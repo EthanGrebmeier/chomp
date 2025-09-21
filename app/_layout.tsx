@@ -1,24 +1,21 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import { QueryClientProvider } from '@/providers/query-client-provider';
+import { Tabs } from 'expo-router';
+import { AppleIcon } from 'lucide-react-native';
+import '../global.css';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <QueryClientProvider>
+      <Tabs screenOptions={{ headerShown: false }}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Grocery List',
+            tabBarIcon: () => <AppleIcon size={24} color="black" />,
+            tabBarActiveTintColor: 'black',
+          }}
+        />
+      </Tabs>
+    </QueryClientProvider>
   );
 }
