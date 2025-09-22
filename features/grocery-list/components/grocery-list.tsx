@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { GroceryListItem } from '../types';
 import { ListItem } from './list-item';
 
@@ -11,9 +11,9 @@ type GroceryListProps = {
 
 export const GroceryList = ({ date, items }: GroceryListProps) => {
   return (
-    <View>
+    <View className="flex-1 gap-4">
       {/** Header */}
-      <View className="mb-8 flex-row items-center justify-between">
+      <View className="flex-row items-center justify-between">
         <Text className="text-3xl font-bold">
           {format(date, 'EEEE, M/d/yy')}
         </Text>
@@ -21,14 +21,24 @@ export const GroceryList = ({ date, items }: GroceryListProps) => {
       </View>
 
       {/** List */}
-      <View className="gap-4">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="py-0"
+        contentContainerClassName="gap-1 py-0"
+      >
         {items.map((item, i) => (
-          <View key={item.id} className="">
-            <ListItem key={item.id} item={item} isChecked={false} />
-            {i < items.length - 1 && <View className="mt-4 h-px bg-gray-200" />}
+          <View key={item.id}>
+            <View className="py-4">
+              <ListItem
+                key={item.id}
+                item={item}
+                isChecked={Boolean(item.isChecked)}
+              />
+            </View>
+            {i < items.length - 1 && <View className="h-px bg-gray-200" />}
           </View>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 };

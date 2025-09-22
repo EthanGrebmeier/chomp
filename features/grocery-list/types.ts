@@ -1,11 +1,9 @@
-export type GroceryList = {
-  date: string;
-  items: GroceryListItem[];
-};
+import { groceryListItemTable, groceryListTable } from '../../db/schema';
 
-export type GroceryListItem = {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
+export type GroceryList = typeof groceryListTable.$inferSelect;
+
+export type GroceryListItem = typeof groceryListItemTable.$inferInsert;
+
+export type GroceryListWithItems = GroceryList & {
+  items: GroceryListItem[];
 };

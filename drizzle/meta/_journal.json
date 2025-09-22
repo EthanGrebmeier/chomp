@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1758483044056,
+      "tag": "0000_yellow_grey_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1758485597734,
+      "tag": "0001_brainy_madelyne_pryor",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1758504936237,
+      "tag": "0002_stiff_shiver_man",
+      "breakpoints": true
+    }
+  ]
+}

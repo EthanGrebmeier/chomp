@@ -1,18 +1,25 @@
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
-import { useGroceryList } from '@/features/grocery-list/hooks/useGroceryList';
+import { useGroceryLists } from '@/features/grocery-list/hooks/useGroceryLists';
 import { View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AddItemSheet } from '../features/grocery-list/components/add-item-sheet';
 
 export default function Index() {
-  const { data: groceryList } = useGroceryList();
+  const { data: groceryLists } = useGroceryLists();
+  const insets = useSafeAreaInsets();
+
+  if (!groceryLists) return null;
+
+  const list = groceryLists[0];
+
   return (
-    <SafeAreaView className="flex-1">
+    <View className="flex-1 " style={{ paddingTop: insets.top }}>
       <View className="flex-1 px-4">
-        <View className="h-12"></View>
-        {groceryList && (
-          <GroceryList date={groceryList.date} items={groceryList.items} />
-        )}
+        {list && <GroceryList date={list.date} items={list.items} />}
       </View>
-    </SafeAreaView>
+      <View className="absolute bottom-4 right-4">
+        {list && <AddItemSheet groceryListId={list.id} />}
+      </View>
+    </View>
   );
 }
