@@ -20,10 +20,12 @@ const groceryListQuery = queryOptions({
     const groceryList = await db
       .select()
       .from(groceryListTable)
-      .innerJoin(
+      .leftJoin(
         groceryListItemTable,
         eq(groceryListTable.id, groceryListItemTable.groceryListId)
       );
+
+    console.log(groceryList);
 
     const result = groceryList.reduce<GroceryLists>((acc, curr) => {
       if (!acc[curr.grocery_list.id]) {
@@ -32,7 +34,9 @@ const groceryListQuery = queryOptions({
           items: [],
         };
       }
-      acc[curr.grocery_list.id].items.push(curr.grocery_list_item);
+      if (curr.grocery_list_item) {
+        acc[curr.grocery_list.id].items.push(curr.grocery_list_item);
+      }
       return acc;
     }, {});
 

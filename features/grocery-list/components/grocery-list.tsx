@@ -5,13 +5,19 @@ import { ListItem } from './list-item';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { AddItemSheet } from './add-item-sheet';
 
 type GroceryListProps = {
   date: string;
   items: GroceryListItem[];
+  groceryListId: string;
 };
 
-export const GroceryList = ({ date, items }: GroceryListProps) => {
+export const GroceryList = ({
+  date,
+  items,
+  groceryListId,
+}: GroceryListProps) => {
   return (
     <View className="flex-1 gap-4">
       {/** Header */}
@@ -38,6 +44,9 @@ export const GroceryList = ({ date, items }: GroceryListProps) => {
           />
         )}
       />
+      <View className="absolute bottom-4 right-4">
+        <AddItemSheet groceryListId={groceryListId} />
+      </View>
     </View>
   );
 };
