@@ -3,9 +3,8 @@ import { QueryClientProvider } from '@/providers/query-client-provider';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { PortalHost } from '@rn-primitives/portal';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
-import { Tabs } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SQLite from 'expo-sqlite';
-import { AppleIcon } from 'lucide-react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import '../global.css';
@@ -20,16 +19,11 @@ export default function RootLayout() {
       <MigrationProvider>
         <GestureHandlerRootView>
           <BottomSheetModalProvider>
-            <Tabs screenOptions={{ headerShown: false }}>
-              <Tabs.Screen
-                name="index"
-                options={{
-                  title: 'Grocery List',
-                  tabBarIcon: () => <AppleIcon size={24} color="black" />,
-                  tabBarActiveTintColor: 'black',
-                }}
-              />
-            </Tabs>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}
+            />
             <PortalHost />
           </BottomSheetModalProvider>
         </GestureHandlerRootView>

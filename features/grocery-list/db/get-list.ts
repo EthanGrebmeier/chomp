@@ -3,14 +3,15 @@ import { groceryListItemTable, groceryListTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
 import { normalizeGroceryList } from '../util';
 
-export const getLists = async () => {
-  const groceryList = await db
+export const getList = async (listId: string) => {
+  const result = await db
     .select()
     .from(groceryListTable)
     .leftJoin(
       groceryListItemTable,
       eq(groceryListTable.id, groceryListItemTable.groceryListId)
     );
-  const result = normalizeGroceryList(groceryList);
-  return Object.values(result);
+  const normalized = normalizeGroceryList(result);
+
+  return normalized[listId];
 };
