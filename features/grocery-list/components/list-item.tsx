@@ -7,6 +7,7 @@ import Animated, {
   FadeInDown,
   FadeOut,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
@@ -27,26 +28,34 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
   const { mutate: removeItem } = useRemoveGroceryListItem();
   const queryClient = useQueryClient();
   const screenWidth = useWindowDimensions().width;
-  const xPos = useSharedValue(0);
-  const deleteThreshold = screenWidth * 0.3;
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: xPos.value }],
+
+  const listItemXPos = useSharedValue(0);
+  const listItemAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: listItemXPos.value }],
   }));
+  const deleteThreshold = screenWidth * 0.5;
+
+  const removeIconSlideOutXPos = useDerivedValue(() => {
+    return Math.max(listItemXPos.value + 48, 0);
+  });
+
   const removeIconAnimatedStyle = useAnimatedStyle(() => {
-    const swipeDistance = Math.abs(xPos.value);
+    const swipeDistance = Math.abs(listItemXPos.value);
     const opacity = Math.min(swipeDistance / deleteThreshold, 1);
 
     return {
       opacity: opacity,
       position: 'absolute',
       right: 16, // Always 16px from right edge
-      top: '50%',
-      transform: [{ translateY: -12 }], // Center vertically (half of icon size)
+      transform: [
+        { translateX: removeIconSlideOutXPos.value },
+        { translateY: '50%' },
+      ], // Center vertically (half of icon size)
     };
   });
 
   const backgroundAnimatedStyle = useAnimatedStyle(() => {
-    const swipeDistance = Math.abs(xPos.value);
+    const swipeDistance = Math.abs(listItemXPos.value);
     const opacity = Math.min(swipeDistance / deleteThreshold, 1);
     // Map opacity from 0-1 to 0.7-1.0 (70% to 100%)
     const backgroundOpacity = 0.7 + opacity * 0.3;
@@ -68,13 +77,14 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
               if (event.velocityX > 0 && event.translationX > 0) {
                 return;
               }
-              xPos.value = event.translationX;
+
+              if (event.translationX) listItemXPos.value = event.translationX;
             })
             .onEnd(e => {
               'worklet';
               if (e.translationX < 0 - deleteThreshold) {
                 // Animate the item off the screen first
-                xPos.value = withSpring(
+                listItemXPos.value = withSpring(
                   -screenWidth - 24,
                   { duration: 180 },
                   () => {
@@ -87,20 +97,22 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
                 );
               } else {
                 // If threshold not reached, spring back to original position
-                xPos.value = withSpring(0);
+                listItemXPos.value = withSpring(0);
               }
             })}
         >
           <Animated.View
-            className={cn('px-4', className)}
-            style={animatedStyle}
+            className={cn('', className)}
+            style={listItemAnimatedStyle}
           >
             <View
-              className={cn('flex-row items-center gap-2 bg-background py-2')}
+              className={cn(
+                'z-10 flex-row items-center gap-2 bg-background px-4 py-2'
+              )}
             >
               <Pressable
                 className={cn(
-                  'size-6 overflow-hidden rounded-full border border-gray-300 p-0.5'
+                  'size-6 overflow-hidden rounded-full border border-gray-300 p-0.5 '
                 )}
                 onPress={() =>
                   checkItem(
@@ -129,7 +141,7 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
               </View>
             </View>
             <Animated.View
-              className="absolute right-[-1200px] h-full w-[1200px] items-start justify-center bg-red-500 px-4"
+              className="absolute left-full h-full w-[1200px] items-start justify-center bg-red-500 px-4"
               style={backgroundAnimatedStyle}
             ></Animated.View>
           </Animated.View>
