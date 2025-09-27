@@ -77,8 +77,16 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
               if (event.velocityX > 0 && event.translationX > 0) {
                 return;
               }
+              const amountOverThreshold = Math.max(
+                -(deleteThreshold + event.translationX),
+                0
+              );
 
-              if (event.translationX) listItemXPos.value = event.translationX;
+              console.log('amountOverThreshold', amountOverThreshold);
+
+              listItemXPos.value =
+                Math.max(event.translationX, -deleteThreshold) -
+                amountOverThreshold ** 0.5;
             })
             .onEnd(e => {
               'worklet';
