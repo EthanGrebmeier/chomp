@@ -82,8 +82,6 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
                 0
               );
 
-              console.log('amountOverThreshold', amountOverThreshold);
-
               listItemXPos.value =
                 Math.max(event.translationX, -deleteThreshold) -
                 amountOverThreshold ** 0.5;
