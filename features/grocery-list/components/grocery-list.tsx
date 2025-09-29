@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { AddItemSheet } from './add-item-sheet';
+import { AddRecipeSheet } from './add-recipe-sheet';
 
 type GroceryListProps = {
   name: string;
@@ -46,7 +47,8 @@ export const GroceryList = ({
           />
         )}
       />
-      <View className="absolute bottom-4 right-4">
+      <View className="absolute bottom-4 right-4 flex-row gap-2">
+        <AddRecipeSheet groceryListId={groceryListId} />
         <AddItemSheet groceryListId={groceryListId} />
       </View>
     </View>

@@ -118,12 +118,12 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
           >
             {field => (
               <View className="gap-2">
-                <Text>Name: </Text>
-                <BottomSheet.TextInput
+                <BottomSheetTextInput
                   value={field.state.value}
                   onChangeText={field.handleChange}
-                  placeholder="Enter ingredient name"
+                  placeholder="Ingredient Name"
                   autoCapitalize="words"
+                  className="rounded-none border-none text-2xl font-semibold"
                   ref={nameInputRef}
                 />
                 <FieldInfo field={field} />
