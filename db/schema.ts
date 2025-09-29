@@ -5,7 +5,8 @@ import { int, text } from 'drizzle-orm/sqlite-core';
 
 export const groceryListTable = sqliteTable('grocery_list', {
   id: text().primaryKey(),
-  date: text().notNull(),
+  date: text(),
+  name: text().notNull(),
 });
 
 export const groceryListRelations = relations(groceryListTable, ({ many }) => ({

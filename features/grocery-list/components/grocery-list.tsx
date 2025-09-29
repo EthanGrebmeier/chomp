@@ -8,12 +8,14 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import { AddItemSheet } from './add-item-sheet';
 
 type GroceryListProps = {
+  name: string;
   date: string;
   items: GroceryListItem[];
   groceryListId: string;
 };
 
 export const GroceryList = ({
+  name,
   date,
   items,
   groceryListId,

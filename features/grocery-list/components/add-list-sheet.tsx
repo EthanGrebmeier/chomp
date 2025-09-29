@@ -1,6 +1,7 @@
 import { FieldInfo } from '@/components/field-info';
 import { Button } from '@/components/ui/button';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
@@ -17,20 +18,23 @@ export const AddListSheet = () => {
   const form = useForm({
     defaultValues: {
       date: new Date().toISOString().split('T')[0], // Default to today
+      name: '', // Default empty name
     },
     onSubmit: e => {
-      const { date } = e.value;
+      const { date, name } = e.value;
 
       addList(
         {
           list: {
             date,
+            name,
           },
         },
         {
           onSuccess: () => {
             form.reset({
               date: new Date().toISOString().split('T')[0],
+              name: '',
             });
             queryClient.invalidateQueries({ queryKey: queryKeys.base() });
             ref.current?.dismiss();
@@ -43,20 +47,40 @@ export const AddListSheet = () => {
   return (
     <>
       <Button onPress={() => ref.current?.present()}>
-        <Text>Add List</Text>
+        <Text>New List</Text>
       </Button>
       <BottomSheet onClose={() => form.reset()} ref={ref}>
         <View className="gap-4 pb-4">
           <form.Field
             validators={{
               onSubmit: ({ value }) => {
-                if (!value.length) {
-                  return 'Date is required';
+                if (!value.trim()) {
+                  return 'Name is required';
                 }
-                // Basic date validation
-                const date = new Date(value);
-                if (isNaN(date.getTime())) {
-                  return 'Invalid date';
+                if (value.trim().length < 2) {
+                  return 'Name must be at least 2 characters';
+                }
+              },
+            }}
+            name="name"
+          >
+            {field => (
+              <View className="gap-2">
+                <Text>Name:</Text>
+                <BottomSheet.TextInput
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                  placeholder="Enter list name"
+                />
+                <FieldInfo field={field} />
+              </View>
+            )}
+          </form.Field>
+          <form.Field
+            validators={{
+              onSubmit: ({ value }) => {
+                if (!value) {
+                  return 'Date is required';
                 }
               },
             }}
@@ -65,10 +89,19 @@ export const AddListSheet = () => {
             {field => (
               <View className="gap-2">
                 <Text>Date:</Text>
-                <BottomSheet.TextInput
-                  value={field.state.value}
-                  onChangeText={field.handleChange}
-                  placeholder="YYYY-MM-DD"
+                <DateTimePicker
+                  value={
+                    field.state.value ? new Date(field.state.value) : new Date()
+                  }
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    if (selectedDate) {
+                      field.handleChange(
+                        selectedDate.toISOString().split('T')[0]
+                      );
+                    }
+                  }}
                 />
                 <FieldInfo field={field} />
               </View>

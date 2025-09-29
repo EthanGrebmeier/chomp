@@ -11,5 +11,6 @@ export const createList = ({ list }: CreateListArgs) => {
   return db.insert(groceryListTable).values({
     id: generateId(),
     date: list.date,
+    name: list.name,
   });
 };
