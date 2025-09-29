@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { useDebounceCallback } from 'usehooks-ts';
 import { TextDisplayInput } from '../../../components/text-input';
+import { Text } from '../../../components/ui/text';
 import { useAddRecipeToList } from '../hooks/useAddRecipeToList';
 import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
 import { RecipeWithIngredients } from '../types';
@@ -64,16 +65,16 @@ export const RecipeDetail = ({
           className="align-text-top text-3xl font-bold"
         />
         {recipe.description && (
-          <Text className="mt-2 text-lg text-gray-600">
+          <Text className="mt-2 text-lg text-muted-foreground">
             {recipe.description}
           </Text>
         )}
         <View className="mt-2 flex-row gap-4">
-          <Text className="text-lg text-gray-500">
+          <Text className="text-lg text-muted-foreground">
             {recipe.ingredients.length} ingredients
           </Text>
           {recipe.servings && (
-            <Text className="text-lg text-gray-500">
+            <Text className="text-lg text-muted-foreground">
               Serves {recipe.servings}
             </Text>
           )}
@@ -89,11 +90,13 @@ export const RecipeDetail = ({
         <View className="gap-2">
           {recipe.ingredients.map((ingredient, index) => (
             <View key={ingredient.id} className="flex-row items-center gap-2">
-              <Text className="text-gray-500">{index + 1}.</Text>
+              <Text className="text-muted-foreground">{index + 1}.</Text>
               <Text className="flex-1 text-base">
                 {ingredient.quantity} {ingredient.unit} {ingredient.name}
                 {ingredient.notes && (
-                  <Text className="text-gray-500"> ({ingredient.notes})</Text>
+                  <Text className="text-muted-foreground">
+                    ({ingredient.notes})
+                  </Text>
                 )}
               </Text>
             </View>

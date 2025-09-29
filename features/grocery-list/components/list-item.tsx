@@ -138,8 +138,12 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
               </Pressable>
 
               <View className="flex-1 flex-row justify-between">
-                <Text className="text-2xl font-medium">{item.name}</Text>
-                <Text className="text-lg text-gray-500">x{item.quantity}</Text>
+                <Text className="text-2xl font-medium text-foreground">
+                  {item.name}
+                </Text>
+                <Text className="text-lg text-muted-foreground">
+                  x{item.quantity}
+                </Text>
               </View>
             </View>
             <Animated.View

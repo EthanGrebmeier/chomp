@@ -4,13 +4,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeftIcon } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon } from '../components/ui/icon';
 
 export default function List() {
   const { listId } = useLocalSearchParams<{ listId: string }>();
 
   const { data: list } = useGroceryList(listId);
-
-  console.log(list);
 
   if (!list) return null;
 
@@ -21,8 +20,8 @@ export default function List() {
           onPress={() => router.back()}
           className="mb-4 flex-row items-center gap-2 px-4"
         >
-          <ArrowLeftIcon size={16} color="black" />
-          <Text className="text-sm font-medium">My Lists</Text>
+          <Icon as={ArrowLeftIcon} size={16} />
+          <Text className="text-sm font-medium text-foreground">My Lists</Text>
         </Pressable>
         <GroceryList
           date={list.date}

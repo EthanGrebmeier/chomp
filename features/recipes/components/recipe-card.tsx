@@ -1,5 +1,6 @@
 import { Link } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../../../components/ui/text';
 import { RecipeWithIngredients } from '../types';
 
 type RecipeCardProps = {
@@ -21,11 +22,11 @@ export const RecipeCard = ({ recipe, cardWidth }: RecipeCardProps) => {
         >
           {recipe.name}
         </Text>
-        <Text className="text-sm text-gray-500">
+        <Text className="text-sm text-muted-foreground">
           {recipe.ingredients.length} ingredients
         </Text>
         {recipe.servings && (
-          <Text className="text-sm text-gray-500">
+          <Text className="text-sm text-muted-foreground">
             Serves {recipe.servings}
           </Text>
         )}

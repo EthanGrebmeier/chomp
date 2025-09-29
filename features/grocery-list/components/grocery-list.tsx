@@ -5,12 +5,13 @@ import { ListItem } from './list-item';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { Heading } from '../../../components/text/heading';
 import { AddItemSheet } from './add-item-sheet';
 import { AddRecipeSheet } from './add-recipe-sheet';
 
 type GroceryListProps = {
   name: string;
-  date: string;
+  date?: string;
   items: GroceryListItem[];
   groceryListId: string;
 };
@@ -25,10 +26,10 @@ export const GroceryList = ({
     <View className="flex-1 gap-4">
       {/** Header */}
       <View className="flex-row items-center justify-between px-4">
-        <Text className="text-3xl font-bold">
-          {format(date, 'EEEE, M/d/yy')}
+        <Heading>{date ? format(date, 'EEEE, M/d/yy') : 'My List'}</Heading>
+        <Text className="text-lg text-muted-foreground">
+          {items.length} items
         </Text>
-        <Text className="text-lg text-gray-500">{items.length} items</Text>
       </View>
       <Animated.FlatList
         className="flex-1"

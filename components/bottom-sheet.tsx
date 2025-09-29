@@ -5,7 +5,9 @@ import {
   BottomSheetTextInput,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
+import { useColorScheme } from 'nativewind';
 import { ComponentProps, forwardRef } from 'react';
+import { THEME } from '../lib/theme';
 
 type BottomSheetProps = {
   children: React.ReactNode;
@@ -20,23 +22,42 @@ export const BottomSheet = ({
   onClose,
   onOpen,
 }: BottomSheetProps) => {
+  const colorscheme = useColorScheme();
+
   return (
     <BottomSheetModal
       backdropComponent={props => (
         <BottomSheetBackdrop
           {...props}
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          style={{
+            backgroundColor:
+              colorscheme.colorScheme === 'dark'
+                ? THEME.dark.background
+                : THEME.light.background,
+          }}
           appearsOnIndex={0}
           disappearsOnIndex={-1}
         />
       )}
       ref={ref}
-      onChange={index => {
+      onChange={(index, position) => {
         if (index === -1) {
           onClose();
         } else if (index >= 0 && onOpen) {
           onOpen();
         }
+      }}
+      backgroundStyle={{
+        backgroundColor:
+          colorscheme.colorScheme === 'dark'
+            ? THEME.dark.card
+            : THEME.light.card,
+      }}
+      handleIndicatorStyle={{
+        backgroundColor:
+          colorscheme.colorScheme === 'dark'
+            ? THEME.dark.cardForeground
+            : THEME.light.cardForeground,
       }}
     >
       <BottomSheetView className="pb-safe px-4">{children}</BottomSheetView>
@@ -53,7 +74,7 @@ const TextInput = forwardRef<
   return (
     <BottomSheetTextInput
       className={cn(
-        'h-10 rounded-md border border-input px-3 py-2 shadow-sm shadow-black/5 ',
+        'h-10 rounded-md border border-input bg-input px-3 py-2 text-foreground shadow-sm shadow-black/5',
         className
       )}
       {...props}
