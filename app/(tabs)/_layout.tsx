@@ -21,6 +21,13 @@ export default function Layout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="recipes"
+        options={{
+          title: 'Recipes',
+          tabBarIcon: () => <ScrollIcon size={24} color="black" />,
+        }}
+      />
     </Tabs>
   );
 }

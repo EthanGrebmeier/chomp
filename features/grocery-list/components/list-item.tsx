@@ -111,11 +111,7 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
             className={cn('', className)}
             style={listItemAnimatedStyle}
           >
-            <View
-              className={cn(
-                'z-10 flex-row items-center gap-2 bg-background px-4 py-2'
-              )}
-            >
+            <View className={cn('z-10 flex-row items-center gap-2 px-4 py-2')}>
               <Pressable
                 className={cn(
                   'size-6 overflow-hidden rounded-full border border-gray-300 p-0.5 '
