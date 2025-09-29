@@ -4,7 +4,6 @@ import { RecipeList } from '@/features/recipes/components/recipe-list';
 import { useCreateRecipe, useRecipes } from '@/features/recipes/hooks';
 import { router } from 'expo-router';
 import { Text as RNText, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Recipes() {
   const { data: recipes, isLoading } = useRecipes();
@@ -29,7 +28,7 @@ export default function Recipes() {
   };
 
   return (
-    <SafeAreaView className="flex-1 gap-2 bg-background px-4">
+    <View className="py-safe flex-1 gap-2 bg-background px-4">
       <View className="flex-row items-center justify-between">
         <Text className="text-2xl font-bold">Recipes</Text>
         <Button onPress={handleCreateRecipe} disabled={isPending}>
@@ -45,6 +44,6 @@ export default function Recipes() {
           <RecipeList recipes={recipes || []} />
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

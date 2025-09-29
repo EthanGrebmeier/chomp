@@ -3,7 +3,7 @@ import { useRecipe } from '@/features/recipes/hooks/useRecipe';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeftIcon } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { Icon } from '../../components/ui/icon';
 
 export default function RecipeDetailPage() {
@@ -17,11 +17,11 @@ export default function RecipeDetailPage() {
   if (isLoading) {
     return (
       <View className="flex-1 bg-background">
-        <SafeAreaView className="flex-1">
+        <View className="py-safe flex-1">
           <View className="flex-1 items-center justify-center">
             <Text className="text-muted-foreground">Loading recipe...</Text>
           </View>
-        </SafeAreaView>
+        </View>
       </View>
     );
   }
@@ -29,18 +29,18 @@ export default function RecipeDetailPage() {
   if (!recipe) {
     return (
       <View className="flex-1 bg-background">
-        <SafeAreaView className="flex-1">
+        <View className="py-safe flex-1">
           <View className="flex-1 items-center justify-center">
             <Text className="text-muted-foreground">Recipe not found</Text>
           </View>
-        </SafeAreaView>
+        </View>
       </View>
     );
   }
 
   return (
     <View className="flex-1 bg-background">
-      <SafeAreaView className="flex-1">
+      <View className="py-safe flex-1">
         <Pressable
           onPress={() => router.back()}
           className="mb-4 flex-row items-center gap-2 px-4"
@@ -49,7 +49,7 @@ export default function RecipeDetailPage() {
           <Text className="text-sm font-medium text-foreground">Recipes</Text>
         </Pressable>
         <RecipeDetail recipe={recipe} autofocus={autofocus === 'true'} />
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

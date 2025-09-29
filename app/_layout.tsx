@@ -5,6 +5,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { Stack } from 'expo-router';
 import * as SQLite from 'expo-sqlite';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import '../global.css';
@@ -19,11 +20,13 @@ export default function RootLayout() {
       <MigrationProvider>
         <GestureHandlerRootView>
           <BottomSheetModalProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-            />
+            <View className="flex-1 bg-background">
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              />
+            </View>
             <PortalHost />
           </BottomSheetModalProvider>
         </GestureHandlerRootView>

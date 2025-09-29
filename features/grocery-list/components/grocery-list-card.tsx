@@ -10,11 +10,11 @@ export const GroceryListCard = ({ groceryList }: GroceryListCardProps) => {
   return (
     <Link
       href={`/${groceryList.id}`}
-      className="flex-1/2 aspect-square rounded-lg border border-border bg-background p-4"
+      className="w-full rounded-lg border border-border bg-background p-4"
     >
       <View>
-        <Text className="text-2xl font-bold text-foreground">
-          {groceryList.date}
+        <Text numberOfLines={1} className="text-2xl font-bold text-foreground">
+          {groceryList.name}
         </Text>
         <Text className="text-lg text-muted-foreground">
           {groceryList.items.length} items

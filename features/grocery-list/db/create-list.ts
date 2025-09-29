@@ -7,10 +7,12 @@ type CreateListArgs = {
   list: Omit<GroceryList, 'id'>;
 };
 
-export const createList = ({ list }: CreateListArgs) => {
-  return db.insert(groceryListTable).values({
-    id: generateId(),
+export const createList = async ({ list }: CreateListArgs) => {
+  const id = generateId();
+  await db.insert(groceryListTable).values({
+    id,
     date: list.date,
     name: list.name,
   });
+  return { id };
 };

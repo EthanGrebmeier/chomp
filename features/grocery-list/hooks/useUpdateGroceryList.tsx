@@ -7,12 +7,8 @@ export const useUpdateGroceryList = () => {
 
   return useMutation({
     mutationFn: updateList,
-    onSuccess: (_, variables) => {
-      // Invalidate both the specific list and all lists
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.detail(variables.listId),
-      });
-      queryClient.invalidateQueries({
+    onSuccess: () => {
+      return queryClient.invalidateQueries({
         queryKey: queryKeys.base(),
       });
     },
