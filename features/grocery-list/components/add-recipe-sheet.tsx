@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRef } from 'react';
-import { Dimensions, FlatList, Text, View } from 'react-native';
+import { Dimensions, FlatList, View } from 'react-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { Text } from '../../../components/ui/text';
 import { useAddRecipeToList } from '../../recipes/hooks/useAddRecipeToList';
 import { useRecipes } from '../../recipes/hooks/useRecipes';
 import { RecipeWithIngredients } from '../../recipes/types';
