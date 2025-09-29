@@ -28,3 +28,8 @@ export type UpdateRecipeArgs = {
     servings?: number;
   };
 };
+
+export type RemoveRecipeIngredientArgs = {
+  itemId: string;
+  recipeId: string;
+};

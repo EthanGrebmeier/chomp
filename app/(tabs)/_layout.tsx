@@ -41,12 +41,6 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="[listId]"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
         name="recipes"
         options={{
           title: 'Recipes',

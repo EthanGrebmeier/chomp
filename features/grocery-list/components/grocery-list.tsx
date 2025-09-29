@@ -1,18 +1,19 @@
 import { Text, View } from 'react-native';
-import { GroceryListItem } from '../types';
-import { ListItem } from './list-item';
 
-import { cn } from '@/lib/utils';
+import { GroceryListItem as GroceryListItemType } from '../types';
+
 import { format } from 'date-fns';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Heading } from '../../../components/text/heading';
+import { cn } from '../../../lib/utils';
 import { AddItemSheet } from './add-item-sheet';
 import { AddRecipeSheet } from './add-recipe-sheet';
+import { GroceryListItem } from './grocery-list-item';
 
 type GroceryListProps = {
   name: string;
   date?: string;
-  items: GroceryListItem[];
+  items: GroceryListItemType[];
   groceryListId: string;
 };
 
@@ -38,13 +39,11 @@ export const GroceryList = ({
         showsVerticalScrollIndicator={false}
         data={items}
         renderItem={({ item, index }) => (
-          <ListItem
+          <GroceryListItem
             key={item.id}
             item={item}
             isChecked={Boolean(item.isChecked)}
-            className={cn(
-              index < items.length - 1 && 'border-b border-gray-200'
-            )}
+            className={cn(index < items.length - 1 && 'border-b border-border')}
           />
         )}
       />

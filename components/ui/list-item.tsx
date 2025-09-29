@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils';
-import { useQueryClient } from '@tanstack/react-query';
 import { TrashIcon } from 'lucide-react-native';
-import { Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeInDown,
@@ -12,21 +11,14 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
-import { useCheckGroceryItem } from '../hooks/useCheckGroceryListItem';
-import { useRemoveGroceryListItem } from '../hooks/useRemoveGroceryListItem';
-import { queryKeys } from '../query-keys';
-import { GroceryListItem } from '../types';
 
 type ListItemProps = {
-  item: GroceryListItem;
-  isChecked: boolean;
   className?: string;
+  children?: React.ReactNode;
+  onDelete?: () => void;
 };
 
-export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
-  const { mutate: checkItem } = useCheckGroceryItem();
-  const { mutate: removeItem } = useRemoveGroceryListItem();
-  const queryClient = useQueryClient();
+export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
   const screenWidth = useWindowDimensions().width;
 
   const listItemXPos = useSharedValue(0);
@@ -47,9 +39,10 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
       opacity: opacity,
       position: 'absolute',
       right: 16, // Always 16px from right edge
+      top: '50%',
       transform: [
         { translateX: removeIconSlideOutXPos.value },
-        { translateY: '50%' },
+        { translateY: '-50%' },
       ], // Center vertically (half of icon size)
     };
   });
@@ -95,10 +88,7 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
                   { duration: 180 },
                   () => {
                     // After animation completes, trigger the delete mutation
-                    scheduleOnRN(removeItem, {
-                      itemId: item.id,
-                      groceryListId: item.groceryListId,
-                    });
+                    onDelete && scheduleOnRN(onDelete);
                   }
                 );
               } else {
@@ -107,44 +97,14 @@ export const ListItem = ({ item, isChecked, className }: ListItemProps) => {
               }
             })}
         >
-          <Animated.View
-            className={cn('', className)}
-            style={listItemAnimatedStyle}
-          >
-            <View className={cn('z-10 flex-row items-center gap-2 px-4 py-2')}>
-              <Pressable
-                className={cn(
-                  'size-6 overflow-hidden rounded-full border border-gray-300 p-0.5 '
-                )}
-                onPress={() =>
-                  checkItem(
-                    { itemId: item.id, isChecked: !isChecked },
-                    {
-                      onSuccess: () => {
-                        queryClient.invalidateQueries({
-                          queryKey: queryKeys.base(),
-                        });
-                      },
-                    }
-                  )
-                }
-              >
-                <View
-                  className={cn(
-                    'h-full w-full rounded-full',
-                    isChecked && 'bg-gray-500'
-                  )}
-                ></View>
-              </Pressable>
-
-              <View className="flex-1 flex-row justify-between">
-                <Text className="text-2xl font-medium text-foreground">
-                  {item.name}
-                </Text>
-                <Text className="text-lg text-muted-foreground">
-                  x{item.quantity}
-                </Text>
-              </View>
+          <Animated.View style={listItemAnimatedStyle}>
+            <View
+              className={cn(
+                'z-10 flex-row items-center gap-2 px-4 py-2',
+                className
+              )}
+            >
+              {children}
             </View>
             <Animated.View
               className="absolute left-full h-full w-[1200px] items-start justify-center bg-red-500 px-4"

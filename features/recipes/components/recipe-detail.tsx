@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { Animated, TextInput, View } from 'react-native';
 import { useDebounceCallback } from 'usehooks-ts';
 import { TextDisplayInput } from '../../../components/text-input';
 import { Text } from '../../../components/ui/text';
+import { cn } from '../../../lib/utils';
 import { useAddRecipeToList } from '../hooks/useAddRecipeToList';
 import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
 import { RecipeWithIngredients } from '../types';
 import { AddIngredientSheet } from './add-ingredient-sheet';
+import { RecipeIngredientItem } from './recipe-ingredient-item';
 
 type RecipeDetailProps = {
   recipe: RecipeWithIngredients;
@@ -82,26 +84,25 @@ export const RecipeDetail = ({
       </View>
 
       {/* Ingredients */}
-      <View className="flex-1 px-4">
-        <View className="mb-4 flex-row items-center justify-between">
+      <View className="flex-1 ">
+        <View className="mb-4 flex-row items-center justify-between px-4">
           <Text className="text-xl font-semibold">Ingredients:</Text>
           <AddIngredientSheet recipeId={recipe.id} />
         </View>
-        <View className="gap-2">
-          {recipe.ingredients.map((ingredient, index) => (
-            <View key={ingredient.id} className="flex-row items-center gap-2">
-              <Text className="text-muted-foreground">{index + 1}.</Text>
-              <Text className="flex-1 text-base">
-                {ingredient.quantity} {ingredient.unit} {ingredient.name}
-                {ingredient.notes && (
-                  <Text className="text-muted-foreground">
-                    ({ingredient.notes})
-                  </Text>
-                )}
-              </Text>
-            </View>
-          ))}
-        </View>
+        <Animated.FlatList
+          className="gap-2"
+          data={recipe.ingredients}
+          renderItem={({ item, index }) => (
+            <RecipeIngredientItem
+              className={cn(
+                index < recipe.ingredients.length - 1 &&
+                  'border-b border-border'
+              )}
+              key={item.id}
+              ingredient={item}
+            />
+          )}
+        />
       </View>
     </View>
   );
