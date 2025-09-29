@@ -5,15 +5,21 @@ import {
   BottomSheetTextInput,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
-import { TextInputProps } from 'react-native';
+import { ComponentProps, forwardRef } from 'react';
 
 type BottomSheetProps = {
   children: React.ReactNode;
   ref: React.RefObject<BottomSheetModal | null>;
   onClose: () => void;
+  onOpen?: () => void;
 };
 
-export const BottomSheet = ({ children, ref, onClose }: BottomSheetProps) => {
+export const BottomSheet = ({
+  children,
+  ref,
+  onClose,
+  onOpen,
+}: BottomSheetProps) => {
   return (
     <BottomSheetModal
       backdropComponent={props => (
@@ -28,6 +34,8 @@ export const BottomSheet = ({ children, ref, onClose }: BottomSheetProps) => {
       onChange={index => {
         if (index === -1) {
           onClose();
+        } else if (index >= 0 && onOpen) {
+          onOpen();
         }
       }}
     >
@@ -36,16 +44,22 @@ export const BottomSheet = ({ children, ref, onClose }: BottomSheetProps) => {
   );
 };
 
-const TextInput = ({ className, ...props }: TextInputProps) => {
+type BottomSheetTextInputProps = ComponentProps<typeof BottomSheetTextInput>;
+
+const TextInput = forwardRef<
+  React.ComponentRef<typeof BottomSheetTextInput>,
+  BottomSheetTextInputProps
+>(({ className, ...props }, ref) => {
   return (
     <BottomSheetTextInput
       className={cn(
-        'border-input h-10 rounded-md border px-3 py-2 shadow-sm shadow-black/5 ',
+        'h-10 rounded-md border border-input px-3 py-2 shadow-sm shadow-black/5 ',
         className
       )}
       {...props}
+      ref={ref}
     />
   );
-};
+});
 
 BottomSheet.TextInput = TextInput;

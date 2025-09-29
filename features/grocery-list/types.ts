@@ -7,3 +7,11 @@ export type GroceryListItem = typeof groceryListItemTable.$inferInsert;
 export type GroceryListWithItems = GroceryList & {
   items: GroceryListItem[];
 };
+
+export type UpdateGroceryListArgs = {
+  listId: string;
+  updates: {
+    name?: string;
+    date?: string;
+  };
+};

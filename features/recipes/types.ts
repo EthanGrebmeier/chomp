@@ -19,3 +19,12 @@ export type AddRecipeToListArgs = {
   recipeId: string;
   groceryListId: string;
 };
+
+export type UpdateRecipeArgs = {
+  recipeId: string;
+  updates: {
+    name?: string;
+    description?: string;
+    servings?: number;
+  };
+};
