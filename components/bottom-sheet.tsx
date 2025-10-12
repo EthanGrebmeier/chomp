@@ -14,11 +14,13 @@ type BottomSheetProps = {
   ref: React.RefObject<BottomSheetModal | null>;
   onClose: () => void;
   onOpen?: () => void;
+  onStartClose?: () => void;
 };
 
 export const BottomSheet = ({
   children,
   ref,
+  onStartClose,
   onClose,
   onOpen,
 }: BottomSheetProps) => {
@@ -37,11 +39,12 @@ export const BottomSheet = ({
         />
       )}
       ref={ref}
-      onChange={(index, position) => {
-        if (index === -1) {
-          onClose();
-        } else if (index >= 0 && onOpen) {
-          onOpen();
+      onAnimate={(fromIndex, toIndex, position) => {
+        if (fromIndex === -1) {
+          onOpen?.();
+        }
+        if (toIndex === -1) {
+          onStartClose?.();
         }
       }}
       backgroundStyle={{

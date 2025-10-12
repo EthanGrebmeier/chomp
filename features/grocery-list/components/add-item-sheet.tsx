@@ -6,6 +6,7 @@ import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
 import { Platform, View } from 'react-native';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
@@ -95,7 +96,14 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
       <Button onPress={() => ref.current?.present()}>
         <Text> Add Item </Text>
       </Button>
-      <BottomSheet onOpen={handleOpen} onClose={() => form.reset()} ref={ref}>
+      <BottomSheet
+        onStartClose={() => {
+          KeyboardController.dismiss();
+        }}
+        onOpen={handleOpen}
+        onClose={() => form.reset()}
+        ref={ref}
+      >
         <View className="flex-row gap-4 pb-4">
           <form.Field
             validators={{
@@ -148,7 +156,7 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
               name="unit"
             >
               {field => (
-                <View className="w-24 shrink-0 gap-2 ">
+                <View className="w-[104px] shrink-0 gap-2 ">
                   <Select
                     className="bg-transparent"
                     value={unitOptions.find(

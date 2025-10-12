@@ -8,7 +8,9 @@ import * as SQLite from 'expo-sqlite';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import '../global.css';
+
 const db = SQLite.openDatabaseSync('db.db');
 
 export default function RootLayout() {
@@ -17,20 +19,22 @@ export default function RootLayout() {
   }
   return (
     <QueryClientProvider>
-      <MigrationProvider>
-        <GestureHandlerRootView>
-          <BottomSheetModalProvider>
-            <View className="flex-1 bg-background">
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                }}
-              />
-            </View>
-            <PortalHost />
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-      </MigrationProvider>
+      <KeyboardProvider>
+        <MigrationProvider>
+          <GestureHandlerRootView>
+            <BottomSheetModalProvider>
+              <View className="flex-1 bg-background">
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                  }}
+                />
+              </View>
+              <PortalHost />
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
+        </MigrationProvider>
+      </KeyboardProvider>
     </QueryClientProvider>
   );
 }
