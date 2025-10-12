@@ -8,8 +8,10 @@ export default function Index() {
   const lists = useGroceryLists();
 
   return (
-    <View className="py-safe flex-1 gap-2 bg-background px-4">
-      <Heading>Lists</Heading>
+    <View className="py-safe flex-1 gap-2 bg-background ">
+      <View className="px-4">
+        <Heading>Lists</Heading>
+      </View>
       <FlatList
         data={lists.data}
         ItemSeparatorComponent={() => <View className="h-2" />}
