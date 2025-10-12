@@ -178,14 +178,12 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
             <View className="flex-1 flex-row gap-2">
               <form.Field name="quantity">
                 {field => (
-                  <View className="flex-1 items-center gap-2">
-                    <BottomSheet.BareTextInput
-                      className="w-full text-right text-xl font-semibold text-foreground"
-                      keyboardType="number-pad"
-                      value={field.state.value}
-                      onChangeText={field.handleChange}
-                    />
-                  </View>
+                  <BottomSheet.BareTextInput
+                    className="flex-1 pb-2 text-right text-xl font-semibold text-foreground"
+                    keyboardType="number-pad"
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                  />
                 )}
               </form.Field>
               <form.Field
@@ -213,9 +211,9 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
                         field.setValue(option.value as typeof field.state.value)
                       }
                     >
-                      <SelectTrigger className="shrink-0 border-0 border-none bg-transparent p-0 shadow-none dark:bg-transparent">
+                      <SelectTrigger className="shrink-0 border-0 border-none  p-0 shadow-none dark:bg-transparent">
                         <SelectValue
-                          className="bg-transparent text-xl font-semibold text-foreground"
+                          className="bg-transparent text-xl font-semibold text-foreground "
                           placeholder="Select Unit"
                         />
                       </SelectTrigger>
