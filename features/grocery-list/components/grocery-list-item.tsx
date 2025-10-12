@@ -58,7 +58,11 @@ export const GroceryListItem = ({
         <Text className="text-2xl font-medium text-foreground">
           {item.name}
         </Text>
-        <Text className="text-lg text-muted-foreground">x{item.quantity}</Text>
+        <Text className="text-lg text-muted-foreground">
+          {item.unit === 'each' && 'x'}
+          {item.quantity}
+          {item.unit !== 'each' && ` ${item.unit}`}
+        </Text>
       </View>
     </ListItem>
   );
