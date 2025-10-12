@@ -4,8 +4,9 @@ import { FieldInfo } from '@/components/field-info';
 import { BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
+import { PlusIcon } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -49,7 +50,6 @@ export type AddItemSheetRef = {
 
 export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
   ({ groceryListId, onClose, defaultValues }, ref) => {
-    console.log('defaultValues', defaultValues);
     const bottomSheetRef = useRef<BottomSheetModal>(null);
     const itemInputRef =
       useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
@@ -134,9 +134,12 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
 
     return (
       <>
-        <Button onPress={() => bottomSheetRef.current?.present()}>
-          <Text> Add Item </Text>
-        </Button>
+        <Pressable
+          className="size-10 items-center justify-center rounded-full border border-border bg-primary"
+          onPress={() => bottomSheetRef.current?.present()}
+        >
+          <PlusIcon color="white" className="size-4 text-white" />
+        </Pressable>
         <BottomSheet
           onStartClose={() => {
             KeyboardController.dismiss();
