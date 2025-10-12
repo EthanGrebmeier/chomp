@@ -134,7 +134,7 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
               {field => (
                 <View className="flex-1 items-center gap-2">
                   <BottomSheet.BareTextInput
-                    className="w-full text-right text-lg font-semibold text-foreground"
+                    className="w-full text-right text-xl font-semibold text-foreground"
                     keyboardType="number-pad"
                     value={field.state.value}
                     onChangeText={field.handleChange}
@@ -168,7 +168,7 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
                   >
                     <SelectTrigger className="shrink-0 border-0 border-none bg-transparent p-0 shadow-none dark:bg-transparent">
                       <SelectValue
-                        className="bg-transparent text-lg font-semibold text-muted-foreground"
+                        className="bg-transparent text-lg font-semibold text-foreground"
                         placeholder="Select Unit"
                       />
                     </SelectTrigger>
