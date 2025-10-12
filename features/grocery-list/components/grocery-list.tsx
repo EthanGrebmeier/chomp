@@ -9,7 +9,7 @@ import { useDebounceCallback } from 'usehooks-ts';
 import { TextDisplayInput } from '../../../components/text-input';
 import { cn } from '../../../lib/utils';
 import { useUpdateGroceryList } from '../hooks/useUpdateGroceryList';
-import { AddItemSheet } from './add-item-sheet';
+import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
 import { AddRecipeSheet } from './add-recipe-sheet';
 import { GroceryListItem } from './grocery-list-item';
 
@@ -33,7 +33,11 @@ export const GroceryList = ({
   const previousText = useRef(name);
 
   const [listName, setListName] = useState(name);
+  const [editingItem, setEditingItem] = useState<GroceryListItemType | null>(
+    null
+  );
   const textInputRef = useRef<TextInput>(null);
+  const editSheetRef = useRef<AddItemSheetRef>(null);
 
   const debouncedUpdateDbList = useDebounceCallback(updateList, 500);
 
@@ -70,6 +74,15 @@ export const GroceryList = ({
       updateName(text);
       previousText.current = text;
     }
+  };
+
+  const handleEditItem = (item: GroceryListItemType) => {
+    setEditingItem(item);
+    editSheetRef.current?.present();
+  };
+
+  const handleCloseEdit = () => {
+    setEditingItem(null);
   };
 
   const sortedItems = items.sort((a, b) => {
@@ -115,12 +128,18 @@ export const GroceryList = ({
             item={item}
             isChecked={Boolean(item.isChecked)}
             className={cn(index < items.length - 1 && 'border-b border-border')}
+            onEdit={() => handleEditItem(item)}
           />
         )}
       />
       <View className="absolute bottom-4 right-4 flex-row gap-2">
         <AddRecipeSheet groceryListId={groceryListId} />
-        <AddItemSheet groceryListId={groceryListId} />
+        <AddItemSheet
+          ref={editSheetRef}
+          defaultValues={editingItem}
+          groceryListId={groceryListId}
+          onClose={handleCloseEdit}
+        />
       </View>
     </View>
   );

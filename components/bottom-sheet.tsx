@@ -12,7 +12,7 @@ import { THEME } from '../lib/theme';
 type BottomSheetProps = {
   children: React.ReactNode;
   ref: React.RefObject<BottomSheetModal | null>;
-  onClose: () => void;
+  onClose?: () => void;
   onOpen?: () => void;
   onStartClose?: () => void;
 };

@@ -12,12 +12,14 @@ type GroceryListItemProps = {
   item: GroceryListItemType;
   isChecked: boolean;
   className?: string;
+  onEdit?: () => void;
 };
 
 export const GroceryListItem = ({
   item,
   isChecked,
   className,
+  onEdit,
 }: GroceryListItemProps) => {
   const { mutate: checkItem } = useCheckGroceryItem();
   const queryClient = useQueryClient();
@@ -54,7 +56,7 @@ export const GroceryListItem = ({
         ></View>
       </Pressable>
 
-      <View className="flex-1 flex-row justify-between">
+      <Pressable className="flex-1 flex-row justify-between" onPress={onEdit}>
         <Text className="text-2xl font-medium text-foreground">
           {item.name}
         </Text>
@@ -63,7 +65,7 @@ export const GroceryListItem = ({
           {item.quantity}
           {item.unit !== 'each' && ` ${item.unit}`}
         </Text>
-      </View>
+      </Pressable>
     </ListItem>
   );
 };
