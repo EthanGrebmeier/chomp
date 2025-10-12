@@ -50,7 +50,7 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
     // Focus the input when the bottom sheet opens
     setTimeout(() => {
       itemInputRef.current?.focus();
-    }, 100);
+    }, 10);
   };
 
   const form = useForm({
@@ -121,12 +121,12 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
               </View>
             )}
           </form.Field>
-          <View className="flex-1 flex-row gap-1">
+          <View className="flex-1 flex-row gap-2">
             <form.Field name="quantity">
               {field => (
                 <View className="flex-1 items-center gap-2">
                   <BottomSheet.BareTextInput
-                    className="w-full text-right text-lg font-semibold"
+                    className="w-full text-right text-lg font-semibold text-foreground"
                     keyboardType="number-pad"
                     value={field.state.value}
                     onChangeText={field.handleChange}
@@ -150,6 +150,7 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
               {field => (
                 <View className="w-24 shrink-0 gap-2 ">
                   <Select
+                    className="bg-transparent"
                     value={unitOptions.find(
                       option => option.value === field.state.value
                     )}
@@ -157,13 +158,15 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
                       option && field.handleChange(option?.value)
                     }
                   >
-                    <SelectTrigger className="shrink-0 border-0 border-none  p-0">
+                    <SelectTrigger className="shrink-0 border-0 border-none bg-transparent p-0 shadow-none dark:bg-transparent">
                       <SelectValue
-                        className="text-lg font-semibold text-muted-foreground"
+                        className="bg-transparent text-lg font-semibold text-muted-foreground"
                         placeholder="Select Unit"
                       />
                     </SelectTrigger>
                     <SelectContent
+                      align="end"
+                      side="top"
                       insets={{
                         top: insets.top,
                         bottom: Platform.select({
