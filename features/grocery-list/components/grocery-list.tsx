@@ -111,13 +111,13 @@ export const GroceryList = ({
           </Text>
           {date && (
             <Text className="text-lg text-muted-foreground">
-              {format(new Date(date + 'T00:00:00'), 'EEEE, M/d/yy')}
+              {format(date, 'EEEE, M/d/yy')}
             </Text>
           )}
         </View>
       </View>
       <Animated.FlatList
-        className="flex-1"
+        style={{ flex: 1 }}
         scrollEnabled
         itemLayoutAnimation={LinearTransition}
         showsVerticalScrollIndicator={false}
@@ -132,7 +132,7 @@ export const GroceryList = ({
           />
         )}
       />
-      <View className="absolute bottom-4 right-4 flex-row gap-2">
+      <View className="absolute bottom-4 right-4 flex-row items-center gap-2">
         <AddRecipeSheet groceryListId={groceryListId} />
         <AddItemSheet
           ref={editSheetRef}
