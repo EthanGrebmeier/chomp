@@ -80,4 +80,19 @@ const TextInput = forwardRef<
   );
 });
 
+const BareTextInput = forwardRef<
+  React.ComponentRef<typeof BottomSheetTextInput>,
+  BottomSheetTextInputProps
+>(({ className, ...props }, ref) => {
+  return (
+    <BottomSheetTextInput
+      {...props}
+      ref={ref}
+      className={cn('border-none bg-transparent', className)}
+    />
+  );
+});
+
+BottomSheet.BareTextInput = BareTextInput;
+
 BottomSheet.TextInput = TextInput;

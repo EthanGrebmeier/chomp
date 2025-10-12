@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 
 import { FieldInfo } from '@/components/field-info';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
@@ -40,9 +40,19 @@ type AddItemSheetProps = {
 
 export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
   const ref = useRef<BottomSheetModal>(null);
+  const itemInputRef =
+    useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
   const { mutate: addItem } = useAddGroceryItem();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+
+  const handleOpen = () => {
+    // Focus the input when the bottom sheet opens
+    setTimeout(() => {
+      itemInputRef.current?.focus();
+    }, 100);
+  };
+
   const form = useForm({
     defaultValues: {
       name: '',
@@ -85,8 +95,8 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
       <Button onPress={() => ref.current?.present()}>
         <Text> Add Item </Text>
       </Button>
-      <BottomSheet onClose={() => form.reset()} ref={ref}>
-        <View className="gap-4 pb-4">
+      <BottomSheet onOpen={handleOpen} onClose={() => form.reset()} ref={ref}>
+        <View className="flex-row gap-4 pb-4">
           <form.Field
             validators={{
               onSubmit: ({ value }) => {
@@ -98,22 +108,25 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
             name="name"
           >
             {field => (
-              <View className="gap-2">
-                <Text>Name: </Text>
-                <BottomSheet.TextInput
+              <View className="flex-1 shrink gap-2">
+                <BottomSheet.BareTextInput
                   value={field.state.value}
                   onChangeText={field.handleChange}
+                  placeholder="Name"
+                  autoCapitalize="words"
+                  className="rounded-none border-none text-2xl font-semibold text-foreground"
+                  ref={itemInputRef}
                 />
                 <FieldInfo field={field} />
               </View>
             )}
           </form.Field>
-          <View className="flex-1 flex-row gap-2">
+          <View className="flex-1 flex-row gap-1">
             <form.Field name="quantity">
               {field => (
-                <View className="flex-1 gap-2">
-                  <Text>Quantity: </Text>
-                  <BottomSheet.TextInput
+                <View className="flex-1 items-center gap-2">
+                  <BottomSheet.BareTextInput
+                    className="w-full text-right text-lg font-semibold"
                     keyboardType="number-pad"
                     value={field.state.value}
                     onChangeText={field.handleChange}
@@ -135,8 +148,7 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
               name="unit"
             >
               {field => (
-                <View className="flex-1 gap-2">
-                  <Text>Unit: </Text>
+                <View className="w-24 shrink-0 gap-2 ">
                   <Select
                     value={unitOptions.find(
                       option => option.value === field.state.value
@@ -145,8 +157,11 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
                       option && field.handleChange(option?.value)
                     }
                   >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select Unit" />
+                    <SelectTrigger className="shrink-0 border-0 border-none  p-0">
+                      <SelectValue
+                        className="text-lg font-semibold text-muted-foreground"
+                        placeholder="Select Unit"
+                      />
                     </SelectTrigger>
                     <SelectContent
                       insets={{
@@ -175,10 +190,10 @@ export const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
               )}
             </form.Field>
           </View>
-          <Button onPress={() => form.handleSubmit()}>
-            <Text>Add Item</Text>
-          </Button>
         </View>
+        <Button onPress={() => form.handleSubmit()}>
+          <Text>Add Item</Text>
+        </Button>
       </BottomSheet>
     </>
   );

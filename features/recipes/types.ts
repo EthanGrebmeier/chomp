@@ -33,3 +33,5 @@ export type RemoveRecipeIngredientArgs = {
   itemId: string;
   recipeId: string;
 };
+
+export type QuantityUnit = 'each' | 'kg' | 'g' | 'l' | 'ml' | 'lb';

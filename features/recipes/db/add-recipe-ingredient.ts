@@ -2,12 +2,13 @@ import { eq } from 'drizzle-orm';
 import { recipeIngredientTable } from '../../../db/schema';
 import { generateId } from '../../../lib/utils';
 import { db } from '../../../providers/migration-provider';
+import { QuantityUnit } from '../types';
 
 export type AddRecipeIngredientArgs = {
   recipeId: string;
   name: string;
   quantity: number;
-  unit: 'each' | 'kg' | 'g' | 'l' | 'ml' | 'lb';
+  unit: QuantityUnit;
   notes?: string;
 };
 

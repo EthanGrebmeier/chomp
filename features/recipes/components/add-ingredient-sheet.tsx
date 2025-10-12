@@ -42,19 +42,15 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
   const { mutate: addIngredient } = useAddRecipeIngredient();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const hasFocusedInput = useRef(false);
 
   const nameInputRef =
     useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
 
   const handleOpen = () => {
     // Focus the input when the bottom sheet opens
-    if (!hasFocusedInput.current) {
-      setTimeout(() => {
-        nameInputRef.current?.focus();
-      }, 100);
-      hasFocusedInput.current = true;
-    }
+    setTimeout(() => {
+      nameInputRef.current?.focus();
+    }, 100);
   };
 
   const form = useForm({
@@ -105,8 +101,6 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
       </Button>
       <BottomSheet onClose={() => form.reset()} onOpen={handleOpen} ref={ref}>
         <View className="gap-4 pb-4">
-          <Text className="text-xl font-semibold">Add Ingredient</Text>
-
           <form.Field
             validators={{
               onSubmit: ({ value }) => {
