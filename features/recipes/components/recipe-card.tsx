@@ -5,15 +5,13 @@ import { RecipeWithIngredients } from '../types';
 
 type RecipeCardProps = {
   recipe: RecipeWithIngredients;
-  cardWidth: number;
 };
 
-export const RecipeCard = ({ recipe, cardWidth }: RecipeCardProps) => {
+export const RecipeCard = ({ recipe }: RecipeCardProps) => {
   return (
     <Link
       href={`/recipe/${recipe.id}`}
-      className="rounded-lg border border-gray-200 bg-background p-4"
-      style={{ width: cardWidth }}
+      className="rounded-lg border border-border bg-background p-4"
     >
       <View>
         <Text

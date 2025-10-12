@@ -71,6 +71,16 @@ export const GroceryList = ({
       previousText.current = text;
     }
   };
+
+  const sortedItems = items.sort((a, b) => {
+    // First sort by checked status: unchecked items first
+    if (a.isChecked && !b.isChecked) return 1;
+    if (!a.isChecked && b.isChecked) return -1;
+
+    // Then sort alphabetically by name
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  });
+
   return (
     <View className="flex-1 gap-4">
       {/** Header */}
@@ -98,7 +108,7 @@ export const GroceryList = ({
         scrollEnabled
         itemLayoutAnimation={LinearTransition}
         showsVerticalScrollIndicator={false}
-        data={items}
+        data={sortedItems}
         renderItem={({ item, index }) => (
           <GroceryListItem
             key={item.id}

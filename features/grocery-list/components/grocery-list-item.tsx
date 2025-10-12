@@ -49,7 +49,7 @@ export const GroceryListItem = ({
         <View
           className={cn(
             'h-full w-full rounded-full',
-            isChecked && 'bg-gray-500'
+            isChecked && 'bg-orange-600'
           )}
         ></View>
       </Pressable>

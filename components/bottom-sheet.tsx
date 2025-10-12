@@ -30,10 +30,7 @@ export const BottomSheet = ({
         <BottomSheetBackdrop
           {...props}
           style={{
-            backgroundColor:
-              colorscheme.colorScheme === 'dark'
-                ? THEME.dark.background
-                : THEME.light.background,
+            backgroundColor: THEME.dark.background,
           }}
           appearsOnIndex={0}
           disappearsOnIndex={-1}

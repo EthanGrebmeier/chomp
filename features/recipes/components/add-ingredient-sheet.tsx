@@ -88,13 +88,10 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
               unit: 'each',
               notes: '',
             });
-            queryClient.invalidateQueries({
-              queryKey: recipeQueryKeys.detail(recipeId),
+            nameInputRef.current?.focus();
+            return queryClient.invalidateQueries({
+              queryKey: recipeQueryKeys.all(),
             });
-            queryClient.invalidateQueries({
-              queryKey: recipeQueryKeys.lists(),
-            });
-            ref.current?.dismiss();
           },
         }
       );
