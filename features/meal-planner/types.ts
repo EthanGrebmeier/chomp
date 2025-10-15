@@ -36,6 +36,8 @@ export type UpdateMealPlanRecipeArgs = {
     mealTag?: MealTag;
     servings?: number;
     order?: number;
+    recipeId?: string;
+    date?: string;
   };
 };
 

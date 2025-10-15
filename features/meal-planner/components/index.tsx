@@ -1,11 +1,15 @@
 import { eachDayOfInterval, format } from 'date-fns';
-import { FlatList, View } from 'react-native';
+import { PlusIcon } from 'lucide-react-native';
+import { useRef } from 'react';
+import { FlatList, Pressable, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { Button } from '../../../components/ui/button';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
+import { useTheme } from '../../../hooks/use-theme';
 import { useMealPlan } from '../hooks';
 import { MealPlanDay } from '../types';
-import { AddMealSheet } from './add-meal-sheet';
+import { MealSheet, MealSheetRef } from './meal-sheet';
 
 type MealPlannerProps = {
   mealPlanId: string;
@@ -18,7 +22,9 @@ export const MealPlanner = ({
   startDate,
   endDate,
 }: MealPlannerProps) => {
+  const mealSheetRef = useRef<MealSheetRef>(null);
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId);
+  const theme = useTheme();
   const daysOfPlan = eachDayOfInterval({
     start: startDate,
     end: endDate,
@@ -60,10 +66,18 @@ export const MealPlanner = ({
   return (
     <View className="flex-1">
       <View className="px-4 py-2">
-        <Text className="text-xl font-bold text-foreground">
-          {mealPlan?.name || 'Meal Planner'}
-        </Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-xl font-bold text-foreground">
+            {mealPlan?.name || 'Meal Planner'}
+          </Text>
+        </View>
       </View>
+      <MealSheet
+        ref={mealSheetRef}
+        mealPlanId={mealPlanId}
+        startDate={startDate}
+        endDate={endDate}
+      />
       <Animated.FlatList
         data={daysOfPlan}
         contentContainerClassName="pb-20"
@@ -80,10 +94,16 @@ export const MealPlanner = ({
                   <Text className="text-lg font-semibold text-foreground">
                     {format(date, 'EEEE, M/d/yy')}
                   </Text>
-                  <AddMealSheet
-                    mealPlanId={mealPlanId}
-                    date={date.toISOString()}
-                  />
+                  <Button
+                    onPress={() =>
+                      mealSheetRef.current?.openForAdd({
+                        date: date.toISOString(),
+                      })
+                    }
+                    className="size-6 rounded-full p-0"
+                  >
+                    <PlusIcon size={16} color={theme.primaryForeground} />
+                  </Button>
                 </View>
                 {recipes.length === 0 ? (
                   <Text className="mt-1 text-muted-foreground">
@@ -92,8 +112,22 @@ export const MealPlanner = ({
                 ) : (
                   <FlatList
                     data={recipes}
-                    renderItem={({ item: recipe }) => (
-                      <Text>{recipe.recipe.name}</Text>
+                    renderItem={({ item: mealPlanRecipe }) => (
+                      <Pressable
+                        onPress={() => {
+                          console.log('mealPlanRecipe', mealPlanRecipe);
+                          console.log(
+                            'mealPlanRecipe.recipe',
+                            mealPlanRecipe.recipe
+                          );
+                          mealSheetRef.current?.openForEdit({
+                            mealPlanRecipe,
+                            recipe: mealPlanRecipe.recipe,
+                          });
+                        }}
+                      >
+                        <Text>{mealPlanRecipe.recipe.name}</Text>
+                      </Pressable>
                     )}
                   />
                 )}
