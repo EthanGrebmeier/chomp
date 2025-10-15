@@ -66,8 +66,13 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
       >
         <GestureDetector
           gesture={Gesture.Pan()
+            .activeOffsetX([-10, 10])
+            .failOffsetY([-5, 5])
             .onUpdate(event => {
-              if (event.velocityX > 0 && event.translationX > 0) {
+              if (
+                (event.velocityX > 0 && event.translationX > 0) ||
+                !onDelete
+              ) {
                 return;
               }
               const amountOverThreshold = Math.max(

@@ -7,7 +7,9 @@ import {
 } from '@gorhom/bottom-sheet';
 import { useColorScheme } from 'nativewind';
 import { ComponentProps, forwardRef } from 'react';
+import { View } from 'react-native';
 import { THEME } from '../lib/theme';
+import { Text } from './ui/text';
 
 type BottomSheetProps = {
   children: React.ReactNode;
@@ -96,6 +98,22 @@ const BareTextInput = forwardRef<
   );
 });
 
+const Header = ({
+  title,
+  button,
+}: {
+  title: string;
+  button?: React.ReactNode;
+}) => {
+  return (
+    <View className="flex-row items-center justify-between">
+      <Text className="text-2xl font-bold">{title}</Text>
+      {button}
+    </View>
+  );
+};
+
+BottomSheet.Header = Header;
 BottomSheet.BareTextInput = BareTextInput;
 
 BottomSheet.TextInput = TextInput;

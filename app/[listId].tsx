@@ -17,7 +17,7 @@ export default function List() {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="py-safe flex-1">
+      <View className="pt-safe flex-1">
         <Pressable
           onPress={() => router.back()}
           className="mb-4 flex-row items-center gap-2 px-4"
@@ -27,7 +27,7 @@ export default function List() {
         </Pressable>
         <GroceryList
           name={list.name}
-          date={list.date || undefined}
+          date={list.date}
           items={list.items}
           groceryListId={list.id}
           autofocus={autofocus === 'true'}

@@ -57,3 +57,48 @@ export const recipeIngredientRelations = relations(
     }),
   })
 );
+
+export const mealPlanTable = sqliteTable('meal_plan', {
+  id: text().primaryKey(),
+  groceryListId: text().references(() => groceryListTable.id),
+  name: text().notNull(),
+  startDate: text().notNull(),
+  endDate: text().notNull(),
+  createdAt: text().notNull(),
+});
+
+export const mealPlanRelations = relations(mealPlanTable, ({ one, many }) => ({
+  groceryList: one(groceryListTable, {
+    fields: [mealPlanTable.groceryListId],
+    references: [groceryListTable.id],
+  }),
+  recipes: many(mealPlanRecipeTable),
+}));
+
+export const mealPlanRecipeTable = sqliteTable('meal_plan_recipe', {
+  id: text().primaryKey(),
+  mealPlanId: text()
+    .notNull()
+    .references(() => mealPlanTable.id, { onDelete: 'cascade' }),
+  recipeId: text()
+    .notNull()
+    .references(() => recipeTable.id, { onDelete: 'cascade' }),
+  mealTag: text({ enum: ['breakfast', 'lunch', 'dinner', 'snack', 'dessert'] }),
+  date: text().notNull(),
+  servings: int().notNull().default(1),
+  order: int().notNull().default(0),
+});
+
+export const mealPlanRecipeRelations = relations(
+  mealPlanRecipeTable,
+  ({ one }) => ({
+    mealPlan: one(mealPlanTable, {
+      fields: [mealPlanRecipeTable.mealPlanId],
+      references: [mealPlanTable.id],
+    }),
+    recipe: one(recipeTable, {
+      fields: [mealPlanRecipeTable.recipeId],
+      references: [recipeTable.id],
+    }),
+  })
+);
