@@ -1,26 +1,20 @@
 import { generateId } from '@/lib/utils';
 import { eq } from 'drizzle-orm';
-import {
-  mealPlanRecipeTable,
-  mealPlanTable,
-  recipeIngredientTable,
-} from '../../../db/schema';
+import { mealPlanRecipeTable, recipeIngredientTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
+import { QuantityUnit } from '../../recipes/types';
 import { GenerateGroceryListFromMealPlanArgs } from '../types';
 
-export const generateGroceryListFromMealPlan = async ({
-  mealPlanId,
-}: GenerateGroceryListFromMealPlanArgs) => {
-  // First check if the meal plan has a grocery list
-  const mealPlan = await db
-    .select({ groceryListId: mealPlanTable.groceryListId })
-    .from(mealPlanTable)
-    .where(eq(mealPlanTable.id, mealPlanId))
-    .limit(1);
+type GenerateIngredientsOptions = {
+  includeIds?: boolean;
+  includeChecked?: boolean;
+};
 
-  if (!mealPlan[0]?.groceryListId) {
-    throw new Error('Meal plan does not have a linked grocery list');
-  }
+export const generateIngredientsFromMealPlan = async (
+  { mealPlanId }: GenerateGroceryListFromMealPlanArgs,
+  options: GenerateIngredientsOptions = {}
+) => {
+  const { includeIds = false, includeChecked = false } = options;
 
   // Get all recipes in the meal plan with their ingredients
   const mealPlanRecipes = await db
@@ -41,7 +35,10 @@ export const generateGroceryListFromMealPlan = async ({
     .where(eq(mealPlanRecipeTable.mealPlanId, mealPlanId));
 
   // Group ingredients by name and unit, summing quantities
-  const ingredientMap = new Map<string, { quantity: number; unit: string }>();
+  const ingredientMap = new Map<
+    string,
+    { quantity: number; unit: QuantityUnit }
+  >();
 
   for (const mealPlanRecipe of mealPlanRecipes) {
     const key = `${mealPlanRecipe.ingredient.name}-${mealPlanRecipe.ingredient.unit}`;
@@ -60,18 +57,24 @@ export const generateGroceryListFromMealPlan = async ({
   }
 
   // Convert to grocery list items
-  const groceryListItems = Array.from(ingredientMap.entries()).map(
-    ([key, data]) => {
-      const [name] = key.split('-');
+  const ingredients = Array.from(ingredientMap.entries()).map(([key, data]) => {
+    const [name] = key.split('-');
+    const baseItem = {
+      name,
+      quantity: data.quantity,
+      unit: data.unit,
+    };
+
+    if (includeIds) {
       return {
+        ...baseItem,
         id: generateId(),
-        name,
-        quantity: data.quantity,
-        unit: data.unit,
-        isChecked: false,
+        ...(includeChecked && { isChecked: false }),
       };
     }
-  );
 
-  return { ingredients: groceryListItems };
+    return baseItem;
+  });
+
+  return { ingredients };
 };

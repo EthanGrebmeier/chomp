@@ -4,6 +4,7 @@ import { useMealPlan } from '@/features/meal-planner/hooks/useMealPlan';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeftIcon } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { Text } from '../../components/ui/text';
 
 export default function MealPlanDetailPage() {
@@ -40,6 +41,7 @@ export default function MealPlanDetailPage() {
         startDate={mealPlan.startDate}
         endDate={mealPlan.endDate}
       />
+      <KeyboardToolbar />
     </View>
   );
 }

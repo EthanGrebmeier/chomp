@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { groceryListItemTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
+import { QuantityUnit } from '../../recipes/types';
 
 export const updateListItem = async ({
   itemId,
@@ -10,7 +11,7 @@ export const updateListItem = async ({
   updates: {
     name?: string;
     quantity?: number;
-    unit?: 'each' | 'kg' | 'g' | 'l' | 'ml' | 'lb';
+    unit?: QuantityUnit;
   };
 }) => {
   const result = await db

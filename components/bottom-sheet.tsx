@@ -17,6 +17,8 @@ type BottomSheetProps = {
   onClose?: () => void;
   onOpen?: () => void;
   onStartClose?: () => void;
+  viewClassName?: string;
+  ignoreSafeArea?: boolean;
 };
 
 export const BottomSheet = ({
@@ -25,6 +27,8 @@ export const BottomSheet = ({
   onStartClose,
   onClose,
   onOpen,
+  viewClassName,
+  ignoreSafeArea = false,
 }: BottomSheetProps) => {
   const colorscheme = useColorScheme();
 
@@ -62,7 +66,11 @@ export const BottomSheet = ({
             : THEME.light.cardForeground,
       }}
     >
-      <BottomSheetView className="pb-safe px-4">{children}</BottomSheetView>
+      <BottomSheetView
+        className={cn('px-4', !ignoreSafeArea && 'pb-safe', viewClassName)}
+      >
+        {children}
+      </BottomSheetView>
     </BottomSheetModal>
   );
 };

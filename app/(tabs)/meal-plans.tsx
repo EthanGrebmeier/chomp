@@ -23,6 +23,10 @@ export default function MealPlansPage() {
             onPress={() => {
               router.push(`/meal-plan/${item.id}`);
             }}
+            onDelete={() => {
+              // The delete logic is handled inside MealPlanCard
+              // This callback can be used for additional cleanup if needed
+            }}
           />
         )}
         className="flex-1"

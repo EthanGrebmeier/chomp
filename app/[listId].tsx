@@ -3,6 +3,7 @@ import { useGroceryList } from '@/features/grocery-list/hooks/useGroceryList';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeftIcon } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { Icon } from '../components/ui/icon';
 
 export default function List() {
@@ -33,6 +34,7 @@ export default function List() {
           autofocus={autofocus === 'true'}
         />
       </View>
+      <KeyboardToolbar />
     </View>
   );
 }

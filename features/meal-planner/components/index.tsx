@@ -1,5 +1,5 @@
 import { eachDayOfInterval, format } from 'date-fns';
-import { PlusIcon } from 'lucide-react-native';
+import { PlusIcon, ShoppingCartIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
@@ -9,6 +9,10 @@ import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import { useMealPlan } from '../hooks';
 import { MealPlanDay } from '../types';
+import {
+  AddToGroceryListSheet,
+  AddToGroceryListSheetRef,
+} from './add-to-grocery-list-sheet';
 import { MealSheet, MealSheetRef } from './meal-sheet';
 
 type MealPlannerProps = {
@@ -23,6 +27,7 @@ export const MealPlanner = ({
   endDate,
 }: MealPlannerProps) => {
   const mealSheetRef = useRef<MealSheetRef>(null);
+  const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId);
   const theme = useTheme();
   const daysOfPlan = eachDayOfInterval({
@@ -68,6 +73,13 @@ export const MealPlanner = ({
           <Text className="text-xl font-bold text-foreground">
             {mealPlan?.name || 'Meal Planner'}
           </Text>
+          <Button
+            onPress={() => addToGroceryListSheetRef.current?.open()}
+            className="flex-row items-center gap-2"
+          >
+            <ShoppingCartIcon size={16} color={theme.primaryForeground} />
+            <Text>Add to List</Text>
+          </Button>
         </View>
       </View>
       <MealSheet
@@ -75,6 +87,11 @@ export const MealPlanner = ({
         mealPlanId={mealPlanId}
         startDate={startDate}
         endDate={endDate}
+      />
+      <AddToGroceryListSheet
+        ref={addToGroceryListSheetRef}
+        mealPlanId={mealPlanId}
+        mealPlanName={mealPlan?.name || 'Meal Plan'}
       />
       <Animated.FlatList
         data={daysOfPlan}
