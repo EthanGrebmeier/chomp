@@ -37,8 +37,6 @@ export const MealPlanner = ({
     );
   };
 
-  console.log(mealPlan);
-
   const groupRecipesByMeal = (recipes: MealPlanDay['recipes']) => {
     const grouped = recipes.reduce(
       (acc, recipe) => {
@@ -115,11 +113,6 @@ export const MealPlanner = ({
                     renderItem={({ item: mealPlanRecipe }) => (
                       <Pressable
                         onPress={() => {
-                          console.log('mealPlanRecipe', mealPlanRecipe);
-                          console.log(
-                            'mealPlanRecipe.recipe',
-                            mealPlanRecipe.recipe
-                          );
                           mealSheetRef.current?.openForEdit({
                             mealPlanRecipe,
                             recipe: mealPlanRecipe.recipe,
