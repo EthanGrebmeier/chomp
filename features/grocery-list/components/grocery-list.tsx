@@ -1,4 +1,4 @@
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 
 import { GroceryListItem as GroceryListItemType } from '../types';
 
@@ -39,9 +39,6 @@ export const GroceryList = ({
     null
   );
 
-  const [activeTab, setActiveTab] = useState<'grocery-list' | 'meal-planner'>(
-    'grocery-list'
-  );
   const textInputRef = useRef<TextInput>(null);
   const editSheetRef = useRef<AddItemSheetRef>(null);
 
@@ -122,58 +119,39 @@ export const GroceryList = ({
           )}
         </View>
       </View>
-      {activeTab === 'grocery-list' && (
-        <View className="flex-1">
-          <Animated.FlatList
-            scrollEnabled={true}
-            itemLayoutAnimation={LinearTransition}
-            contentContainerClassName="pb-20"
-            showsVerticalScrollIndicator={false}
-            data={sortedItems}
-            keyExtractor={item => item.id}
-            contentContainerStyle={{ flexGrow: 1 }}
-            renderItem={({ item, index }) => (
-              <GroceryListItem
-                item={item}
-                isChecked={Boolean(item.isChecked)}
-                className={cn(
-                  index < items.length - 1 && 'border-b border-border'
-                )}
-                onEdit={() => handleEditItem(item)}
-              />
-            )}
-          />
-        </View>
-      )}
+      <View className="flex-1">
+        <Animated.FlatList
+          scrollEnabled={true}
+          itemLayoutAnimation={LinearTransition}
+          contentContainerClassName="pb-20"
+          showsVerticalScrollIndicator={false}
+          data={sortedItems}
+          keyExtractor={item => item.id}
+          contentContainerStyle={{ flexGrow: 1 }}
+          renderItem={({ item, index }) => (
+            <GroceryListItem
+              item={item}
+              isChecked={Boolean(item.isChecked)}
+              className={cn(
+                index < items.length - 1 && 'border-b border-border'
+              )}
+              onEdit={() => handleEditItem(item)}
+            />
+          )}
+        />
+      </View>
       <View
         style={{ bottom: bottom + 16 }}
-        className=" absolute left-4 flex-row gap-2"
+        className=" absolute right-4 flex-row items-center gap-2"
       >
-        <Pressable onPress={() => setActiveTab('grocery-list')}>
-          <Text className={cn(activeTab === 'grocery-list' && 'font-semibold')}>
-            Grocery List
-          </Text>
-        </Pressable>
-        <Pressable onPress={() => setActiveTab('meal-planner')}>
-          <Text className={cn(activeTab === 'meal-planner' && 'font-semibold')}>
-            Meal Planner
-          </Text>
-        </Pressable>
+        <AddRecipeSheet groceryListId={groceryListId} />
+        <AddItemSheet
+          ref={editSheetRef}
+          defaultValues={editingItem}
+          groceryListId={groceryListId}
+          onClose={handleCloseEdit}
+        />
       </View>
-      {activeTab === 'grocery-list' && (
-        <View
-          style={{ bottom: bottom + 16 }}
-          className=" absolute right-4 flex-row items-center gap-2"
-        >
-          <AddRecipeSheet groceryListId={groceryListId} />
-          <AddItemSheet
-            ref={editSheetRef}
-            defaultValues={editingItem}
-            groceryListId={groceryListId}
-            onClose={handleCloseEdit}
-          />
-        </View>
-      )}
     </View>
   );
 };
