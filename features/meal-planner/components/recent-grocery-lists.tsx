@@ -2,6 +2,7 @@ import { SearchIcon } from 'lucide-react-native';
 import { FlatList, Pressable, View } from 'react-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Text } from '../../../components/ui/text';
+import { GroceryListItemCard } from '../../grocery-list/components/grocery-list-item-card';
 import { useGroceryLists } from '../../grocery-list/hooks/useGroceryLists';
 
 type GroceryListOptionsProps = {
@@ -61,23 +62,11 @@ export const GroceryListOptions = ({
         data={recentLists}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <Pressable
+          <GroceryListItemCard
+            item={item}
             onPress={() => onAddToList(item.id)}
             disabled={isAdding}
-            className={`mb-2 rounded-lg border p-4 ${
-              isAdding ? 'opacity-50' : 'border-border bg-card'
-            }`}
-          >
-            <Text className="text-lg font-semibold">{item.name}</Text>
-            <Text className="text-sm text-muted-foreground">
-              {item.items?.length || 0} items
-            </Text>
-            {item.date && (
-              <Text className="text-xs text-muted-foreground">
-                {new Date(item.date).toLocaleDateString()}
-              </Text>
-            )}
-          </Pressable>
+          />
         )}
       />
     </View>

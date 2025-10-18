@@ -19,6 +19,7 @@ type BottomSheetProps = {
   onStartClose?: () => void;
   viewClassName?: string;
   ignoreSafeArea?: boolean;
+  snapPoints?: string[];
 };
 
 export const BottomSheet = ({
@@ -29,6 +30,7 @@ export const BottomSheet = ({
   onOpen,
   viewClassName,
   ignoreSafeArea = false,
+  snapPoints,
 }: BottomSheetProps) => {
   const colorscheme = useColorScheme();
 
@@ -65,6 +67,7 @@ export const BottomSheet = ({
             ? THEME.dark.cardForeground
             : THEME.light.cardForeground,
       }}
+      snapPoints={snapPoints}
     >
       <BottomSheetView
         className={cn('px-4', !ignoreSafeArea && 'pb-safe', viewClassName)}

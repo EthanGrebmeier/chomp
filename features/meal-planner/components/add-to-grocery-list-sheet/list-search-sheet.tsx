@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet } from '../../../../components/bottom-sheet';
 import { TextInput } from '../../../../components/text-input';
 import { Text } from '../../../../components/ui/text';
+import { GroceryListItemCard } from '../../../grocery-list/components/grocery-list-item-card';
 import { useGroceryLists } from '../../../grocery-list/hooks/useGroceryLists';
 import { GroceryListWithItems } from '../../../grocery-list/types';
 
@@ -52,20 +53,7 @@ export const GroceryListSearchSheet = forwardRef<
   };
 
   const renderListItem = ({ item }: { item: GroceryListWithItems }) => (
-    <Pressable
-      onPress={() => handleSelectList(item)}
-      className="mb-2 rounded-lg border border-border bg-card p-4"
-    >
-      <Text className="text-lg font-semibold">{item.name}</Text>
-      <Text className="text-sm text-muted-foreground">
-        {item.items?.length || 0} items
-      </Text>
-      {item.date && (
-        <Text className="text-xs text-muted-foreground">
-          {new Date(item.date).toLocaleDateString()}
-        </Text>
-      )}
-    </Pressable>
+    <GroceryListItemCard item={item} onPress={handleSelectList} />
   );
 
   return (
@@ -75,6 +63,7 @@ export const GroceryListSearchSheet = forwardRef<
         setSearchQuery('');
       }}
       ignoreSafeArea
+      snapPoints={['50%']}
     >
       <View style={{ height: height - top - 100 }}>
         <BottomSheet.Header

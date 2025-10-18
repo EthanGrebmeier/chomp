@@ -31,10 +31,10 @@ export default function MealPlanDetailPage() {
     <View className="pt-safe flex-1 bg-background">
       <Pressable
         onPress={() => router.back()}
-        className="mb-4 flex-row items-center gap-2 px-4"
+        className="flex-row items-center gap-2 px-4"
       >
         <ArrowLeftIcon size={16} />
-        <Text className="text-sm font-medium text-foreground">Meal Plans</Text>
+        <Text className="text-sm font-medium text-foreground">Back</Text>
       </Pressable>
       <MealPlanner
         mealPlanId={mealPlanId!}

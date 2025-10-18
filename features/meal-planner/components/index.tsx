@@ -1,5 +1,5 @@
 import { eachDayOfInterval, format } from 'date-fns';
-import { PlusIcon, ShoppingCartIcon } from 'lucide-react-native';
+import { NotebookTabsIcon, PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
@@ -73,13 +73,6 @@ export const MealPlanner = ({
           <Text className="text-xl font-bold text-foreground">
             {mealPlan?.name || 'Meal Planner'}
           </Text>
-          <Button
-            onPress={() => addToGroceryListSheetRef.current?.open()}
-            className="flex-row items-center gap-2"
-          >
-            <ShoppingCartIcon size={16} color={theme.primaryForeground} />
-            <Text>Add to List</Text>
-          </Button>
         </View>
       </View>
       <MealSheet
@@ -93,6 +86,15 @@ export const MealPlanner = ({
         mealPlanId={mealPlanId}
         mealPlanName={mealPlan?.name || 'Meal Plan'}
       />
+      <View className="bottom-safe absolute right-4 z-10">
+        <Button
+          onPress={() => addToGroceryListSheetRef.current?.open()}
+          className="flex-row items-center gap-2"
+        >
+          <NotebookTabsIcon size={16} color={theme.primaryForeground} />
+          <Text>Add to List</Text>
+        </Button>
+      </View>
       <Animated.FlatList
         data={daysOfPlan}
         contentContainerClassName="pb-20"
