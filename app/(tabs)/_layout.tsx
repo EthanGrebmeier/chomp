@@ -1,5 +1,9 @@
 import { Tabs } from 'expo-router';
-import { CalendarIcon, ScrollIcon } from 'lucide-react-native';
+import {
+  CalendarIcon,
+  CookingPotIcon,
+  NotebookTabsIcon,
+} from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { Icon } from '../../components/ui/icon';
 import { THEME } from '../../lib/theme';
@@ -36,16 +40,7 @@ export default function Layout() {
         options={{
           title: 'Lists',
           tabBarIcon: ({ color }) => (
-            <Icon as={ScrollIcon} size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="recipes"
-        options={{
-          title: 'Recipes',
-          tabBarIcon: ({ color }) => (
-            <Icon as={ScrollIcon} size={24} color={color} />
+            <Icon as={NotebookTabsIcon} size={24} color={color} />
           ),
         }}
       />
@@ -55,6 +50,15 @@ export default function Layout() {
           title: 'Meal Plans',
           tabBarIcon: ({ color }) => (
             <Icon as={CalendarIcon} size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="recipes"
+        options={{
+          title: 'Recipes',
+          tabBarIcon: ({ color }) => (
+            <Icon as={CookingPotIcon} size={24} color={color} />
           ),
         }}
       />
