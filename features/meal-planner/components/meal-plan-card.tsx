@@ -30,7 +30,7 @@ export const MealPlanCard = ({
   return (
     <Pressable onPress={onPress}>
       <ListItem
-        className="mb-2 p-4"
+        className="px-4 py-2"
         onDelete={onDelete ? handleDelete : undefined}
       >
         <View>
