@@ -15,7 +15,6 @@ export default function MealPlansPage() {
       </View>
       <FlatList
         data={mealPlans.data}
-        ItemSeparatorComponent={() => <View className="h-2" />}
         renderItem={({ item }) => (
           <MealPlanCard
             key={item.id}
