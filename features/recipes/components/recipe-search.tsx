@@ -1,22 +1,26 @@
-import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { ArrowLeftIcon } from 'lucide-react-native';
-import { useEffect, useRef, useState } from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { RefObject, useEffect, useRef, useState } from 'react';
+import { FlatList, Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { Text } from '../../../components/ui/text';
 import { useRecipes } from '../hooks/useRecipes';
 import { RecipeWithIngredients } from '../types';
+import { CreateRecipeButton } from './create-recipe-button';
 
 type RecipeSearchProps = {
   onItemSelect: (item: RecipeWithIngredients) => void;
   onBack: () => void;
   canGoBack: boolean;
+  sheetRef: RefObject<BottomSheetModal | null>;
 };
 
 export const RecipeSearch = ({
   onItemSelect,
   onBack,
   canGoBack,
+  sheetRef,
 }: RecipeSearchProps) => {
   const [search, setSearch] = useState('');
   const { data: recipes, isLoading } = useRecipes();
@@ -54,7 +58,7 @@ export const RecipeSearch = ({
         value={search}
         ref={searchInputRef}
       />
-      {filteredRecipes.length > 0 && (
+      {filteredRecipes.length > 0 ? (
         <View className="w-full px-4">
           <FlatList
             data={filteredRecipes}
@@ -65,6 +69,11 @@ export const RecipeSearch = ({
               </Pressable>
             )}
           />
+        </View>
+      ) : (
+        <View className="flex-1 items-center justify-center gap-2">
+          <Text className="text-muted-foreground">No recipes found</Text>
+          <CreateRecipeButton onSuccess={() => sheetRef.current?.dismiss()} />
         </View>
       )}
     </Animated.View>
