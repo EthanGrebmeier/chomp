@@ -74,6 +74,12 @@ export const MealPlanner = ({
             {mealPlan?.name || 'Meal Planner'}
           </Text>
         </View>
+        {mealPlan?.startDate && mealPlan?.endDate && (
+          <Text>
+            {format(new Date(mealPlan?.startDate), 'EE, M/d/yy')} -{' '}
+            {format(new Date(mealPlan?.endDate), 'EE, M/d/yy')}
+          </Text>
+        )}
       </View>
       <MealSheet
         ref={mealSheetRef}
