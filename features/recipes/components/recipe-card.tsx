@@ -13,7 +13,7 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
       <View className="flex-1 py-2">
         <View className="w-full flex-row items-center justify-between">
           <Text
-            className="overflow-ellipsis text-xl font-bold leading-none"
+            className="overflow-ellipsis text-lg font-bold leading-none"
             numberOfLines={2}
           >
             {recipe.name}

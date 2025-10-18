@@ -27,13 +27,10 @@ export const GroceryListCard = ({ groceryList }: GroceryListCardProps) => {
     <ListItem onDelete={handleDelete}>
       <Link className="flex-1" href={`/${groceryList.id}`}>
         <View>
-          <Text
-            numberOfLines={1}
-            className="text-2xl font-bold text-foreground"
-          >
+          <Text numberOfLines={1} className="text-lg font-bold text-foreground">
             {groceryList.name}
           </Text>
-          <Text className="text-lg text-muted-foreground">
+          <Text className="text-sm text-muted-foreground">
             {groceryList.items.length} items
           </Text>
         </View>
