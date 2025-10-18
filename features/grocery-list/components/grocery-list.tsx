@@ -3,11 +3,10 @@ import { Text, TextInput, View } from 'react-native';
 import { GroceryListItem as GroceryListItemType } from '../types';
 
 import { format } from 'date-fns';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDebounceCallback } from 'usehooks-ts';
-import { TextDisplayInput } from '../../../components/text-input';
+import { EditableHeader } from '../../../components/editable-header';
 import { cn } from '../../../lib/utils';
 import { useUpdateGroceryList } from '../hooks/useUpdateGroceryList';
 import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
@@ -31,10 +30,7 @@ export const GroceryList = ({
 }: GroceryListProps) => {
   const { bottom } = useSafeAreaInsets();
   const { mutate: updateList } = useUpdateGroceryList();
-  const hasClearedName = useRef(false);
-  const previousText = useRef(name);
 
-  const [listName, setListName] = useState(name);
   const [editingItem, setEditingItem] = useState<GroceryListItemType | null>(
     null
   );
@@ -42,41 +38,11 @@ export const GroceryList = ({
   const textInputRef = useRef<TextInput>(null);
   const editSheetRef = useRef<AddItemSheetRef>(null);
 
-  const debouncedUpdateDbList = useDebounceCallback(updateList, 500);
-
-  useEffect(() => {
-    if (autofocus && textInputRef.current) {
-      // Small delay to ensure the component is fully rendered
-      setTimeout(() => {
-        textInputRef.current?.focus();
-      }, 100);
-    }
-  }, [autofocus]);
-
-  const updateName = (text: string) => {
-    setListName(text);
-    debouncedUpdateDbList({
+  const handleChangeText = (text: string) => {
+    updateList({
       listId: groceryListId,
       updates: { name: text },
     });
-  };
-
-  const handleChangeText = (text: string) => {
-    // Check if backspace was pressed (text got shorter)
-    if (
-      autofocus &&
-      !hasClearedName.current &&
-      previousText.current.length > text.length &&
-      text.length === 0
-    ) {
-      // If backspace was pressed and we're in autofocus mode, clear the entire title
-      updateName('');
-      hasClearedName.current = true;
-      previousText.current = '';
-    } else {
-      updateName(text);
-      previousText.current = text;
-    }
   };
 
   const handleEditItem = (item: GroceryListItemType) => {
@@ -100,15 +66,13 @@ export const GroceryList = ({
   return (
     <View className="flex-1 gap-2">
       {/** Header */}
-      <View className="px-4">
-        <TextDisplayInput
-          ref={textInputRef}
-          onChangeText={handleChangeText}
-          value={listName}
-          multiline
-          className="align-text-top text-3xl font-bold"
-        />
-        <View className="mt-2 flex-row gap-4">
+      <EditableHeader
+        ref={textInputRef}
+        value={name}
+        onChangeText={handleChangeText}
+        autofocus={autofocus}
+      >
+        <View className="flex-row gap-4">
           <Text className="text-lg text-muted-foreground">
             {items.length} items
           </Text>
@@ -118,7 +82,7 @@ export const GroceryList = ({
             </Text>
           )}
         </View>
-      </View>
+      </EditableHeader>
       <View className="flex-1">
         <Animated.FlatList
           scrollEnabled={true}

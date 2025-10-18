@@ -1,13 +1,15 @@
 import { eachDayOfInterval, format } from 'date-fns';
 import { NotebookTabsIcon, PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, Pressable, TextInput, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { EditableHeader } from '../../../components/editable-header';
 import { Button } from '../../../components/ui/button';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import { useMealPlan } from '../hooks';
+import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
 import { MealPlanDay } from '../types';
 import {
   AddToGroceryListSheet,
@@ -28,7 +30,9 @@ export const MealPlanner = ({
 }: MealPlannerProps) => {
   const mealSheetRef = useRef<MealSheetRef>(null);
   const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
+  const textInputRef = useRef<TextInput>(null);
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId);
+  const { mutate: updateMealPlan } = useUpdateMealPlan();
   const theme = useTheme();
   const daysOfPlan = eachDayOfInterval({
     start: startDate,
@@ -58,6 +62,13 @@ export const MealPlanner = ({
     return grouped;
   };
 
+  const handleChangeText = (text: string) => {
+    updateMealPlan({
+      mealPlanId,
+      updates: { name: text },
+    });
+  };
+
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -68,19 +79,18 @@ export const MealPlanner = ({
 
   return (
     <View className="flex-1">
-      <View className="px-4 py-2">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-bold text-foreground">
-            {mealPlan?.name || 'Meal Planner'}
-          </Text>
-        </View>
+      <EditableHeader
+        ref={textInputRef}
+        value={mealPlan?.name || 'Meal Planner'}
+        onChangeText={handleChangeText}
+      >
         {mealPlan?.startDate && mealPlan?.endDate && (
-          <Text>
-            {format(new Date(mealPlan?.startDate), 'EE, M/d/yy')} -{' '}
-            {format(new Date(mealPlan?.endDate), 'EE, M/d/yy')}
+          <Text className="text-lg text-muted-foreground">
+            {format(new Date(mealPlan.startDate), 'EE, M/d/yy')} -{' '}
+            {format(new Date(mealPlan.endDate), 'EE, M/d/yy')}
           </Text>
         )}
-      </View>
+      </EditableHeader>
       <MealSheet
         ref={mealSheetRef}
         mealPlanId={mealPlanId}

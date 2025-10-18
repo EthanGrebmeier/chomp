@@ -22,6 +22,16 @@ export type CreateMealPlanArgs = {
   mealPlan: Omit<MealPlanInsert, 'id' | 'createdAt'>;
 };
 
+export type UpdateMealPlanArgs = {
+  mealPlanId: string;
+  updates: {
+    name?: string;
+    startDate?: string;
+    endDate?: string;
+    groceryListId?: string | null;
+  };
+};
+
 export type AddRecipeToMealPlanArgs = {
   mealPlanId: string;
   recipeId: string;
