@@ -2,7 +2,7 @@ import { eachDayOfInterval, format } from 'date-fns';
 import { NotebookTabsIcon, PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { EditableHeader } from '../../../components/editable-header';
 import { Button } from '../../../components/ui/button';
 import { ListItem } from '../../../components/ui/list-item';
@@ -114,7 +114,6 @@ export const MealPlanner = ({
       <Animated.FlatList
         data={daysOfPlan}
         contentContainerClassName="pb-20"
-        itemLayoutAnimation={LinearTransition}
         showsVerticalScrollIndicator={false}
         renderItem={({ item: date }) => {
           const recipes = getRecipesForDate(date);
