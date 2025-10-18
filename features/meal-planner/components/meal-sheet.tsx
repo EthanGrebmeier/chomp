@@ -158,6 +158,7 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
       >
         {currentView === 'search' ? (
           <RecipeSearch
+            sheetRef={sheetRef}
             canGoBack={canGoBack}
             onItemSelect={recipe => {
               setSelectedRecipe(recipe);
