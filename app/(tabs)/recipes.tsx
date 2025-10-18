@@ -9,8 +9,8 @@ export default function Recipes() {
   const { mutate: createRecipe, isPending } = useCreateRecipe();
 
   return (
-    <View className="py-safe flex-1 gap-2 bg-background px-4">
-      <View className="flex-row items-center justify-between">
+    <View className="py-safe flex-1 gap-2 bg-background ">
+      <View className="flex-row items-center justify-between px-4">
         <Text className="text-2xl font-bold">Recipes</Text>
       </View>
       <View className="absolute bottom-4 right-4">

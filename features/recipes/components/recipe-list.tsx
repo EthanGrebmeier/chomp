@@ -1,4 +1,6 @@
 import { FlatList, Text, View } from 'react-native';
+import { ListItem } from '../../../components/ui/list-item';
+import { useDeleteRecipe } from '../hooks';
 import { RecipeWithIngredients } from '../types';
 import { RecipeCard } from './recipe-card';
 
@@ -16,12 +18,20 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
       </View>
     );
   }
+  const { mutate: deleteRecipe } = useDeleteRecipe();
+  const handleDelete = (recipeId: string) => {
+    deleteRecipe(recipeId);
+  };
 
   return (
     <FlatList
       className="flex-col"
       data={recipes}
-      renderItem={({ item }) => <RecipeCard recipe={item} />}
+      renderItem={({ item }) => (
+        <ListItem onDelete={() => handleDelete(item.id)}>
+          <RecipeCard recipe={item} />
+        </ListItem>
+      )}
       keyExtractor={item => item.id}
       ItemSeparatorComponent={() => <View className="h-4" />}
       contentContainerClassName="flex-1"
