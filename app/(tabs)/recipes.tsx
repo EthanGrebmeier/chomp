@@ -31,10 +31,14 @@ export default function Recipes() {
     <View className="py-safe flex-1 gap-2 bg-background px-4">
       <View className="flex-row items-center justify-between">
         <Text className="text-2xl font-bold">Recipes</Text>
-        <Button onPress={handleCreateRecipe} disabled={isPending}>
-          <Text>{isPending ? 'Creating...' : 'Create Recipe'}</Text>
-        </Button>
       </View>
+      <Button
+        className="absolute bottom-4 right-4"
+        onPress={handleCreateRecipe}
+        disabled={isPending}
+      >
+        <Text>{isPending ? 'Creating...' : 'Create Recipe'}</Text>
+      </Button>
       <View className="flex-1">
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
