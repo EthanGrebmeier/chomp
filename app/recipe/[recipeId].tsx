@@ -1,10 +1,9 @@
 import { RecipeDetail } from '@/features/recipes/components/recipe-detail';
 import { useRecipe } from '@/features/recipes/hooks/useRecipe';
-import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeftIcon } from 'lucide-react-native';
-import { Pressable, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { Text, View } from 'react-native';
 
-import { Icon } from '../../components/ui/icon';
+import { BackButton } from '../../components/ui/back-button';
 
 export default function RecipeDetailPage() {
   const { recipeId, autofocus } = useLocalSearchParams<{
@@ -41,13 +40,7 @@ export default function RecipeDetailPage() {
   return (
     <View className="flex-1 bg-background">
       <View className="py-safe flex-1">
-        <Pressable
-          onPress={() => router.back()}
-          className="mb-4 flex-row items-center gap-2 px-4"
-        >
-          <Icon as={ArrowLeftIcon} size={16} />
-          <Text className="text-sm font-medium text-foreground">Recipes</Text>
-        </Pressable>
+        <BackButton />
         <RecipeDetail recipe={recipe} autofocus={autofocus === 'true'} />
       </View>
     </View>
