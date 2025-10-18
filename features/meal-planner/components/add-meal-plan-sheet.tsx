@@ -31,7 +31,9 @@ export const AddMealPlanSheet = () => {
 
   return (
     <Button onPress={handleCreateMealPlan} disabled={createMealPlan.isPending}>
-      <Text>{createMealPlan.isPending ? 'Creating...' : 'New Meal Plan'}</Text>
+      <Text>
+        {createMealPlan.isPending ? 'Creating...' : 'Create Meal Plan'}
+      </Text>
     </Button>
   );
 };
