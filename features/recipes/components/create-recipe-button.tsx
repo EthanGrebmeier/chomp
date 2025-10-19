@@ -1,6 +1,8 @@
 import { router } from 'expo-router';
+import { PlusIcon } from 'lucide-react-native';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
+import { useTheme } from '../../../hooks/use-theme';
 import { useCreateRecipe } from '../hooks';
 
 type CreateRecipeButtonProps = {
@@ -13,6 +15,7 @@ export const CreateRecipeButton = ({
   onPress: onPressProp,
 }: CreateRecipeButtonProps) => {
   const { mutate: createRecipe, isPending } = useCreateRecipe();
+  const theme = useTheme();
   const handleCreateRecipe = () => {
     onPressProp?.();
     createRecipe(
@@ -34,6 +37,7 @@ export const CreateRecipeButton = ({
   };
   return (
     <Button onPress={handleCreateRecipe} disabled={isPending}>
+      <PlusIcon size={16} strokeWidth={3.5} color={theme.primaryForeground} />
       <Text>{isPending ? 'Creating...' : 'Create Recipe'}</Text>
     </Button>
   );

@@ -47,7 +47,7 @@ export const RecipeSearch = ({
         </Pressable>
       )}
       <BottomSheet.Header
-        title="Search Recipes"
+        title="Select a Recipe"
         button={
           <CreateRecipeButton onPress={() => sheetRef.current?.dismiss()} />
         }
