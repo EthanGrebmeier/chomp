@@ -10,8 +10,6 @@ export default function MealPlanDetailPage() {
   const { mealPlanId } = useLocalSearchParams<{ mealPlanId: string }>();
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId!);
 
-  console.log(mealPlan);
-
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
