@@ -5,11 +5,16 @@ import { useCreateRecipe } from '../hooks';
 
 type CreateRecipeButtonProps = {
   onSuccess?: (result: { id: string }) => void;
+  onPress?: () => void;
 };
 
-export const CreateRecipeButton = ({ onSuccess }: CreateRecipeButtonProps) => {
+export const CreateRecipeButton = ({
+  onSuccess,
+  onPress: onPressProp,
+}: CreateRecipeButtonProps) => {
   const { mutate: createRecipe, isPending } = useCreateRecipe();
   const handleCreateRecipe = () => {
+    onPressProp?.();
     createRecipe(
       {
         recipe: {

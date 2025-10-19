@@ -49,9 +49,7 @@ export const RecipeSearch = ({
       <BottomSheet.Header
         title="Search Recipes"
         button={
-          <Pressable onPress={() => sheetRef.current?.dismiss()}>
-            <CreateRecipeButton />
-          </Pressable>
+          <CreateRecipeButton onPress={() => sheetRef.current?.dismiss()} />
         }
       />
       <View>
