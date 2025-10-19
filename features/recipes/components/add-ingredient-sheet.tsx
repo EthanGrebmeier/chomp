@@ -99,7 +99,11 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
       <Button onPress={() => ref.current?.present()}>
         <Text>Add Ingredient</Text>
       </Button>
-      <BottomSheet onClose={() => form.reset()} onOpen={handleOpen} ref={ref}>
+      <BottomSheet
+        onStartClose={() => form.reset()}
+        onOpen={handleOpen}
+        ref={ref}
+      >
         <View className="gap-4 pb-4">
           <form.Field
             validators={{

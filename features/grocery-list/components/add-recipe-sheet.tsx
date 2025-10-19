@@ -66,7 +66,7 @@ export const AddRecipeSheet = ({ groceryListId }: AddRecipeSheetProps) => {
       <Button onPress={() => ref.current?.present()}>
         <Text>Add Recipe</Text>
       </Button>
-      <BottomSheet onClose={() => {}} ref={ref}>
+      <BottomSheet ref={ref}>
         <View className="gap-4 pb-4">
           <Text className="text-2xl font-bold">Add Recipe to List</Text>
           {isLoading ? (

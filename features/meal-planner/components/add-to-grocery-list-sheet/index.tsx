@@ -74,7 +74,7 @@ export const AddToGroceryListSheet = forwardRef<
 
   return (
     <>
-      <BottomSheet ref={bottomSheetRef} onClose={() => {}}>
+      <BottomSheet ref={bottomSheetRef}>
         <BottomSheet.Header title="Add to Grocery List" />
 
         <View className="mt-6 flex-1">

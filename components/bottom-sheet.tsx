@@ -14,7 +14,6 @@ import { Text } from './ui/text';
 type BottomSheetProps = {
   children: React.ReactNode;
   ref: React.RefObject<BottomSheetModal | null>;
-  onClose?: () => void;
   onOpen?: () => void;
   onStartClose?: () => void;
   viewClassName?: string;
@@ -26,7 +25,6 @@ export const BottomSheet = ({
   children,
   ref,
   onStartClose,
-  onClose,
   onOpen,
   viewClassName,
   ignoreSafeArea = false,

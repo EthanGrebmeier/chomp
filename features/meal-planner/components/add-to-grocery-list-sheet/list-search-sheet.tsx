@@ -59,7 +59,7 @@ export const GroceryListSearchSheet = forwardRef<
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      onClose={() => {
+      onStartClose={() => {
         setSearchQuery('');
       }}
       ignoreSafeArea
