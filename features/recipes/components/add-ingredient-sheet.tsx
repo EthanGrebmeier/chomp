@@ -131,7 +131,6 @@ export const AddIngredientSheet = forwardRef<
               queryClient.invalidateQueries({
                 queryKey: recipeQueryKeys.all(),
               });
-              bottomSheetRef.current?.dismiss();
               onClose?.();
             },
           }
