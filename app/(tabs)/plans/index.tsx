@@ -3,10 +3,10 @@ import { MealPlanCard } from '@/features/meal-planner/components/meal-plan-card'
 import { useMealPlans } from '@/features/meal-planner/hooks/useMealPlans';
 import { router } from 'expo-router';
 import { FlatList, View } from 'react-native';
-import { ListItem } from '../../components/ui/list-item';
-import { Text } from '../../components/ui/text';
-import { CreateMealPlanSheet } from '../../features/meal-planner/components/create-meal-plan-sheet';
-import { useDeleteMealPlan } from '../../features/meal-planner/hooks/useDeleteMealPlan';
+import { ListItem } from '../../../components/ui/list-item';
+import { Text } from '../../../components/ui/text';
+import { CreateMealPlanSheet } from '../../../features/meal-planner/components/create-meal-plan-sheet';
+import { useDeleteMealPlan } from '../../../features/meal-planner/hooks/useDeleteMealPlan';
 
 export default function MealPlansPage() {
   const mealPlans = useMealPlans();
@@ -33,7 +33,7 @@ export default function MealPlansPage() {
               <MealPlanCard
                 mealPlan={item}
                 onPress={() => {
-                  router.push(`/meal-plan/${item.id}`);
+                  router.push(`/plans/${item.id}`);
                 }}
               />
             </ListItem>

@@ -4,7 +4,7 @@ import { useMealPlan } from '@/features/meal-planner/hooks/useMealPlan';
 import { useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
-import { BackButton } from '../../components/ui/back-button';
+import { BackButton } from '../../../components/ui/back-button';
 
 export default function MealPlanDetailPage() {
   const { mealPlanId } = useLocalSearchParams<{ mealPlanId: string }>();

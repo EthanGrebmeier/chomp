@@ -3,7 +3,7 @@ import { useRecipe } from '@/features/recipes/hooks/useRecipe';
 import { useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { BackButton } from '../../components/ui/back-button';
+import { BackButton } from '../../../components/ui/back-button';
 
 export default function RecipeDetailPage() {
   const { recipeId, autofocus } = useLocalSearchParams<{

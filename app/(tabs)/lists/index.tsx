@@ -2,8 +2,8 @@ import { Heading } from '@/components/text/heading';
 import { GroceryListCard } from '@/features/grocery-list/components/grocery-list-card';
 import { useGroceryLists } from '@/features/grocery-list/hooks/useGroceryLists';
 import { FlatList, View } from 'react-native';
-import { Text } from '../../components/ui/text';
-import { AddListSheet } from '../../features/grocery-list/components/add-list-sheet';
+import { Text } from '../../../components/ui/text';
+import { AddListSheet } from '../../../features/grocery-list/components/add-list-sheet';
 export default function Index() {
   const lists = useGroceryLists();
 

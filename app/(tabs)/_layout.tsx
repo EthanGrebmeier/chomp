@@ -36,7 +36,7 @@ export default function Layout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="lists"
         options={{
           title: 'Lists',
           tabBarIcon: ({ color }) => (
@@ -45,7 +45,7 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="meal-plans"
+        name="plans"
         options={{
           title: 'Meal Plans',
           tabBarIcon: ({ color }) => (

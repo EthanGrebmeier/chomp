@@ -29,7 +29,7 @@ export const CreateRecipeButton = ({
       },
       {
         onSuccess: result => {
-          router.push(`/recipe/${result.id}?autofocus=true`);
+          router.push(`/recipes/${result.id}?autofocus=true`);
           onSuccess?.(result);
         },
       }

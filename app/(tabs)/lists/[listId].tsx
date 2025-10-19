@@ -3,7 +3,7 @@ import { useGroceryList } from '@/features/grocery-list/hooks/useGroceryList';
 import { useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
-import { BackButton } from '../components/ui/back-button';
+import { BackButton } from '../../../components/ui/back-button';
 
 export default function List() {
   const { listId, autofocus } = useLocalSearchParams<{

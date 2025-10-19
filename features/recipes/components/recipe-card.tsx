@@ -9,7 +9,7 @@ type RecipeCardProps = {
 
 export const RecipeCard = ({ recipe }: RecipeCardProps) => {
   return (
-    <Link href={`/recipe/${recipe.id}`}>
+    <Link href={`/recipes/${recipe.id}`}>
       <View className="w-full flex-row items-center justify-between">
         <Text
           className="overflow-ellipsis text-lg font-bold "
