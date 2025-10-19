@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { useTheme } from '@/hooks/use-theme';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { addDays, format, startOfDay } from 'date-fns';
 import { router } from 'expo-router';
-import { CalendarIcon, RulerDimensionLine } from 'lucide-react-native';
+import { CalendarIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -18,8 +19,14 @@ export const CreateMealPlanSheet = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(
     startOfDay(new Date())
   );
-  const [numberOfDays, setNumberOfDays] = useState(7);
-  const calendarSheetRef = useRef<BottomSheetModal | null>(null);
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    addDays(startOfDay(new Date()), 7)
+  );
+  const startDateSheetRef = useRef<BottomSheetModal | null>(null);
+  const endDateSheetRef = useRef<BottomSheetModal | null>(null);
+
+  const theme = useTheme();
+
   const getDefaultName = (date: Date) => {
     return `Week of ${date.toLocaleDateString('en-US', {
       month: 'short',
@@ -29,16 +36,15 @@ export const CreateMealPlanSheet = () => {
 
   const onClose = () => {
     setStartDate(startOfDay(new Date()));
-    setNumberOfDays(7);
+    setEndDate(addDays(startOfDay(new Date()), 7));
     setMealPlanName('');
   };
 
   const handleCreateMealPlan = async () => {
-    if (!startDate) {
+    if (!startDate || !endDate) {
       return;
     }
 
-    const endDate = addDays(startDate, numberOfDays - 1);
     const startDateStr = format(startDate, 'yyyy-MM-dd') + 'T00:00:00';
     const endDateStr = format(endDate, 'yyyy-MM-dd') + 'T00:00:00';
 
@@ -64,10 +70,24 @@ export const CreateMealPlanSheet = () => {
           {createMealPlan.isPending ? 'Creating...' : 'Create Meal Plan'}
         </Text>
       </Button>
+      {/** Start Date Sheet */}
       <CalendarSheet
-        ref={calendarSheetRef}
+        ref={startDateSheetRef}
         selectedDate={startDate}
         onChange={date => setStartDate(startOfDay(date))}
+        onClose={() => {
+          bottomSheetRef.current?.present();
+        }}
+      />
+      {/** End Date Sheet */}
+      <CalendarSheet
+        ref={endDateSheetRef}
+        selectedDate={endDate}
+        onChange={date => setEndDate(startOfDay(date))}
+        headerTitle="Select End Date"
+        onClose={() => {
+          bottomSheetRef.current?.present();
+        }}
       />
       <BottomSheet onStartClose={onClose} ref={bottomSheetRef}>
         <View className="gap-4">
@@ -78,24 +98,24 @@ export const CreateMealPlanSheet = () => {
             onChangeText={setMealPlanName}
           />
           <View className=" flex-row items-center gap-2 border-t border-border pt-2">
-            <Pressable onPress={() => calendarSheetRef.current?.present()}>
+            <Pressable onPress={() => startDateSheetRef.current?.present()}>
               <Pill
-                icon={<CalendarIcon size={16} />}
+                icon={<CalendarIcon color={theme.primary} size={16} />}
                 hasValue={!!startDate}
-                onClear={() => setStartDate(undefined)}
               >
                 {startDate
                   ? format(startDate, 'EEEE, M/d/yy')
                   : 'Select Start Date'}
               </Pill>
             </Pressable>
-            <Pill
-              icon={<RulerDimensionLine size={16} />}
-              hasValue={!!numberOfDays}
-              onClear={() => setNumberOfDays(7)}
-            >
-              {numberOfDays} Days
-            </Pill>
+            <Pressable onPress={() => endDateSheetRef.current?.present()}>
+              <Pill
+                icon={<CalendarIcon color={theme.primary} size={16} />}
+                hasValue={!!endDate}
+              >
+                {endDate ? format(endDate, 'EEEE, M/d/yy') : 'Select End Date'}
+              </Pill>
+            </Pressable>
           </View>
 
           <Button onPress={handleCreateMealPlan}>

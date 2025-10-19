@@ -33,7 +33,8 @@ export const MealPlanner = ({
   const mealSheetRef = useRef<MealSheetRef>(null);
   const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const textInputRef = useRef<TextInput>(null);
-  const calendarSheetRef = useRef<BottomSheetModal | null>(null);
+  const startDateSheetRef = useRef<BottomSheetModal | null>(null);
+  const endDateSheetRef = useRef<BottomSheetModal | null>(null);
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId);
   const { mutate: updateMealPlan } = useUpdateMealPlan();
   const theme = useTheme();
@@ -98,18 +99,32 @@ export const MealPlanner = ({
         onChangeText={handleChangeText}
       >
         {mealPlan?.startDate && mealPlan?.endDate && (
-          <Pressable onPress={() => calendarSheetRef.current?.present()}>
-            <Text className="text-lg text-muted-foreground">
-              {format(new Date(mealPlan.startDate), 'EE, M/d/yy')} -{' '}
-              {format(new Date(mealPlan.endDate), 'EE, M/d/yy')}
-            </Text>
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            <Pressable onPress={() => startDateSheetRef.current?.present()}>
+              <Text className="text-lg text-muted-foreground">
+                {format(new Date(mealPlan.startDate), 'EE, M/d/yy')}
+              </Text>
+            </Pressable>
+            <Text className="text-lg text-muted-foreground">-</Text>
+            <Pressable onPress={() => endDateSheetRef.current?.present()}>
+              <Text className="text-lg text-muted-foreground">
+                {format(new Date(mealPlan.endDate), 'EE, M/d/yy')}
+              </Text>
+            </Pressable>
+          </View>
         )}
       </EditableHeader>
       <CalendarSheet
         onChange={handleChangeDate}
-        ref={calendarSheetRef}
+        ref={startDateSheetRef}
         selectedDate={new Date(startDate)}
+        headerTitle="Select Start Date"
+      />
+      <CalendarSheet
+        onChange={handleChangeDate}
+        ref={endDateSheetRef}
+        selectedDate={new Date(endDate)}
+        headerTitle="Select End Date"
       />
       <MealSheet
         ref={mealSheetRef}

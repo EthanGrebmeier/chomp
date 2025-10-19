@@ -14,21 +14,27 @@ import {
 import { Check, X } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import { useTheme } from '../hooks/use-theme';
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './ui/button';
 import { Text } from './ui/text';
 
 type CalendarSheetProps = {
   onChange: (date: Date) => void;
+  onClose?: () => void;
   selectedDate?: Date;
+  headerTitle?: string;
   ref: React.RefObject<BottomSheetModal | null>;
 };
 
 export const CalendarSheet = ({
   onChange,
+  onClose: onCloseProp,
   selectedDate,
+  headerTitle = 'Select Date',
   ref,
 }: CalendarSheetProps) => {
+  const theme = useTheme();
   useEffect(() => {
     if (selectedDate) {
       setInternalSelectedDate(startOfDay(selectedDate));
@@ -66,8 +72,13 @@ export const CalendarSheet = ({
     ref.current?.dismiss();
   };
 
-  const onClose = () => {
+  const reset = () => {
     setInternalSelectedDate(undefined);
+  };
+
+  const onClose = () => {
+    reset();
+    onCloseProp?.();
   };
 
   const handleScrollToCurrentMonth = useCallback((ref: ScrollView | null) => {
@@ -125,7 +136,6 @@ export const CalendarSheet = ({
                 <View
                   className={cn(
                     'h-8 w-8 items-center justify-center rounded-full',
-                    isToday && !isSelected && 'bg-orange-300',
                     isSelected && 'bg-primary'
                   )}
                 >
@@ -133,7 +143,7 @@ export const CalendarSheet = ({
                     className={cn(
                       'text-sm font-medium',
                       isSelected && 'text-primary-foreground',
-                      isToday && !isSelected && 'text-accent-foreground',
+                      isToday && !isSelected && 'font-bold text-blue-800',
                       !isCurrentMonth && 'text-muted-foreground',
                       isCurrentMonth &&
                         !isSelected &&
@@ -157,7 +167,7 @@ export const CalendarSheet = ({
       ignoreSafeArea
       onStartClose={onClose}
       ref={ref}
-      snapPoints={['75%']}
+      snapPoints={['30%']}
     >
       <View className="gap-4">
         {/* Custom header with close and confirm buttons */}
@@ -168,11 +178,11 @@ export const CalendarSheet = ({
             onPress={handleClose}
             className="h-10 w-10"
           >
-            <X size={20} className="text-foreground" />
+            <X color={theme.primary} size={20} />
           </Button>
 
           <Text className="text-2xl font-bold text-foreground">
-            Select Date
+            {headerTitle}
           </Text>
 
           <Button
@@ -184,12 +194,22 @@ export const CalendarSheet = ({
           >
             <Check
               size={20}
+              color={theme.primary}
               className={cn(
                 'text-foreground',
                 !internalSelectedDate && 'opacity-50'
               )}
             />
           </Button>
+        </View>
+        <View className="-mx-4 flex-row items-center justify-center bg-primary">
+          <Text
+            className={cn(' text-lg font-semibold text-primary-foreground')}
+          >
+            {internalSelectedDate
+              ? format(internalSelectedDate, 'EEEE, M/d/yy')
+              : 'No date selected'}
+          </Text>
         </View>
 
         <ScrollView
