@@ -10,6 +10,7 @@ import { Text } from '../../../components/ui/text';
 
 import { PencilIcon, TrashIcon } from 'lucide-react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
+import { useTheme } from '../../../hooks/use-theme';
 import { RecipeSearch } from '../../recipes/components/recipe-search';
 import { Recipe } from '../../recipes/types';
 import { useAddRecipeToMealPlan } from '../hooks/useAddRecipeToMealPlan';
@@ -58,7 +59,7 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
       start: props.startDate,
       end: props.endDate,
     });
-
+    const theme = useTheme();
     // Hooks
     const { mutate: addRecipeToMealPlan } = useAddRecipeToMealPlan();
     const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
@@ -171,31 +172,24 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
           />
         ) : (
           <View>
-            <BottomSheet.Header
-              title={mode === 'add' ? 'Add Meal' : 'Update Meal'}
-              button={
-                mode === 'add' && !selectedRecipe ? (
-                  <Pressable onPress={() => setCurrentView('search')}>
-                    <Text className="text-sm font-bold text-foreground">
-                      Add From Recipes
-                    </Text>
-                  </Pressable>
-                ) : mode === 'edit' ? (
-                  <Pressable onPress={handleRemoveMeal}>
-                    <TrashIcon size={20} color="#ef4444" />
-                  </Pressable>
-                ) : null
-              }
-            />
             <View className="gap-4">
               {recipeToDisplay && (
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-lg font-semibold text-foreground">
-                    {recipeToDisplay?.name}
-                  </Text>
-                  <Pressable onPress={() => setCurrentView('search')}>
-                    <PencilIcon size={16} />
-                  </Pressable>
+                <View className="w-full flex-row items-center justify-between gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-2xl font-semibold text-foreground">
+                      {recipeToDisplay?.name}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center gap-4">
+                    <Pressable onPress={() => setCurrentView('search')}>
+                      <PencilIcon color={theme.foreground} size={20} />
+                    </Pressable>
+                    {mode === 'edit' && (
+                      <Pressable onPress={handleRemoveMeal}>
+                        <TrashIcon size={20} color={theme.destructive} />
+                      </Pressable>
+                    )}
+                  </View>
                 </View>
               )}
 
