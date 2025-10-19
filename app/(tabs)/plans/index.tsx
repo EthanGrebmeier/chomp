@@ -1,6 +1,7 @@
 import { Heading } from '@/components/text/heading';
 import { MealPlanCard } from '@/features/meal-planner/components/meal-plan-card';
 import { useMealPlans } from '@/features/meal-planner/hooks/useMealPlans';
+import { navigation } from '@/lib/navigation';
 import { router } from 'expo-router';
 import { FlatList, View } from 'react-native';
 import { ListItem } from '../../../components/ui/list-item';
@@ -33,7 +34,7 @@ export default function MealPlansPage() {
               <MealPlanCard
                 mealPlan={item}
                 onPress={() => {
-                  router.push(`/plans/${item.id}`);
+                  router.push(navigation.goToMealPlan(item.id));
                 }}
               />
             </ListItem>

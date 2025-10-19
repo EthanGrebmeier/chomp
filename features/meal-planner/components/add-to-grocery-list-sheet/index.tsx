@@ -1,3 +1,4 @@
+import { navigation } from '@/lib/navigation';
 import { router } from 'expo-router';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { View } from 'react-native';
@@ -47,7 +48,9 @@ export const AddToGroceryListSheet = forwardRef<
       { mealPlanId },
       {
         onSuccess: result => {
-          router.push(`/lists/${result.groceryListId}?autofocus=true`);
+          router.push(
+            navigation.goToList(result.groceryListId, { autofocus: true })
+          );
           bottomSheetRef.current?.dismiss();
         },
         onError: error => {
@@ -62,7 +65,9 @@ export const AddToGroceryListSheet = forwardRef<
       { mealPlanId, groceryListId: listId },
       {
         onSuccess: result => {
-          router.push(`/lists/${result.groceryListId}?autofocus=true`);
+          router.push(
+            navigation.goToList(result.groceryListId, { autofocus: true })
+          );
           bottomSheetRef.current?.dismiss();
         },
         onError: error => {

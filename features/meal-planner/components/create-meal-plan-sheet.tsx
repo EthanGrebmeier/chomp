@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/hooks/use-theme';
+import { navigation } from '@/lib/navigation';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { addDays, format, startOfDay } from 'date-fns';
 import { router } from 'expo-router';
@@ -62,7 +63,7 @@ export const CreateMealPlanSheet = () => {
       },
     });
     bottomSheetRef.current?.dismiss();
-    router.push(`/meal-plan/${mealPlan.id}`);
+    router.push(navigation.goToMealPlan(mealPlan.id));
   };
 
   return (

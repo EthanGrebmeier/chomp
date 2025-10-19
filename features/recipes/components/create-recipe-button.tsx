@@ -1,3 +1,4 @@
+import { navigation } from '@/lib/navigation';
 import { router } from 'expo-router';
 import { PlusIcon } from 'lucide-react-native';
 import { Button } from '../../../components/ui/button';
@@ -29,7 +30,7 @@ export const CreateRecipeButton = ({
       },
       {
         onSuccess: result => {
-          router.push(`/recipes/${result.id}?autofocus=true`);
+          router.push(navigation.goToRecipe(result.id, { autofocus: true }));
           onSuccess?.(result);
         },
       }

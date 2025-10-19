@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { navigation } from '@/lib/navigation';
 import { router } from 'expo-router';
 import { Text } from '../../../components/ui/text';
 import { useAddGroceryList } from '../hooks/useAddGroceryList';
@@ -27,7 +28,7 @@ export const AddListSheet = () => {
       },
       {
         onSuccess: result => {
-          router.push(`/${result.id}?autofocus=true`);
+          router.push(navigation.goToList(result.id, { autofocus: true }));
         },
       }
     );
