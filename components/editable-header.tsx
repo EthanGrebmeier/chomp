@@ -52,13 +52,20 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
 
     const debouncedOnChangeText = useDebounceCallback(onChangeText, 500);
 
-    const handleFocus = useCallback(
+    const handleFocus = (textInputRef: TextInput | null) => {
+      if (autofocus && textInputRef) {
+        textInputRef.focus();
+      }
+    };
+
+    const refFunction = useCallback(
       (textInputRef: TextInput | null) => {
-        if (autofocus && textInputRef) {
-          textInputRef.focus();
+        handleFocus(textInputRef);
+        if (ref && 'current' in ref) {
+          ref.current = textInputRef;
         }
       },
-      [onFocus]
+      [handleFocus, ref]
     );
 
     const handleChangeText = (text: string) => {
@@ -101,12 +108,7 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
     return (
       <View className={cn('px-4', className)}>
         <TextDisplayInput
-          ref={inputRef => {
-            handleFocus(inputRef);
-            if (ref && 'current' in ref) {
-              ref.current = inputRef;
-            }
-          }}
+          ref={refFunction}
           onChangeText={handleChangeText}
           value={localValue}
           multiline={multiline}
