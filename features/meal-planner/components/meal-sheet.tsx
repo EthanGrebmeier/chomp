@@ -1,11 +1,14 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { eachDayOfInterval } from 'date-fns';
+import { format, parseISO, startOfDay } from 'date-fns';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { Pressable, View } from 'react-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
+import {
+  CalendarSheet,
+  CalendarSheetRef,
+} from '../../../components/calendar-sheet';
 import { Button } from '../../../components/ui/button';
-import { DateSelector } from '../../../components/ui/date-selector';
 import { Text } from '../../../components/ui/text';
 
 import { PencilIcon, TrashIcon } from 'lucide-react-native';
@@ -53,12 +56,7 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
       useState<MealPlanRecipe | null>(null);
 
     const sheetRef = useRef<BottomSheetModal>(null);
-
-    // Computed values
-    const daysOfPlan = eachDayOfInterval({
-      start: props.startDate,
-      end: props.endDate,
-    });
+    const calendarSheetRef = useRef<CalendarSheetRef>(null);
     const theme = useTheme();
     // Hooks
     const { mutate: addRecipeToMealPlan } = useAddRecipeToMealPlan();
@@ -150,70 +148,103 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
     const recipeToDisplay = selectedRecipe;
 
     return (
-      <BottomSheet
-        ref={sheetRef}
-        onStartClose={() => {
-          KeyboardController.dismiss();
-          resetState();
-        }}
-      >
-        {currentView === 'search' ? (
-          <RecipeSearch
-            sheetRef={sheetRef}
-            canGoBack={canGoBack}
-            onItemSelect={recipe => {
-              setSelectedRecipe(recipe);
-              setCurrentView('recipe');
-              setCanGoBack(true);
-            }}
-            onBack={() => {
-              setCurrentView('recipe');
-            }}
-          />
-        ) : (
-          <View>
-            <View className="gap-4">
-              {recipeToDisplay && (
-                <View className="w-full flex-row items-center justify-between gap-2">
-                  <View className="flex-row items-center gap-2">
-                    <Text className="text-2xl font-semibold text-foreground">
-                      {recipeToDisplay?.name}
-                    </Text>
-                  </View>
-                  <View className="flex-row items-center gap-4">
-                    <Pressable onPress={() => setCurrentView('search')}>
-                      <PencilIcon color={theme.foreground} size={20} />
-                    </Pressable>
-                    {mode === 'edit' && (
-                      <Pressable onPress={handleRemoveMeal}>
-                        <TrashIcon size={20} color={theme.destructive} />
+      <View>
+        <BottomSheet
+          ref={sheetRef}
+          onStartClose={() => {
+            KeyboardController.dismiss();
+          }}
+        >
+          {currentView === 'search' ? (
+            <RecipeSearch
+              sheetRef={sheetRef}
+              canGoBack={canGoBack}
+              onItemSelect={recipe => {
+                setSelectedRecipe(recipe);
+                setCurrentView('recipe');
+                setCanGoBack(true);
+              }}
+              onBack={() => {
+                setCurrentView('recipe');
+              }}
+            />
+          ) : (
+            <View>
+              <View className="gap-2">
+                {recipeToDisplay && (
+                  <View className="w-full flex-row items-center justify-between gap-2">
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-2xl font-semibold text-foreground">
+                        {recipeToDisplay?.name}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-4">
+                      <Pressable onPress={() => setCurrentView('search')}>
+                        <PencilIcon color={theme.foreground} size={20} />
                       </Pressable>
-                    )}
+                      {mode === 'edit' && (
+                        <Pressable onPress={handleRemoveMeal}>
+                          <TrashIcon size={20} color={theme.destructive} />
+                        </Pressable>
+                      )}
+                    </View>
                   </View>
-                </View>
-              )}
+                )}
 
-              <View className="gap-4 border-t border-border pt-2">
-                <View className="flex-row items-center gap-2">
-                  <DateSelector
-                    daysOfPlan={daysOfPlan}
-                    date={selectedDate}
-                    onSelect={date => {
-                      setSelectedDate(date);
-                      setCurrentView('recipe');
-                    }}
-                    onClear={() => setSelectedDate(undefined)}
-                  />
-                  <MealTimeSelector onSelect={setMealTag} mealTime={mealTag} />
+                <View className="gap-4 border-t border-border pt-2">
+                  <View className="flex-row items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onPress={() =>
+                        calendarSheetRef.current?.present({
+                          selectedDate: selectedDate
+                            ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
+                            : undefined,
+                        })
+                      }
+                      className="flex-1 justify-start"
+                    >
+                      <Text className="text-left">
+                        {selectedDate
+                          ? startOfDay(
+                              parseISO(selectedDate + 'T00:00:00')
+                            ).toLocaleDateString()
+                          : 'Select Date'}
+                      </Text>
+                    </Button>
+                    <MealTimeSelector
+                      onSelect={setMealTag}
+                      mealTime={mealTag}
+                    />
+                  </View>
+                  <Button onPress={handleSubmit}>
+                    <Text>{mode === 'add' ? 'Add Meal' : 'Update Meal'}</Text>
+                  </Button>
                 </View>
-                <Button onPress={handleSubmit}>
-                  <Text>{mode === 'add' ? 'Add Meal' : 'Update Meal'}</Text>
-                </Button>
               </View>
             </View>
-          </View>
-        )}
-      </BottomSheet>
+          )}
+        </BottomSheet>
+
+        <CalendarSheet
+          ref={calendarSheetRef}
+          selectedDate={
+            selectedDate
+              ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
+              : undefined
+          }
+          validStartDate={startOfDay(parseISO(props.startDate))}
+          validEndDate={startOfDay(parseISO(props.endDate))}
+          headerTitle="Select Date"
+          onClose={() => {
+            setCurrentView('recipe');
+          }}
+          onChange={date => {
+            setSelectedDate(format(date, 'yyyy-MM-dd'));
+            setCurrentView('recipe');
+          }}
+        />
+      </View>
     );
   }
 );

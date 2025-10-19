@@ -33,7 +33,6 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
         </ListItem>
       )}
       keyExtractor={item => item.id}
-      ItemSeparatorComponent={() => <View className="h-4" />}
       contentContainerClassName="flex-1"
     />
   );

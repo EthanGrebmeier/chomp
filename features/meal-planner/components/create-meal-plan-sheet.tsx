@@ -8,7 +8,10 @@ import { CalendarIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { CalendarSheet } from '../../../components/calendar-sheet';
+import {
+  CalendarSheet,
+  CalendarSheetRef,
+} from '../../../components/calendar-sheet';
 import { Pill } from '../../../components/ui/pill';
 import { useCreateMealPlan } from '../hooks';
 
@@ -22,8 +25,8 @@ export const CreateMealPlanSheet = () => {
   const [endDate, setEndDate] = useState<Date | undefined>(
     addDays(startOfDay(new Date()), 7)
   );
-  const startDateSheetRef = useRef<BottomSheetModal | null>(null);
-  const endDateSheetRef = useRef<BottomSheetModal | null>(null);
+  const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
+  const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
 
   const theme = useTheme();
 

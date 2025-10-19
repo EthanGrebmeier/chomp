@@ -1,10 +1,19 @@
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { addDays, differenceInDays, eachDayOfInterval, format } from 'date-fns';
+import {
+  addDays,
+  differenceInDays,
+  eachDayOfInterval,
+  format,
+  parseISO,
+  startOfDay,
+} from 'date-fns';
 import { NotebookTabsIcon, PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { CalendarSheet } from '../../../components/calendar-sheet';
+import {
+  CalendarSheet,
+  CalendarSheetRef,
+} from '../../../components/calendar-sheet';
 import { EditableHeader } from '../../../components/editable-header';
 import { Button } from '../../../components/ui/button';
 import { ListItem } from '../../../components/ui/list-item';
@@ -33,8 +42,8 @@ export const MealPlanner = ({
   const mealSheetRef = useRef<MealSheetRef>(null);
   const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const textInputRef = useRef<TextInput>(null);
-  const startDateSheetRef = useRef<BottomSheetModal | null>(null);
-  const endDateSheetRef = useRef<BottomSheetModal | null>(null);
+  const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
+  const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId);
   const { mutate: updateMealPlan } = useUpdateMealPlan();
   const theme = useTheme();
@@ -46,7 +55,7 @@ export const MealPlanner = ({
   const getRecipesForDate = (date: Date): MealPlanDay['recipes'] => {
     if (!mealPlan) return [];
     return mealPlan.recipes.filter(
-      recipe => recipe.date === date.toISOString()
+      recipe => recipe.date === format(date, 'yyyy-MM-dd')
     );
   };
 
@@ -77,8 +86,9 @@ export const MealPlanner = ({
     updateMealPlan({
       mealPlanId,
       updates: {
-        startDate: date.toISOString(),
-        endDate: addDays(date, numberOfDays - 1).toISOString(),
+        startDate: format(date, 'yyyy-MM-dd') + 'T00:00:00',
+        endDate:
+          format(addDays(date, numberOfDays - 1), 'yyyy-MM-dd') + 'T00:00:00',
       },
     });
   };
@@ -117,13 +127,13 @@ export const MealPlanner = ({
       <CalendarSheet
         onChange={handleChangeDate}
         ref={startDateSheetRef}
-        selectedDate={new Date(startDate)}
+        selectedDate={startOfDay(parseISO(startDate))}
         headerTitle="Select Start Date"
       />
       <CalendarSheet
         onChange={handleChangeDate}
         ref={endDateSheetRef}
-        selectedDate={new Date(endDate)}
+        selectedDate={startOfDay(parseISO(endDate))}
         headerTitle="Select End Date"
       />
       <MealSheet
@@ -164,7 +174,7 @@ export const MealPlanner = ({
                   <Button
                     onPress={() =>
                       mealSheetRef.current?.openForAdd({
-                        date: date.toISOString(),
+                        date: format(date, 'yyyy-MM-dd'),
                       })
                     }
                     className="size-6 rounded-full p-0"

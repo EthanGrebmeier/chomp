@@ -51,8 +51,16 @@ export const RecipeSearch = ({
           <Text className="text-sm font-bold text-foreground">Back</Text>
         </Pressable>
       )}
+      <BottomSheet.Header
+        title="Search Recipes"
+        button={
+          <Pressable onPress={() => sheetRef.current?.dismiss()}>
+            <CreateRecipeButton />
+          </Pressable>
+        }
+      />
       <BottomSheet.TextInput
-        className="h-11 rounded-full border border-border bg-input px-4 text-foreground"
+        className="h-8 rounded-full border border-border bg-input px-4 text-foreground"
         placeholder="Search recipes"
         onChangeText={setSearch}
         value={search}
@@ -78,7 +86,6 @@ export const RecipeSearch = ({
       ) : (
         <View className="flex-1 items-center justify-center gap-2">
           <Text className="text-muted-foreground">No recipes found</Text>
-          <CreateRecipeButton onSuccess={() => sheetRef.current?.dismiss()} />
         </View>
       )}
     </Animated.View>

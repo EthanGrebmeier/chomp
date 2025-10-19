@@ -10,7 +10,7 @@ type RecipeCardProps = {
 export const RecipeCard = ({ recipe }: RecipeCardProps) => {
   return (
     <Link href={`/recipe/${recipe.id}`}>
-      <View className="flex-1 py-2">
+      <View className="flex-1">
         <View className="w-full flex-row items-center justify-between">
           <Text
             className="overflow-ellipsis text-lg font-bold leading-none"

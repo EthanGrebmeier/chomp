@@ -41,7 +41,7 @@ const buttonVariants = cva(
       },
       size: {
         default: cn(
-          'h-10 px-4 py-2 sm:h-9',
+          'h-8 px-4 py-1 sm:h-9',
           Platform.select({ web: 'has-[>svg]:px-3' })
         ),
         sm: cn(
