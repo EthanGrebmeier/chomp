@@ -45,7 +45,7 @@ export const BottomSheet = ({
         />
       )}
       ref={ref}
-      onAnimate={(fromIndex, toIndex, position) => {
+      onAnimate={(fromIndex, toIndex) => {
         if (fromIndex === -1) {
           onOpen?.();
         }
