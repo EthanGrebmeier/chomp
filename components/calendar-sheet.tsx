@@ -12,7 +12,7 @@ import {
   startOfWeek,
 } from 'date-fns';
 import { Check, X } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './ui/button';
@@ -69,6 +69,10 @@ export const CalendarSheet = ({
   const onClose = () => {
     setInternalSelectedDate(undefined);
   };
+
+  const handleScrollToCurrentMonth = useCallback((ref: ScrollView | null) => {
+    ref?.scrollTo({ y: 310, animated: false });
+  }, []);
 
   const renderMonth = (month: Date) => {
     const monthStart = startOfMonth(month);
@@ -189,9 +193,7 @@ export const CalendarSheet = ({
         </View>
 
         <ScrollView
-          ref={scrollViewRef =>
-            scrollViewRef?.scrollTo({ y: 310, animated: false })
-          }
+          ref={handleScrollToCurrentMonth}
           showsVerticalScrollIndicator={false}
           className="max-h-96"
           contentContainerStyle={{ paddingBottom: 20 }}
