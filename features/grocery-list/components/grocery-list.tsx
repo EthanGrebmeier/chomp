@@ -5,7 +5,6 @@ import { GroceryListItem as GroceryListItemType } from '../types';
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
 import Animated, { LinearTransition } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EditableHeader } from '../../../components/editable-header';
 import { cn } from '../../../lib/utils';
 import { useUpdateGroceryList } from '../hooks/useUpdateGroceryList';
@@ -28,7 +27,6 @@ export const GroceryList = ({
   groceryListId,
   autofocus = false,
 }: GroceryListProps) => {
-  const { bottom } = useSafeAreaInsets();
   const { mutate: updateList } = useUpdateGroceryList();
 
   const [editingItem, setEditingItem] = useState<GroceryListItemType | null>(
@@ -104,10 +102,7 @@ export const GroceryList = ({
           )}
         />
       </View>
-      <View
-        style={{ bottom: bottom + 16 }}
-        className=" absolute right-4 flex-row items-center gap-2"
-      >
+      <View className=" absolute bottom-4 right-4 flex-row items-center gap-2">
         <AddRecipeSheet groceryListId={groceryListId} />
         <AddItemSheet
           ref={editSheetRef}

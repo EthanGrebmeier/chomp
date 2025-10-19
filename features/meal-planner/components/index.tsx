@@ -157,7 +157,7 @@ export const MealPlanner = ({
         mealPlanId={mealPlanId}
         mealPlanName={mealPlan?.name || 'Meal Plan'}
       />
-      <View className="bottom-safe absolute right-4 z-10">
+      <View className="absolute bottom-4 right-4 z-10">
         <Button
           onPress={() => addToGroceryListSheetRef.current?.open()}
           className="flex-row items-center gap-2"
