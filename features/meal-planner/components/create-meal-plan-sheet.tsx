@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { addDays, format, startOfDay } from 'date-fns';
+import { router } from 'expo-router';
 import { CalendarIcon, RulerDimensionLine } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -32,7 +33,7 @@ export const CreateMealPlanSheet = () => {
     setMealPlanName('');
   };
 
-  const handleCreateMealPlan = () => {
+  const handleCreateMealPlan = async () => {
     if (!startDate) {
       return;
     }
@@ -42,13 +43,15 @@ export const CreateMealPlanSheet = () => {
     const endDateStr = format(endDate, 'yyyy-MM-dd') + 'T00:00:00';
 
     // Create the meal plan without a grocery list
-    createMealPlan.mutate({
+    const mealPlan = await createMealPlan.mutateAsync({
       mealPlan: {
         name: mealPlanName || getDefaultName(startDate),
         startDate: startDateStr,
         endDate: endDateStr,
       },
     });
+    bottomSheetRef.current?.close();
+    router.push(`/meal-plan/${mealPlan.id}`);
   };
 
   return (
