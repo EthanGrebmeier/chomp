@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { format, startOfDay } from 'date-fns';
+import { addDays, format, startOfDay } from 'date-fns';
 import { CalendarIcon, RulerDimensionLine } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -26,23 +26,27 @@ export const CreateMealPlanSheet = () => {
     })}`;
   };
 
+  const onClose = () => {
+    setStartDate(startOfDay(new Date()));
+    setNumberOfDays(7);
+    setMealPlanName('');
+  };
+
   const handleCreateMealPlan = () => {
     if (!startDate) {
       return;
     }
 
-    const endDate = new Date(
-      startDate.getTime() + (numberOfDays - 1) * 24 * 60 * 60 * 1000
-    )
-      .toISOString()
-      .split('T')[0]; // 7 days from today
+    const endDate = addDays(startDate, numberOfDays - 1);
+    const startDateStr = format(startDate, 'yyyy-MM-dd') + 'T00:00:00';
+    const endDateStr = format(endDate, 'yyyy-MM-dd') + 'T00:00:00';
 
     // Create the meal plan without a grocery list
     createMealPlan.mutate({
       mealPlan: {
-        name: getDefaultName(startDate),
-        startDate: startDate?.toISOString().split('T')[0],
-        endDate,
+        name: mealPlanName || getDefaultName(startDate),
+        startDate: startDateStr,
+        endDate: endDateStr,
       },
     });
   };
@@ -62,7 +66,7 @@ export const CreateMealPlanSheet = () => {
         selectedDate={startDate}
         onChange={date => setStartDate(startOfDay(date))}
       />
-      <BottomSheet ref={bottomSheetRef}>
+      <BottomSheet onStartClose={onClose} ref={bottomSheetRef}>
         <View className="gap-4">
           <BottomSheet.BareTextInput
             className="text-2xl font-semibold text-foreground"

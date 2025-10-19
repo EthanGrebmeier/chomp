@@ -35,8 +35,8 @@ export const MealPlanner = ({
   const { mutate: updateMealPlan } = useUpdateMealPlan();
   const theme = useTheme();
   const daysOfPlan = eachDayOfInterval({
-    start: startDate,
-    end: endDate,
+    start: new Date(startDate),
+    end: new Date(endDate),
   });
 
   const getRecipesForDate = (date: Date): MealPlanDay['recipes'] => {

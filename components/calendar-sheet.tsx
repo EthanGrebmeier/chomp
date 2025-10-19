@@ -12,7 +12,7 @@ import {
   startOfWeek,
 } from 'date-fns';
 import { Check, X } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './ui/button';
@@ -29,6 +29,11 @@ export const CalendarSheet = ({
   selectedDate,
   ref,
 }: CalendarSheetProps) => {
+  useEffect(() => {
+    if (selectedDate) {
+      setInternalSelectedDate(startOfDay(selectedDate));
+    }
+  }, [selectedDate]);
   const currentDate = new Date();
   const months = [
     addMonths(currentDate, -1), // Previous month
