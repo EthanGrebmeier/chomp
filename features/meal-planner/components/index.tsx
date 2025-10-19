@@ -193,9 +193,17 @@ export const MealPlanner = ({
                   </Button>
                 </View>
                 {recipes.length === 0 ? (
-                  <Text className="mt-1 text-muted-foreground">
-                    No meals planned
-                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      mealSheetRef.current?.openForAdd({
+                        date: format(date, 'yyyy-MM-dd'),
+                      })
+                    }
+                  >
+                    <Text className="mt-1 text-muted-foreground">
+                      No meals planned
+                    </Text>
+                  </Pressable>
                 ) : (
                   <FlatList
                     data={recipes}
