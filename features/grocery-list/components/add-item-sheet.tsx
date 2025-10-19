@@ -54,6 +54,8 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
     const bottomSheetRef = useRef<BottomSheetModal>(null);
     const itemInputRef =
       useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
+    const quantityInputRef =
+      useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
     const { mutate: addItem } = useAddGroceryItem();
     const { mutate: updateItem } = useUpdateGroceryListItem();
     const insets = useSafeAreaInsets();
@@ -104,7 +106,6 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
                   unit: 'each',
                 });
                 queryClient.invalidateQueries({ queryKey: queryKeys.base() });
-                bottomSheetRef.current?.dismiss();
                 onClose?.();
               },
             }
@@ -159,7 +160,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
           onOpen={handleOpen}
           ref={bottomSheetRef}
         >
-          <View className="flex-row gap-4 pb-4">
+          <View className="gap-2 pb-4">
             <form.Field
               validators={{
                 onSubmit: ({ value }) => {
@@ -171,11 +172,12 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
               name="name"
             >
               {field => (
-                <View className="flex-1 shrink gap-2">
+                <View className="flex-1 gap-2 ">
                   <BottomSheet.BareTextInput
                     value={field.state.value}
                     onChangeText={field.handleChange}
                     placeholder="Name"
+                    returnKeyType="done"
                     autoCapitalize="words"
                     className="rounded-none border-none text-2xl font-semibold text-foreground"
                     ref={itemInputRef}
@@ -184,14 +186,24 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
                 </View>
               )}
             </form.Field>
-            <View className="flex-1 flex-row gap-2">
+            <View className="w-[164px] flex-row gap-2 ">
               <form.Field name="quantity">
                 {field => (
                   <BottomSheet.BareTextInput
-                    className="flex-1 pb-2 text-right text-xl font-semibold text-foreground"
-                    keyboardType="number-pad"
+                    className="h-8 min-w-8 text-start text-xl font-semibold text-foreground"
+                    keyboardType="numeric"
+                    placeholder="1"
                     value={field.state.value}
+                    ref={quantityInputRef}
                     onChangeText={field.handleChange}
+                    onFocus={e => {
+                      quantityInputRef.current?.setNativeProps({
+                        selection: {
+                          start: field.state.value.length + 1,
+                          end: field.state.value.length + 1,
+                        },
+                      });
+                    }}
                   />
                 )}
               </form.Field>

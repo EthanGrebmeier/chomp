@@ -55,6 +55,8 @@ export const AddIngredientSheet = forwardRef<
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const nameInputRef =
     useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
+  const quantityInputRef =
+    useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
   const { mutate: addIngredient } = useAddRecipeIngredient();
   const { mutate: updateIngredient } = useUpdateRecipeIngredient();
   const insets = useSafeAreaInsets();
@@ -164,7 +166,7 @@ export const AddIngredientSheet = forwardRef<
         onOpen={handleOpen}
         ref={bottomSheetRef}
       >
-        <View className="flex-row gap-2 pb-4">
+        <View className="gap-2 pb-4">
           <form.Field
             validators={{
               onSubmit: ({ value }) => {
@@ -181,6 +183,7 @@ export const AddIngredientSheet = forwardRef<
                   value={field.state.value}
                   onChangeText={field.handleChange}
                   placeholder="Ingredient Name"
+                  returnKeyType="done"
                   autoCapitalize="words"
                   className="rounded-none border-none text-2xl font-semibold text-foreground"
                   ref={nameInputRef}
@@ -189,14 +192,24 @@ export const AddIngredientSheet = forwardRef<
               </View>
             )}
           </form.Field>
-          <View className="w-[130px]  flex-row gap-2 ">
+          <View className="w-[164px] flex-row gap-2 ">
             <form.Field name="quantity">
               {field => (
                 <BottomSheet.BareTextInput
-                  className="h-8  text-right text-xl font-semibold text-foreground"
-                  keyboardType="number-pad"
+                  className="h-8 min-w-8 text-start text-xl font-semibold text-foreground"
+                  keyboardType="numeric"
+                  placeholder="1"
                   value={field.state.value}
+                  ref={quantityInputRef}
                   onChangeText={field.handleChange}
+                  onFocus={e => {
+                    quantityInputRef.current?.setNativeProps({
+                      selection: {
+                        start: field.state.value.length + 1,
+                        end: field.state.value.length + 1,
+                      },
+                    });
+                  }}
                 />
               )}
             </form.Field>

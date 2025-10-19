@@ -34,6 +34,7 @@ export const BottomSheet = ({
 
   return (
     <BottomSheetModal
+      keyboardBlurBehavior="restore"
       backdropComponent={props => (
         <BottomSheetBackdrop
           {...props}
