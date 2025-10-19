@@ -10,23 +10,24 @@ type RecipeCardProps = {
 export const RecipeCard = ({ recipe }: RecipeCardProps) => {
   return (
     <Link href={`/recipes/${recipe.id}`}>
-      <View className="w-full flex-row items-center justify-between">
-        <Text
-          className="overflow-ellipsis text-lg font-bold "
-          numberOfLines={2}
-        >
-          {recipe.name}
-        </Text>
-        {recipe.servings && (
-          <Text className="text-sm text-muted-foreground">
-            Serves {recipe.servings}
+      <View>
+        <View className="w-full flex-row items-center justify-between">
+          <Text
+            className="overflow-ellipsis text-lg font-bold "
+            numberOfLines={2}
+          >
+            {recipe.name}
           </Text>
-        )}
+          {recipe.servings && (
+            <Text className="text-sm text-muted-foreground">
+              Serves {recipe.servings}
+            </Text>
+          )}
+        </View>
+        <Text className="text-sm text-muted-foreground">
+          {recipe.ingredients.length} ingredients
+        </Text>
       </View>
-
-      <Text className="text-sm text-muted-foreground">
-        {recipe.ingredients.length} ingredients
-      </Text>
     </Link>
   );
 };
