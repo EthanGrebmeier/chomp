@@ -1,16 +1,19 @@
 {
   "expo": {
-    "name": "grocery",
-    "slug": "grocery",
+    "name": "Chomp",
+    "slug": "chomp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "grocery",
+    "scheme": "chomp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ethangrebmeier.grocery"
+      "bundleIdentifier": "com.ethangrebmeier.chomp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
