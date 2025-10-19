@@ -3,7 +3,6 @@ import { MealPlanner } from '@/features/meal-planner/components';
 import { useMealPlan } from '@/features/meal-planner/hooks/useMealPlan';
 import { useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { BackButton } from '../../../components/ui/back-button';
 
 export default function MealPlanDetailPage() {
@@ -34,7 +33,6 @@ export default function MealPlanDetailPage() {
         startDate={mealPlan.startDate}
         endDate={mealPlan.endDate}
       />
-      <KeyboardToolbar />
     </View>
   );
 }

@@ -2,7 +2,6 @@ import { GroceryList } from '@/features/grocery-list/components/grocery-list';
 import { useGroceryList } from '@/features/grocery-list/hooks/useGroceryList';
 import { useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { BackButton } from '../../../components/ui/back-button';
 
 export default function List() {
@@ -27,7 +26,6 @@ export default function List() {
           autofocus={autofocus === 'true'}
         />
       </View>
-      <KeyboardToolbar />
     </View>
   );
 }
