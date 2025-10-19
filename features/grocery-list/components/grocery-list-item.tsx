@@ -51,13 +51,18 @@ export const GroceryListItem = ({
         <View
           className={cn(
             'h-full w-full rounded-full',
-            isChecked && 'bg-orange-600'
+            isChecked && 'bg-primary'
           )}
         ></View>
       </Pressable>
 
       <Pressable className="flex-1 flex-row justify-between" onPress={onEdit}>
-        <Text className="text-2xl font-medium text-foreground">
+        <Text
+          className={cn(
+            'text-2xl font-medium text-foreground',
+            isChecked && 'text-muted-foreground'
+          )}
+        >
           {item.name}
         </Text>
         <Text className="text-lg text-muted-foreground">
