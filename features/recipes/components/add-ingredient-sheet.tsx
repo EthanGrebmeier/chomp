@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import { BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRef } from 'react';
-import { Platform, View } from 'react-native';
+import { PlusIcon } from 'lucide-react-native';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { Platform, Pressable, View } from 'react-native';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
@@ -15,8 +17,11 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import { Text } from '../../../components/ui/text';
+import { useTheme } from '../../../hooks/use-theme';
 import { useAddRecipeIngredient } from '../hooks/useAddRecipeIngredient';
+import { useUpdateRecipeIngredient } from '../hooks/useUpdateRecipeIngredient';
 import { recipeQueryKeys } from '../query-keys';
+import { RecipeIngredient } from '../types';
 
 const unitOptions = [
   { label: 'Each', value: 'each' },
@@ -35,30 +40,44 @@ const verifyUnit = (
 
 type AddIngredientSheetProps = {
   recipeId: string;
+  onClose?: () => void;
+  defaultValues?: RecipeIngredient | null;
 };
 
-export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
-  const ref = useRef<BottomSheetModal>(null);
-  const { mutate: addIngredient } = useAddRecipeIngredient();
-  const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
+export type AddIngredientSheetRef = {
+  present: () => void;
+};
 
+export const AddIngredientSheet = forwardRef<
+  AddIngredientSheetRef,
+  AddIngredientSheetProps
+>(({ recipeId, onClose, defaultValues }, ref) => {
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
   const nameInputRef =
     useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
+  const { mutate: addIngredient } = useAddRecipeIngredient();
+  const { mutate: updateIngredient } = useUpdateRecipeIngredient();
+  const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
+  const theme = useTheme();
+  const isEditing = !!defaultValues;
+
+  useImperativeHandle(ref, () => ({
+    present: () => bottomSheetRef.current?.present(),
+  }));
 
   const handleOpen = () => {
     // Focus the input when the bottom sheet opens
     setTimeout(() => {
       nameInputRef.current?.focus();
-    }, 100);
+    }, 10);
   };
 
   const form = useForm({
     defaultValues: {
-      name: '',
-      quantity: '1',
-      unit: 'each',
-      notes: '',
+      name: defaultValues?.name || '',
+      quantity: defaultValues?.quantity?.toString() || '1',
+      unit: defaultValues?.unit || 'each',
     },
     onSubmit: e => {
       const { ...formValue } = e.value;
@@ -68,43 +87,85 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
         return;
       }
 
-      addIngredient(
-        {
-          recipeId,
-          name: formValue.name,
-          quantity: parseInt(formValue.quantity),
-          unit,
-          notes: formValue.notes || undefined,
-        },
-        {
-          onSuccess: () => {
-            form.reset({
-              name: '',
-              quantity: '1',
-              unit: 'each',
-              notes: '',
-            });
-            nameInputRef.current?.focus();
-            return queryClient.invalidateQueries({
-              queryKey: recipeQueryKeys.all(),
-            });
+      if (isEditing && defaultValues) {
+        updateIngredient(
+          {
+            itemId: defaultValues.id,
+            recipeId,
+            updates: {
+              name: formValue.name,
+              quantity: parseInt(formValue.quantity),
+              unit,
+            },
           },
-        }
-      );
+          {
+            onSuccess: () => {
+              form.reset({
+                name: '',
+                quantity: '1',
+                unit: 'each',
+              });
+              queryClient.invalidateQueries({
+                queryKey: recipeQueryKeys.all(),
+              });
+              bottomSheetRef.current?.dismiss();
+              onClose?.();
+            },
+          }
+        );
+      } else {
+        addIngredient(
+          {
+            recipeId,
+            name: formValue.name,
+            quantity: parseInt(formValue.quantity),
+            unit,
+          },
+          {
+            onSuccess: () => {
+              form.reset({
+                name: '',
+                quantity: '1',
+                unit: 'each',
+              });
+              queryClient.invalidateQueries({
+                queryKey: recipeQueryKeys.all(),
+              });
+              bottomSheetRef.current?.dismiss();
+              onClose?.();
+            },
+          }
+        );
+      }
     },
   });
 
   return (
     <>
-      <Button onPress={() => ref.current?.present()}>
-        <Text>Add Ingredient</Text>
-      </Button>
-      <BottomSheet
-        onStartClose={() => form.reset()}
-        onOpen={handleOpen}
-        ref={ref}
+      <Pressable
+        className="size-10 items-center justify-center rounded-full border border-border bg-primary"
+        onPress={() => bottomSheetRef.current?.present()}
       >
-        <View className="gap-4 pb-4">
+        <PlusIcon
+          color={theme.primaryForeground}
+          strokeWidth={3.5}
+          className="size-4"
+        />
+      </Pressable>
+      <BottomSheet
+        onStartClose={() => {
+          KeyboardController.dismiss();
+          form.reset({
+            name: '',
+            quantity: '1',
+            unit: 'each',
+          });
+          onClose?.();
+        }}
+        onOpen={handleOpen}
+        ref={bottomSheetRef}
+      >
+        <View className="flex-row gap-2 pb-4">
           <form.Field
             validators={{
               onSubmit: ({ value }) => {
@@ -116,8 +177,8 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
             name="name"
           >
             {field => (
-              <View className="gap-2">
-                <BottomSheetTextInput
+              <View className="flex-1 gap-2 ">
+                <BottomSheet.BareTextInput
                   value={field.state.value}
                   onChangeText={field.handleChange}
                   placeholder="Ingredient Name"
@@ -129,19 +190,15 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
               </View>
             )}
           </form.Field>
-
-          <View className="flex-1 flex-row gap-2">
+          <View className="w-[130px]  flex-row gap-2 ">
             <form.Field name="quantity">
               {field => (
-                <View className="flex-1 gap-2">
-                  <Text>Quantity: </Text>
-                  <BottomSheet.TextInput
-                    keyboardType="number-pad"
-                    value={field.state.value}
-                    onChangeText={field.handleChange}
-                    placeholder="1"
-                  />
-                </View>
+                <BottomSheet.BareTextInput
+                  className="h-8  text-right text-xl font-semibold text-foreground"
+                  keyboardType="number-pad"
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                />
               )}
             </form.Field>
             <form.Field
@@ -158,20 +215,26 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
               name="unit"
             >
               {field => (
-                <View className="flex-1 gap-2">
-                  <Text>Unit: </Text>
+                <View className="w-[104px] shrink-0 gap-2 ">
                   <Select
+                    className="bg-transparent"
                     value={unitOptions.find(
                       option => option.value === field.state.value
                     )}
                     onValueChange={option =>
-                      option && field.handleChange(option?.value)
+                      option &&
+                      field.setValue(option.value as typeof field.state.value)
                     }
                   >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select Unit" />
+                    <SelectTrigger className="shrink-0 border-0 border-none  p-0 shadow-none dark:bg-transparent">
+                      <SelectValue
+                        className="bg-transparent text-xl font-semibold text-foreground "
+                        placeholder="Select Unit"
+                      />
                     </SelectTrigger>
                     <SelectContent
+                      align="end"
+                      side="top"
                       insets={{
                         top: insets.top,
                         bottom: Platform.select({
@@ -194,32 +257,15 @@ export const AddIngredientSheet = ({ recipeId }: AddIngredientSheetProps) => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <FieldInfo field={field} />
                 </View>
               )}
             </form.Field>
           </View>
-
-          <form.Field name="notes">
-            {field => (
-              <View className="gap-2">
-                <Text>Notes (optional): </Text>
-                <BottomSheet.TextInput
-                  value={field.state.value}
-                  onChangeText={field.handleChange}
-                  placeholder="Add any notes about this ingredient"
-                  multiline
-                  numberOfLines={2}
-                />
-              </View>
-            )}
-          </form.Field>
-
-          <Button onPress={() => form.handleSubmit()}>
-            <Text>Add Ingredient</Text>
-          </Button>
         </View>
+        <Button onPress={() => form.handleSubmit()}>
+          <Text>{isEditing ? 'Update Ingredient' : 'Add Ingredient'}</Text>
+        </Button>
       </BottomSheet>
     </>
   );
-};
+});

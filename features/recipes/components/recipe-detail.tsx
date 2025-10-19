@@ -1,12 +1,15 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Animated, TextInput, View } from 'react-native';
 import { EditableHeader } from '../../../components/editable-header';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { useAddRecipeToList } from '../hooks/useAddRecipeToList';
 import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
-import { RecipeWithIngredients } from '../types';
-import { AddIngredientSheet } from './add-ingredient-sheet';
+import { RecipeIngredient, RecipeWithIngredients } from '../types';
+import {
+  AddIngredientSheet,
+  AddIngredientSheetRef,
+} from './add-ingredient-sheet';
 import { RecipeIngredientItem } from './recipe-ingredient-item';
 
 type RecipeDetailProps = {
@@ -22,9 +25,21 @@ export const RecipeDetail = ({
   const { mutate: updateRecipe } = useUpdateRecipe();
 
   const textInputRef = useRef<TextInput>(null);
+  const addIngredientSheetRef = useRef<AddIngredientSheetRef>(null);
+  const [editingIngredient, setEditingIngredient] =
+    useState<RecipeIngredient | null>(null);
 
   const handleChangeText = (text: string) => {
     updateRecipe({ recipe: { ...recipe, name: text } });
+  };
+
+  const handleEditIngredient = (ingredient: RecipeIngredient) => {
+    setEditingIngredient(ingredient);
+    addIngredientSheetRef.current?.present();
+  };
+
+  const handleCloseIngredientSheet = () => {
+    setEditingIngredient(null);
   };
 
   return (
@@ -59,7 +74,12 @@ export const RecipeDetail = ({
       <View className="flex-1 ">
         <View className="mb-4 flex-row items-center justify-between px-4">
           <Text className="text-xl font-semibold">Ingredients:</Text>
-          <AddIngredientSheet recipeId={recipe.id} />
+          <AddIngredientSheet
+            ref={addIngredientSheetRef}
+            recipeId={recipe.id}
+            onClose={handleCloseIngredientSheet}
+            defaultValues={editingIngredient}
+          />
         </View>
         <Animated.FlatList
           className="gap-2"
@@ -72,6 +92,7 @@ export const RecipeDetail = ({
               )}
               key={item.id}
               ingredient={item}
+              onEdit={handleEditIngredient}
             />
           )}
         />
