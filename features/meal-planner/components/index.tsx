@@ -1,8 +1,10 @@
-import { eachDayOfInterval, format } from 'date-fns';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { addDays, differenceInDays, eachDayOfInterval, format } from 'date-fns';
 import { NotebookTabsIcon, PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { CalendarSheet } from '../../../components/calendar-sheet';
 import { EditableHeader } from '../../../components/editable-header';
 import { Button } from '../../../components/ui/button';
 import { ListItem } from '../../../components/ui/list-item';
@@ -31,6 +33,7 @@ export const MealPlanner = ({
   const mealSheetRef = useRef<MealSheetRef>(null);
   const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const textInputRef = useRef<TextInput>(null);
+  const calendarSheetRef = useRef<BottomSheetModal | null>(null);
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId);
   const { mutate: updateMealPlan } = useUpdateMealPlan();
   const theme = useTheme();
@@ -68,6 +71,16 @@ export const MealPlanner = ({
       updates: { name: text },
     });
   };
+  const handleChangeDate = (date: Date) => {
+    const numberOfDays = differenceInDays(new Date(endDate), date);
+    updateMealPlan({
+      mealPlanId,
+      updates: {
+        startDate: date.toISOString(),
+        endDate: addDays(date, numberOfDays - 1).toISOString(),
+      },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -85,12 +98,19 @@ export const MealPlanner = ({
         onChangeText={handleChangeText}
       >
         {mealPlan?.startDate && mealPlan?.endDate && (
-          <Text className="text-lg text-muted-foreground">
-            {format(new Date(mealPlan.startDate), 'EE, M/d/yy')} -{' '}
-            {format(new Date(mealPlan.endDate), 'EE, M/d/yy')}
-          </Text>
+          <Pressable onPress={() => calendarSheetRef.current?.present()}>
+            <Text className="text-lg text-muted-foreground">
+              {format(new Date(mealPlan.startDate), 'EE, M/d/yy')} -{' '}
+              {format(new Date(mealPlan.endDate), 'EE, M/d/yy')}
+            </Text>
+          </Pressable>
         )}
       </EditableHeader>
+      <CalendarSheet
+        onChange={handleChangeDate}
+        ref={calendarSheetRef}
+        selectedDate={new Date(startDate)}
+      />
       <MealSheet
         ref={mealSheetRef}
         mealPlanId={mealPlanId}
