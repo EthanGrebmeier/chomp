@@ -202,9 +202,11 @@ export const CalendarSheet = ({
             />
           </Button>
         </View>
-        <View className="-mx-4 flex-row items-center justify-center bg-primary">
+        <View className="-mx-4 flex-row items-center justify-center ">
           <Text
-            className={cn(' text-lg font-semibold text-primary-foreground')}
+            className={cn(
+              'grow-0 self-center rounded-full bg-primary px-4 py-0.5 text-lg font-semibold text-primary-foreground '
+            )}
           >
             {internalSelectedDate
               ? format(internalSelectedDate, 'EEEE, M/d/yy')
