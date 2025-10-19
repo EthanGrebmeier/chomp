@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useCreateMealPlan } from '../hooks';
 
-export const AddMealPlanSheet = () => {
+export const CreateMealPlanSheet = () => {
   const createMealPlan = useCreateMealPlan();
 
   const getDefaultName = (date: Date) => {

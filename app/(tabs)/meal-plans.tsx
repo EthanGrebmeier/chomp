@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { FlatList, View } from 'react-native';
 import { ListItem } from '../../components/ui/list-item';
 import { Text } from '../../components/ui/text';
-import { AddMealPlanSheet } from '../../features/meal-planner/components/add-meal-plan-sheet';
+import { CreateMealPlanSheet } from '../../features/meal-planner/components/create-meal-plan-sheet';
 import { useDeleteMealPlan } from '../../features/meal-planner/hooks/useDeleteMealPlan';
 
 export default function MealPlansPage() {
@@ -42,7 +42,7 @@ export default function MealPlansPage() {
       )}
 
       <View className="absolute bottom-4 right-4">
-        <AddMealPlanSheet />
+        <CreateMealPlanSheet />
       </View>
     </View>
   );
