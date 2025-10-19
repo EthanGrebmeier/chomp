@@ -66,7 +66,7 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
       >
         <GestureDetector
           gesture={Gesture.Pan()
-            .activeOffsetX([-10, 10])
+            .activeOffsetX([-10, 100])
             .failOffsetY([-5, 5])
             .onUpdate(event => {
               if (
