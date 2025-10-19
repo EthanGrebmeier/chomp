@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import { Text } from '../../../components/ui/text';
+import { useTheme } from '../../../hooks/use-theme';
 import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
 import { useUpdateGroceryListItem } from '../hooks/useUpdateGroceryListItem';
 import { queryKeys } from '../query-keys';
@@ -58,6 +59,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
     const insets = useSafeAreaInsets();
     const queryClient = useQueryClient();
     const isEditing = !!defaultValues;
+    const theme = useTheme();
 
     useImperativeHandle(ref, () => ({
       present: () => bottomSheetRef.current?.present(),
@@ -138,7 +140,11 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
           className="size-10 items-center justify-center rounded-full border border-border bg-primary"
           onPress={() => bottomSheetRef.current?.present()}
         >
-          <PlusIcon color="white" className="size-4 text-white" />
+          <PlusIcon
+            color={theme.primaryForeground}
+            strokeWidth={3.5}
+            className="size-4"
+          />
         </Pressable>
         <BottomSheet
           onStartClose={() => {

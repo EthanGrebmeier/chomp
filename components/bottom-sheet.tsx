@@ -85,7 +85,7 @@ const TextInput = forwardRef<
   return (
     <BottomSheetTextInput
       className={cn(
-        'h-10 rounded-md border border-input bg-input px-3 py-2 text-foreground shadow-sm shadow-black/5',
+        'h-10 rounded-md border border-input bg-input px-3 text-foreground shadow-sm shadow-black/5',
         className
       )}
       {...props}

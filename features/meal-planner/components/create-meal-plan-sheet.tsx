@@ -4,9 +4,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { addDays, format, startOfDay } from 'date-fns';
 import { router } from 'expo-router';
-import { CalendarIcon } from 'lucide-react-native';
+import { SunriseIcon, SunsetIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
   CalendarSheet,
@@ -41,6 +42,7 @@ export const CreateMealPlanSheet = () => {
     setStartDate(startOfDay(new Date()));
     setEndDate(addDays(startOfDay(new Date()), 7));
     setMealPlanName('');
+    KeyboardController.dismiss();
   };
 
   const handleCreateMealPlan = async () => {
@@ -59,7 +61,7 @@ export const CreateMealPlanSheet = () => {
         endDate: endDateStr,
       },
     });
-    bottomSheetRef.current?.close();
+    bottomSheetRef.current?.dismiss();
     router.push(`/meal-plan/${mealPlan.id}`);
   };
 
@@ -76,21 +78,14 @@ export const CreateMealPlanSheet = () => {
       {/** Start Date Sheet */}
       <CalendarSheet
         ref={startDateSheetRef}
-        selectedDate={startDate}
         onChange={date => setStartDate(startOfDay(date))}
-        onClose={() => {
-          bottomSheetRef.current?.present();
-        }}
+        headerTitle="Select Start Date"
       />
       {/** End Date Sheet */}
       <CalendarSheet
         ref={endDateSheetRef}
-        selectedDate={endDate}
         onChange={date => setEndDate(startOfDay(date))}
         headerTitle="Select End Date"
-        onClose={() => {
-          bottomSheetRef.current?.present();
-        }}
       />
       <BottomSheet onStartClose={onClose} ref={bottomSheetRef}>
         <View className="gap-4">
@@ -101,9 +96,16 @@ export const CreateMealPlanSheet = () => {
             onChangeText={setMealPlanName}
           />
           <View className=" flex-row items-center gap-2 border-t border-border pt-2">
-            <Pressable onPress={() => startDateSheetRef.current?.present()}>
+            <Pressable
+              onPress={() =>
+                startDateSheetRef.current?.present({
+                  selectedDate: startDate,
+                  validEndDate: endDate,
+                })
+              }
+            >
               <Pill
-                icon={<CalendarIcon color={theme.primary} size={16} />}
+                icon={<SunriseIcon color={theme.primary} size={16} />}
                 hasValue={!!startDate}
               >
                 {startDate
@@ -111,9 +113,16 @@ export const CreateMealPlanSheet = () => {
                   : 'Select Start Date'}
               </Pill>
             </Pressable>
-            <Pressable onPress={() => endDateSheetRef.current?.present()}>
+            <Pressable
+              onPress={() =>
+                endDateSheetRef.current?.present({
+                  selectedDate: endDate,
+                  validStartDate: startDate,
+                })
+              }
+            >
               <Pill
-                icon={<CalendarIcon color={theme.primary} size={16} />}
+                icon={<SunsetIcon color={theme.primary} size={16} />}
                 hasValue={!!endDate}
               >
                 {endDate ? format(endDate, 'EEEE, M/d/yy') : 'Select End Date'}

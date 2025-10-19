@@ -1,10 +1,11 @@
 import { BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { ArrowLeftIcon } from 'lucide-react-native';
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { ArrowLeftIcon, SearchIcon } from 'lucide-react-native';
+import { RefObject, useRef, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Text } from '../../../components/ui/text';
+import { useTheme } from '../../../hooks/use-theme';
 import { useRecipes } from '../hooks/useRecipes';
 import { RecipeWithIngredients } from '../types';
 import { CreateRecipeButton } from './create-recipe-button';
@@ -22,6 +23,7 @@ export const RecipeSearch = ({
   canGoBack,
   sheetRef,
 }: RecipeSearchProps) => {
+  const theme = useTheme();
   const [search, setSearch] = useState('');
   const { data: recipes, isLoading } = useRecipes();
   const searchInputRef =
@@ -31,13 +33,6 @@ export const RecipeSearch = ({
     recipes?.filter(recipe =>
       recipe.name.toLowerCase().includes(search.toLowerCase())
     ) || [];
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [onBack]);
 
   return (
     <Animated.View
@@ -59,30 +54,34 @@ export const RecipeSearch = ({
           </Pressable>
         }
       />
-      <BottomSheet.TextInput
-        className="h-8 rounded-full border border-border bg-input px-4 text-foreground"
-        placeholder="Search recipes"
-        onChangeText={setSearch}
-        value={search}
-        ref={searchInputRef}
-      />
-      {filteredRecipes.length > 0 ? (
-        <View className="w-full px-4">
-          <FlatList
-            data={filteredRecipes}
-            scrollEnabled
-            renderItem={({ item }) => (
-              <Pressable onPress={() => onItemSelect(item)}>
-                <View className="flex-1 flex-row justify-between">
-                  <Text className="text-lg text-foreground">{item.name}</Text>
-                  <Text className="text-sm text-muted-foreground">
-                    {item.ingredients.length} ingredients
-                  </Text>
-                </View>
-              </Pressable>
-            )}
-          />
+      <View>
+        <BottomSheet.TextInput
+          className="border border-border bg-input px-4 pl-8 text-foreground"
+          onChangeText={setSearch}
+          value={search}
+          ref={searchInputRef}
+        />
+        <View className="absolute left-2 top-1/2 -translate-y-1/2">
+          <SearchIcon size={16} color={theme.foreground} />
         </View>
+      </View>
+      {filteredRecipes.length > 0 ? (
+        <FlatList
+          className="min-h-[240]"
+          contentContainerClassName="pb-4"
+          data={filteredRecipes}
+          scrollEnabled
+          renderItem={({ item }) => (
+            <Pressable onPress={() => onItemSelect(item)}>
+              <View className="flex-1 flex-row justify-between">
+                <Text className="text-lg text-foreground">{item.name}</Text>
+                <Text className="text-sm text-muted-foreground">
+                  {item.ingredients.length} ingredients
+                </Text>
+              </View>
+            </Pressable>
+          )}
+        />
       ) : (
         <View className="flex-1 items-center justify-center gap-2">
           <Text className="text-muted-foreground">No recipes found</Text>

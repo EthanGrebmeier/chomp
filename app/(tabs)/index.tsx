@@ -19,7 +19,6 @@ export default function Index() {
       ) : (
         <FlatList
           data={lists.data}
-          ItemSeparatorComponent={() => <View className="h-2" />}
           renderItem={({ item }) => (
             <GroceryListCard key={item.id} groceryList={item} />
           )}

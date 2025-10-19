@@ -41,7 +41,7 @@ const buttonVariants = cva(
       },
       size: {
         default: cn(
-          'h-8 px-4 py-1 sm:h-9',
+          'h-10 px-4 py-1 sm:h-9',
           Platform.select({ web: 'has-[>svg]:px-3' })
         ),
         sm: cn(
@@ -64,7 +64,7 @@ const buttonVariants = cva(
 
 const buttonTextVariants = cva(
   cn(
-    'text-foreground text-sm font-medium',
+    'text-foreground text-sm font-extrabold',
     Platform.select({ web: 'pointer-events-none transition-colors' })
   ),
   {

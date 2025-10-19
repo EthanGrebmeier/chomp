@@ -1,4 +1,4 @@
-import { ReactNode, forwardRef, useEffect, useRef, useState } from 'react';
+import { ReactNode, forwardRef, useCallback, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useDebounceCallback } from 'usehooks-ts';
 import { cn } from '../lib/utils';
@@ -52,14 +52,14 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
 
     const debouncedOnChangeText = useDebounceCallback(onChangeText, 500);
 
-    useEffect(() => {
-      if (autofocus && ref && 'current' in ref && ref.current) {
-        // Small delay to ensure the component is fully rendered
-        setTimeout(() => {
-          (ref as React.RefObject<TextInput>).current?.focus();
-        }, 100);
-      }
-    }, [autofocus, ref]);
+    const handleFocus = useCallback(
+      (textInputRef: TextInput | null) => {
+        if (autofocus && textInputRef) {
+          textInputRef.focus();
+        }
+      },
+      [onFocus]
+    );
 
     const handleChangeText = (text: string) => {
       setLocalValue(text);
@@ -101,7 +101,12 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
     return (
       <View className={cn('px-4', className)}>
         <TextDisplayInput
-          ref={ref}
+          ref={inputRef => {
+            handleFocus(inputRef);
+            if (ref && 'current' in ref) {
+              ref.current = inputRef;
+            }
+          }}
           onChangeText={handleChangeText}
           value={localValue}
           multiline={multiline}

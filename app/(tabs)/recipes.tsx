@@ -1,7 +1,7 @@
-import { Text } from '@/components/ui/text';
 import { RecipeList } from '@/features/recipes/components/recipe-list';
 import { useCreateRecipe, useRecipes } from '@/features/recipes/hooks';
 import { Text as RNText, View } from 'react-native';
+import { Heading } from '../../components/text/heading';
 import { CreateRecipeButton } from '../../features/recipes/components/create-recipe-button';
 
 export default function Recipes() {
@@ -10,8 +10,8 @@ export default function Recipes() {
 
   return (
     <View className="py-safe flex-1 bg-background ">
-      <View className="flex-row items-center justify-between px-4">
-        <Text className="text-2xl font-bold">Recipes</Text>
+      <View className="px-4">
+        <Heading>Recipes</Heading>
       </View>
       <View className="absolute bottom-4 right-4">
         <CreateRecipeButton />

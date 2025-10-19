@@ -25,7 +25,6 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
 
   return (
     <FlatList
-      className="flex-col"
       data={recipes}
       renderItem={({ item }) => (
         <ListItem onDelete={() => handleDelete(item.id)}>

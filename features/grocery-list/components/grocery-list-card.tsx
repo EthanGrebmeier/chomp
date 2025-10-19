@@ -25,7 +25,7 @@ export const GroceryListCard = ({ groceryList }: GroceryListCardProps) => {
 
   return (
     <ListItem onDelete={handleDelete}>
-      <Link className="flex-1" href={`/${groceryList.id}`}>
+      <Link href={`/${groceryList.id}`}>
         <View>
           <Text numberOfLines={1} className="text-lg font-bold text-foreground">
             {groceryList.name}

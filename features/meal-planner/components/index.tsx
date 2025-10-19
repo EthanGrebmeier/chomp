@@ -1,11 +1,4 @@
-import {
-  addDays,
-  differenceInDays,
-  eachDayOfInterval,
-  format,
-  parseISO,
-  startOfDay,
-} from 'date-fns';
+import { eachDayOfInterval, format } from 'date-fns';
 import { NotebookTabsIcon, PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
@@ -81,14 +74,19 @@ export const MealPlanner = ({
       updates: { name: text },
     });
   };
-  const handleChangeDate = (date: Date) => {
-    const numberOfDays = differenceInDays(new Date(endDate), date);
+  const handleChangeStartDate = (date: Date) => {
     updateMealPlan({
       mealPlanId,
       updates: {
         startDate: format(date, 'yyyy-MM-dd') + 'T00:00:00',
-        endDate:
-          format(addDays(date, numberOfDays - 1), 'yyyy-MM-dd') + 'T00:00:00',
+      },
+    });
+  };
+  const handleChangeEndDate = (date: Date) => {
+    updateMealPlan({
+      mealPlanId,
+      updates: {
+        endDate: format(date, 'yyyy-MM-dd') + 'T00:00:00',
       },
     });
   };
@@ -110,13 +108,27 @@ export const MealPlanner = ({
       >
         {mealPlan?.startDate && mealPlan?.endDate && (
           <View className="flex-row items-center gap-2">
-            <Pressable onPress={() => startDateSheetRef.current?.present()}>
+            <Pressable
+              onPress={() =>
+                startDateSheetRef.current?.present({
+                  selectedDate: new Date(mealPlan.startDate),
+                  validEndDate: new Date(mealPlan.endDate),
+                })
+              }
+            >
               <Text className="text-lg text-muted-foreground">
                 {format(new Date(mealPlan.startDate), 'EE, M/d/yy')}
               </Text>
             </Pressable>
             <Text className="text-lg text-muted-foreground">-</Text>
-            <Pressable onPress={() => endDateSheetRef.current?.present()}>
+            <Pressable
+              onPress={() =>
+                endDateSheetRef.current?.present({
+                  selectedDate: new Date(mealPlan.endDate),
+                  validStartDate: new Date(mealPlan.startDate),
+                })
+              }
+            >
               <Text className="text-lg text-muted-foreground">
                 {format(new Date(mealPlan.endDate), 'EE, M/d/yy')}
               </Text>
@@ -125,15 +137,13 @@ export const MealPlanner = ({
         )}
       </EditableHeader>
       <CalendarSheet
-        onChange={handleChangeDate}
+        onChange={handleChangeStartDate}
         ref={startDateSheetRef}
-        selectedDate={startOfDay(parseISO(startDate))}
         headerTitle="Select Start Date"
       />
       <CalendarSheet
-        onChange={handleChangeDate}
+        onChange={handleChangeEndDate}
         ref={endDateSheetRef}
-        selectedDate={startOfDay(parseISO(endDate))}
         headerTitle="Select End Date"
       />
       <MealSheet

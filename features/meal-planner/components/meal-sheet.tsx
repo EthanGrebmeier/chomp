@@ -11,8 +11,9 @@ import {
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 
-import { PencilIcon, TrashIcon } from 'lucide-react-native';
+import { CalendarIcon, PencilIcon, TrashIcon } from 'lucide-react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
+import { Pill } from '../../../components/ui/pill';
 import { useTheme } from '../../../hooks/use-theme';
 import { RecipeSearch } from '../../recipes/components/recipe-search';
 import { Recipe } from '../../recipes/types';
@@ -125,7 +126,7 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
         },
       });
       resetState();
-      sheetRef.current?.close();
+      sheetRef.current?.dismiss();
     };
 
     const handleRemoveMeal = () => {
@@ -134,7 +135,7 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
         mealPlanRecipeId: mealPlanRecipeToEdit.id,
       });
       resetState();
-      sheetRef.current?.close();
+      sheetRef.current?.dismiss();
     };
 
     const handleSubmit = () => {
@@ -193,25 +194,30 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
 
                 <View className="gap-4 border-t border-border pt-2">
                   <View className="flex-row items-center gap-2">
-                    <Button
-                      variant="outline"
+                    <Pressable
                       onPress={() =>
                         calendarSheetRef.current?.present({
                           selectedDate: selectedDate
                             ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
                             : undefined,
+                          validStartDate: startOfDay(parseISO(props.startDate)),
+                          validEndDate: startOfDay(parseISO(props.endDate)),
                         })
                       }
-                      className="flex-1 justify-start"
                     >
-                      <Text className="text-left">
-                        {selectedDate
-                          ? startOfDay(
-                              parseISO(selectedDate + 'T00:00:00')
-                            ).toLocaleDateString()
-                          : 'Select Date'}
-                      </Text>
-                    </Button>
+                      <Pill
+                        hasValue={!!selectedDate}
+                        icon={<CalendarIcon size={16} />}
+                      >
+                        <Text className="text-left">
+                          {selectedDate
+                            ? startOfDay(
+                                parseISO(selectedDate + 'T00:00:00')
+                              ).toLocaleDateString()
+                            : 'Select Date'}
+                        </Text>
+                      </Pill>
+                    </Pressable>
                     <MealTimeSelector
                       onSelect={setMealTag}
                       mealTime={mealTag}
@@ -228,13 +234,6 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
 
         <CalendarSheet
           ref={calendarSheetRef}
-          selectedDate={
-            selectedDate
-              ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
-              : undefined
-          }
-          validStartDate={startOfDay(parseISO(props.startDate))}
-          validEndDate={startOfDay(parseISO(props.endDate))}
           headerTitle="Select Date"
           onClose={() => {
             setCurrentView('recipe');
