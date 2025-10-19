@@ -23,8 +23,8 @@ export function BackButton({ onPress, className }: BackButtonProps) {
       onPress={handlePress}
       className={`flex-row items-center gap-2 px-4 ${className || ''}`}
     >
-      <Icon as={ArrowLeftIcon} size={16} />
-      <Text className="text-sm font-medium text-foreground">Back</Text>
+      <Icon as={ArrowLeftIcon} size={20} />
+      <Text className="text-lg font-medium text-foreground">Back</Text>
     </Pressable>
   );
 }
