@@ -12,6 +12,7 @@ export type UpdateRecipeIngredientArgs = {
     quantity?: number;
     unit?: QuantityUnit;
     notes?: string;
+    category?: string;
   };
 };
 

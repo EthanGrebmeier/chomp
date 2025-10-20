@@ -11,6 +11,7 @@ export type AddRecipeIngredientArgs = {
   quantity: number;
   unit: QuantityUnit;
   notes?: string;
+  category?: string;
 };
 
 export const addRecipeIngredient = async ({
@@ -19,6 +20,7 @@ export const addRecipeIngredient = async ({
   quantity,
   unit,
   notes,
+  category,
 }: AddRecipeIngredientArgs) => {
   // Get the current max order for this recipe
   const existingIngredients = await db
@@ -38,6 +40,7 @@ export const addRecipeIngredient = async ({
     quantity,
     unit,
     notes,
+    category,
   });
 
   const newIngredient = {
