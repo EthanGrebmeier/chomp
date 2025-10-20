@@ -10,7 +10,7 @@ type CreateListItemArgs = {
   quantity: number;
   unit: QuantityUnit;
   notes?: string;
-  category?: string;
+  category?: string | null;
 };
 
 export const createListItem = async ({

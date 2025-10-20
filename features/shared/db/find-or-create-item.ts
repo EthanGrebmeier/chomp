@@ -9,7 +9,7 @@ export type FindOrCreateItemArgs = {
   quantity: number;
   unit: QuantityUnit;
   notes?: string;
-  category?: string;
+  category?: string | null;
 };
 
 export const findOrCreateItem = async ({

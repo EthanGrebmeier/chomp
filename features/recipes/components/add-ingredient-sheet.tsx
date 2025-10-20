@@ -41,7 +41,7 @@ export const AddIngredientSheet = forwardRef<
             name: data.name,
             quantity: parseInt(data.quantity),
             unit: data.unit,
-            category: data.category || undefined,
+            category: data.category === '' ? null : data.category || undefined,
           },
         },
         {
@@ -60,7 +60,7 @@ export const AddIngredientSheet = forwardRef<
           name: data.name,
           quantity: parseInt(data.quantity),
           unit: data.unit,
-          category: data.category || undefined,
+          category: data.category === '' ? null : data.category || undefined,
         },
         {
           onSuccess: () => {

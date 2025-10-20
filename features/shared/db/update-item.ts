@@ -10,14 +10,20 @@ export type UpdateItemArgs = {
     quantity?: number;
     unit?: QuantityUnit;
     notes?: string;
-    category?: string;
+    category?: string | null;
   };
 };
 
 export const updateItem = async ({ itemId, updates }: UpdateItemArgs) => {
+  // Handle null category explicitly - convert undefined to null for database
+  const processedUpdates = {
+    ...updates,
+    category: updates.category === undefined ? null : updates.category,
+  };
+
   const result = await db
     .update(itemTable)
-    .set(updates)
+    .set(processedUpdates)
     .where(eq(itemTable.id, itemId))
     .returning();
 

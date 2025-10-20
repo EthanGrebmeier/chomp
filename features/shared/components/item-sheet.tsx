@@ -39,7 +39,7 @@ export type ItemFormData = {
   name: string;
   quantity: string;
   unit: QuantityUnit;
-  category?: string;
+  category?: string | null;
 };
 
 export type ItemSheetProps = {
@@ -113,7 +113,8 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
           name: formValue.name,
           quantity: formValue.quantity,
           unit,
-          category: formValue.category || undefined,
+          category:
+            formValue.category === '' ? null : formValue.category || undefined,
         });
       },
     });

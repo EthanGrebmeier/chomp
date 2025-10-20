@@ -38,7 +38,8 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
               name: data.name,
               unit: data.unit,
               quantity: parseInt(data.quantity),
-              category: data.category || undefined,
+              category:
+                data.category === '' ? null : data.category || undefined,
             },
           },
           {
@@ -56,7 +57,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
             name: data.name,
             unit: data.unit,
             quantity: parseInt(data.quantity),
-            category: data.category || undefined,
+            category: data.category === '' ? null : data.category || undefined,
           },
           {
             onSuccess: () => {

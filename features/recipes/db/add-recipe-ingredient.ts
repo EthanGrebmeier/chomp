@@ -11,7 +11,7 @@ export type AddRecipeIngredientArgs = {
   quantity: number;
   unit: QuantityUnit;
   notes?: string;
-  category?: string;
+  category?: string | null;
 };
 
 export const addRecipeIngredient = async ({

@@ -8,7 +8,7 @@ export type CreateItemArgs = {
   quantity: number;
   unit: QuantityUnit;
   notes?: string;
-  category?: string;
+  category?: string | null;
 };
 
 export const createItem = async ({

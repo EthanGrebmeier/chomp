@@ -14,7 +14,7 @@ export const updateListItem = async ({
     quantity?: number;
     unit?: QuantityUnit;
     notes?: string;
-    category?: string;
+    category?: string | null;
   };
 }) => {
   // Get the grocery list item to find the associated item
