@@ -14,6 +14,7 @@ import {
   CalendarSheet,
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
+import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { useCreateMealPlan } from '../hooks';
 
@@ -106,7 +107,7 @@ export const CreateMealPlanSheet = () => {
               }
             >
               <Pill
-                icon={<SunriseIcon color={theme.primary} size={16} />}
+                icon={<Icon as={SunriseIcon} color={theme.primary} size={16} />}
                 hasValue={!!startDate}
               >
                 {startDate
@@ -123,7 +124,7 @@ export const CreateMealPlanSheet = () => {
               }
             >
               <Pill
-                icon={<SunsetIcon color={theme.primary} size={16} />}
+                icon={<Icon as={SunsetIcon} color={theme.primary} size={16} />}
                 hasValue={!!endDate}
               >
                 {endDate ? format(endDate, 'EEEE, M/d/yy') : 'Select End Date'}

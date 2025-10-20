@@ -18,6 +18,7 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import { useTheme } from '../hooks/use-theme';
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './ui/button';
+import { Icon } from './ui/icon';
 import { Text } from './ui/text';
 
 type CalendarSheetProps = {
@@ -314,7 +315,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
           {/* Custom header with close and confirm buttons */}
           <View className="flex-row items-center justify-between">
             <Button variant="ghost" size="icon" onPress={handleClose}>
-              <X color={theme.primary} size={28} />
+              <Icon as={X} color={theme.primary} size={28} />
             </Button>
 
             <Text className="text-2xl font-bold text-foreground">
@@ -327,7 +328,8 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
               onPress={handleConfirm}
               disabled={!internalSelectedDate}
             >
-              <Check
+              <Icon
+                as={Check}
                 size={28}
                 color={theme.primary}
                 className={cn(

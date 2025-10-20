@@ -9,6 +9,7 @@ import {
 } from '../../../components/calendar-sheet';
 import { EditableHeader } from '../../../components/editable-header';
 import { Button } from '../../../components/ui/button';
+import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
@@ -162,7 +163,11 @@ export const MealPlanner = ({
           onPress={() => addToGroceryListSheetRef.current?.open()}
           className="flex-row items-center gap-2"
         >
-          <NotebookTabsIcon size={16} color={theme.primaryForeground} />
+          <Icon
+            as={NotebookTabsIcon}
+            size={16}
+            color={theme.primaryForeground}
+          />
           <Text>Add to List</Text>
         </Button>
       </View>
@@ -189,7 +194,11 @@ export const MealPlanner = ({
                     }
                     className="size-6 rounded-full p-0"
                   >
-                    <PlusIcon size={16} color={theme.primaryForeground} />
+                    <Icon
+                      as={PlusIcon}
+                      size={16}
+                      color={theme.primaryForeground}
+                    />
                   </Button>
                 </View>
                 {recipes.length === 0 ? (

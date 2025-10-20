@@ -4,6 +4,7 @@ import { RefObject, useRef, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import { useRecipes } from '../hooks/useRecipes';
@@ -42,7 +43,7 @@ export const RecipeSearch = ({
     >
       {canGoBack && (
         <Pressable onPress={onBack} className="flex-row items-center gap-2">
-          <ArrowLeftIcon size={16} />
+          <Icon as={ArrowLeftIcon} size={16} />
           <Text className="text-sm font-bold text-foreground">Back</Text>
         </Pressable>
       )}
@@ -60,7 +61,7 @@ export const RecipeSearch = ({
           ref={searchInputRef}
         />
         <View className="absolute left-2 top-1/2 -translate-y-1/2">
-          <SearchIcon size={16} color={theme.foreground} />
+          <Icon as={SearchIcon} size={16} color={theme.foreground} />
         </View>
       </View>
       {filteredRecipes.length > 0 ? (

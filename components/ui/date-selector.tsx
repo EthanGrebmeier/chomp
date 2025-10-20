@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { Pressable, View } from 'react-native';
+import { Icon } from './icon';
 import { Pill } from './pill';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { Text } from './text';
@@ -25,7 +26,7 @@ export const DateSelector = ({
   return (
     <Popover>
       <PopoverTrigger ref={ref}>
-        <Pill icon={<CalendarIcon size={16} />} hasValue={!!date}>
+        <Pill icon={<Icon as={CalendarIcon} size={16} />} hasValue={!!date}>
           {date
             ? new Date(date).toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -58,7 +59,11 @@ export const DateSelector = ({
               <Text className="text-base font-medium text-foreground">
                 {format(date, 'EEEE, M/d/yy')}
               </Text>
-              <CalendarIcon size={16} className="text-muted-foreground" />
+              <Icon
+                as={CalendarIcon}
+                size={16}
+                className="text-muted-foreground"
+              />
             </Pressable>
           ))}
         </View>

@@ -1,6 +1,7 @@
 import { SearchIcon } from 'lucide-react-native';
 import { FlatList, Pressable, View } from 'react-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { GroceryListItemCard } from '../../grocery-list/components/grocery-list-item-card';
 import { useGroceryLists } from '../../grocery-list/hooks/useGroceryLists';
@@ -51,7 +52,7 @@ export const GroceryListOptions = ({
           title="Add to List"
           button={
             <Pressable onPress={onSearch}>
-              <SearchIcon size={16} />
+              <Icon as={SearchIcon} size={16} />
             </Pressable>
           }
         />

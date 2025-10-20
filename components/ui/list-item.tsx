@@ -11,6 +11,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+import { Icon } from './icon';
 
 type ListItemProps = {
   className?: string;
@@ -119,7 +120,7 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
         </GestureDetector>
       </Animated.View>
       <Animated.View style={removeIconAnimatedStyle}>
-        <TrashIcon color="white" size={24} />
+        <Icon as={TrashIcon} color="white" size={24} />
       </Animated.View>
     </View>
   );

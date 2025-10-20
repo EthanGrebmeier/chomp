@@ -43,6 +43,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
           },
           {
             onSuccess: () => {
+              itemSheetRef.current?.dismiss();
               queryClient.invalidateQueries({ queryKey: queryKeys.base() });
               onClose?.();
             },

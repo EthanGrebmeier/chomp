@@ -8,6 +8,7 @@ import { Platform, Pressable, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { Icon } from '../../../components/ui/icon';
 import {
   Select,
   SelectContent,
@@ -56,6 +57,7 @@ export type ItemSheetProps = {
 
 export type ItemSheetRef = {
   present: () => void;
+  dismiss: () => void;
 };
 
 export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
@@ -82,6 +84,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
 
     useImperativeHandle(ref, () => ({
       present: () => bottomSheetRef.current?.present(),
+      dismiss: () => bottomSheetRef.current?.dismiss(),
     }));
 
     const handleOpen = () => {
@@ -141,7 +144,8 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
             className="size-10 items-center justify-center rounded-full border border-border bg-primary"
             onPress={() => bottomSheetRef.current?.present()}
           >
-            <PlusIcon
+            <Icon
+              as={PlusIcon}
               color={theme.primaryForeground}
               strokeWidth={3.5}
               className="size-4"

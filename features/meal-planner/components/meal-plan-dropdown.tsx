@@ -7,6 +7,7 @@ import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
 } from '../../../components/native-dropdown';
+import { Icon } from '../../../components/ui/icon';
 import { useTheme } from '../../../hooks/use-theme';
 
 type MealPlanDropdownProps = {
@@ -19,7 +20,7 @@ export const MealPlanDropdown = ({ onEdit }: MealPlanDropdownProps) => {
     <DropdownMenuRoot>
       <DropdownMenuTrigger>
         <Pressable>
-          <MoreHorizontalIcon size={24} color={theme.primary} />
+          <Icon as={MoreHorizontalIcon} size={24} color={theme.primary} />
         </Pressable>
       </DropdownMenuTrigger>
       <DropdownMenuContent>

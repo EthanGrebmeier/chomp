@@ -2,6 +2,7 @@ import { TriggerRef } from '@rn-primitives/popover';
 import { ClockIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable } from 'react-native';
+import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import {
   Popover,
@@ -51,7 +52,7 @@ export const MealTimeSelector = ({
     <Popover>
       <PopoverTrigger ref={ref}>
         <Pill
-          icon={<ClockIcon size={16} />}
+          icon={<Icon as={ClockIcon} size={16} />}
           hasValue={!!mealTime}
           onClear={mealTime ? () => onSelect(undefined) : undefined}
         >

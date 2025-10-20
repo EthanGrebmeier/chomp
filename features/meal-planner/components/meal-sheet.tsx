@@ -13,6 +13,7 @@ import { Text } from '../../../components/ui/text';
 
 import { CalendarIcon, PencilIcon, TrashIcon } from 'lucide-react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
+import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { useTheme } from '../../../hooks/use-theme';
 import { RecipeSearch } from '../../recipes/components/recipe-search';
@@ -181,11 +182,19 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
                     </View>
                     <View className="flex-row items-center gap-4">
                       <Pressable onPress={() => setCurrentView('search')}>
-                        <PencilIcon color={theme.foreground} size={20} />
+                        <Icon
+                          as={PencilIcon}
+                          color={theme.foreground}
+                          size={20}
+                        />
                       </Pressable>
                       {mode === 'edit' && (
                         <Pressable onPress={handleRemoveMeal}>
-                          <TrashIcon size={20} color={theme.destructive} />
+                          <Icon
+                            as={TrashIcon}
+                            size={20}
+                            color={theme.destructive}
+                          />
                         </Pressable>
                       )}
                     </View>
@@ -207,7 +216,7 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
                     >
                       <Pill
                         hasValue={!!selectedDate}
-                        icon={<CalendarIcon size={16} />}
+                        icon={<Icon as={CalendarIcon} size={16} />}
                       >
                         <Text className="text-left">
                           {selectedDate
