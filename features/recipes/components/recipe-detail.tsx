@@ -5,7 +5,7 @@ import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { useAddRecipeToList } from '../hooks/useAddRecipeToList';
 import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
-import { RecipeIngredient, RecipeWithIngredients } from '../types';
+import { RecipeIngredientWithItem, RecipeWithIngredients } from '../types';
 import {
   AddIngredientSheet,
   AddIngredientSheetRef,
@@ -27,14 +27,17 @@ export const RecipeDetail = ({
   const textInputRef = useRef<TextInput>(null);
   const addIngredientSheetRef = useRef<AddIngredientSheetRef>(null);
   const [editingIngredient, setEditingIngredient] =
-    useState<RecipeIngredient | null>(null);
+    useState<RecipeIngredientWithItem | null>(null);
 
   const handleChangeText = (text: string) => {
     updateRecipe({ recipe: { ...recipe, name: text } });
   };
 
-  const handleEditIngredient = (ingredient: RecipeIngredient) => {
-    setEditingIngredient(ingredient);
+  const handleEditIngredient = (ingredient: RecipeIngredientWithItem) => {
+    setEditingIngredient({
+      ...ingredient,
+      item: ingredient.item,
+    });
     addIngredientSheetRef.current?.present();
   };
 
