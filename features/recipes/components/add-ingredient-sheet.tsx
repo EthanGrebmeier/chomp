@@ -50,6 +50,7 @@ export const AddIngredientSheet = forwardRef<
               queryKey: recipeQueryKeys.all(),
             });
             onClose?.();
+            itemSheetRef.current?.dismiss();
           },
         }
       );

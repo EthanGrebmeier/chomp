@@ -1,4 +1,5 @@
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { CategoryTag } from '../../../components/category-tag';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useRemoveRecipeIngredient } from '../hooks/useRemoveRecipeIngredient';
@@ -23,14 +24,22 @@ export const RecipeIngredientItem = ({
       }
       className={className}
     >
-      <Pressable
-        className="flex-1 flex-row justify-between"
-        onPress={() => onEdit?.(ingredient)}
-      >
-        <Text>{ingredient.item.name}</Text>
-        <Text className="text-muted-foreground">
-          {ingredient.item.quantity} {ingredient.item.unit}
-        </Text>
+      <Pressable className="flex-1 " onPress={() => onEdit?.(ingredient)}>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-2xl font-medium text-foreground">
+            {ingredient.item.name}
+          </Text>
+          <Text className="text-lg text-muted-foreground">
+            {ingredient.item.unit === 'each' && 'x'}
+            {ingredient.item.quantity}
+            {ingredient.item.unit !== 'each' && ` ${ingredient.item.unit}`}
+          </Text>
+        </View>
+        <View className="flex-row items-center justify-end gap-2">
+          {ingredient.item.category && (
+            <CategoryTag category={ingredient.item.category} />
+          )}
+        </View>
       </Pressable>
     </ListItem>
   );

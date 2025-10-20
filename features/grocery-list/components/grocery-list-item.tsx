@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { CookingPotIcon } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
+import { CategoryTag } from '../../../components/category-tag';
 import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
@@ -88,9 +89,7 @@ export const GroceryListItem = ({
               )}
             </View>
             {item.item.category && (
-              <Text className="rounded-full bg-muted px-2 py-1 text-sm text-muted-foreground">
-                {item.item.category}
-              </Text>
+              <CategoryTag category={item.item.category} />
             )}
           </View>
         )}

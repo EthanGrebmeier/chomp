@@ -116,6 +116,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
           category:
             formValue.category === '' ? null : formValue.category || undefined,
         });
+        form.reset();
       },
     });
 
