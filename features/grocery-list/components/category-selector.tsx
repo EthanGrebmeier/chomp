@@ -10,21 +10,8 @@ import {
   PopoverTrigger,
 } from '../../../components/ui/popover';
 import { Text } from '../../../components/ui/text';
-
-const categoryOptions = [
-  { label: 'Produce', value: 'produce' },
-  { label: 'Deli', value: 'deli' },
-  { label: 'Meat', value: 'meat' },
-  { label: 'Dairy', value: 'dairy' },
-  { label: 'Bakery', value: 'bakery' },
-  { label: 'Frozen', value: 'frozen' },
-  { label: 'Pantry', value: 'pantry' },
-  { label: 'Beverages', value: 'beverages' },
-  { label: 'Snacks', value: 'snacks' },
-  { label: 'Health & Beauty', value: 'health-beauty' },
-  { label: 'Household', value: 'household' },
-  { label: 'Other', value: 'other' },
-] as const;
+import { cn } from '../../../lib/utils';
+import { categoryOptions } from '../../shared/category/categories';
 
 const CategoryItem = ({
   category,
@@ -34,8 +21,12 @@ const CategoryItem = ({
   onSelect: (category: (typeof categoryOptions)[number]) => void;
 }) => {
   return (
-    <Pressable onPress={() => onSelect(category)}>
-      <Text className="text-sm font-medium text-foreground">
+    <Pressable
+      onPress={() => onSelect(category)}
+      className="flex-row items-center gap-2"
+    >
+      <Icon as={category.style.icon} size={16} />
+      <Text className={cn('text-sm font-medium text-foreground')}>
         {category.label}
       </Text>
     </Pressable>
@@ -58,7 +49,7 @@ export const CategorySelector = ({
 
   return (
     <Popover>
-      <PopoverTrigger ref={ref}>
+      <PopoverTrigger className="self-start" ref={ref}>
         <Pill
           icon={<Icon as={TagIcon} size={16} />}
           hasValue={!!category}
@@ -67,7 +58,7 @@ export const CategorySelector = ({
           {selectedCategory ? selectedCategory.label : 'Category'}
         </Pill>
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" className="w-32 gap-1 py-2">
+      <PopoverContent side="top" align="start" className="w-44 gap-1 py-2">
         {categoryOptions.map(categoryOption => (
           <CategoryItem
             key={categoryOption.value}
