@@ -22,7 +22,7 @@ import { useTheme } from '../../../hooks/use-theme';
 import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
 import { useUpdateGroceryListItem } from '../hooks/useUpdateGroceryListItem';
 import { queryKeys } from '../query-keys';
-import { GroceryListItem } from '../types';
+import { GroceryListItemWithItem } from '../types';
 
 const unitOptions = [
   { label: 'Each', value: 'each' },
@@ -42,7 +42,7 @@ const verifyUnit = (
 type AddItemSheetProps = {
   groceryListId: string;
   onClose?: () => void;
-  defaultValues: GroceryListItem | null;
+  defaultValues: GroceryListItemWithItem | null;
 };
 
 export type AddItemSheetRef = {
@@ -76,9 +76,9 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
 
     const form = useForm({
       defaultValues: {
-        name: defaultValues?.name || '',
-        quantity: defaultValues?.quantity?.toString() || '1',
-        unit: defaultValues?.unit || 'each',
+        name: defaultValues?.item.name || '',
+        quantity: defaultValues?.item.quantity?.toString() || '1',
+        unit: defaultValues?.item.unit || 'each',
       },
       onSubmit: e => {
         const { ...formValue } = e.value;
@@ -106,6 +106,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
                   unit: 'each',
                 });
                 queryClient.invalidateQueries({ queryKey: queryKeys.base() });
+                bottomSheetRef.current?.dismiss();
                 onClose?.();
               },
             }
@@ -113,12 +114,10 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
         } else {
           addItem(
             {
-              item: {
-                name: formValue.name,
-                groceryListId,
-                unit,
-                quantity: parseInt(formValue.quantity),
-              },
+              groceryListId,
+              name: formValue.name,
+              unit,
+              quantity: parseInt(formValue.quantity),
             },
             {
               onSuccess: () => {

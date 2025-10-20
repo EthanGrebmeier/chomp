@@ -1,6 +1,7 @@
 import { generateId } from '@/lib/utils';
 import { recipeIngredientTable, recipeTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
+import { findOrCreateItem } from '../../shared/db/find-or-create-item';
 import { CreateRecipeArgs } from '../types';
 
 export const createRecipe = async ({
@@ -21,15 +22,24 @@ export const createRecipe = async ({
 
   // Create the ingredients
   if (ingredients.length > 0) {
-    const ingredientsWithIds = ingredients.map((ingredient, index) => ({
-      id: generateId(),
-      recipeId,
-      name: ingredient.name,
-      quantity: ingredient.quantity,
-      unit: ingredient.unit,
-      notes: ingredient.notes,
-      order: ingredient.order ?? index,
-    }));
+    const ingredientsWithIds = [];
+    for (const [index, ingredient] of ingredients.entries()) {
+      // Find or create the item
+      const item = await findOrCreateItem({
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        unit: ingredient.unit,
+        notes: ingredient.notes,
+      });
+
+      ingredientsWithIds.push({
+        id: generateId(),
+        recipeId,
+        itemId: item.id,
+        notes: ingredient.notes,
+        order: ingredient.order ?? index,
+      });
+    }
 
     await db.insert(recipeIngredientTable).values(ingredientsWithIds);
   }

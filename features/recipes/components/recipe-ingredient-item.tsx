@@ -2,12 +2,12 @@ import { Pressable } from 'react-native';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useRemoveRecipeIngredient } from '../hooks/useRemoveRecipeIngredient';
-import { RecipeIngredient as RecipeIngredientType } from '../types';
+import { RecipeIngredientWithItem } from '../types';
 
 type RecipeIngredientItemProps = {
-  ingredient: RecipeIngredientType;
+  ingredient: RecipeIngredientWithItem;
   className?: string;
-  onEdit?: (ingredient: RecipeIngredientType) => void;
+  onEdit?: (ingredient: RecipeIngredientWithItem) => void;
 };
 
 export const RecipeIngredientItem = ({
@@ -27,9 +27,9 @@ export const RecipeIngredientItem = ({
         className="flex-1 flex-row justify-between"
         onPress={() => onEdit?.(ingredient)}
       >
-        <Text>{ingredient.name}</Text>
+        <Text>{ingredient.item.name}</Text>
         <Text className="text-muted-foreground">
-          {ingredient.quantity} {ingredient.unit}
+          {ingredient.item.quantity} {ingredient.item.unit}
         </Text>
       </Pressable>
     </ListItem>

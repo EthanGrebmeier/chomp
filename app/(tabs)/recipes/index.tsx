@@ -1,12 +1,11 @@
 import { RecipeList } from '@/features/recipes/components/recipe-list';
-import { useCreateRecipe, useRecipes } from '@/features/recipes/hooks';
+import { useRecipes } from '@/features/recipes/hooks';
 import { Text as RNText, View } from 'react-native';
 import { Heading } from '../../../components/text/heading';
 import { CreateRecipeButton } from '../../../features/recipes/components/create-recipe-button';
 
 export default function Recipes() {
   const { data: recipes, isLoading } = useRecipes();
-  const { mutate: createRecipe, isPending } = useCreateRecipe();
 
   return (
     <View className="py-safe flex-1 bg-background ">

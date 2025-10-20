@@ -21,7 +21,7 @@ import { useTheme } from '../../../hooks/use-theme';
 import { useAddRecipeIngredient } from '../hooks/useAddRecipeIngredient';
 import { useUpdateRecipeIngredient } from '../hooks/useUpdateRecipeIngredient';
 import { recipeQueryKeys } from '../query-keys';
-import { RecipeIngredient } from '../types';
+import { RecipeIngredientWithItem } from '../types';
 
 const unitOptions = [
   { label: 'Each', value: 'each' },
@@ -41,7 +41,7 @@ const verifyUnit = (
 type AddIngredientSheetProps = {
   recipeId: string;
   onClose?: () => void;
-  defaultValues?: RecipeIngredient | null;
+  defaultValues?: RecipeIngredientWithItem | null;
 };
 
 export type AddIngredientSheetRef = {
@@ -77,9 +77,9 @@ export const AddIngredientSheet = forwardRef<
 
   const form = useForm({
     defaultValues: {
-      name: defaultValues?.name || '',
-      quantity: defaultValues?.quantity?.toString() || '1',
-      unit: defaultValues?.unit || 'each',
+      name: defaultValues?.item?.name || '',
+      quantity: defaultValues?.item?.quantity?.toString() || '1',
+      unit: defaultValues?.item?.unit || 'each',
     },
     onSubmit: e => {
       const { ...formValue } = e.value;

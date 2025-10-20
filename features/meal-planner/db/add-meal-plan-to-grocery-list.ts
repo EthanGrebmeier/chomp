@@ -6,6 +6,7 @@ import {
   mealPlanTable,
 } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
+import { findOrCreateItem } from '../../shared/db/find-or-create-item';
 import { GenerateGroceryListFromMealPlanArgs } from '../types';
 import { generateIngredientsFromMealPlan } from './generate-ingredients-from-meal-plan';
 
@@ -55,14 +56,22 @@ export const addMealPlanToGroceryList = async ({
   const { ingredients } = await generateIngredientsFromMealPlan({ mealPlanId });
 
   // Add all ingredients to the grocery list
-  const groceryListItems = ingredients.map(ingredient => ({
-    id: generateId(),
-    groceryListId: targetGroceryListId!,
-    name: ingredient.name,
-    quantity: ingredient.quantity,
-    unit: ingredient.unit,
-    isChecked: false,
-  }));
+  const groceryListItems = [];
+  for (const ingredient of ingredients) {
+    // Find or create the item
+    const item = await findOrCreateItem({
+      name: ingredient.name,
+      quantity: ingredient.quantity,
+      unit: ingredient.unit,
+    });
+
+    groceryListItems.push({
+      id: generateId(),
+      groceryListId: targetGroceryListId!,
+      itemId: item.id,
+      isChecked: false,
+    });
+  }
 
   // Insert all items in a single transaction
   await db.insert(groceryListItemTable).values(groceryListItems);

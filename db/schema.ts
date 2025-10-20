@@ -3,24 +3,29 @@ import { sqliteTable } from 'drizzle-orm/sqlite-core';
 
 import { int, text } from 'drizzle-orm/sqlite-core';
 
+export const itemTable = sqliteTable('item', {
+  id: text().primaryKey(),
+  name: text().notNull(),
+  quantity: int().notNull(),
+  unit: text({ enum: ['each', 'kg', 'g', 'l', 'ml', 'lb'] }).notNull(),
+  createdAt: text().notNull(),
+  notes: text(),
+});
+
 export const groceryListTable = sqliteTable('grocery_list', {
   id: text().primaryKey(),
   date: text(),
   name: text().notNull(),
 });
 
-export const groceryListRelations = relations(groceryListTable, ({ many }) => ({
-  items: many(groceryListItemTable),
-}));
-
 export const groceryListItemTable = sqliteTable('grocery_list_item', {
   id: text().primaryKey(),
   groceryListId: text()
     .notNull()
     .references(() => groceryListTable.id),
-  name: text().notNull(),
-  quantity: int().notNull(),
-  unit: text({ enum: ['each', 'kg', 'g', 'l', 'ml', 'lb'] }).notNull(),
+  itemId: text()
+    .notNull()
+    .references(() => itemTable.id),
   isChecked: int({ mode: 'boolean' }).notNull().default(false),
 });
 
@@ -32,31 +37,16 @@ export const recipeTable = sqliteTable('recipe', {
   createdAt: text().notNull(),
 });
 
-export const recipeRelations = relations(recipeTable, ({ many }) => ({
-  ingredients: many(recipeIngredientTable),
-}));
-
 export const recipeIngredientTable = sqliteTable('recipe_ingredient', {
   id: text().primaryKey(),
   recipeId: text()
     .notNull()
     .references(() => recipeTable.id, { onDelete: 'cascade' }),
-  name: text().notNull(),
-  quantity: int().notNull(),
-  unit: text({ enum: ['each', 'kg', 'g', 'l', 'ml', 'lb'] }).notNull(),
-  notes: text(),
+  itemId: text()
+    .notNull()
+    .references(() => itemTable.id),
   order: int().notNull().default(0),
 });
-
-export const recipeIngredientRelations = relations(
-  recipeIngredientTable,
-  ({ one }) => ({
-    recipe: one(recipeTable, {
-      fields: [recipeIngredientTable.recipeId],
-      references: [recipeTable.id],
-    }),
-  })
-);
 
 export const mealPlanTable = sqliteTable('meal_plan', {
   id: text().primaryKey(),
@@ -66,14 +56,6 @@ export const mealPlanTable = sqliteTable('meal_plan', {
   endDate: text().notNull(),
   createdAt: text().notNull(),
 });
-
-export const mealPlanRelations = relations(mealPlanTable, ({ one, many }) => ({
-  groceryList: one(groceryListTable, {
-    fields: [mealPlanTable.groceryListId],
-    references: [groceryListTable.id],
-  }),
-  recipes: many(mealPlanRecipeTable),
-}));
 
 export const mealPlanRecipeTable = sqliteTable('meal_plan_recipe', {
   id: text().primaryKey(),
@@ -102,3 +84,53 @@ export const mealPlanRecipeRelations = relations(
     }),
   })
 );
+
+// Relations
+export const itemRelations = relations(itemTable, ({ many }) => ({
+  groceryListItems: many(groceryListItemTable),
+  recipeIngredients: many(recipeIngredientTable),
+}));
+
+export const groceryListRelations = relations(groceryListTable, ({ many }) => ({
+  items: many(groceryListItemTable),
+}));
+
+export const groceryListItemRelations = relations(
+  groceryListItemTable,
+  ({ one }) => ({
+    groceryList: one(groceryListTable, {
+      fields: [groceryListItemTable.groceryListId],
+      references: [groceryListTable.id],
+    }),
+    item: one(itemTable, {
+      fields: [groceryListItemTable.itemId],
+      references: [itemTable.id],
+    }),
+  })
+);
+
+export const recipeRelations = relations(recipeTable, ({ many }) => ({
+  ingredients: many(recipeIngredientTable),
+}));
+
+export const recipeIngredientRelations = relations(
+  recipeIngredientTable,
+  ({ one }) => ({
+    recipe: one(recipeTable, {
+      fields: [recipeIngredientTable.recipeId],
+      references: [recipeTable.id],
+    }),
+    item: one(itemTable, {
+      fields: [recipeIngredientTable.itemId],
+      references: [itemTable.id],
+    }),
+  })
+);
+
+export const mealPlanRelations = relations(mealPlanTable, ({ one, many }) => ({
+  groceryList: one(groceryListTable, {
+    fields: [mealPlanTable.groceryListId],
+    references: [groceryListTable.id],
+  }),
+  recipes: many(mealPlanRecipeTable),
+}));

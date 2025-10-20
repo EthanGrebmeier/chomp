@@ -1,6 +1,6 @@
 import { Text, TextInput, View } from 'react-native';
 
-import { GroceryListItem as GroceryListItemType } from '../types';
+import { GroceryListItemWithItem } from '../types';
 
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
@@ -15,7 +15,7 @@ import { GroceryListItem } from './grocery-list-item';
 type GroceryListProps = {
   name: string;
   date: string;
-  items: GroceryListItemType[];
+  items: GroceryListItemWithItem[];
   groceryListId: string;
   autofocus?: boolean;
 };
@@ -29,9 +29,8 @@ export const GroceryList = ({
 }: GroceryListProps) => {
   const { mutate: updateList } = useUpdateGroceryList();
 
-  const [editingItem, setEditingItem] = useState<GroceryListItemType | null>(
-    null
-  );
+  const [editingItem, setEditingItem] =
+    useState<GroceryListItemWithItem | null>(null);
 
   const textInputRef = useRef<TextInput>(null);
   const editSheetRef = useRef<AddItemSheetRef>(null);
@@ -43,7 +42,7 @@ export const GroceryList = ({
     });
   };
 
-  const handleEditItem = (item: GroceryListItemType) => {
+  const handleEditItem = (item: GroceryListItemWithItem) => {
     setEditingItem(item);
     editSheetRef.current?.present();
   };
@@ -58,7 +57,9 @@ export const GroceryList = ({
     if (!a.isChecked && b.isChecked) return -1;
 
     // Then sort alphabetically by name
-    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    return a.item.name.localeCompare(b.item.name, undefined, {
+      sensitivity: 'base',
+    });
   });
 
   return (
@@ -106,7 +107,7 @@ export const GroceryList = ({
         <AddRecipeSheet groceryListId={groceryListId} />
         <AddItemSheet
           ref={editSheetRef}
-          defaultValues={editingItem}
+          defaultValues={editingItem || null}
           groceryListId={groceryListId}
           onClose={handleCloseEdit}
         />

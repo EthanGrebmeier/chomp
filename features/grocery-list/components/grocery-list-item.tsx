@@ -6,10 +6,10 @@ import { cn } from '../../../lib/utils';
 import { useCheckGroceryItem } from '../hooks/useCheckGroceryListItem';
 import { useRemoveGroceryListItem } from '../hooks/useRemoveGroceryListItem';
 import { queryKeys } from '../query-keys';
-import { GroceryListItem as GroceryListItemType } from '../types';
+import { GroceryListItemWithItem } from '../types';
 
 type GroceryListItemProps = {
-  item: GroceryListItemType;
+  item: GroceryListItemWithItem;
   isChecked: boolean;
   className?: string;
   onEdit?: () => void;
@@ -63,12 +63,12 @@ export const GroceryListItem = ({
             isChecked && 'text-muted-foreground'
           )}
         >
-          {item.name}
+          {item.item.name}
         </Text>
         <Text className="text-lg text-muted-foreground">
-          {item.unit === 'each' && 'x'}
-          {item.quantity}
-          {item.unit !== 'each' && ` ${item.unit}`}
+          {item.item.unit === 'each' && 'x'}
+          {item.item.quantity}
+          {item.item.unit !== 'each' && ` ${item.item.unit}`}
         </Text>
       </Pressable>
     </ListItem>
