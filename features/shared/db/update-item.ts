@@ -10,6 +10,7 @@ export type UpdateItemArgs = {
     quantity?: number;
     unit?: QuantityUnit;
     notes?: string;
+    category?: string;
   };
 };
 

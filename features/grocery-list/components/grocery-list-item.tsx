@@ -32,6 +32,7 @@ export const GroceryListItem = ({
       className={className}
     >
       <Pressable
+        hitSlop={10}
         className={cn(
           'size-6 overflow-hidden rounded-full border border-border p-0.5 '
         )}
@@ -72,11 +73,18 @@ export const GroceryListItem = ({
             {item.item.unit !== 'each' && ` ${item.item.unit}`}
           </Text>
         </View>
-        {item.recipe && (
-          <View>
-            <Text className="text-lg text-muted-foreground">
-              {item.recipe?.name}
-            </Text>
+        {(item.recipe || item.item.category) && (
+          <View className="flex-row items-center gap-2">
+            {item.recipe && (
+              <Text className="text-lg text-muted-foreground">
+                {item.recipe.name}
+              </Text>
+            )}
+            {item.item.category && (
+              <Text className="rounded-full bg-muted px-2 py-1 text-sm text-muted-foreground">
+                {item.item.category}
+              </Text>
+            )}
           </View>
         )}
       </Pressable>

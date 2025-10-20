@@ -9,6 +9,7 @@ export type FindOrCreateItemArgs = {
   quantity: number;
   unit: QuantityUnit;
   notes?: string;
+  category?: string;
 };
 
 export const findOrCreateItem = async ({
@@ -16,6 +17,7 @@ export const findOrCreateItem = async ({
   quantity,
   unit,
   notes,
+  category,
 }: FindOrCreateItemArgs) => {
   // Try to find an existing item with the same name, quantity, and unit
   const existingItem = await db
@@ -35,5 +37,5 @@ export const findOrCreateItem = async ({
   }
 
   // Create a new item if none exists
-  return await createItem({ name, quantity, unit, notes });
+  return await createItem({ name, quantity, unit, notes, category });
 };

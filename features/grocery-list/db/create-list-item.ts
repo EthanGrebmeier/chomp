@@ -10,6 +10,7 @@ type CreateListItemArgs = {
   quantity: number;
   unit: QuantityUnit;
   notes?: string;
+  category?: string;
 };
 
 export const createListItem = async ({
@@ -18,6 +19,7 @@ export const createListItem = async ({
   quantity,
   unit,
   notes,
+  category,
 }: CreateListItemArgs) => {
   // Find or create the item
   const item = await findOrCreateItem({
@@ -25,6 +27,7 @@ export const createListItem = async ({
     quantity,
     unit,
     notes,
+    category,
   });
 
   // Create the grocery list item reference

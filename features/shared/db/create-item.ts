@@ -8,6 +8,7 @@ export type CreateItemArgs = {
   quantity: number;
   unit: QuantityUnit;
   notes?: string;
+  category?: string;
 };
 
 export const createItem = async ({
@@ -15,6 +16,7 @@ export const createItem = async ({
   quantity,
   unit,
   notes,
+  category,
 }: CreateItemArgs) => {
   const itemId = generateId();
   const now = new Date().toISOString();
@@ -25,6 +27,7 @@ export const createItem = async ({
     quantity,
     unit,
     notes,
+    category,
     createdAt: now,
   };
 

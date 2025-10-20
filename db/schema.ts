@@ -10,6 +10,7 @@ export const itemTable = sqliteTable('item', {
   unit: text({ enum: ['each', 'kg', 'g', 'l', 'ml', 'lb'] }).notNull(),
   createdAt: text().notNull(),
   notes: text(),
+  category: text(),
 });
 
 export const groceryListTable = sqliteTable('grocery_list', {

@@ -23,6 +23,7 @@ import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
 import { useUpdateGroceryListItem } from '../hooks/useUpdateGroceryListItem';
 import { queryKeys } from '../query-keys';
 import { GroceryListItemWithItem } from '../types';
+import { CategorySelector } from './category-selector';
 
 const unitOptions = [
   { label: 'Each', value: 'each' },
@@ -79,6 +80,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
         name: defaultValues?.item.name || '',
         quantity: defaultValues?.item.quantity?.toString() || '1',
         unit: defaultValues?.item.unit || 'each',
+        category: defaultValues?.item.category || '',
       },
       onSubmit: e => {
         const { ...formValue } = e.value;
@@ -96,6 +98,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
                 name: formValue.name,
                 unit,
                 quantity: parseInt(formValue.quantity),
+                category: formValue.category || undefined,
               },
             },
             {
@@ -104,6 +107,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
                   name: '',
                   quantity: '1',
                   unit: 'each',
+                  category: '',
                 });
                 queryClient.invalidateQueries({ queryKey: queryKeys.base() });
                 bottomSheetRef.current?.dismiss();
@@ -118,6 +122,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
               name: formValue.name,
               unit,
               quantity: parseInt(formValue.quantity),
+              category: formValue.category || undefined,
             },
             {
               onSuccess: () => {
@@ -125,6 +130,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
                   name: '',
                   quantity: '1',
                   unit: 'each',
+                  category: '',
                 });
                 queryClient.invalidateQueries({ queryKey: queryKeys.base() });
               },
@@ -153,6 +159,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
               name: '',
               quantity: '1',
               unit: 'each',
+              category: '',
             });
             onClose?.();
           }}
@@ -266,6 +273,14 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
                 )}
               </form.Field>
             </View>
+            <form.Field name="category">
+              {field => (
+                <CategorySelector
+                  category={field.state.value}
+                  onSelect={value => field.setValue(value || '')}
+                />
+              )}
+            </form.Field>
           </View>
           <Button onPress={() => form.handleSubmit()}>
             <Text>{isEditing ? 'Update Item' : 'Add Item'}</Text>
