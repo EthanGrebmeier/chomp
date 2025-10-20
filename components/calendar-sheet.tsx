@@ -55,15 +55,12 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
         console.log('present', options);
         reset();
         if (options?.selectedDate) {
-          console.log('selectedDate', options.selectedDate);
           setInternalSelectedDate(startOfDay(options.selectedDate));
         }
         if (options?.validStartDate) {
-          console.log('Setting validStartDate:', options.validStartDate);
           setDynamicValidStartDate(startOfDay(options.validStartDate));
         }
         if (options?.validEndDate) {
-          console.log('Setting validEndDate:', options.validEndDate);
           setDynamicValidEndDate(startOfDay(options.validEndDate));
         }
         bottomSheetRef.current?.present();
