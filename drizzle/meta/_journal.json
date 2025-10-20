@@ -57,6 +57,13 @@
       "when": 1760988448625,
       "tag": "0007_fixed_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1760992541381,
+      "tag": "0008_bizarre_venom",
+      "breakpoints": true
     }
   ]
 }

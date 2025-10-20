@@ -1,3 +1,4 @@
+import { Recipe } from '../recipes/types';
 import { Item } from '../shared/types';
 import {
   GroceryList,
@@ -11,6 +12,7 @@ export const normalizeGroceryList = (
     grocery_list: GroceryList;
     grocery_list_item: GroceryListItem | null;
     item: Item | null;
+    recipe: Recipe | null;
   }[]
 ) => {
   return dbResult.reduce<Record<string, GroceryListWithItems>>((acc, curr) => {
@@ -24,6 +26,7 @@ export const normalizeGroceryList = (
       const itemWithItem: GroceryListItemWithItem = {
         ...curr.grocery_list_item,
         item: curr.item,
+        recipe: curr.recipe || null,
       };
       acc[curr.grocery_list.id].items.push(itemWithItem);
     }

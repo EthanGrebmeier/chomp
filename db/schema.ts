@@ -26,6 +26,7 @@ export const groceryListItemTable = sqliteTable('grocery_list_item', {
   itemId: text()
     .notNull()
     .references(() => itemTable.id),
+  recipeId: text().references(() => recipeTable.id),
   isChecked: int({ mode: 'boolean' }).notNull().default(false),
 });
 
@@ -105,6 +106,10 @@ export const groceryListItemRelations = relations(
     item: one(itemTable, {
       fields: [groceryListItemTable.itemId],
       references: [itemTable.id],
+    }),
+    recipe: one(recipeTable, {
+      fields: [groceryListItemTable.recipeId],
+      references: [recipeTable.id],
     }),
   })
 );

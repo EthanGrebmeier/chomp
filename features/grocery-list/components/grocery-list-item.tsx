@@ -56,20 +56,29 @@ export const GroceryListItem = ({
         ></View>
       </Pressable>
 
-      <Pressable className="flex-1 flex-row justify-between" onPress={onEdit}>
-        <Text
-          className={cn(
-            'text-2xl font-medium text-foreground',
-            isChecked && 'text-muted-foreground'
-          )}
-        >
-          {item.item.name}
-        </Text>
-        <Text className="text-lg text-muted-foreground">
-          {item.item.unit === 'each' && 'x'}
-          {item.item.quantity}
-          {item.item.unit !== 'each' && ` ${item.item.unit}`}
-        </Text>
+      <Pressable className="flex-1" onPress={onEdit}>
+        <View className="flex-row items-center justify-between">
+          <Text
+            className={cn(
+              'text-2xl font-medium text-foreground',
+              isChecked && 'text-muted-foreground'
+            )}
+          >
+            {item.item.name}
+          </Text>
+          <Text className="text-lg text-muted-foreground">
+            {item.item.unit === 'each' && 'x'}
+            {item.item.quantity}
+            {item.item.unit !== 'each' && ` ${item.item.unit}`}
+          </Text>
+        </View>
+        {item.recipe && (
+          <View>
+            <Text className="text-lg text-muted-foreground">
+              {item.recipe?.name}
+            </Text>
+          </View>
+        )}
       </Pressable>
     </ListItem>
   );

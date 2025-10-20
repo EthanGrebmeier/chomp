@@ -43,6 +43,7 @@ export const addRecipeToList = async ({
       id: generateId(),
       groceryListId,
       itemId: groceryItem.id,
+      recipeId: recipeId,
       isChecked: false,
     });
   }
