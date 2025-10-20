@@ -59,6 +59,12 @@
         "projectId": "eaca5365-c88e-4712-b89c-b3f737a6cde5"
       }
     },
-    "owner": "ethangrebmeier"
+    "owner": "ethangrebmeier",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/eaca5365-c88e-4712-b89c-b3f737a6cde5"
+    }
   }
 }
