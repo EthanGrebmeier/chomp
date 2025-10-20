@@ -16,7 +16,6 @@ export const createRecipe = async ({
     id: recipeId,
     name: recipe.name,
     description: recipe.description,
-    servings: recipe.servings,
     createdAt: now,
   });
 

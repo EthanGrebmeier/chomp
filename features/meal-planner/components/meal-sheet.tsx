@@ -122,7 +122,7 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
         updates: {
           recipeId: selectedRecipe.id,
           mealTag,
-          servings: selectedRecipe.servings ?? undefined,
+          servings: 1,
           date: selectedDate,
         },
       });

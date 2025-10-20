@@ -25,7 +25,6 @@ export const CreateRecipeButton = ({
         recipe: {
           name: 'My Recipe',
           description: '',
-          servings: 4,
         },
         ingredients: [],
       },

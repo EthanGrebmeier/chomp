@@ -36,7 +36,6 @@ export type UpdateRecipeArgs = {
   updates: {
     name?: string;
     description?: string;
-    servings?: number;
   };
 };
 

@@ -36,7 +36,6 @@ export const getMealPlan = async (
         id: recipeTable.id,
         name: recipeTable.name,
         description: recipeTable.description,
-        servings: recipeTable.servings,
         createdAt: recipeTable.createdAt,
       },
     })

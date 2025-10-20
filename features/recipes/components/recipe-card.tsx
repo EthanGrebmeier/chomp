@@ -18,11 +18,6 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
           >
             {recipe.name}
           </Text>
-          {recipe.servings && (
-            <Text className="text-sm text-muted-foreground">
-              Serves {recipe.servings}
-            </Text>
-          )}
         </View>
         <Text className="text-sm text-muted-foreground">
           {recipe.ingredients.length} ingredients

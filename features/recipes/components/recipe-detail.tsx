@@ -58,11 +58,6 @@ export const RecipeDetail = ({
           <Text className="text-lg text-muted-foreground">
             {recipe.ingredients.length} ingredients
           </Text>
-          {recipe.servings && (
-            <Text className="text-lg text-muted-foreground">
-              Serves {recipe.servings}
-            </Text>
-          )}
         </View>
       </EditableHeader>
       {recipe.description && (
