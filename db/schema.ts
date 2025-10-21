@@ -17,6 +17,9 @@ export const groceryListTable = sqliteTable('grocery_list', {
   id: text().primaryKey(),
   date: text(),
   name: text().notNull(),
+  groupBy: text({ enum: ['category', 'none'] })
+    .notNull()
+    .default('none'),
 });
 
 export const groceryListItemTable = sqliteTable('grocery_list_item', {

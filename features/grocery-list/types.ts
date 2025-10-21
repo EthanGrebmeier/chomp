@@ -20,5 +20,6 @@ export type UpdateGroceryListArgs = {
   updates: {
     name?: string;
     date?: string;
+    groupBy?: 'category' | 'none';
   };
 };

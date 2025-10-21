@@ -29,6 +29,7 @@ type GroceryListProps = {
   date: string;
   items: GroceryListItemWithItem[];
   groceryListId: string;
+  groupBy: 'category' | 'none';
   autofocus?: boolean;
 };
 
@@ -37,13 +38,14 @@ export const GroceryList = ({
   date,
   items,
   groceryListId,
+  groupBy: initialGroupBy,
   autofocus = false,
 }: GroceryListProps) => {
   const { mutate: updateList } = useUpdateGroceryList();
 
   const [editingItem, setEditingItem] =
     useState<GroceryListItemWithItem | null>(null);
-  const [groupBy, setGroupBy] = useState<'category' | 'none'>('none');
+  const [groupBy, setGroupBy] = useState<'category' | 'none'>(initialGroupBy);
 
   const textInputRef = useRef<TextInput>(null);
   const editSheetRef = useRef<AddItemSheetRef>(null);
@@ -62,6 +64,14 @@ export const GroceryList = ({
 
   const handleCloseEdit = () => {
     setEditingItem(null);
+  };
+
+  const handleGroupByChange = (newGroupBy: 'category' | 'none') => {
+    setGroupBy(newGroupBy);
+    updateList({
+      listId: groceryListId,
+      updates: { groupBy: newGroupBy },
+    });
   };
 
   // Group items based on selected grouping
@@ -99,7 +109,7 @@ export const GroceryList = ({
       </EditableHeader>
       <View className="flex-1">
         <View className="px-4 pb-2">
-          <GroupBySelector value={groupBy} onChange={setGroupBy} />
+          <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
         </View>
         <AnimatedSectionList
           scrollEnabled={true}

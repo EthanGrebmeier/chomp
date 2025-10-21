@@ -1,0 +1,36 @@
+# Cursor Rules for Grocery App
+
+## Database Migrations
+
+- NEVER run `npx drizzle-kit push` or `npx drizzle-kit migrate` commands
+- ONLY generate migrations with `npx drizzle-kit generate`
+- The app handles database migrations automatically at runtime
+- When schema changes are made, generate the migration but don't apply it
+
+## Code Style
+
+- Use TypeScript strict mode
+- Follow existing patterns for component structure
+- Use Tailwind CSS for styling
+- Prefer functional components with hooks
+- Use proper TypeScript types for all props and state
+
+## File Organization
+
+- Keep feature-specific components in their respective feature directories
+- Use shared components from `/components` directory
+- Follow the existing naming conventions
+- Group related functionality together
+
+## React Native Specific
+
+- Use React Native components and APIs
+- Follow React Native best practices for performance
+- Use proper navigation patterns with Expo Router
+- Handle platform differences appropriately
+
+## Testing
+
+- Write tests for utility functions
+- Test component behavior, not implementation details
+- Use proper mocking for external dependencies

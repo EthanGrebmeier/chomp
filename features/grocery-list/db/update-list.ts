@@ -1,16 +1,12 @@
 import { eq } from 'drizzle-orm';
 import { groceryListTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
+import { UpdateGroceryListArgs } from '../types';
 
-type UpdateListArgs = {
-  listId: string;
-  updates: {
-    name?: string;
-    date?: string;
-  };
-};
-
-export const updateList = async ({ listId, updates }: UpdateListArgs) => {
+export const updateList = async ({
+  listId,
+  updates,
+}: UpdateGroceryListArgs) => {
   await db
     .update(groceryListTable)
     .set(updates)

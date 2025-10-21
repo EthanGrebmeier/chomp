@@ -23,6 +23,7 @@ export default function List() {
           date={list.date || ''}
           items={list.items}
           groceryListId={list.id}
+          groupBy={list.groupBy}
           autofocus={autofocus === 'true'}
         />
       </View>
