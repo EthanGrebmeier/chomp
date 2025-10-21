@@ -33,3 +33,60 @@ export const normalizeGroceryList = (
     return acc;
   }, {});
 };
+
+export const groupItemsBy = (
+  items: GroceryListItemWithItem[],
+  groupBy: 'category' | 'none'
+): Map<string, GroceryListItemWithItem[]> => {
+  const groups = new Map<string, GroceryListItemWithItem[]>();
+
+  if (groupBy === 'none') {
+    // Sort items: unchecked first, then alphabetically by name
+    const sortedItems = items.sort((a, b) => {
+      // First sort by checked status: unchecked items first
+      if (a.isChecked && !b.isChecked) return 1;
+      if (!a.isChecked && b.isChecked) return -1;
+
+      // Then sort alphabetically by name
+      return a.item.name.localeCompare(b.item.name, undefined, {
+        sensitivity: 'base',
+      });
+    });
+    groups.set('', sortedItems);
+    return groups;
+  }
+
+  if (groupBy === 'category') {
+    items.forEach(item => {
+      const category = item.item.category || 'Uncategorized';
+      if (!groups.has(category)) {
+        groups.set(category, []);
+      }
+      groups.get(category)!.push(item);
+    });
+  }
+
+  // Sort items within each group: unchecked first, then alphabetically
+  groups.forEach(groupItems => {
+    groupItems.sort((a, b) => {
+      // First sort by checked status: unchecked items first
+      if (a.isChecked && !b.isChecked) return 1;
+      if (!a.isChecked && b.isChecked) return -1;
+
+      // Then sort alphabetically by name
+      return a.item.name.localeCompare(b.item.name, undefined, {
+        sensitivity: 'base',
+      });
+    });
+  });
+
+  // Convert to array, sort groups to put Uncategorized at the bottom, then back to Map
+  const sortedGroups = Array.from(groups.entries()).sort(([a], [b]) => {
+    if (a === 'Uncategorized') return 1;
+    if (b === 'Uncategorized') return -1;
+    return a.localeCompare(b);
+  });
+
+  const sortedGroupsMap = new Map(sortedGroups);
+  return sortedGroupsMap;
+};

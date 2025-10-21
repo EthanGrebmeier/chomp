@@ -1,16 +1,28 @@
-import { Text, TextInput, View } from 'react-native';
+import {
+  SectionList,
+  SectionListData,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 import { GroceryListItemWithItem } from '../types';
 
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { EditableHeader } from '../../../components/editable-header';
 import { cn } from '../../../lib/utils';
 import { useUpdateGroceryList } from '../hooks/useUpdateGroceryList';
+import { groupItemsBy } from '../util';
 import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
 import { AddRecipeSheet } from './add-recipe-sheet';
 import { GroceryListItem } from './grocery-list-item';
+import { GroupBySelector } from './group-by-selector';
+
+const AnimatedSectionList = Animated.createAnimatedComponent(
+  SectionList<GroceryListItemWithItem>
+);
 
 type GroceryListProps = {
   name: string;
@@ -31,6 +43,7 @@ export const GroceryList = ({
 
   const [editingItem, setEditingItem] =
     useState<GroceryListItemWithItem | null>(null);
+  const [groupBy, setGroupBy] = useState<'category' | 'none'>('none');
 
   const textInputRef = useRef<TextInput>(null);
   const editSheetRef = useRef<AddItemSheetRef>(null);
@@ -51,16 +64,16 @@ export const GroceryList = ({
     setEditingItem(null);
   };
 
-  const sortedItems = items.sort((a, b) => {
-    // First sort by checked status: unchecked items first
-    if (a.isChecked && !b.isChecked) return 1;
-    if (!a.isChecked && b.isChecked) return -1;
+  // Group items based on selected grouping
+  const groupedItems = groupItemsBy(items, groupBy);
 
-    // Then sort alphabetically by name
-    return a.item.name.localeCompare(b.item.name, undefined, {
-      sensitivity: 'base',
-    });
-  });
+  // Convert Map to sections array for SectionList
+  const sections: SectionListData<GroceryListItemWithItem>[] = Array.from(
+    groupedItems.entries()
+  ).map(([title, data]) => ({
+    title,
+    data,
+  }));
 
   return (
     <View className="flex-1 gap-2">
@@ -71,36 +84,55 @@ export const GroceryList = ({
         onChangeText={handleChangeText}
         autofocus={autofocus}
       >
-        <View className="flex-row gap-4">
-          <Text className="text-lg text-muted-foreground">
-            {items.length} items
-          </Text>
-          {date && (
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row gap-4">
             <Text className="text-lg text-muted-foreground">
-              {format(date, 'EEEE, M/d/yy')}
+              {items.length} items
             </Text>
-          )}
+            {date && (
+              <Text className="text-lg text-muted-foreground">
+                {format(date, 'EEEE, M/d/yy')}
+              </Text>
+            )}
+          </View>
         </View>
       </EditableHeader>
       <View className="flex-1">
-        <Animated.FlatList
+        <View className="px-4 pb-2">
+          <GroupBySelector value={groupBy} onChange={setGroupBy} />
+        </View>
+        <AnimatedSectionList
           scrollEnabled={true}
-          itemLayoutAnimation={LinearTransition}
           contentContainerClassName="pb-20"
           showsVerticalScrollIndicator={false}
-          data={sortedItems}
+          sections={sections}
           keyExtractor={item => item.id}
           contentContainerStyle={{ flexGrow: 1 }}
-          renderItem={({ item, index }) => (
-            <GroceryListItem
-              item={item}
-              isChecked={Boolean(item.isChecked)}
-              className={cn(
-                index < items.length - 1 && 'border-b border-border'
-              )}
-              onEdit={() => handleEditItem(item)}
-            />
-          )}
+          renderSectionHeader={({ section }) => {
+            if (groupBy === 'none' || !section.title) return null;
+            return (
+              <View className="bg-background px-4 py-2">
+                <Text className="text-lg font-semibold capitalize text-foreground">
+                  {section.title}
+                </Text>
+              </View>
+            );
+          }}
+          renderItem={({ item, index, section }) => {
+            const isLastInSection = index === section.data.length - 1;
+            const isLastSection =
+              sections.indexOf(section) === sections.length - 1;
+            const showBorder = !isLastInSection || !isLastSection;
+
+            return (
+              <GroceryListItem
+                item={item}
+                isChecked={Boolean(item.isChecked)}
+                className={cn(showBorder && 'border-b border-border')}
+                onEdit={() => handleEditItem(item)}
+              />
+            );
+          }}
         />
       </View>
       <View className=" absolute bottom-4 right-4 flex-row items-center gap-2">
