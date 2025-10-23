@@ -5,6 +5,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeInDown,
   FadeOut,
+  LinearTransition,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -64,6 +65,7 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
       <Animated.View
         entering={FadeInDown.duration(140)}
         exiting={FadeOut.duration(140)}
+        layout={LinearTransition}
       >
         <GestureDetector
           gesture={Gesture.Pan()

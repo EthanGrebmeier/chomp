@@ -1,6 +1,7 @@
 import { RecipeList } from '@/features/recipes/components/recipe-list';
 import { useRecipes } from '@/features/recipes/hooks';
 import { Text as RNText, View } from 'react-native';
+import { LayoutAnimationConfig } from 'react-native-reanimated';
 import { Heading } from '../../../components/text/heading';
 import { CreateRecipeButton } from '../../../features/recipes/components/create-recipe-button';
 
@@ -21,7 +22,9 @@ export default function Recipes() {
             <RNText className="text-gray-500">Loading recipes...</RNText>
           </View>
         ) : (
-          <RecipeList recipes={recipes || []} />
+          <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
+            <RecipeList recipes={recipes || []} />
+          </LayoutAnimationConfig>
         )}
       </View>
     </View>

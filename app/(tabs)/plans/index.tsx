@@ -4,6 +4,7 @@ import { useMealPlans } from '@/features/meal-planner/hooks/useMealPlans';
 import { navigation } from '@/lib/navigation';
 import { router } from 'expo-router';
 import { FlatList, View } from 'react-native';
+import { LayoutAnimationConfig } from 'react-native-reanimated';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { CreateMealPlanSheet } from '../../../features/meal-planner/components/create-meal-plan-sheet';
@@ -22,24 +23,26 @@ export default function MealPlansPage() {
           <Text className="text-muted-foreground">No meal plans yet</Text>
         </View>
       ) : (
-        <FlatList
-          data={mealPlans.data}
-          renderItem={({ item }) => (
-            <ListItem
-              key={item.id}
-              onDelete={() => {
-                deleteMealPlan(item.id);
-              }}
-            >
-              <MealPlanCard
-                mealPlan={item}
-                onPress={() => {
-                  router.push(navigation.goToMealPlan(item.id));
+        <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
+          <FlatList
+            data={mealPlans.data}
+            renderItem={({ item }) => (
+              <ListItem
+                key={item.id}
+                onDelete={() => {
+                  deleteMealPlan(item.id);
                 }}
-              />
-            </ListItem>
-          )}
-        />
+              >
+                <MealPlanCard
+                  mealPlan={item}
+                  onPress={() => {
+                    router.push(navigation.goToMealPlan(item.id));
+                  }}
+                />
+              </ListItem>
+            )}
+          />
+        </LayoutAnimationConfig>
       )}
 
       <View className="absolute bottom-4 right-4">

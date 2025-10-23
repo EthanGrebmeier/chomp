@@ -2,6 +2,7 @@ import { Heading } from '@/components/text/heading';
 import { GroceryListCard } from '@/features/grocery-list/components/grocery-list-card';
 import { useGroceryLists } from '@/features/grocery-list/hooks/useGroceryLists';
 import { FlatList, View } from 'react-native';
+import { LayoutAnimationConfig } from 'react-native-reanimated';
 import { Text } from '../../../components/ui/text';
 import { AddListSheet } from '../../../features/grocery-list/components/add-list-sheet';
 export default function Index() {
@@ -17,14 +18,16 @@ export default function Index() {
           <Text className="text-muted-foreground">No lists yet</Text>
         </View>
       ) : (
-        <FlatList
-          data={lists.data}
-          renderItem={({ item }) => (
-            <GroceryListCard key={item.id} groceryList={item} />
-          )}
-          className="flex-1"
-          contentContainerClassName="flex-1"
-        />
+        <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
+          <FlatList
+            data={lists.data}
+            renderItem={({ item }) => (
+              <GroceryListCard key={item.id} groceryList={item} />
+            )}
+            className="flex-1"
+            contentContainerClassName="flex-1"
+          />
+        </LayoutAnimationConfig>
       )}
       <View className="absolute bottom-4 right-4">
         <AddListSheet />

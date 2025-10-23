@@ -10,7 +10,7 @@ import { GroceryListItemWithItem } from '../types';
 
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
-import Animated from 'react-native-reanimated';
+import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 import { EditableHeader } from '../../../components/editable-header';
 import { cn } from '../../../lib/utils';
 import { useUpdateGroceryList } from '../hooks/useUpdateGroceryList';
@@ -111,39 +111,41 @@ export const GroceryList = ({
         <View className="px-4 pb-2">
           <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
         </View>
-        <AnimatedSectionList
-          scrollEnabled={true}
-          contentContainerClassName="pb-20"
-          showsVerticalScrollIndicator={false}
-          sections={sections}
-          keyExtractor={item => item.id}
-          contentContainerStyle={{ flexGrow: 1 }}
-          renderSectionHeader={({ section }) => {
-            if (groupBy === 'none' || !section.title) return null;
-            return (
-              <View className="bg-background px-4 py-2">
-                <Text className="text-lg font-semibold capitalize text-foreground">
-                  {section.title}
-                </Text>
-              </View>
-            );
-          }}
-          renderItem={({ item, index, section }) => {
-            const isLastInSection = index === section.data.length - 1;
-            const isLastSection =
-              sections.indexOf(section) === sections.length - 1;
-            const showBorder = !isLastInSection || !isLastSection;
+        <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
+          <AnimatedSectionList
+            scrollEnabled={true}
+            contentContainerClassName="pb-20"
+            showsVerticalScrollIndicator={false}
+            sections={sections}
+            keyExtractor={item => item.id}
+            contentContainerStyle={{ flexGrow: 1 }}
+            renderSectionHeader={({ section }) => {
+              if (groupBy === 'none' || !section.title) return null;
+              return (
+                <View className="bg-background px-4 py-2">
+                  <Text className="text-lg font-semibold capitalize text-foreground">
+                    {section.title}
+                  </Text>
+                </View>
+              );
+            }}
+            renderItem={({ item, index, section }) => {
+              const isLastInSection = index === section.data.length - 1;
+              const isLastSection =
+                sections.indexOf(section) === sections.length - 1;
+              const showBorder = !isLastInSection || !isLastSection;
 
-            return (
-              <GroceryListItem
-                item={item}
-                isChecked={Boolean(item.isChecked)}
-                className={cn(showBorder && 'border-b border-border')}
-                onEdit={() => handleEditItem(item)}
-              />
-            );
-          }}
-        />
+              return (
+                <GroceryListItem
+                  item={item}
+                  isChecked={Boolean(item.isChecked)}
+                  className={cn(showBorder && 'border-b border-border')}
+                  onEdit={() => handleEditItem(item)}
+                />
+              );
+            }}
+          />
+        </LayoutAnimationConfig>
       </View>
       <View className=" absolute bottom-4 right-4 flex-row items-center gap-2">
         <AddRecipeSheet groceryListId={groceryListId} />
