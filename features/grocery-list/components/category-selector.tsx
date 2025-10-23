@@ -26,7 +26,7 @@ const CategoryItem = ({
       className="flex-row items-center gap-2"
     >
       <Icon as={category.style.icon} size={16} />
-      <Text className={cn('text-sm font-medium text-foreground')}>
+      <Text className={cn('text-lg font-medium text-foreground')}>
         {category.label}
       </Text>
     </Pressable>
@@ -51,14 +51,22 @@ export const CategorySelector = ({
     <Popover>
       <PopoverTrigger className="self-start" ref={ref}>
         <Pill
-          icon={<Icon as={TagIcon} size={16} />}
+          icon={
+            <Icon
+              as={selectedCategory ? selectedCategory.style.icon : TagIcon}
+              size={16}
+            />
+          }
           hasValue={!!category}
           onClear={category ? () => onSelect(undefined) : undefined}
+          className={cn(
+            selectedCategory ? 'border-yellow-500 bg-yellow-100' : ' bg-muted'
+          )}
         >
           {selectedCategory ? selectedCategory.label : 'Category'}
         </Pill>
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" className="w-44 gap-1 py-2">
+      <PopoverContent side="top" align="start" className="w-48 py-2">
         {categoryOptions.map(categoryOption => (
           <CategoryItem
             key={categoryOption.value}

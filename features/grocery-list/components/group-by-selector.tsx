@@ -26,7 +26,7 @@ const GroupByItem = ({
       onPress={() => onSelect(value)}
       className="flex-row items-center gap-2"
     >
-      <Text className={cn('text-sm font-medium text-foreground')}>{label}</Text>
+      <Text className={cn('text-lg font-medium text-foreground')}>{label}</Text>
     </Pressable>
   );
 };
@@ -65,7 +65,7 @@ export const GroupBySelector = ({
           {getDisplayLabel(value)}
         </Pill>
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" className="w-44 gap-1 py-2">
+      <PopoverContent side="bottom" align="start" className="w-44 gap-1 py-2">
         <GroupByItem
           label="None"
           value="none"

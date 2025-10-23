@@ -32,7 +32,7 @@ export const Pill = ({
         {icon}
         <Text
           className={cn(
-            'text-sm font-medium',
+            'text-base font-medium',
             hasValue ? 'text-foreground' : 'text-muted-foreground'
           )}
         >
