@@ -16,10 +16,10 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
   return (
     <Pill
       className="border-yellow-500 bg-yellow-100"
-      icon={<Icon as={icon} size={16} />}
+      icon={<Icon as={icon} color="black" size={16} />}
       hasValue={true}
     >
-      <Text className="text-sm font-medium text-foreground">
+      <Text className="text-sm font-medium text-black">
         {categoryOption.label}
       </Text>
     </Pill>

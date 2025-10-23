@@ -11,12 +11,14 @@ type PillProps = {
   className?: string;
   icon?: ReactNode;
   hasValue?: boolean;
+  textClassName?: string;
 };
 
 export const Pill = ({
   children,
   onClear,
   className,
+  textClassName,
   icon,
   hasValue = false,
 }: PillProps) => {
@@ -33,7 +35,8 @@ export const Pill = ({
         <Text
           className={cn(
             'text-base font-medium',
-            hasValue ? 'text-foreground' : 'text-muted-foreground'
+            hasValue ? 'text-foreground' : 'text-muted-foreground',
+            textClassName
           )}
         >
           {children}

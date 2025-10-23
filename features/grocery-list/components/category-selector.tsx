@@ -55,6 +55,7 @@ export const CategorySelector = ({
             <Icon
               as={selectedCategory ? selectedCategory.style.icon : TagIcon}
               size={16}
+              color="black"
             />
           }
           hasValue={!!category}
@@ -62,6 +63,7 @@ export const CategorySelector = ({
           className={cn(
             selectedCategory ? 'border-yellow-500 bg-yellow-100' : ' bg-muted'
           )}
+          textClassName="text-black"
         >
           {selectedCategory ? selectedCategory.label : 'Category'}
         </Pill>
