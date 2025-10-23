@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { SunriseIcon, SunsetIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
@@ -97,7 +98,12 @@ export const CreateMealPlanSheet = () => {
             value={mealPlanName}
             onChangeText={setMealPlanName}
           />
-          <View className=" flex-row items-center gap-2 border-t border-border pt-2">
+          <ScrollView
+            horizontal
+            className="-mx-4"
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="px-4 flex-row items-center gap-2 pt-2 "
+          >
             <Pressable
               onPress={() =>
                 startDateSheetRef.current?.present({
@@ -130,7 +136,7 @@ export const CreateMealPlanSheet = () => {
                 {endDate ? format(endDate, 'EEEE, M/d/yy') : 'Select End Date'}
               </Pill>
             </Pressable>
-          </View>
+          </ScrollView>
 
           <Button onPress={handleCreateMealPlan}>
             <Text>Create Meal Plan</Text>
