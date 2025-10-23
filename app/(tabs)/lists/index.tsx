@@ -21,8 +21,16 @@ export default function Index() {
         <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
           <FlatList
             data={lists.data}
-            renderItem={({ item }) => (
-              <GroceryListCard key={item.id} groceryList={item} />
+            renderItem={({ item, index }) => (
+              <GroceryListCard
+                key={item.id}
+                groceryList={item}
+                className={
+                  index !== (lists.data?.length ?? 0) - 1
+                    ? 'border-b border-border'
+                    : ''
+                }
+              />
             )}
             className="flex-1"
             contentContainerClassName="flex-1"

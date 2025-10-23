@@ -6,9 +6,13 @@ import { GroceryListWithItems } from '../types';
 
 type GroceryListCardProps = {
   groceryList: GroceryListWithItems;
+  className?: string;
 };
 
-export const GroceryListCard = ({ groceryList }: GroceryListCardProps) => {
+export const GroceryListCard = ({
+  groceryList,
+  className,
+}: GroceryListCardProps) => {
   const deleteGroceryList = useDeleteGroceryList();
 
   const handleDelete = () => {
@@ -24,10 +28,13 @@ export const GroceryListCard = ({ groceryList }: GroceryListCardProps) => {
   };
 
   return (
-    <ListItem onDelete={handleDelete}>
+    <ListItem onDelete={handleDelete} className={className}>
       <Link className="w-full" href={`/lists/${groceryList.id}`}>
         <View>
-          <Text numberOfLines={1} className="text-lg font-bold text-foreground">
+          <Text
+            numberOfLines={1}
+            className="text-2xl font-bold text-foreground"
+          >
             {groceryList.name}
           </Text>
           <Text className="text-sm text-muted-foreground">

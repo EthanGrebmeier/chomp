@@ -26,12 +26,17 @@ export default function MealPlansPage() {
         <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
           <FlatList
             data={mealPlans.data}
-            renderItem={({ item }) => (
+            renderItem={({ item, index }) => (
               <ListItem
                 key={item.id}
                 onDelete={() => {
                   deleteMealPlan(item.id);
                 }}
+                className={
+                  index !== (mealPlans.data?.length ?? 0) - 1
+                    ? 'border-b border-border'
+                    : ''
+                }
               >
                 <MealPlanCard
                   mealPlan={item}

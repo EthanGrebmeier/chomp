@@ -5,15 +5,16 @@ import { RecipeWithIngredients } from '../types';
 
 type RecipeCardProps = {
   recipe: RecipeWithIngredients;
+  className?: string;
 };
 
-export const RecipeCard = ({ recipe }: RecipeCardProps) => {
+export const RecipeCard = ({ recipe, className }: RecipeCardProps) => {
   return (
     <Link href={`/recipes/${recipe.id}`}>
-      <View>
+      <View className={className}>
         <View className="w-full flex-row items-center justify-between">
           <Text
-            className="overflow-ellipsis text-lg font-bold "
+            className="overflow-ellipsis text-2xl font-bold "
             numberOfLines={2}
           >
             {recipe.name}

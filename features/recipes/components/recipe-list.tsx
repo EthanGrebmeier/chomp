@@ -26,8 +26,13 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
   return (
     <FlatList
       data={recipes}
-      renderItem={({ item }) => (
-        <ListItem onDelete={() => handleDelete(item.id)}>
+      renderItem={({ item, index }) => (
+        <ListItem
+          className={
+            index !== (recipes.length ?? 0) - 1 ? 'border-b border-border' : ''
+          }
+          onDelete={() => handleDelete(item.id)}
+        >
           <RecipeCard recipe={item} />
         </ListItem>
       )}
