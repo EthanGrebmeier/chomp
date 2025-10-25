@@ -43,12 +43,15 @@ export const addRecipeIngredient = async ({
     category,
   });
 
+  const now = new Date().toISOString();
   const newIngredient = {
     id: generateId(),
     recipeId,
     itemId: item.id,
     notes,
     order: nextOrder,
+    createdAt: now,
+    updatedAt: now,
   };
 
   await db.insert(recipeIngredientTable).values(newIngredient);

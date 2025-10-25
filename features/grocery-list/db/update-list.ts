@@ -9,6 +9,9 @@ export const updateList = async ({
 }: UpdateGroceryListArgs) => {
   await db
     .update(groceryListTable)
-    .set(updates)
+    .set({
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    })
     .where(eq(groceryListTable.id, listId));
 };

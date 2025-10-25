@@ -31,11 +31,14 @@ export const createListItem = async ({
   });
 
   // Create the grocery list item reference
+  const now = new Date().toISOString();
   const groceryListItem = {
     id: generateId(),
     groceryListId,
     itemId: item.id,
     isChecked: false,
+    createdAt: now,
+    updatedAt: now,
   };
 
   await db.insert(groceryListItemTable).values(groceryListItem);

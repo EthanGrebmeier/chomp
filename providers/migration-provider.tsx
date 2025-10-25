@@ -14,6 +14,14 @@ export const MigrationProvider = ({
   children: React.ReactNode;
 }) => {
   const { success, error } = useMigrations(db, migrations);
+  if (error) {
+    console.error(error);
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-2xl font-bold"> {error.message} </Text>
+      </View>
+    );
+  }
 
   if (!success) {
     return (
@@ -22,12 +30,6 @@ export const MigrationProvider = ({
       </View>
     );
   }
-  if (error) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-2xl font-bold"> {error.message} </Text>
-      </View>
-    );
-  }
+
   return <>{children}</>;
 };

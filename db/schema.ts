@@ -3,14 +3,20 @@ import { sqliteTable } from 'drizzle-orm/sqlite-core';
 
 import { int, text } from 'drizzle-orm/sqlite-core';
 
+// Common timestamps for all tables
+const timestamps = {
+  createdAt: text().notNull(),
+  updatedAt: text().notNull(),
+};
+
 export const itemTable = sqliteTable('item', {
   id: text().primaryKey(),
   name: text().notNull(),
   quantity: int().notNull(),
   unit: text({ enum: ['each', 'kg', 'g', 'l', 'ml', 'lb'] }).notNull(),
-  createdAt: text().notNull(),
   notes: text(),
   category: text(),
+  ...timestamps,
 });
 
 export const groceryListTable = sqliteTable('grocery_list', {
@@ -20,6 +26,7 @@ export const groceryListTable = sqliteTable('grocery_list', {
   groupBy: text({ enum: ['category', 'none', 'recipe'] })
     .notNull()
     .default('none'),
+  ...timestamps,
 });
 
 export const groceryListItemTable = sqliteTable('grocery_list_item', {
@@ -32,13 +39,14 @@ export const groceryListItemTable = sqliteTable('grocery_list_item', {
     .references(() => itemTable.id),
   recipeId: text().references(() => recipeTable.id),
   isChecked: int({ mode: 'boolean' }).notNull().default(false),
+  ...timestamps,
 });
 
 export const recipeTable = sqliteTable('recipe', {
   id: text().primaryKey(),
   name: text().notNull(),
   description: text(),
-  createdAt: text().notNull(),
+  ...timestamps,
 });
 
 export const recipeIngredientTable = sqliteTable('recipe_ingredient', {
@@ -50,6 +58,7 @@ export const recipeIngredientTable = sqliteTable('recipe_ingredient', {
     .notNull()
     .references(() => itemTable.id),
   order: int().notNull().default(0),
+  ...timestamps,
 });
 
 export const mealPlanTable = sqliteTable('meal_plan', {
@@ -58,7 +67,7 @@ export const mealPlanTable = sqliteTable('meal_plan', {
   name: text().notNull(),
   startDate: text().notNull(),
   endDate: text().notNull(),
-  createdAt: text().notNull(),
+  ...timestamps,
 });
 
 export const mealPlanRecipeTable = sqliteTable('meal_plan_recipe', {
@@ -73,6 +82,7 @@ export const mealPlanRecipeTable = sqliteTable('meal_plan_recipe', {
   date: text().notNull(),
   servings: int().notNull().default(1),
   order: int().notNull().default(0),
+  ...timestamps,
 });
 
 export const mealPlanRecipeRelations = relations(

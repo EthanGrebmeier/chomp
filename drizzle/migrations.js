@@ -13,6 +13,8 @@ import m0008 from './0008_bizarre_venom.sql';
 import m0009 from './0009_dusty_ezekiel_stane.sql';
 import m0010 from './0010_last_doomsday.sql';
 import m0011 from './0011_late_leech.sql';
+import m0012 from './0012_ambitious_union_jack.sql';
+import m0013 from './0013_famous_red_hulk.sql';
 
   export default {
     journal,
@@ -28,7 +30,9 @@ m0007,
 m0008,
 m0009,
 m0010,
-m0011
+m0011,
+m0012,
+m0013
     }
   }
   

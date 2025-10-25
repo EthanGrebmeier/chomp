@@ -14,6 +14,7 @@ export const createMealPlan = async ({ mealPlan }: CreateMealPlanArgs) => {
     startDate: mealPlan.startDate,
     endDate: mealPlan.endDate,
     createdAt,
+    updatedAt: createdAt,
   });
 
   return { id };

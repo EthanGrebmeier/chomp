@@ -1,12 +1,17 @@
 import { Heading } from '@/components/text/heading';
 import { GroceryListCard } from '@/features/grocery-list/components/grocery-list-card';
 import { useGroceryLists } from '@/features/grocery-list/hooks/useGroceryLists';
+import { isBefore } from 'date-fns';
 import { FlatList, View } from 'react-native';
 import { LayoutAnimationConfig } from 'react-native-reanimated';
 import { Text } from '../../../components/ui/text';
 import { AddListSheet } from '../../../features/grocery-list/components/add-list-sheet';
 export default function Index() {
   const lists = useGroceryLists();
+
+  const listsChronological = lists.data?.sort((a, b) => {
+    return isBefore(b.createdAt, a.createdAt) ? -1 : 1;
+  });
 
   return (
     <View className="pt-safe flex-1  bg-background ">
@@ -20,7 +25,7 @@ export default function Index() {
       ) : (
         <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
           <FlatList
-            data={lists.data}
+            data={listsChronological}
             renderItem={({ item, index }) => (
               <GroceryListCard
                 key={item.id}

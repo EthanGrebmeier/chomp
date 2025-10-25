@@ -29,6 +29,7 @@ export const createItem = async ({
     notes,
     category,
     createdAt: now,
+    updatedAt: now,
   };
 
   await db.insert(itemTable).values(newItem);

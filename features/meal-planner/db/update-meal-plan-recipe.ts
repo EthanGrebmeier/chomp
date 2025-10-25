@@ -9,6 +9,9 @@ export const updateMealPlanRecipe = async ({
 }: UpdateMealPlanRecipeArgs) => {
   await db
     .update(mealPlanRecipeTable)
-    .set(updates)
+    .set({
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    })
     .where(eq(mealPlanRecipeTable.id, mealPlanRecipeId));
 };

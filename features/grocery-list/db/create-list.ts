@@ -9,10 +9,13 @@ type CreateListArgs = {
 
 export const createList = async ({ list }: CreateListArgs) => {
   const id = generateId();
+  const now = new Date().toISOString();
   await db.insert(groceryListTable).values({
     id,
     date: list.date,
     name: list.name,
+    createdAt: now,
+    updatedAt: now,
   });
   return { id };
 };

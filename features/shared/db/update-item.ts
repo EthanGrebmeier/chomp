@@ -19,6 +19,7 @@ export const updateItem = async ({ itemId, updates }: UpdateItemArgs) => {
   const processedUpdates = {
     ...updates,
     category: updates.category === undefined ? null : updates.category,
+    updatedAt: new Date().toISOString(),
   };
 
   const result = await db

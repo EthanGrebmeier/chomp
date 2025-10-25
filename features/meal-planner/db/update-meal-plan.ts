@@ -9,6 +9,9 @@ export const updateMealPlan = async ({
 }: UpdateMealPlanArgs) => {
   await db
     .update(mealPlanTable)
-    .set(updates)
+    .set({
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    })
     .where(eq(mealPlanTable.id, mealPlanId));
 };

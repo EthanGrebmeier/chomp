@@ -17,6 +17,7 @@ export const createRecipe = async ({
     name: recipe.name,
     description: recipe.description,
     createdAt: now,
+    updatedAt: now,
   });
 
   // Create the ingredients
@@ -37,6 +38,8 @@ export const createRecipe = async ({
         itemId: item.id,
         notes: ingredient.notes,
         order: ingredient.order ?? index,
+        createdAt: now,
+        updatedAt: now,
       });
     }
 

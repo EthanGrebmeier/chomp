@@ -30,6 +30,7 @@ export const addRecipeToMealPlan = async ({
       ? Math.max(...existingRecipes.map(r => r.order)) + 1
       : 0;
 
+  const now = new Date().toISOString();
   await db.insert(mealPlanRecipeTable).values({
     id,
     mealPlanId,
@@ -38,6 +39,8 @@ export const addRecipeToMealPlan = async ({
     date,
     servings,
     order: nextOrder,
+    createdAt: now,
+    updatedAt: now,
   });
 
   return { id };

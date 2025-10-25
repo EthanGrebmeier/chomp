@@ -8,5 +8,11 @@ type UpdateRecipeArgs = {
 };
 
 export const updateRecipe = async ({ recipe }: UpdateRecipeArgs) => {
-  await db.update(recipeTable).set(recipe).where(eq(recipeTable.id, recipe.id));
+  await db
+    .update(recipeTable)
+    .set({
+      ...recipe,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(recipeTable.id, recipe.id));
 };
