@@ -13,13 +13,14 @@ import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
-import { useMealPlan } from '../hooks';
-import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
-import { MealPlanDay } from '../types';
 import {
   AddToGroceryListSheet,
   AddToGroceryListSheetRef,
-} from './add-to-grocery-list-sheet';
+} from '../../shared/components';
+import { useMealPlan } from '../hooks';
+import { useAddMealPlanToGroceryList } from '../hooks/useAddMealPlanToGroceryList';
+import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
+import { MealPlanDay } from '../types';
 import { MealSheet, MealSheetRef } from './meal-sheet';
 
 type MealPlannerProps = {
@@ -40,6 +41,7 @@ export const MealPlanner = ({
   const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId);
   const { mutate: updateMealPlan } = useUpdateMealPlan();
+  const { mutate: addMealPlanToGroceryList } = useAddMealPlanToGroceryList();
   const theme = useTheme();
   const daysOfPlan = eachDayOfInterval({
     start: new Date(startDate),
@@ -89,6 +91,32 @@ export const MealPlanner = ({
       updates: {
         endDate: format(date, 'yyyy-MM-dd') + 'T00:00:00',
       },
+    });
+  };
+
+  const handleAddMealPlanToList = async (
+    listId: string,
+    isNewList: boolean
+  ) => {
+    return new Promise<void>((resolve, reject) => {
+      addMealPlanToGroceryList(
+        {
+          mealPlanId,
+          groceryListId: listId,
+          groceryListName: isNewList
+            ? `${mealPlan?.name || 'Meal Plan'} - Grocery List`
+            : undefined,
+        },
+        {
+          onSuccess: () => {
+            resolve();
+          },
+          onError: error => {
+            console.error('Failed to add meal plan to grocery list:', error);
+            reject(error);
+          },
+        }
+      );
     });
   };
 
@@ -155,8 +183,9 @@ export const MealPlanner = ({
       />
       <AddToGroceryListSheet
         ref={addToGroceryListSheetRef}
-        mealPlanId={mealPlanId}
-        mealPlanName={mealPlan?.name || 'Meal Plan'}
+        onListSelected={handleAddMealPlanToList}
+        title="Add Meal Plan to Grocery List"
+        createNewButtonText="Create New List & Add Meal Plan"
       />
       <View className="absolute bottom-4 right-4 z-10">
         <Button

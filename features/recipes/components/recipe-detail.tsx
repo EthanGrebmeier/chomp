@@ -1,8 +1,13 @@
 import { useRef, useState } from 'react';
 import { Animated, TextInput, View } from 'react-native';
 import { EditableHeader } from '../../../components/editable-header';
+import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
+import {
+  AddToGroceryListSheet,
+  AddToGroceryListSheetRef,
+} from '../../shared/components';
 import { useAddRecipeToList } from '../hooks/useAddRecipeToList';
 import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
 import { RecipeIngredientWithItem, RecipeWithIngredients } from '../types';
@@ -26,6 +31,7 @@ export const RecipeDetail = ({
 
   const textInputRef = useRef<TextInput>(null);
   const addIngredientSheetRef = useRef<AddIngredientSheetRef>(null);
+  const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const [editingIngredient, setEditingIngredient] =
     useState<RecipeIngredientWithItem | null>(null);
 
@@ -43,6 +49,23 @@ export const RecipeDetail = ({
 
   const handleCloseIngredientSheet = () => {
     setEditingIngredient(null);
+  };
+
+  const handleAddRecipeToList = async (listId: string, isNewList: boolean) => {
+    return new Promise<void>((resolve, reject) => {
+      addRecipeToList(
+        { recipeId: recipe.id, groceryListId: listId },
+        {
+          onSuccess: () => {
+            resolve();
+          },
+          onError: error => {
+            console.error('Failed to add recipe to grocery list:', error);
+            reject(error);
+          },
+        }
+      );
+    });
   };
 
   return (
@@ -89,7 +112,14 @@ export const RecipeDetail = ({
           )}
         />
       </View>
-      <View className="absolute bottom-4 right-4">
+      <View className="absolute bottom-4 right-4 flex-row gap-2">
+        <Button
+          onPress={() => addToGroceryListSheetRef.current?.open()}
+          className="flex-row items-center gap-2"
+          disabled={isPending}
+        >
+          <Text>{isPending ? 'Adding...' : 'Add to List'}</Text>
+        </Button>
         <AddIngredientSheet
           ref={addIngredientSheetRef}
           recipeId={recipe.id}
@@ -97,6 +127,12 @@ export const RecipeDetail = ({
           defaultValues={editingIngredient}
         />
       </View>
+      <AddToGroceryListSheet
+        ref={addToGroceryListSheetRef}
+        onListSelected={handleAddRecipeToList}
+        title="Add Recipe to Grocery List"
+        createNewButtonText="Create New List & Add Recipe"
+      />
     </View>
   );
 };

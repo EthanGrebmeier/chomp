@@ -3,13 +3,14 @@ import { eq } from 'drizzle-orm';
 import {
   groceryListItemTable,
   groceryListTable,
+  itemTable,
+  mealPlanRecipeTable,
   mealPlanTable,
   recipeIngredientTable,
 } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
 import { findOrCreateItem } from '../../shared/db/find-or-create-item';
 import { GenerateGroceryListFromMealPlanArgs } from '../types';
-import { generateIngredientsFromMealPlan } from './generate-ingredients-from-meal-plan';
 
 type AddMealPlanToGroceryListArgs = GenerateGroceryListFromMealPlanArgs & {
   groceryListId?: string;
@@ -55,6 +56,26 @@ export const addMealPlanToGroceryList = async ({
     isNewList = true;
   }
 
+  // Get all recipes in the meal plan with their ingredients
+  const mealPlanRecipes = await db
+    .select({
+      recipeId: mealPlanRecipeTable.recipeId,
+      servings: mealPlanRecipeTable.servings,
+      ingredient: {
+        id: itemTable.id,
+        name: itemTable.name,
+        quantity: itemTable.quantity,
+        unit: itemTable.unit,
+      },
+    })
+    .from(mealPlanRecipeTable)
+    .innerJoin(
+      recipeIngredientTable,
+      eq(mealPlanRecipeTable.recipeId, recipeIngredientTable.recipeId)
+    )
+    .innerJoin(itemTable, eq(recipeIngredientTable.itemId, itemTable.id))
+    .where(eq(mealPlanRecipeTable.mealPlanId, mealPlanId));
+
   // Get all item IDs that are currently used by recipe ingredients
   const recipeIngredientItems = await db
     .select({ itemId: recipeIngredientTable.itemId })
@@ -62,18 +83,16 @@ export const addMealPlanToGroceryList = async ({
 
   const excludeItemIds = recipeIngredientItems.map(row => row.itemId);
 
-  // Generate the aggregated ingredients from the meal plan
-  const { ingredients } = await generateIngredientsFromMealPlan({ mealPlanId });
-
-  // Add all ingredients to the grocery list
+  // Add each recipe's ingredients to the grocery list individually
   const groceryListItems = [];
   const now = new Date().toISOString();
-  for (const ingredient of ingredients) {
+
+  for (const mealPlanRecipe of mealPlanRecipes) {
     // Find or create the item, excluding items used by recipe ingredients
     const item = await findOrCreateItem({
-      name: ingredient.name,
-      quantity: ingredient.quantity,
-      unit: ingredient.unit,
+      name: mealPlanRecipe.ingredient.name,
+      quantity: mealPlanRecipe.ingredient.quantity * mealPlanRecipe.servings,
+      unit: mealPlanRecipe.ingredient.unit,
       excludeItemIds,
     });
 
@@ -81,6 +100,7 @@ export const addMealPlanToGroceryList = async ({
       id: generateId(),
       groceryListId: targetGroceryListId!,
       itemId: item.id,
+      recipeId: mealPlanRecipe.recipeId, // Preserve recipe context
       isChecked: false,
       createdAt: now,
       updatedAt: now,

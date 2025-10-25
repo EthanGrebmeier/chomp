@@ -2,7 +2,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { format, parseISO, startOfDay } from 'date-fns';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
   CalendarSheet,

@@ -1,3 +1,4 @@
+import { useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { FlatList, Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,6 +24,7 @@ export const GroceryListSearchSheet = forwardRef<
   GroceryListSearchSheetRef,
   GroceryListSearchSheetProps
 >(({ onSelectList, onCancel, title = 'Select Grocery List' }, ref) => {
+  const { dismissAll } = useBottomSheetModal();
   const bottomSheetRef = useRef<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { top } = useSafeAreaInsets();
@@ -48,7 +50,7 @@ export const GroceryListSearchSheet = forwardRef<
 
   const handleSelectList = (list: GroceryListWithItems) => {
     onSelectList(list);
-    bottomSheetRef.current?.dismiss();
+    dismissAll();
     setSearchQuery('');
   };
 
@@ -63,7 +65,6 @@ export const GroceryListSearchSheet = forwardRef<
         setSearchQuery('');
       }}
       ignoreSafeArea
-      snapPoints={['50%']}
     >
       <View style={{ height: height - top - 100 }}>
         <BottomSheet.Header
@@ -87,7 +88,6 @@ export const GroceryListSearchSheet = forwardRef<
               placeholder="Search grocery lists..."
               value={searchQuery}
               onChangeText={setSearchQuery}
-              autoFocus
             />
           </View>
 
