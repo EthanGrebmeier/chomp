@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { CookingPotIcon } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { CategoryTag } from '../../../components/category-tag';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
@@ -34,7 +35,7 @@ export const GroceryListItem = ({
       }
       className={className}
     >
-      <Pressable
+      <HapticPressable
         hitSlop={10}
         className={cn(
           'size-6 overflow-hidden rounded-full border border-border p-0.5 '
@@ -51,6 +52,7 @@ export const GroceryListItem = ({
             }
           )
         }
+        hapticType="selection"
       >
         <View
           className={cn(
@@ -58,9 +60,9 @@ export const GroceryListItem = ({
             isChecked && 'bg-primary'
           )}
         ></View>
-      </Pressable>
+      </HapticPressable>
 
-      <Pressable className="flex-1" onPress={onEdit}>
+      <HapticPressable className="flex-1" onPress={onEdit} hapticType="light">
         <View className="flex-row items-center justify-between">
           <Text
             className={cn(
@@ -93,7 +95,7 @@ export const GroceryListItem = ({
             )}
           </View>
         )}
-      </Pressable>
+      </HapticPressable>
     </ListItem>
   );
 };

@@ -1,4 +1,5 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { GroceryListWithItems } from '../types';
@@ -17,7 +18,7 @@ export const GroceryListItemCard = ({
   className = '',
 }: GroceryListItemCardProps) => {
   return (
-    <Pressable
+    <HapticPressable
       onPress={() => onPress(item)}
       disabled={disabled}
       className={cn(
@@ -25,6 +26,7 @@ export const GroceryListItemCard = ({
         disabled ? 'opacity-50' : 'border-border bg-card',
         className
       )}
+      hapticType="light"
     >
       <View className="flex-row items-center justify-between">
         <Text className="text-lg font-semibold">{item.name}</Text>
@@ -37,6 +39,6 @@ export const GroceryListItemCard = ({
       <Text className="text-sm text-muted-foreground">
         {item.items?.length || 0} items
       </Text>
-    </Pressable>
+    </HapticPressable>
   );
 };

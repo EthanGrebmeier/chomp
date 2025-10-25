@@ -2,13 +2,14 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { format, parseISO, startOfDay } from 'date-fns';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
   CalendarSheet,
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
 import { Button } from '../../../components/ui/button';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 
 import { CalendarIcon, PencilIcon, TrashIcon } from 'lucide-react-native';
@@ -181,21 +182,27 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-4">
-                      <Pressable onPress={() => setCurrentView('search')}>
+                      <HapticPressable
+                        onPress={() => setCurrentView('search')}
+                        hapticType="light"
+                      >
                         <Icon
                           as={PencilIcon}
                           color={theme.foreground}
                           size={20}
                         />
-                      </Pressable>
+                      </HapticPressable>
                       {mode === 'edit' && (
-                        <Pressable onPress={handleRemoveMeal}>
+                        <HapticPressable
+                          onPress={handleRemoveMeal}
+                          hapticType="heavy"
+                        >
                           <Icon
                             as={TrashIcon}
                             size={20}
                             color={theme.destructive}
                           />
-                        </Pressable>
+                        </HapticPressable>
                       )}
                     </View>
                   </View>

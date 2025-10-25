@@ -4,10 +4,11 @@ import { BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useForm } from '@tanstack/react-form';
 import { PlusIcon } from 'lucide-react-native';
 import { ReactNode, forwardRef, useImperativeHandle, useRef } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import {
   Select,
@@ -142,9 +143,10 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
     return (
       <>
         {showAddButton && (
-          <Pressable
+          <HapticPressable
             className="size-10 items-center justify-center rounded-full border border-border bg-primary"
             onPress={() => bottomSheetRef.current?.present()}
+            hapticType="medium"
           >
             <Icon
               as={PlusIcon}
@@ -152,7 +154,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
               strokeWidth={3.5}
               className="size-4"
             />
-          </Pressable>
+          </HapticPressable>
         )}
         <BottomSheet
           onStartClose={handleClose}

@@ -1,7 +1,8 @@
 import { cn } from '@/lib/utils';
 import { XIcon } from 'lucide-react-native';
 import { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { HapticPressable } from './haptic-pressable';
 import { Icon } from './icon';
 import { Text } from './text';
 
@@ -43,12 +44,13 @@ export const Pill = ({
         </Text>
       </View>
       {hasValue && onClear && (
-        <Pressable
+        <HapticPressable
           onPress={onClear}
           className="absolute right-2 top-1/2 -translate-y-1/2"
+          hapticType="light"
         >
           <Icon as={XIcon} color="black" size={16} />
-        </Pressable>
+        </HapticPressable>
       )}
     </View>
   );

@@ -1,7 +1,8 @@
+import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Platform, Pressable } from 'react-native';
+import { Platform } from 'react-native';
 
 const buttonVariants = cva(
   cn(
@@ -99,20 +100,45 @@ const buttonTextVariants = cva(
   }
 );
 
-type ButtonProps = React.ComponentProps<typeof Pressable> &
-  React.RefAttributes<typeof Pressable> &
-  VariantProps<typeof buttonVariants>;
+type ButtonProps = React.ComponentProps<typeof HapticPressable> &
+  VariantProps<typeof buttonVariants> & {
+    /**
+     * Whether to trigger haptic feedback on press
+     * @default true
+     */
+    haptic?: boolean;
+    /**
+     * The type of haptic feedback to trigger
+     * @default 'light'
+     */
+    hapticType?:
+      | 'light'
+      | 'medium'
+      | 'heavy'
+      | 'selection'
+      | 'impact'
+      | 'notification';
+  };
 
-function Button({ className, variant, size, ...props }: ButtonProps) {
+function Button({
+  className,
+  variant,
+  size,
+  haptic = true,
+  hapticType = 'light',
+  ...props
+}: ButtonProps) {
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
-      <Pressable
+      <HapticPressable
         className={cn(
           props.disabled && 'opacity-50',
           buttonVariants({ variant, size }),
           className
         )}
         role="button"
+        haptic={haptic}
+        hapticType={hapticType}
         {...props}
       />
     </TextClassContext.Provider>
