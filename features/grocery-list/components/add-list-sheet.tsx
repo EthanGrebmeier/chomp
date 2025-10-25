@@ -24,6 +24,7 @@ export const AddListSheet = () => {
         list: {
           date: dateString,
           name: getDefaultName(today),
+          groupBy: 'none',
         },
       },
       {

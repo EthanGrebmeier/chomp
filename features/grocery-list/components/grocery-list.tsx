@@ -29,7 +29,7 @@ type GroceryListProps = {
   date: string;
   items: GroceryListItemWithItem[];
   groceryListId: string;
-  groupBy: 'category' | 'none';
+  groupBy: 'category' | 'none' | 'recipe';
   autofocus?: boolean;
 };
 
@@ -45,7 +45,9 @@ export const GroceryList = ({
 
   const [editingItem, setEditingItem] =
     useState<GroceryListItemWithItem | null>(null);
-  const [groupBy, setGroupBy] = useState<'category' | 'none'>(initialGroupBy);
+  const [groupBy, setGroupBy] = useState<'category' | 'none' | 'recipe'>(
+    initialGroupBy
+  );
 
   const textInputRef = useRef<TextInput>(null);
   const editSheetRef = useRef<AddItemSheetRef>(null);
@@ -66,7 +68,7 @@ export const GroceryList = ({
     setEditingItem(null);
   };
 
-  const handleGroupByChange = (newGroupBy: 'category' | 'none') => {
+  const handleGroupByChange = (newGroupBy: 'category' | 'none' | 'recipe') => {
     setGroupBy(newGroupBy);
     updateList({
       listId: groceryListId,

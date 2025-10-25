@@ -36,7 +36,7 @@ export const normalizeGroceryList = (
 
 export const groupItemsBy = (
   items: GroceryListItemWithItem[],
-  groupBy: 'category' | 'none'
+  groupBy: 'category' | 'none' | 'recipe'
 ): Map<string, GroceryListItemWithItem[]> => {
   const groups = new Map<string, GroceryListItemWithItem[]>();
 
@@ -66,6 +66,16 @@ export const groupItemsBy = (
     });
   }
 
+  if (groupBy === 'recipe') {
+    items.forEach(item => {
+      const recipeName = item.recipe?.name || 'Ungrouped';
+      if (!groups.has(recipeName)) {
+        groups.set(recipeName, []);
+      }
+      groups.get(recipeName)!.push(item);
+    });
+  }
+
   // Sort items within each group: unchecked first, then alphabetically
   groups.forEach(groupItems => {
     groupItems.sort((a, b) => {
@@ -80,12 +90,38 @@ export const groupItemsBy = (
     });
   });
 
-  // Convert to array, sort groups to put Uncategorized at the bottom, then back to Map
-  const sortedGroups = Array.from(groups.entries()).sort(([a], [b]) => {
-    if (a === 'Uncategorized') return 1;
-    if (b === 'Uncategorized') return -1;
-    return a.localeCompare(b);
-  });
+  // Convert to array, sort groups based on grouping type
+  let sortedGroups: [string, GroceryListItemWithItem[]][];
+
+  if (groupBy === 'category') {
+    // Sort category groups: put Uncategorized at the bottom, others alphabetically
+    sortedGroups = Array.from(groups.entries()).sort(([a], [b]) => {
+      if (a === 'Uncategorized') return 1;
+      if (b === 'Uncategorized') return -1;
+      return a.localeCompare(b);
+    });
+  } else if (groupBy === 'recipe') {
+    // Sort recipe groups: put Ungrouped at the bottom, others chronologically by earliest item
+    sortedGroups = Array.from(groups.entries()).sort(
+      ([a, aItems], [b, bItems]) => {
+        if (a === 'Ungrouped') return 1;
+        if (b === 'Ungrouped') return -1;
+
+        // Find the earliest item in each group (by item creation time)
+        const aEarliest = Math.min(
+          ...aItems.map(item => new Date(item.item.createdAt).getTime())
+        );
+        const bEarliest = Math.min(
+          ...bItems.map(item => new Date(item.item.createdAt).getTime())
+        );
+
+        return aEarliest - bEarliest;
+      }
+    );
+  } else {
+    // For 'none' grouping, no additional sorting needed
+    sortedGroups = Array.from(groups.entries());
+  }
 
   const sortedGroupsMap = new Map(sortedGroups);
   return sortedGroupsMap;

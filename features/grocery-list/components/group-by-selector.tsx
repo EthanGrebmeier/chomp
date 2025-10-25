@@ -18,8 +18,8 @@ const GroupByItem = ({
   onSelect,
 }: {
   label: string;
-  value: 'category' | 'none';
-  onSelect: (value: 'category' | 'none') => void;
+  value: 'category' | 'none' | 'recipe';
+  onSelect: (value: 'category' | 'none' | 'recipe') => void;
 }) => {
   return (
     <Pressable
@@ -32,8 +32,8 @@ const GroupByItem = ({
 };
 
 type GroupBySelectorProps = {
-  value?: 'category' | 'none';
-  onChange: (value: 'category' | 'none') => void;
+  value?: 'category' | 'none' | 'recipe';
+  onChange: (value: 'category' | 'none' | 'recipe') => void;
 };
 
 export const GroupBySelector = ({
@@ -43,10 +43,12 @@ export const GroupBySelector = ({
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<TriggerRef>(null);
 
-  const getDisplayLabel = (value: 'category' | 'none') => {
+  const getDisplayLabel = (value: 'category' | 'none' | 'recipe') => {
     switch (value) {
       case 'category':
         return 'Group by: Category';
+      case 'recipe':
+        return 'Group by: Recipe';
       case 'none':
         return 'Group by: None';
       default:
@@ -79,6 +81,14 @@ export const GroupBySelector = ({
           value="category"
           onSelect={() => {
             onChange('category');
+            ref.current?.close();
+          }}
+        />
+        <GroupByItem
+          label="Recipe"
+          value="recipe"
+          onSelect={() => {
+            onChange('recipe');
             ref.current?.close();
           }}
         />
