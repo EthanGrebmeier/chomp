@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { BottomSheetModal, useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRef, useState } from 'react';
 import { KeyboardController } from 'react-native-keyboard-controller';
+import { toast } from 'sonner-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Text } from '../../../components/ui/text';
 import { RecipeSearch } from '../../recipes/components/recipe-search';
@@ -65,6 +66,7 @@ export const AddRecipeSheet = ({ groceryListId }: AddRecipeSheetProps) => {
       {
         onSuccess: () => {
           dismissAll();
+          toast.success(`${selectedRecipe.name} added`);
         },
       }
     );
@@ -81,6 +83,7 @@ export const AddRecipeSheet = ({ groceryListId }: AddRecipeSheetProps) => {
       {
         onSuccess: () => {
           dismissAll();
+          toast.success(`${selectedRecipe.name} added`);
         },
       }
     );
