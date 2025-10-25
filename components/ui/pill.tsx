@@ -49,7 +49,7 @@ export const Pill = ({
           className="absolute right-2 top-1/2 -translate-y-1/2"
           hapticType="light"
         >
-          <Icon as={XIcon} color="black" size={16} />
+          <Icon as={XIcon} size={16} />
         </HapticPressable>
       )}
     </View>
