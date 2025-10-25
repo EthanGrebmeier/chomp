@@ -1,12 +1,12 @@
 import {
   BoxIcon,
+  CarrotIcon,
   CircleQuestionMarkIcon,
   CroissantIcon,
   CupSodaIcon,
   HamIcon,
   HeartIcon,
   HomeIcon,
-  LeafIcon,
   MilkIcon,
   PopcornIcon,
   SnowflakeIcon,
@@ -17,7 +17,7 @@ export const categoryOptions = [
     label: 'Produce',
     value: 'produce',
     style: {
-      icon: LeafIcon,
+      icon: CarrotIcon,
     },
   },
   {
