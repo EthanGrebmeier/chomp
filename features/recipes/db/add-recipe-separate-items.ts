@@ -1,5 +1,5 @@
 import { generateId } from '@/lib/utils';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import {
   groceryListItemTable,
   itemTable,
@@ -7,27 +7,16 @@ import {
 } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
 import { findOrCreateItem } from '../../shared/db/find-or-create-item';
-import { AddRecipeToListArgs } from '../types';
 
-export const addRecipeToList = async ({
+export type AddRecipeAsSeparateItemsArgs = {
+  recipeId: string;
+  groceryListId: string;
+};
+
+export const addRecipeAsSeparateItems = async ({
   recipeId,
   groceryListId,
-}: AddRecipeToListArgs) => {
-  // Check if this recipe already exists in the grocery list
-  const existingRecipeItems = await db
-    .select()
-    .from(groceryListItemTable)
-    .where(
-      and(
-        eq(groceryListItemTable.groceryListId, groceryListId),
-        eq(groceryListItemTable.recipeId, recipeId)
-      )
-    );
-
-  if (existingRecipeItems.length > 0) {
-    return { isDuplicate: true, existingItems: existingRecipeItems };
-  }
-
+}: AddRecipeAsSeparateItemsArgs) => {
   // Get all item IDs that are currently used by recipe ingredients
   const recipeIngredientItems = await db
     .select({ itemId: recipeIngredientTable.itemId })
@@ -46,7 +35,7 @@ export const addRecipeToList = async ({
     .where(eq(recipeIngredientTable.recipeId, recipeId))
     .orderBy(recipeIngredientTable.order);
 
-  // Convert recipe ingredients to grocery list items
+  // Convert recipe ingredients to grocery list items (without recipeId)
   const groceryListItems = [];
   for (const { ingredient, item } of ingredients) {
     if (!item) {
@@ -67,7 +56,7 @@ export const addRecipeToList = async ({
       id: generateId(),
       groceryListId,
       itemId: groceryItem.id,
-      recipeId: recipeId,
+      recipeId: null, // No recipeId linking for separate items
       isChecked: false,
     });
   }
@@ -77,5 +66,5 @@ export const addRecipeToList = async ({
     await db.insert(groceryListItemTable).values(groceryListItems);
   }
 
-  return { addedItems: groceryListItems.length, isDuplicate: false };
+  return { addedItems: groceryListItems.length };
 };
