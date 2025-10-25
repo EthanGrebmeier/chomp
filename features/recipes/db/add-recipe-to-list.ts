@@ -13,6 +13,13 @@ export const addRecipeToList = async ({
   recipeId,
   groceryListId,
 }: AddRecipeToListArgs) => {
+  // Get all item IDs that are currently used by recipe ingredients
+  const recipeIngredientItems = await db
+    .select({ itemId: recipeIngredientTable.itemId })
+    .from(recipeIngredientTable);
+
+  const excludeItemIds = recipeIngredientItems.map(row => row.itemId);
+
   // Get all ingredients for the recipe with their items
   const ingredients = await db
     .select({
@@ -32,11 +39,13 @@ export const addRecipeToList = async ({
     }
 
     // Find or create the item (in case it needs to be duplicated for the grocery list)
+    // Exclude items that are currently used by recipe ingredients to prevent bi-directional updates
     const groceryItem = await findOrCreateItem({
       name: item.name,
       quantity: item.quantity,
       unit: item.unit,
       notes: item.notes ?? undefined,
+      excludeItemIds,
     });
 
     groceryListItems.push({

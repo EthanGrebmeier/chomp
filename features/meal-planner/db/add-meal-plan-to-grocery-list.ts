@@ -4,6 +4,7 @@ import {
   groceryListItemTable,
   groceryListTable,
   mealPlanTable,
+  recipeIngredientTable,
 } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
 import { findOrCreateItem } from '../../shared/db/find-or-create-item';
@@ -52,17 +53,25 @@ export const addMealPlanToGroceryList = async ({
     isNewList = true;
   }
 
+  // Get all item IDs that are currently used by recipe ingredients
+  const recipeIngredientItems = await db
+    .select({ itemId: recipeIngredientTable.itemId })
+    .from(recipeIngredientTable);
+
+  const excludeItemIds = recipeIngredientItems.map(row => row.itemId);
+
   // Generate the aggregated ingredients from the meal plan
   const { ingredients } = await generateIngredientsFromMealPlan({ mealPlanId });
 
   // Add all ingredients to the grocery list
   const groceryListItems = [];
   for (const ingredient of ingredients) {
-    // Find or create the item
+    // Find or create the item, excluding items used by recipe ingredients
     const item = await findOrCreateItem({
       name: ingredient.name,
       quantity: ingredient.quantity,
       unit: ingredient.unit,
+      excludeItemIds,
     });
 
     groceryListItems.push({

@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, notInArray } from 'drizzle-orm';
 import { itemTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
 import { QuantityUnit } from '../types';
@@ -10,6 +10,7 @@ export type FindOrCreateItemArgs = {
   unit: QuantityUnit;
   notes?: string;
   category?: string | null;
+  excludeItemIds?: string[];
 };
 
 export const findOrCreateItem = async ({
@@ -18,18 +19,25 @@ export const findOrCreateItem = async ({
   unit,
   notes,
   category,
+  excludeItemIds,
 }: FindOrCreateItemArgs) => {
+  // Build the where conditions
+  const whereConditions = [
+    eq(itemTable.name, name),
+    eq(itemTable.quantity, quantity),
+    eq(itemTable.unit, unit),
+  ];
+
+  // Add exclusion condition if provided
+  if (excludeItemIds && excludeItemIds.length > 0) {
+    whereConditions.push(notInArray(itemTable.id, excludeItemIds));
+  }
+
   // Try to find an existing item with the same name, quantity, and unit
   const existingItem = await db
     .select()
     .from(itemTable)
-    .where(
-      and(
-        eq(itemTable.name, name),
-        eq(itemTable.quantity, quantity),
-        eq(itemTable.unit, unit)
-      )
-    )
+    .where(and(...whereConditions))
     .limit(1);
 
   if (existingItem.length > 0) {
