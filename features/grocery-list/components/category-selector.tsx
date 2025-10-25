@@ -55,15 +55,16 @@ export const CategorySelector = ({
             <Icon
               as={selectedCategory ? selectedCategory.style.icon : TagIcon}
               size={16}
-              color="black"
             />
           }
           hasValue={!!category}
           onClear={category ? () => onSelect(undefined) : undefined}
           className={cn(
-            selectedCategory ? 'border-yellow-500 bg-yellow-100' : ' bg-muted'
+            selectedCategory ? 'border-yellow-500 bg-yellow-100' : ' bg-none'
           )}
-          textClassName="text-black"
+          textClassName={cn(
+            selectedCategory ? 'text-black' : 'text-muted-foreground'
+          )}
         >
           {selectedCategory ? selectedCategory.label : 'Category'}
         </Pill>
