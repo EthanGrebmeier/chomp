@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { toast } from 'sonner-native';
 import { CategorySelector } from '../../grocery-list/components/category-selector';
 import { ItemFormData, ItemSheet, ItemSheetRef } from '../../shared/components';
 import { useAddRecipeIngredient } from '../hooks/useAddRecipeIngredient';
@@ -51,6 +52,7 @@ export const AddIngredientSheet = forwardRef<
             });
             onClose?.();
             itemSheetRef.current?.dismiss();
+            toast.success(`${defaultValues.item.name} updated`);
           },
         }
       );
@@ -69,6 +71,7 @@ export const AddIngredientSheet = forwardRef<
               queryKey: recipeQueryKeys.all(),
             });
             onClose?.();
+            toast.success(`${data.name} added`);
           },
         }
       );
