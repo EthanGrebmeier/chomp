@@ -1,8 +1,6 @@
 import { navigation } from '@/lib/navigation';
 import { router } from 'expo-router';
-import { PlusIcon } from 'lucide-react-native';
 import { Button } from '../../../components/ui/button';
-import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import { useCreateRecipe } from '../hooks';
@@ -38,12 +36,6 @@ export const CreateRecipeButton = ({
   };
   return (
     <Button onPress={handleCreateRecipe} disabled={isPending}>
-      <Icon
-        as={PlusIcon}
-        size={16}
-        strokeWidth={3.5}
-        color={theme.primaryForeground}
-      />
       <Text>{isPending ? 'Creating...' : 'Create Recipe'}</Text>
     </Button>
   );

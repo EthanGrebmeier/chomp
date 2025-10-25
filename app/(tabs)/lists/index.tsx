@@ -9,7 +9,7 @@ export default function Index() {
   const lists = useGroceryLists();
 
   return (
-    <View className="py-safe flex-1  bg-background ">
+    <View className="pt-safe flex-1  bg-background ">
       <View className="px-4">
         <Heading>Lists</Heading>
       </View>

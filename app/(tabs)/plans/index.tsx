@@ -14,7 +14,7 @@ export default function MealPlansPage() {
   const mealPlans = useMealPlans();
   const { mutate: deleteMealPlan } = useDeleteMealPlan();
   return (
-    <View className="py-safe flex-1 bg-background">
+    <View className="pt-safe flex-1 bg-background">
       <View className="px-4">
         <Heading>Meal Plans</Heading>
       </View>

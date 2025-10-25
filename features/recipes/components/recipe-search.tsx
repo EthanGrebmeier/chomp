@@ -39,7 +39,7 @@ export const RecipeSearch = ({
     <Animated.View
       entering={canGoBack ? FadeIn : undefined}
       exiting={FadeOut}
-      className="h-[300] w-full gap-2"
+      className="h-[300] w-full gap-4"
     >
       {canGoBack && (
         <Pressable onPress={onBack} className="flex-row items-center gap-2">

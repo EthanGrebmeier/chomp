@@ -16,7 +16,7 @@ export default function RecipeDetailPage() {
   if (isLoading) {
     return (
       <View className="flex-1 bg-background">
-        <View className="py-safe flex-1">
+        <View className="pt-safe flex-1">
           <View className="flex-1 items-center justify-center">
             <Text className="text-muted-foreground">Loading recipe...</Text>
           </View>
@@ -28,7 +28,7 @@ export default function RecipeDetailPage() {
   if (!recipe) {
     return (
       <View className="flex-1 bg-background">
-        <View className="py-safe flex-1">
+        <View className="pt-safe flex-1">
           <View className="flex-1 items-center justify-center">
             <Text className="text-muted-foreground">Recipe not found</Text>
           </View>
@@ -38,8 +38,8 @@ export default function RecipeDetailPage() {
   }
 
   return (
-    <View className="flex-1 bg-background">
-      <View className="py-safe flex-1">
+    <View className="pt-safe flex-1 bg-background">
+      <View className="flex-1">
         <BackButton />
         <RecipeDetail recipe={recipe} autofocus={autofocus === 'true'} />
       </View>

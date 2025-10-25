@@ -72,12 +72,6 @@ export const RecipeDetail = ({
       <View className="flex-1 ">
         <View className="mb-4 flex-row items-center justify-between px-4">
           <Text className="text-xl font-semibold">Ingredients:</Text>
-          <AddIngredientSheet
-            ref={addIngredientSheetRef}
-            recipeId={recipe.id}
-            onClose={handleCloseIngredientSheet}
-            defaultValues={editingIngredient}
-          />
         </View>
         <Animated.FlatList
           className="gap-2"
@@ -93,6 +87,14 @@ export const RecipeDetail = ({
               onEdit={handleEditIngredient}
             />
           )}
+        />
+      </View>
+      <View className="absolute bottom-4 right-4">
+        <AddIngredientSheet
+          ref={addIngredientSheetRef}
+          recipeId={recipe.id}
+          onClose={handleCloseIngredientSheet}
+          defaultValues={editingIngredient}
         />
       </View>
     </View>

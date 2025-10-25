@@ -9,7 +9,7 @@ export default function Recipes() {
   const { data: recipes, isLoading } = useRecipes();
 
   return (
-    <View className="py-safe flex-1 bg-background ">
+    <View className="pt-safe flex-1 bg-background ">
       <View className="px-4">
         <Heading>Recipes</Heading>
       </View>
