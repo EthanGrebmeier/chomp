@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { toast } from 'sonner-native';
 import { ItemFormData, ItemSheet, ItemSheetRef } from '../../shared/components';
 import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
 import { useUpdateGroceryListItem } from '../hooks/useUpdateGroceryListItem';
@@ -46,7 +47,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
             onSuccess: () => {
               itemSheetRef.current?.dismiss();
               queryClient.invalidateQueries({ queryKey: queryKeys.base() });
-              onClose?.();
+              toast.success(`${defaultValues.item.name} updated`);
             },
           }
         );
@@ -62,6 +63,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
           {
             onSuccess: () => {
               queryClient.invalidateQueries({ queryKey: queryKeys.base() });
+              toast.success(`${data.name} added`);
             },
           }
         );

@@ -9,6 +9,7 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { Toaster } from 'sonner-native';
 import '../global.css';
 
 const db = SQLite.openDatabaseSync('db.db');
@@ -27,6 +28,14 @@ export default function RootLayout() {
                 <Stack
                   screenOptions={{
                     headerShown: false,
+                  }}
+                />
+                <Toaster
+                  position="top-center"
+                  toastOptions={{
+                    style: {
+                      borderRadius: 100,
+                    },
                   }}
                 />
               </View>
