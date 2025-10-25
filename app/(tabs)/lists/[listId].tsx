@@ -17,7 +17,7 @@ export default function List() {
   return (
     <View className="flex-1 bg-background">
       <View className="pt-safe flex-1">
-        <BackButton />
+        <BackButton href="/(tabs)/lists" />
         <GroceryList
           name={list.name}
           date={list.date || ''}

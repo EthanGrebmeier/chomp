@@ -27,7 +27,7 @@ export default function MealPlanDetailPage() {
 
   return (
     <View className="pt-safe flex-1 bg-background">
-      <BackButton />
+      <BackButton href="/(tabs)/plans" />
       <MealPlanner
         mealPlanId={mealPlanId!}
         startDate={mealPlan.startDate}

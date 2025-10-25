@@ -10,7 +10,10 @@ import { GroceryListItemWithItem } from '../types';
 
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
-import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
+import Animated, {
+  LayoutAnimationConfig,
+  LinearTransition,
+} from 'react-native-reanimated';
 import { EditableHeader } from '../../../components/editable-header';
 import { cn } from '../../../lib/utils';
 import { useUpdateGroceryList } from '../hooks/useUpdateGroceryList';
@@ -124,11 +127,11 @@ export const GroceryList = ({
             renderSectionHeader={({ section }) => {
               if (groupBy === 'none' || !section.title) return null;
               return (
-                <View className="bg-background px-4 py-2">
+                <Animated.View layout={LinearTransition} className="px-4 py-2">
                   <Text className="text-lg font-semibold capitalize text-foreground">
                     {section.title}
                   </Text>
-                </View>
+                </Animated.View>
               );
             }}
             renderItem={({ item, index, section }) => {
