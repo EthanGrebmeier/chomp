@@ -32,11 +32,14 @@ export const getMealPlan = async (
       date: mealPlanRecipeTable.date,
       servings: mealPlanRecipeTable.servings,
       order: mealPlanRecipeTable.order,
+      createdAt: mealPlanRecipeTable.createdAt,
+      updatedAt: mealPlanRecipeTable.updatedAt,
       recipe: {
+        createdAt: recipeTable.createdAt,
+        updatedAt: recipeTable.updatedAt,
         id: recipeTable.id,
         name: recipeTable.name,
         description: recipeTable.description,
-        createdAt: recipeTable.createdAt,
       },
     })
     .from(mealPlanRecipeTable)
@@ -52,6 +55,8 @@ export const getMealPlan = async (
         id: groceryListTable.id,
         name: groceryListTable.name,
         date: groceryListTable.date,
+        createdAt: groceryListTable.createdAt,
+        updatedAt: groceryListTable.updatedAt,
       })
       .from(groceryListTable)
       .where(eq(groceryListTable.id, mealPlan[0].groceryListId))

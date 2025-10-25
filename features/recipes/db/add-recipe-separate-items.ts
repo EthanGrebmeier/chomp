@@ -37,6 +37,7 @@ export const addRecipeAsSeparateItems = async ({
 
   // Convert recipe ingredients to grocery list items (without recipeId)
   const groceryListItems = [];
+  const now = new Date().toISOString();
   for (const { ingredient, item } of ingredients) {
     if (!item) {
       throw new Error(`Item not found for ingredient ${ingredient.id}`);
@@ -58,6 +59,8 @@ export const addRecipeAsSeparateItems = async ({
       itemId: groceryItem.id,
       recipeId: null, // No recipeId linking for separate items
       isChecked: false,
+      createdAt: now,
+      updatedAt: now,
     });
   }
 

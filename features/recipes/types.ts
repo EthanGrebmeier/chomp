@@ -16,7 +16,7 @@ export type RecipeWithIngredients = Recipe & {
 };
 
 export type CreateRecipeArgs = {
-  recipe: Omit<RecipeInsert, 'id' | 'createdAt'>;
+  recipe: Omit<RecipeInsert, 'id' | 'createdAt' | 'updatedAt'>;
   ingredients: {
     name: string;
     quantity: number;

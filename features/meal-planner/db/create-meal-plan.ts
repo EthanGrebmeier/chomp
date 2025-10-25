@@ -5,7 +5,7 @@ import { CreateMealPlanArgs } from '../types';
 
 export const createMealPlan = async ({ mealPlan }: CreateMealPlanArgs) => {
   const id = generateId();
-  const createdAt = new Date().toISOString();
+  const now = new Date().toISOString();
 
   await db.insert(mealPlanTable).values({
     id,
@@ -13,8 +13,8 @@ export const createMealPlan = async ({ mealPlan }: CreateMealPlanArgs) => {
     name: mealPlan.name,
     startDate: mealPlan.startDate,
     endDate: mealPlan.endDate,
-    createdAt,
-    updatedAt: createdAt,
+    createdAt: now,
+    updatedAt: now,
   });
 
   return { id };

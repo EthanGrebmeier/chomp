@@ -41,11 +41,13 @@ export const addMealPlanToGroceryList = async ({
   if (!groceryListId) {
     const listName = groceryListName || `${mealPlan[0].name} - Grocery List`;
     const newListId = generateId();
-
+    const now = new Date().toISOString();
     // Create a new grocery list
     await db.insert(groceryListTable).values({
       id: newListId,
       name: listName,
+      createdAt: now,
+      updatedAt: now,
       date: new Date().toISOString(),
     });
 
@@ -65,6 +67,7 @@ export const addMealPlanToGroceryList = async ({
 
   // Add all ingredients to the grocery list
   const groceryListItems = [];
+  const now = new Date().toISOString();
   for (const ingredient of ingredients) {
     // Find or create the item, excluding items used by recipe ingredients
     const item = await findOrCreateItem({
@@ -79,6 +82,8 @@ export const addMealPlanToGroceryList = async ({
       groceryListId: targetGroceryListId!,
       itemId: item.id,
       isChecked: false,
+      createdAt: now,
+      updatedAt: now,
     });
   }
 

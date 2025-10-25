@@ -19,7 +19,7 @@ export type MealPlanWithRecipes = MealPlan & {
 };
 
 export type CreateMealPlanArgs = {
-  mealPlan: Omit<MealPlanInsert, 'id' | 'createdAt'>;
+  mealPlan: Omit<MealPlanInsert, 'id' | 'createdAt' | 'updatedAt'>;
 };
 
 export type UpdateMealPlanArgs = {

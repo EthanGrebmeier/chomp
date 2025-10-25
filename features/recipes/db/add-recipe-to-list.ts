@@ -48,6 +48,7 @@ export const addRecipeToList = async ({
 
   // Convert recipe ingredients to grocery list items
   const groceryListItems = [];
+  const now = new Date().toISOString();
   for (const { ingredient, item } of ingredients) {
     if (!item) {
       throw new Error(`Item not found for ingredient ${ingredient.id}`);
@@ -69,6 +70,8 @@ export const addRecipeToList = async ({
       itemId: groceryItem.id,
       recipeId: recipeId,
       isChecked: false,
+      createdAt: now,
+      updatedAt: now,
     });
   }
 
