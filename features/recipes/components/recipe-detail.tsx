@@ -10,7 +10,7 @@ import {
 } from '../../shared/components';
 import { useAddRecipeToList } from '../hooks/useAddRecipeToList';
 import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
-import { RecipeIngredientWithItem, RecipeWithIngredients } from '../types';
+import { RecipeIngredient, RecipeWithIngredients } from '../types';
 import {
   AddIngredientSheet,
   AddIngredientSheetRef,
@@ -33,17 +33,14 @@ export const RecipeDetail = ({
   const addIngredientSheetRef = useRef<AddIngredientSheetRef>(null);
   const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const [editingIngredient, setEditingIngredient] =
-    useState<RecipeIngredientWithItem | null>(null);
+    useState<RecipeIngredient | null>(null);
 
   const handleChangeText = (text: string) => {
     updateRecipe({ recipe: { ...recipe, name: text } });
   };
 
-  const handleEditIngredient = (ingredient: RecipeIngredientWithItem) => {
-    setEditingIngredient({
-      ...ingredient,
-      item: ingredient.item,
-    });
+  const handleEditIngredient = (ingredient: RecipeIngredient) => {
+    setEditingIngredient(ingredient);
     addIngredientSheetRef.current?.present();
   };
 

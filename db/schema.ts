@@ -9,16 +9,6 @@ const timestamps = {
   updatedAt: text().notNull(),
 };
 
-export const itemTable = sqliteTable('item', {
-  id: text().primaryKey(),
-  name: text().notNull(),
-  quantity: int().notNull(),
-  unit: text({ enum: ['each', 'kg', 'g', 'l', 'ml', 'lb'] }).notNull(),
-  notes: text(),
-  category: text(),
-  ...timestamps,
-});
-
 export const groceryListTable = sqliteTable('grocery_list', {
   id: text().primaryKey(),
   date: text(),
@@ -34,9 +24,11 @@ export const groceryListItemTable = sqliteTable('grocery_list_item', {
   groceryListId: text()
     .notNull()
     .references(() => groceryListTable.id),
-  itemId: text()
-    .notNull()
-    .references(() => itemTable.id),
+  name: text().notNull(),
+  quantity: int().notNull(),
+  unit: text({ enum: ['each', 'kg', 'g', 'l', 'ml', 'lb'] }).notNull(),
+  notes: text(),
+  category: text(),
   recipeId: text().references(() => recipeTable.id),
   isChecked: int({ mode: 'boolean' }).notNull().default(false),
   ...timestamps,
@@ -54,9 +46,11 @@ export const recipeIngredientTable = sqliteTable('recipe_ingredient', {
   recipeId: text()
     .notNull()
     .references(() => recipeTable.id, { onDelete: 'cascade' }),
-  itemId: text()
-    .notNull()
-    .references(() => itemTable.id),
+  name: text().notNull(),
+  quantity: int().notNull(),
+  unit: text({ enum: ['each', 'kg', 'g', 'l', 'ml', 'lb'] }).notNull(),
+  notes: text(),
+  category: text(),
   order: int().notNull().default(0),
   ...timestamps,
 });
@@ -100,11 +94,6 @@ export const mealPlanRecipeRelations = relations(
 );
 
 // Relations
-export const itemRelations = relations(itemTable, ({ many }) => ({
-  groceryListItems: many(groceryListItemTable),
-  recipeIngredients: many(recipeIngredientTable),
-}));
-
 export const groceryListRelations = relations(groceryListTable, ({ many }) => ({
   items: many(groceryListItemTable),
 }));
@@ -115,10 +104,6 @@ export const groceryListItemRelations = relations(
     groceryList: one(groceryListTable, {
       fields: [groceryListItemTable.groceryListId],
       references: [groceryListTable.id],
-    }),
-    item: one(itemTable, {
-      fields: [groceryListItemTable.itemId],
-      references: [itemTable.id],
     }),
     recipe: one(recipeTable, {
       fields: [groceryListItemTable.recipeId],
@@ -137,10 +122,6 @@ export const recipeIngredientRelations = relations(
     recipe: one(recipeTable, {
       fields: [recipeIngredientTable.recipeId],
       references: [recipeTable.id],
-    }),
-    item: one(itemTable, {
-      fields: [recipeIngredientTable.itemId],
-      references: [itemTable.id],
     }),
   })
 );

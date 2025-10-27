@@ -1,7 +1,6 @@
 import { generateId } from '@/lib/utils';
 import { groceryListItemTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
-import { findOrCreateItem } from '../../shared/db/find-or-create-item';
 import { QuantityUnit } from '../../shared/types';
 
 type CreateListItemArgs = {
@@ -21,21 +20,15 @@ export const createListItem = async ({
   notes,
   category,
 }: CreateListItemArgs) => {
-  // Find or create the item
-  const item = await findOrCreateItem({
+  const now = new Date().toISOString();
+  const groceryListItem = {
+    id: generateId(),
+    groceryListId,
     name,
     quantity,
     unit,
     notes,
     category,
-  });
-
-  // Create the grocery list item reference
-  const now = new Date().toISOString();
-  const groceryListItem = {
-    id: generateId(),
-    groceryListId,
-    itemId: item.id,
     isChecked: false,
     createdAt: now,
     updatedAt: now,

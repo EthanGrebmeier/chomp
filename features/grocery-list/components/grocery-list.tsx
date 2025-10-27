@@ -6,7 +6,7 @@ import {
   View,
 } from 'react-native';
 
-import { GroceryListItemWithItem } from '../types';
+import { GroceryListItemWithRecipe } from '../types';
 
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
@@ -24,13 +24,13 @@ import { GroceryListItem } from './grocery-list-item';
 import { GroupBySelector } from './group-by-selector';
 
 const AnimatedSectionList = Animated.createAnimatedComponent(
-  SectionList<GroceryListItemWithItem>
+  SectionList<GroceryListItemWithRecipe>
 );
 
 type GroceryListProps = {
   name: string;
   date: string;
-  items: GroceryListItemWithItem[];
+  items: GroceryListItemWithRecipe[];
   groceryListId: string;
   groupBy: 'category' | 'none' | 'recipe';
   autofocus?: boolean;
@@ -47,7 +47,7 @@ export const GroceryList = ({
   const { mutate: updateList } = useUpdateGroceryList();
 
   const [editingItem, setEditingItem] =
-    useState<GroceryListItemWithItem | null>(null);
+    useState<GroceryListItemWithRecipe | null>(null);
   const [groupBy, setGroupBy] = useState<'category' | 'none' | 'recipe'>(
     initialGroupBy
   );
@@ -62,7 +62,7 @@ export const GroceryList = ({
     });
   };
 
-  const handleEditItem = (item: GroceryListItemWithItem) => {
+  const handleEditItem = (item: GroceryListItemWithRecipe) => {
     setEditingItem(item);
     editSheetRef.current?.present();
   };
@@ -83,7 +83,7 @@ export const GroceryList = ({
   const groupedItems = groupItemsBy(items, groupBy);
 
   // Convert Map to sections array for SectionList
-  const sections: SectionListData<GroceryListItemWithItem>[] = Array.from(
+  const sections: SectionListData<GroceryListItemWithRecipe>[] = Array.from(
     groupedItems.entries()
   ).map(([title, data]) => ({
     title,

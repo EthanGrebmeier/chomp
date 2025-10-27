@@ -5,13 +5,13 @@ import { ItemFormData, ItemSheet, ItemSheetRef } from '../../shared/components';
 import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
 import { useUpdateGroceryListItem } from '../hooks/useUpdateGroceryListItem';
 import { queryKeys } from '../query-keys';
-import { GroceryListItemWithItem } from '../types';
+import { GroceryListItemWithRecipe } from '../types';
 import { CategorySelector } from './category-selector';
 
 type AddItemSheetProps = {
   groceryListId: string;
   onClose?: () => void;
-  defaultValues: GroceryListItemWithItem | null;
+  defaultValues: GroceryListItemWithRecipe | null;
 };
 
 export type AddItemSheetRef = {
@@ -47,7 +47,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
             onSuccess: () => {
               itemSheetRef.current?.dismiss();
               queryClient.invalidateQueries({ queryKey: queryKeys.base() });
-              toast.success(`${defaultValues.item.name} updated`);
+              toast.success(`${defaultValues.name} updated`);
             },
           }
         );
@@ -72,10 +72,10 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
 
     const formData: ItemFormData | null = defaultValues
       ? {
-          name: defaultValues.item.name,
-          quantity: defaultValues.item.quantity?.toString() || '1',
-          unit: defaultValues.item.unit,
-          category: defaultValues.item.category || '',
+          name: defaultValues.name,
+          quantity: defaultValues.quantity?.toString() || '1',
+          unit: defaultValues.unit,
+          category: defaultValues.category || '',
         }
       : null;
 

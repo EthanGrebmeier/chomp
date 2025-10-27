@@ -1,9 +1,8 @@
 import { Recipe } from '../recipes/types';
-import { Item } from '../shared/types';
 import {
   GroceryList,
   GroceryListItem,
-  GroceryListItemWithItem,
+  GroceryListItemWithRecipe,
   GroceryListWithItems,
 } from './types';
 
@@ -11,7 +10,6 @@ export const normalizeGroceryList = (
   dbResult: {
     grocery_list: GroceryList;
     grocery_list_item: GroceryListItem | null;
-    item: Item | null;
     recipe: Recipe | null;
   }[]
 ) => {
@@ -22,23 +20,22 @@ export const normalizeGroceryList = (
         items: [],
       };
     }
-    if (curr.grocery_list_item && curr.item) {
-      const itemWithItem: GroceryListItemWithItem = {
+    if (curr.grocery_list_item) {
+      const itemWithRecipe: GroceryListItemWithRecipe = {
         ...curr.grocery_list_item,
-        item: curr.item,
         recipe: curr.recipe || null,
       };
-      acc[curr.grocery_list.id].items.push(itemWithItem);
+      acc[curr.grocery_list.id].items.push(itemWithRecipe);
     }
     return acc;
   }, {});
 };
 
 export const groupItemsBy = (
-  items: GroceryListItemWithItem[],
+  items: GroceryListItemWithRecipe[],
   groupBy: 'category' | 'none' | 'recipe'
-): Map<string, GroceryListItemWithItem[]> => {
-  const groups = new Map<string, GroceryListItemWithItem[]>();
+): Map<string, GroceryListItemWithRecipe[]> => {
+  const groups = new Map<string, GroceryListItemWithRecipe[]>();
 
   if (groupBy === 'none') {
     // Sort items: unchecked first, then alphabetically by name
@@ -48,7 +45,7 @@ export const groupItemsBy = (
       if (!a.isChecked && b.isChecked) return -1;
 
       // Then sort alphabetically by name
-      return a.item.name.localeCompare(b.item.name, undefined, {
+      return a.name.localeCompare(b.name, undefined, {
         sensitivity: 'base',
       });
     });
@@ -58,7 +55,7 @@ export const groupItemsBy = (
 
   if (groupBy === 'category') {
     items.forEach(item => {
-      const category = item.item.category || 'Uncategorized';
+      const category = item.category || 'Uncategorized';
       if (!groups.has(category)) {
         groups.set(category, []);
       }
@@ -84,14 +81,14 @@ export const groupItemsBy = (
       if (!a.isChecked && b.isChecked) return -1;
 
       // Then sort alphabetically by name
-      return a.item.name.localeCompare(b.item.name, undefined, {
+      return a.name.localeCompare(b.name, undefined, {
         sensitivity: 'base',
       });
     });
   });
 
   // Convert to array, sort groups based on grouping type
-  let sortedGroups: [string, GroceryListItemWithItem[]][];
+  let sortedGroups: [string, GroceryListItemWithRecipe[]][];
 
   if (groupBy === 'category') {
     // Sort category groups: put Uncategorized at the bottom, others alphabetically
@@ -109,10 +106,10 @@ export const groupItemsBy = (
 
         // Find the earliest item in each group (by item creation time)
         const aEarliest = Math.min(
-          ...aItems.map(item => new Date(item.item.createdAt).getTime())
+          ...aItems.map(item => new Date(item.createdAt).getTime())
         );
         const bEarliest = Math.min(
-          ...bItems.map(item => new Date(item.item.createdAt).getTime())
+          ...bItems.map(item => new Date(item.createdAt).getTime())
         );
 
         return aEarliest - bEarliest;

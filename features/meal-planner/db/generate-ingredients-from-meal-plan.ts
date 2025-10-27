@@ -1,10 +1,6 @@
 import { generateId } from '@/lib/utils';
 import { eq } from 'drizzle-orm';
-import {
-  itemTable,
-  mealPlanRecipeTable,
-  recipeIngredientTable,
-} from '../../../db/schema';
+import { mealPlanRecipeTable, recipeIngredientTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
 import { QuantityUnit } from '../../shared/types';
 import { GenerateGroceryListFromMealPlanArgs } from '../types';
@@ -25,18 +21,13 @@ export const generateIngredientsFromMealPlan = async (
     .select({
       recipeId: mealPlanRecipeTable.recipeId,
       servings: mealPlanRecipeTable.servings,
-      ingredient: {
-        name: itemTable.name,
-        quantity: itemTable.quantity,
-        unit: itemTable.unit,
-      },
+      ingredient: recipeIngredientTable,
     })
     .from(mealPlanRecipeTable)
     .innerJoin(
       recipeIngredientTable,
       eq(mealPlanRecipeTable.recipeId, recipeIngredientTable.recipeId)
     )
-    .innerJoin(itemTable, eq(recipeIngredientTable.itemId, itemTable.id))
     .where(eq(mealPlanRecipeTable.mealPlanId, mealPlanId));
 
   // Group ingredients by name and unit, summing quantities

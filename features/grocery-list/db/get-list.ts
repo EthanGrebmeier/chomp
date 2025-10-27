@@ -2,7 +2,6 @@ import { eq } from 'drizzle-orm';
 import {
   groceryListItemTable,
   groceryListTable,
-  itemTable,
   recipeTable,
 } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
@@ -16,7 +15,6 @@ export const getList = async (listId: string) => {
       groceryListItemTable,
       eq(groceryListTable.id, groceryListItemTable.groceryListId)
     )
-    .leftJoin(itemTable, eq(groceryListItemTable.itemId, itemTable.id))
     .leftJoin(recipeTable, eq(groceryListItemTable.recipeId, recipeTable.id))
     .where(eq(groceryListTable.id, listId));
   const normalized = normalizeGroceryList(result);

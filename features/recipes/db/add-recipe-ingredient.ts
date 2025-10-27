@@ -2,7 +2,6 @@ import { eq } from 'drizzle-orm';
 import { recipeIngredientTable } from '../../../db/schema';
 import { generateId } from '../../../lib/utils';
 import { db } from '../../../providers/migration-provider';
-import { findOrCreateItem } from '../../shared/db/find-or-create-item';
 import { QuantityUnit } from '../../shared/types';
 
 export type AddRecipeIngredientArgs = {
@@ -34,21 +33,15 @@ export const addRecipeIngredient = async ({
       ? Math.max(...existingIngredients.map(ing => ing.order)) + 1
       : 0;
 
-  // Find or create the item
-  const item = await findOrCreateItem({
+  const now = new Date().toISOString();
+  const newIngredient = {
+    id: generateId(),
+    recipeId,
     name,
     quantity,
     unit,
     notes,
     category,
-  });
-
-  const now = new Date().toISOString();
-  const newIngredient = {
-    id: generateId(),
-    recipeId,
-    itemId: item.id,
-    notes,
     order: nextOrder,
     createdAt: now,
     updatedAt: now,

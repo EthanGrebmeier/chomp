@@ -3,13 +3,11 @@ import { eq } from 'drizzle-orm';
 import {
   groceryListItemTable,
   groceryListTable,
-  itemTable,
   mealPlanRecipeTable,
   mealPlanTable,
   recipeIngredientTable,
 } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
-import { findOrCreateItem } from '../../shared/db/find-or-create-item';
 import { GenerateGroceryListFromMealPlanArgs } from '../types';
 
 type AddMealPlanToGroceryListArgs = GenerateGroceryListFromMealPlanArgs & {
@@ -61,45 +59,31 @@ export const addMealPlanToGroceryList = async ({
     .select({
       recipeId: mealPlanRecipeTable.recipeId,
       servings: mealPlanRecipeTable.servings,
-      ingredient: {
-        id: itemTable.id,
-        name: itemTable.name,
-        quantity: itemTable.quantity,
-        unit: itemTable.unit,
-      },
+      ingredient: recipeIngredientTable,
     })
     .from(mealPlanRecipeTable)
     .innerJoin(
       recipeIngredientTable,
       eq(mealPlanRecipeTable.recipeId, recipeIngredientTable.recipeId)
     )
-    .innerJoin(itemTable, eq(recipeIngredientTable.itemId, itemTable.id))
     .where(eq(mealPlanRecipeTable.mealPlanId, mealPlanId));
-
-  // Get all item IDs that are currently used by recipe ingredients
-  const recipeIngredientItems = await db
-    .select({ itemId: recipeIngredientTable.itemId })
-    .from(recipeIngredientTable);
-
-  const excludeItemIds = recipeIngredientItems.map(row => row.itemId);
 
   // Add each recipe's ingredients to the grocery list individually
   const groceryListItems = [];
   const now = new Date().toISOString();
 
   for (const mealPlanRecipe of mealPlanRecipes) {
-    // Find or create the item, excluding items used by recipe ingredients
-    const item = await findOrCreateItem({
-      name: mealPlanRecipe.ingredient.name,
-      quantity: mealPlanRecipe.ingredient.quantity * mealPlanRecipe.servings,
-      unit: mealPlanRecipe.ingredient.unit,
-      excludeItemIds,
-    });
+    const adjustedQuantity =
+      mealPlanRecipe.ingredient.quantity * mealPlanRecipe.servings;
 
     groceryListItems.push({
       id: generateId(),
       groceryListId: targetGroceryListId!,
-      itemId: item.id,
+      name: mealPlanRecipe.ingredient.name,
+      quantity: adjustedQuantity,
+      unit: mealPlanRecipe.ingredient.unit,
+      notes: mealPlanRecipe.ingredient.notes ?? undefined,
+      category: mealPlanRecipe.ingredient.category ?? undefined,
       recipeId: mealPlanRecipe.recipeId, // Preserve recipe context
       isChecked: false,
       createdAt: now,

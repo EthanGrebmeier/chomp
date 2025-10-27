@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { groceryListItemTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
-import { updateItem } from '../../shared/db/update-item';
 import { QuantityUnit } from '../../shared/types';
 
 export const updateListItem = async ({
@@ -17,22 +16,17 @@ export const updateListItem = async ({
     category?: string | null;
   };
 }) => {
-  // Get the grocery list item to find the associated item
-  const groceryListItem = await db
-    .select({ itemId: groceryListItemTable.itemId })
-    .from(groceryListItemTable)
+  const processedUpdates = {
+    ...updates,
+    category: updates.category === undefined ? null : updates.category,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const result = await db
+    .update(groceryListItemTable)
+    .set(processedUpdates)
     .where(eq(groceryListItemTable.id, itemId))
-    .limit(1);
+    .returning();
 
-  if (groceryListItem.length === 0) {
-    throw new Error('Grocery list item not found');
-  }
-
-  // Update the item
-  const updatedItem = await updateItem({
-    itemId: groceryListItem[0].itemId,
-    updates,
-  });
-
-  return updatedItem;
+  return result[0];
 };

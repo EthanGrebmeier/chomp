@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { recipeIngredientTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
-import { updateItem } from '../../shared/db/update-item';
 import { QuantityUnit } from '../../shared/types';
 
 export type UpdateRecipeIngredientArgs = {
@@ -21,22 +20,17 @@ export const updateRecipeIngredient = async ({
   recipeId,
   updates,
 }: UpdateRecipeIngredientArgs) => {
-  // Get the recipe ingredient to find the associated item
-  const recipeIngredient = await db
-    .select({ itemId: recipeIngredientTable.itemId })
-    .from(recipeIngredientTable)
+  const processedUpdates = {
+    ...updates,
+    category: updates.category === undefined ? null : updates.category,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const result = await db
+    .update(recipeIngredientTable)
+    .set(processedUpdates)
     .where(eq(recipeIngredientTable.id, itemId))
-    .limit(1);
+    .returning();
 
-  if (recipeIngredient.length === 0) {
-    throw new Error('Recipe ingredient not found');
-  }
-
-  // Update the item
-  const updatedItem = await updateItem({
-    itemId: recipeIngredient[0].itemId,
-    updates,
-  });
-
-  return { itemId, recipeId, updates, updatedItem };
+  return { itemId, recipeId, updates, updatedItem: result[0] };
 };

@@ -6,12 +6,12 @@ import { ItemFormData, ItemSheet, ItemSheetRef } from '../../shared/components';
 import { useAddRecipeIngredient } from '../hooks/useAddRecipeIngredient';
 import { useUpdateRecipeIngredient } from '../hooks/useUpdateRecipeIngredient';
 import { recipeQueryKeys } from '../query-keys';
-import { RecipeIngredientWithItem } from '../types';
+import { RecipeIngredient } from '../types';
 
 type AddIngredientSheetProps = {
   recipeId: string;
   onClose?: () => void;
-  defaultValues?: RecipeIngredientWithItem | null;
+  defaultValues?: RecipeIngredient | null;
 };
 
 export type AddIngredientSheetRef = {
@@ -52,7 +52,7 @@ export const AddIngredientSheet = forwardRef<
             });
             onClose?.();
             itemSheetRef.current?.dismiss();
-            toast.success(`${defaultValues.item.name} updated`);
+            toast.success(`${defaultValues.name} updated`);
           },
         }
       );
@@ -80,10 +80,10 @@ export const AddIngredientSheet = forwardRef<
 
   const formData: ItemFormData | null = defaultValues
     ? {
-        name: defaultValues.item?.name || '',
-        quantity: defaultValues.item?.quantity?.toString() || '1',
-        unit: defaultValues.item?.unit || 'each',
-        category: defaultValues.item?.category || '',
+        name: defaultValues.name || '',
+        quantity: defaultValues.quantity?.toString() || '1',
+        unit: defaultValues.unit || 'each',
+        category: defaultValues.category || '',
       }
     : null;
 

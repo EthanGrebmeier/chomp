@@ -10,10 +10,10 @@ import { cn } from '../../../lib/utils';
 import { useCheckGroceryItem } from '../hooks/useCheckGroceryListItem';
 import { useRemoveGroceryListItem } from '../hooks/useRemoveGroceryListItem';
 import { queryKeys } from '../query-keys';
-import { GroceryListItemWithItem } from '../types';
+import { GroceryListItemWithRecipe } from '../types';
 
 type GroceryListItemProps = {
-  item: GroceryListItemWithItem;
+  item: GroceryListItemWithRecipe;
   isChecked: boolean;
   className?: string;
   onEdit?: () => void;
@@ -70,15 +70,15 @@ export const GroceryListItem = ({
               isChecked && 'text-muted-foreground'
             )}
           >
-            {item.item.name}
+            {item.name}
           </Text>
           <Text className="text-lg text-muted-foreground">
-            {item.item.unit === 'each' && 'x'}
-            {item.item.quantity}
-            {item.item.unit !== 'each' && ` ${item.item.unit}`}
+            {item.unit === 'each' && 'x'}
+            {item.quantity}
+            {item.unit !== 'each' && ` ${item.unit}`}
           </Text>
         </View>
-        {(item.recipe || item.item.category) && (
+        {(item.recipe || item.category) && (
           <View className="flex-row items-center justify-between gap-2">
             <View>
               {item.recipe && (
@@ -90,9 +90,7 @@ export const GroceryListItem = ({
                 </View>
               )}
             </View>
-            {item.item.category && (
-              <CategoryTag category={item.item.category} />
-            )}
+            {item.category && <CategoryTag category={item.category} />}
           </View>
         )}
       </HapticPressable>
