@@ -1,0 +1,1 @@
+ALTER TABLE `grocery_list` ADD `sortBy` text DEFAULT 'name' NOT NULL;

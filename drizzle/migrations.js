@@ -17,6 +17,8 @@ import m0012 from './0012_ambitious_union_jack.sql';
 import m0013 from './0013_famous_red_hulk.sql';
 import m0014 from './0014_groovy_loners.sql';
 import m0015 from './0015_polite_tattoo.sql';
+import m0016 from './0016_outgoing_unicorn.sql';
+import m0017 from './0017_lonely_clea.sql';
 
   export default {
     journal,
@@ -36,7 +38,9 @@ m0011,
 m0012,
 m0013,
 m0014,
-m0015
+m0015,
+m0016,
+m0017
     }
   }
   

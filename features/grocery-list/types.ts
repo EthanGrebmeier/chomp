@@ -19,5 +19,6 @@ export type UpdateGroceryListArgs = {
     name?: string;
     date?: string;
     groupBy?: 'category' | 'none' | 'recipe';
+    sortBy?: 'name' | 'recent';
   };
 };

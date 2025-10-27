@@ -24,6 +24,7 @@ export default function List() {
           items={list.items}
           groceryListId={list.id}
           groupBy={list.groupBy}
+          sortBy={list.sortBy}
           autofocus={autofocus === 'true'}
         />
       </View>

@@ -16,6 +16,9 @@ export const groceryListTable = sqliteTable('grocery_list', {
   groupBy: text({ enum: ['category', 'none', 'recipe'] })
     .notNull()
     .default('none'),
+  sortBy: text({ enum: ['name', 'recent'] })
+    .notNull()
+    .default('recent'),
   ...timestamps,
 });
 

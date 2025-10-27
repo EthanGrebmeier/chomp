@@ -31,24 +31,39 @@ export const normalizeGroceryList = (
   }, {});
 };
 
+const sortItems = (
+  items: GroceryListItemWithRecipe[],
+  sortBy: 'name' | 'recent'
+): GroceryListItemWithRecipe[] => {
+  return [...items].sort((a, b) => {
+    // First sort by checked status: unchecked items first
+    if (a.isChecked && !b.isChecked) return 1;
+    if (!a.isChecked && b.isChecked) return -1;
+
+    if (sortBy === 'recent') {
+      // Sort by most recent first (based on createdAt)
+      const aTime = new Date(a.createdAt).getTime();
+      const bTime = new Date(b.createdAt).getTime();
+      return bTime - aTime;
+    } else {
+      // Sort alphabetically by name
+      return a.name.localeCompare(b.name, undefined, {
+        sensitivity: 'base',
+      });
+    }
+  });
+};
+
 export const groupItemsBy = (
   items: GroceryListItemWithRecipe[],
-  groupBy: 'category' | 'none' | 'recipe'
+  groupBy: 'category' | 'none' | 'recipe',
+  sortBy: 'name' | 'recent' = 'recent'
 ): Map<string, GroceryListItemWithRecipe[]> => {
   const groups = new Map<string, GroceryListItemWithRecipe[]>();
 
   if (groupBy === 'none') {
-    // Sort items: unchecked first, then alphabetically by name
-    const sortedItems = items.sort((a, b) => {
-      // First sort by checked status: unchecked items first
-      if (a.isChecked && !b.isChecked) return 1;
-      if (!a.isChecked && b.isChecked) return -1;
-
-      // Then sort alphabetically by name
-      return a.name.localeCompare(b.name, undefined, {
-        sensitivity: 'base',
-      });
-    });
+    // Sort items based on sortBy parameter
+    const sortedItems = sortItems(items, sortBy);
     groups.set('', sortedItems);
     return groups;
   }
@@ -73,19 +88,10 @@ export const groupItemsBy = (
     });
   }
 
-  // Sort items within each group: unchecked first, then alphabetically
-  groups.forEach(groupItems => {
-    groupItems.sort((a, b) => {
-      // First sort by checked status: unchecked items first
-      if (a.isChecked && !b.isChecked) return 1;
-      if (!a.isChecked && b.isChecked) return -1;
-
-      // Then sort alphabetically by name
-      return a.name.localeCompare(b.name, undefined, {
-        sensitivity: 'base',
-      });
-    });
-  });
+  // Sort items within each group based on sortBy parameter
+  for (const [key, groupItems] of groups.entries()) {
+    groups.set(key, sortItems(groupItems, sortBy));
+  }
 
   // Convert to array, sort groups based on grouping type
   let sortedGroups: [string, GroceryListItemWithRecipe[]][];

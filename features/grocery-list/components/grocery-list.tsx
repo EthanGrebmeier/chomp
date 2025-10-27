@@ -20,6 +20,7 @@ import { AddRecipeSheet } from './add-recipe-sheet';
 import { CollapsibleSectionHeader } from './collapsible-section-header';
 import { GroceryListItem } from './grocery-list-item';
 import { GroupBySelector } from './group-by-selector';
+import { SortBySelector } from './sort-by-selector';
 
 const AnimatedSectionList = Animated.createAnimatedComponent(
   SectionList<GroceryListItemWithRecipe>
@@ -31,6 +32,7 @@ type GroceryListProps = {
   items: GroceryListItemWithRecipe[];
   groceryListId: string;
   groupBy: 'category' | 'none' | 'recipe';
+  sortBy: 'name' | 'recent';
   autofocus?: boolean;
 };
 
@@ -40,6 +42,7 @@ export const GroceryList = ({
   items,
   groceryListId,
   groupBy: initialGroupBy,
+  sortBy: initialSortBy,
   autofocus = false,
 }: GroceryListProps) => {
   const { mutate: updateList } = useUpdateGroceryList();
@@ -49,6 +52,7 @@ export const GroceryList = ({
   const [groupBy, setGroupBy] = useState<'category' | 'none' | 'recipe'>(
     initialGroupBy
   );
+  const [sortBy, setSortBy] = useState<'name' | 'recent'>(initialSortBy);
   // Track which sections are collapsed by their title
   // By default, all sections start expanded
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
@@ -94,12 +98,35 @@ export const GroceryList = ({
     });
   };
 
+  const handleSortByChange = (newSortBy: 'name' | 'recent') => {
+    setSortBy(newSortBy);
+    updateList({
+      listId: groceryListId,
+      updates: { sortBy: newSortBy },
+    });
+  };
+
   // Separate checked and unchecked items
   const uncheckedItems = items.filter(item => !item.isChecked);
-  const checkedItems = items.filter(item => item.isChecked);
+  let checkedItems = items.filter(item => item.isChecked);
+
+  // Sort checked items based on selected sorting
+  if (sortBy === 'recent') {
+    checkedItems = checkedItems.sort((a, b) => {
+      const aTime = new Date(a.createdAt).getTime();
+      const bTime = new Date(b.createdAt).getTime();
+      return bTime - aTime;
+    });
+  } else {
+    checkedItems = checkedItems.sort((a, b) => {
+      return a.name.localeCompare(b.name, undefined, {
+        sensitivity: 'base',
+      });
+    });
+  }
 
   // Group unchecked items based on selected grouping
-  const groupedUncheckedItems = groupItemsBy(uncheckedItems, groupBy);
+  const groupedUncheckedItems = groupItemsBy(uncheckedItems, groupBy, sortBy);
 
   // Convert Map to sections array for SectionList
   const sections: SectionListData<GroceryListItemWithRecipe>[] = Array.from(
@@ -144,8 +171,9 @@ export const GroceryList = ({
         </View>
       </EditableHeader>
       <View className="flex-1">
-        <View className="px-4 pb-2">
+        <View className="flex-row gap-2 px-4 pb-2">
           <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
+          <SortBySelector value={sortBy} onChange={handleSortByChange} />
         </View>
         <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
           <AnimatedSectionList
