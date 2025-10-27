@@ -10,16 +10,14 @@ import { GroceryListItemWithRecipe } from '../types';
 
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
-import Animated, {
-  LayoutAnimationConfig,
-  LinearTransition,
-} from 'react-native-reanimated';
+import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 import { EditableHeader } from '../../../components/editable-header';
 import { cn } from '../../../lib/utils';
 import { useUpdateGroceryList } from '../hooks/useUpdateGroceryList';
 import { groupItemsBy } from '../util';
 import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
 import { AddRecipeSheet } from './add-recipe-sheet';
+import { CollapsibleSectionHeader } from './collapsible-section-header';
 import { GroceryListItem } from './grocery-list-item';
 import { GroupBySelector } from './group-by-selector';
 
@@ -51,9 +49,26 @@ export const GroceryList = ({
   const [groupBy, setGroupBy] = useState<'category' | 'none' | 'recipe'>(
     initialGroupBy
   );
+  // Track which sections are collapsed by their title
+  // By default, all sections start expanded
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    new Set(['Checked']) // Start with checked items collapsed
+  );
 
   const textInputRef = useRef<TextInput>(null);
   const editSheetRef = useRef<AddItemSheetRef>(null);
+
+  const toggleSection = (sectionTitle: string) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(sectionTitle)) {
+        next.delete(sectionTitle);
+      } else {
+        next.add(sectionTitle);
+      }
+      return next;
+    });
+  };
 
   const handleChangeText = (text: string) => {
     updateList({
@@ -79,16 +94,32 @@ export const GroceryList = ({
     });
   };
 
-  // Group items based on selected grouping
-  const groupedItems = groupItemsBy(items, groupBy);
+  // Separate checked and unchecked items
+  const uncheckedItems = items.filter(item => !item.isChecked);
+  const checkedItems = items.filter(item => item.isChecked);
+
+  // Group unchecked items based on selected grouping
+  const groupedUncheckedItems = groupItemsBy(uncheckedItems, groupBy);
 
   // Convert Map to sections array for SectionList
   const sections: SectionListData<GroceryListItemWithRecipe>[] = Array.from(
-    groupedItems.entries()
-  ).map(([title, data]) => ({
-    title,
-    data,
-  }));
+    groupedUncheckedItems.entries()
+  ).map(([title, data]) => {
+    const isCollapsed = collapsedSections.has(title);
+    return {
+      title,
+      data: isCollapsed ? [] : data,
+    };
+  });
+
+  // Add checked items section at the bottom if there are any checked items
+  if (checkedItems.length > 0) {
+    const isCollapsed = collapsedSections.has('Checked');
+    sections.push({
+      title: 'Checked',
+      data: isCollapsed ? [] : checkedItems,
+    });
+  }
 
   return (
     <View className="flex-1 gap-2">
@@ -125,13 +156,27 @@ export const GroceryList = ({
             keyExtractor={item => item.id}
             contentContainerStyle={{ flexGrow: 1 }}
             renderSectionHeader={({ section }) => {
-              if (groupBy === 'none' || !section.title) return null;
+              if (groupBy === 'none' && !section.title) return null;
+
+              const isCollapsed = collapsedSections.has(section.title);
+              const isExpanded = !isCollapsed;
+
+              // Get the item count for this section from the grouped items
+              let itemCount: number | undefined;
+              if (section.title === 'Checked') {
+                itemCount = checkedItems.length;
+              } else {
+                itemCount = groupedUncheckedItems.get(section.title)?.length;
+              }
+
               return (
-                <Animated.View layout={LinearTransition} className="px-4 py-2">
-                  <Text className="text-lg font-semibold capitalize text-foreground">
-                    {section.title}
-                  </Text>
-                </Animated.View>
+                <CollapsibleSectionHeader
+                  title={section.title}
+                  itemCount={itemCount}
+                  isExpanded={isExpanded}
+                  onToggle={() => toggleSection(section.title)}
+                  showCollapse={true}
+                />
               );
             }}
             renderItem={({ item, index, section }) => {
