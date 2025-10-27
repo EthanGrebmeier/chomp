@@ -23,7 +23,7 @@ export const groceryListItemTable = sqliteTable('grocery_list_item', {
   id: text().primaryKey(),
   groceryListId: text()
     .notNull()
-    .references(() => groceryListTable.id),
+    .references(() => groceryListTable.id, { onDelete: 'cascade' }),
   name: text().notNull(),
   quantity: int().notNull(),
   unit: text({ enum: ['each', 'kg', 'g', 'l', 'ml', 'lb'] }).notNull(),

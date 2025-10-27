@@ -106,6 +106,13 @@
       "when": 1761604223910,
       "tag": "0014_groovy_loners",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1761604919150,
+      "tag": "0015_polite_tattoo",
+      "breakpoints": true
     }
   ]
 }
