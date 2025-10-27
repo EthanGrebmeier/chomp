@@ -118,6 +118,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
             formValue.category === '' ? null : formValue.category || undefined,
         });
         form.reset();
+        nameInputRef.current?.focus();
       },
     });
 
