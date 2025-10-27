@@ -1,5 +1,6 @@
 import { FlatList, Text, View } from 'react-native';
 import { ListItem } from '../../../components/ui/list-item';
+import { cn } from '../../../lib/utils';
 import { useDeleteRecipe } from '../hooks';
 import { RecipeWithIngredients } from '../types';
 import { RecipeCard } from './recipe-card';
@@ -28,12 +29,12 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
       data={recipes}
       renderItem={({ item, index }) => (
         <ListItem
-          className={
+          className={cn(
             index !== (recipes.length ?? 0) - 1 ? 'border-b border-border' : ''
-          }
+          )}
           onDelete={() => handleDelete(item.id)}
         >
-          <RecipeCard recipe={item} />
+          <RecipeCard className="w-full" recipe={item} />
         </ListItem>
       )}
       keyExtractor={item => item.id}
