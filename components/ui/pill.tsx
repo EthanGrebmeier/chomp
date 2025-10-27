@@ -13,6 +13,7 @@ type PillProps = {
   icon?: ReactNode;
   hasValue?: boolean;
   textClassName?: string;
+  closeIconClassName?: string;
 };
 
 export const Pill = ({
@@ -22,6 +23,7 @@ export const Pill = ({
   textClassName,
   icon,
   hasValue = false,
+  closeIconClassName,
 }: PillProps) => {
   return (
     <View className="self-start">
@@ -49,7 +51,7 @@ export const Pill = ({
           className="absolute right-2 top-1/2 -translate-y-1/2"
           hapticType="light"
         >
-          <Icon as={XIcon} size={16} />
+          <Icon className={closeIconClassName} as={XIcon} size={16} />
         </HapticPressable>
       )}
     </View>

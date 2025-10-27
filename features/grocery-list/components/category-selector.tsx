@@ -54,6 +54,7 @@ export const CategorySelector = ({
           icon={
             <Icon
               as={selectedCategory ? selectedCategory.style.icon : TagIcon}
+              color={selectedCategory ? 'black' : 'white'}
               size={16}
             />
           }
@@ -63,6 +64,9 @@ export const CategorySelector = ({
             selectedCategory ? 'border-yellow-500 bg-yellow-100' : ' bg-none'
           )}
           textClassName={cn(
+            selectedCategory ? 'text-black' : 'text-muted-foreground'
+          )}
+          closeIconClassName={cn(
             selectedCategory ? 'text-black' : 'text-muted-foreground'
           )}
         >
