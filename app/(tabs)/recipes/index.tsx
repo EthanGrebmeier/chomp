@@ -13,7 +13,7 @@ export default function Recipes() {
       <View className="px-4">
         <Heading>Recipes</Heading>
       </View>
-      <View className="absolute bottom-4 right-4">
+      <View className="absolute bottom-4 right-4 z-10">
         <CreateRecipeButton />
       </View>
       <View className="flex-1">
