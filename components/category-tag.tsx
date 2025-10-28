@@ -14,7 +14,7 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
   const { icon } = categoryOption.style;
   return (
     <Pill
-      className="border-2 border-black bg-[#ECD92B]"
+      className="border-2 border-black bg-[#E688EF]"
       // icon={<Icon as={icon} color="black" size={16} strokeWidth={3} />}
       hasValue={true}
     >
