@@ -10,6 +10,7 @@ import { GroceryListItemWithRecipe } from '../types';
 
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
+import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 import { EditableHeader } from '../../../components/editable-header';
 import { cn } from '../../../lib/utils';
@@ -171,10 +172,14 @@ export const GroceryList = ({
         </View>
       </EditableHeader>
       <View className="flex-1">
-        <View className="flex-row gap-2 px-4 pb-2">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="flex-row gap-2 px-4 pb-2"
+        >
           <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
           <SortBySelector value={sortBy} onChange={handleSortByChange} />
-        </View>
+        </ScrollView>
         <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
           <AnimatedSectionList
             scrollEnabled={true}
