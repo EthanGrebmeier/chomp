@@ -20,7 +20,10 @@ export const CollapsibleSectionHeader = ({
   showCollapse = true,
 }: CollapsibleSectionHeaderProps) => {
   return (
-    <Animated.View layout={LinearTransition} className="px-4 py-2">
+    <Animated.View
+      layout={LinearTransition}
+      className="bg-background px-4 py-2"
+    >
       {showCollapse ? (
         <TouchableOpacity
           onPress={onToggle}
