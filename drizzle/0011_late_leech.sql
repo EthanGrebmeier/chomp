@@ -1,1 +1,0 @@
-ALTER TABLE `grocery_list` ADD `groupBy` text DEFAULT 'none' NOT NULL;

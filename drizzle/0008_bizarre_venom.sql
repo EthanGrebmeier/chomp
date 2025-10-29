@@ -1,1 +1,0 @@
-ALTER TABLE `grocery_list_item` ADD `recipeId` text REFERENCES recipe(id);
