@@ -176,6 +176,7 @@ export const GroceryList = ({
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerClassName="flex-row gap-2 px-4 pb-2"
+          className="flex-grow-0"
         >
           <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
           <SortBySelector value={sortBy} onChange={handleSortByChange} />
