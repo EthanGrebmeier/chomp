@@ -12,7 +12,7 @@ import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 
-import { CalendarIcon, PencilIcon, TrashIcon } from 'lucide-react-native';
+import { CalendarIcon, PencilIcon } from 'lucide-react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
@@ -32,13 +32,7 @@ type MealSheetProps = {
 };
 
 export type MealSheetRef = {
-  openForAdd: ({
-    date,
-    mealTime,
-  }: {
-    date: string;
-    mealTime?: MealTag;
-  }) => void;
+  openForAdd: ({ date, mealTime }: { date: string; mealTime: MealTag }) => void;
   openForEdit: ({
     mealPlanRecipe,
     recipe,
@@ -74,18 +68,12 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
 
     // Imperative handle
     useImperativeHandle(ref, () => ({
-      openForAdd: ({
-        date,
-        mealTime,
-      }: {
-        date: string;
-        mealTime?: MealTag;
-      }) => {
+      openForAdd: ({ date, mealTime }: { date: string; mealTime: MealTag }) => {
         setMode('add');
         setSelectedDate(date);
         setSelectedRecipe(null);
         setMealPlanRecipeToEdit(null);
-        mealTime && setMealTag(mealTime);
+        setMealTag(mealTime);
         setCurrentView('search');
         setCanGoBack(false);
         sheetRef.current?.present();
@@ -175,9 +163,24 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
               sheetRef={sheetRef}
               canGoBack={canGoBack}
               onItemSelect={recipe => {
-                setSelectedRecipe(recipe);
-                setCurrentView('recipe');
-                setCanGoBack(true);
+                if (mode === 'add') {
+                  // Immediately add recipe when in add mode
+                  if (selectedDate && mealTag) {
+                    addRecipeToMealPlan({
+                      mealPlanId: props.mealPlanId,
+                      recipeId: recipe.id,
+                      mealTag,
+                      date: selectedDate,
+                    });
+                    resetState();
+                    sheetRef.current?.dismiss();
+                  }
+                } else {
+                  // For edit mode, show the recipe view
+                  setSelectedRecipe(recipe);
+                  setCurrentView('recipe');
+                  setCanGoBack(true);
+                }
               }}
               onBack={() => {
                 setCurrentView('recipe');
@@ -204,18 +207,6 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
                           size={20}
                         />
                       </HapticPressable>
-                      {mode === 'edit' && (
-                        <HapticPressable
-                          onPress={handleRemoveMeal}
-                          hapticType="heavy"
-                        >
-                          <Icon
-                            as={TrashIcon}
-                            size={20}
-                            color={theme.destructive}
-                          />
-                        </HapticPressable>
-                      )}
                     </View>
                   </View>
                 )}
