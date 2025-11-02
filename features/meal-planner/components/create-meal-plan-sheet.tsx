@@ -113,7 +113,7 @@ export const CreateMealPlanSheet = () => {
               }
             >
               <Pill
-                icon={<Icon as={SunriseIcon} color={theme.primary} size={16} />}
+                icon={<Icon as={SunriseIcon} size={16} />}
                 hasValue={!!startDate}
               >
                 {startDate
@@ -130,7 +130,7 @@ export const CreateMealPlanSheet = () => {
               }
             >
               <Pill
-                icon={<Icon as={SunsetIcon} color={theme.primary} size={16} />}
+                icon={<Icon as={SunsetIcon} size={16} />}
                 hasValue={!!endDate}
               >
                 {endDate ? format(endDate, 'EEEE, M/d/yy') : 'Select End Date'}

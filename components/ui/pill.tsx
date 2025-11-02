@@ -51,6 +51,7 @@ export const Pill = ({
             event?.stopPropagation?.();
             onClear();
           }}
+          hitSlop={10}
           className="absolute right-2 top-1/2 -translate-y-1/2"
           hapticType="light"
         >

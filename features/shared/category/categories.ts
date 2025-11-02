@@ -18,6 +18,8 @@ export const categoryOptions = [
     value: 'produce',
     style: {
       icon: CarrotIcon,
+      className: 'border-accent-green-foreground bg-accent-green-background',
+      textClassName: 'text-accent-green-foreground',
     },
   },
   {
@@ -25,6 +27,8 @@ export const categoryOptions = [
     value: 'deli',
     style: {
       icon: HamIcon,
+      className: 'border-accent-orange-foreground bg-accent-orange-background',
+      textClassName: 'text-accent-orange-foreground',
     },
   },
   {
@@ -32,6 +36,8 @@ export const categoryOptions = [
     value: 'dairy',
     style: {
       icon: MilkIcon,
+      className: 'border-accent-pink-foreground bg-accent-pink-background',
+      textClassName: 'text-accent-pink-foreground',
     },
   },
   {
@@ -39,6 +45,8 @@ export const categoryOptions = [
     value: 'bakery',
     style: {
       icon: CroissantIcon,
+      className: 'border-accent-yellow-foreground bg-accent-yellow-background',
+      textClassName: 'text-accent-yellow-foreground',
     },
   },
   {
@@ -46,6 +54,8 @@ export const categoryOptions = [
     value: 'frozen',
     style: {
       icon: SnowflakeIcon,
+      className: 'border-accent-blue-foreground bg-accent-blue-background',
+      textClassName: 'text-accent-blue-foreground',
     },
   },
   {
@@ -53,6 +63,8 @@ export const categoryOptions = [
     value: 'pantry',
     style: {
       icon: BoxIcon,
+      className: 'border-accent-orange-foreground bg-accent-orange-background',
+      textClassName: 'text-accent-orange-foreground',
     },
   },
   {
@@ -60,6 +72,8 @@ export const categoryOptions = [
     value: 'beverages',
     style: {
       icon: CupSodaIcon,
+      className: 'border-accent-purple-foreground bg-accent-purple-background',
+      textClassName: 'text-accent-purple-foreground',
     },
   },
   {
@@ -67,6 +81,8 @@ export const categoryOptions = [
     value: 'snacks',
     style: {
       icon: PopcornIcon,
+      className: 'border-accent-red-foreground bg-accent-red-background',
+      textClassName: 'text-accent-red-foreground',
     },
   },
   {
@@ -74,6 +90,8 @@ export const categoryOptions = [
     value: 'health-beauty',
     style: {
       icon: HeartIcon,
+      className: 'border-accent-pink-foreground bg-accent-pink-background',
+      textClassName: 'text-accent-pink-foreground',
     },
   },
   {
@@ -81,6 +99,8 @@ export const categoryOptions = [
     value: 'household',
     style: {
       icon: HomeIcon,
+      className: 'border-accent-brown-foreground bg-accent-brown-background',
+      textClassName: 'text-accent-brown-foreground',
     },
   },
   {
@@ -88,6 +108,8 @@ export const categoryOptions = [
     value: 'other',
     style: {
       icon: CircleQuestionMarkIcon,
+      className: 'border-accent-yellow-foreground bg-accent-yellow-background',
+      textClassName: 'text-accent-yellow-foreground',
     },
   },
 ] as const;

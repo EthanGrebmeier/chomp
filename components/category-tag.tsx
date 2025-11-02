@@ -1,4 +1,5 @@
 import { categoryOptions } from '../features/shared/category/categories';
+import { cn } from '../lib/utils';
 import { Pill } from './ui/pill';
 import { Text } from './ui/text';
 
@@ -11,14 +12,10 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
   if (!categoryOption) {
     return null;
   }
-  const { icon } = categoryOption.style;
+  const { icon, className, textClassName } = categoryOption.style;
   return (
-    <Pill
-      className="border-2 border-black bg-[#E688EF]"
-      // icon={<Icon as={icon} color="black" size={16} strokeWidth={3} />}
-      hasValue={true}
-    >
-      <Text className="text-sm font-semibold text-black">
+    <Pill className={cn('border border-border', className)} hasValue={true}>
+      <Text className={cn('text-sm font-semibold', textClassName)}>
         {categoryOption.label}
       </Text>
     </Pill>

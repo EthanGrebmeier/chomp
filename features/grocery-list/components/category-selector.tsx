@@ -54,17 +54,24 @@ export const CategorySelector = ({
           icon={
             <Icon
               as={selectedCategory ? selectedCategory.style.icon : TagIcon}
-              color={selectedCategory ? 'black' : 'white'}
+              className={
+                selectedCategory
+                  ? selectedCategory.style.textClassName
+                  : 'white'
+              }
               size={16}
             />
           }
           hasValue={!!category}
           onClear={category ? () => onSelect(undefined) : undefined}
           className={cn(
-            selectedCategory ? 'border-yellow-500 bg-yellow-100' : ' bg-none'
+            'border border-border',
+            selectedCategory ? selectedCategory.style.className : 'bg-none'
           )}
           textClassName={cn(
-            selectedCategory ? 'text-black' : 'text-muted-foreground'
+            selectedCategory
+              ? selectedCategory.style.textClassName
+              : 'text-muted-foreground'
           )}
           closeIconClassName={cn(
             selectedCategory ? 'text-black' : 'text-muted-foreground'

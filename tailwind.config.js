@@ -36,6 +36,38 @@ module.exports = {
         accent: {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
+          purple: {
+            background: '#ebceed',
+            foreground: '#c71ad3',
+          },
+          blue: {
+            background: '#e6f4fe',
+            foreground: '#007aff',
+          },
+          green: {
+            background: '#e6fefe',
+            foreground: '#00b389',
+          },
+          orange: {
+            background: '#ffe6d9',
+            foreground: '#d97a08',
+          },
+          yellow: {
+            background: '#fff9e6',
+            foreground: '#d9a508',
+          },
+          red: {
+            background: '#ffe6e6',
+            foreground: '#d90808',
+          },
+          pink: {
+            background: '#ffe6f0',
+            foreground: '#d908d9',
+          },
+          brown: {
+            background: '#f0e6e6',
+            foreground: '#d97a08',
+          },
         },
         popover: {
           DEFAULT: 'hsl(var(--popover))',
