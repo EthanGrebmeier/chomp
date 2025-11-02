@@ -106,7 +106,7 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
     };
 
     return (
-      <View className={cn('px-4', className)}>
+      <View className={cn('shrink px-4', className)}>
         <TextDisplayInput
           ref={refFunction}
           onChangeText={handleChangeText}
@@ -115,7 +115,10 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
           onFocus={onFocus}
           onBlur={onBlur}
           onKeyPress={handleKeyPress}
-          className={cn('align-text-top text-3xl font-bold', titleClassName)}
+          className={cn(
+            'align-text-top text-3xl font-bold leading-[0.9]',
+            titleClassName
+          )}
         />
         {children}
       </View>

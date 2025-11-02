@@ -1,3 +1,4 @@
+import { launchImageLibraryAsync } from 'expo-image-picker';
 import { useRef, useState } from 'react';
 import { Animated, TextInput, View } from 'react-native';
 import { EditableHeader } from '../../../components/editable-header';
@@ -15,6 +16,7 @@ import {
   AddIngredientSheet,
   AddIngredientSheetRef,
 } from './add-ingredient-sheet';
+import RecipeImage from './recipe-image';
 import { RecipeIngredientItem } from './recipe-ingredient-item';
 
 type RecipeDetailProps = {
@@ -65,21 +67,40 @@ export const RecipeDetail = ({
     });
   };
 
+  const handleSelectImage = async () => {
+    const result = await launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 4],
+      quality: 1,
+    });
+
+    if (result.assets?.[0]) {
+      updateRecipe({ recipe: { ...recipe, imageSrc: result.assets[0].uri } });
+    }
+  };
+
   return (
     <View className="flex-1 gap-4">
       {/* Header */}
-      <EditableHeader
-        ref={textInputRef}
-        value={recipe.name}
-        onChangeText={handleChangeText}
-        autofocus={autofocus}
-      >
-        <View className="flex-row gap-4">
-          <Text className="text-lg text-muted-foreground">
-            {recipe.ingredients.length} ingredients
-          </Text>
-        </View>
-      </EditableHeader>
+      <View className="w-full flex-row gap-1 px-4">
+        <RecipeImage
+          imageSrc={recipe.imageSrc}
+          onSelectImage={handleSelectImage}
+        />
+        <EditableHeader
+          ref={textInputRef}
+          value={recipe.name}
+          onChangeText={handleChangeText}
+          autofocus={autofocus}
+        >
+          <View className="flex-row gap-4">
+            <Text className="text-lg text-muted-foreground">
+              {recipe.ingredients.length} ingredients
+            </Text>
+          </View>
+        </EditableHeader>
+      </View>
       {recipe.description && (
         <View className="px-4">
           <Text className="text-lg text-muted-foreground">
@@ -90,7 +111,7 @@ export const RecipeDetail = ({
 
       {/* Ingredients */}
       <View className="flex-1 ">
-        <View className="mb-4 flex-row items-center justify-between px-4">
+        <View className="flex-row items-center justify-between px-4">
           <Text className="text-xl font-semibold">Ingredients:</Text>
         </View>
         <Animated.FlatList

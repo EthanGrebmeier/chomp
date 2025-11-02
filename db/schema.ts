@@ -41,6 +41,7 @@ export const recipeTable = sqliteTable('recipe', {
   id: text().primaryKey(),
   name: text().notNull(),
   description: text(),
+  imageSrc: text(),
   ...timestamps,
 });
 

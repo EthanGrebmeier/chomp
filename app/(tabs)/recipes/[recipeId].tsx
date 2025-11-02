@@ -39,7 +39,7 @@ export default function RecipeDetailPage() {
 
   return (
     <View className="pt-safe flex-1 bg-background">
-      <View className="flex-1">
+      <View className="flex-1 gap-2">
         <BackButton href="/(tabs)/recipes" />
         <RecipeDetail recipe={recipe} autofocus={autofocus === 'true'} />
       </View>

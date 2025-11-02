@@ -1,4 +1,5 @@
 import { Text } from '@/components/ui/text';
+import { Image } from 'expo-image';
 import { PlusIcon, Trash2Icon } from 'lucide-react-native';
 import { FlatList, View } from 'react-native';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
@@ -55,6 +56,8 @@ export const MealPlanDateView = ({
 
   const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
 
+  console.log(groupedRecipes['breakfast']);
+
   return (
     <FlatList
       contentContainerClassName="pb-20"
@@ -77,7 +80,16 @@ export const MealPlanDateView = ({
                   }
                 >
                   <View className="w-full flex-row items-center gap-4 rounded-xl bg-muted px-4 py-2">
-                    <View className="size-14 rounded-sm bg-gray-200"></View>
+                    <View className="size-14 overflow-hidden rounded-sm bg-gray-200">
+                      {mealPlanRecipe.recipe.imageSrc ? (
+                        <Image
+                          source={{ uri: mealPlanRecipe.recipe.imageSrc }}
+                          style={{ width: '100%', height: '100%' }}
+                        />
+                      ) : (
+                        <View className="size-full rounded-sm " />
+                      )}
+                    </View>
                     <View className="flex-1 flex-row justify-between">
                       <Text className="text-lg font-semibold text-foreground">
                         {mealPlanRecipe.recipe.name}
@@ -112,7 +124,7 @@ export const MealPlanDateView = ({
                   size={16}
                   color={ACCENT_COLORS.orange.foreground}
                 />
-                <Text className="text-accent-orange-foreground text-sm font-semibold">
+                <Text className="text-sm font-semibold text-accent-orange-foreground">
                   Select Recipe
                 </Text>
               </View>

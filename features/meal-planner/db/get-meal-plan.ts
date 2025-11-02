@@ -35,6 +35,7 @@ export const getMealPlan = async (
       createdAt: mealPlanRecipeTable.createdAt,
       updatedAt: mealPlanRecipeTable.updatedAt,
       recipe: {
+        imageSrc: recipeTable.imageSrc,
         createdAt: recipeTable.createdAt,
         updatedAt: recipeTable.updatedAt,
         id: recipeTable.id,

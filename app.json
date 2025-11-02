@@ -45,6 +45,12 @@
           }
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you select them as recipe images."
+        }
+      ],
       "expo-sqlite",
       "expo-font",
       "expo-web-browser"
