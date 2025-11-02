@@ -27,7 +27,7 @@ export const CreateMealPlanSheet = () => {
     startOfDay(new Date())
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    addDays(startOfDay(new Date()), 7)
+    addDays(startOfDay(new Date()), 6)
   );
   const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const endDateSheetRef = useRef<CalendarSheetRef | null>(null);

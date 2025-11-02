@@ -1,8 +1,7 @@
 import { eachDayOfInterval, format } from 'date-fns';
-import { NotebookTabsIcon, PlusIcon } from 'lucide-react-native';
-import { useRef } from 'react';
-import { FlatList, Pressable, TextInput, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { NotebookTabsIcon } from 'lucide-react-native';
+import { useRef, useState } from 'react';
+import { Pressable, TextInput, View } from 'react-native';
 import {
   CalendarSheet,
   CalendarSheetRef,
@@ -10,7 +9,6 @@ import {
 import { EditableHeader } from '../../../components/editable-header';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
-import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import {
@@ -21,6 +19,8 @@ import { useMealPlan } from '../hooks';
 import { useAddMealPlanToGroceryList } from '../hooks/useAddMealPlanToGroceryList';
 import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
 import { MealPlanDay } from '../types';
+import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
+import { MealPlanDateView } from './meal-plan-date-view';
 import { MealSheet, MealSheetRef } from './meal-sheet';
 
 type MealPlannerProps = {
@@ -34,6 +34,7 @@ export const MealPlanner = ({
   startDate,
   endDate,
 }: MealPlannerProps) => {
+  const [currentDate, setCurrentDate] = useState<Date>(new Date(startDate));
   const mealSheetRef = useRef<MealSheetRef>(null);
   const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const textInputRef = useRef<TextInput>(null);
@@ -53,22 +54,6 @@ export const MealPlanner = ({
     return mealPlan.recipes.filter(
       recipe => recipe.date === format(date, 'yyyy-MM-dd')
     );
-  };
-
-  const groupRecipesByMeal = (recipes: MealPlanDay['recipes']) => {
-    const grouped = recipes.reduce(
-      (acc, recipe) => {
-        const mealTag = recipe.mealTag || 'meal';
-        if (!acc[mealTag]) {
-          acc[mealTag] = [];
-        }
-        acc[mealTag].push(recipe);
-        return acc;
-      },
-      {} as Record<string, MealPlanDay['recipes']>
-    );
-
-    return grouped;
   };
 
   const handleChangeText = (text: string) => {
@@ -129,14 +114,14 @@ export const MealPlanner = ({
   }
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 gap-2">
       <EditableHeader
         ref={textInputRef}
         value={mealPlan?.name || 'Meal Planner'}
         onChangeText={handleChangeText}
       >
         {mealPlan?.startDate && mealPlan?.endDate && (
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-1">
             <Pressable
               onPress={() =>
                 startDateSheetRef.current?.present({
@@ -145,7 +130,7 @@ export const MealPlanner = ({
                 })
               }
             >
-              <Text className="text-lg text-muted-foreground">
+              <Text className="text-lg font-semibold text-muted-foreground">
                 {format(new Date(mealPlan.startDate), 'EE, M/d/yy')}
               </Text>
             </Pressable>
@@ -158,7 +143,7 @@ export const MealPlanner = ({
                 })
               }
             >
-              <Text className="text-lg text-muted-foreground">
+              <Text className="text-lg font-semibold text-muted-foreground">
                 {format(new Date(mealPlan.endDate), 'EE, M/d/yy')}
               </Text>
             </Pressable>
@@ -200,9 +185,23 @@ export const MealPlanner = ({
           <Text>Add to List</Text>
         </Button>
       </View>
-      <Animated.FlatList
+      <MealPlanDateSelector
+        dates={daysOfPlan}
+        currentDate={currentDate}
+        onDatePress={setCurrentDate}
+      />
+      <MealPlanDateView
+        recipes={getRecipesForDate(currentDate)}
+        date={format(currentDate, 'yyyy-MM-dd')}
+        onMealPress={({ mealPlanRecipe, recipe }) =>
+          mealSheetRef.current?.openForEdit({ mealPlanRecipe, recipe })
+        }
+        onAddMealPress={({ date, mealTime }) =>
+          mealSheetRef.current?.openForAdd({ date, mealTime })
+        }
+      />
+      {/* <Animated.FlatList
         data={daysOfPlan}
-        contentContainerClassName="pb-20"
         showsVerticalScrollIndicator={false}
         renderItem={({ item: date }) => {
           const recipes = getRecipesForDate(date);
@@ -263,7 +262,7 @@ export const MealPlanner = ({
             </ListItem>
           );
         }}
-      />
+      /> */}
     </View>
   );
 };

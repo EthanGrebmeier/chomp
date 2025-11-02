@@ -91,8 +91,10 @@ export const addMealPlanToGroceryList = async ({
     });
   }
 
-  // Insert all items in a single transaction
-  await db.insert(groceryListItemTable).values(groceryListItems);
+  if (groceryListItems.length > 0) {
+    // Insert all items in a single transaction
+    await db.insert(groceryListItemTable).values(groceryListItems);
+  }
 
   return {
     groceryListId: targetGroceryListId!,

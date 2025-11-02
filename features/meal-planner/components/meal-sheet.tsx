@@ -32,7 +32,13 @@ type MealSheetProps = {
 };
 
 export type MealSheetRef = {
-  openForAdd: ({ date }: { date: string }) => void;
+  openForAdd: ({
+    date,
+    mealTime,
+  }: {
+    date: string;
+    mealTime?: MealTag;
+  }) => void;
   openForEdit: ({
     mealPlanRecipe,
     recipe,
@@ -68,12 +74,18 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
 
     // Imperative handle
     useImperativeHandle(ref, () => ({
-      openForAdd: ({ date }: { date: string }) => {
+      openForAdd: ({
+        date,
+        mealTime,
+      }: {
+        date: string;
+        mealTime?: MealTag;
+      }) => {
         setMode('add');
         setSelectedDate(date);
         setSelectedRecipe(null);
         setMealPlanRecipeToEdit(null);
-        setMealTag(undefined);
+        mealTime && setMealTag(mealTime);
         setCurrentView('search');
         setCanGoBack(false);
         sheetRef.current?.present();
