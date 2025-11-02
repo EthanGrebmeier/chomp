@@ -1,7 +1,8 @@
-import { eachDayOfInterval, format } from 'date-fns';
+import { eachDayOfInterval, format, isSameDay } from 'date-fns';
 import { NotebookTabsIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
+import PagerView from 'react-native-pager-view';
 import {
   CalendarSheet,
   CalendarSheetRef,
@@ -34,12 +35,13 @@ export const MealPlanner = ({
   startDate,
   endDate,
 }: MealPlannerProps) => {
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(startDate));
+  const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
   const mealSheetRef = useRef<MealSheetRef>(null);
   const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const textInputRef = useRef<TextInput>(null);
   const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
+  const pagerRef = useRef<PagerView>(null);
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId);
   const { mutate: updateMealPlan } = useUpdateMealPlan();
   const { mutate: addMealPlanToGroceryList } = useAddMealPlanToGroceryList();
@@ -48,6 +50,8 @@ export const MealPlanner = ({
     start: new Date(startDate),
     end: new Date(endDate),
   });
+
+  const currentDate = daysOfPlan[currentPageIndex] || daysOfPlan[0];
 
   const getRecipesForDate = (date: Date): MealPlanDay['recipes'] => {
     if (!mealPlan) return [];
@@ -77,6 +81,18 @@ export const MealPlanner = ({
         endDate: format(date, 'yyyy-MM-dd') + 'T00:00:00',
       },
     });
+  };
+
+  const handleDatePress = (date: Date) => {
+    const index = daysOfPlan.findIndex(d => isSameDay(d, date));
+    if (index !== -1) {
+      pagerRef.current?.setPage(index);
+      setCurrentPageIndex(index);
+    }
+  };
+
+  const handlePageSelected = (e: { nativeEvent: { position: number } }) => {
+    setCurrentPageIndex(e.nativeEvent.position);
   };
 
   const handleAddMealPlanToList = async (
@@ -188,21 +204,32 @@ export const MealPlanner = ({
       <MealPlanDateSelector
         dates={daysOfPlan}
         currentDate={currentDate}
-        onDatePress={setCurrentDate}
+        onDatePress={handleDatePress}
       />
-      <Text className="mb-2 px-2 text-2xl font-semibold text-foreground">
-        {format(currentDate, 'EEEE, MMMM d, yyyy')}
-      </Text>
-      <MealPlanDateView
-        recipes={getRecipesForDate(currentDate)}
-        date={format(currentDate, 'yyyy-MM-dd')}
-        onMealPress={({ mealPlanRecipe, recipe }) =>
-          mealSheetRef.current?.openForEdit({ mealPlanRecipe, recipe })
-        }
-        onAddMealPress={({ date, mealTime }) =>
-          mealSheetRef.current?.openForAdd({ date, mealTime })
-        }
-      />
+      <PagerView
+        ref={pagerRef}
+        style={{ flex: 1 }}
+        initialPage={currentPageIndex}
+        onPageSelected={handlePageSelected}
+      >
+        {daysOfPlan.map(date => (
+          <View key={date.toISOString()} style={{ flex: 1 }}>
+            <Text className="mb-2 px-2 text-2xl font-semibold text-foreground">
+              {format(date, 'EEEE, MMMM d, yyyy')}
+            </Text>
+            <MealPlanDateView
+              recipes={getRecipesForDate(date)}
+              date={format(date, 'yyyy-MM-dd')}
+              onMealPress={({ mealPlanRecipe, recipe }) =>
+                mealSheetRef.current?.openForEdit({ mealPlanRecipe, recipe })
+              }
+              onAddMealPress={({ date: mealDate, mealTime }) =>
+                mealSheetRef.current?.openForAdd({ date: mealDate, mealTime })
+              }
+            />
+          </View>
+        ))}
+      </PagerView>
     </View>
   );
 };
