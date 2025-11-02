@@ -200,69 +200,6 @@ export const MealPlanner = ({
           mealSheetRef.current?.openForAdd({ date, mealTime })
         }
       />
-      {/* <Animated.FlatList
-        data={daysOfPlan}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item: date }) => {
-          const recipes = getRecipesForDate(date);
-          //   const groupedRecipes = groupRecipesByMeal(recipes);
-
-          return (
-            <ListItem key={date.toISOString()} className="mb-2">
-              <View className="flex-1">
-                <View className="flex-1 flex-row items-center justify-between">
-                  <Text className="text-lg font-semibold text-foreground">
-                    {format(date, 'EEEE, M/d/yy')}
-                  </Text>
-                  <Button
-                    onPress={() =>
-                      mealSheetRef.current?.openForAdd({
-                        date: format(date, 'yyyy-MM-dd'),
-                      })
-                    }
-                    className="size-6 rounded-full p-0"
-                  >
-                    <Icon
-                      as={PlusIcon}
-                      size={16}
-                      color={theme.primaryForeground}
-                    />
-                  </Button>
-                </View>
-                {recipes.length === 0 ? (
-                  <Pressable
-                    onPress={() =>
-                      mealSheetRef.current?.openForAdd({
-                        date: format(date, 'yyyy-MM-dd'),
-                      })
-                    }
-                  >
-                    <Text className="mt-1 text-muted-foreground">
-                      No meals planned
-                    </Text>
-                  </Pressable>
-                ) : (
-                  <FlatList
-                    data={recipes}
-                    renderItem={({ item: mealPlanRecipe }) => (
-                      <Pressable
-                        onPress={() => {
-                          mealSheetRef.current?.openForEdit({
-                            mealPlanRecipe,
-                            recipe: mealPlanRecipe.recipe,
-                          });
-                        }}
-                      >
-                        <Text>{mealPlanRecipe.recipe.name}</Text>
-                      </Pressable>
-                    )}
-                  />
-                )}
-              </View>
-            </ListItem>
-          );
-        }}
-      /> */}
     </View>
   );
 };
