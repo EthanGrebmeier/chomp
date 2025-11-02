@@ -1,6 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { CookingPotIcon } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { CategoryTag } from '../../../components/category-tag';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
@@ -9,7 +15,6 @@ import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { useCheckGroceryItem } from '../hooks/useCheckGroceryListItem';
 import { useRemoveGroceryListItem } from '../hooks/useRemoveGroceryListItem';
-import { queryKeys } from '../query-keys';
 import { GroceryListItemWithRecipe } from '../types';
 
 type GroceryListItemProps = {
@@ -25,9 +30,37 @@ export const GroceryListItem = ({
   className,
   onEdit,
 }: GroceryListItemProps) => {
+  const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
   const { mutate: checkItem } = useCheckGroceryItem();
   const queryClient = useQueryClient();
   const { mutate: removeItem } = useRemoveGroceryListItem();
+
+  // Animated value for strikethrough
+  const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
+
+  useEffect(() => {
+    strikethroughWidth.value = withTiming(internalIsChecked ? 1 : 0, {
+      duration: 300,
+    });
+  }, [internalIsChecked]);
+
+  const strikethroughStyle = useAnimatedStyle(() => {
+    return {
+      width: `${strikethroughWidth.value * 100}%`,
+    };
+  });
+
+  const onCheck = () => {
+    if (internalIsChecked) {
+      checkItem({ itemId: item.id, isChecked: false });
+    } else {
+      setTimeout(() => {
+        checkItem({ itemId: item.id, isChecked: true });
+      }, 1000);
+    }
+    setInternalIsChecked(!internalIsChecked);
+  };
+
   return (
     <ListItem
       onDelete={() =>
@@ -40,38 +73,43 @@ export const GroceryListItem = ({
         className={cn(
           'size-6 overflow-hidden rounded-full border border-border p-0.5 '
         )}
-        onPress={() =>
-          checkItem(
-            { itemId: item.id, isChecked: !isChecked },
-            {
-              onSuccess: () => {
-                queryClient.invalidateQueries({
-                  queryKey: queryKeys.base(),
-                });
-              },
-            }
-          )
-        }
+        onPress={onCheck}
         hapticType="selection"
       >
         <View
           className={cn(
             'h-full w-full rounded-full',
-            isChecked && 'bg-primary'
+            internalIsChecked && 'bg-primary'
           )}
         ></View>
       </HapticPressable>
 
       <HapticPressable className="flex-1" onPress={onEdit} hapticType="light">
         <View className="flex-row items-center justify-between">
-          <Text
-            className={cn(
-              'text-2xl font-medium text-foreground',
-              isChecked && 'text-muted-foreground'
-            )}
-          >
-            {item.name}
-          </Text>
+          <View className="relative">
+            <Text
+              className={cn(
+                'text-2xl font-medium text-foreground',
+                internalIsChecked && 'text-muted-foreground'
+              )}
+            >
+              {item.name}
+            </Text>
+            <Animated.View
+              style={[
+                strikethroughStyle,
+                {
+                  position: 'absolute',
+                  top: '50%',
+                  left: 0,
+                  height: 2,
+                  backgroundColor: internalIsChecked
+                    ? '#9ca3af'
+                    : 'transparent',
+                },
+              ]}
+            />
+          </View>
           <Text className="text-lg text-muted-foreground">
             {item.unit === 'each' && 'x'}
             {item.quantity}
