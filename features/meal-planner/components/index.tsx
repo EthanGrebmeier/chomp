@@ -215,7 +215,7 @@ export const MealPlanner = ({
       >
         {daysOfPlan.map(date => (
           <View key={date.toISOString()} style={{ flex: 1 }}>
-            <Text className="mb-2 px-2 text-2xl font-semibold text-foreground">
+            <Text className="mb-2 px-4 text-2xl font-semibold text-foreground">
               {format(date, 'EEEE, MMMM d, yyyy')}
             </Text>
             <MealPlanDateView

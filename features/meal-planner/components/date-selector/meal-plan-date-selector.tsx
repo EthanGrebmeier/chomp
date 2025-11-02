@@ -40,7 +40,7 @@ const MealPlanDateSelector = ({
   return (
     <ScrollView
       ref={scrollViewRef}
-      contentContainerClassName="flex-row items-center gap-4 px-2 py-4"
+      contentContainerClassName="flex-row items-center gap-4 px-4 py-4"
       className="flex-shrink-0 flex-grow-0"
       horizontal
       showsHorizontalScrollIndicator={false}

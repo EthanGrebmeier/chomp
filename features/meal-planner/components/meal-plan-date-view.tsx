@@ -60,7 +60,7 @@ export const MealPlanDateView = ({
       contentContainerClassName="pb-20"
       data={mealTimes}
       renderItem={({ item: mealTime }) => (
-        <View className="mb-2 gap-1 px-2">
+        <View className="mb-2 gap-1 px-4">
           <Text className="text-xl font-semibold capitalize text-foreground">
             {mealTime}
           </Text>
