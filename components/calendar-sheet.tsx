@@ -52,7 +52,6 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
         validStartDate?: Date;
         validEndDate?: Date;
       }) => {
-        console.log('present', options);
         reset();
         if (options?.selectedDate) {
           setInternalSelectedDate(startOfDay(options.selectedDate));

@@ -56,8 +56,6 @@ export const MealPlanDateView = ({
 
   const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
 
-  console.log(groupedRecipes['breakfast']);
-
   return (
     <FlatList
       contentContainerClassName="pb-20"
