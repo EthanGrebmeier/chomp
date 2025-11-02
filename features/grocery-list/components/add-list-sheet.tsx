@@ -36,7 +36,7 @@ export const AddListSheet = () => {
   };
 
   return (
-    <Button onPress={handleCreateList} disabled={isPending}>
+    <Button size="sm" onPress={handleCreateList} disabled={isPending}>
       <Text>{isPending ? 'Creating...' : 'Create List'}</Text>
     </Button>
   );

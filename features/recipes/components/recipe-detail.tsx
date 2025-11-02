@@ -114,6 +114,7 @@ export const RecipeDetail = ({
           onPress={() => addToGroceryListSheetRef.current?.open()}
           className="flex-row items-center gap-2"
           disabled={isPending}
+          size="sm"
         >
           <Text>{isPending ? 'Adding...' : 'Add to List'}</Text>
         </Button>
