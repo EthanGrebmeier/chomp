@@ -60,9 +60,24 @@ export const GroupBySelector = ({
     <Popover>
       <PopoverTrigger className="self-start" ref={ref}>
         <Pill
-          icon={<Icon as={Rows3Icon} size={16} />}
+          icon={
+            <Icon
+              className={cn(
+                value !== 'none' && 'text-accent-orange-foreground'
+              )}
+              as={Rows3Icon}
+              size={16}
+            />
+          }
           hasValue={value !== 'none'}
           onClear={value !== 'none' ? () => onChange('none') : undefined}
+          className={cn(
+            value !== 'none' &&
+              'border-accent-orange-foreground bg-accent-orange-background '
+          )}
+          textClassName={cn(
+            value !== 'none' && 'text-accent-orange-foreground'
+          )}
         >
           {getDisplayLabel(value)}
         </Pill>

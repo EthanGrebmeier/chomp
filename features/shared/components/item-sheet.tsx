@@ -8,7 +8,6 @@ import { Platform, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import {
   Select,
@@ -144,8 +143,8 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
     return (
       <>
         {showAddButton && (
-          <HapticPressable
-            className="size-10 items-center justify-center rounded-full border border-border bg-primary"
+          <Button
+            size="icon"
             onPress={() => bottomSheetRef.current?.present()}
             hapticType="medium"
           >
@@ -155,7 +154,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
               strokeWidth={3.5}
               className="size-4"
             />
-          </HapticPressable>
+          </Button>
         )}
         <BottomSheet
           onStartClose={handleClose}

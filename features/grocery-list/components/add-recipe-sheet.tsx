@@ -98,7 +98,7 @@ export const AddRecipeSheet = ({ groceryListId }: AddRecipeSheetProps) => {
 
   return (
     <>
-      <Button onPress={() => ref.current?.present()}>
+      <Button size="sm" onPress={() => ref.current?.present()}>
         <Text>Add Recipe</Text>
       </Button>
       <BottomSheet onStartClose={() => KeyboardController.dismiss()} ref={ref}>

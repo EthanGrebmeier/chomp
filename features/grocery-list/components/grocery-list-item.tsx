@@ -79,7 +79,7 @@ export const GroceryListItem = ({
         <View
           className={cn(
             'h-full w-full rounded-full',
-            internalIsChecked && 'bg-primary'
+            internalIsChecked && 'bg-accent-foreground'
           )}
         ></View>
       </HapticPressable>

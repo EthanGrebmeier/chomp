@@ -59,9 +59,24 @@ export const SortBySelector = ({
       <PopoverTrigger asChild className="self-start" ref={ref}>
         <HapticPressable>
           <Pill
-            icon={<Icon as={ArrowDownUpIcon} size={16} />}
+            icon={
+              <Icon
+                className={cn(
+                  value !== 'recent' && 'text-accent-purple-foreground'
+                )}
+                as={ArrowDownUpIcon}
+                size={16}
+              />
+            }
             hasValue={value !== 'recent'}
             onClear={value !== 'recent' ? () => onChange('recent') : undefined}
+            className={cn(
+              value !== 'recent' &&
+                'border-accent-purple-foreground bg-accent-purple-background '
+            )}
+            textClassName={cn(
+              value !== 'recent' && 'text-accent-purple-foreground'
+            )}
           >
             {getDisplayLabel(value)}
           </Pill>

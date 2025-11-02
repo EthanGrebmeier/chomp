@@ -192,6 +192,7 @@ export const MealPlanner = ({
         <Button
           onPress={() => addToGroceryListSheetRef.current?.open()}
           className="flex-row items-center gap-2"
+          size="sm"
         >
           <Icon
             as={NotebookTabsIcon}

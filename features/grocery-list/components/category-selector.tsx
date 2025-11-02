@@ -74,7 +74,7 @@ export const CategorySelector = ({
               : 'text-muted-foreground'
           )}
           closeIconClassName={cn(
-            selectedCategory ? 'text-black' : 'text-muted-foreground'
+            selectedCategory ? 'text-foreground' : 'text-muted-foreground'
           )}
         >
           {selectedCategory ? selectedCategory.label : 'Category'}
