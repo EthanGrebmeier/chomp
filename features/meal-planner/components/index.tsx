@@ -114,7 +114,7 @@ export const MealPlanner = ({
   }
 
   return (
-    <View className="flex-1 gap-2">
+    <View className="flex-1 ">
       <EditableHeader
         ref={textInputRef}
         value={mealPlan?.name || 'Meal Planner'}
@@ -190,6 +190,9 @@ export const MealPlanner = ({
         currentDate={currentDate}
         onDatePress={setCurrentDate}
       />
+      <Text className="mb-2 mt-4 px-2 text-2xl font-semibold text-foreground">
+        {format(currentDate, 'EEEE, MMMM d, yyyy')}
+      </Text>
       <MealPlanDateView
         recipes={getRecipesForDate(currentDate)}
         date={format(currentDate, 'yyyy-MM-dd')}
