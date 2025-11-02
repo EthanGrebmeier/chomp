@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { HapticPressable } from '../../../../components/ui/haptic-pressable';
 import { Text } from '../../../../components/ui/text';
 import { cn } from '../../../../lib/utils';
 
@@ -15,10 +16,10 @@ export const MealPlanDateSelectorDate = ({
   onPress,
 }: MealPlanDateSelectorDateProps) => {
   return (
-    <Pressable onPress={() => onPress(date)} className="items-center">
+    <HapticPressable onPress={() => onPress(date)} className="items-center">
       <View
         className={cn(
-          'size-10 items-center justify-center rounded-full bg-gray-100'
+          'size-10 items-center justify-center rounded-full bg-muted'
         )}
       >
         <Text
@@ -38,6 +39,6 @@ export const MealPlanDateSelectorDate = ({
       >
         {format(date, 'LL/d')}
       </Text>
-    </Pressable>
+    </HapticPressable>
   );
 };

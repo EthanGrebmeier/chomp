@@ -1,6 +1,7 @@
 import { Text } from '@/components/ui/text';
 import { PlusIcon, Trash2Icon } from 'lucide-react-native';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { HapticTouchableOpacity } from '../../../components/ui/haptic-touchable-opacity';
 import { Icon } from '../../../components/ui/icon';
 import { useTheme } from '../../../hooks/use-theme';
@@ -67,7 +68,7 @@ export const MealPlanDateView = ({
             <FlatList
               data={groupedRecipes[mealTime]}
               renderItem={({ item: mealPlanRecipe }) => (
-                <Pressable
+                <HapticPressable
                   onPress={() =>
                     onMealPress({
                       mealPlanRecipe,
@@ -75,13 +76,13 @@ export const MealPlanDateView = ({
                     })
                   }
                 >
-                  <View className="w-full flex-row items-center gap-4 rounded-xl bg-gray-100 px-4 py-2">
+                  <View className="w-full flex-row items-center gap-4 rounded-xl bg-muted px-4 py-2">
                     <View className="size-14 rounded-sm bg-gray-200"></View>
                     <View className="flex-1 flex-row justify-between">
                       <Text className="text-lg font-semibold text-foreground">
                         {mealPlanRecipe.recipe.name}
                       </Text>
-                      <Pressable
+                      <HapticPressable
                         onPress={() =>
                           removeRecipeFromMealPlan({
                             mealPlanRecipeId: mealPlanRecipe.id,
@@ -93,17 +94,17 @@ export const MealPlanDateView = ({
                           size={20}
                           color={theme.destructive}
                         />
-                      </Pressable>
+                      </HapticPressable>
                     </View>
                   </View>
-                </Pressable>
+                </HapticPressable>
               )}
             />
           ) : (
             <HapticTouchableOpacity
               hapticType="light"
               onPress={() => onAddMealPress({ date: date, mealTime })}
-              className="h-[72] w-full items-center justify-center rounded-xl bg-gray-100"
+              className="h-[72] w-full items-center justify-center rounded-xl bg-muted"
             >
               <View className="flex-row items-center justify-center gap-1">
                 <Icon

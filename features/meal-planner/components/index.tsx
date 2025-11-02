@@ -190,7 +190,7 @@ export const MealPlanner = ({
         currentDate={currentDate}
         onDatePress={setCurrentDate}
       />
-      <Text className="mb-2 mt-4 px-2 text-2xl font-semibold text-foreground">
+      <Text className="mb-2 px-2 text-2xl font-semibold text-foreground">
         {format(currentDate, 'EEEE, MMMM d, yyyy')}
       </Text>
       <MealPlanDateView
