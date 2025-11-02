@@ -25,6 +25,7 @@ export const AddListSheet = () => {
           date: dateString,
           name: getDefaultName(today),
           groupBy: 'none',
+          sortBy: 'recent',
         },
       },
       {
