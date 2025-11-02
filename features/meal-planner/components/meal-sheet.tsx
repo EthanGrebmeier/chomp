@@ -12,11 +12,14 @@ import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 
+import { useBottomSheetModal } from '@gorhom/bottom-sheet';
+import { router } from 'expo-router';
 import { CalendarIcon, PencilIcon } from 'lucide-react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { useTheme } from '../../../hooks/use-theme';
+import { navigation } from '../../../lib/navigation';
 import { RecipeSearch } from '../../recipes/components/recipe-search';
 import { Recipe } from '../../recipes/types';
 import { useAddRecipeToMealPlan } from '../hooks/useAddRecipeToMealPlan';
@@ -65,6 +68,7 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
     const { mutate: addRecipeToMealPlan } = useAddRecipeToMealPlan();
     const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
     const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
+    const { dismissAll } = useBottomSheetModal();
 
     // Imperative handle
     useImperativeHandle(ref, () => ({
@@ -198,7 +202,12 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
                     </View>
                     <View className="flex-row items-center gap-4">
                       <HapticPressable
-                        onPress={() => setCurrentView('search')}
+                        onPress={() => {
+                          router.push(
+                            navigation.goToRecipe(recipeToDisplay.id)
+                          );
+                          dismissAll();
+                        }}
                         hapticType="light"
                       >
                         <Icon
@@ -211,7 +220,7 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
                   </View>
                 )}
 
-                <View className="gap-4 border-t border-border pt-2">
+                <View className="gap-4">
                   <View className="flex-row items-center gap-2">
                     <Pressable
                       onPress={() =>
