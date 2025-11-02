@@ -7,7 +7,7 @@ import {
 import { useColorScheme } from 'nativewind';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { Icon } from '../../components/ui/icon';
-import { THEME } from '../../lib/theme';
+import { ACCENT_COLORS, THEME } from '../../lib/theme';
 
 export default function Layout() {
   const colorscheme = useColorScheme();
@@ -26,15 +26,23 @@ export default function Layout() {
               colorscheme.colorScheme === 'dark'
                 ? THEME.dark.border
                 : THEME.light.border,
+            shadowOffset: {
+              width: 0,
+              height: -10,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 10.41,
+            elevation: 1,
           },
-          tabBarActiveTintColor:
-            colorscheme.colorScheme === 'dark'
-              ? THEME.dark.primary
-              : THEME.light.primary,
+          tabBarActiveTintColor: ACCENT_COLORS.orange.foreground,
           tabBarInactiveTintColor:
             colorscheme.colorScheme === 'dark'
               ? THEME.dark.mutedForeground
               : THEME.light.mutedForeground,
+          tabBarLabelStyle: {
+            fontWeight: 'bold',
+            fontSize: 12,
+          },
         }}
       >
         <Tabs.Screen
