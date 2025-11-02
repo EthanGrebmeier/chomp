@@ -1,6 +1,7 @@
 import { useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { FlatList, Pressable, View, useWindowDimensions } from 'react-native';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet } from '../../../../components/bottom-sheet';
 import { TextInput } from '../../../../components/text-input';
@@ -74,6 +75,7 @@ export const GroceryListSearchSheet = forwardRef<
               onPress={() => {
                 bottomSheetRef.current?.dismiss();
                 onCancel?.();
+                KeyboardController.dismiss();
               }}
             >
               <Text> Cancel </Text>

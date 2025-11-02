@@ -102,27 +102,7 @@ export const AddToGroceryListSheet = forwardRef<
     return (
       <>
         <BottomSheet ref={bottomSheetRef}>
-          <BottomSheet.Header title={title} />
-
-          <View className="mt-6 flex-1">
-            {/* Option to create new list */}
-            <View className="mb-6">
-              <Button
-                onPress={handleCreateNewList}
-                disabled={isLoading}
-                className="w-full"
-              >
-                <Text>{isLoading ? 'Creating...' : createNewButtonText}</Text>
-              </Button>
-            </View>
-
-            {/* Divider */}
-            <View className="mb-6 flex-row items-center">
-              <View className="flex-1 border-t border-border" />
-              <Text className="mx-4 text-sm text-muted-foreground">OR</Text>
-              <View className="flex-1 border-t border-border" />
-            </View>
-
+          <View className="flex-1">
             {/* List options */}
             <GroceryListOptions
               onSearch={() => {
@@ -133,6 +113,13 @@ export const AddToGroceryListSheet = forwardRef<
               isAdding={isLoading}
             />
           </View>
+          <Button
+            onPress={handleCreateNewList}
+            disabled={isLoading}
+            className="w-full"
+          >
+            <Text>{isLoading ? 'Creating...' : createNewButtonText}</Text>
+          </Button>
         </BottomSheet>
         <GroceryListSearchSheet
           ref={groceryListSearchSheetRef}

@@ -35,7 +35,7 @@ export const CreateRecipeButton = ({
     );
   };
   return (
-    <Button onPress={handleCreateRecipe} disabled={isPending}>
+    <Button size="sm" onPress={handleCreateRecipe} disabled={isPending}>
       <Text>{isPending ? 'Creating...' : 'Create Recipe'}</Text>
     </Button>
   );

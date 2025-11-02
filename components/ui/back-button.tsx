@@ -27,7 +27,7 @@ export function BackButton({ onPress, className, href }: BackButtonProps) {
   return (
     <HapticPressable
       onPress={handlePress}
-      className={cn('flex-row items-center gap-2 px-4', className)}
+      className={cn('mb-2 flex-row items-center gap-2 px-4', className)}
       hapticType="light"
     >
       <Icon as={ArrowLeftIcon} size={20} />
