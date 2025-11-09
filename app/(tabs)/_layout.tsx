@@ -49,7 +49,7 @@ export default function Layout() {
         <Tabs.Screen
           name="list"
           options={{
-            title: 'List',
+            title: 'Grocery List',
             tabBarIcon: ({ color }) => (
               <Icon as={NotebookTabsIcon} size={24} color={color} />
             ),

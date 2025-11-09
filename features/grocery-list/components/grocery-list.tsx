@@ -1,19 +1,14 @@
-import {
-  SectionList,
-  SectionListData,
-  Text,
-  View,
-} from 'react-native';
-
-import { GroceryListItemWithRecipe } from '../types';
-
 import { useRef, useState } from 'react';
+import { SectionList, SectionListData, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
+
 import { Heading } from '../../../components/text/heading';
 import { cn } from '../../../lib/utils';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
+import { GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
+
 import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
 import { AddRecipeSheet } from './add-recipe-sheet';
 import { CollapsibleSectionHeader } from './collapsible-section-header';
@@ -129,7 +124,7 @@ export const GroceryList = ({
     <View className="flex-1 gap-2">
       {/** Header */}
       <View className="px-4">
-        <Heading>Shopping List</Heading>
+        <Heading>Grocery List</Heading>
         <Text className="text-lg text-muted-foreground">
           {items.length} items
         </Text>

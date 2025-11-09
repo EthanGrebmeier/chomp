@@ -1,7 +1,3 @@
-import { Button } from '@/components/ui/button';
-import { Text } from '@/components/ui/text';
-import { useTheme } from '@/hooks/use-theme';
-import { navigation } from '@/lib/navigation';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { addDays, format, startOfDay } from 'date-fns';
 import { router } from 'expo-router';
@@ -10,6 +6,12 @@ import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { KeyboardController } from 'react-native-keyboard-controller';
+
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import { useTheme } from '@/hooks/use-theme';
+import { navigation } from '@/lib/navigation';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
   CalendarSheet,
@@ -71,7 +73,7 @@ export const CreateMealPlanSheet = () => {
   return (
     <>
       <Button
-        onPress={() => bottomSheetRef.current?.present()}
+        onPress={handleCreateMealPlan}
         disabled={createMealPlan.isPending}
       >
         <Text>
