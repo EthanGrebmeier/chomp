@@ -75,6 +75,7 @@ export const CreateMealPlanSheet = () => {
       <Button
         onPress={handleCreateMealPlan}
         disabled={createMealPlan.isPending}
+        size="sm"
       >
         <Text>
           {createMealPlan.isPending ? 'Creating...' : 'Create Meal Plan'}
