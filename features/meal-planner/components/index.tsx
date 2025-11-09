@@ -1,8 +1,11 @@
 import { eachDayOfInterval, format, isSameDay } from 'date-fns';
+import { router } from 'expo-router';
 import { NotebookTabsIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
+import { toast } from 'sonner-native';
+
 import {
   CalendarSheet,
   CalendarSheetRef,
@@ -12,14 +15,12 @@ import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
-import {
-  AddToGroceryListSheet,
-  AddToGroceryListSheetRef,
-} from '../../shared/components';
+import { navigation } from '../../../lib/navigation';
 import { useMealPlan } from '../hooks';
 import { useAddMealPlanToGroceryList } from '../hooks/useAddMealPlanToGroceryList';
 import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
 import { MealPlanDay } from '../types';
+
 import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
 import { MealPlanDateView } from './meal-plan-date-view';
 import { MealSheet, MealSheetRef } from './meal-sheet';
@@ -37,7 +38,6 @@ export const MealPlanner = ({
 }: MealPlannerProps) => {
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
   const mealSheetRef = useRef<MealSheetRef>(null);
-  const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const textInputRef = useRef<TextInput>(null);
   const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
@@ -95,30 +95,18 @@ export const MealPlanner = ({
     setCurrentPageIndex(e.nativeEvent.position);
   };
 
-  const handleAddMealPlanToList = async (
-    listId: string,
-    isNewList: boolean
-  ) => {
-    return new Promise<void>((resolve, reject) => {
-      addMealPlanToGroceryList(
-        {
-          mealPlanId,
-          groceryListId: listId,
-          groceryListName: isNewList
-            ? `${mealPlan?.name || 'Meal Plan'} - Grocery List`
-            : undefined,
+  const handleAddToGroceryList = async () => {
+    addMealPlanToGroceryList(
+      {
+        mealPlanId,
+      },
+      {
+        onSuccess: () => {
+          router.push(navigation.goToList());
+          toast.success('Meal plan added to grocery list');
         },
-        {
-          onSuccess: () => {
-            resolve();
-          },
-          onError: error => {
-            console.error('Failed to add meal plan to grocery list:', error);
-            reject(error);
-          },
-        }
-      );
-    });
+      }
+    );
   };
 
   if (isLoading) {
@@ -133,7 +121,7 @@ export const MealPlanner = ({
     <View className="flex-1 ">
       <EditableHeader
         ref={textInputRef}
-        value={mealPlan?.name || 'Meal Planner'}
+        value={mealPlan?.name ?? 'Meal Planner'}
         onChangeText={handleChangeText}
       >
         {mealPlan?.startDate && mealPlan?.endDate && (
@@ -182,15 +170,9 @@ export const MealPlanner = ({
         startDate={startDate}
         endDate={endDate}
       />
-      <AddToGroceryListSheet
-        ref={addToGroceryListSheetRef}
-        onListSelected={handleAddMealPlanToList}
-        title="Add Meal Plan to Grocery List"
-        createNewButtonText="Create New List & Add Meal Plan"
-      />
       <View className="absolute bottom-4 right-4 z-10">
         <Button
-          onPress={() => addToGroceryListSheetRef.current?.open()}
+          onPress={handleAddToGroceryList}
           className="flex-row items-center gap-2"
           size="sm"
         >
