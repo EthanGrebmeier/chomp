@@ -2,19 +2,17 @@ import {
   SectionList,
   SectionListData,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
 import { GroceryListItemWithRecipe } from '../types';
 
-import { format } from 'date-fns';
 import { useRef, useState } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
-import { EditableHeader } from '../../../components/editable-header';
+import { Heading } from '../../../components/text/heading';
 import { cn } from '../../../lib/utils';
-import { useUpdateGroceryList } from '../hooks/useUpdateGroceryList';
+import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { groupItemsBy } from '../util';
 import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
 import { AddRecipeSheet } from './add-recipe-sheet';
@@ -28,25 +26,17 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 );
 
 type GroceryListProps = {
-  name: string;
-  date: string;
   items: GroceryListItemWithRecipe[];
-  groceryListId: string;
   groupBy: 'category' | 'none' | 'recipe';
   sortBy: 'name' | 'recent';
-  autofocus?: boolean;
 };
 
 export const GroceryList = ({
-  name,
-  date,
   items,
-  groceryListId,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
-  autofocus = false,
 }: GroceryListProps) => {
-  const { mutate: updateList } = useUpdateGroceryList();
+  const { mutate: updateSettings } = useUpdateSettings();
 
   const [editingItem, setEditingItem] =
     useState<GroceryListItemWithRecipe | null>(null);
@@ -60,7 +50,6 @@ export const GroceryList = ({
     new Set(['Checked']) // Start with checked items collapsed
   );
 
-  const textInputRef = useRef<TextInput>(null);
   const editSheetRef = useRef<AddItemSheetRef>(null);
 
   const toggleSection = (sectionTitle: string) => {
@@ -75,13 +64,6 @@ export const GroceryList = ({
     });
   };
 
-  const handleChangeText = (text: string) => {
-    updateList({
-      listId: groceryListId,
-      updates: { name: text },
-    });
-  };
-
   const handleEditItem = (item: GroceryListItemWithRecipe) => {
     setEditingItem(item);
     editSheetRef.current?.present();
@@ -93,18 +75,12 @@ export const GroceryList = ({
 
   const handleGroupByChange = (newGroupBy: 'category' | 'none' | 'recipe') => {
     setGroupBy(newGroupBy);
-    updateList({
-      listId: groceryListId,
-      updates: { groupBy: newGroupBy },
-    });
+    updateSettings({ groupBy: newGroupBy });
   };
 
   const handleSortByChange = (newSortBy: 'name' | 'recent') => {
     setSortBy(newSortBy);
-    updateList({
-      listId: groceryListId,
-      updates: { sortBy: newSortBy },
-    });
+    updateSettings({ sortBy: newSortBy });
   };
 
   // Separate checked and unchecked items
@@ -152,25 +128,12 @@ export const GroceryList = ({
   return (
     <View className="flex-1 gap-2">
       {/** Header */}
-      <EditableHeader
-        ref={textInputRef}
-        value={name}
-        onChangeText={handleChangeText}
-        autofocus={autofocus}
-      >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row gap-4">
-            <Text className="text-lg text-muted-foreground">
-              {items.length} items
-            </Text>
-            {date && (
-              <Text className="text-lg text-muted-foreground">
-                {format(date, 'EEEE, M/d/yy')}
-              </Text>
-            )}
-          </View>
-        </View>
-      </EditableHeader>
+      <View className="px-4">
+        <Heading>Shopping List</Heading>
+        <Text className="text-lg text-muted-foreground">
+          {items.length} items
+        </Text>
+      </View>
       <View className="flex-1">
         <ScrollView
           horizontal
@@ -231,14 +194,16 @@ export const GroceryList = ({
           />
         </LayoutAnimationConfig>
       </View>
-      <View className=" absolute bottom-4 right-4 flex-row items-center gap-2">
-        <AddRecipeSheet groceryListId={groceryListId} />
-        <AddItemSheet
-          ref={editSheetRef}
-          defaultValues={editingItem || null}
-          groceryListId={groceryListId}
-          onClose={handleCloseEdit}
-        />
+      <View className=" absolute bottom-4 left-4 right-4 flex-row items-center justify-between gap-2">
+        <View></View>
+        <View className="flex-row gap-2">
+          <AddRecipeSheet />
+          <AddItemSheet
+            ref={editSheetRef}
+            defaultValues={editingItem || null}
+            onClose={handleCloseEdit}
+          />
+        </View>
       </View>
     </View>
   );

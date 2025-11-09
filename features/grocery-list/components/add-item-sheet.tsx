@@ -9,7 +9,6 @@ import { GroceryListItemWithRecipe } from '../types';
 import { CategorySelector } from './category-selector';
 
 type AddItemSheetProps = {
-  groceryListId: string;
   onClose?: () => void;
   defaultValues: GroceryListItemWithRecipe | null;
 };
@@ -19,7 +18,7 @@ export type AddItemSheetRef = {
 };
 
 export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
-  ({ groceryListId, onClose, defaultValues }, ref) => {
+  ({ onClose, defaultValues }, ref) => {
     const itemSheetRef = useRef<ItemSheetRef>(null);
     const { mutate: addItem } = useAddGroceryItem();
     const { mutate: updateItem } = useUpdateGroceryListItem();
@@ -46,7 +45,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
           {
             onSuccess: () => {
               itemSheetRef.current?.dismiss();
-              queryClient.invalidateQueries({ queryKey: queryKeys.base() });
+              queryClient.invalidateQueries({ queryKey: queryKeys.items() });
               toast.success(`${defaultValues.name} updated`);
             },
           }
@@ -54,7 +53,6 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
       } else {
         addItem(
           {
-            groceryListId,
             name: data.name,
             unit: data.unit,
             quantity: parseInt(data.quantity),
@@ -62,7 +60,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
           },
           {
             onSuccess: () => {
-              queryClient.invalidateQueries({ queryKey: queryKeys.base() });
+              queryClient.invalidateQueries({ queryKey: queryKeys.items() });
               toast.success(`${data.name} added`);
             },
           }

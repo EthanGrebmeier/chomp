@@ -1,8 +1,10 @@
+import { useLocalSearchParams } from 'expo-router';
+import { View } from 'react-native';
+
 import { Heading } from '@/components/text/heading';
 import { MealPlanner } from '@/features/meal-planner/components';
 import { useMealPlan } from '@/features/meal-planner/hooks/useMealPlan';
-import { useLocalSearchParams } from 'expo-router';
-import { View } from 'react-native';
+
 import { BackButton } from '../../../components/ui/back-button';
 
 export default function MealPlanDetailPage() {

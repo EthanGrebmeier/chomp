@@ -1,8 +1,5 @@
-export { useAddGroceryList } from './useAddGroceryList';
-
-export { useDeleteGroceryList } from './useDeleteGroceryList';
-export { useGroceryList } from './useGroceryList';
-export { useGroceryLists } from './useGroceryLists';
+export { useGroceryItems } from './useGroceryItems';
 export { useRemoveGroceryListItem } from './useRemoveGroceryListItem';
-export { useUpdateGroceryList } from './useUpdateGroceryList';
+export { useSettings } from './useSettings';
 export { useUpdateGroceryListItem } from './useUpdateGroceryListItem';
+export { useUpdateSettings } from './useUpdateSettings';

@@ -8,7 +8,7 @@ export const useAddMealPlanToGroceryList = () => {
 
   return useMutation({
     mutationFn: addMealPlanToGroceryList,
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       // Invalidate meal plan queries to refresh the UI
       if (variables?.mealPlanId) {
         queryClient.invalidateQueries({
@@ -21,12 +21,10 @@ export const useAddMealPlanToGroceryList = () => {
         queryKey: queryKeys.base(),
       });
 
-      // Invalidate the specific grocery list
-      if (data?.groceryListId) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.list(data.groceryListId),
-        });
-      }
+      // Invalidate the items query
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.items(),
+      });
     },
   });
 };

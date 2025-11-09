@@ -1,6 +1,11 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { Pressable, PressableProps, View } from 'react-native';
+import {
+  GestureResponderEvent,
+  Pressable,
+  PressableProps,
+  View,
+} from 'react-native';
 
 export type HapticPressableProps = PressableProps & {
   /**
@@ -32,7 +37,7 @@ export const HapticPressable = ({
   ref,
   ...props
 }: HapticPressableProps) => {
-  const handlePress = (event: any) => {
+  const handlePress = (event: GestureResponderEvent) => {
     if (haptic) {
       // Trigger haptic feedback
       switch (hapticType) {

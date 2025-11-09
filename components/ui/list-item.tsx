@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils';
 import { TrashIcon } from 'lucide-react-native';
 import { View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -12,6 +11,9 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+
+import { cn } from '@/lib/utils';
+
 import { Icon } from './icon';
 
 type ListItemProps = {

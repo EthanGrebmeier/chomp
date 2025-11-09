@@ -1,5 +1,6 @@
 import { Icon as LucideIcon } from 'lucide-react-native';
 import { ComponentProps } from 'react';
+
 import { useTheme } from '../../hooks/use-theme';
 
 const Icon = ({

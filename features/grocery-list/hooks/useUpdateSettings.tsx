@@ -1,15 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createList } from '../db/create-list';
+import { updateSettings } from '../db/update-settings';
 import { queryKeys } from '../query-keys';
 
-export const useAddGroceryList = () => {
+export const useUpdateSettings = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createList,
+    mutationFn: updateSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.base(),
+        queryKey: queryKeys.settings(),
       });
     },
   });
 };
+

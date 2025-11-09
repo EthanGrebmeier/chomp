@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import {
   addMonths,
@@ -15,7 +14,11 @@ import { Check, X } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
+
+import { cn } from '@/lib/utils';
+
 import { useTheme } from '../hooks/use-theme';
+
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './ui/button';
 import { Icon } from './ui/icon';
@@ -28,7 +31,11 @@ type CalendarSheetProps = {
 };
 
 export type CalendarSheetRef = {
-  present: (options?: {}) => void;
+  present: (options?: {
+    selectedDate?: Date;
+    validStartDate?: Date;
+    validEndDate?: Date;
+  }) => void;
   dismiss: () => void;
   setSelectedDate: (date: Date) => void;
 };
@@ -359,3 +366,5 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
     );
   }
 );
+
+CalendarSheet.displayName = 'CalendarSheet';

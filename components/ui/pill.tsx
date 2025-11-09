@@ -1,7 +1,9 @@
-import { cn } from '@/lib/utils';
 import { XIcon } from 'lucide-react-native';
 import { ReactNode } from 'react';
 import { View } from 'react-native';
+
+import { cn } from '@/lib/utils';
+
 import { HapticPressable } from './haptic-pressable';
 import { Icon } from './icon';
 import { Text } from './text';

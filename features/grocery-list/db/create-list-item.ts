@@ -4,7 +4,6 @@ import { db } from '../../../providers/migration-provider';
 import { QuantityUnit } from '../../shared/types';
 
 type CreateListItemArgs = {
-  groceryListId: string;
   name: string;
   quantity: number;
   unit: QuantityUnit;
@@ -13,7 +12,6 @@ type CreateListItemArgs = {
 };
 
 export const createListItem = async ({
-  groceryListId,
   name,
   quantity,
   unit,
@@ -23,7 +21,6 @@ export const createListItem = async ({
   const now = new Date().toISOString();
   const groceryListItem = {
     id: generateId(),
-    groceryListId,
     name,
     quantity,
     unit,

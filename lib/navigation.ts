@@ -25,14 +25,9 @@
  */
 
 // Base route types
-export type TabRoute = 'lists' | 'plans' | 'recipes';
+export type TabRoute = 'list' | 'plans' | 'recipes';
 
 // Dynamic route parameters
-export interface ListParams {
-  listId: string;
-  autofocus?: boolean;
-}
-
 export interface MealPlanParams {
   mealPlanId: string;
   autofocus?: boolean;
@@ -57,12 +52,10 @@ export function buildTabUrl(tab: TabRoute) {
 }
 
 /**
- * Builds a URL for a grocery list detail page
+ * Builds a URL for the single grocery list page
  */
-export function buildListUrl(params: ListParams) {
-  const { listId, autofocus } = params;
-  const query = autofocus ? '?autofocus=true' : '';
-  return `/(tabs)/lists/${listId}${query}` as const;
+export function buildListUrl() {
+  return `/(tabs)/list` as const;
 }
 
 /**
@@ -88,13 +81,9 @@ export function buildRecipeUrl(params: RecipeParams) {
  */
 export const navigation = {
   // Tab navigation
-  goToLists: () => buildTabUrl('lists'),
+  goToList: () => buildListUrl(),
   goToPlans: () => buildTabUrl('plans'),
   goToRecipes: () => buildTabUrl('recipes'),
-
-  // List navigation
-  goToList: (listId: string, options?: NavigationOptions) =>
-    buildListUrl({ listId, autofocus: options?.autofocus }),
 
   // Meal plan navigation
   goToMealPlan: (mealPlanId: string, options?: NavigationOptions) =>
@@ -112,13 +101,9 @@ export const navigation = {
 export function useNavigation() {
   return {
     // Tab navigation
-    goToLists: () => navigation.goToLists(),
+    goToList: () => navigation.goToList(),
     goToPlans: () => navigation.goToPlans(),
     goToRecipes: () => navigation.goToRecipes(),
-
-    // List navigation
-    goToList: (listId: string, options?: NavigationOptions) =>
-      navigation.goToList(listId, options),
 
     // Meal plan navigation
     goToMealPlan: (mealPlanId: string, options?: NavigationOptions) =>
@@ -136,13 +121,9 @@ export function useNavigation() {
  */
 export const navActions = {
   // Tab navigation
-  goToLists: () => buildTabUrl('lists'),
+  goToList: () => buildListUrl(),
   goToPlans: () => buildTabUrl('plans'),
   goToRecipes: () => buildTabUrl('recipes'),
-
-  // List navigation
-  goToList: (listId: string, options?: NavigationOptions) =>
-    buildListUrl({ listId, autofocus: options?.autofocus }),
 
   // Meal plan navigation
   goToMealPlan: (mealPlanId: string, options?: NavigationOptions) =>
@@ -158,14 +139,11 @@ export const navActions = {
  */
 export const ROUTES = {
   TABS: {
-    LISTS: '/(tabs)/lists',
+    LIST: '/(tabs)/list',
     PLANS: '/(tabs)/plans',
     RECIPES: '/(tabs)/recipes',
   },
-  LISTS: {
-    INDEX: '/(tabs)/lists',
-    DETAIL: (listId: string) => `/(tabs)/lists/${listId}`,
-  },
+  LIST: '/(tabs)/list',
   PLANS: {
     INDEX: '/(tabs)/plans',
     DETAIL: (mealPlanId: string) => `/(tabs)/plans/${mealPlanId}`,

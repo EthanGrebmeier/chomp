@@ -8,12 +8,10 @@ import { db } from '../../../providers/migration-provider';
 
 export type AddRecipeAsSeparateItemsArgs = {
   recipeId: string;
-  groceryListId: string;
 };
 
 export const addRecipeAsSeparateItems = async ({
   recipeId,
-  groceryListId,
 }: AddRecipeAsSeparateItemsArgs) => {
   // Get all ingredients for the recipe
   const ingredients = await db
@@ -28,7 +26,6 @@ export const addRecipeAsSeparateItems = async ({
   for (const ingredient of ingredients) {
     groceryListItems.push({
       id: generateId(),
-      groceryListId,
       name: ingredient.name,
       quantity: ingredient.quantity,
       unit: ingredient.unit,

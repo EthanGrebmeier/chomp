@@ -1,6 +1,14 @@
+CREATE TABLE `app_settings` (
+	`id` text PRIMARY KEY DEFAULT 'default' NOT NULL,
+	`listName` text DEFAULT 'Shopping List' NOT NULL,
+	`groupBy` text DEFAULT 'none' NOT NULL,
+	`sortBy` text DEFAULT 'recent' NOT NULL,
+	`createdAt` text NOT NULL,
+	`updatedAt` text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `grocery_list_item` (
 	`id` text PRIMARY KEY NOT NULL,
-	`groceryListId` text NOT NULL,
 	`name` text NOT NULL,
 	`quantity` integer NOT NULL,
 	`unit` text NOT NULL,
@@ -10,18 +18,7 @@ CREATE TABLE `grocery_list_item` (
 	`isChecked` integer DEFAULT false NOT NULL,
 	`createdAt` text NOT NULL,
 	`updatedAt` text NOT NULL,
-	FOREIGN KEY (`groceryListId`) REFERENCES `grocery_list`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`recipeId`) REFERENCES `recipe`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `grocery_list` (
-	`id` text PRIMARY KEY NOT NULL,
-	`date` text,
-	`name` text NOT NULL,
-	`groupBy` text DEFAULT 'none' NOT NULL,
-	`sortBy` text DEFAULT 'recent' NOT NULL,
-	`createdAt` text NOT NULL,
-	`updatedAt` text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `meal_plan_recipe` (
@@ -40,13 +37,11 @@ CREATE TABLE `meal_plan_recipe` (
 --> statement-breakpoint
 CREATE TABLE `meal_plan` (
 	`id` text PRIMARY KEY NOT NULL,
-	`groceryListId` text,
 	`name` text NOT NULL,
 	`startDate` text NOT NULL,
 	`endDate` text NOT NULL,
 	`createdAt` text NOT NULL,
-	`updatedAt` text NOT NULL,
-	FOREIGN KEY (`groceryListId`) REFERENCES `grocery_list`(`id`) ON UPDATE no action ON DELETE no action
+	`updatedAt` text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `recipe_ingredient` (
@@ -67,6 +62,7 @@ CREATE TABLE `recipe` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`description` text,
+	`imageSrc` text,
 	`createdAt` text NOT NULL,
 	`updatedAt` text NOT NULL
 );

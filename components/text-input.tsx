@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import { TextInput as RNTextInput, TextInputProps } from 'react-native';
+
 import { cn } from '../lib/utils';
 
 export const TextDisplayInput = forwardRef<RNTextInput, TextInputProps>(
@@ -28,3 +29,6 @@ export const TextInput = forwardRef<RNTextInput, TextInputProps>(
     );
   }
 );
+
+TextDisplayInput.displayName = 'TextDisplayInput';
+TextInput.displayName = 'TextInput';

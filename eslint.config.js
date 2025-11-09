@@ -1,6 +1,8 @@
 // https://docs.expo.dev/guides/using-eslint/
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
+const tseslint = require('@typescript-eslint/eslint-plugin');
+const tsParser = require('@typescript-eslint/parser');
 
 module.exports = defineConfig([
   expoConfig,
@@ -15,6 +17,17 @@ module.exports = defineConfig([
     ],
   },
   {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: __dirname,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
     rules: {
       // React/React Native specific rules
       'react/react-in-jsx-scope': 'off', // Not needed in React 17+
@@ -22,7 +35,7 @@ module.exports = defineConfig([
       'react-hooks/exhaustive-deps': 'warn',
 
       // General code quality rules
-      'no-unused-vars': 'warn',
+      'no-unused-vars': 'off', // Turn off base rule as it can report incorrect errors
       'no-console': 'warn',
       'prefer-const': 'error',
       'no-var': 'error',

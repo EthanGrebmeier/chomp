@@ -13,6 +13,7 @@ export const MigrationProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  console.log(migrations.journal);
   const { success, error } = useMigrations(db, migrations);
   if (error) {
     console.error(error);

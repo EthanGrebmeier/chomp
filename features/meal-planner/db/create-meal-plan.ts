@@ -9,7 +9,6 @@ export const createMealPlan = async ({ mealPlan }: CreateMealPlanArgs) => {
 
   await db.insert(mealPlanTable).values({
     id,
-    groceryListId: mealPlan.groceryListId,
     name: mealPlan.name,
     startDate: mealPlan.startDate,
     endDate: mealPlan.endDate,

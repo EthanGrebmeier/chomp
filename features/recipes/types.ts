@@ -23,11 +23,6 @@ export type CreateRecipeArgs = {
   }[];
 };
 
-export type AddRecipeToListArgs = {
-  recipeId: string;
-  groceryListId: string;
-};
-
 export type AddRecipeToListResult = {
   addedItems: number;
   isDuplicate?: boolean;

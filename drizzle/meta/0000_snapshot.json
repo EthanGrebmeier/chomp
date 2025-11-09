@@ -1,9 +1,65 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d282c15e-44ac-4661-9514-7e1813762280",
+  "id": "b9708dce-8a5a-4fb1-bfa5-33c011c5b715",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
+    "app_settings": {
+      "name": "app_settings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'default'"
+        },
+        "listName": {
+          "name": "listName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'Shopping List'"
+        },
+        "groupBy": {
+          "name": "groupBy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'none'"
+        },
+        "sortBy": {
+          "name": "sortBy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'recent'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "grocery_list_item": {
       "name": "grocery_list_item",
       "columns": {
@@ -11,13 +67,6 @@
           "name": "id",
           "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "groceryListId": {
-          "name": "groceryListId",
-          "type": "text",
-          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -88,19 +137,6 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "grocery_list_item_groceryListId_grocery_list_id_fk": {
-          "name": "grocery_list_item_groceryListId_grocery_list_id_fk",
-          "tableFrom": "grocery_list_item",
-          "tableTo": "grocery_list",
-          "columnsFrom": [
-            "groceryListId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
         "grocery_list_item_recipeId_recipe_id_fk": {
           "name": "grocery_list_item_recipeId_recipe_id_fk",
           "tableFrom": "grocery_list_item",
@@ -115,67 +151,6 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "grocery_list": {
-      "name": "grocery_list",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "date": {
-          "name": "date",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "groupBy": {
-          "name": "groupBy",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'none'"
-        },
-        "sortBy": {
-          "name": "sortBy",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'recent'"
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -292,13 +267,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "groceryListId": {
-          "name": "groceryListId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "name": {
           "name": "name",
           "type": "text",
@@ -336,21 +304,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "meal_plan_groceryListId_grocery_list_id_fk": {
-          "name": "meal_plan_groceryListId_grocery_list_id_fk",
-          "tableFrom": "meal_plan",
-          "tableTo": "grocery_list",
-          "columnsFrom": [
-            "groceryListId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -469,6 +423,13 @@
         },
         "description": {
           "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "imageSrc": {
+          "name": "imageSrc",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

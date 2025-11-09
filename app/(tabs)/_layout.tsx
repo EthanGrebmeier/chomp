@@ -6,6 +6,7 @@ import {
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
+
 import { Icon } from '../../components/ui/icon';
 import { ACCENT_COLORS, THEME } from '../../lib/theme';
 
@@ -46,9 +47,9 @@ export default function Layout() {
         }}
       >
         <Tabs.Screen
-          name="lists"
+          name="list"
           options={{
-            title: 'Lists',
+            title: 'List',
             tabBarIcon: ({ color }) => (
               <Icon as={NotebookTabsIcon} size={24} color={color} />
             ),

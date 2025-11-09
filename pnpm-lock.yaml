@@ -183,6 +183,12 @@ importers:
       '@types/react':
         specifier: ~19.1.0
         version: 19.1.13
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.20.0
+        version: 8.44.0(@typescript-eslint/parser@8.44.0(eslint@9.36.0(jiti@1.21.7))(typescript@5.9.2))(eslint@9.36.0(jiti@1.21.7))(typescript@5.9.2)
+      '@typescript-eslint/parser':
+        specifier: ^8.20.0
+        version: 8.44.0(eslint@9.36.0(jiti@1.21.7))(typescript@5.9.2)
       drizzle-kit:
         specifier: ^0.31.4
         version: 0.31.4

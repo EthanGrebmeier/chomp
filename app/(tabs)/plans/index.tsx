@@ -1,10 +1,12 @@
+import { router } from 'expo-router';
+import { FlatList, View } from 'react-native';
+import { LayoutAnimationConfig } from 'react-native-reanimated';
+
 import { Heading } from '@/components/text/heading';
 import { MealPlanCard } from '@/features/meal-planner/components/meal-plan-card';
 import { useMealPlans } from '@/features/meal-planner/hooks/useMealPlans';
 import { navigation } from '@/lib/navigation';
-import { router } from 'expo-router';
-import { FlatList, View } from 'react-native';
-import { LayoutAnimationConfig } from 'react-native-reanimated';
+
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { CreateMealPlanSheet } from '../../../features/meal-planner/components/create-meal-plan-sheet';

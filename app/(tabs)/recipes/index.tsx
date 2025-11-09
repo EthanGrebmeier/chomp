@@ -1,7 +1,9 @@
-import { RecipeList } from '@/features/recipes/components/recipe-list';
-import { useRecipes } from '@/features/recipes/hooks';
 import { Text as RNText, View } from 'react-native';
 import { LayoutAnimationConfig } from 'react-native-reanimated';
+
+import { RecipeList } from '@/features/recipes/components/recipe-list';
+import { useRecipes } from '@/features/recipes/hooks';
+
 import { Heading } from '../../../components/text/heading';
 import { CreateRecipeButton } from '../../../features/recipes/components/create-recipe-button';
 
@@ -23,7 +25,7 @@ export default function Recipes() {
           </View>
         ) : (
           <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
-            <RecipeList recipes={recipes || []} />
+            <RecipeList recipes={recipes ?? []} />
           </LayoutAnimationConfig>
         )}
       </View>

@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils';
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -8,7 +7,11 @@ import {
 import { useColorScheme } from 'nativewind';
 import { ComponentProps, forwardRef } from 'react';
 import { View } from 'react-native';
+
+import { cn } from '@/lib/utils';
+
 import { THEME } from '../lib/theme';
+
 import { Text } from './ui/text';
 
 type BottomSheetProps = {
@@ -94,7 +97,7 @@ const TextInput = forwardRef<
     />
   );
 });
-
+TextInput.displayName = 'TextInput';
 const BareTextInput = forwardRef<
   React.ComponentRef<typeof BottomSheetTextInput>,
   BottomSheetTextInputProps
@@ -107,7 +110,7 @@ const BareTextInput = forwardRef<
     />
   );
 });
-
+BareTextInput.displayName = 'BareTextInput';
 const Header = ({
   title,
   button,

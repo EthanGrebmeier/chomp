@@ -1,14 +1,13 @@
+import { navigation } from '@/lib/navigation';
 import { launchImageLibraryAsync } from 'expo-image-picker';
+import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Animated, TextInput, View } from 'react-native';
 import { EditableHeader } from '../../../components/editable-header';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import {
-  AddToGroceryListSheet,
-  AddToGroceryListSheetRef,
-} from '../../shared/components';
+import { AddToGroceryListSheetRef } from '../../shared/components';
 import { useAddRecipeToList } from '../hooks/useAddRecipeToList';
 import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
@@ -50,21 +49,18 @@ export const RecipeDetail = ({
     setEditingIngredient(null);
   };
 
-  const handleAddRecipeToList = async (listId: string, isNewList: boolean) => {
-    return new Promise<void>((resolve, reject) => {
-      addRecipeToList(
-        { recipeId: recipe.id, groceryListId: listId },
-        {
-          onSuccess: () => {
-            resolve();
-          },
-          onError: error => {
-            console.error('Failed to add recipe to grocery list:', error);
-            reject(error);
-          },
-        }
-      );
-    });
+  const handleAddRecipeToList = async () => {
+    addRecipeToList(
+      { recipeId: recipe.id },
+      {
+        onSuccess: () => {
+          router.push(navigation.goToList());
+        },
+        onError: error => {
+          console.error('Failed to add recipe to grocery list:', error);
+        },
+      }
+    );
   };
 
   const handleSelectImage = async () => {
@@ -132,7 +128,7 @@ export const RecipeDetail = ({
       </View>
       <View className="absolute bottom-4 right-4 flex-row gap-2">
         <Button
-          onPress={() => addToGroceryListSheetRef.current?.open()}
+          onPress={handleAddRecipeToList}
           className="flex-row items-center gap-2"
           disabled={isPending}
           size="sm"
@@ -146,12 +142,6 @@ export const RecipeDetail = ({
           defaultValues={editingIngredient}
         />
       </View>
-      <AddToGroceryListSheet
-        ref={addToGroceryListSheetRef}
-        onListSelected={handleAddRecipeToList}
-        title="Add Recipe to Grocery List"
-        createNewButtonText="Create New List & Add Recipe"
-      />
     </View>
   );
 };

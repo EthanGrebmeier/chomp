@@ -1,6 +1,10 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import {
+  GestureResponderEvent,
+  TouchableOpacity,
+  TouchableOpacityProps,
+} from 'react-native';
 
 export type HapticTouchableOpacityProps = TouchableOpacityProps & {
   /**
@@ -30,7 +34,7 @@ export const HapticTouchableOpacity = ({
   onPress,
   ...props
 }: HapticTouchableOpacityProps) => {
-  const handlePress = (event: any) => {
+  const handlePress = (event: GestureResponderEvent) => {
     if (haptic) {
       // Trigger haptic feedback
       switch (hapticType) {
@@ -63,4 +67,3 @@ export const HapticTouchableOpacity = ({
 
   return <TouchableOpacity onPress={handlePress} {...props} />;
 };
-

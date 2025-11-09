@@ -15,11 +15,7 @@ import {
   RecipeConflictSheetRef,
 } from './recipe-conflict-sheet';
 
-type AddRecipeSheetProps = {
-  groceryListId: string;
-};
-
-export const AddRecipeSheet = ({ groceryListId }: AddRecipeSheetProps) => {
+export const AddRecipeSheet = () => {
   const ref = useRef<BottomSheetModal>(null);
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
   const [selectedRecipe, setSelectedRecipe] =
@@ -39,7 +35,6 @@ export const AddRecipeSheet = ({ groceryListId }: AddRecipeSheetProps) => {
     addRecipeToList(
       {
         recipeId: recipe.id,
-        groceryListId,
       },
       {
         onSuccess: result => {
@@ -61,7 +56,6 @@ export const AddRecipeSheet = ({ groceryListId }: AddRecipeSheetProps) => {
     incrementQuantities(
       {
         recipeId: selectedRecipe.id,
-        groceryListId,
       },
       {
         onSuccess: () => {
@@ -78,7 +72,6 @@ export const AddRecipeSheet = ({ groceryListId }: AddRecipeSheetProps) => {
     addAsSeparate(
       {
         recipeId: selectedRecipe.id,
-        groceryListId,
       },
       {
         onSuccess: () => {

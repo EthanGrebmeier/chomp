@@ -1,7 +1,8 @@
-import { RecipeDetail } from '@/features/recipes/components/recipe-detail';
-import { useRecipe } from '@/features/recipes/hooks/useRecipe';
 import { useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
+
+import { RecipeDetail } from '@/features/recipes/components/recipe-detail';
+import { useRecipe } from '@/features/recipes/hooks/useRecipe';
 
 import { BackButton } from '../../../components/ui/back-button';
 

@@ -1,4 +1,5 @@
 export const queryKeys = {
   base: () => ['groceryList'],
-  list: (listId: string) => ['groceryList', listId],
+  items: () => ['groceryList', 'items'],
+  settings: () => ['groceryList', 'settings'],
 };

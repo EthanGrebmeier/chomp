@@ -1,5 +1,6 @@
 import { categoryOptions } from '../features/shared/category/categories';
 import { cn } from '../lib/utils';
+
 import { Pill } from './ui/pill';
 import { Text } from './ui/text';
 
@@ -12,7 +13,7 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
   if (!categoryOption) {
     return null;
   }
-  const { icon, className, textClassName } = categoryOption.style;
+  const { className, textClassName } = categoryOption.style;
   return (
     <Pill className={cn('border border-border', className)} hasValue={true}>
       <Text className={cn('text-sm font-semibold', textClassName)}>

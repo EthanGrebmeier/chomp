@@ -1,26 +1,21 @@
 import { generateId } from '@/lib/utils';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import {
   groceryListItemTable,
   recipeIngredientTable,
 } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
-import { AddRecipeToListArgs } from '../types';
 
-export const addRecipeToList = async ({
-  recipeId,
-  groceryListId,
-}: AddRecipeToListArgs) => {
+export type AddRecipeToListArgs = {
+  recipeId: string;
+};
+
+export const addRecipeToList = async ({ recipeId }: AddRecipeToListArgs) => {
   // Check if this recipe already exists in the grocery list
   const existingRecipeItems = await db
     .select()
     .from(groceryListItemTable)
-    .where(
-      and(
-        eq(groceryListItemTable.groceryListId, groceryListId),
-        eq(groceryListItemTable.recipeId, recipeId)
-      )
-    );
+    .where(eq(groceryListItemTable.recipeId, recipeId));
 
   if (existingRecipeItems.length > 0) {
     return { isDuplicate: true, existingItems: existingRecipeItems };
@@ -39,7 +34,6 @@ export const addRecipeToList = async ({
   for (const ingredient of ingredients) {
     groceryListItems.push({
       id: generateId(),
-      groceryListId,
       name: ingredient.name,
       quantity: ingredient.quantity,
       unit: ingredient.unit,

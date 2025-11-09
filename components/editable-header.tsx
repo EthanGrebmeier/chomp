@@ -1,7 +1,9 @@
-import { ReactNode, forwardRef, useCallback, useRef, useState } from 'react';
+import { ReactNode, forwardRef, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useDebounceCallback } from 'usehooks-ts';
+
 import { cn } from '../lib/utils';
+
 import { TextDisplayInput } from './text-input';
 
 export type EditableHeaderProps = {
@@ -24,6 +26,7 @@ export type EditableHeaderProps = {
   /** Callback when the input is blurred */
   onBlur?: () => void;
   /** Callback when a key is pressed */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onKeyPress?: (e: any) => void;
   /** Whether to clear the entire text when backspace is pressed in autofocus mode */
   clearOnBackspace?: boolean;
@@ -52,22 +55,6 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
 
     const debouncedOnChangeText = useDebounceCallback(onChangeText, 500);
 
-    const handleFocus = (textInputRef: TextInput | null) => {
-      if (autofocus && textInputRef) {
-        textInputRef.focus();
-      }
-    };
-
-    const refFunction = useCallback(
-      (textInputRef: TextInput | null) => {
-        handleFocus(textInputRef);
-        if (ref && 'current' in ref) {
-          ref.current = textInputRef;
-        }
-      },
-      [handleFocus, ref]
-    );
-
     const handleChangeText = (text: string) => {
       setLocalValue(text);
       debouncedOnChangeText(text);
@@ -90,6 +77,7 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleKeyPress = (e: any) => {
       if (
         e.nativeEvent.key === 'Backspace' &&
@@ -108,7 +96,7 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
     return (
       <View className={cn('shrink px-4', className)}>
         <TextDisplayInput
-          ref={refFunction}
+          ref={ref}
           onChangeText={handleChangeText}
           value={localValue}
           multiline={multiline}

@@ -1,1 +1,0 @@
-ALTER TABLE `recipe` ADD `imageSrc` text;

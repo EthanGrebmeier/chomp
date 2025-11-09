@@ -11,11 +11,6 @@ export type MealTag = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'dessert';
 
 export type MealPlanWithRecipes = MealPlan & {
   recipes: (MealPlanRecipe & { recipe: Recipe })[];
-  groceryList?: {
-    id: string;
-    name: string;
-    date: string | null;
-  };
 };
 
 export type CreateMealPlanArgs = {
@@ -28,7 +23,6 @@ export type UpdateMealPlanArgs = {
     name?: string;
     startDate?: string;
     endDate?: string;
-    groceryListId?: string | null;
   };
 };
 

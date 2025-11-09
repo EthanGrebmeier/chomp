@@ -7,10 +7,10 @@ export const useIncrementRecipeQuantities = () => {
 
   return useMutation({
     mutationFn: incrementRecipeQuantities,
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // Invalidate grocery list queries to refresh the list
       queryClient.invalidateQueries({
-        queryKey: groceryListQueryKeys.list(variables.groceryListId),
+        queryKey: groceryListQueryKeys.items(),
       });
       queryClient.invalidateQueries({
         queryKey: groceryListQueryKeys.base(),
