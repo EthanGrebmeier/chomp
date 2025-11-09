@@ -1,22 +1,32 @@
-import { Button } from '@/components/ui/button';
 import { BottomSheetModal, useBottomSheetModal } from '@gorhom/bottom-sheet';
-import { useRef, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { Text } from '../../../components/ui/text';
 import { RecipeSearch } from '../../recipes/components/recipe-search';
 import { useAddRecipeAsSeparateItems } from '../../recipes/hooks/useAddRecipeAsSeparateItems';
 import { useAddRecipeToList } from '../../recipes/hooks/useAddRecipeToList';
 import { useIncrementRecipeQuantities } from '../../recipes/hooks/useIncrementRecipeQuantities';
 import { RecipeWithIngredients } from '../../recipes/types';
+
 import {
   RecipeConflictSheet,
   RecipeConflictSheetRef,
 } from './recipe-conflict-sheet';
 
-export const AddRecipeSheet = () => {
-  const ref = useRef<BottomSheetModal>(null);
+export type AddRecipeSheetRef = {
+  present: () => void;
+  dismiss: () => void;
+};
+
+export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
+  const sheetRef = useRef<BottomSheetModal>(null);
+
+  useImperativeHandle(ref, () => ({
+    present: () => sheetRef.current?.present(),
+    dismiss: () => sheetRef.current?.dismiss(),
+  }));
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
@@ -43,7 +53,7 @@ export const AddRecipeSheet = () => {
             conflictSheetRef.current?.present();
           } else {
             // Recipe added successfully
-            ref.current?.dismiss();
+            sheetRef.current?.dismiss();
           }
         },
       }
@@ -91,12 +101,12 @@ export const AddRecipeSheet = () => {
 
   return (
     <>
-      <Button size="sm" onPress={() => ref.current?.present()}>
-        <Text>Add Recipe</Text>
-      </Button>
-      <BottomSheet onStartClose={() => KeyboardController.dismiss()} ref={ref}>
+      <BottomSheet
+        onStartClose={() => KeyboardController.dismiss()}
+        ref={sheetRef}
+      >
         <RecipeSearch
-          sheetRef={ref}
+          sheetRef={sheetRef}
           canGoBack={false}
           onItemSelect={handleRecipeSelect}
           onBack={() => {}}
@@ -104,7 +114,7 @@ export const AddRecipeSheet = () => {
       </BottomSheet>
       <RecipeConflictSheet
         ref={conflictSheetRef}
-        recipeName={selectedRecipe?.name || ''}
+        recipeName={selectedRecipe?.name ?? ''}
         onIncrement={handleIncrementQuantities}
         onCreateSeparate={handleCreateSeparateItems}
         onCancel={handleCancelConflict}
@@ -112,4 +122,6 @@ export const AddRecipeSheet = () => {
       />
     </>
   );
-};
+});
+
+AddRecipeSheet.displayName = 'AddRecipeSheet';

@@ -1,11 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { toast } from 'sonner-native';
+
 import { ItemFormData, ItemSheet, ItemSheetRef } from '../../shared/components';
 import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
 import { useUpdateGroceryListItem } from '../hooks/useUpdateGroceryListItem';
 import { queryKeys } from '../query-keys';
 import { GroceryListItemWithRecipe } from '../types';
+
 import { CategorySelector } from './category-selector';
 
 type AddItemSheetProps = {
@@ -39,7 +41,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
               unit: data.unit,
               quantity: parseInt(data.quantity),
               category:
-                data.category === '' ? null : data.category || undefined,
+                data.category === '' ? null : (data.category ?? undefined),
             },
           },
           {
@@ -56,7 +58,8 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
             name: data.name,
             unit: data.unit,
             quantity: parseInt(data.quantity),
-            category: data.category === '' ? null : data.category || undefined,
+            category:
+              data.category === '' ? null : (data.category ?? undefined),
           },
           {
             onSuccess: () => {
@@ -73,7 +76,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
           name: defaultValues.name,
           quantity: defaultValues.quantity?.toString() || '1',
           unit: defaultValues.unit,
-          category: defaultValues.category || '',
+          category: defaultValues.category ?? '',
         }
       : null;
 
@@ -92,3 +95,5 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
     );
   }
 );
+
+AddItemSheet.displayName = 'AddItemSheet';

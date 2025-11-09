@@ -1,5 +1,3 @@
-import { FieldInfo } from '@/components/field-info';
-import { Button } from '@/components/ui/button';
 import { BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useForm } from '@tanstack/react-form';
 import { PlusIcon } from 'lucide-react-native';
@@ -7,6 +5,10 @@ import { ReactNode, forwardRef, useImperativeHandle, useRef } from 'react';
 import { Platform, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { FieldInfo } from '@/components/field-info';
+import { Button } from '@/components/ui/button';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Icon } from '../../../components/ui/icon';
 import {
@@ -96,10 +98,10 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
 
     const form = useForm({
       defaultValues: {
-        name: defaultValues?.name || '',
-        quantity: defaultValues?.quantity || '1',
-        unit: defaultValues?.unit || 'each',
-        category: defaultValues?.category || '',
+        name: defaultValues?.name ?? '',
+        quantity: defaultValues?.quantity ?? '1',
+        unit: defaultValues?.unit ?? 'each',
+        category: defaultValues?.category ?? '',
       },
       onSubmit: e => {
         const { ...formValue } = e.value;
@@ -114,7 +116,9 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
           quantity: formValue.quantity,
           unit,
           category:
-            formValue.category === '' ? null : formValue.category || undefined,
+            formValue.category === ''
+              ? null
+              : (formValue.category ?? undefined),
         });
         form.reset();
         nameInputRef.current?.focus();
@@ -144,7 +148,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
       <>
         {showAddButton && (
           <Button
-            size="icon"
+            size="iconLg"
             onPress={() => bottomSheetRef.current?.present()}
             hapticType="medium"
           >
@@ -152,7 +156,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
               as={PlusIcon}
               color={theme.primaryForeground}
               strokeWidth={3.5}
-              className="size-4"
+              className="size-10"
             />
           </Button>
         )}
@@ -273,11 +277,11 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
                 <View className="gap-2">
                   {categoryComponent ? (
                     categoryComponent(field.state.value, category =>
-                      field.setValue(category || '')
+                      field.setValue(category ?? '')
                     )
                   ) : (
                     <Text className="text-sm text-muted-foreground">
-                      Category: {field.state.value || 'None'}
+                      Category: {field.state.value ?? 'None'}
                     </Text>
                   )}
                 </View>
@@ -286,7 +290,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
           </View>
           <Button onPress={handleSubmit}>
             <Text>
-              {buttonText || (isEditing ? 'Update Item' : 'Add Item')}
+              {buttonText ?? (isEditing ? 'Update Item' : 'Add Item')}
             </Text>
           </Button>
         </BottomSheet>
@@ -294,3 +298,5 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
     );
   }
 );
+
+ItemSheet.displayName = 'ItemSheet';

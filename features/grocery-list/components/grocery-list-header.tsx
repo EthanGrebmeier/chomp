@@ -8,9 +8,13 @@ import { GroceryListContextMenu } from './context-menu';
 
 type GroceryListHeaderProps = {
   itemCount: number;
+  openRecipeSheet: () => void;
 };
 
-export const GroceryListHeader = ({ itemCount }: GroceryListHeaderProps) => {
+export const GroceryListHeader = ({
+  itemCount,
+  openRecipeSheet,
+}: GroceryListHeaderProps) => {
   return (
     <View className="px-4">
       <View className="flex-row items-center justify-between">
@@ -19,6 +23,7 @@ export const GroceryListHeader = ({ itemCount }: GroceryListHeaderProps) => {
         </View>
         <GroceryListContextMenu
           trigger={<Icon as={MoreHorizontal} size={24} />}
+          openRecipeSheet={openRecipeSheet}
         />
       </View>
       <Text className="text-lg text-muted-foreground">{itemCount} items</Text>

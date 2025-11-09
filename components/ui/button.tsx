@@ -55,6 +55,7 @@ const buttonVariants = cva(
           Platform.select({ web: 'has-[>svg]:px-4' })
         ),
         icon: 'size-8',
+        iconLg: 'size-14',
       },
     },
     defaultVariants: {
@@ -92,6 +93,7 @@ const buttonTextVariants = cva(
         sm: '',
         lg: '',
         icon: '',
+        iconLg: '',
       },
     },
     defaultVariants: {

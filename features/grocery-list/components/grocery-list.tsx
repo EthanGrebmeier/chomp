@@ -9,7 +9,7 @@ import { GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
 
 import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
-import { AddRecipeSheet } from './add-recipe-sheet';
+import { AddRecipeSheet, AddRecipeSheetRef } from './add-recipe-sheet';
 import { CollapsibleSectionHeader } from './collapsible-section-header';
 import { GroceryListHeader } from './grocery-list-header';
 import { GroceryListItem } from './grocery-list-item';
@@ -31,6 +31,7 @@ export const GroceryList = ({
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
 }: GroceryListProps) => {
+  const recipeSheetRef = useRef<AddRecipeSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
 
   const [editingItem, setEditingItem] =
@@ -123,7 +124,10 @@ export const GroceryList = ({
   return (
     <View className="flex-1 gap-2">
       {/** Header */}
-      <GroceryListHeader itemCount={items.length} />
+      <GroceryListHeader
+        itemCount={items.length}
+        openRecipeSheet={() => recipeSheetRef.current?.present()}
+      />
       <View className="flex-1">
         <ScrollView
           horizontal
@@ -187,7 +191,7 @@ export const GroceryList = ({
       <View className=" absolute bottom-4 left-4 right-4 flex-row items-center justify-between gap-2">
         <View></View>
         <View className="flex-row gap-2">
-          <AddRecipeSheet />
+          <AddRecipeSheet ref={recipeSheetRef} />
           <AddItemSheet
             ref={editSheetRef}
             defaultValues={editingItem ?? null}
