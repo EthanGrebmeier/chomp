@@ -7,6 +7,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+
 import { CategoryTag } from '../../../components/category-tag';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
@@ -63,9 +64,7 @@ export const GroceryListItem = ({
 
   return (
     <ListItem
-      onDelete={() =>
-        removeItem({ itemId: item.id, groceryListId: item.groceryListId })
-      }
+      onDelete={() => removeItem({ itemId: item.id })}
       className={className}
     >
       <HapticPressable
@@ -116,7 +115,7 @@ export const GroceryListItem = ({
             {item.unit !== 'each' && ` ${item.unit}`}
           </Text>
         </View>
-        {(item.recipe || item.category) && (
+        {(item.recipe ?? item.category) && (
           <View className="flex-row items-center justify-between gap-2">
             <View>
               {item.recipe && (

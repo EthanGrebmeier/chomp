@@ -4,15 +4,15 @@ import * as DropdownMenu from 'zeego/dropdown-menu';
 import { useClearCheckedItems } from '../../hooks/useClearCheckedItems';
 import { useClearList } from '../../hooks/useClearList';
 
-type GroceryListContextMenuProps = {
+type GroceryListDropdownMenuProps = {
   trigger: ReactNode;
   openRecipeSheet: () => void;
 };
 
-export const GroceryListContextMenu = ({
+export const GroceryListDropdownMenu = ({
   trigger,
   openRecipeSheet,
-}: GroceryListContextMenuProps) => {
+}: GroceryListDropdownMenuProps) => {
   const { mutate: clearList } = useClearList();
   const { mutate: clearCheckedItems } = useClearCheckedItems();
   return (

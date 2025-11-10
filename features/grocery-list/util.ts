@@ -1,35 +1,4 @@
-import { Recipe } from '../recipes/types';
-import {
-  GroceryList,
-  GroceryListItem,
-  GroceryListItemWithRecipe,
-  GroceryListWithItems,
-} from './types';
-
-export const normalizeGroceryList = (
-  dbResult: {
-    grocery_list: GroceryList;
-    grocery_list_item: GroceryListItem | null;
-    recipe: Recipe | null;
-  }[]
-) => {
-  return dbResult.reduce<Record<string, GroceryListWithItems>>((acc, curr) => {
-    if (!acc[curr.grocery_list.id]) {
-      acc[curr.grocery_list.id] = {
-        ...curr.grocery_list,
-        items: [],
-      };
-    }
-    if (curr.grocery_list_item) {
-      const itemWithRecipe: GroceryListItemWithRecipe = {
-        ...curr.grocery_list_item,
-        recipe: curr.recipe || null,
-      };
-      acc[curr.grocery_list.id].items.push(itemWithRecipe);
-    }
-    return acc;
-  }, {});
-};
+import { GroceryListItemWithRecipe } from './types';
 
 const sortItems = (
   items: GroceryListItemWithRecipe[],
@@ -70,7 +39,7 @@ export const groupItemsBy = (
 
   if (groupBy === 'category') {
     items.forEach(item => {
-      const category = item.category || 'Uncategorized';
+      const category = item.category ?? 'Uncategorized';
       if (!groups.has(category)) {
         groups.set(category, []);
       }
@@ -80,7 +49,7 @@ export const groupItemsBy = (
 
   if (groupBy === 'recipe') {
     items.forEach(item => {
-      const recipeName = item.recipe?.name || 'Ungrouped';
+      const recipeName = item.recipe?.name ?? 'Ungrouped';
       if (!groups.has(recipeName)) {
         groups.set(recipeName, []);
       }

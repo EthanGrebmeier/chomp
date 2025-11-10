@@ -1,16 +1,13 @@
-import { navigation } from '@/lib/navigation';
 import { launchImageLibraryAsync } from 'expo-image-picker';
-import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Animated, TextInput, View } from 'react-native';
+
 import { EditableHeader } from '../../../components/editable-header';
-import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import { AddToGroceryListSheetRef } from '../../shared/components';
-import { useAddRecipeToList } from '../hooks/useAddRecipeToList';
 import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
+
 import {
   AddIngredientSheet,
   AddIngredientSheetRef,
@@ -27,12 +24,10 @@ export const RecipeDetail = ({
   recipe,
   autofocus = false,
 }: RecipeDetailProps) => {
-  const { mutate: addRecipeToList, isPending } = useAddRecipeToList();
   const { mutate: updateRecipe } = useUpdateRecipe();
 
   const textInputRef = useRef<TextInput>(null);
   const addIngredientSheetRef = useRef<AddIngredientSheetRef>(null);
-  const addToGroceryListSheetRef = useRef<AddToGroceryListSheetRef>(null);
   const [editingIngredient, setEditingIngredient] =
     useState<RecipeIngredient | null>(null);
 
@@ -47,20 +42,6 @@ export const RecipeDetail = ({
 
   const handleCloseIngredientSheet = () => {
     setEditingIngredient(null);
-  };
-
-  const handleAddRecipeToList = async () => {
-    addRecipeToList(
-      { recipeId: recipe.id },
-      {
-        onSuccess: () => {
-          router.push(navigation.goToList());
-        },
-        onError: error => {
-          console.error('Failed to add recipe to grocery list:', error);
-        },
-      }
-    );
   };
 
   const handleSelectImage = async () => {
@@ -126,15 +107,7 @@ export const RecipeDetail = ({
           )}
         />
       </View>
-      <View className="absolute bottom-4 right-4 flex-row gap-2">
-        <Button
-          onPress={handleAddRecipeToList}
-          className="flex-row items-center gap-2"
-          disabled={isPending}
-          size="sm"
-        >
-          <Text>{isPending ? 'Adding...' : 'Add to List'}</Text>
-        </Button>
+      <View className="absolute bottom-4 right-4">
         <AddIngredientSheet
           ref={addIngredientSheetRef}
           recipeId={recipe.id}

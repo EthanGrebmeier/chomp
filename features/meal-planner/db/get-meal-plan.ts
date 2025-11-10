@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
+
 import {
-  groceryListTable,
   mealPlanRecipeTable,
   mealPlanTable,
   recipeTable,
@@ -48,29 +48,8 @@ export const getMealPlan = async (
     .where(eq(mealPlanRecipeTable.mealPlanId, mealPlanId))
     .orderBy(mealPlanRecipeTable.date, mealPlanRecipeTable.order);
 
-  // Get grocery list if it exists
-  let groceryList = undefined;
-  if (mealPlan[0].groceryListId) {
-    const groceryListResult = await db
-      .select({
-        id: groceryListTable.id,
-        name: groceryListTable.name,
-        date: groceryListTable.date,
-        createdAt: groceryListTable.createdAt,
-        updatedAt: groceryListTable.updatedAt,
-      })
-      .from(groceryListTable)
-      .where(eq(groceryListTable.id, mealPlan[0].groceryListId))
-      .limit(1);
-
-    if (groceryListResult.length > 0) {
-      groceryList = groceryListResult[0];
-    }
-  }
-
   return {
     ...mealPlan[0],
     recipes,
-    groceryList,
   };
 };
