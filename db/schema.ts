@@ -61,6 +61,7 @@ export const mealPlanTable = sqliteTable('meal_plan', {
   name: text().notNull(),
   startDate: text().notNull(),
   endDate: text().notNull(),
+  isArchived: int({ mode: 'boolean' }).notNull().default(false),
   ...timestamps,
 });
 

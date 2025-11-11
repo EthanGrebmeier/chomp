@@ -1,8 +1,9 @@
-import { navigation } from '@/lib/navigation';
 import { router } from 'expo-router';
 import { ReactNode, useRef, useState } from 'react';
 import { toast } from 'sonner-native';
 import * as DropdownMenu from 'zeego/dropdown-menu';
+
+import { navigation } from '@/lib/navigation';
 
 import {
   RecipeConflictSheet,
@@ -148,4 +149,3 @@ export const RecipeDropdownMenu = ({
     </>
   );
 };
-

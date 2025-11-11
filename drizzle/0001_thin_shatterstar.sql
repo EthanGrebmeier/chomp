@@ -1,0 +1,1 @@
+ALTER TABLE `meal_plan` ADD `isArchived` integer DEFAULT false NOT NULL;

@@ -58,7 +58,7 @@ export default function Layout() {
         <Tabs.Screen
           name="plans"
           options={{
-            title: 'Meal Plans',
+            title: 'Meal Plan',
             tabBarIcon: ({ color }) => (
               <Icon as={CalendarIcon} size={24} color={color} />
             ),

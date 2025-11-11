@@ -1,3 +1,4 @@
+export { useActiveMealPlan } from './useActiveMealPlan';
 export { useAddMealPlanToGroceryList } from './useAddMealPlanToGroceryList';
 export { useAddRecipeToMealPlan } from './useAddRecipeToMealPlan';
 export { useCreateMealPlan } from './useCreateMealPlan';

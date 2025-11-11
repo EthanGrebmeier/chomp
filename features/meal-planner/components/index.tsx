@@ -1,7 +1,6 @@
-import { eachDayOfInterval, format, isSameDay } from 'date-fns';
+import { eachDayOfInterval, format, isSameDay, startOfDay } from 'date-fns';
 import { router } from 'expo-router';
-import { NotebookTabsIcon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { toast } from 'sonner-native';
@@ -10,46 +9,45 @@ import {
   CalendarSheet,
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
-import { EditableHeader } from '../../../components/editable-header';
-import { Button } from '../../../components/ui/button';
-import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import { navigation } from '../../../lib/navigation';
-import { useMealPlan } from '../hooks';
 import { useAddMealPlanToGroceryList } from '../hooks/useAddMealPlanToGroceryList';
 import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
-import { MealPlanDay } from '../types';
+import { MealPlanDay, MealPlanWithRecipes } from '../types';
 
 import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
 import { MealPlanDateView } from './meal-plan-date-view';
+import { MealPlanDropdownMenu } from './meal-plan-dropdown-menu';
 import { MealSheet, MealSheetRef } from './meal-sheet';
 
 type MealPlannerProps = {
-  mealPlanId: string;
-  startDate: string;
-  endDate: string;
+  mealPlan: MealPlanWithRecipes;
 };
 
-export const MealPlanner = ({
-  mealPlanId,
-  startDate,
-  endDate,
-}: MealPlannerProps) => {
-  const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
+export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
   const mealSheetRef = useRef<MealSheetRef>(null);
   const textInputRef = useRef<TextInput>(null);
   const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const pagerRef = useRef<PagerView>(null);
-  const { data: mealPlan, isLoading } = useMealPlan(mealPlanId);
   const { mutate: updateMealPlan } = useUpdateMealPlan();
   const { mutate: addMealPlanToGroceryList } = useAddMealPlanToGroceryList();
   const theme = useTheme();
   const daysOfPlan = eachDayOfInterval({
-    start: new Date(startDate),
-    end: new Date(endDate),
+    start: new Date(mealPlan.startDate),
+    end: new Date(mealPlan.endDate),
   });
+
+  // Calculate initial page index to be today if it falls within the meal plan
+  const initialPageIndex = useMemo(() => {
+    const today = startOfDay(new Date());
+    const todayIndex = daysOfPlan.findIndex(date => isSameDay(date, today));
+    return todayIndex !== -1 ? todayIndex : 0;
+  }, [daysOfPlan]);
+
+  const [currentPageIndex, setCurrentPageIndex] =
+    useState<number>(initialPageIndex);
 
   const currentDate = daysOfPlan[currentPageIndex] || daysOfPlan[0];
 
@@ -60,15 +58,9 @@ export const MealPlanner = ({
     );
   };
 
-  const handleChangeText = (text: string) => {
-    updateMealPlan({
-      mealPlanId,
-      updates: { name: text },
-    });
-  };
   const handleChangeStartDate = (date: Date) => {
     updateMealPlan({
-      mealPlanId,
+      mealPlanId: mealPlan.id,
       updates: {
         startDate: format(date, 'yyyy-MM-dd') + 'T00:00:00',
       },
@@ -76,7 +68,7 @@ export const MealPlanner = ({
   };
   const handleChangeEndDate = (date: Date) => {
     updateMealPlan({
-      mealPlanId,
+      mealPlanId: mealPlan.id,
       updates: {
         endDate: format(date, 'yyyy-MM-dd') + 'T00:00:00',
       },
@@ -98,7 +90,7 @@ export const MealPlanner = ({
   const handleAddToGroceryList = async () => {
     addMealPlanToGroceryList(
       {
-        mealPlanId,
+        mealPlanId: mealPlan.id,
       },
       {
         onSuccess: () => {
@@ -109,21 +101,18 @@ export const MealPlanner = ({
     );
   };
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text>Loading meal plan...</Text>
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 ">
-      <EditableHeader
-        ref={textInputRef}
-        value={mealPlan?.name ?? 'Meal Planner'}
-        onChangeText={handleChangeText}
-      >
+      <View className="px-4">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-4xl font-bold text-foreground">
+            {mealPlan?.name ?? 'Meal Plan'}
+          </Text>
+          <MealPlanDropdownMenu
+            mealPlanId={mealPlan.id}
+            mealPlanName={'Meal Plan'}
+          />
+        </View>
         {mealPlan?.startDate && mealPlan?.endDate && (
           <View className="flex-row items-center gap-1">
             <Pressable
@@ -153,7 +142,7 @@ export const MealPlanner = ({
             </Pressable>
           </View>
         )}
-      </EditableHeader>
+      </View>
       <CalendarSheet
         onChange={handleChangeStartDate}
         ref={startDateSheetRef}
@@ -166,24 +155,10 @@ export const MealPlanner = ({
       />
       <MealSheet
         ref={mealSheetRef}
-        mealPlanId={mealPlanId}
-        startDate={startDate}
-        endDate={endDate}
+        mealPlanId={mealPlan.id}
+        startDate={mealPlan.startDate}
+        endDate={mealPlan.endDate}
       />
-      <View className="absolute bottom-4 right-4 z-10">
-        <Button
-          onPress={handleAddToGroceryList}
-          className="flex-row items-center gap-2"
-          size="sm"
-        >
-          <Icon
-            as={NotebookTabsIcon}
-            size={16}
-            color={theme.primaryForeground}
-          />
-          <Text>Add to List</Text>
-        </Button>
-      </View>
       <MealPlanDateSelector
         dates={daysOfPlan}
         currentDate={currentDate}

@@ -1,6 +1,5 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { addDays, format, startOfDay } from 'date-fns';
-import { router } from 'expo-router';
 import { SunriseIcon, SunsetIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -9,8 +8,6 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { useTheme } from '@/hooks/use-theme';
-import { navigation } from '@/lib/navigation';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
@@ -33,8 +30,6 @@ export const CreateMealPlanSheet = () => {
   );
   const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
-
-  const theme = useTheme();
 
   const getDefaultName = (date: Date) => {
     return `Week of ${date.toLocaleDateString('en-US', {
@@ -59,15 +54,13 @@ export const CreateMealPlanSheet = () => {
     const endDateStr = format(endDate, 'yyyy-MM-dd') + 'T00:00:00';
 
     // Create the meal plan without a grocery list
-    const mealPlan = await createMealPlan.mutateAsync({
+    await createMealPlan.mutateAsync({
       mealPlan: {
         name: mealPlanName || getDefaultName(startDate),
         startDate: startDateStr,
         endDate: endDateStr,
       },
     });
-    bottomSheetRef.current?.dismiss();
-    router.push(navigation.goToMealPlan(mealPlan.id));
   };
 
   return (
