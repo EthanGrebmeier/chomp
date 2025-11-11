@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { CookingPotIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
@@ -33,7 +32,6 @@ export const GroceryListItem = ({
 }: GroceryListItemProps) => {
   const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
   const { mutate: checkItem } = useCheckGroceryItem();
-  const queryClient = useQueryClient();
   const { mutate: removeItem } = useRemoveGroceryListItem();
   const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
