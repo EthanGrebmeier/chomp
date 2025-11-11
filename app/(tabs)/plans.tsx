@@ -4,7 +4,7 @@ import { Heading } from '@/components/text/heading';
 import { MealPlanner } from '@/features/meal-planner/components';
 import { useActiveMealPlan } from '@/features/meal-planner/hooks';
 
-import { CreateMealPlanSheet } from '../../../features/meal-planner/components/create-meal-plan-sheet';
+import { CreateMealPlanSheet } from '../../features/meal-planner/components/create-meal-plan-sheet';
 
 export default function MealPlansPage() {
   const { data: activeMealPlan, isLoading } = useActiveMealPlan();

@@ -5,7 +5,7 @@ import { Heading } from '@/components/text/heading';
 import { MealPlanner } from '@/features/meal-planner/components';
 import { useMealPlan } from '@/features/meal-planner/hooks/useMealPlan';
 
-import { BackButton } from '../../../components/ui/back-button';
+import { BackButton } from '../../components/ui/back-button';
 
 export default function MealPlanDetailPage() {
   const { mealPlanId } = useLocalSearchParams<{ mealPlanId: string }>();
@@ -30,13 +30,9 @@ export default function MealPlanDetailPage() {
   return (
     <View className="pt-safe flex-1 bg-background">
       <View className="px-4">
-        <BackButton href="/(tabs)/plans" />
+        <BackButton />
       </View>
-      <MealPlanner
-        mealPlanId={mealPlanId!}
-        startDate={mealPlan.startDate}
-        endDate={mealPlan.endDate}
-      />
+      <MealPlanner mealPlan={mealPlan} />
     </View>
   );
 }

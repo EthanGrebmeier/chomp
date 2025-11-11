@@ -64,7 +64,7 @@ export function buildListUrl() {
 export function buildMealPlanUrl(params: MealPlanParams) {
   const { mealPlanId, autofocus } = params;
   const query = autofocus ? '?autofocus=true' : '';
-  return `/(tabs)/plans/${mealPlanId}${query}` as const;
+  return `/plans/${mealPlanId}${query}` as const;
 }
 
 /**
@@ -73,7 +73,7 @@ export function buildMealPlanUrl(params: MealPlanParams) {
 export function buildRecipeUrl(params: RecipeParams) {
   const { recipeId, autofocus } = params;
   const query = autofocus ? '?autofocus=true' : '';
-  return `/(tabs)/recipes/${recipeId}${query}` as const;
+  return `/recipes/${recipeId}${query}` as const;
 }
 
 /**

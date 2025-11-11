@@ -107,7 +107,7 @@ export const RecipeDetail = ({
           )}
         />
       </View>
-      <View className="absolute bottom-4 right-4">
+      <View className="bottom-safe absolute right-4">
         <AddIngredientSheet
           ref={addIngredientSheetRef}
           recipeId={recipe.id}
