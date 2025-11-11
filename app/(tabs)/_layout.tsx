@@ -8,10 +8,14 @@ import { useColorScheme } from 'nativewind';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 
 import { Icon } from '../../components/ui/icon';
+import { useActiveMealPlan } from '../../features/meal-planner/hooks';
+import { useRecipes } from '../../features/recipes/hooks';
 import { ACCENT_COLORS, THEME } from '../../lib/theme';
 
 export default function Layout() {
   const colorscheme = useColorScheme();
+  useActiveMealPlan();
+  useRecipes();
 
   return (
     <>
