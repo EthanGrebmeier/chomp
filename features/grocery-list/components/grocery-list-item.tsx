@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { CookingPotIcon } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -35,6 +35,9 @@ export const GroceryListItem = ({
   const { mutate: checkItem } = useCheckGroceryItem();
   const queryClient = useQueryClient();
   const { mutate: removeItem } = useRemoveGroceryListItem();
+  const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   // Animated value for strikethrough
   const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
@@ -52,10 +55,13 @@ export const GroceryListItem = ({
   });
 
   const onCheck = () => {
+    if (checkItemTimeoutRef.current) {
+      clearTimeout(checkItemTimeoutRef.current);
+    }
     if (internalIsChecked) {
       checkItem({ itemId: item.id, isChecked: false });
     } else {
-      setTimeout(() => {
+      checkItemTimeoutRef.current = setTimeout(() => {
         checkItem({ itemId: item.id, isChecked: true });
       }, 1000);
     }
