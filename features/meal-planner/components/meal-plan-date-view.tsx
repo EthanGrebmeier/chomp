@@ -1,7 +1,9 @@
-import { Text } from '@/components/ui/text';
 import { Image } from 'expo-image';
 import { PlusIcon, Trash2Icon } from 'lucide-react-native';
 import { FlatList, View } from 'react-native';
+
+import { Text } from '@/components/ui/text';
+
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { HapticTouchableOpacity } from '../../../components/ui/haptic-touchable-opacity';
 import { Icon } from '../../../components/ui/icon';
@@ -31,11 +33,11 @@ type MealPlanDateViewProps = {
 };
 
 const mealTimes: MealTag[] = [
-  'breakfast',
-  'lunch',
-  'dinner',
-  'snack',
-  'dessert',
+  'Breakfast',
+  'Lunch',
+  'Dinner',
+  'Snack',
+  'Dessert',
 ];
 
 export const MealPlanDateView = ({

@@ -1,7 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { sqliteTable } from 'drizzle-orm/sqlite-core';
-
-import { int, text } from 'drizzle-orm/sqlite-core';
+import { int, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 // Common timestamps for all tables
 const timestamps = {
@@ -73,7 +71,7 @@ export const mealPlanRecipeTable = sqliteTable('meal_plan_recipe', {
   recipeId: text()
     .notNull()
     .references(() => recipeTable.id, { onDelete: 'cascade' }),
-  mealTag: text({ enum: ['breakfast', 'lunch', 'dinner', 'snack', 'dessert'] }),
+  mealTag: text({ enum: ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'] }),
   date: text().notNull(),
   servings: int().notNull().default(1),
   order: int().notNull().default(0),

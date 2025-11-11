@@ -7,7 +7,7 @@ export type MealPlanInsert = typeof mealPlanTable.$inferInsert;
 export type MealPlanRecipe = typeof mealPlanRecipeTable.$inferSelect;
 export type MealPlanRecipeInsert = typeof mealPlanRecipeTable.$inferInsert;
 
-export type MealTag = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'dessert';
+export type MealTag = 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert';
 
 export type MealPlanWithRecipes = MealPlan & {
   recipes: (MealPlanRecipe & { recipe: Recipe })[];

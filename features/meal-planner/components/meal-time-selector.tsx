@@ -1,40 +1,23 @@
-import { TriggerRef } from '@rn-primitives/popover';
 import { ClockIcon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
-import { Pressable } from 'react-native';
+
+import {
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+} from '../../../components/native-dropdown';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../../../components/ui/popover';
-import { Text } from '../../../components/ui/text';
 import { MealTag } from '../types';
 
 const mealTimes: MealTag[] = [
-  'breakfast',
-  'lunch',
-  'dinner',
-  'snack',
-  'dessert',
+  'Breakfast',
+  'Lunch',
+  'Dinner',
+  'Snack',
+  'Dessert',
 ];
-
-const MealTimeItem = ({
-  mealTime,
-  onSelect,
-}: {
-  mealTime: MealTag;
-  onSelect: (mealTime: MealTag) => void;
-}) => {
-  return (
-    <Pressable onPress={() => onSelect(mealTime)}>
-      <Text className="text-sm font-medium capitalize text-foreground">
-        {mealTime}
-      </Text>
-    </Pressable>
-  );
-};
 
 type MealTimeSelectorProps = {
   mealTime?: MealTag;
@@ -45,34 +28,28 @@ export const MealTimeSelector = ({
   mealTime,
   onSelect,
 }: MealTimeSelectorProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<TriggerRef>(null);
-
   return (
-    <Popover>
-      <PopoverTrigger ref={ref}>
-        <Pill
-          icon={<Icon as={ClockIcon} size={16} />}
-          hasValue={!!mealTime}
-          onClear={mealTime ? () => onSelect(undefined) : undefined}
-        >
+    <DropdownMenuRoot>
+      <DropdownMenuTrigger>
+        <Pill hasValue={!!mealTime} icon={<Icon as={ClockIcon} size={16} />}>
           {mealTime
             ? mealTime.charAt(0).toUpperCase() + mealTime.slice(1)
             : 'Meal Time'}
         </Pill>
-      </PopoverTrigger>
-      <PopoverContent side="top" align="start" className="w-28 gap-1 py-2">
-        {mealTimes.map(mealTime => (
-          <MealTimeItem
-            key={mealTime}
-            mealTime={mealTime}
-            onSelect={() => {
-              onSelect(mealTime);
-              ref.current?.close();
-            }}
-          />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        {mealTimes.map(time => (
+          <DropdownMenuCheckboxItem
+            key={time}
+            value={mealTime === time ? 'on' : 'off'}
+            onValueChange={() => onSelect(time)}
+          >
+            <DropdownMenuItemTitle className="capitalize">
+              {time}
+            </DropdownMenuItemTitle>
+          </DropdownMenuCheckboxItem>
         ))}
-      </PopoverContent>
-    </Popover>
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
   );
 };

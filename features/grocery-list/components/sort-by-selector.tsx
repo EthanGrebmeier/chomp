@@ -1,36 +1,15 @@
-import { TriggerRef } from '@rn-primitives/popover';
 import { ArrowDownUpIcon } from 'lucide-react-native';
-import { useRef } from 'react';
-import { Pressable } from 'react-native';
-import { HapticPressable } from '../../../components/ui/haptic-pressable';
+
+import {
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+} from '../../../components/native-dropdown';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../../../components/ui/popover';
-import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-
-const SortByItem = ({
-  label,
-  value,
-  onSelect,
-}: {
-  label: string;
-  value: 'name' | 'recent';
-  onSelect: (value: 'name' | 'recent') => void;
-}) => {
-  return (
-    <Pressable
-      onPress={() => onSelect(value)}
-      className="flex-row items-center gap-2"
-    >
-      <Text className={cn('text-lg font-medium text-foreground')}>{label}</Text>
-    </Pressable>
-  );
-};
 
 type SortBySelectorProps = {
   value?: 'name' | 'recent';
@@ -41,8 +20,6 @@ export const SortBySelector = ({
   value = 'recent',
   onChange,
 }: SortBySelectorProps) => {
-  const ref = useRef<TriggerRef>(null);
-
   const getDisplayLabel = (value: 'name' | 'recent') => {
     switch (value) {
       case 'name':
@@ -55,51 +32,45 @@ export const SortBySelector = ({
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild className="self-start" ref={ref}>
-        <HapticPressable>
-          <Pill
-            icon={
-              <Icon
-                className={cn(
-                  value !== 'recent' && 'text-accent-purple-foreground'
-                )}
-                as={ArrowDownUpIcon}
-                size={16}
-              />
-            }
-            hasValue={value !== 'recent'}
-            onClear={value !== 'recent' ? () => onChange('recent') : undefined}
-            className={cn(
-              value !== 'recent' &&
-                'border-accent-purple-foreground bg-accent-purple-background '
-            )}
-            textClassName={cn(
-              value !== 'recent' && 'text-accent-purple-foreground'
-            )}
-          >
-            {getDisplayLabel(value)}
-          </Pill>
-        </HapticPressable>
-      </PopoverTrigger>
-      <PopoverContent side="bottom" align="start" className="w-44 gap-1 py-2">
-        <SortByItem
-          label="Alphabetical"
-          value="name"
-          onSelect={() => {
-            onChange('name');
-            ref.current?.close();
-          }}
-        />
-        <SortByItem
-          label="Recent"
-          value="recent"
-          onSelect={() => {
-            onChange('recent');
-            ref.current?.close();
-          }}
-        />
-      </PopoverContent>
-    </Popover>
+    <DropdownMenuRoot>
+      <DropdownMenuTrigger>
+        <Pill
+          icon={
+            <Icon
+              className={cn(
+                value !== 'recent' && 'text-accent-purple-foreground'
+              )}
+              as={ArrowDownUpIcon}
+              size={16}
+            />
+          }
+          className={cn(
+            value !== 'recent' &&
+              'border-accent-purple-foreground bg-accent-purple-background '
+          )}
+          textClassName={cn(
+            value !== 'recent' && 'text-accent-purple-foreground'
+          )}
+        >
+          {getDisplayLabel(value)}
+        </Pill>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuCheckboxItem
+          key="name"
+          value={value === 'name' ? 'on' : 'off'}
+          onValueChange={() => onChange('name')}
+        >
+          <DropdownMenuItemTitle>Alphabetical</DropdownMenuItemTitle>
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          key="recent"
+          value={value === 'recent' ? 'on' : 'off'}
+          onValueChange={() => onChange('recent')}
+        >
+          <DropdownMenuItemTitle>Recent</DropdownMenuItemTitle>
+        </DropdownMenuCheckboxItem>
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
   );
 };

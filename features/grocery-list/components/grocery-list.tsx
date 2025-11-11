@@ -1,8 +1,10 @@
+import { Image } from 'expo-image';
 import { useRef, useState } from 'react';
 import { SectionList, SectionListData, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 
+import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { GroceryListItemWithRecipe } from '../types';
@@ -139,53 +141,76 @@ export const GroceryList = ({
           <SortBySelector value={sortBy} onChange={handleSortByChange} />
         </ScrollView>
         <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
-          <AnimatedSectionList
-            scrollEnabled={true}
-            contentContainerClassName="pb-20"
-            showsVerticalScrollIndicator={false}
-            sections={sections}
-            keyExtractor={item => item.id}
-            contentContainerStyle={{ flexGrow: 1 }}
-            renderSectionHeader={({ section }) => {
-              if (groupBy === 'none' && !section.title) return null;
-
-              const isCollapsed = collapsedSections.has(section.title);
-              const isExpanded = !isCollapsed;
-
-              // Get the item count for this section from the grouped items
-              let itemCount: number | undefined;
-              if (section.title === 'Checked') {
-                itemCount = checkedItems.length;
-              } else {
-                itemCount = groupedUncheckedItems.get(section.title)?.length;
-              }
-
-              return (
-                <CollapsibleSectionHeader
-                  title={section.title}
-                  itemCount={itemCount}
-                  isExpanded={isExpanded}
-                  onToggle={() => toggleSection(section.title)}
-                  showCollapse={true}
+          {items.length === 0 ? (
+            <View className="flex-1 items-center justify-center ">
+              <View className="w-64">
+                <Image
+                  source={require('../../../assets/images/grocery-basket.png')}
+                  style={{
+                    width: 'auto',
+                    height: 180,
+                  }}
+                  contentFit="contain"
                 />
-              );
-            }}
-            renderItem={({ item, index, section }) => {
-              const isLastInSection = index === section.data.length - 1;
-              const isLastSection =
-                sections.indexOf(section) === sections.length - 1;
-              const showBorder = !isLastInSection || !isLastSection;
+              </View>
+              <View>
+                <Text className="px-4 text-center text-base font-medium text-muted-foreground">
+                  Your grocery list is empty.
+                </Text>
+                <Text className="px-4 text-center text-base text-foreground">
+                  Add some items to get started!
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <AnimatedSectionList
+              scrollEnabled={true}
+              contentContainerClassName="pb-20"
+              showsVerticalScrollIndicator={false}
+              sections={sections}
+              keyExtractor={item => item.id}
+              contentContainerStyle={{ flexGrow: 1 }}
+              renderSectionHeader={({ section }) => {
+                if (groupBy === 'none' && !section.title) return null;
 
-              return (
-                <GroceryListItem
-                  item={item}
-                  isChecked={Boolean(item.isChecked)}
-                  className={cn(showBorder && 'border-b border-border')}
-                  onEdit={() => handleEditItem(item)}
-                />
-              );
-            }}
-          />
+                const isCollapsed = collapsedSections.has(section.title);
+                const isExpanded = !isCollapsed;
+
+                // Get the item count for this section from the grouped items
+                let itemCount: number | undefined;
+                if (section.title === 'Checked') {
+                  itemCount = checkedItems.length;
+                } else {
+                  itemCount = groupedUncheckedItems.get(section.title)?.length;
+                }
+
+                return (
+                  <CollapsibleSectionHeader
+                    title={section.title}
+                    itemCount={itemCount}
+                    isExpanded={isExpanded}
+                    onToggle={() => toggleSection(section.title)}
+                    showCollapse={true}
+                  />
+                );
+              }}
+              renderItem={({ item, index, section }) => {
+                const isLastInSection = index === section.data.length - 1;
+                const isLastSection =
+                  sections.indexOf(section) === sections.length - 1;
+                const showBorder = !isLastInSection || !isLastSection;
+
+                return (
+                  <GroceryListItem
+                    item={item}
+                    isChecked={Boolean(item.isChecked)}
+                    className={cn(showBorder && 'border-b border-border')}
+                    onEdit={() => handleEditItem(item)}
+                  />
+                );
+              }}
+            />
+          )}
         </LayoutAnimationConfig>
       </View>
       <View className=" absolute bottom-4 left-4 right-4 flex-row items-center justify-between gap-2">
