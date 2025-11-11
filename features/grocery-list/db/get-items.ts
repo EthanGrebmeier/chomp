@@ -1,6 +1,7 @@
+import { eq } from 'drizzle-orm';
+
 import { groceryListItemTable, recipeTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
-import { eq } from 'drizzle-orm';
 import { GroceryListItemWithRecipe } from '../types';
 
 export const getItems = async (): Promise<GroceryListItemWithRecipe[]> => {
@@ -11,7 +12,6 @@ export const getItems = async (): Promise<GroceryListItemWithRecipe[]> => {
 
   return result.map(row => ({
     ...row.grocery_list_item,
-    recipe: row.recipe || null,
+    recipe: row.recipe ?? null,
   }));
 };
-

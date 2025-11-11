@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
+
 import { getSettings } from '../db/get-settings';
 import { queryKeys } from '../query-keys';
 
@@ -10,4 +11,3 @@ const settingsQuery = queryOptions({
 export const useSettings = () => {
   return useQuery(settingsQuery);
 };
-

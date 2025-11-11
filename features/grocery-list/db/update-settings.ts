@@ -1,6 +1,7 @@
+import { eq } from 'drizzle-orm';
+
 import { appSettingsTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
-import { eq } from 'drizzle-orm';
 
 type UpdateSettingsArgs = {
   listName?: string;
@@ -22,4 +23,3 @@ export const updateSettings = async (updates: UpdateSettingsArgs) => {
 
   return result[0];
 };
-
