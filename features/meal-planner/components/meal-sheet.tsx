@@ -9,12 +9,11 @@ import {
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
 import { Button } from '../../../components/ui/button';
-import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 
 import { useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
-import { CalendarIcon, PencilIcon } from 'lucide-react-native';
+import { CalendarIcon } from 'lucide-react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
@@ -26,6 +25,7 @@ import { useAddRecipeToMealPlan } from '../hooks/useAddRecipeToMealPlan';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { MealPlanRecipe, MealTag } from '../types';
+import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 import { MealTimeSelector } from './meal-time-selector';
 
 type MealSheetProps = {
@@ -200,23 +200,18 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
                         {recipeToDisplay?.name}
                       </Text>
                     </View>
-                    <View className="flex-row items-center gap-4">
-                      <HapticPressable
-                        onPress={() => {
-                          router.push(
-                            navigation.goToRecipe(recipeToDisplay.id)
-                          );
-                          dismissAll();
-                        }}
-                        hapticType="light"
-                      >
-                        <Icon
-                          as={PencilIcon}
-                          color={theme.foreground}
-                          size={20}
-                        />
-                      </HapticPressable>
-                    </View>
+                    <MealSheetRecipeDropdown
+                      recipeId={recipeToDisplay.id}
+                      recipeName={recipeToDisplay.name}
+                      onRemove={handleRemoveMeal}
+                      onViewRecipe={() => {
+                        router.push(navigation.goToRecipe(recipeToDisplay.id));
+                        dismissAll();
+                      }}
+                      onChangeRecipe={() => {
+                        setCurrentView('search');
+                      }}
+                    />
                   </View>
                 )}
 
