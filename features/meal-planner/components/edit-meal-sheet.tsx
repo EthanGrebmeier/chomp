@@ -1,41 +1,37 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { format, parseISO, startOfDay } from 'date-fns';
+import { router } from 'expo-router';
+import { CalendarIcon } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-
 import { Pressable, View } from 'react-native';
+import { KeyboardController } from 'react-native-keyboard-controller';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
   CalendarSheet,
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
 import { Button } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
-
-import { router } from 'expo-router';
-import { CalendarIcon } from 'lucide-react-native';
-import { KeyboardController } from 'react-native-keyboard-controller';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
-import { useTheme } from '../../../hooks/use-theme';
+import { Text } from '../../../components/ui/text';
 import { navigation } from '../../../lib/navigation';
 import { RecipeSearch } from '../../recipes/components/recipe-search';
 import { Recipe } from '../../recipes/types';
-import { useAddRecipeToMealPlan } from '../hooks/useAddRecipeToMealPlan';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { MealPlanRecipe, MealTag } from '../types';
+
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 import { MealTimeSelector } from './meal-time-selector';
 
-type MealSheetProps = {
-  mealPlanId: string;
+type EditMealSheetProps = {
   startDate: string;
   endDate: string;
 };
 
-export type MealSheetRef = {
-  openForAdd: ({ date, mealTime }: { date: string; mealTime: MealTag }) => void;
-  openForEdit: ({
+export type EditMealSheetRef = {
+  open: ({
     mealPlanRecipe,
     recipe,
   }: {
@@ -44,14 +40,11 @@ export type MealSheetRef = {
   }) => void;
 };
 
-export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
+export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
   (props, ref) => {
-    // State management
-    const [mode, setMode] = useState<'add' | 'edit'>('add');
-    const [currentView, setCurrentView] = useState<'search' | 'recipe'>(
-      'search'
+    const [currentView, setCurrentView] = useState<'recipe' | 'search'>(
+      'recipe'
     );
-    const [canGoBack, setCanGoBack] = useState(false);
     const [mealTag, setMealTag] = useState<MealTag | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<string | undefined>(
       undefined
@@ -62,38 +55,22 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
 
     const sheetRef = useRef<TrueSheet>(null);
     const calendarSheetRef = useRef<CalendarSheetRef>(null);
-    const theme = useTheme();
-    // Hooks
-    const { mutate: addRecipeToMealPlan } = useAddRecipeToMealPlan();
     const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
     const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
 
-    // Imperative handle
     useImperativeHandle(ref, () => ({
-      openForAdd: ({ date, mealTime }: { date: string; mealTime: MealTag }) => {
-        setMode('add');
-        setSelectedDate(date);
-        setSelectedRecipe(null);
-        setMealPlanRecipeToEdit(null);
-        setMealTag(mealTime);
-        setCurrentView('search');
-        setCanGoBack(false);
-        sheetRef.current?.present();
-      },
-      openForEdit: ({
+      open: ({
         mealPlanRecipe,
         recipe,
       }: {
         mealPlanRecipe: MealPlanRecipe;
         recipe: Recipe;
       }) => {
-        setMode('edit');
         setSelectedDate(mealPlanRecipe.date);
         setSelectedRecipe(recipe);
         setMealPlanRecipeToEdit(mealPlanRecipe);
         setMealTag(mealPlanRecipe.mealTag ?? undefined);
         setCurrentView('recipe');
-        setCanGoBack(true);
         sheetRef.current?.present();
       },
     }));
@@ -101,25 +78,14 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
     const resetState = () => {
       setSelectedRecipe(null);
       setSelectedDate(undefined);
-      setCanGoBack(false);
-      setCurrentView('search');
+      setCurrentView('recipe');
       setMealTag(undefined);
       setMealPlanRecipeToEdit(null);
     };
 
-    const handleAddRecipeToMealPlan = () => {
-      if (!selectedRecipe || !selectedDate || mode !== 'add') return;
-      addRecipeToMealPlan({
-        mealPlanId: props.mealPlanId,
-        recipeId: selectedRecipe.id,
-        mealTag,
-        date: selectedDate,
-      });
-      resetState();
-    };
-
     const handleUpdateMealPlanRecipe = () => {
-      if (!selectedRecipe || !mealPlanRecipeToEdit || mode !== 'edit') return;
+      if (!selectedRecipe || !mealPlanRecipeToEdit) return;
+      
       updateMealPlanRecipe({
         mealPlanRecipeId: mealPlanRecipeToEdit.id,
         updates: {
@@ -129,28 +95,26 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
           date: selectedDate,
         },
       });
+      
       resetState();
       sheetRef.current?.dismiss();
     };
 
     const handleRemoveMeal = () => {
-      if (!mealPlanRecipeToEdit || mode !== 'edit') return;
+      if (!mealPlanRecipeToEdit) return;
+      
       removeRecipeFromMealPlan({
         mealPlanRecipeId: mealPlanRecipeToEdit.id,
       });
+      
       resetState();
       sheetRef.current?.dismiss();
     };
 
-    const handleSubmit = () => {
-      if (mode === 'add') {
-        handleAddRecipeToMealPlan();
-      } else {
-        handleUpdateMealPlanRecipe();
-      }
+    const handleRecipeChange = (recipe: Recipe) => {
+      setSelectedRecipe(recipe);
+      setCurrentView('recipe');
     };
-
-    const recipeToDisplay = selectedRecipe;
 
     return (
       <View>
@@ -163,27 +127,8 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
           {currentView === 'search' ? (
             <RecipeSearch
               sheetRef={sheetRef}
-              canGoBack={canGoBack}
-              onItemSelect={recipe => {
-                if (mode === 'add') {
-                  // Immediately add recipe when in add mode
-                  if (selectedDate && mealTag) {
-                    addRecipeToMealPlan({
-                      mealPlanId: props.mealPlanId,
-                      recipeId: recipe.id,
-                      mealTag,
-                      date: selectedDate,
-                    });
-                    resetState();
-                    sheetRef.current?.dismiss();
-                  }
-                } else {
-                  // For edit mode, show the recipe view
-                  setSelectedRecipe(recipe);
-                  setCurrentView('recipe');
-                  setCanGoBack(true);
-                }
-              }}
+              canGoBack={true}
+              onItemSelect={handleRecipeChange}
               onBack={() => {
                 setCurrentView('recipe');
               }}
@@ -191,19 +136,19 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
           ) : (
             <View>
               <View className="gap-2">
-                {recipeToDisplay && (
+                {selectedRecipe && (
                   <View className="w-full flex-row items-center justify-between gap-2">
                     <View className="flex-row items-center gap-2">
                       <Text className="text-2xl font-semibold text-foreground">
-                        {recipeToDisplay?.name}
+                        {selectedRecipe.name}
                       </Text>
                     </View>
                     <MealSheetRecipeDropdown
-                      recipeId={recipeToDisplay.id}
-                      recipeName={recipeToDisplay.name}
+                      recipeId={selectedRecipe.id}
+                      recipeName={selectedRecipe.name}
                       onRemove={handleRemoveMeal}
                       onViewRecipe={() => {
-                        router.push(navigation.goToRecipe(recipeToDisplay.id));
+                        router.push(navigation.goToRecipe(selectedRecipe.id));
                         sheetRef.current?.dismiss();
                         calendarSheetRef.current?.dismiss();
                       }}
@@ -245,8 +190,8 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
                       mealTime={mealTag}
                     />
                   </View>
-                  <Button onPress={handleSubmit}>
-                    <Text>{mode === 'add' ? 'Add Meal' : 'Update Meal'}</Text>
+                  <Button onPress={handleUpdateMealPlanRecipe}>
+                    <Text>Update Meal</Text>
                   </Button>
                 </View>
               </View>
@@ -269,3 +214,6 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
     );
   }
 );
+
+EditMealSheet.displayName = 'EditMealSheet';
+

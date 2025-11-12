@@ -1,9 +1,7 @@
 import { eachDayOfInterval, format, isSameDay, startOfDay } from 'date-fns';
-import { router } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
-import { toast } from 'sonner-native';
 
 import {
   CalendarSheet,
@@ -11,22 +9,23 @@ import {
 } from '../../../components/calendar-sheet';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
-import { navigation } from '../../../lib/navigation';
 import { useAddMealPlanToGroceryList } from '../hooks/useAddMealPlanToGroceryList';
 import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
 import { MealPlanDay, MealPlanWithRecipes } from '../types';
 
+import { AddMealSheet, AddMealSheetRef } from './add-meal-sheet';
 import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
+import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
 import { MealPlanDateView } from './meal-plan-date-view';
 import { MealPlanDropdownMenu } from './meal-plan-dropdown-menu';
-import { MealSheet, MealSheetRef } from './meal-sheet';
 
 type MealPlannerProps = {
   mealPlan: MealPlanWithRecipes;
 };
 
 export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
-  const mealSheetRef = useRef<MealSheetRef>(null);
+  const addMealSheet = useRef<AddMealSheetRef>(null);
+  const editMealSheet = useRef<EditMealSheetRef>(null);
   const textInputRef = useRef<TextInput>(null);
   const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
@@ -87,20 +86,6 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
     setCurrentPageIndex(e.nativeEvent.position);
   };
 
-  const handleAddToGroceryList = async () => {
-    addMealPlanToGroceryList(
-      {
-        mealPlanId: mealPlan.id,
-      },
-      {
-        onSuccess: () => {
-          router.push(navigation.goToList());
-          toast.success('Meal plan added to grocery list');
-        },
-      }
-    );
-  };
-
   return (
     <View className="flex-1 ">
       <View className="px-4">
@@ -153,9 +138,9 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
         ref={endDateSheetRef}
         headerTitle="Select End Date"
       />
-      <MealSheet
-        ref={mealSheetRef}
-        mealPlanId={mealPlan.id}
+      <AddMealSheet ref={addMealSheet} mealPlanId={mealPlan.id} />
+      <EditMealSheet
+        ref={editMealSheet}
         startDate={mealPlan.startDate}
         endDate={mealPlan.endDate}
       />
@@ -179,10 +164,10 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
               recipes={getRecipesForDate(date)}
               date={format(date, 'yyyy-MM-dd')}
               onMealPress={({ mealPlanRecipe, recipe }) =>
-                mealSheetRef.current?.openForEdit({ mealPlanRecipe, recipe })
+                editMealSheet.current?.open({ mealPlanRecipe, recipe })
               }
               onAddMealPress={({ date: mealDate, mealTime }) =>
-                mealSheetRef.current?.openForAdd({ date: mealDate, mealTime })
+                addMealSheet.current?.open({ date: mealDate, mealTime })
               }
             />
           </View>
