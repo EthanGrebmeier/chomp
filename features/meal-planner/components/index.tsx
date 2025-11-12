@@ -1,6 +1,6 @@
 import { eachDayOfInterval, format, isSameDay, startOfDay } from 'date-fns';
 import { useMemo, useRef, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
 import {
@@ -8,8 +8,6 @@ import {
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
 import { Text } from '../../../components/ui/text';
-import { useTheme } from '../../../hooks/use-theme';
-import { useAddMealPlanToGroceryList } from '../hooks/useAddMealPlanToGroceryList';
 import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
 import { MealPlanDay, MealPlanWithRecipes } from '../types';
 
@@ -26,13 +24,10 @@ type MealPlannerProps = {
 export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
   const addMealSheet = useRef<AddMealSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
-  const textInputRef = useRef<TextInput>(null);
   const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const pagerRef = useRef<PagerView>(null);
   const { mutate: updateMealPlan } = useUpdateMealPlan();
-  const { mutate: addMealPlanToGroceryList } = useAddMealPlanToGroceryList();
-  const theme = useTheme();
   const daysOfPlan = eachDayOfInterval({
     start: new Date(mealPlan.startDate),
     end: new Date(mealPlan.endDate),
