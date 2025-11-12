@@ -1,4 +1,4 @@
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import {
   addMonths,
   eachDayOfInterval,
@@ -43,7 +43,7 @@ export type CalendarSheetRef = {
 export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
   ({ onChange, onClose: onCloseProp, headerTitle = 'Select Date' }, ref) => {
     const theme = useTheme();
-    const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const bottomSheetRef = useRef<TrueSheet>(null);
 
     // State for dynamic valid dates
     const [dynamicValidStartDate, setDynamicValidStartDate] = useState<

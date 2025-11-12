@@ -1,4 +1,4 @@
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { format, parseISO, startOfDay } from 'date-fns';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
@@ -11,7 +11,6 @@ import {
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 
-import { useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
 import { CalendarIcon } from 'lucide-react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
@@ -61,14 +60,13 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
     const [mealPlanRecipeToEdit, setMealPlanRecipeToEdit] =
       useState<MealPlanRecipe | null>(null);
 
-    const sheetRef = useRef<BottomSheetModal>(null);
+    const sheetRef = useRef<TrueSheet>(null);
     const calendarSheetRef = useRef<CalendarSheetRef>(null);
     const theme = useTheme();
     // Hooks
     const { mutate: addRecipeToMealPlan } = useAddRecipeToMealPlan();
     const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
     const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
-    const { dismissAll } = useBottomSheetModal();
 
     // Imperative handle
     useImperativeHandle(ref, () => ({
@@ -206,7 +204,8 @@ export const MealSheet = forwardRef<MealSheetRef, MealSheetProps>(
                       onRemove={handleRemoveMeal}
                       onViewRecipe={() => {
                         router.push(navigation.goToRecipe(recipeToDisplay.id));
-                        dismissAll();
+                        sheetRef.current?.dismiss();
+                        calendarSheetRef.current?.dismiss();
                       }}
                       onChangeRecipe={() => {
                         setCurrentView('search');

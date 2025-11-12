@@ -1,8 +1,8 @@
-import { BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { useForm } from '@tanstack/react-form';
 import { PlusIcon } from 'lucide-react-native';
 import { ReactNode, forwardRef, useImperativeHandle, useRef } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, TextInput, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -75,26 +75,24 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
     },
     ref
   ) => {
-    const bottomSheetRef = useRef<BottomSheetModal>(null);
-    const nameInputRef =
-      useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
-    const quantityInputRef =
-      useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
+    const bottomSheetRef = useRef<TrueSheet>(null);
+    const nameInputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
+    const quantityInputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const isEditing = !!defaultValues;
 
     useImperativeHandle(ref, () => ({
-      present: () => bottomSheetRef.current?.present(),
+      present: () => {
+        console.log('present');
+        bottomSheetRef.current?.present();
+        // Focus after a short delay to ensure sheet is mounted
+        setTimeout(() => {
+          nameInputRef.current?.focus();
+        }, 100);
+      },
       dismiss: () => bottomSheetRef.current?.dismiss(),
     }));
-
-    const handleOpen = () => {
-      // Focus the input when the bottom sheet opens
-      setTimeout(() => {
-        nameInputRef.current?.focus();
-      }, 10);
-    };
 
     const form = useForm({
       defaultValues: {
@@ -149,7 +147,10 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
         {showAddButton && (
           <Button
             size="iconLg"
-            onPress={() => bottomSheetRef.current?.present()}
+            onPress={() => {
+              bottomSheetRef.current?.present();
+              nameInputRef.current?.focus();
+            }}
             hapticType="medium"
           >
             <Icon
@@ -160,11 +161,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
             />
           </Button>
         )}
-        <BottomSheet
-          onStartClose={handleClose}
-          onOpen={handleOpen}
-          ref={bottomSheetRef}
-        >
+        <BottomSheet onStartClose={handleClose} ref={bottomSheetRef}>
           <View className="gap-2 pb-4">
             <form.Field
               validators={{

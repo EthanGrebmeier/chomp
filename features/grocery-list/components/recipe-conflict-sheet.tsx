@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
@@ -27,7 +27,7 @@ export const RecipeConflictSheet = forwardRef<
     { recipeName, onIncrement, onCreateSeparate, onCancel, isPending = false },
     ref
   ) => {
-    const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const bottomSheetRef = useRef<TrueSheet>(null);
 
     useImperativeHandle(ref, () => ({
       present: () => bottomSheetRef.current?.present(),

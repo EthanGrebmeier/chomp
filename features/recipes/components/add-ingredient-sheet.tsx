@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef } from 'react';
 import { toast } from 'sonner-native';
+
 import { CategorySelector } from '../../grocery-list/components/category-selector';
 import { ItemFormData, ItemSheet, ItemSheetRef } from '../../shared/components';
 import { useAddRecipeIngredient } from '../hooks/useAddRecipeIngredient';
@@ -14,23 +15,14 @@ type AddIngredientSheetProps = {
   defaultValues?: RecipeIngredient | null;
 };
 
-export type AddIngredientSheetRef = {
-  present: () => void;
-};
-
 export const AddIngredientSheet = forwardRef<
-  AddIngredientSheetRef,
+  ItemSheetRef,
   AddIngredientSheetProps
 >(({ recipeId, onClose, defaultValues }, ref) => {
-  const itemSheetRef = useRef<ItemSheetRef>(null);
   const { mutate: addIngredient } = useAddRecipeIngredient();
   const { mutate: updateIngredient } = useUpdateRecipeIngredient();
   const queryClient = useQueryClient();
   const isEditing = !!defaultValues;
-
-  useImperativeHandle(ref, () => ({
-    present: () => itemSheetRef.current?.present(),
-  }));
 
   const handleSubmit = (data: ItemFormData) => {
     if (isEditing && defaultValues) {
@@ -42,7 +34,8 @@ export const AddIngredientSheet = forwardRef<
             name: data.name,
             quantity: parseInt(data.quantity),
             unit: data.unit,
-            category: data.category === '' ? null : data.category || undefined,
+            category:
+              data.category === '' ? null : (data.category ?? undefined),
           },
         },
         {
@@ -51,7 +44,9 @@ export const AddIngredientSheet = forwardRef<
               queryKey: recipeQueryKeys.all(),
             });
             onClose?.();
-            itemSheetRef.current?.dismiss();
+            if (typeof ref !== 'function' && ref?.current) {
+              ref.current.dismiss();
+            }
             toast.success(`${defaultValues.name} updated`);
           },
         }
@@ -63,7 +58,7 @@ export const AddIngredientSheet = forwardRef<
           name: data.name,
           quantity: parseInt(data.quantity),
           unit: data.unit,
-          category: data.category === '' ? null : data.category || undefined,
+          category: data.category === '' ? null : (data.category ?? undefined),
         },
         {
           onSuccess: () => {
@@ -80,16 +75,16 @@ export const AddIngredientSheet = forwardRef<
 
   const formData: ItemFormData | null = defaultValues
     ? {
-        name: defaultValues.name || '',
-        quantity: defaultValues.quantity?.toString() || '1',
-        unit: defaultValues.unit || 'each',
-        category: defaultValues.category || '',
+        name: defaultValues.name ?? '',
+        quantity: defaultValues.quantity?.toString() ?? '1',
+        unit: defaultValues.unit ?? 'each',
+        category: defaultValues.category ?? '',
       }
     : null;
 
   return (
     <ItemSheet
-      ref={itemSheetRef}
+      ref={ref}
       onClose={onClose}
       defaultValues={formData}
       onSubmit={handleSubmit}
@@ -101,3 +96,5 @@ export const AddIngredientSheet = forwardRef<
     />
   );
 });
+
+AddIngredientSheet.displayName = 'AddIngredientSheet';

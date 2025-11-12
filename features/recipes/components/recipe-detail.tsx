@@ -5,13 +5,11 @@ import { Animated, TextInput, View } from 'react-native';
 import { EditableHeader } from '../../../components/editable-header';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
+import { ItemSheetRef } from '../../shared/components';
 import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
 
-import {
-  AddIngredientSheet,
-  AddIngredientSheetRef,
-} from './add-ingredient-sheet';
+import { AddIngredientSheet } from './add-ingredient-sheet';
 import RecipeImage from './recipe-image';
 import { RecipeIngredientItem } from './recipe-ingredient-item';
 
@@ -27,7 +25,7 @@ export const RecipeDetail = ({
   const { mutate: updateRecipe } = useUpdateRecipe();
 
   const textInputRef = useRef<TextInput>(null);
-  const addIngredientSheetRef = useRef<AddIngredientSheetRef>(null);
+  const addIngredientSheetRef = useRef<ItemSheetRef>(null);
   const [editingIngredient, setEditingIngredient] =
     useState<RecipeIngredient | null>(null);
 

@@ -1,12 +1,7 @@
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetTextInput,
-  BottomSheetView,
-} from '@gorhom/bottom-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { useColorScheme } from 'nativewind';
 import { ComponentProps, forwardRef } from 'react';
-import { View } from 'react-native';
+import { TextInput as RNTextInput, View } from 'react-native';
 
 import { cn } from '@/lib/utils';
 
@@ -16,7 +11,7 @@ import { Text } from './ui/text';
 
 type BottomSheetProps = {
   children: React.ReactNode;
-  ref: React.RefObject<BottomSheetModal | null>;
+  ref: React.RefObject<TrueSheet | null>;
   onOpen?: () => void;
   onStartClose?: () => void;
   viewClassName?: string;
@@ -36,58 +31,42 @@ export const BottomSheet = ({
   const colorscheme = useColorScheme();
 
   return (
-    <BottomSheetModal
-      keyboardBlurBehavior="restore"
-      backdropComponent={props => (
-        <BottomSheetBackdrop
-          {...props}
-          style={{
-            backgroundColor: THEME.dark.background,
-          }}
-          appearsOnIndex={0}
-          disappearsOnIndex={-1}
-        />
-      )}
+    <TrueSheet
       ref={ref}
-      onAnimate={(fromIndex, toIndex) => {
-        if (fromIndex === -1) {
-          onOpen?.();
-        }
-        if (toIndex === -1) {
-          onStartClose?.();
-        }
+      sizes={['auto']}
+      onPresent={onOpen}
+      onDismiss={onStartClose}
+      backgroundColor={
+        colorscheme.colorScheme === 'dark' ? THEME.dark.card : THEME.light.card
+      }
+      grabberProps={{
+        style: {
+          backgroundColor:
+            colorscheme.colorScheme === 'dark'
+              ? THEME.dark.cardForeground
+              : THEME.light.cardForeground,
+        },
       }}
-      backgroundStyle={{
-        backgroundColor:
-          colorscheme.colorScheme === 'dark'
-            ? THEME.dark.card
-            : THEME.light.card,
-      }}
-      handleIndicatorStyle={{
-        backgroundColor:
-          colorscheme.colorScheme === 'dark'
-            ? THEME.dark.cardForeground
-            : THEME.light.cardForeground,
-      }}
-      snapPoints={snapPoints}
+      cornerRadius={16}
+      dimmedIndex={0}
     >
-      <BottomSheetView
-        className={cn('px-4', !ignoreSafeArea && 'pb-safe', viewClassName)}
+      <View
+        className={cn('px-4 pt-6', !ignoreSafeArea && 'pb-safe', viewClassName)}
       >
         {children}
-      </BottomSheetView>
-    </BottomSheetModal>
+      </View>
+    </TrueSheet>
   );
 };
 
-type BottomSheetTextInputProps = ComponentProps<typeof BottomSheetTextInput>;
+type BottomSheetTextInputProps = ComponentProps<typeof RNTextInput>;
 
 const TextInput = forwardRef<
-  React.ComponentRef<typeof BottomSheetTextInput>,
+  React.ComponentRef<typeof RNTextInput>,
   BottomSheetTextInputProps
 >(({ className, ...props }, ref) => {
   return (
-    <BottomSheetTextInput
+    <RNTextInput
       className={cn(
         'h-10 rounded-md border border-input bg-input px-3 text-foreground shadow-sm shadow-black/5',
         className
@@ -99,11 +78,11 @@ const TextInput = forwardRef<
 });
 TextInput.displayName = 'TextInput';
 const BareTextInput = forwardRef<
-  React.ComponentRef<typeof BottomSheetTextInput>,
+  React.ComponentRef<typeof RNTextInput>,
   BottomSheetTextInputProps
 >(({ className, ...props }, ref) => {
   return (
-    <BottomSheetTextInput
+    <RNTextInput
       {...props}
       ref={ref}
       className={cn('border-none bg-transparent', className)}

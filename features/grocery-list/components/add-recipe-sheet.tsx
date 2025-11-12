@@ -1,4 +1,4 @@
-import { BottomSheetModal, useBottomSheetModal } from '@gorhom/bottom-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
@@ -21,7 +21,7 @@ export type AddRecipeSheetRef = {
 };
 
 export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const sheetRef = useRef<TrueSheet>(null);
 
   useImperativeHandle(ref, () => ({
     present: () => sheetRef.current?.present(),
@@ -30,8 +30,6 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
-
-  const { dismissAll } = useBottomSheetModal();
 
   const { mutate: addRecipeToList, isPending: isAddingRecipe } =
     useAddRecipeToList();
@@ -69,7 +67,8 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
       },
       {
         onSuccess: () => {
-          dismissAll();
+          sheetRef.current?.dismiss();
+          conflictSheetRef.current?.dismiss();
           toast.success(`${selectedRecipe.name} added`);
         },
       }
@@ -85,7 +84,8 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
       },
       {
         onSuccess: () => {
-          dismissAll();
+          sheetRef.current?.dismiss();
+          conflictSheetRef.current?.dismiss();
           toast.success(`${selectedRecipe.name} added`);
         },
       }

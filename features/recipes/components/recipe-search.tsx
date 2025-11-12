@@ -1,7 +1,7 @@
-import { BottomSheetModal, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { ArrowLeftIcon, SearchIcon } from 'lucide-react-native';
 import { RefObject, useRef, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, Pressable, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Icon } from '../../../components/ui/icon';
@@ -15,7 +15,7 @@ type RecipeSearchProps = {
   onItemSelect: (item: RecipeWithIngredients) => void;
   onBack: () => void;
   canGoBack: boolean;
-  sheetRef: RefObject<BottomSheetModal | null>;
+  sheetRef: RefObject<TrueSheet | null>;
 };
 
 export const RecipeSearch = ({
@@ -28,7 +28,7 @@ export const RecipeSearch = ({
   const [search, setSearch] = useState('');
   const { data: recipes, isLoading } = useRecipes();
   const searchInputRef =
-    useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
+    useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const filteredRecipes =
     recipes?.filter(recipe =>

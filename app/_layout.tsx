@@ -1,4 +1,3 @@
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { PortalHost } from '@rn-primitives/portal';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { Stack } from 'expo-router';
@@ -26,24 +25,22 @@ export default function RootLayout() {
       <KeyboardProvider>
         <MigrationProvider>
           <GestureHandlerRootView>
-            <BottomSheetModalProvider>
-              <View className="flex-1 bg-background">
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                  }}
-                />
-                <Toaster
-                  position="top-center"
-                  toastOptions={{
-                    style: {
-                      borderRadius: 100,
-                    },
-                  }}
-                />
-              </View>
-              <PortalHost />
-            </BottomSheetModalProvider>
+            <View className="flex-1 bg-background">
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              />
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  style: {
+                    borderRadius: 100,
+                  },
+                }}
+              />
+            </View>
+            <PortalHost />
           </GestureHandlerRootView>
         </MigrationProvider>
       </KeyboardProvider>

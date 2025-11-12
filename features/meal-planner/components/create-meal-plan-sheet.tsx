@@ -1,4 +1,4 @@
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { addDays, format, startOfDay } from 'date-fns';
 import { SunriseIcon, SunsetIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
@@ -20,7 +20,7 @@ import { useCreateMealPlan } from '../hooks';
 
 export const CreateMealPlanSheet = () => {
   const createMealPlan = useCreateMealPlan();
-  const bottomSheetRef = useRef<BottomSheetModal | null>(null);
+  const bottomSheetRef = useRef<TrueSheet | null>(null);
   const [mealPlanName, setMealPlanName] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(
     startOfDay(new Date())
