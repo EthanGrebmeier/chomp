@@ -8,7 +8,6 @@ import { RecipeSearch } from '../../recipes/components/recipe-search';
 import { useAddRecipeAsSeparateItems } from '../../recipes/hooks/useAddRecipeAsSeparateItems';
 import { useAddRecipeToList } from '../../recipes/hooks/useAddRecipeToList';
 import { useIncrementRecipeQuantities } from '../../recipes/hooks/useIncrementRecipeQuantities';
-import { RecipeWithIngredients } from '../../recipes/types';
 
 import {
   RecipeConflictSheet,
@@ -28,8 +27,10 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
     dismiss: () => sheetRef.current?.dismiss(),
   }));
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
-  const [selectedRecipe, setSelectedRecipe] =
-    useState<RecipeWithIngredients | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const { mutate: addRecipeToList, isPending: isAddingRecipe } =
     useAddRecipeToList();
@@ -38,8 +39,8 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
   const { mutate: addAsSeparate, isPending: isAddingSeparate } =
     useAddRecipeAsSeparateItems();
 
-  const handleRecipeSelect = (recipe: RecipeWithIngredients) => {
-    setSelectedRecipe(recipe);
+  const handleRecipeSelect = (recipe: { id: string; name: string }) => {
+    setSelectedRecipe({ id: recipe.id, name: recipe.name });
     addRecipeToList(
       {
         recipeId: recipe.id,

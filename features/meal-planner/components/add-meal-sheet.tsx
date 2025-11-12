@@ -1,6 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -39,16 +38,16 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
       setMealTag(undefined);
     };
 
-    const handleAddRecipe = (recipeId: string) => {
+    const handleAddRecipe = (recipe: { id: string; name: string }) => {
       if (!selectedDate || !mealTag) return;
-      
+
       addRecipeToMealPlan({
         mealPlanId: props.mealPlanId,
-        recipeId,
+        recipeId: recipe.id,
         mealTag,
         date: selectedDate,
       });
-      
+
       resetState();
       sheetRef.current?.dismiss();
     };
@@ -64,9 +63,7 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
         <RecipeSearch
           sheetRef={sheetRef}
           canGoBack={false}
-          onItemSelect={recipe => {
-            handleAddRecipe(recipe.id);
-          }}
+          onItemSelect={handleAddRecipe}
           onBack={() => {
             // No-op for add mode
           }}
@@ -77,4 +74,3 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
 );
 
 AddMealSheet.displayName = 'AddMealSheet';
-
