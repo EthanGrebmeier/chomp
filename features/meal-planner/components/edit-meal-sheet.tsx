@@ -117,89 +117,13 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     };
 
     return (
-      <View>
-        <BottomSheet
-          name="edit-meal-sheet"
-          ref={sheetRef}
-          onStartClose={() => {
-            KeyboardController.dismiss();
-          }}
-        >
-          {currentView === 'search' ? (
-            <RecipeSearch
-              sheetRef={sheetRef}
-              canGoBack={true}
-              onItemSelect={handleRecipeChange}
-              onBack={() => {
-                setCurrentView('recipe');
-              }}
-            />
-          ) : (
-            <View>
-              <View className="gap-2">
-                {selectedRecipe && (
-                  <View className="w-full flex-row items-center justify-between gap-2">
-                    <View className="flex-row items-center gap-2">
-                      <Text className="text-2xl font-semibold text-foreground">
-                        {selectedRecipe.name}
-                      </Text>
-                    </View>
-                    <MealSheetRecipeDropdown
-                      recipeId={selectedRecipe.id}
-                      recipeName={selectedRecipe.name}
-                      onRemove={handleRemoveMeal}
-                      onViewRecipe={() => {
-                        router.push(navigation.goToRecipe(selectedRecipe.id));
-                        sheetRef.current?.dismiss();
-                        calendarSheetRef.current?.dismiss();
-                      }}
-                      onChangeRecipe={() => {
-                        setCurrentView('search');
-                      }}
-                    />
-                  </View>
-                )}
-
-                <View className="gap-4">
-                  <View className="flex-row items-center gap-2">
-                    <Pressable
-                      onPress={() =>
-                        calendarSheetRef.current?.present({
-                          selectedDate: selectedDate
-                            ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
-                            : undefined,
-                          validStartDate: startOfDay(parseISO(props.startDate)),
-                          validEndDate: startOfDay(parseISO(props.endDate)),
-                        })
-                      }
-                    >
-                      <Pill
-                        hasValue={!!selectedDate}
-                        icon={<Icon as={CalendarIcon} size={16} />}
-                      >
-                        <Text className="text-left">
-                          {selectedDate
-                            ? startOfDay(
-                                parseISO(selectedDate + 'T00:00:00')
-                              ).toLocaleDateString()
-                            : 'Select Date'}
-                        </Text>
-                      </Pill>
-                    </Pressable>
-                    <MealTimeSelector
-                      onSelect={setMealTag}
-                      mealTime={mealTag}
-                    />
-                  </View>
-                  <Button onPress={handleUpdateMealPlanRecipe}>
-                    <Text>Update Meal</Text>
-                  </Button>
-                </View>
-              </View>
-            </View>
-          )}
-        </BottomSheet>
-
+      <BottomSheet
+        name="edit-meal-sheet"
+        ref={sheetRef}
+        onStartClose={() => {
+          KeyboardController.dismiss();
+        }}
+      >
         <CalendarSheet
           name="edit-meal-calendar-sheet"
           ref={calendarSheetRef}
@@ -212,7 +136,77 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
             setCurrentView('recipe');
           }}
         />
-      </View>
+        {currentView === 'search' ? (
+          <RecipeSearch
+            sheetRef={sheetRef}
+            canGoBack={true}
+            onItemSelect={handleRecipeChange}
+            onBack={() => {
+              setCurrentView('recipe');
+            }}
+          />
+        ) : (
+          <View>
+            <View className="gap-2">
+              {selectedRecipe && (
+                <View className="w-full flex-row items-center justify-between gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-2xl font-semibold text-foreground">
+                      {selectedRecipe.name}
+                    </Text>
+                  </View>
+                  <MealSheetRecipeDropdown
+                    recipeId={selectedRecipe.id}
+                    recipeName={selectedRecipe.name}
+                    onRemove={handleRemoveMeal}
+                    onViewRecipe={() => {
+                      router.push(navigation.goToRecipe(selectedRecipe.id));
+                      sheetRef.current?.dismiss();
+                      calendarSheetRef.current?.dismiss();
+                    }}
+                    onChangeRecipe={() => {
+                      setCurrentView('search');
+                    }}
+                  />
+                </View>
+              )}
+
+              <View className="gap-4">
+                <View className="flex-row items-center gap-2">
+                  <Pressable
+                    onPress={() =>
+                      calendarSheetRef.current?.present({
+                        selectedDate: selectedDate
+                          ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
+                          : undefined,
+                        validStartDate: startOfDay(parseISO(props.startDate)),
+                        validEndDate: startOfDay(parseISO(props.endDate)),
+                      })
+                    }
+                  >
+                    <Pill
+                      hasValue={!!selectedDate}
+                      icon={<Icon as={CalendarIcon} size={16} />}
+                    >
+                      <Text className="text-left">
+                        {selectedDate
+                          ? startOfDay(
+                              parseISO(selectedDate + 'T00:00:00')
+                            ).toLocaleDateString()
+                          : 'Select Date'}
+                      </Text>
+                    </Pill>
+                  </Pressable>
+                  <MealTimeSelector onSelect={setMealTag} mealTime={mealTag} />
+                </View>
+                <Button onPress={handleUpdateMealPlanRecipe}>
+                  <Text>Update Meal</Text>
+                </Button>
+              </View>
+            </View>
+          </View>
+        )}
+      </BottomSheet>
     );
   }
 );
