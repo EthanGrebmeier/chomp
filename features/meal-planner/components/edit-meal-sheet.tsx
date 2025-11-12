@@ -85,7 +85,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 
     const handleUpdateMealPlanRecipe = () => {
       if (!selectedRecipe || !mealPlanRecipeToEdit) return;
-      
+
       updateMealPlanRecipe({
         mealPlanRecipeId: mealPlanRecipeToEdit.id,
         updates: {
@@ -95,18 +95,18 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           date: selectedDate,
         },
       });
-      
+
       resetState();
       sheetRef.current?.dismiss();
     };
 
     const handleRemoveMeal = () => {
       if (!mealPlanRecipeToEdit) return;
-      
+
       removeRecipeFromMealPlan({
         mealPlanRecipeId: mealPlanRecipeToEdit.id,
       });
-      
+
       resetState();
       sheetRef.current?.dismiss();
     };
@@ -119,6 +119,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     return (
       <View>
         <BottomSheet
+          name="edit-meal-sheet"
           ref={sheetRef}
           onStartClose={() => {
             KeyboardController.dismiss();
@@ -200,6 +201,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         </BottomSheet>
 
         <CalendarSheet
+          name="edit-meal-calendar-sheet"
           ref={calendarSheetRef}
           headerTitle="Select Date"
           onClose={() => {
@@ -216,4 +218,3 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 );
 
 EditMealSheet.displayName = 'EditMealSheet';
-

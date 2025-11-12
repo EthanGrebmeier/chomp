@@ -51,6 +51,7 @@ export type ItemSheetProps = {
   namePlaceholder?: string;
   buttonText?: string;
   showAddButton?: boolean;
+  sheetName?: string;
   categoryComponent?: (
     category: string,
     onSelect: (category?: string) => void
@@ -71,6 +72,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
       namePlaceholder = 'Name',
       buttonText,
       showAddButton = true,
+      sheetName,
       categoryComponent,
     },
     ref
@@ -161,7 +163,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
             />
           </Button>
         )}
-        <BottomSheet onStartClose={handleClose} ref={bottomSheetRef}>
+        <BottomSheet name={sheetName} onStartClose={handleClose} ref={bottomSheetRef}>
           <View className="gap-2 pb-4">
             <form.Field
               validators={{

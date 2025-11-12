@@ -129,11 +129,13 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
         )}
       </View>
       <CalendarSheet
+        name="meal-planner-start-date-sheet"
         onChange={handleChangeStartDate}
         ref={startDateSheetRef}
         headerTitle="Select Start Date"
       />
       <CalendarSheet
+        name="meal-planner-end-date-sheet"
         onChange={handleChangeEndDate}
         ref={endDateSheetRef}
         headerTitle="Select End Date"

@@ -55,6 +55,7 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
 
     return (
       <BottomSheet
+        name="add-meal-sheet"
         ref={sheetRef}
         onStartClose={() => {
           KeyboardController.dismiss();

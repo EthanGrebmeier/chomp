@@ -83,6 +83,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
     return (
       <ItemSheet
         ref={itemSheetRef}
+        sheetName="add-grocery-item-sheet"
         onClose={onClose}
         defaultValues={formData}
         onSubmit={handleSubmit}

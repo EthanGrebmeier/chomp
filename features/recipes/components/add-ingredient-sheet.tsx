@@ -85,6 +85,7 @@ export const AddIngredientSheet = forwardRef<
   return (
     <ItemSheet
       ref={ref}
+      sheetName="add-ingredient-sheet"
       onClose={onClose}
       defaultValues={formData}
       onSubmit={handleSubmit}

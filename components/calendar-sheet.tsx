@@ -28,6 +28,7 @@ type CalendarSheetProps = {
   onChange: (date: Date) => void;
   onClose?: () => void;
   headerTitle?: string;
+  name?: string;
 };
 
 export type CalendarSheetRef = {
@@ -41,7 +42,7 @@ export type CalendarSheetRef = {
 };
 
 export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
-  ({ onChange, onClose: onCloseProp, headerTitle = 'Select Date' }, ref) => {
+  ({ onChange, onClose: onCloseProp, headerTitle = 'Select Date', name }, ref) => {
     const theme = useTheme();
     const bottomSheetRef = useRef<TrueSheet>(null);
 
@@ -309,6 +310,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
 
     return (
       <BottomSheet
+        name={name}
         onOpen={() => KeyboardController.dismiss()}
         ignoreSafeArea
         onStartClose={onClose}

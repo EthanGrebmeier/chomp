@@ -12,6 +12,7 @@ import { Text } from './ui/text';
 type BottomSheetProps = {
   children: React.ReactNode;
   ref: React.RefObject<TrueSheet | null>;
+  name?: string;
   onOpen?: () => void;
   onStartClose?: () => void;
   viewClassName?: string;
@@ -22,6 +23,7 @@ type BottomSheetProps = {
 export const BottomSheet = ({
   children,
   ref,
+  name,
   onStartClose,
   onOpen,
   viewClassName,
@@ -33,6 +35,7 @@ export const BottomSheet = ({
   return (
     <TrueSheet
       ref={ref}
+      name={name}
       sizes={['auto']}
       onPresent={onOpen}
       onDismiss={onStartClose}

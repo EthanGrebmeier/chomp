@@ -40,7 +40,7 @@ export const RecipeConflictSheet = forwardRef<
     };
 
     return (
-      <BottomSheet ref={bottomSheetRef}>
+      <BottomSheet name="recipe-conflict-sheet" ref={bottomSheetRef}>
         <BottomSheet.Header title={`"${recipeName}" Already Exists`} />
         <View className="gap-4">
           <Text className="text-muted-foreground">

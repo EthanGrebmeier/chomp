@@ -102,6 +102,7 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
   return (
     <>
       <BottomSheet
+        name="add-recipe-to-list-sheet"
         onStartClose={() => KeyboardController.dismiss()}
         ref={sheetRef}
       >

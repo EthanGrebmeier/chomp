@@ -76,17 +76,19 @@ export const CreateMealPlanSheet = () => {
       </Button>
       {/** Start Date Sheet */}
       <CalendarSheet
+        name="create-meal-plan-start-date-sheet"
         ref={startDateSheetRef}
         onChange={date => setStartDate(startOfDay(date))}
         headerTitle="Select Start Date"
       />
       {/** End Date Sheet */}
       <CalendarSheet
+        name="create-meal-plan-end-date-sheet"
         ref={endDateSheetRef}
         onChange={date => setEndDate(startOfDay(date))}
         headerTitle="Select End Date"
       />
-      <BottomSheet onStartClose={onClose} ref={bottomSheetRef}>
+      <BottomSheet name="create-meal-plan-sheet" onStartClose={onClose} ref={bottomSheetRef}>
         <View className="gap-4">
           <BottomSheet.BareTextInput
             className="text-2xl font-semibold text-foreground"
