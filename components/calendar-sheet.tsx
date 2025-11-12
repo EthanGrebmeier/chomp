@@ -9,6 +9,7 @@ import {
   startOfDay,
   startOfMonth,
   startOfWeek,
+  subDays,
 } from 'date-fns';
 import { Check, X } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
@@ -66,8 +67,10 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
 
     // Calculate months based on valid date range
     const getMonthsInRange = () => {
-      // Always start from current month (never show previous months)
       const currentMonth = startOfMonth(new Date());
+      const today = startOfDay(new Date());
+      const oneWeekAgo = startOfDay(subDays(today, 7));
+      const earliestAllowedMonth = startOfMonth(oneWeekAgo);
 
       if (!validStartDate && !validEndDate) {
         // Default behavior - show current month and next 2 months
@@ -83,20 +86,20 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
       let endMonth: Date;
 
       if (validStartDate && validEndDate) {
-        // Both dates provided - use them but ensure we don't go before current month
+        // Both dates provided - use them but ensure we don't go before one week ago
         startMonth = startOfMonth(
-          Math.max(validStartDate.getTime(), currentMonth.getTime())
+          Math.max(validStartDate.getTime(), earliestAllowedMonth.getTime())
         );
         endMonth = startOfMonth(validEndDate);
       } else if (validStartDate) {
-        // Only start date - show from start date (or current month) to 2 months ahead
+        // Only start date - show from start date (or earliest allowed) to 2 months ahead
         startMonth = startOfMonth(
-          Math.max(validStartDate.getTime(), currentMonth.getTime())
+          Math.max(validStartDate.getTime(), earliestAllowedMonth.getTime())
         );
         endMonth = addMonths(startMonth, 2);
       } else if (validEndDate) {
-        // Only end date - show from current month to end date
-        startMonth = currentMonth;
+        // Only end date - show from earliest allowed to end date
+        startMonth = earliestAllowedMonth;
         endMonth = startOfMonth(validEndDate);
       } else {
         // Fallback - show current month and next 2 months
@@ -126,10 +129,11 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
       // Check if date is within valid range
       const normalizedDate = startOfDay(date);
       const today = startOfDay(new Date());
+      const oneWeekAgo = startOfDay(subDays(today, 7));
 
-      // Always prevent selection of dates before today
-      if (normalizedDate < today) {
-        return; // Don't allow selection before today
+      // Allow selection of dates up to a week before today
+      if (normalizedDate < oneWeekAgo) {
+        return; // Don't allow selection more than a week before today
       }
 
       // Check if date is before valid start date
@@ -179,12 +183,13 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
           const isCurrentMonth = day.getMonth() === month.getMonth();
           const normalizedDay = startOfDay(day);
           const today = startOfDay(new Date());
-          const isBeforeToday = normalizedDay < today;
+          const oneWeekAgo = startOfDay(subDays(today, 7));
+          const isTooOld = normalizedDay < oneWeekAgo;
           const isBeforeValidStart =
             validStartDate && normalizedDay < validStartDate;
           const isAfterValidEnd = validEndDate && normalizedDay > validEndDate;
           const isWithinValidRange =
-            !isBeforeToday && !isBeforeValidStart && !isAfterValidEnd;
+            !isTooOld && !isBeforeValidStart && !isAfterValidEnd;
           const isDisabled = !isWithinValidRange || !isCurrentMonth;
 
           return !isDisabled;
@@ -229,13 +234,14 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
 
                   // Check if date is within valid range
                   const today = startOfDay(new Date());
-                  const isBeforeToday = normalizedDay < today;
+                  const oneWeekAgo = startOfDay(subDays(today, 7));
+                  const isTooOld = normalizedDay < oneWeekAgo;
                   const isBeforeValidStart =
                     validStartDate && normalizedDay < validStartDate;
                   const isAfterValidEnd =
                     validEndDate && normalizedDay > validEndDate;
                   const isWithinValidRange =
-                    !isBeforeToday && !isBeforeValidStart && !isAfterValidEnd;
+                    !isTooOld && !isBeforeValidStart && !isAfterValidEnd;
                   const isDisabled = !isWithinValidRange || !isCurrentMonth;
 
                   return (
