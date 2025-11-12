@@ -80,6 +80,8 @@ export const CreateMealPlanSheet = () => {
         ref={startDateSheetRef}
         onChange={date => setStartDate(startOfDay(date))}
         headerTitle="Select Start Date"
+        selectedDate={startDate}
+        validEndDate={endDate}
       />
       {/** End Date Sheet */}
       <CalendarSheet
@@ -87,6 +89,8 @@ export const CreateMealPlanSheet = () => {
         ref={endDateSheetRef}
         onChange={date => setEndDate(startOfDay(date))}
         headerTitle="Select End Date"
+        selectedDate={endDate}
+        validStartDate={startDate}
       />
       <BottomSheet name="create-meal-plan-sheet" onStartClose={onClose} ref={bottomSheetRef}>
         <View className="gap-4">
@@ -103,12 +107,7 @@ export const CreateMealPlanSheet = () => {
             contentContainerClassName="px-4 flex-row items-center gap-2 pt-2 "
           >
             <Pressable
-              onPress={() =>
-                startDateSheetRef.current?.present({
-                  selectedDate: startDate,
-                  validEndDate: endDate,
-                })
-              }
+              onPress={() => startDateSheetRef.current?.present()}
             >
               <Pill
                 icon={<Icon as={SunriseIcon} size={16} />}
@@ -120,12 +119,7 @@ export const CreateMealPlanSheet = () => {
               </Pill>
             </Pressable>
             <Pressable
-              onPress={() =>
-                endDateSheetRef.current?.present({
-                  selectedDate: endDate,
-                  validStartDate: startDate,
-                })
-              }
+              onPress={() => endDateSheetRef.current?.present()}
             >
               <Pill
                 icon={<Icon as={SunsetIcon} size={16} />}

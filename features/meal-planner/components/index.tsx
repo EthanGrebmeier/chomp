@@ -95,27 +95,13 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
         </View>
         {mealPlan?.startDate && mealPlan?.endDate && (
           <View className="flex-row items-center gap-1">
-            <Pressable
-              onPress={() =>
-                startDateSheetRef.current?.present({
-                  selectedDate: new Date(mealPlan.startDate),
-                  validEndDate: new Date(mealPlan.endDate),
-                })
-              }
-            >
+            <Pressable onPress={() => startDateSheetRef.current?.present()}>
               <Text className="text-lg font-semibold text-muted-foreground">
                 {format(new Date(mealPlan.startDate), 'EE, M/d/yy')}
               </Text>
             </Pressable>
             <Text className="text-lg text-muted-foreground">-</Text>
-            <Pressable
-              onPress={() =>
-                endDateSheetRef.current?.present({
-                  selectedDate: new Date(mealPlan.endDate),
-                  validStartDate: new Date(mealPlan.startDate),
-                })
-              }
-            >
+            <Pressable onPress={() => endDateSheetRef.current?.present()}>
               <Text className="text-lg font-semibold text-muted-foreground">
                 {format(new Date(mealPlan.endDate), 'EE, M/d/yy')}
               </Text>
@@ -128,12 +114,16 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
         onChange={handleChangeStartDate}
         ref={startDateSheetRef}
         headerTitle="Select Start Date"
+        selectedDate={new Date(mealPlan.startDate)}
+        validEndDate={new Date(mealPlan.endDate)}
       />
       <CalendarSheet
         name="meal-planner-end-date-sheet"
         onChange={handleChangeEndDate}
         ref={endDateSheetRef}
         headerTitle="Select End Date"
+        selectedDate={new Date(mealPlan.endDate)}
+        validStartDate={new Date(mealPlan.startDate)}
       />
       <AddMealSheet ref={addMealSheet} mealPlanId={mealPlan.id} />
       <EditMealSheet

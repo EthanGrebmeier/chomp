@@ -29,53 +29,37 @@ type CalendarSheetProps = {
   onClose?: () => void;
   headerTitle?: string;
   name?: string;
+  validStartDate?: Date;
+  validEndDate?: Date;
+  selectedDate?: Date;
 };
 
 export type CalendarSheetRef = {
-  present: (options?: {
-    selectedDate?: Date;
-    validStartDate?: Date;
-    validEndDate?: Date;
-  }) => void;
+  present: () => void;
   dismiss: () => void;
-  setSelectedDate: (date: Date) => void;
 };
 
 export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
-  ({ onChange, onClose: onCloseProp, headerTitle = 'Select Date', name }, ref) => {
+  (
+    {
+      onChange,
+      onClose: onCloseProp,
+      headerTitle = 'Select Date',
+      name,
+      validStartDate,
+      validEndDate,
+      selectedDate,
+    },
+    ref
+  ) => {
     const theme = useTheme();
     const bottomSheetRef = useRef<TrueSheet>(null);
 
-    // State for dynamic valid dates
-    const [dynamicValidStartDate, setDynamicValidStartDate] = useState<
-      Date | undefined
-    >(undefined);
-    const [dynamicValidEndDate, setDynamicValidEndDate] = useState<
-      Date | undefined
-    >(undefined);
-
     useImperativeHandle(ref, () => ({
-      present: (options?: {
-        selectedDate?: Date;
-        validStartDate?: Date;
-        validEndDate?: Date;
-      }) => {
-        reset();
-        if (options?.selectedDate) {
-          setInternalSelectedDate(startOfDay(options.selectedDate));
-        }
-        if (options?.validStartDate) {
-          setDynamicValidStartDate(startOfDay(options.validStartDate));
-        }
-        if (options?.validEndDate) {
-          setDynamicValidEndDate(startOfDay(options.validEndDate));
-        }
+      present: () => {
         bottomSheetRef.current?.present();
       },
       dismiss: () => bottomSheetRef.current?.dismiss(),
-      setSelectedDate: (date: Date) => {
-        setInternalSelectedDate(startOfDay(date));
-      },
     }));
 
     const currentDate = new Date();
@@ -85,7 +69,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
       // Always start from current month (never show previous months)
       const currentMonth = startOfMonth(new Date());
 
-      if (!dynamicValidStartDate && !dynamicValidEndDate) {
+      if (!validStartDate && !validEndDate) {
         // Default behavior - show current month and next 2 months
         return [
           currentMonth,
@@ -98,22 +82,22 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
       let startMonth: Date;
       let endMonth: Date;
 
-      if (dynamicValidStartDate && dynamicValidEndDate) {
+      if (validStartDate && validEndDate) {
         // Both dates provided - use them but ensure we don't go before current month
         startMonth = startOfMonth(
-          Math.max(dynamicValidStartDate.getTime(), currentMonth.getTime())
+          Math.max(validStartDate.getTime(), currentMonth.getTime())
         );
-        endMonth = startOfMonth(dynamicValidEndDate);
-      } else if (dynamicValidStartDate) {
+        endMonth = startOfMonth(validEndDate);
+      } else if (validStartDate) {
         // Only start date - show from start date (or current month) to 2 months ahead
         startMonth = startOfMonth(
-          Math.max(dynamicValidStartDate.getTime(), currentMonth.getTime())
+          Math.max(validStartDate.getTime(), currentMonth.getTime())
         );
         endMonth = addMonths(startMonth, 2);
-      } else if (dynamicValidEndDate) {
+      } else if (validEndDate) {
         // Only end date - show from current month to end date
         startMonth = currentMonth;
-        endMonth = startOfMonth(dynamicValidEndDate);
+        endMonth = startOfMonth(validEndDate);
       } else {
         // Fallback - show current month and next 2 months
         startMonth = currentMonth;
@@ -136,7 +120,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
     // Normalize the selectedDate to start of day to avoid timezone issues
     const [internalSelectedDate, setInternalSelectedDate] = useState<
       Date | undefined
-    >(undefined);
+    >(selectedDate);
 
     const handleDatePress = (date: Date) => {
       // Check if date is within valid range
@@ -149,12 +133,12 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
       }
 
       // Check if date is before valid start date
-      if (dynamicValidStartDate && normalizedDate < dynamicValidStartDate) {
+      if (validStartDate && normalizedDate < validStartDate) {
         return; // Don't allow selection before valid start date
       }
 
       // Check if date is after valid end date
-      if (dynamicValidEndDate && normalizedDate > dynamicValidEndDate) {
+      if (validEndDate && normalizedDate > validEndDate) {
         return; // Don't allow selection after valid end date
       }
 
@@ -175,13 +159,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
     const handleClose = () => {
       bottomSheetRef.current?.dismiss();
     };
-
-    const reset = () => {
-      setInternalSelectedDate(undefined);
-    };
-
     const onClose = () => {
-      reset();
       onCloseProp?.();
     };
 
@@ -203,9 +181,8 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
           const today = startOfDay(new Date());
           const isBeforeToday = normalizedDay < today;
           const isBeforeValidStart =
-            dynamicValidStartDate && normalizedDay < dynamicValidStartDate;
-          const isAfterValidEnd =
-            dynamicValidEndDate && normalizedDay > dynamicValidEndDate;
+            validStartDate && normalizedDay < validStartDate;
+          const isAfterValidEnd = validEndDate && normalizedDay > validEndDate;
           const isWithinValidRange =
             !isBeforeToday && !isBeforeValidStart && !isAfterValidEnd;
           const isDisabled = !isWithinValidRange || !isCurrentMonth;
@@ -254,10 +231,9 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
                   const today = startOfDay(new Date());
                   const isBeforeToday = normalizedDay < today;
                   const isBeforeValidStart =
-                    dynamicValidStartDate &&
-                    normalizedDay < dynamicValidStartDate;
+                    validStartDate && normalizedDay < validStartDate;
                   const isAfterValidEnd =
-                    dynamicValidEndDate && normalizedDay > dynamicValidEndDate;
+                    validEndDate && normalizedDay > validEndDate;
                   const isWithinValidRange =
                     !isBeforeToday && !isBeforeValidStart && !isAfterValidEnd;
                   const isDisabled = !isWithinValidRange || !isCurrentMonth;

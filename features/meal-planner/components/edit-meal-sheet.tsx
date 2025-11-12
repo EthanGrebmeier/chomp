@@ -128,6 +128,9 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           name="edit-meal-calendar-sheet"
           ref={calendarSheetRef}
           headerTitle="Select Date"
+          selectedDate={selectedDate ? startOfDay(parseISO(selectedDate + 'T00:00:00')) : undefined}
+          validStartDate={startOfDay(parseISO(props.startDate))}
+          validEndDate={startOfDay(parseISO(props.endDate))}
           onClose={() => {
             setCurrentView('recipe');
           }}
@@ -174,15 +177,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
               <View className="gap-4">
                 <View className="flex-row items-center gap-2">
                   <Pressable
-                    onPress={() =>
-                      calendarSheetRef.current?.present({
-                        selectedDate: selectedDate
-                          ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
-                          : undefined,
-                        validStartDate: startOfDay(parseISO(props.startDate)),
-                        validEndDate: startOfDay(parseISO(props.endDate)),
-                      })
-                    }
+                    onPress={() => calendarSheetRef.current?.present()}
                   >
                     <Pill
                       hasValue={!!selectedDate}
