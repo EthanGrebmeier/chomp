@@ -13,6 +13,7 @@ import { CategorySelector } from './category-selector';
 type AddItemSheetProps = {
   onClose?: () => void;
   defaultValues: GroceryListItemWithRecipe | null;
+  showButton?: boolean;
 };
 
 export type AddItemSheetRef = {
@@ -20,7 +21,7 @@ export type AddItemSheetRef = {
 };
 
 export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
-  ({ onClose, defaultValues }, ref) => {
+  ({ onClose, defaultValues, showButton = true }, ref) => {
     const itemSheetRef = useRef<ItemSheetRef>(null);
     const { mutate: addItem } = useAddGroceryItem();
     const { mutate: updateItem } = useUpdateGroceryListItem();
@@ -82,6 +83,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
 
     return (
       <ItemSheet
+        showAddButton={showButton}
         ref={itemSheetRef}
         sheetName="add-grocery-item-sheet"
         onClose={onClose}
