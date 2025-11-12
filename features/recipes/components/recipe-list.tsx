@@ -1,8 +1,10 @@
 import { FlatList, Text, View } from 'react-native';
+
 import { ListItem } from '../../../components/ui/list-item';
 import { cn } from '../../../lib/utils';
 import { useDeleteRecipe } from '../hooks';
 import { RecipeWithIngredients } from '../types';
+
 import { RecipeCard } from './recipe-card';
 
 type RecipeListProps = {
@@ -10,6 +12,11 @@ type RecipeListProps = {
 };
 
 export const RecipeList = ({ recipes }: RecipeListProps) => {
+  const { mutate: deleteRecipe } = useDeleteRecipe();
+  const handleDelete = (recipeId: string) => {
+    deleteRecipe(recipeId);
+  };
+
   if (recipes.length === 0) {
     return (
       <View className="flex-1 items-center justify-center p-8">
@@ -19,10 +26,6 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
       </View>
     );
   }
-  const { mutate: deleteRecipe } = useDeleteRecipe();
-  const handleDelete = (recipeId: string) => {
-    deleteRecipe(recipeId);
-  };
 
   return (
     <FlatList
@@ -38,7 +41,6 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
         </ListItem>
       )}
       keyExtractor={item => item.id}
-      contentContainerClassName="flex-1"
     />
   );
 };
