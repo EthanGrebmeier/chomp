@@ -163,7 +163,11 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
             />
           </Button>
         )}
-        <BottomSheet name={sheetName} onStartClose={handleClose} ref={bottomSheetRef}>
+        <BottomSheet
+          name={sheetName}
+          onStartClose={handleClose}
+          ref={bottomSheetRef}
+        >
           <View className="gap-2 pb-4">
             <form.Field
               validators={{
@@ -181,7 +185,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
                     value={field.state.value}
                     onChangeText={field.handleChange}
                     placeholder={namePlaceholder}
-                    returnKeyType="done"
+                    returnKeyType="none"
                     autoCapitalize="words"
                     className="rounded-none border-none text-2xl font-semibold text-foreground"
                     ref={nameInputRef}
