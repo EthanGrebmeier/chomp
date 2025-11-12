@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
-import { PlusIcon, Trash2Icon } from 'lucide-react-native';
+import { CameraIcon, PlusIcon, Trash2Icon } from 'lucide-react-native';
 import { FlatList, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { Text } from '@/components/ui/text';
 
@@ -68,50 +69,61 @@ export const MealPlanDateView = ({
             {mealTime}
           </Text>
           {groupedRecipes[mealTime] ? (
-            <FlatList
-              data={groupedRecipes[mealTime]}
-              renderItem={({ item: mealPlanRecipe }) => (
-                <HapticPressable
-                  onPress={() =>
-                    onMealPress({
-                      mealPlanRecipe,
-                      recipe: mealPlanRecipe.recipe,
-                    })
-                  }
-                >
-                  <View className="w-full flex-row items-center gap-4 rounded-xl bg-muted px-4 py-2">
-                    <View className="size-14 overflow-hidden rounded-sm bg-gray-200">
-                      {mealPlanRecipe.recipe.imageSrc ? (
-                        <Image
-                          source={{ uri: mealPlanRecipe.recipe.imageSrc }}
-                          style={{ width: '100%', height: '100%' }}
-                        />
-                      ) : (
-                        <View className="size-full rounded-sm " />
-                      )}
-                    </View>
-                    <View className="flex-1 flex-row justify-between">
-                      <Text className="text-lg font-semibold text-foreground">
-                        {mealPlanRecipe.recipe.name}
-                      </Text>
-                      <HapticPressable
-                        onPress={() =>
-                          removeRecipeFromMealPlan({
-                            mealPlanRecipeId: mealPlanRecipe.id,
-                          })
-                        }
-                      >
-                        <Icon
-                          as={Trash2Icon}
-                          size={20}
-                          color={theme.destructive}
-                        />
-                      </HapticPressable>
-                    </View>
-                  </View>
-                </HapticPressable>
-              )}
-            />
+            <Animated.View
+              entering={FadeIn.duration(140)}
+              exiting={FadeOut.duration(140)}
+            >
+              <View>
+                <FlatList
+                  data={groupedRecipes[mealTime]}
+                  renderItem={({ item: mealPlanRecipe }) => (
+                    <HapticPressable
+                      onPress={() =>
+                        onMealPress({
+                          mealPlanRecipe,
+                          recipe: mealPlanRecipe.recipe,
+                        })
+                      }
+                    >
+                      <View className="w-full flex-row items-center gap-4 rounded-xl bg-muted px-4 py-2">
+                        <View className="size-14 items-center justify-center overflow-hidden rounded-sm bg-gray-200">
+                          {mealPlanRecipe.recipe.imageSrc ? (
+                            <Image
+                              source={{ uri: mealPlanRecipe.recipe.imageSrc }}
+                              style={{ width: '100%', height: '100%' }}
+                            />
+                          ) : (
+                            <Icon
+                              className="text-muted-foreground"
+                              as={CameraIcon}
+                              size={24}
+                            />
+                          )}
+                        </View>
+                        <View className="flex-1 flex-row justify-between">
+                          <Text className="text-lg font-semibold text-foreground">
+                            {mealPlanRecipe.recipe.name}
+                          </Text>
+                          <HapticPressable
+                            onPress={() =>
+                              removeRecipeFromMealPlan({
+                                mealPlanRecipeId: mealPlanRecipe.id,
+                              })
+                            }
+                          >
+                            <Icon
+                              as={Trash2Icon}
+                              size={20}
+                              color={theme.destructive}
+                            />
+                          </HapticPressable>
+                        </View>
+                      </View>
+                    </HapticPressable>
+                  )}
+                />
+              </View>
+            </Animated.View>
           ) : (
             <HapticTouchableOpacity
               hapticType="light"
