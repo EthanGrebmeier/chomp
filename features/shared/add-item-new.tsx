@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import * as Haptics from 'expo-haptics';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -97,7 +98,11 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
             className="z-10 border border-border bg-muted font-semibold"
             value={input}
             onChangeText={setInput}
-            onFocus={() => setIsOpen(true)}
+            onFocus={() => {
+              setIsOpen(true);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setInput('');
+            }}
             onBlur={() => {
               setIsOpen(false);
               setInput('');
@@ -134,20 +139,20 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
           >
             <Animated.View
               entering={FadeInDown.duration(300)}
-              className=" z-10 mb-4 gap-1"
+              className=" z-10 mb-2 gap-1"
             >
               {matchingItems.map(item => (
                 <Animated.View key={item.name} entering={FadeIn.duration(300)}>
-                  <Pressable
+                  <HapticPressable
                     className={cn(
-                      'flex-row items-center justify-between self-start rounded-xl border border-border bg-muted px-1.5 py-1'
+                      'flex-row items-center justify-between self-start rounded-xl border border-border bg-muted px-2 py-1'
                     )}
                     onPress={() => handleAddItem(item)}
                   >
-                    <Text className={cn('font-medium text-foreground')}>
+                    <Text className={cn('text-lg font-medium text-foreground')}>
                       {item.name}
                     </Text>
-                  </Pressable>
+                  </HapticPressable>
                 </Animated.View>
               ))}
             </Animated.View>
@@ -163,7 +168,6 @@ const style = StyleSheet.create({
     flexDirection: 'column-reverse',
     position: 'absolute',
     display: 'flex',
-    columnGap: 16,
     bottom: 16,
     left: 16,
     right: 16,
