@@ -87,7 +87,7 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
       <KeyboardStickyView
         style={[style.container]}
         offset={{
-          opened: 48,
+          opened: 36,
         }}
       >
         <View>
