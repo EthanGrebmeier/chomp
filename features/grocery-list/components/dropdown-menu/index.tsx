@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { ReactNode } from 'react';
 import * as DropdownMenu from 'zeego/dropdown-menu';
 
@@ -17,7 +18,11 @@ export const GroceryListDropdownMenu = ({
   const { mutate: clearCheckedItems } = useClearCheckedItems();
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger>{trigger}</DropdownMenu.Trigger>
+      <DropdownMenu.Trigger
+        onClick={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+      >
+        {trigger}
+      </DropdownMenu.Trigger>
       <DropdownMenu.Content>
         <DropdownMenu.Item onSelect={openRecipeSheet} key="open-recipe-sheet">
           <DropdownMenu.ItemTitle>Add Recipe</DropdownMenu.ItemTitle>

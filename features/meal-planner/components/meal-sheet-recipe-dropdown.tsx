@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { MoreHorizontalIcon } from 'lucide-react-native';
 import { Pressable } from 'react-native';
 import * as DropdownMenu from 'zeego/dropdown-menu';
@@ -24,7 +25,9 @@ export const MealSheetRecipeDropdown = ({
 
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger>
+      <DropdownMenu.Trigger
+        onClick={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+      >
         <Pressable className="p-2">
           <Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />
         </Pressable>
@@ -48,4 +51,3 @@ export const MealSheetRecipeDropdown = ({
     </DropdownMenu.Root>
   );
 };
-

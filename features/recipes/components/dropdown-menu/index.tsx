@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { ReactNode, useRef, useState } from 'react';
 import { toast } from 'sonner-native';
@@ -118,7 +119,11 @@ export const RecipeDropdownMenu = ({
   return (
     <>
       <DropdownMenu.Root>
-        <DropdownMenu.Trigger>{trigger}</DropdownMenu.Trigger>
+        <DropdownMenu.Trigger
+          onClick={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        >
+          {trigger}
+        </DropdownMenu.Trigger>
         <DropdownMenu.Content>
           <DropdownMenu.Item onSelect={handleAddToList} key="add-to-list">
             <DropdownMenu.ItemTitle>Add to List</DropdownMenu.ItemTitle>
