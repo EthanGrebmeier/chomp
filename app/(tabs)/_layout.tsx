@@ -5,7 +5,6 @@ import {
   NotebookTabsIcon,
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
 
 import { Icon } from '../../components/ui/icon';
 import { useActiveMealPlan } from '../../features/meal-planner/hooks';
@@ -78,7 +77,6 @@ export default function Layout() {
           }}
         />
       </Tabs>
-      <KeyboardToolbar />
     </>
   );
 }
