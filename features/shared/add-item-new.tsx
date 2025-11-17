@@ -1,18 +1,24 @@
 import { useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { PlusIcon } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import {
   KeyboardController,
   KeyboardStickyView,
 } from 'react-native-keyboard-controller';
-import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { toast } from 'sonner-native';
 
+import { Button } from '../../components/ui/button';
 import { HapticPressable } from '../../components/ui/haptic-pressable';
 import { Icon } from '../../components/ui/icon';
 import { Text } from '../../components/ui/text';
@@ -23,6 +29,8 @@ import { useAddGroceryItem } from '../grocery-list/hooks/useAddGroceryListItem';
 import { queryKeys } from '../grocery-list/query-keys';
 import { BaseGroceryItem } from '../grocery-list/types';
 
+import { NATIVE_TABS_OFFSET } from './consts';
+
 type AddItemNewProps = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -30,7 +38,7 @@ type AddItemNewProps = {
 
 export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
   const [input, setInput] = useState('');
-  const { bottom } = useSafeAreaInsets();
+  const inputRef = useRef<TextInput>(null);
   const theme = useTheme();
   const matchingItems =
     input.length > 0
@@ -72,8 +80,30 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
     KeyboardController.dismiss();
   };
 
+  const inputStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(isOpen ? 1 : 0),
+    };
+  });
+
   return (
     <>
+      <Button
+        className="absolute right-4 z-20"
+        style={{ bottom: NATIVE_TABS_OFFSET }}
+        size="iconLg"
+        onPress={() => {
+          setIsOpen(true);
+          inputRef.current?.focus();
+        }}
+      >
+        <Icon
+          as={PlusIcon}
+          size={28}
+          strokeWidth={3}
+          className="text-primary-foreground"
+        />
+      </Button>
       {isOpen && (
         <Animated.View
           entering={FadeIn.duration(300)}
@@ -92,9 +122,10 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
           opened: 88,
         }}
       >
-        <Animated.View>
+        <Animated.View style={inputStyle}>
           <View className="z-10  rounded-2xl border border-border bg-muted px-5 py-3 text-xl font-semibold">
             <TextInput
+              ref={inputRef}
               placeholder="Add Item"
               placeholderTextColor={theme.mutedForeground}
               className="z-10 h-10 text-xl font-semibold"

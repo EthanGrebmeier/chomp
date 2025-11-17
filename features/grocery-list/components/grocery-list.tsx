@@ -13,6 +13,7 @@ import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { AddItemNew } from '../../shared/add-item-new';
+import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
@@ -154,7 +155,12 @@ export const GroceryList = ({
           <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
             {items.length === 0 ? (
               <View className="flex-1 items-center justify-center ">
-                <View className="w-64">
+                <View
+                  className="w-64"
+                  style={{
+                    marginTop: -NATIVE_TABS_OFFSET,
+                  }}
+                >
                   <Image
                     source={require('../../../assets/images/grocery-basket.png')}
                     style={{
@@ -165,10 +171,10 @@ export const GroceryList = ({
                   />
                 </View>
                 <View>
-                  <Text className="px-4 text-center text-base font-medium text-muted-foreground">
-                    Your grocery list is empty.
+                  <Text className="px-4 text-center text-xl font-semibold text-foreground">
+                    Your grocery list is empty
                   </Text>
-                  <Text className="px-4 text-center text-base text-foreground">
+                  <Text className="px-4 text-center text-sm text-muted-foreground">
                     Add some items to get started!
                   </Text>
                 </View>
