@@ -23,3 +23,4 @@ export const updateSettings = async (updates: UpdateSettingsArgs) => {
 
   return result[0];
 };
+

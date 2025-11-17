@@ -11,3 +11,4 @@ const settingsQuery = queryOptions({
 export const useSettings = () => {
   return useQuery(settingsQuery);
 };
+

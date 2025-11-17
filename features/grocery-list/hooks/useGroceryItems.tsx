@@ -11,3 +11,4 @@ const groceryItemsQuery = queryOptions({
 export const useGroceryItems = () => {
   return useQuery(groceryItemsQuery);
 };
+

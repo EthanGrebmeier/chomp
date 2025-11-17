@@ -15,3 +15,4 @@ export const getItems = async (): Promise<GroceryListItemWithRecipe[]> => {
     recipe: row.recipe ?? null,
   }));
 };
+
