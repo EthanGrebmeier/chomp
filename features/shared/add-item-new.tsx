@@ -2,17 +2,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import {
   KeyboardController,
   KeyboardStickyView,
 } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import { toast } from 'sonner-native';
 
-import { TextInput } from '../../components/text-input';
 import { HapticPressable } from '../../components/ui/haptic-pressable';
 import { Icon } from '../../components/ui/icon';
 import { Text } from '../../components/ui/text';
@@ -30,6 +30,7 @@ type AddItemNewProps = {
 
 export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
   const [input, setInput] = useState('');
+  const { bottom } = useSafeAreaInsets();
   const theme = useTheme();
   const matchingItems =
     input.length > 0
@@ -86,34 +87,36 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
         </Animated.View>
       )}
       <KeyboardStickyView
-        style={[style.container]}
+        style={[style.container, { bottom: 72 }]}
         offset={{
-          opened: 36,
+          opened: 88,
         }}
       >
-        <View>
-          <TextInput
-            placeholder="Add item"
-            placeholderTextColor={theme.mutedForeground}
-            className="z-10 border border-border bg-muted font-semibold"
-            value={input}
-            onChangeText={setInput}
-            onFocus={() => {
-              setIsOpen(true);
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setInput('');
-            }}
-            onBlur={() => {
-              setIsOpen(false);
-              setInput('');
-            }}
-            returnKeyType="none"
-          />
+        <Animated.View>
+          <View className="z-10  rounded-2xl border border-border bg-muted px-5 py-3 text-xl font-semibold">
+            <TextInput
+              placeholder="Add Item"
+              placeholderTextColor={theme.mutedForeground}
+              className="z-10 h-10 text-xl font-semibold"
+              value={input}
+              onChangeText={setInput}
+              onFocus={() => {
+                setIsOpen(true);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setInput('');
+              }}
+              onBlur={() => {
+                setIsOpen(false);
+                setInput('');
+              }}
+              returnKeyType="none"
+            />
+          </View>
           {isOpen && input.length > 0 && (
             <Animated.View
               entering={FadeIn.duration(300)}
               exiting={FadeOut.duration(300)}
-              className="absolute right-2 top-1/2 z-10 size-8 -translate-y-1/2  items-center justify-center rounded-full bg-primary"
+              className="absolute right-3 top-1/2 z-10 size-10 -translate-y-1/2  items-center justify-center rounded-full bg-primary"
             >
               <HapticPressable
                 className="items-center justify-center"
@@ -122,12 +125,13 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
                 <Icon
                   as={PlusIcon}
                   size={20}
+                  strokeWidth={3}
                   className="text-primary-foreground"
                 />
               </HapticPressable>
             </Animated.View>
           )}
-        </View>
+        </Animated.View>
         {isOpen && input.length > 0 && (
           <GestureDetector
             gesture={Gesture.Pan().onUpdate(event => {
@@ -168,9 +172,9 @@ const style = StyleSheet.create({
     flexDirection: 'column-reverse',
     position: 'absolute',
     display: 'flex',
-    bottom: 16,
     left: 16,
     right: 16,
     zIndex: 10,
+    paddingVertical: 32,
   },
 });

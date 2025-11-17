@@ -28,3 +28,4 @@ export const getSettings = async () => {
   return result[0];
 };
 
+

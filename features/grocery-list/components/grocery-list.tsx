@@ -81,10 +81,6 @@ export const GroceryList = ({
     editSheetRef.current?.present();
   };
 
-  const handleCloseEdit = () => {
-    setEditingItem(null);
-  };
-
   const handleGroupByChange = (newGroupBy: 'category' | 'none' | 'recipe') => {
     setGroupBy(newGroupBy);
     updateSettings({ groupBy: newGroupBy });
