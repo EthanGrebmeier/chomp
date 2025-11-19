@@ -252,7 +252,9 @@ export const GroceryList = ({
                     <GroceryListItem
                       item={item}
                       isChecked={Boolean(item.isChecked)}
-                      className={cn(showBorder && 'border-b border-border')}
+                      className={cn(
+                        showBorder && 'border-b border-dashed border-border'
+                      )}
                       onEdit={() => handleEditItem(item)}
                     />
                   );

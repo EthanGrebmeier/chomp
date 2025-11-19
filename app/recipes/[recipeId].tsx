@@ -5,9 +5,8 @@ import { RecipeDetail } from '@/features/recipes/components/recipe-detail';
 import { useRecipe } from '@/features/recipes/hooks/useRecipe';
 
 export default function RecipeDetailPage() {
-  const { recipeId, autofocus } = useLocalSearchParams<{
+  const { recipeId } = useLocalSearchParams<{
     recipeId: string;
-    autofocus?: string;
   }>();
 
   const { data: recipe, isLoading } = useRecipe(recipeId);
@@ -39,7 +38,7 @@ export default function RecipeDetailPage() {
   return (
     <View className="flex-1 bg-background">
       <View className="flex-1 gap-2 ">
-        <RecipeDetail recipe={recipe} autofocus={autofocus === 'true'} />
+        <RecipeDetail recipe={recipe} />
       </View>
     </View>
   );

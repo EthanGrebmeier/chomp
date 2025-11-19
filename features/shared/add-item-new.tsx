@@ -102,7 +102,7 @@ export const AddItemNew = ({
               ref={inputRef}
               placeholder="Add Item"
               placeholderTextColor={theme.mutedForeground}
-              className="z-10 h-10 text-xl font-semibold"
+              className="z-10 h-10 text-xl font-semibold text-foreground "
               value={input}
               onChangeText={setInput}
               onFocus={() => {

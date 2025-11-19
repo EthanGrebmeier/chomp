@@ -1,4 +1,5 @@
 import { Pressable, View } from 'react-native';
+
 import { CategoryTag } from '../../../components/category-tag';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
@@ -24,9 +25,9 @@ export const RecipeIngredientItem = ({
       }
       className={className}
     >
-      <Pressable className="flex-1 " onPress={() => onEdit?.(ingredient)}>
+      <Pressable className="flex-1 gap-1" onPress={() => onEdit?.(ingredient)}>
         <View className="flex-row items-center justify-between">
-          <Text className="text-2xl font-medium text-foreground">
+          <Text className="text-xl font-medium text-foreground">
             {ingredient.name}
           </Text>
           <Text className="text-lg text-muted-foreground">
@@ -35,7 +36,7 @@ export const RecipeIngredientItem = ({
             {ingredient.unit !== 'each' && ` ${ingredient.unit}`}
           </Text>
         </View>
-        <View className="flex-row items-center justify-end gap-2">
+        <View className="flex-row items-center gap-2">
           {ingredient.category && (
             <CategoryTag category={ingredient.category} />
           )}

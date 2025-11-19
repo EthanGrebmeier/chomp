@@ -7,6 +7,7 @@ import {
   CalendarSheet,
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
+import { Heading } from '../../../components/text/heading';
 import { Text } from '../../../components/ui/text';
 import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
 import { MealPlanDay, MealPlanWithRecipes } from '../types';
@@ -85,9 +86,7 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
     <View className="flex-1 ">
       <View className="px-4">
         <View className="flex-row items-center justify-between">
-          <Text className="text-4xl font-bold text-foreground">
-            {mealPlan?.name ?? 'Meal Plan'}
-          </Text>
+          <Heading>Meal Plan</Heading>
           <MealPlanDropdownMenu
             mealPlanId={mealPlan.id}
             mealPlanName={'Meal Plan'}

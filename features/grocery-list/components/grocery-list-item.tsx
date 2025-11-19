@@ -74,7 +74,7 @@ export const GroceryListItem = ({
       <HapticPressable
         hitSlop={10}
         className={cn(
-          'size-6 overflow-hidden rounded-full border border-border p-0.5 '
+          'mr-2 size-6 overflow-hidden rounded-sm border border-border p-0.5'
         )}
         onPress={onCheck}
         hapticType="selection"
@@ -87,12 +87,16 @@ export const GroceryListItem = ({
         ></View>
       </HapticPressable>
 
-      <HapticPressable className="flex-1" onPress={onEdit} hapticType="light">
+      <HapticPressable
+        className="flex-1 gap-1"
+        onPress={onEdit}
+        hapticType="light"
+      >
         <View className="flex-row items-center justify-between">
           <View className="relative">
             <Text
               className={cn(
-                'text-2xl font-medium text-foreground',
+                'text-xl font-medium text-foreground',
                 internalIsChecked && 'text-muted-foreground'
               )}
             >
@@ -120,18 +124,18 @@ export const GroceryListItem = ({
           </Text>
         </View>
         {(item.recipe ?? item.category) && (
-          <View className="flex-row items-center justify-between gap-2">
-            <View>
-              {item.recipe && (
+          <View className="flex-row items-center gap-2">
+            {item.category && <CategoryTag category={item.category} />}
+            {item.recipe && (
+              <View>
                 <View className="flex-row items-center gap-1">
                   <Icon as={CookingPotIcon} size={14} />
                   <Text className="text-sm text-muted-foreground">
                     {item.recipe.name}
                   </Text>
                 </View>
-              )}
-            </View>
-            {item.category && <CategoryTag category={item.category} />}
+              </View>
+            )}
           </View>
         )}
       </HapticPressable>

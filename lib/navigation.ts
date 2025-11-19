@@ -24,6 +24,8 @@
  * nav.goToList('list-123', { autofocus: true });
  */
 
+import { Href } from 'expo-router';
+
 // Base route types
 export type TabRoute = 'list' | 'plans' | 'recipes';
 
@@ -35,7 +37,6 @@ export interface MealPlanParams {
 
 export interface RecipeParams {
   recipeId: string;
-  autofocus?: boolean;
 }
 
 // Navigation options
@@ -47,15 +48,19 @@ export interface NavigationOptions {
 /**
  * Builds a URL for a specific tab
  */
-export function buildTabUrl(tab: TabRoute) {
-  return `/(tabs)/${tab}` as const;
+export function buildRecipesUrl(): Href {
+  return `/recipes` as const;
+}
+
+export function buildPlansUrl(): Href {
+  return `/plans` as const;
 }
 
 /**
  * Builds a URL for the single grocery list page
  */
-export function buildListUrl() {
-  return `/(tabs)/list` as const;
+export function buildListUrl(): Href {
+  return `/(tabs)` as const;
 }
 
 /**
@@ -71,9 +76,8 @@ export function buildMealPlanUrl(params: MealPlanParams) {
  * Builds a URL for a recipe detail page
  */
 export function buildRecipeUrl(params: RecipeParams) {
-  const { recipeId, autofocus } = params;
-  const query = autofocus ? '?autofocus=true' : '';
-  return `/recipes/${recipeId}${query}` as const;
+  const { recipeId } = params;
+  return `/recipes/${recipeId}` as const;
 }
 
 /**
@@ -81,17 +85,16 @@ export function buildRecipeUrl(params: RecipeParams) {
  */
 export const navigation = {
   // Tab navigation
-  goToList: () => buildListUrl(),
-  goToPlans: () => buildTabUrl('plans'),
-  goToRecipes: () => buildTabUrl('recipes'),
+  goToList: buildListUrl,
+  goToPlans: buildPlansUrl,
+  goToRecipes: buildRecipesUrl,
 
   // Meal plan navigation
   goToMealPlan: (mealPlanId: string, options?: NavigationOptions) =>
     buildMealPlanUrl({ mealPlanId, autofocus: options?.autofocus }),
 
   // Recipe navigation
-  goToRecipe: (recipeId: string, options?: NavigationOptions) =>
-    buildRecipeUrl({ recipeId, autofocus: options?.autofocus }),
+  goToRecipe: (recipeId: string) => buildRecipeUrl({ recipeId }),
 } as const;
 
 /**
@@ -110,8 +113,7 @@ export function useNavigation() {
       navigation.goToMealPlan(mealPlanId, options),
 
     // Recipe navigation
-    goToRecipe: (recipeId: string, options?: NavigationOptions) =>
-      navigation.goToRecipe(recipeId, options),
+    goToRecipe: (recipeId: string) => navigation.goToRecipe(recipeId),
   };
 }
 
@@ -122,16 +124,15 @@ export function useNavigation() {
 export const navActions = {
   // Tab navigation
   goToList: () => buildListUrl(),
-  goToPlans: () => buildTabUrl('plans'),
-  goToRecipes: () => buildTabUrl('recipes'),
+  goToPlans: () => buildPlansUrl(),
+  goToRecipes: () => buildRecipesUrl(),
 
   // Meal plan navigation
   goToMealPlan: (mealPlanId: string, options?: NavigationOptions) =>
     buildMealPlanUrl({ mealPlanId, autofocus: options?.autofocus }),
 
   // Recipe navigation
-  goToRecipe: (recipeId: string, options?: NavigationOptions) =>
-    buildRecipeUrl({ recipeId, autofocus: options?.autofocus }),
+  goToRecipe: (recipeId: string) => buildRecipeUrl({ recipeId }),
 } as const;
 
 /**

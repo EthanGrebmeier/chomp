@@ -103,6 +103,7 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
           onFocus={onFocus}
           onBlur={onBlur}
           onKeyPress={handleKeyPress}
+          numberOfLines={2}
           className={cn(
             'align-text-top text-3xl font-bold leading-[0.9]',
             titleClassName

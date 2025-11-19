@@ -33,7 +33,9 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
       renderItem={({ item, index }) => (
         <ListItem
           className={cn(
-            index !== (recipes.length ?? 0) - 1 ? 'border-b border-border' : ''
+            index !== (recipes.length ?? 0) - 1
+              ? 'border-b border-dashed border-border'
+              : ''
           )}
           onDelete={() => handleDelete(item.id)}
         >

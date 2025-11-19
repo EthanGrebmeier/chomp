@@ -2,10 +2,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { launchImageLibraryAsync } from 'expo-image-picker';
 import { MoreHorizontal, PlusIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { Animated, TextInput, View } from 'react-native';
+import { Animated, View } from 'react-native';
 import { toast } from 'sonner-native';
 
-import { EditableHeader } from '../../../components/editable-header';
+import { Heading } from '../../../components/text/heading';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
@@ -26,26 +26,17 @@ import { RecipeIngredientItem } from './recipe-ingredient-item';
 
 type RecipeDetailProps = {
   recipe: RecipeWithIngredients;
-  autofocus?: boolean;
 };
 
-export const RecipeDetail = ({
-  recipe,
-  autofocus = false,
-}: RecipeDetailProps) => {
+export const RecipeDetail = ({ recipe }: RecipeDetailProps) => {
   const { mutate: updateRecipe } = useUpdateRecipe();
   const { mutate: addIngredient } = useAddRecipeIngredient();
   const queryClient = useQueryClient();
 
-  const textInputRef = useRef<TextInput>(null);
   const addIngredientSheetRef = useRef<ItemSheetRef>(null);
   const [editingIngredient, setEditingIngredient] =
     useState<RecipeIngredient | null>(null);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
-
-  const handleChangeText = (text: string) => {
-    updateRecipe({ recipe: { ...recipe, name: text } });
-  };
 
   const handleEditIngredient = (ingredient: RecipeIngredient) => {
     setEditingIngredient(ingredient);
@@ -95,28 +86,23 @@ export const RecipeDetail = ({
         <BackButton />
         <RecipeDropdownMenu
           trigger={<Icon as={MoreHorizontal} size={24} />}
-          recipeId={recipe.id}
-          recipeName={recipe.name}
+          recipe={recipe}
         />
       </View>
       {/* Header */}
-      <View className="w-full flex-row gap-1 px-4">
+      <View className="w-full flex-row gap-2 px-4">
         <RecipeImage
           imageSrc={recipe.imageSrc}
           onSelectImage={handleSelectImage}
         />
-        <EditableHeader
-          ref={textInputRef}
-          value={recipe.name}
-          onChangeText={handleChangeText}
-          autofocus={autofocus}
-        >
-          <View className="flex-row gap-4">
+        <View className="flex-row gap-4">
+          <View>
+            <Heading>{recipe.name}</Heading>
             <Text className="text-lg text-muted-foreground">
               {recipe.ingredients.length} ingredients
             </Text>
           </View>
-        </EditableHeader>
+        </View>
       </View>
       {recipe.description && (
         <View className="px-4">
@@ -138,7 +124,7 @@ export const RecipeDetail = ({
             <RecipeIngredientItem
               className={cn(
                 index < recipe.ingredients.length - 1 &&
-                  'border-b border-border'
+                  'border-b border-dashed border-border'
               )}
               key={item.id}
               ingredient={item}

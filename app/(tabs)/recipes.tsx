@@ -6,6 +6,7 @@ import { useRecipes } from '@/features/recipes/hooks';
 
 import { Heading } from '../../components/text/heading';
 import { CreateRecipeButton } from '../../features/recipes/components/create-recipe-button';
+import { NATIVE_TABS_OFFSET } from '../../features/shared/consts';
 
 export default function Recipes() {
   const { data: recipes, isLoading } = useRecipes();
@@ -15,7 +16,10 @@ export default function Recipes() {
       <View className="px-4">
         <Heading>Recipes</Heading>
       </View>
-      <View className="absolute bottom-4 right-4 z-10">
+      <View
+        className="absolute right-4 z-10"
+        style={{ bottom: NATIVE_TABS_OFFSET }}
+      >
         <CreateRecipeButton />
       </View>
       <View className="flex-1">

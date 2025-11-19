@@ -15,8 +15,11 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
   }
   const { className, textClassName } = categoryOption.style;
   return (
-    <Pill className={cn('border border-border', className)} hasValue={true}>
-      <Text className={cn('text-sm font-semibold', textClassName)}>
+    <Pill
+      className={cn('border border-border py-0.5', className)}
+      hasValue={true}
+    >
+      <Text className={cn('text-xs font-semibold', textClassName)}>
         {categoryOption.label}
       </Text>
     </Pill>

@@ -19,7 +19,7 @@
     --accent: 0 0% 96.1%;
     --accent-foreground: 214 91% 45%;
     --destructive: 0 84.2% 60.2%;
-    --border: 0 0% 89.8%;
+    --border: 176 23% 85.8%;
     --input: 0 0% 89.8%;
     --ring: 0 0% 63%;
     --radius: 0.625rem;
@@ -31,7 +31,7 @@
   }
 
   .dark:root {
-    --background: 208 100% 3%;
+    --background: 334 10% 14%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -46,7 +46,7 @@
     --accent: 0 0% 14.9%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 70.9% 59.4%;
-    --border: 0 0% 14.9%;
+    --border: 216 8% 30%;
     --input: 0 0% 14.9%;
     --ring: 300 0% 45%;
     --chart-1: 220 70% 50%;
