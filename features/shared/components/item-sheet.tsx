@@ -1,41 +1,20 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { useForm } from '@tanstack/react-form';
-import { PlusIcon } from 'lucide-react-native';
+import { PlusIcon, ScaleIcon } from 'lucide-react-native';
 import { ReactNode, forwardRef, useImperativeHandle, useRef } from 'react';
-import { Platform, TextInput, View } from 'react-native';
+import { ScrollView, TextInput, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FieldInfo } from '@/components/field-info';
 import { Button } from '@/components/ui/button';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Icon } from '../../../components/ui/icon';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../components/ui/select';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import { QuantityUnit } from '../types';
 
-const unitOptions = [
-  { label: 'Each', value: 'each' },
-  { label: 'Kilogram', value: 'kg' },
-  { label: 'Gram', value: 'g' },
-  { label: 'Liter', value: 'l' },
-  { label: 'Milliliter', value: 'ml' },
-  { label: 'Pound', value: 'lb' },
-] as const;
-
-const verifyUnit = (
-  unit: string
-): unit is (typeof unitOptions)[number]['value'] => {
-  return unitOptions.some(option => option.value === unit);
-};
+import { UnitSelector } from './unit-selector';
 
 export type ItemFormData = {
   name: string;
@@ -80,17 +59,12 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
     const bottomSheetRef = useRef<TrueSheet>(null);
     const nameInputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
     const quantityInputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
-    const insets = useSafeAreaInsets();
     const theme = useTheme();
     const isEditing = !!defaultValues;
 
     useImperativeHandle(ref, () => ({
       present: () => {
         bottomSheetRef.current?.present();
-        // Focus after a short delay to ensure sheet is mounted
-        setTimeout(() => {
-          nameInputRef.current?.focus();
-        }, 100);
       },
       dismiss: () => bottomSheetRef.current?.dismiss(),
     }));
@@ -104,16 +78,11 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
       },
       onSubmit: e => {
         const { ...formValue } = e.value;
-        const unit = formValue.unit;
-
-        if (!verifyUnit(unit)) {
-          return;
-        }
 
         onSubmit({
           name: formValue.name,
           quantity: formValue.quantity,
-          unit,
+          unit: formValue.unit,
           category:
             formValue.category === ''
               ? null
@@ -193,102 +162,66 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
                 </View>
               )}
             </form.Field>
-            <View className="w-[164px] flex-row gap-2 ">
+            <View className="flex-row items-center gap-2 ">
+              <Icon as={ScaleIcon} size={16} />
               <form.Field name="quantity">
                 {field => (
-                  <BottomSheet.BareTextInput
-                    className="h-8 min-w-8 text-start text-xl font-semibold text-foreground"
-                    keyboardType="numeric"
-                    placeholder="1"
-                    value={field.state.value}
-                    ref={quantityInputRef}
-                    onChangeText={field.handleChange}
-                    onFocus={e => {
-                      quantityInputRef.current?.setNativeProps({
-                        selection: {
-                          start: field.state.value.length + 1,
-                          end: field.state.value.length + 1,
-                        },
-                      });
-                    }}
-                  />
+                  <View className="flex-row items-center gap-2">
+                    <BottomSheet.BareTextInput
+                      className="mb-2 h-8 w-full min-w-4 text-start text-xl font-semibold text-foreground"
+                      style={{
+                        textAlignVertical: 'center',
+                      }}
+                      keyboardType="numeric"
+                      placeholder="1"
+                      textAlignVertical="center"
+                      numberOfLines={1}
+                      value={field.state.value}
+                      ref={quantityInputRef}
+                      onChangeText={field.handleChange}
+                      onFocus={e => {
+                        quantityInputRef.current?.setNativeProps({
+                          selection: {
+                            start: field.state.value.length,
+                            end: field.state.value.length,
+                          },
+                        });
+                      }}
+                    />
+                  </View>
                 )}
+                {}
               </form.Field>
-              <form.Field
-                validators={{
-                  onSubmit: ({ value }) => {
-                    if (!value.length) {
-                      return 'Unit is required';
-                    }
-                    if (!verifyUnit(value)) {
-                      return 'Invalid unit';
-                    }
-                  },
-                }}
-                name="unit"
-              >
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="flex-row items-center gap-2"
+            >
+              <form.Field name="category">
                 {field => (
-                  <View className="w-[104px] shrink-0 gap-2 ">
-                    <Select
-                      className="bg-transparent"
-                      value={unitOptions.find(
-                        option => option.value === field.state.value
-                      )}
-                      onValueChange={option =>
-                        option &&
-                        field.setValue(option.value as typeof field.state.value)
-                      }
-                    >
-                      <SelectTrigger className="shrink-0 border-0 border-none  p-0 shadow-none dark:bg-transparent">
-                        <SelectValue
-                          className="bg-transparent text-xl font-semibold text-foreground "
-                          placeholder="Select Unit"
-                        />
-                      </SelectTrigger>
-                      <SelectContent
-                        align="end"
-                        side="top"
-                        insets={{
-                          top: insets.top,
-                          bottom: Platform.select({
-                            ios: insets.bottom,
-                            android: insets.bottom + 24,
-                          }),
-                          left: 12,
-                          right: 12,
-                        }}
-                        className=" flex-1"
-                      >
-                        {unitOptions.map(option => (
-                          <SelectItem
-                            key={option.value}
-                            value={option.value}
-                            label={option.label}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <View className="gap-2">
+                    {categoryComponent ? (
+                      categoryComponent(field.state.value, category =>
+                        field.setValue(category ?? '')
+                      )
+                    ) : (
+                      <Text className="text-sm text-muted-foreground">
+                        Category: {field.state.value ?? 'None'}
+                      </Text>
+                    )}
                   </View>
                 )}
               </form.Field>
-            </View>
-            <form.Field name="category">
-              {field => (
-                <View className="gap-2">
-                  {categoryComponent ? (
-                    categoryComponent(field.state.value, category =>
-                      field.setValue(category ?? '')
-                    )
-                  ) : (
-                    <Text className="text-sm text-muted-foreground">
-                      Category: {field.state.value ?? 'None'}
-                    </Text>
-                  )}
-                </View>
-              )}
-            </form.Field>
+              <form.Field name="unit">
+                {field => (
+                  <UnitSelector
+                    unit={field.state.value}
+                    onSelect={field.handleChange}
+                  />
+                )}
+              </form.Field>
+            </ScrollView>
           </View>
           <Button onPress={handleSubmit}>
             <Text>

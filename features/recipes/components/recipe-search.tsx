@@ -100,6 +100,7 @@ export const RecipeSearch = ({
           placeholder="Search for or create a recipe"
           ref={searchInputRef}
           clearButtonMode="always"
+          textAlign="left"
         />
         <View className="absolute left-2 top-1/2 -translate-y-1/2">
           <Icon as={SearchIcon} size={16} color={theme.foreground} />
