@@ -8,20 +8,20 @@
  * import { router } from 'expo-router';
  * import { navigation } from '@/lib/navigation';
  *
- * router.push(navigation.goToList('list-123', { autofocus: true }));
+ * router.push(navigation.goToList());
  * router.push(navigation.goToMealPlan('plan-456'));
  * router.push(navigation.goToRecipe('recipe-789'));
  *
  * // Using the navActions (alternative API)
  * import { navActions } from '@/lib/navigation';
  *
- * router.push(navActions.goToList('list-123', { autofocus: true }));
+ * router.push(navActions.goToList());
  *
  * // Using the hook in components
  * import { useNavigation } from '@/lib/navigation';
  *
  * const nav = useNavigation();
- * nav.goToList('list-123', { autofocus: true });
+ * nav.goToList();
  */
 
 import { Href } from 'expo-router';

@@ -16,7 +16,7 @@ export const useDuplicateRecipe = () => {
         queryKey: recipeQueryKeys.lists(),
       });
       // Navigate to the new recipe
-      router.push(navigation.goToRecipe(result.id, { autofocus: true }));
+      router.push(navigation.goToRecipe(result.id));
     },
   });
 };

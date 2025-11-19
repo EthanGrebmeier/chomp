@@ -2,6 +2,7 @@ import { eachDayOfInterval, format, isSameDay, startOfDay } from 'date-fns';
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import {
   CalendarSheet,
@@ -83,7 +84,11 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
   };
 
   return (
-    <View className="flex-1 ">
+    <Animated.View
+      entering={FadeIn.duration(140)}
+      exiting={FadeOut.duration(140)}
+      className="flex-1 "
+    >
       <View className="px-4">
         <View className="flex-row items-center justify-between">
           <Heading>Meal Plan</Heading>
@@ -159,6 +164,6 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
           </View>
         ))}
       </PagerView>
-    </View>
+    </Animated.View>
   );
 };

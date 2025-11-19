@@ -55,16 +55,18 @@ export const RecipeSearch = ({
 
           toast.custom(
             <View className="px-4">
-              <View className="flex-row items-center justify-between gap-4 rounded-full border border-border bg-white py-2 pl-6 pr-2">
-                <Text className="text-sm font-medium  text-black">
-                  <Text className="font-semibold capitalize">{search}</Text>{' '}
+              <View className="flex-row items-center justify-between gap-4 rounded-full border border-border bg-muted py-2 pl-6 pr-2">
+                <Text className="text-sm font-medium text-foreground">
+                  <Text className="font-semibold capitalize text-foreground">
+                    {search}
+                  </Text>{' '}
                   created
                 </Text>
                 <Button
                   variant="default"
                   size="sm"
                   onPress={() => {
-                    router.push(navigation.goToRecipe(id, { autofocus: true }));
+                    router.push(navigation.goToRecipe(id));
                   }}
                 >
                   <Text>View Recipe</Text>

@@ -33,7 +33,7 @@ export default function MealPlansPage() {
 
   return (
     <View className="pt-safe flex-1 bg-background">
-      <MealPlanner mealPlan={activeMealPlan} />
+      <MealPlanner key={activeMealPlan.id} mealPlan={activeMealPlan} />
     </View>
   );
 }

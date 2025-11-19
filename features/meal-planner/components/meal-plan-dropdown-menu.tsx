@@ -39,13 +39,23 @@ export const MealPlanDropdownMenu = ({
   const handleCreateNewMealPlan = () => {
     const startDate = startOfDay(new Date());
     const endDate = addDays(startDate, 6);
-    createMealPlan({
-      mealPlan: {
-        name: 'New Meal Plan',
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
+    createMealPlan(
+      {
+        mealPlan: {
+          name: 'New Meal Plan',
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          toast.success('New meal plan created');
+        },
+        onError: () => {
+          toast.error('Failed to create meal plan');
+        },
+      }
+    );
   };
 
   const handleAddToGroceryList = () => {
