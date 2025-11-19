@@ -45,7 +45,7 @@ export const AddItemNew = ({
       ? groceries
           .filter(item => item.name.toLowerCase().includes(input.toLowerCase()))
           .slice(0, 7)
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .sort((a, b) => b.name.localeCompare(a.name))
       : [];
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export const AddItemNew = ({
               className=" z-10 mb-2 gap-1"
             >
               {matchingItems.map(item => (
-                <Animated.View key={item.name} entering={FadeIn.duration(300)}>
+                <Animated.View key={item.name}>
                   <HapticPressable
                     className={cn(
                       'flex-row items-center justify-between self-start rounded-xl border border-border bg-muted px-2 py-1'
