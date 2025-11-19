@@ -86,7 +86,6 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
 
     useImperativeHandle(ref, () => ({
       present: () => {
-        console.log('present');
         bottomSheetRef.current?.present();
         // Focus after a short delay to ensure sheet is mounted
         setTimeout(() => {
