@@ -211,7 +211,7 @@ export const GroceryList = ({
               <AnimatedSectionList
                 scrollEnabled={true}
                 onScroll={() => setIsItemSheetOpen(false)}
-                contentContainerClassName="pb-20"
+                contentContainerClassName="pb-36"
                 showsVerticalScrollIndicator={false}
                 sections={sections}
                 keyExtractor={item => item.id}
@@ -263,17 +263,12 @@ export const GroceryList = ({
             )}
           </LayoutAnimationConfig>
         </View>
-        <View className=" absolute bottom-4 left-4 right-4 flex-row items-center justify-between gap-2">
-          <View></View>
-          <View className="flex-row gap-2">
-            <AddRecipeSheet ref={recipeSheetRef} />
-            <AddItemSheet
-              showButton={false}
-              defaultValues={editingItem}
-              ref={editSheetRef}
-            />
-          </View>
-        </View>
+        <AddRecipeSheet ref={recipeSheetRef} />
+        <AddItemSheet
+          showButton={false}
+          defaultValues={editingItem}
+          ref={editSheetRef}
+        />
         <View
           className="absolute right-4 z-20"
           style={{ bottom: NATIVE_TABS_OFFSET }}

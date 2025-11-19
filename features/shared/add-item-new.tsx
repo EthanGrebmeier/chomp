@@ -95,6 +95,7 @@ export const AddItemNew = ({
         offset={{
           opened: 88,
         }}
+        pointerEvents={isOpen ? 'auto' : 'box-none'}
       >
         <Animated.View style={inputStyle}>
           <View className="z-10  rounded-2xl border border-border bg-muted px-5 py-3 text-xl font-semibold">
