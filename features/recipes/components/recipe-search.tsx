@@ -124,7 +124,7 @@ export const RecipeSearch = ({
             </Pressable>
           )}
         />
-      ) : (
+      ) : search.length > 0 ? (
         <View className="flex-1 items-center justify-center gap-2">
           <Text className="text-muted-foreground">
             No recipes found for &quot;{search}&quot;
@@ -133,7 +133,7 @@ export const RecipeSearch = ({
             <Text>Create Recipe</Text>
           </Button>
         </View>
-      )}
+      ) : null}
     </Animated.View>
   );
 };

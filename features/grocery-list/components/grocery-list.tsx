@@ -1,4 +1,6 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
+import { PlusIcon } from 'lucide-react-native';
 import { forwardRef, useRef, useState } from 'react';
 import {
   ScrollViewProps,
@@ -9,13 +11,18 @@ import {
 import { ScrollView } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
+import { toast } from 'sonner-native';
 
+import { Button } from '../../../components/ui/button';
+import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { AddItemNew } from '../../shared/add-item-new';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
+import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
-import { GroceryListItemWithRecipe } from '../types';
+import { queryKeys } from '../query-keys';
+import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
 
 import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
@@ -50,6 +57,27 @@ export const GroceryList = ({
   const [isItemSheetOpen, setIsItemSheetOpen] = useState(false);
   const recipeSheetRef = useRef<AddRecipeSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
+
+  const queryClient = useQueryClient();
+
+  const { mutate: addItem } = useAddGroceryItem();
+
+  const handleAddItem = (item: BaseGroceryItem) => {
+    addItem(
+      {
+        name: item.name,
+        quantity: 1,
+        unit: 'each',
+        category: item.category,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${item.name} added to grocery list`);
+          queryClient.invalidateQueries({ queryKey: queryKeys.items() });
+        },
+      }
+    );
+  };
 
   const [editingItem, setEditingItem] =
     useState<GroceryListItemWithRecipe | null>(null);
@@ -244,8 +272,31 @@ export const GroceryList = ({
             />
           </View>
         </View>
+        <View
+          className="absolute right-4 z-20"
+          style={{ bottom: NATIVE_TABS_OFFSET }}
+        >
+          <Button
+            size="iconLg"
+            onPress={() => {
+              setIsItemSheetOpen(true);
+            }}
+          >
+            <Icon
+              as={PlusIcon}
+              size={28}
+              strokeWidth={3}
+              className="text-primary-foreground"
+            />
+          </Button>
+        </View>
       </View>
-      <AddItemNew isOpen={isItemSheetOpen} setIsOpen={setIsItemSheetOpen} />
+      <AddItemNew
+        isOpen={isItemSheetOpen}
+        setIsOpen={setIsItemSheetOpen}
+        onAddItem={handleAddItem}
+        bottomOffset={NATIVE_TABS_OFFSET}
+      />
     </>
   );
 };

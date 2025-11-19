@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
@@ -16,27 +15,28 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
-import { toast } from 'sonner-native';
 
-import { Button } from '../../components/ui/button';
 import { HapticPressable } from '../../components/ui/haptic-pressable';
 import { Icon } from '../../components/ui/icon';
 import { Text } from '../../components/ui/text';
 import { useTheme } from '../../hooks/use-theme';
 import { cn } from '../../lib/utils';
 import { groceries } from '../grocery-list/consts/groceries';
-import { useAddGroceryItem } from '../grocery-list/hooks/useAddGroceryListItem';
-import { queryKeys } from '../grocery-list/query-keys';
 import { BaseGroceryItem } from '../grocery-list/types';
-
-import { NATIVE_TABS_OFFSET } from './consts';
 
 type AddItemNewProps = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  onAddItem: (item: BaseGroceryItem) => void;
+  bottomOffset?: number;
 };
 
-export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
+export const AddItemNew = ({
+  isOpen,
+  setIsOpen,
+  onAddItem,
+  bottomOffset = 72,
+}: AddItemNewProps) => {
   const [input, setInput] = useState('');
   const inputRef = useRef<TextInput>(null);
   const theme = useTheme();
@@ -48,29 +48,14 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
           .sort((a, b) => a.name.localeCompare(b.name))
       : [];
 
-  const { mutate: addItem } = useAddGroceryItem();
-  const queryClient = useQueryClient();
-  const handleAddItem = (item: BaseGroceryItem) => {
-    addItem(
-      {
-        name: item.name,
-        quantity: 1,
-        unit: 'each',
-        category: item.category,
-      },
-      {
-        onSuccess: () => {
-          setInput('');
-          toast.success(`${item.name} added to grocery list`);
-          queryClient.invalidateQueries({ queryKey: queryKeys.items() });
-        },
-      }
-    );
-  };
-
   useEffect(() => {
     if (!isOpen) {
       KeyboardController.dismiss();
+    } else {
+      // Focus input when opened
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   }, [isOpen]);
 
@@ -86,24 +71,13 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
     };
   });
 
+  const handleAddItem = (item: BaseGroceryItem) => {
+    onAddItem(item);
+    setInput('');
+  };
+
   return (
     <>
-      <Button
-        className="absolute right-4 z-20"
-        style={{ bottom: NATIVE_TABS_OFFSET }}
-        size="iconLg"
-        onPress={() => {
-          setIsOpen(true);
-          inputRef.current?.focus();
-        }}
-      >
-        <Icon
-          as={PlusIcon}
-          size={28}
-          strokeWidth={3}
-          className="text-primary-foreground"
-        />
-      </Button>
       {isOpen && (
         <Animated.View
           entering={FadeIn.duration(300)}
@@ -117,7 +91,7 @@ export const AddItemNew = ({ isOpen, setIsOpen }: AddItemNewProps) => {
         </Animated.View>
       )}
       <KeyboardStickyView
-        style={[style.container, { bottom: 72 }]}
+        style={[style.container, { bottom: bottomOffset }]}
         offset={{
           opened: 88,
         }}

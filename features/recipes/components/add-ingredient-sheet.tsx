@@ -91,6 +91,7 @@ export const AddIngredientSheet = forwardRef<
       onSubmit={handleSubmit}
       namePlaceholder="Ingredient Name"
       buttonText={isEditing ? 'Update Ingredient' : 'Add Ingredient'}
+      showAddButton={false}
       categoryComponent={(category, onSelect) => (
         <CategorySelector category={category} onSelect={onSelect} />
       )}

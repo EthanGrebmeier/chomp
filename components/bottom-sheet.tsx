@@ -34,6 +34,7 @@ export const BottomSheet = ({
 
   return (
     <TrueSheet
+      edgeToEdge={true}
       ref={ref}
       name={name}
       sizes={['auto']}
