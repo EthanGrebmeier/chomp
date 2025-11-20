@@ -98,7 +98,7 @@ export const AddItemNew = ({
         pointerEvents={isOpen ? 'auto' : 'box-none'}
       >
         <Animated.View style={inputStyle}>
-          <View className="z-10  rounded-2xl border border-border bg-muted px-5 py-3 text-xl font-semibold">
+          <View className="z-10 rounded-2xl border border-border bg-muted px-5 py-2 text-xl font-semibold">
             <TextInput
               ref={inputRef}
               placeholder="Add Item"
@@ -106,6 +106,7 @@ export const AddItemNew = ({
               className="z-10 h-10 text-xl font-semibold text-foreground "
               value={input}
               onChangeText={setInput}
+              textAlign="left"
               onFocus={() => {
                 setIsOpen(true);
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -126,6 +127,7 @@ export const AddItemNew = ({
             >
               <HapticPressable
                 className="items-center justify-center"
+                hitSlop={40}
                 onPress={() => handleAddItem({ name: input })}
               >
                 <Icon
