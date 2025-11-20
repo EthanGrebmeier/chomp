@@ -266,34 +266,35 @@ export const GroceryList = ({
             <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
             <SortBySelector value={sortBy} onChange={handleSortByChange} />
           </ScrollView>
-          <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
-            {items.length === 0 ? (
-              <View className="flex-1 items-center justify-center ">
-                <View
-                  className="w-64"
+
+          {items.length === 0 ? (
+            <View className="flex-1 items-center justify-center ">
+              <View
+                className="w-64"
+                style={{
+                  marginTop: -NATIVE_TABS_OFFSET,
+                }}
+              >
+                <Image
+                  source={require('../../../assets/images/grocery-basket.png')}
                   style={{
-                    marginTop: -NATIVE_TABS_OFFSET,
+                    width: 'auto',
+                    height: 180,
                   }}
-                >
-                  <Image
-                    source={require('../../../assets/images/grocery-basket.png')}
-                    style={{
-                      width: 'auto',
-                      height: 180,
-                    }}
-                    contentFit="contain"
-                  />
-                </View>
-                <View>
-                  <EmptyHeading className="px-4">
-                    Your grocery list is empty
-                  </EmptyHeading>
-                  <EmptySubtext className="px-4">
-                    Add some items to get started!
-                  </EmptySubtext>
-                </View>
+                  contentFit="contain"
+                />
               </View>
-            ) : (
+              <View>
+                <EmptyHeading className="px-4">
+                  Your grocery list is empty
+                </EmptyHeading>
+                <EmptySubtext className="px-4">
+                  Add some items to get started!
+                </EmptySubtext>
+              </View>
+            </View>
+          ) : (
+            <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
               <AnimatedSectionList
                 scrollEnabled={true}
                 onScroll={() => setIsItemSheetOpen(false)}
@@ -346,8 +347,8 @@ export const GroceryList = ({
                   );
                 }}
               />
-            )}
-          </LayoutAnimationConfig>
+            </LayoutAnimationConfig>
+          )}
         </View>
         <AddRecipeSheet ref={recipeSheetRef} />
         <AddItemSheet
