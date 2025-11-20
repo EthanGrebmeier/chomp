@@ -1,45 +1,26 @@
-import { and, eq } from 'drizzle-orm';
-
 import { generateId } from '@/lib/utils';
 
 import { groceryListItemTable } from '../../../db/schema';
 import { db } from '../../../providers/migration-provider';
 import { QuantityUnit } from '../../shared/types';
 
-type CreateListItemArgs = {
+type CreateSeparateListItemArgs = {
   name: string;
   quantity: number;
   unit: QuantityUnit;
   notes?: string;
   category?: string | null;
+  recipeId?: string | null;
 };
 
-export const createListItem = async ({
+export const createSeparateListItem = async ({
   name,
   quantity,
   unit,
   notes,
   category,
-}: CreateListItemArgs) => {
-  const existingItem = await db
-    .select()
-    .from(groceryListItemTable)
-    .where(
-      and(
-        eq(groceryListItemTable.name, name),
-        eq(groceryListItemTable.unit, unit),
-        eq(groceryListItemTable.isChecked, false)
-      )
-    )
-    .limit(1);
-
-  if (existingItem.length > 0) {
-    return {
-      isDuplicate: true,
-      existingItem: existingItem[0],
-    };
-  }
-
+  recipeId,
+}: CreateSeparateListItemArgs) => {
   const now = new Date().toISOString();
   const groceryListItem = {
     id: generateId(),
@@ -48,6 +29,7 @@ export const createListItem = async ({
     unit,
     notes,
     category,
+    recipeId,
     isChecked: false,
     createdAt: now,
     updatedAt: now,
@@ -55,8 +37,6 @@ export const createListItem = async ({
 
   await db.insert(groceryListItemTable).values(groceryListItem);
 
-  return {
-    isDuplicate: false,
-    groceryListItem,
-  };
+  return groceryListItem;
 };
+

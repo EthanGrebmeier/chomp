@@ -1,3 +1,4 @@
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { PlusIcon } from 'lucide-react-native';
@@ -20,11 +21,14 @@ import { cn } from '../../../lib/utils';
 import { AddItemNew } from '../../shared/add-item-new';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
+import { useCreateSeparateGroceryListItem } from '../hooks/useCreateSeparateGroceryListItem';
+import { useIncrementGroceryListItem } from '../hooks/useIncrementGroceryListItem';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { queryKeys } from '../query-keys';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
 
+import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
 import { AddRecipeSheet, AddRecipeSheetRef } from './add-recipe-sheet';
 import { CollapsibleSectionHeader } from './collapsible-section-header';
@@ -61,6 +65,8 @@ export const GroceryList = ({
   const queryClient = useQueryClient();
 
   const { mutate: addItem } = useAddGroceryItem();
+  const { mutate: incrementItem } = useIncrementGroceryListItem();
+  const { mutate: createSeparateItem } = useCreateSeparateGroceryListItem();
 
   const handleAddItem = (item: BaseGroceryItem) => {
     addItem(
@@ -71,7 +77,15 @@ export const GroceryList = ({
         category: item.category,
       },
       {
-        onSuccess: () => {
+        onSuccess: result => {
+          if (result.isDuplicate && result.existingItem) {
+            setConflictItem({
+              existingItemId: result.existingItem.id,
+              newItem: item,
+            });
+            addItemConflictSheetRef.current?.present();
+            return;
+          }
           toast.success(`${item.name} added to grocery list`);
           queryClient.invalidateQueries({ queryKey: queryKeys.items() });
         },
@@ -81,6 +95,10 @@ export const GroceryList = ({
 
   const [editingItem, setEditingItem] =
     useState<GroceryListItemWithRecipe | null>(null);
+  const [conflictItem, setConflictItem] = useState<{
+    existingItemId: string;
+    newItem: BaseGroceryItem;
+  } | null>(null);
   const [groupBy, setGroupBy] = useState<'category' | 'none' | 'recipe'>(
     initialGroupBy
   );
@@ -92,7 +110,7 @@ export const GroceryList = ({
   );
 
   const editSheetRef = useRef<AddItemSheetRef>(null);
-
+  const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const toggleSection = (sectionTitle: string) => {
     setCollapsedSections(prev => {
       const next = new Set(prev);
@@ -118,6 +136,51 @@ export const GroceryList = ({
   const handleSortByChange = (newSortBy: 'name' | 'recent') => {
     setSortBy(newSortBy);
     updateSettings({ sortBy: newSortBy });
+  };
+
+  const handleIncrementExistingItem = () => {
+    if (!conflictItem) return;
+
+    incrementItem(
+      {
+        itemId: conflictItem.existingItemId,
+        quantityToAdd: 1,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Quantity updated for ${conflictItem.newItem.name}`);
+          queryClient.invalidateQueries({ queryKey: queryKeys.items() });
+          addItemConflictSheetRef.current?.dismiss();
+          setConflictItem(null);
+        },
+      }
+    );
+  };
+
+  const handleCreateSeparateItem = () => {
+    if (!conflictItem) return;
+
+    createSeparateItem(
+      {
+        name: conflictItem.newItem.name,
+        quantity: 1,
+        unit: 'each',
+        category: conflictItem.newItem.category,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${conflictItem.newItem.name} added as separate item`);
+          queryClient.invalidateQueries({ queryKey: queryKeys.items() });
+          addItemConflictSheetRef.current?.dismiss();
+          setConflictItem(null);
+        },
+      }
+    );
+  };
+
+  const handleCancelConflict = () => {
+    addItemConflictSheetRef.current?.dismiss();
+    setConflictItem(null);
   };
 
   // Separate checked and unchecked items
@@ -268,6 +331,12 @@ export const GroceryList = ({
           showButton={false}
           defaultValues={editingItem}
           ref={editSheetRef}
+        />
+        <AddItemConflictSheet
+          ref={addItemConflictSheetRef}
+          onIncrement={handleIncrementExistingItem}
+          onCreateSeparate={handleCreateSeparateItem}
+          onCancel={handleCancelConflict}
         />
         <View
           className="absolute right-4 z-20"
