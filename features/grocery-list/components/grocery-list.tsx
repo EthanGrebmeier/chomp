@@ -14,9 +14,10 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
+import { EmptyHeading } from '../../../components/text/empty-heading';
+import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
-import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { AddItemNew } from '../../shared/add-item-new';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
@@ -284,12 +285,12 @@ export const GroceryList = ({
                   />
                 </View>
                 <View>
-                  <Text className="px-4 text-center text-xl font-semibold text-foreground">
+                  <EmptyHeading className="px-4">
                     Your grocery list is empty
-                  </Text>
-                  <Text className="px-4 text-center text-sm text-muted-foreground">
+                  </EmptyHeading>
+                  <EmptySubtext className="px-4">
                     Add some items to get started!
-                  </Text>
+                  </EmptySubtext>
                 </View>
               </View>
             ) : (

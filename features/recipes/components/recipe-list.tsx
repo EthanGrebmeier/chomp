@@ -1,5 +1,7 @@
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 
+import { EmptyHeading } from '../../../components/text/empty-heading';
+import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { ListItem } from '../../../components/ui/list-item';
 import { cn } from '../../../lib/utils';
 import { useDeleteRecipe } from '../hooks';
@@ -19,10 +21,9 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
 
   if (recipes.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center p-8">
-        <Text className="text-center text-gray-500">
-          No recipes yet. Create your first recipe to get started!
-        </Text>
+      <View className="flex-1 items-center justify-center px-4">
+        <EmptyHeading>No recipes yet</EmptyHeading>
+        <EmptySubtext>Create your first recipe to get started!</EmptySubtext>
       </View>
     );
   }
