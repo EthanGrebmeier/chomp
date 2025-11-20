@@ -3,19 +3,19 @@ import { ReactNode } from 'react';
 import * as DropdownMenu from 'zeego/dropdown-menu';
 
 import { useClearCheckedItems } from '../../hooks/useClearCheckedItems';
-import { useClearList } from '../../hooks/useClearList';
 import { useGroceryItems } from '../../hooks/useGroceryItems';
 
 type GroceryListDropdownMenuProps = {
   trigger: ReactNode;
   openRecipeSheet: () => void;
+  onClearListPress: () => void;
 };
 
 export const GroceryListDropdownMenu = ({
   trigger,
   openRecipeSheet,
+  onClearListPress,
 }: GroceryListDropdownMenuProps) => {
-  const { mutate: clearList } = useClearList();
   const { mutate: clearCheckedItems } = useClearCheckedItems();
   const { data: groceryListItems } = useGroceryItems();
   const checkedItems = groceryListItems?.filter(item => item.isChecked) ?? [];
@@ -32,7 +32,12 @@ export const GroceryListDropdownMenu = ({
           <DropdownMenu.ItemTitle>Add Recipe</DropdownMenu.ItemTitle>
           <DropdownMenu.ItemIcon ios={{ name: 'book' }} />
         </DropdownMenu.Item>
-        <DropdownMenu.Item onSelect={clearList} destructive key="clear-list">
+        <DropdownMenu.Item
+          onSelect={onClearListPress}
+          destructive
+          key="clear-list"
+          disabled={!groceryListItems?.length}
+        >
           <DropdownMenu.ItemTitle>Clear Grocery List</DropdownMenu.ItemTitle>
           <DropdownMenu.ItemIcon ios={{ name: 'trash' }} />
         </DropdownMenu.Item>

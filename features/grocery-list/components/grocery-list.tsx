@@ -21,6 +21,7 @@ import { cn } from '../../../lib/utils';
 import { AddItemNew } from '../../shared/add-item-new';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
+import { useClearList } from '../hooks/useClearList';
 import { useCreateSeparateGroceryListItem } from '../hooks/useCreateSeparateGroceryListItem';
 import { useIncrementGroceryListItem } from '../hooks/useIncrementGroceryListItem';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
@@ -31,6 +32,7 @@ import { groupItemsBy } from '../util';
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
 import { AddRecipeSheet, AddRecipeSheetRef } from './add-recipe-sheet';
+import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
 import { CollapsibleSectionHeader } from './collapsible-section-header';
 import { GroceryListHeader } from './grocery-list-header';
 import { GroceryListItem } from './grocery-list-item';
@@ -67,6 +69,7 @@ export const GroceryList = ({
   const { mutate: addItem } = useAddGroceryItem();
   const { mutate: incrementItem } = useIncrementGroceryListItem();
   const { mutate: createSeparateItem } = useCreateSeparateGroceryListItem();
+  const { mutate: clearList } = useClearList();
 
   const handleAddItem = (item: BaseGroceryItem) => {
     addItem(
@@ -111,6 +114,7 @@ export const GroceryList = ({
 
   const editSheetRef = useRef<AddItemSheetRef>(null);
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
+  const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
   const toggleSection = (sectionTitle: string) => {
     setCollapsedSections(prev => {
       const next = new Set(prev);
@@ -183,6 +187,23 @@ export const GroceryList = ({
     setConflictItem(null);
   };
 
+  const handleClearListPress = () => {
+    clearListConfirmationSheetRef.current?.present();
+  };
+
+  const handleConfirmClearList = () => {
+    clearList(undefined, {
+      onSuccess: () => {
+        toast.success('Grocery list cleared');
+        clearListConfirmationSheetRef.current?.dismiss();
+      },
+    });
+  };
+
+  const handleCancelClearList = () => {
+    clearListConfirmationSheetRef.current?.dismiss();
+  };
+
   // Separate checked and unchecked items
   const uncheckedItems = items.filter(item => !item.isChecked);
   let checkedItems = items.filter(item => item.isChecked);
@@ -232,6 +253,7 @@ export const GroceryList = ({
         <GroceryListHeader
           itemCount={items.length}
           openRecipeSheet={() => recipeSheetRef.current?.present()}
+          onClearListPress={handleClearListPress}
         />
         <View className="flex-1">
           <ScrollView
@@ -337,6 +359,11 @@ export const GroceryList = ({
           onIncrement={handleIncrementExistingItem}
           onCreateSeparate={handleCreateSeparateItem}
           onCancel={handleCancelConflict}
+        />
+        <ClearListConfirmationSheet
+          ref={clearListConfirmationSheetRef}
+          onConfirm={handleConfirmClearList}
+          onCancel={handleCancelClearList}
         />
         <View
           className="absolute right-4 z-20"
