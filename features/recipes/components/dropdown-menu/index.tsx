@@ -1,9 +1,15 @@
-import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { ReactNode, useRef, useState } from 'react';
 import { toast } from 'sonner-native';
-import * as DropdownMenu from 'zeego/dropdown-menu';
 
+import {
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+} from '@/components/ui/dropdown-menu';
 import { navigation } from '@/lib/navigation';
 
 import {
@@ -138,43 +144,38 @@ export const RecipeDropdownMenu = ({
 
   return (
     <>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger
-          onClick={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-        >
-          {trigger}
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
-          <DropdownMenu.Item onSelect={handleAddToList} key="add-to-list">
-            <DropdownMenu.ItemTitle>Add to List</DropdownMenu.ItemTitle>
-            <DropdownMenu.ItemIcon ios={{ name: 'cart' }} />
-          </DropdownMenu.Item>
+      <DropdownMenuRoot trigger={trigger}>
+        <DropdownMenuContent>
+          <DropdownMenuItem onSelect={handleAddToList} key="add-to-list">
+            <DropdownMenuItemTitle>Add to List</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'cart' }} />
+          </DropdownMenuItem>
 
-          <DropdownMenu.Group>
-            <DropdownMenu.Item
+          <DropdownMenuGroup>
+            <DropdownMenuItem
               onSelect={() => createRecipeSheetRef.current?.present()}
               key="edit-recipe"
             >
-              <DropdownMenu.ItemTitle>Edit Recipe</DropdownMenu.ItemTitle>
-              <DropdownMenu.ItemIcon ios={{ name: 'pencil' }} />
-            </DropdownMenu.Item>
-            <DropdownMenu.Item onSelect={handleDuplicate} key="duplicate">
-              <DropdownMenu.ItemTitle>Duplicate Recipe</DropdownMenu.ItemTitle>
-              <DropdownMenu.ItemIcon ios={{ name: 'doc.on.doc' }} />
-            </DropdownMenu.Item>
-          </DropdownMenu.Group>
-          <DropdownMenu.Group>
-            <DropdownMenu.Item
+              <DropdownMenuItemTitle>Edit Recipe</DropdownMenuItemTitle>
+              <DropdownMenuItemIcon ios={{ name: 'pencil' }} />
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleDuplicate} key="duplicate">
+              <DropdownMenuItemTitle>Duplicate Recipe</DropdownMenuItemTitle>
+              <DropdownMenuItemIcon ios={{ name: 'doc.on.doc' }} />
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuGroup>
+            <DropdownMenuItem
               onSelect={handleDelete}
               destructive
               key="delete-recipe"
             >
-              <DropdownMenu.ItemTitle>Delete Recipe</DropdownMenu.ItemTitle>
-              <DropdownMenu.ItemIcon ios={{ name: 'trash' }} />
-            </DropdownMenu.Item>
-          </DropdownMenu.Group>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+              <DropdownMenuItemTitle>Delete Recipe</DropdownMenuItemTitle>
+              <DropdownMenuItemIcon ios={{ name: 'trash' }} />
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenuRoot>
       <RecipeConflictSheet
         ref={conflictSheetRef}
         recipeName={recipe.name}

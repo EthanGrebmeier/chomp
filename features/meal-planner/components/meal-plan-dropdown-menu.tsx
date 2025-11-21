@@ -1,10 +1,16 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { addDays, startOfDay } from 'date-fns';
 import { MoreHorizontalIcon } from 'lucide-react-native';
-import { Pressable } from 'react-native';
 import { toast } from 'sonner-native';
-import * as DropdownMenu from 'zeego/dropdown-menu';
 
+import {
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+} from '../../../components/ui/dropdown-menu';
 import { Icon } from '../../../components/ui/icon';
 import { useTheme } from '../../../hooks/use-theme';
 import { useAddMealPlanToGroceryList } from '../hooks/useAddMealPlanToGroceryList';
@@ -75,54 +81,51 @@ export const MealPlanDropdownMenu = ({
   };
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger>
-        <Pressable className="p-2">
-          <Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />
-        </Pressable>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content>
-        <DropdownMenu.Group>
-          <DropdownMenu.Item
+    <DropdownMenuRoot
+      trigger={<Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />}
+    >
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
             onSelect={handleCreateNewMealPlan}
             key="create-new-meal-plan"
           >
-            <DropdownMenu.ItemTitle>
+            <DropdownMenuItemTitle>
               Create New Meal Plan
-            </DropdownMenu.ItemTitle>
-            <DropdownMenu.ItemIcon ios={{ name: 'plus' }} />
-          </DropdownMenu.Item>
-          <DropdownMenu.Item
+            </DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'plus' }} />
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onSelect={handleAddToGroceryList}
             key="add-to-grocery-list"
           >
-            <DropdownMenu.ItemTitle>Add to Grocery List</DropdownMenu.ItemTitle>
-            <DropdownMenu.ItemIcon ios={{ name: 'cart' }} />
-          </DropdownMenu.Item>
-        </DropdownMenu.Group>
-        <DropdownMenu.Group>
-          <DropdownMenu.Item
+            <DropdownMenuItemTitle>Add to Grocery List</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'cart' }} />
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
             onSelect={() => TrueSheet.present('meal-planner-start-date-sheet')}
             key="start-date"
           >
-            <DropdownMenu.ItemTitle>Change Start Date</DropdownMenu.ItemTitle>
-            <DropdownMenu.ItemIcon ios={{ name: 'calendar' }} />
-          </DropdownMenu.Item>
-          <DropdownMenu.Item
+            <DropdownMenuItemTitle>Change Start Date</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'calendar' }} />
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onSelect={() => TrueSheet.present('meal-planner-end-date-sheet')}
             key="end-date"
           >
-            <DropdownMenu.ItemTitle>Change End Date</DropdownMenu.ItemTitle>
-            <DropdownMenu.ItemIcon ios={{ name: 'calendar' }} />
-          </DropdownMenu.Item>
-        </DropdownMenu.Group>
-        <DropdownMenu.Group>
-          <DropdownMenu.Item onSelect={handleDelete} destructive key="delete">
-            <DropdownMenu.ItemTitle>Delete Meal Plan</DropdownMenu.ItemTitle>
-            <DropdownMenu.ItemIcon ios={{ name: 'trash' }} />
-          </DropdownMenu.Item>
-        </DropdownMenu.Group>
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+            <DropdownMenuItemTitle>Change End Date</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'calendar' }} />
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuGroup>
+          <DropdownMenuItem onSelect={handleDelete} destructive key="delete">
+            <DropdownMenuItemTitle>Delete Meal Plan</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'trash' }} />
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
   );
 };

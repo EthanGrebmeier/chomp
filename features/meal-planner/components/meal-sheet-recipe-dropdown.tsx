@@ -1,8 +1,12 @@
-import * as Haptics from 'expo-haptics';
 import { MoreHorizontalIcon } from 'lucide-react-native';
-import { Pressable } from 'react-native';
-import * as DropdownMenu from 'zeego/dropdown-menu';
 
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+} from '../../../components/ui/dropdown-menu';
 import { Icon } from '../../../components/ui/icon';
 import { useTheme } from '../../../hooks/use-theme';
 
@@ -24,30 +28,25 @@ export const MealSheetRecipeDropdown = ({
   const theme = useTheme();
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger
-        onClick={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-      >
-        <Pressable className="p-2">
-          <Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />
-        </Pressable>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content>
-        <DropdownMenu.Item onSelect={onViewRecipe} key="view-recipe">
-          <DropdownMenu.ItemTitle>View Recipe</DropdownMenu.ItemTitle>
-          <DropdownMenu.ItemIcon ios={{ name: 'eye' }} />
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onSelect={onChangeRecipe} key="change-recipe">
-          <DropdownMenu.ItemTitle>Change Recipe</DropdownMenu.ItemTitle>
-          <DropdownMenu.ItemIcon ios={{ name: 'arrow.2.squarepath' }} />
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onSelect={onRemove} destructive key="remove-recipe">
-          <DropdownMenu.ItemTitle>
+    <DropdownMenuRoot
+      trigger={<Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />}
+    >
+      <DropdownMenuContent>
+        <DropdownMenuItem onSelect={onViewRecipe} key="view-recipe">
+          <DropdownMenuItemTitle>View Recipe</DropdownMenuItemTitle>
+          <DropdownMenuItemIcon ios={{ name: 'eye' }} />
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onChangeRecipe} key="change-recipe">
+          <DropdownMenuItemTitle>Change Recipe</DropdownMenuItemTitle>
+          <DropdownMenuItemIcon ios={{ name: 'arrow.2.squarepath' }} />
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onRemove} destructive key="remove-recipe">
+          <DropdownMenuItemTitle>
             Remove Recipe From Meal Plan
-          </DropdownMenu.ItemTitle>
-          <DropdownMenu.ItemIcon ios={{ name: 'trash' }} />
-        </DropdownMenu.Item>
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+          </DropdownMenuItemTitle>
+          <DropdownMenuItemIcon ios={{ name: 'trash' }} />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
   );
 };

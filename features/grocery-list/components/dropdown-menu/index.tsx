@@ -1,7 +1,12 @@
-import * as Haptics from 'expo-haptics';
 import { ReactNode } from 'react';
-import * as DropdownMenu from 'zeego/dropdown-menu';
 
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+} from '../../../../components/ui/dropdown-menu';
 import { useClearCheckedItems } from '../../hooks/useClearCheckedItems';
 import { useGroceryItems } from '../../hooks/useGroceryItems';
 
@@ -21,40 +26,35 @@ export const GroceryListDropdownMenu = ({
   const checkedItems = groceryListItems?.filter(item => item.isChecked) ?? [];
   const hasCheckedItems = checkedItems.length > 0;
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger
-        onClick={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-      >
-        {trigger}
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content>
-        <DropdownMenu.Item onSelect={openRecipeSheet} key="open-recipe-sheet">
-          <DropdownMenu.ItemTitle>Add Recipe</DropdownMenu.ItemTitle>
-          <DropdownMenu.ItemIcon ios={{ name: 'book' }} />
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
+    <DropdownMenuRoot trigger={trigger}>
+      <DropdownMenuContent>
+        <DropdownMenuItem onSelect={openRecipeSheet} key="open-recipe-sheet">
+          <DropdownMenuItemTitle>Add Recipe</DropdownMenuItemTitle>
+          <DropdownMenuItemIcon ios={{ name: 'book' }} />
+        </DropdownMenuItem>
+        <DropdownMenuItem
           onSelect={onClearListPress}
           destructive
           key="clear-list"
           disabled={!groceryListItems?.length}
         >
-          <DropdownMenu.ItemTitle>Clear Grocery List</DropdownMenu.ItemTitle>
-          <DropdownMenu.ItemIcon ios={{ name: 'trash' }} />
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
+          <DropdownMenuItemTitle>Clear Grocery List</DropdownMenuItemTitle>
+          <DropdownMenuItemIcon ios={{ name: 'trash' }} />
+        </DropdownMenuItem>
+        <DropdownMenuItem
           destructive
           key="delete-checked"
           onSelect={clearCheckedItems}
           disabled={!hasCheckedItems}
         >
-          <DropdownMenu.ItemTitle>Clear Checked Items</DropdownMenu.ItemTitle>
-          <DropdownMenu.ItemIcon
+          <DropdownMenuItemTitle>Clear Checked Items</DropdownMenuItemTitle>
+          <DropdownMenuItemIcon
             ios={{
               name: 'trash',
             }}
           />
-        </DropdownMenu.Item>
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
   );
 };
