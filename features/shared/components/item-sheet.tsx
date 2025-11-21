@@ -62,13 +62,6 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
     const theme = useTheme();
     const isEditing = !!defaultValues;
 
-    useImperativeHandle(ref, () => ({
-      present: () => {
-        bottomSheetRef.current?.present();
-      },
-      dismiss: () => bottomSheetRef.current?.dismiss(),
-    }));
-
     const form = useForm({
       defaultValues: {
         name: defaultValues?.name ?? '',
@@ -92,6 +85,22 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
         nameInputRef.current?.focus();
       },
     });
+
+    useImperativeHandle(ref, () => ({
+      present: () => {
+        // Reset form values when sheet is presented to ensure fresh data
+        if (defaultValues) {
+          form.reset({
+            name: defaultValues.name ?? '',
+            quantity: defaultValues.quantity ?? '1',
+            unit: defaultValues.unit ?? 'each',
+            category: defaultValues.category ?? '',
+          });
+        }
+        bottomSheetRef.current?.present();
+      },
+      dismiss: () => bottomSheetRef.current?.dismiss(),
+    }));
 
     const handleSubmit = () => {
       form.handleSubmit();

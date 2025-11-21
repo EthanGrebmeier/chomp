@@ -51,8 +51,7 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
             // Show conflict resolution sheet
             conflictSheetRef.current?.present();
           } else {
-            // Recipe added successfully
-            sheetRef.current?.dismiss();
+            toast.success(`${recipe.name} added`);
           }
         },
       }
@@ -113,15 +112,15 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
           onItemSelect={handleRecipeSelect}
           onBack={() => {}}
         />
+        <RecipeConflictSheet
+          ref={conflictSheetRef}
+          recipeName={selectedRecipe?.name ?? ''}
+          onIncrement={handleIncrementQuantities}
+          onCreateSeparate={handleCreateSeparateItems}
+          onCancel={handleCancelConflict}
+          isPending={isPending}
+        />
       </BottomSheet>
-      <RecipeConflictSheet
-        ref={conflictSheetRef}
-        recipeName={selectedRecipe?.name ?? ''}
-        onIncrement={handleIncrementQuantities}
-        onCreateSeparate={handleCreateSeparateItems}
-        onCancel={handleCancelConflict}
-        isPending={isPending}
-      />
     </>
   );
 });

@@ -31,10 +31,10 @@ import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
-import { AddItemSheet, AddItemSheetRef } from './add-item-sheet';
 import { AddRecipeSheet, AddRecipeSheetRef } from './add-recipe-sheet';
 import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
 import { CollapsibleSectionHeader } from './collapsible-section-header';
+import { EditItemSheet, EditItemSheetRef } from './edit-item-sheet';
 import { GroceryListHeader } from './grocery-list-header';
 import { GroceryListItem } from './grocery-list-item';
 import { GroupBySelector } from './group-by-selector';
@@ -113,7 +113,7 @@ export const GroceryList = ({
     new Set(['Checked']) // Start with checked items collapsed
   );
 
-  const editSheetRef = useRef<AddItemSheetRef>(null);
+  const editSheetRef = useRef<EditItemSheetRef>(null);
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
   const toggleSection = (sectionTitle: string) => {
@@ -351,7 +351,7 @@ export const GroceryList = ({
           )}
         </View>
         <AddRecipeSheet ref={recipeSheetRef} />
-        <AddItemSheet
+        <EditItemSheet
           showButton={false}
           defaultValues={editingItem}
           ref={editSheetRef}

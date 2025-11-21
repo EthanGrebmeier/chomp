@@ -10,17 +10,17 @@ import { GroceryListItemWithRecipe } from '../types';
 
 import { CategorySelector } from './category-selector';
 
-type AddItemSheetProps = {
+type EditItemSheetProps = {
   onClose?: () => void;
   defaultValues: GroceryListItemWithRecipe | null;
   showButton?: boolean;
 };
 
-export type AddItemSheetRef = {
+export type EditItemSheetRef = {
   present: () => void;
 };
 
-export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
+export const EditItemSheet = forwardRef<EditItemSheetRef, EditItemSheetProps>(
   ({ onClose, defaultValues, showButton = true }, ref) => {
     const itemSheetRef = useRef<ItemSheetRef>(null);
     const { mutate: addItem } = useAddGroceryItem();
@@ -85,7 +85,7 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
       <ItemSheet
         showAddButton={showButton}
         ref={itemSheetRef}
-        sheetName="add-grocery-item-sheet"
+        sheetName="edit-grocery-item-sheet"
         onClose={onClose}
         defaultValues={formData}
         onSubmit={handleSubmit}
@@ -99,4 +99,5 @@ export const AddItemSheet = forwardRef<AddItemSheetRef, AddItemSheetProps>(
   }
 );
 
-AddItemSheet.displayName = 'AddItemSheet';
+EditItemSheet.displayName = 'EditItemSheet';
+
