@@ -1,11 +1,10 @@
 import { Href, router } from 'expo-router';
-import { ArrowLeftIcon } from 'lucide-react-native';
+import { ChevronLeftIcon } from 'lucide-react-native';
 
 import { cn } from '../../lib/utils';
 
-import { HapticPressable } from './haptic-pressable';
+import { HapticTouchableOpacity } from './haptic-touchable-opacity';
 import { Icon } from './icon';
-import { Text } from './text';
 
 interface BackButtonProps {
   onPress?: () => void;
@@ -27,13 +26,15 @@ export function BackButton({ onPress, className, href }: BackButtonProps) {
   };
 
   return (
-    <HapticPressable
+    <HapticTouchableOpacity
       onPress={handlePress}
-      className={cn('mb-2 flex-row items-center gap-2', className)}
+      className={cn(
+        ' flex-row items-center gap-2 rounded-full bg-muted p-2',
+        className
+      )}
       hapticType="light"
     >
-      <Icon as={ArrowLeftIcon} size={20} />
-      <Text className="text-lg font-medium text-foreground">Back</Text>
-    </HapticPressable>
+      <Icon as={ChevronLeftIcon} strokeWidth={3.5} size={20} />
+    </HapticTouchableOpacity>
   );
 }

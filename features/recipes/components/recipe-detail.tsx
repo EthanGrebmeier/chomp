@@ -82,7 +82,7 @@ export const RecipeDetail = ({ recipe }: RecipeDetailProps) => {
 
   return (
     <View className="pt-safe flex-1 gap-4">
-      <View className="flex-row items-center justify-between px-4">
+      <View className="flex-row items-center justify-between  px-4">
         <BackButton />
         <RecipeDropdownMenu
           trigger={<Icon as={MoreHorizontal} size={24} />}

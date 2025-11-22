@@ -1,4 +1,4 @@
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { SheetSize, TrueSheet } from '@lodev09/react-native-true-sheet';
 import { useColorScheme } from 'nativewind';
 import { ComponentProps, forwardRef } from 'react';
 import { TextInput as RNTextInput, View } from 'react-native';
@@ -17,7 +17,7 @@ type BottomSheetProps = {
   onStartClose?: () => void;
   viewClassName?: string;
   ignoreSafeArea?: boolean;
-  snapPoints?: string[];
+  snapPoints?: SheetSize[];
 };
 
 export const BottomSheet = ({
@@ -37,7 +37,7 @@ export const BottomSheet = ({
       edgeToEdge={true}
       ref={ref}
       name={name}
-      sizes={['auto']}
+      sizes={snapPoints ?? ['auto']}
       onPresent={onOpen}
       onDismiss={onStartClose}
       backgroundColor={
