@@ -135,6 +135,20 @@ export default function SignInEmail() {
                 <Text>Sign In</Text>
               )}
             </Button>
+
+            <View className="mt-6 flex-row items-center justify-center">
+              <Text variant="muted" className="text-sm">
+                Don&apos;t have an account?{' '}
+              </Text>
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={() => router.push('/(auth)/sign-up-email')}
+                disabled={isSigningIn}
+              >
+                <Text className="text-sm font-semibold">Sign Up</Text>
+              </Button>
+            </View>
           </View>
         </View>
       </KeyboardAvoidingView>
