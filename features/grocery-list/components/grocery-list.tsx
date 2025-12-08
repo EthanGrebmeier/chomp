@@ -21,11 +21,12 @@ import { Icon } from '../../../components/ui/icon';
 import { cn } from '../../../lib/utils';
 import { AddItemNew } from '../../shared/add-item-new';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
-import { useAddGroceryItem } from '../hooks/useAddGroceryListItem';
 import { useClearList } from '../hooks/useClearList';
 import { useCreateSeparateGroceryListItem } from '../hooks/useCreateSeparateGroceryListItem';
 import { useIncrementGroceryListItem } from '../hooks/useIncrementGroceryListItem';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
+import { addGroceryListItem } from '../instant/addGroceryListItem';
+import { useGroceryListItems } from '../instant/useGroceryListItems';
 import { queryKeys } from '../query-keys';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
@@ -62,7 +63,6 @@ RenderScrollComponent.displayName = 'RenderScrollComponent';
 export const GroceryList = ({
   listId,
   listName,
-  items,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
   onTitlePress,
@@ -73,34 +73,23 @@ export const GroceryList = ({
 
   const queryClient = useQueryClient();
 
-  const { mutate: addItem } = useAddGroceryItem();
   const { mutate: incrementItem } = useIncrementGroceryListItem();
   const { mutate: createSeparateItem } = useCreateSeparateGroceryListItem();
   const { mutate: clearList } = useClearList();
 
+  const { data } = useGroceryListItems(listId);
+  const items = data?.grocery_items ?? [];
+
   const handleAddItem = (item: BaseGroceryItem) => {
-    addItem(
-      {
-        name: item.name,
+    addGroceryListItem({
+      listId,
+      item: {
+        ...item,
         quantity: 1,
         unit: 'each',
-        category: item.category,
+        isChecked: false,
       },
-      {
-        onSuccess: result => {
-          if (result.isDuplicate && result.existingItem) {
-            setConflictItem({
-              existingItemId: result.existingItem.id,
-              newItem: item,
-            });
-            addItemConflictSheetRef.current?.present();
-            return;
-          }
-          toast.success(`${item.name} added to grocery list`);
-          queryClient.invalidateQueries({ queryKey: queryKeys.items() });
-        },
-      }
-    );
+    });
   };
 
   const [editingItem, setEditingItem] =

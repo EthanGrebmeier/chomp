@@ -49,6 +49,8 @@ export default function List() {
 
   if (!items || !settings || !activeListId) return null;
 
+  console.log(JSON.stringify(lists, null, 2));
+
   return (
     <View className="flex-1 bg-background">
       <View className="pt-safe flex-1">
