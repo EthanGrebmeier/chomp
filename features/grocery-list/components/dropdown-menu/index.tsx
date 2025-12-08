@@ -7,7 +7,7 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '../../../../components/ui/dropdown-menu';
-import { useClearCheckedItems } from '../../hooks/useClearCheckedItems';
+import { clearCheckedItems } from '../../instant/clear-checked-items';
 import { useGroceryListItems } from '../../instant/use-grocery-list-items';
 
 type GroceryListDropdownMenuProps = {
@@ -23,11 +23,11 @@ export const GroceryListDropdownMenu = ({
   onClearListPress,
   listId,
 }: GroceryListDropdownMenuProps) => {
-  const { mutate: clearCheckedItems } = useClearCheckedItems();
   const { data: groceryListItems } = useGroceryListItems(listId);
   const checkedItems =
     groceryListItems?.grocery_items.filter(item => item.isChecked) ?? [];
   const hasCheckedItems = checkedItems.length > 0;
+
   return (
     <DropdownMenuRoot trigger={trigger}>
       <DropdownMenuContent>

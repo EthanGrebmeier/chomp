@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
-import { useGroceryItems, useSettings } from '@/features/grocery-list/hooks';
 import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
@@ -11,9 +10,9 @@ import { useCreateGroceryList } from '@/features/grocery-lists/instant/useCreate
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 
 import { Text } from '../../components/ui/text';
+import { useSettings } from '../../features/grocery-list/hooks/useSettings';
 
 export default function List() {
-  const { data: items } = useGroceryItems();
   const { data: settings, isLoading: settingsLoading } = useSettings();
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const { data: lists, isLoading: listsLoading } = useGroceryLists();
@@ -47,7 +46,7 @@ export default function List() {
     );
   }
 
-  if (!items || !settings || !activeListId) return null;
+  if (!settings || !activeListId) return null;
 
   return (
     <View className="flex-1 bg-background">
@@ -55,7 +54,6 @@ export default function List() {
         <GroceryList
           listId={activeListId}
           listName={activeListName}
-          items={items}
           groupBy={settings.groupBy}
           sortBy={settings.sortBy}
           onTitlePress={() => selectListSheetRef.current?.present()}

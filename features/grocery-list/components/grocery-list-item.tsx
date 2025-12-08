@@ -13,8 +13,8 @@ import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import { useCheckGroceryItem } from '../hooks/useCheckGroceryListItem';
-import { useRemoveGroceryListItem } from '../hooks/useRemoveGroceryListItem';
+import { checkListItem } from '../instant/check-list-item';
+import { removeGroceryListItem } from '../instant/remove-grocery-list-item';
 import { GroceryListItemWithRecipe } from '../types';
 
 type GroceryListItemProps = {
@@ -31,8 +31,6 @@ export const GroceryListItem = ({
   onEdit,
 }: GroceryListItemProps) => {
   const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
-  const { mutate: checkItem } = useCheckGroceryItem();
-  const { mutate: removeItem } = useRemoveGroceryListItem();
   const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
@@ -57,10 +55,10 @@ export const GroceryListItem = ({
       clearTimeout(checkItemTimeoutRef.current);
     }
     if (internalIsChecked) {
-      checkItem({ itemId: item.id, isChecked: false });
+      checkListItem({ itemId: item.id, isChecked: false });
     } else {
       checkItemTimeoutRef.current = setTimeout(() => {
-        checkItem({ itemId: item.id, isChecked: true });
+        checkListItem({ itemId: item.id, isChecked: true });
       }, 1000);
     }
     setInternalIsChecked(!internalIsChecked);
@@ -68,7 +66,7 @@ export const GroceryListItem = ({
 
   return (
     <ListItem
-      onDelete={() => removeItem({ itemId: item.id })}
+      onDelete={() => removeGroceryListItem({ itemId: item.id })}
       className={className}
     >
       <HapticPressable

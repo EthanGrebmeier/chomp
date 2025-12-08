@@ -14,7 +14,6 @@ import {
   KeyboardController,
 } from 'react-native-keyboard-controller';
 import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
-import { toast } from 'sonner-native';
 
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
@@ -24,11 +23,10 @@ import { cn } from '../../../lib/utils';
 import { AddItemNew } from '../../shared/add-item-new';
 import { ItemFormData } from '../../shared/components';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
-import { clearGroceryList } from '../db/clear-list';
-import { useCreateSeparateGroceryListItem } from '../hooks/useCreateSeparateGroceryListItem';
-import { useIncrementGroceryListItem } from '../hooks/useIncrementGroceryListItem';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
+import { clearGroceryList } from '../instant/clear-list';
+import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
 import { updateGroceryListItem } from '../instant/update-grocery-list-item';
 import { useGroceryListItems } from '../instant/use-grocery-list-items';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
@@ -51,7 +49,6 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 type GroceryListProps = {
   listId: string;
   listName?: string;
-  items: GroceryListItemWithRecipe[];
   groupBy: 'category' | 'none' | 'recipe';
   sortBy: 'name' | 'recent';
   onTitlePress?: () => void;
@@ -73,9 +70,6 @@ export const GroceryList = ({
   const [isItemSheetOpen, setIsItemSheetOpen] = useState(false);
   const recipeSheetRef = useRef<AddRecipeSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
-
-  const { mutate: incrementItem } = useIncrementGroceryListItem();
-  const { mutate: createSeparateItem } = useCreateSeparateGroceryListItem();
 
   const { data } = useGroceryListItems(listId);
   const items = data?.grocery_items ?? [];
@@ -152,39 +146,24 @@ export const GroceryList = ({
   const handleIncrementExistingItem = () => {
     if (!conflictItem) return;
 
-    incrementItem(
-      {
-        itemId: conflictItem.existingItemId,
-        quantityToAdd: 1,
-      },
-      {
-        onSuccess: () => {
-          toast.success(`Quantity updated for ${conflictItem.newItem.name}`);
-          addItemConflictSheetRef.current?.dismiss();
-          setConflictItem(null);
-        },
-      }
-    );
+    incrementGroceryListItem({
+      itemId: conflictItem.existingItemId,
+      quantityToAdd: 1,
+    });
   };
 
   const handleCreateSeparateItem = () => {
     if (!conflictItem) return;
 
-    createSeparateItem(
-      {
-        name: conflictItem.newItem.name,
+    addGroceryListItem({
+      listId,
+      item: {
+        ...conflictItem.newItem,
         quantity: 1,
         unit: 'each',
-        category: conflictItem.newItem.category,
+        isChecked: false,
       },
-      {
-        onSuccess: () => {
-          toast.success(`${conflictItem.newItem.name} added as separate item`);
-          addItemConflictSheetRef.current?.dismiss();
-          setConflictItem(null);
-        },
-      }
-    );
+    });
   };
 
   const handleCancelConflict = () => {
