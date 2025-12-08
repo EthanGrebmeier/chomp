@@ -1,5 +1,4 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { PlusIcon } from 'lucide-react-native';
 import { forwardRef, useRef, useState } from 'react';
@@ -25,14 +24,13 @@ import { cn } from '../../../lib/utils';
 import { AddItemNew } from '../../shared/add-item-new';
 import { ItemFormData } from '../../shared/components';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
-import { useClearList } from '../hooks/useClearList';
+import { clearGroceryList } from '../db/clear-list';
 import { useCreateSeparateGroceryListItem } from '../hooks/useCreateSeparateGroceryListItem';
 import { useIncrementGroceryListItem } from '../hooks/useIncrementGroceryListItem';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
-import { addGroceryListItem } from '../instant/addGroceryListItem';
-import { updateGroceryListItem } from '../instant/updateGroceryListItem';
-import { useGroceryListItems } from '../instant/useGroceryListItems';
-import { queryKeys } from '../query-keys';
+import { addGroceryListItem } from '../instant/add-grocery-list-item';
+import { updateGroceryListItem } from '../instant/update-grocery-list-item';
+import { useGroceryListItems } from '../instant/use-grocery-list-items';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
 
@@ -76,11 +74,8 @@ export const GroceryList = ({
   const recipeSheetRef = useRef<AddRecipeSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
 
-  const queryClient = useQueryClient();
-
   const { mutate: incrementItem } = useIncrementGroceryListItem();
   const { mutate: createSeparateItem } = useCreateSeparateGroceryListItem();
-  const { mutate: clearList } = useClearList();
 
   const { data } = useGroceryListItems(listId);
   const items = data?.grocery_items ?? [];
@@ -165,7 +160,6 @@ export const GroceryList = ({
       {
         onSuccess: () => {
           toast.success(`Quantity updated for ${conflictItem.newItem.name}`);
-          queryClient.invalidateQueries({ queryKey: queryKeys.items() });
           addItemConflictSheetRef.current?.dismiss();
           setConflictItem(null);
         },
@@ -186,7 +180,6 @@ export const GroceryList = ({
       {
         onSuccess: () => {
           toast.success(`${conflictItem.newItem.name} added as separate item`);
-          queryClient.invalidateQueries({ queryKey: queryKeys.items() });
           addItemConflictSheetRef.current?.dismiss();
           setConflictItem(null);
         },
@@ -204,12 +197,7 @@ export const GroceryList = ({
   };
 
   const handleConfirmClearList = () => {
-    clearList(undefined, {
-      onSuccess: () => {
-        toast.success('Grocery list cleared');
-        clearListConfirmationSheetRef.current?.dismiss();
-      },
-    });
+    clearGroceryList({ listId });
   };
 
   const handleCancelClearList = () => {
@@ -263,6 +251,7 @@ export const GroceryList = ({
       <View className="flex-1 gap-2">
         {/** Header */}
         <GroceryListHeader
+          listId={listId}
           itemCount={items.length}
           listName={listName}
           openRecipeSheet={() => recipeSheetRef.current?.present()}

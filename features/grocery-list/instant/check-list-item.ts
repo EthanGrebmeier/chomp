@@ -1,4 +1,4 @@
-import { updateGroceryListItem } from '../instant/update-grocery-list-item';
+import { updateGroceryListItem } from './update-grocery-list-item';
 type CheckListItemArgs = {
   itemId: string;
   isChecked: boolean;

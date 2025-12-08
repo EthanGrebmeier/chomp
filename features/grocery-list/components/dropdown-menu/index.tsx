@@ -8,22 +8,25 @@ import {
   DropdownMenuRoot,
 } from '../../../../components/ui/dropdown-menu';
 import { useClearCheckedItems } from '../../hooks/useClearCheckedItems';
-import { useGroceryItems } from '../../hooks/useGroceryItems';
+import { useGroceryListItems } from '../../instant/use-grocery-list-items';
 
 type GroceryListDropdownMenuProps = {
   trigger: ReactNode;
   openRecipeSheet: () => void;
   onClearListPress: () => void;
+  listId: string;
 };
 
 export const GroceryListDropdownMenu = ({
   trigger,
   openRecipeSheet,
   onClearListPress,
+  listId,
 }: GroceryListDropdownMenuProps) => {
   const { mutate: clearCheckedItems } = useClearCheckedItems();
-  const { data: groceryListItems } = useGroceryItems();
-  const checkedItems = groceryListItems?.filter(item => item.isChecked) ?? [];
+  const { data: groceryListItems } = useGroceryListItems(listId);
+  const checkedItems =
+    groceryListItems?.grocery_items.filter(item => item.isChecked) ?? [];
   const hasCheckedItems = checkedItems.length > 0;
   return (
     <DropdownMenuRoot trigger={trigger}>
@@ -36,7 +39,7 @@ export const GroceryListDropdownMenu = ({
           onSelect={onClearListPress}
           destructive
           key="clear-list"
-          disabled={!groceryListItems?.length}
+          disabled={!groceryListItems?.grocery_items.length}
         >
           <DropdownMenuItemTitle>Clear Grocery List</DropdownMenuItemTitle>
           <DropdownMenuItemIcon ios={{ name: 'trash' }} />

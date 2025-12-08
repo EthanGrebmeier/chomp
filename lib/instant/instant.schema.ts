@@ -16,6 +16,8 @@ export const schema = i.schema({
       isChecked: i.boolean(),
       createdAt: i.string(),
       updatedAt: i.string(),
+      isDeleted: i.boolean(),
+      deletedAt: i.string().optional(),
     }),
     recipes: i.entity({
       name: i.string(),
