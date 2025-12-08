@@ -45,9 +45,12 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 );
 
 type GroceryListProps = {
+  listId: string;
+  listName?: string;
   items: GroceryListItemWithRecipe[];
   groupBy: 'category' | 'none' | 'recipe';
   sortBy: 'name' | 'recent';
+  onTitlePress?: () => void;
 };
 
 const RenderScrollComponent = forwardRef<ScrollView, ScrollViewProps>(
@@ -57,9 +60,12 @@ const RenderScrollComponent = forwardRef<ScrollView, ScrollViewProps>(
 RenderScrollComponent.displayName = 'RenderScrollComponent';
 
 export const GroceryList = ({
+  listId,
+  listName,
   items,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
+  onTitlePress,
 }: GroceryListProps) => {
   const [isItemSheetOpen, setIsItemSheetOpen] = useState(false);
   const recipeSheetRef = useRef<AddRecipeSheetRef>(null);
@@ -253,8 +259,10 @@ export const GroceryList = ({
         {/** Header */}
         <GroceryListHeader
           itemCount={items.length}
+          listName={listName}
           openRecipeSheet={() => recipeSheetRef.current?.present()}
           onClearListPress={handleClearListPress}
+          onTitlePress={onTitlePress}
         />
         <View className="flex-1">
           <ScrollView

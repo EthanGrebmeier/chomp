@@ -1,5 +1,5 @@
-import { MoreHorizontal } from 'lucide-react-native';
-import { Text, View } from 'react-native';
+import { ChevronDownIcon, MoreHorizontal } from 'lucide-react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { Heading } from '../../../components/text/heading';
 import { Icon } from '../../../components/ui/icon';
@@ -8,21 +8,37 @@ import { GroceryListDropdownMenu } from './dropdown-menu';
 
 type GroceryListHeaderProps = {
   itemCount: number;
+  listName?: string;
   openRecipeSheet: () => void;
   onClearListPress: () => void;
+  onTitlePress?: () => void;
 };
 
 export const GroceryListHeader = ({
   itemCount,
+  listName,
   openRecipeSheet,
   onClearListPress,
+  onTitlePress,
 }: GroceryListHeaderProps) => {
   return (
     <View className="px-4">
       <View className="flex-row items-center justify-between">
-        <View>
-          <Heading>Grocery List</Heading>
-        </View>
+        <Pressable
+          onPress={onTitlePress}
+          disabled={!onTitlePress}
+          className="flex-row items-center gap-1 active:opacity-70"
+        >
+          <Heading>{listName ?? 'Grocery List'}</Heading>
+          {onTitlePress && (
+            <Icon
+              as={ChevronDownIcon}
+              size={24}
+              className="text-foreground"
+              strokeWidth={2.5}
+            />
+          )}
+        </Pressable>
         <GroceryListDropdownMenu
           trigger={<Icon as={MoreHorizontal} size={24} />}
           openRecipeSheet={openRecipeSheet}
