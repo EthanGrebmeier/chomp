@@ -21,8 +21,8 @@ const unitOptions = [
 ] as const;
 
 type UnitSelectorProps = {
-  unit: QuantityUnit;
-  onSelect: (unit: QuantityUnit) => void;
+  unit: string;
+  onSelect: (unit: string) => void;
 };
 
 export const UnitSelector = ({ unit, onSelect }: UnitSelectorProps) => {

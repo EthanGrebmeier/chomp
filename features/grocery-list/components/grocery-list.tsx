@@ -10,7 +10,10 @@ import {
   View,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import {
+  KeyboardAwareScrollView,
+  KeyboardController,
+} from 'react-native-keyboard-controller';
 import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
@@ -20,12 +23,14 @@ import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { cn } from '../../../lib/utils';
 import { AddItemNew } from '../../shared/add-item-new';
+import { ItemFormData } from '../../shared/components';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useClearList } from '../hooks/useClearList';
 import { useCreateSeparateGroceryListItem } from '../hooks/useCreateSeparateGroceryListItem';
 import { useIncrementGroceryListItem } from '../hooks/useIncrementGroceryListItem';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/addGroceryListItem';
+import { updateGroceryListItem } from '../instant/updateGroceryListItem';
 import { useGroceryListItems } from '../instant/useGroceryListItems';
 import { queryKeys } from '../query-keys';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
@@ -35,11 +40,11 @@ import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { AddRecipeSheet, AddRecipeSheetRef } from './add-recipe-sheet';
 import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
 import { CollapsibleSectionHeader } from './collapsible-section-header';
-import { EditItemSheet, EditItemSheetRef } from './edit-item-sheet';
 import { GroceryListHeader } from './grocery-list-header';
 import { GroceryListItem } from './grocery-list-item';
 import { GroupBySelector } from './group-by-selector';
 import { SortBySelector } from './sort-by-selector';
+import { UpdateItemSheet, UpdateItemSheetRef } from './update-item-sheet';
 
 const AnimatedSectionList = Animated.createAnimatedComponent(
   SectionList<GroceryListItemWithRecipe>
@@ -92,6 +97,17 @@ export const GroceryList = ({
     });
   };
 
+  const handleUpdateItem = (item: ItemFormData) => {
+    const { quantity, ...rest } = item;
+    if (!editingItem) return;
+    updateGroceryListItem({
+      itemId: editingItem.id,
+      item: { quantity: parseInt(quantity), ...rest },
+    });
+    updateItemSheetRef.current?.dismiss();
+    KeyboardController.dismiss();
+  };
+
   const [editingItem, setEditingItem] =
     useState<GroceryListItemWithRecipe | null>(null);
   const [conflictItem, setConflictItem] = useState<{
@@ -108,7 +124,7 @@ export const GroceryList = ({
     new Set(['Checked']) // Start with checked items collapsed
   );
 
-  const editSheetRef = useRef<EditItemSheetRef>(null);
+  const updateItemSheetRef = useRef<UpdateItemSheetRef>(null);
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
   const toggleSection = (sectionTitle: string) => {
@@ -125,7 +141,7 @@ export const GroceryList = ({
 
   const handleEditItem = (item: GroceryListItemWithRecipe) => {
     setEditingItem(item);
-    editSheetRef.current?.present();
+    updateItemSheetRef.current?.present();
   };
 
   const handleGroupByChange = (newGroupBy: 'category' | 'none' | 'recipe') => {
@@ -348,10 +364,11 @@ export const GroceryList = ({
           )}
         </View>
         <AddRecipeSheet ref={recipeSheetRef} />
-        <EditItemSheet
+        <UpdateItemSheet
           showButton={false}
           defaultValues={editingItem}
-          ref={editSheetRef}
+          ref={updateItemSheetRef}
+          onUpdate={handleUpdateItem}
         />
         <AddItemConflictSheet
           ref={addItemConflictSheetRef}

@@ -12,15 +12,14 @@ import { BottomSheet } from '../../../components/bottom-sheet';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
-import { QuantityUnit } from '../types';
 
 import { UnitSelector } from './unit-selector';
 
 export type ItemFormData = {
   name: string;
   quantity: string;
-  unit: QuantityUnit;
-  category?: string | null;
+  unit: string;
+  category?: string;
 };
 
 export type ItemSheetProps = {
@@ -78,7 +77,7 @@ export const ItemSheet = forwardRef<ItemSheetRef, ItemSheetProps>(
           unit: formValue.unit,
           category:
             formValue.category === ''
-              ? null
+              ? undefined
               : (formValue.category ?? undefined),
         });
         form.reset();
