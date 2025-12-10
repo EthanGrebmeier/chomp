@@ -2,6 +2,9 @@ import { i } from '@instantdb/react-native';
 
 export const schema = i.schema({
   entities: {
+    $users: i.entity({
+      email: i.string(),
+    }),
     grocery_lists: i.entity({
       name: i.string(),
       createdAt: i.string(),
@@ -23,6 +26,7 @@ export const schema = i.schema({
       name: i.string(),
       description: i.string(),
       imageSrc: i.string(),
+      visibility: i.string(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),

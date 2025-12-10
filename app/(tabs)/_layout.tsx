@@ -2,12 +2,14 @@ import { useAuth } from '@clerk/clerk-expo';
 import { Redirect } from 'expo-router';
 import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 
+import { InstantClerkAuth } from '@/lib/instant/use-clerk-auth';
+
 import { useActiveMealPlan } from '../../features/meal-planner/hooks';
 import { useRecipes } from '../../features/recipes/hooks';
 
 export default function Layout() {
   const { isSignedIn } = useAuth();
-  
+
   useActiveMealPlan();
   useRecipes();
 
@@ -18,6 +20,7 @@ export default function Layout() {
 
   return (
     <>
+      <InstantClerkAuth />
       <NativeTabs>
         <NativeTabs.Trigger name="index">
           <Icon sf="square.and.pencil" />
