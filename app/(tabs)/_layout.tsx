@@ -34,6 +34,10 @@ export default function Layout() {
           <Icon sf="book.fill" />
           <Label> Recipes </Label>
         </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="settings">
+          <Icon sf="gearshape.fill" />
+          <Label> Settings </Label>
+        </NativeTabs.Trigger>
       </NativeTabs>
     </>
   );
