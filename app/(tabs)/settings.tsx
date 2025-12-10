@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { toast } from 'sonner-native';
@@ -23,6 +24,7 @@ export default function Settings() {
       toast.error('Failed to sign out. Please try again.');
     } finally {
       setIsSigningOut(false);
+      router.replace('/(auth)/sign-in-email');
     }
   };
 
