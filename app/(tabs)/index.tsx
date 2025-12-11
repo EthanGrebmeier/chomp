@@ -14,7 +14,9 @@ import { useSettings } from '../../features/grocery-list/hooks/useSettings';
 
 export default function List() {
   const { data: settings, isLoading: settingsLoading } = useSettings();
-  const [activeListId, setActiveListId] = useState<string | null>(null);
+  const [activeListId, setActiveListId] = useState<string | undefined>(
+    undefined
+  );
   const { data: lists, isLoading: listsLoading } = useGroceryLists();
   const createGroceryList = useCreateGroceryList();
   const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
@@ -24,9 +26,6 @@ export default function List() {
       if (lists && !activeListId) {
         if (lists.grocery_lists.length > 0) {
           setActiveListId(lists.grocery_lists[0].id);
-        } else {
-          const list = await createGroceryList('My List');
-          setActiveListId(list.clientId);
         }
       }
     };
@@ -46,7 +45,7 @@ export default function List() {
     );
   }
 
-  if (!settings || !activeListId) return null;
+  if (!settings) return null;
 
   return (
     <View className="flex-1 bg-background">

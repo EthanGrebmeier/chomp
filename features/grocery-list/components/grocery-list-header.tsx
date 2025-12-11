@@ -9,7 +9,7 @@ import { GroceryListDropdownMenu } from './dropdown-menu';
 type GroceryListHeaderProps = {
   itemCount: number;
   listName?: string;
-  listId: string;
+  listId?: string;
   openRecipeSheet: () => void;
   onClearListPress: () => void;
   onTitlePress?: () => void;
@@ -41,12 +41,14 @@ export const GroceryListHeader = ({
             />
           )}
         </Pressable>
-        <GroceryListDropdownMenu
-          listId={listId}
-          trigger={<Icon as={MoreHorizontal} size={24} />}
-          openRecipeSheet={openRecipeSheet}
-          onClearListPress={onClearListPress}
-        />
+        {listId && (
+          <GroceryListDropdownMenu
+            listId={listId}
+            trigger={<Icon as={MoreHorizontal} size={24} />}
+            openRecipeSheet={openRecipeSheet}
+            onClearListPress={onClearListPress}
+          />
+        )}
       </View>
       <Text className="text-lg text-muted-foreground">{itemCount} items</Text>
     </View>

@@ -47,7 +47,7 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 );
 
 type GroceryListProps = {
-  listId: string;
+  listId?: string;
   listName?: string;
   groupBy: 'category' | 'none' | 'recipe';
   sortBy: 'name' | 'recent';
@@ -75,6 +75,7 @@ export const GroceryList = ({
   const items = data?.grocery_items ?? [];
 
   const handleAddItem = (item: BaseGroceryItem) => {
+    if (!listId) return;
     addGroceryListItem({
       listId,
       item: {
@@ -153,7 +154,7 @@ export const GroceryList = ({
   };
 
   const handleCreateSeparateItem = () => {
-    if (!conflictItem) return;
+    if (!conflictItem || !listId) return;
 
     addGroceryListItem({
       listId,
@@ -176,6 +177,7 @@ export const GroceryList = ({
   };
 
   const handleConfirmClearList = () => {
+    if (!listId) return;
     clearGroceryList({ listId });
   };
 

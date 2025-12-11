@@ -3,12 +3,12 @@ import { InstantRules } from '@instantdb/react-native';
 const rules = {
   grocery_lists: {
     allow: {
-      create: 'isOwner',
+      create: 'true',
       view: 'isOwner',
       update: 'isOwner',
       delete: 'isOwner',
     },
-    bind: ['isOwner', 'user.id == data.userId'],
+    bind: ['isOwner', "auth.id in data.ref('shares.user_id')"],
   },
   grocery_items: {
     allow: {
@@ -17,25 +17,23 @@ const rules = {
       update: 'isOwner',
       delete: 'isOwner',
     },
-    bind: ['isOwner', 'user.id == data.userId'],
+    bind: ['isOwner', "auth.id in data.ref('grocery_list.shares.user_id')"],
   },
   recipe_ingredients: {
     allow: {
-      create: 'isOwner',
-      view: 'isOwner',
-      update: 'isOwner',
-      delete: 'isOwner',
+      create: 'true',
+      view: 'true',
+      update: 'true',
+      delete: 'true',
     },
-    bind: ['isOwner', 'user.id == data.userId'],
   },
   recipes: {
     allow: {
-      create: 'isOwner',
-      view: 'isOwner || data.visibility == "public"',
-      update: 'isOwner',
-      delete: 'isOwner',
+      create: 'true',
+      view: 'true || data.visibility == "public"',
+      update: 'true',
+      delete: 'true',
     },
-    bind: ['isOwner', 'user.id == data.userId'],
   },
 } satisfies InstantRules;
 

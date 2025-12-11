@@ -1,11 +1,11 @@
 import { db } from '../../../lib/instant';
 
 export const useGroceryLists = () => {
-  const query = {
+  const groceryListsQuery = db.useQuery({
     grocery_lists: {
       grocery_items: {},
     },
-  };
+  });
 
-  return db.useQuery(query);
+  return groceryListsQuery;
 };

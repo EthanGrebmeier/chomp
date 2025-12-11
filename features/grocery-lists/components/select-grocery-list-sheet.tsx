@@ -18,7 +18,7 @@ export type SelectGroceryListSheetRef = {
 };
 
 type SelectGroceryListSheetProps = {
-  selectedListId: string | null;
+  selectedListId: string | undefined;
   onSelectList: (listId: string) => void;
 };
 
@@ -153,4 +153,3 @@ export const SelectGroceryListSheet = forwardRef<
 });
 
 SelectGroceryListSheet.displayName = 'SelectGroceryListSheet';
-

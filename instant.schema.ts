@@ -24,6 +24,10 @@ const _schema = i.schema({
       isDeleted: i.boolean(),
       deletedAt: i.string().optional(),
     }),
+    grocery_list_shares: i.entity({
+      grocery_list_id: i.string(),
+      user_id: i.string(),
+    }),
     recipes: i.entity({
       name: i.string(),
       description: i.string(),
@@ -51,7 +55,7 @@ const _schema = i.schema({
       reverse: {
         on: 'grocery_items',
         has: 'one',
-        label: 'grocery_lists',
+        label: 'grocery_list',
         onDelete: 'cascade',
       },
     },
@@ -78,6 +82,19 @@ const _schema = i.schema({
         on: 'recipes',
         has: 'many',
         label: 'grocery_items',
+      },
+    },
+    grocery_list_shares_grocery_lists: {
+      forward: {
+        on: 'grocery_list_shares',
+        has: 'one',
+        label: 'grocery_list',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: 'grocery_lists',
+        has: 'many',
+        label: 'shares',
       },
     },
   },
