@@ -8,7 +8,7 @@ import { addGroceryListItem } from '../../../features/grocery-list/instant/add-g
 import { BaseGroceryItem } from '../../../features/grocery-list/types';
 import { NATIVE_TABS_OFFSET } from '../../../features/shared/consts';
 import { BottomSheet } from '../../bottom-sheet';
-import { HapticPressable } from '../../ui/haptic-pressable';
+import { Button } from '../../ui/button';
 import { Icon } from '../../ui/icon';
 import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
@@ -26,13 +26,19 @@ const AddItemSheet = () => {
   };
   return (
     <>
-      <HapticPressable
-        className="absolute right-4 z-10 rounded-full bg-primary p-2"
+      <Button
+        size="iconLg"
         style={{ bottom: NATIVE_TABS_OFFSET }}
         onPress={openSheet}
+        className="absolute right-4 z-10"
       >
-        <Icon as={PlusIcon} className="size-10 text-primary-foreground" />
-      </HapticPressable>
+        <Icon
+          as={PlusIcon}
+          size={28}
+          strokeWidth={3}
+          className="text-primary-foreground"
+        />
+      </Button>
       <BottomSheet
         viewClassName="pb-4"
         ignoreSafeArea
