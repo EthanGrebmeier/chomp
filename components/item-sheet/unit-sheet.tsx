@@ -110,17 +110,10 @@ export const UnitSheet = ({
       <WithLayoutTransition>
         <HapticPressable onPress={openSheet} hapticType="light">
           <Pill
-            icon={
-              <Icon
-                as={ScaleIcon}
-                size={16}
-                className="text-muted-foreground"
-              />
-            }
-            className="border border-border bg-transparent"
-            textClassName={
-              isDefault ? 'text-muted-foreground' : 'text-foreground'
-            }
+            className={cn('border-0 bg-[#AE51E7]')}
+            textClassName="text-black font-semibold"
+            closeIconClassName="text-black"
+            icon={<Icon as={ScaleIcon} className="text-black" size={16} />}
             hasValue={!isDefault}
           >
             {formatDisplay()}

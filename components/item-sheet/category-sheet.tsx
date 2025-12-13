@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { LucideIcon, TagIcon } from 'lucide-react-native';
+import { LucideIcon, ShoppingBasketIcon, TagIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -82,27 +82,11 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
         <HapticPressable onPress={openSheet} hapticType="light">
           <Pill
             icon={
-              <Icon
-                as={selectedCategory ? selectedCategory.style.icon : TagIcon}
-                className={
-                  selectedCategory
-                    ? selectedCategory.style.textClassName
-                    : 'text-muted-foreground'
-                }
-                size={16}
-              />
+              <Icon as={ShoppingBasketIcon} className="text-black" size={16} />
             }
-            className={cn(
-              'border border-border',
-              selectedCategory
-                ? selectedCategory.style.className
-                : 'bg-transparent'
-            )}
-            textClassName={cn(
-              selectedCategory
-                ? selectedCategory.style.textClassName
-                : 'text-muted-foreground'
-            )}
+            className={cn('border-0 bg-[#D9EC4B]')}
+            textClassName="text-black font-semibold"
+            closeIconClassName="text-black"
             hasValue={!!selectedCategory}
             onClear={() => onSelect(undefined)}
           >
