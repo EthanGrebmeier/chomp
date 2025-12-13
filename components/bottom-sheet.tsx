@@ -94,6 +94,7 @@ const BareTextInput = forwardRef<
   );
 });
 BareTextInput.displayName = 'BareTextInput';
+
 const Header = ({
   title,
   button,

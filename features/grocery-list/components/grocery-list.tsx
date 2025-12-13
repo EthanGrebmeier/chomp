@@ -1,6 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { Image } from 'expo-image';
-import { PlusIcon } from 'lucide-react-native';
 import { forwardRef, useRef, useState } from 'react';
 import {
   ScrollViewProps,
@@ -17,10 +16,7 @@ import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
-import { Button } from '../../../components/ui/button';
-import { Icon } from '../../../components/ui/icon';
 import { cn } from '../../../lib/utils';
-import { AddItemNew } from '../../shared/add-item-new';
 import { ItemFormData } from '../../shared/components';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
@@ -33,6 +29,7 @@ import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
+import AddItemSheet from './add-item-sheet';
 import { AddRecipeSheet, AddRecipeSheetRef } from './add-recipe-sheet';
 import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
 import { CollapsibleSectionHeader } from './collapsible-section-header';
@@ -363,34 +360,8 @@ export const GroceryList = ({
           onCancel={handleCancelClearList}
         />
         <ShareListSheet ref={shareListSheetRef} />
-        <View
-          className={cn(
-            'absolute right-4 z-10',
-            isItemSheetOpen && 'opacity-0'
-          )}
-          style={{ bottom: NATIVE_TABS_OFFSET }}
-        >
-          <Button
-            size="iconLg"
-            onPress={() => {
-              setIsItemSheetOpen(true);
-            }}
-          >
-            <Icon
-              as={PlusIcon}
-              size={28}
-              strokeWidth={3}
-              className="text-primary-foreground"
-            />
-          </Button>
-        </View>
       </View>
-      <AddItemNew
-        isOpen={isItemSheetOpen}
-        setIsOpen={setIsItemSheetOpen}
-        onAddItem={handleAddItem}
-        bottomOffset={NATIVE_TABS_OFFSET}
-      />
+      {listId && <AddItemSheet groceryListId={listId} />}
     </>
   );
 };

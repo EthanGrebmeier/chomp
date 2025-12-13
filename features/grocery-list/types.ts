@@ -7,16 +7,15 @@ export type GroceryListItemWithRecipe = GroceryListItem & {
   recipe?: Recipe | null;
 };
 
-export type BaseGroceryItem = {
+export type BaseGroceryItem = Omit<GroceryListItem, 'id' | 'isChecked'>;
+
+export type GroceryListItem = {
   name: string;
   category?: string;
-};
-
-export type GroceryListItem = BaseGroceryItem & {
   id: string;
   quantity: number;
   unit: string;
   notes?: string;
-  category?: string;
+
   isChecked: boolean;
 };
