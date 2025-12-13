@@ -8,6 +8,7 @@ export const useGroceryListItems = (listId?: string) => {
             $: {
               where: {
                 isDeleted: false,
+                'grocery_list.id': listId,
               },
             },
           },
