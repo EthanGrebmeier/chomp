@@ -1,13 +1,14 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { addGroceryListItem } from '../../../features/grocery-list/instant/add-grocery-list-item';
 import { BaseGroceryItem } from '../../../features/grocery-list/types';
 import { NATIVE_TABS_OFFSET } from '../../../features/shared/consts';
 import { BottomSheet } from '../../bottom-sheet';
+import { HapticPressable } from '../../ui/haptic-pressable';
 import { Icon } from '../../ui/icon';
 import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
@@ -25,13 +26,13 @@ const AddItemSheet = () => {
   };
   return (
     <>
-      <Pressable
-        className="absolute right-4 z-10"
+      <HapticPressable
+        className="absolute right-4 z-10 rounded-full bg-primary p-2"
         style={{ bottom: NATIVE_TABS_OFFSET }}
         onPress={openSheet}
       >
-        <Icon as={PlusIcon} className="size-10" />
-      </Pressable>
+        <Icon as={PlusIcon} className="size-10 text-primary-foreground" />
+      </HapticPressable>
       <BottomSheet
         viewClassName="pb-4"
         ignoreSafeArea
