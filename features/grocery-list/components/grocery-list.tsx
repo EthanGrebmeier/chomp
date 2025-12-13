@@ -364,7 +364,10 @@ export const GroceryList = ({
         />
         <ShareListSheet ref={shareListSheetRef} />
         <View
-          className="absolute right-4 z-20"
+          className={cn(
+            'absolute right-4 z-10',
+            isItemSheetOpen && 'opacity-0'
+          )}
           style={{ bottom: NATIVE_TABS_OFFSET }}
         >
           <Button
