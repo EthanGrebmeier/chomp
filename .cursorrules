@@ -7,6 +7,19 @@
 - The app handles database migrations automatically at runtime
 - When schema changes are made, generate the migration but don't apply it
 
+## InstantDB
+
+- This app uses InstantDB for real-time data sync
+- Always use the InstantDB MCP tools to understand schema and permissions
+- Schema is defined in `instant.schema.ts`, permissions in `instant.perms.ts`
+- Use `@instantdb/react-native` for client-side operations
+- Always pass `schema` when initializing Instant for type safety
+- Use `id()` from InstantDB to generate IDs for new entities
+- When transactions involve links that affect permissions, pass `ruleParams` to provide context
+- For transactions that create records and link them, ensure the user has permission on BOTH the new record AND any linked records
+- When linking creates reverse links, InstantDB treats it as an update to the linked entity - ensure permissions allow this
+- Use InstaQL utility types (`InstaQLEntity`) for typing data models
+
 ## Code Style
 
 - Use TypeScript strict mode

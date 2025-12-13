@@ -33,9 +33,9 @@ export default function List() {
     setDefaultList();
   }, [lists, activeListId, createGroceryList]);
 
-  const activeListName = lists?.grocery_lists.find(
+  const activeList = lists?.grocery_lists.find(
     list => list.id === activeListId
-  )?.name;
+  );
 
   if (listsLoading || settingsLoading) {
     return (
@@ -52,7 +52,8 @@ export default function List() {
       <View className="pt-safe flex-1">
         <GroceryList
           listId={activeListId}
-          listName={activeListName}
+          listName={activeList?.name}
+          joinCode={activeList?.joinCode}
           groupBy={settings.groupBy}
           sortBy={settings.sortBy}
           onTitlePress={() => selectListSheetRef.current?.present()}

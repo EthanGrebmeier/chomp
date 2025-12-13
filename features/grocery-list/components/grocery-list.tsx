@@ -39,6 +39,7 @@ import { CollapsibleSectionHeader } from './collapsible-section-header';
 import { GroceryListHeader } from './grocery-list-header';
 import { GroceryListItem } from './grocery-list-item';
 import { GroupBySelector } from './group-by-selector';
+import { ShareListSheet, ShareListSheetRef } from './share-list-sheet';
 import { SortBySelector } from './sort-by-selector';
 import { UpdateItemSheet, UpdateItemSheetRef } from './update-item-sheet';
 
@@ -49,6 +50,7 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 type GroceryListProps = {
   listId?: string;
   listName?: string;
+  joinCode?: string;
   groupBy: 'category' | 'none' | 'recipe';
   sortBy: 'name' | 'recent';
   onTitlePress?: () => void;
@@ -63,12 +65,14 @@ RenderScrollComponent.displayName = 'RenderScrollComponent';
 export const GroceryList = ({
   listId,
   listName,
+  joinCode,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
   onTitlePress,
 }: GroceryListProps) => {
   const [isItemSheetOpen, setIsItemSheetOpen] = useState(false);
   const recipeSheetRef = useRef<AddRecipeSheetRef>(null);
+  const shareListSheetRef = useRef<ShareListSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
 
   const { data } = useGroceryListItems(listId);
@@ -185,6 +189,12 @@ export const GroceryList = ({
     clearListConfirmationSheetRef.current?.dismiss();
   };
 
+  const handleSharePress = () => {
+    if (joinCode) {
+      shareListSheetRef.current?.present(joinCode);
+    }
+  };
+
   // Separate checked and unchecked items
   const uncheckedItems = items.filter(item => !item.isChecked);
   let checkedItems = items.filter(item => item.isChecked);
@@ -237,6 +247,7 @@ export const GroceryList = ({
           listName={listName}
           openRecipeSheet={() => recipeSheetRef.current?.present()}
           onClearListPress={handleClearListPress}
+          onSharePress={handleSharePress}
           onTitlePress={onTitlePress}
         />
         <View className="flex-1">
@@ -351,6 +362,7 @@ export const GroceryList = ({
           onConfirm={handleConfirmClearList}
           onCancel={handleCancelClearList}
         />
+        <ShareListSheet ref={shareListSheetRef} />
         <View
           className="absolute right-4 z-20"
           style={{ bottom: NATIVE_TABS_OFFSET }}

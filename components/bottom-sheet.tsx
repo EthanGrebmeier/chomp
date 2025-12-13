@@ -109,7 +109,22 @@ const Header = ({
   );
 };
 
+const Subtext = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <Text className={cn('text-base text-muted-foreground', className)}>
+      {children}
+    </Text>
+  );
+};
+
 BottomSheet.Header = Header;
+BottomSheet.Subtext = Subtext;
 BottomSheet.BareTextInput = BareTextInput;
 
 BottomSheet.TextInput = TextInput;

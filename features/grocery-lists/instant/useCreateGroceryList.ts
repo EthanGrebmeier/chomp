@@ -1,11 +1,13 @@
 import { id } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { generateJoinCode } from '../utils/generate-join-code';
 
 export const useCreateGroceryList = () => {
   const createGroceryList = async (name: string) => {
     const listId = id();
     const shareId = id();
+    const joinCode = generateJoinCode();
     const user = await db.getAuth();
     if (!user) {
       throw new Error('User not authenticated');
@@ -14,6 +16,7 @@ export const useCreateGroceryList = () => {
     const list = await db.transact([
       db.tx.grocery_lists[listId].create({
         name,
+        joinCode,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),

@@ -12,6 +12,7 @@ type GroceryListHeaderProps = {
   listId?: string;
   openRecipeSheet: () => void;
   onClearListPress: () => void;
+  onSharePress: () => void;
   onTitlePress?: () => void;
 };
 
@@ -21,6 +22,7 @@ export const GroceryListHeader = ({
   listId,
   openRecipeSheet,
   onClearListPress,
+  onSharePress,
   onTitlePress,
 }: GroceryListHeaderProps) => {
   return (
@@ -47,6 +49,7 @@ export const GroceryListHeader = ({
             trigger={<Icon as={MoreHorizontal} size={24} />}
             openRecipeSheet={openRecipeSheet}
             onClearListPress={onClearListPress}
+            onSharePress={onSharePress}
           />
         )}
       </View>

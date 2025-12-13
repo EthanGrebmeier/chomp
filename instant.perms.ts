@@ -4,11 +4,24 @@ const rules = {
   grocery_lists: {
     allow: {
       create: 'true',
-      view: 'isOwner',
-      update: 'isOwner',
+      view: 'isOwner || isKnownList',
+      update: 'isOwner || isKnownList',
       delete: 'isOwner',
     },
-    bind: ['isOwner', "auth.id in data.ref('shares.user_id')"],
+    bind: [
+      'isOwner',
+      "auth.id in data.ref('shares.user_id')",
+      'isKnownList',
+      'data.joinCode == ruleParams.knownJoinCode',
+    ],
+  },
+  grocery_list_shares: {
+    allow: {
+      create: 'auth.id != null',
+      view: 'auth.id == data.user_id',
+      update: 'false',
+      delete: 'auth.id == data.user_id',
+    },
   },
   grocery_items: {
     allow: {

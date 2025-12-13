@@ -9,6 +9,7 @@ const _schema = i.schema({
     }),
     grocery_lists: i.entity({
       name: i.string(),
+      joinCode: i.string().unique(), // 8-char alphanumeric, case-sensitive
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
