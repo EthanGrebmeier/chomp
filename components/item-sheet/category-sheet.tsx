@@ -3,15 +3,15 @@ import { LucideIcon, TagIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import { WithLayoutTransition } from '../../../../components/animated/with-layout-transition';
-import { BottomSheet } from '../../../../components/bottom-sheet';
-import { BackButton } from '../../../../components/ui/back-button';
-import { HapticPressable } from '../../../../components/ui/haptic-pressable';
-import { Icon } from '../../../../components/ui/icon';
-import { Pill } from '../../../../components/ui/pill';
-import { Text } from '../../../../components/ui/text';
-import { cn } from '../../../../lib/utils';
-import { categoryOptions } from '../../../shared/category/categories';
+import { categoryOptions } from '../../features/shared/category/categories';
+import { cn } from '../../lib/utils';
+import { WithLayoutTransition } from '../animated/with-layout-transition';
+import { BottomSheet } from '../bottom-sheet';
+import { BackButton } from '../ui/back-button';
+import { HapticPressable } from '../ui/haptic-pressable';
+import { Icon } from '../ui/icon';
+import { Pill } from '../ui/pill';
+import { Text } from '../ui/text';
 
 type CategoryOptionProps = {
   label: string;

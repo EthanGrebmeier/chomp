@@ -2,11 +2,11 @@ import { View } from 'react-native';
 
 import { CategorySheet } from './category-sheet';
 import { UnitSheet } from './unit-sheet';
-import { useAddItem } from './useAddItem';
+import { useItemSheet } from './use-item-sheet';
 
 export const MetaBar = () => {
   const { category, setCategory, quantity, setQuantity, unit, setUnit } =
-    useAddItem();
+    useItemSheet();
 
   return (
     <View className="my-3 flex-row items-center gap-2">

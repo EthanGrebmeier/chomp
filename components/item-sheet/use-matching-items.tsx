@@ -1,4 +1,4 @@
-import { groceries } from '../../consts/groceries';
+import { groceries } from '../../features/grocery-list/consts/groceries';
 
 export const useMatchingItems = (value: string) => {
   const matchingItems =

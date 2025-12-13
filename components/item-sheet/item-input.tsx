@@ -1,13 +1,13 @@
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { BottomSheet } from '../../../../components/bottom-sheet';
-import { HapticPressable } from '../../../../components/ui/haptic-pressable';
-import { Text } from '../../../../components/ui/text';
-import { cn } from '../../../../lib/utils';
+import { cn } from '../../lib/utils';
+import { BottomSheet } from '../bottom-sheet';
+import { HapticPressable } from '../ui/haptic-pressable';
+import { Text } from '../ui/text';
 
-import { useAddItem } from './useAddItem';
-import { useMatchingItems } from './useMatchingItems';
+import { useItemSheet } from './use-item-sheet';
+import { useMatchingItems } from './use-matching-items';
 
 type ItemInputProps = {
   placeholder: string;
@@ -21,7 +21,7 @@ export const ItemInput = ({ placeholder }: ItemInputProps) => {
     setShowMatchingItems,
     onChangeItemText,
     onSelect,
-  } = useAddItem();
+  } = useItemSheet();
   const { matchingItems } = useMatchingItems(itemInputValue);
 
   return (

@@ -1,12 +1,11 @@
 import { View } from 'react-native';
 
-import { Button } from '../../../../components/ui/button';
-import { Text } from '../../../../components/ui/text';
+import { Button } from '../../ui/button';
+import { Text } from '../../ui/text';
+import { useItemSheet } from '../use-item-sheet';
 
-import { useAddItem } from './useAddItem';
-
-const BottomBar = () => {
-  const { addItem } = useAddItem();
+const AddItemBottomBar = () => {
+  const { onSubmit: addItem } = useItemSheet();
   return (
     <View className="flex-row items-center justify-between border-t border-dashed border-border pt-3">
       <Text> My List </Text>
@@ -17,4 +16,4 @@ const BottomBar = () => {
   );
 };
 
-export default BottomBar;
+export default AddItemBottomBar;

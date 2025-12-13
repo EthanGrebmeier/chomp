@@ -1,15 +1,16 @@
-import { createContext, useContext, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { TextInput } from 'react-native';
-import { toast } from 'sonner-native';
 
-import { addGroceryListItem } from '../../instant/add-grocery-list-item';
-import { BaseGroceryItem } from '../../types';
+import {
+  BaseGroceryItem,
+  GroceryListItem,
+} from '../../features/grocery-list/types';
 
-const addItemContext = createContext<{
+const itemSheetContext = createContext<{
   onSelect: (item: BaseGroceryItem) => void;
   selectedItem: BaseGroceryItem | null;
   setSelectedItem: (item: BaseGroceryItem | null) => void;
-  addItem: () => void;
+  onSubmit: () => void;
   itemInputValue: string;
   itemInputRef: React.RefObject<TextInput | null>;
   onChangeItemText: (text: string) => void;
@@ -24,23 +25,43 @@ const addItemContext = createContext<{
   setQuantity: (quantity: number) => void;
   unit: string;
   setUnit: (unit: string) => void;
+  reset: () => void;
+  itemId: string | null;
+  setItemId: (id: string | null) => void;
+  setFromItem: (item: GroceryListItem) => void;
 } | null>(null);
 
-export const useAddItem = () => {
-  const context = useContext(addItemContext);
+export const useItemSheet = () => {
+  const context = useContext(itemSheetContext);
   if (!context) {
-    throw new Error('useAddItem must be used within an AddItemProvider');
+    throw new Error('useAddItem must be used within an ItemSheetProvider');
   }
   return context;
 };
 
-export const AddItemProvider = ({
-  children,
-  groceryListId,
-}: {
+type ItemSheetProviderProps = {
   children: React.ReactNode;
   groceryListId: string;
-}) => {
+  onSubmit: ({
+    item,
+    listId,
+    itemId,
+  }: {
+    item: BaseGroceryItem;
+    listId: string;
+    itemId: string | null;
+  }) => void;
+  setFromItemRef?: React.MutableRefObject<
+    ((item: GroceryListItem) => void) | null
+  >;
+};
+
+export const ItemSheetProvider = ({
+  children,
+  groceryListId,
+  onSubmit,
+  setFromItemRef,
+}: ItemSheetProviderProps) => {
   const [selectedItem, setSelectedItem] = useState<BaseGroceryItem | null>(
     null
   );
@@ -51,6 +72,7 @@ export const AddItemProvider = ({
   const [unit, setUnit] = useState('each');
   const itemInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
+  const [itemId, setItemId] = useState<string | null>(null);
 
   const reset = () => {
     setSelectedItem(null);
@@ -60,23 +82,39 @@ export const AddItemProvider = ({
     setQuantity(1);
     setUnit('each');
     setShowMatchingItems(false);
+    setItemId(null);
   };
 
-  const addItem = () => {
-    addGroceryListItem({
+  const setFromItem = (item: GroceryListItem) => {
+    setItemId(item.id);
+    setItemInputValue(item.name);
+    setCategory(item.category);
+    setQuantity(item.quantity);
+    setUnit(item.unit);
+    setNotesInputValue(item.notes ?? '');
+    setShowMatchingItems(false);
+  };
+
+  // Expose setFromItem to parent via ref
+  useEffect(() => {
+    if (setFromItemRef) {
+      setFromItemRef.current = setFromItem;
+    }
+  }, [setFromItemRef]);
+
+  const submitItem = () => {
+    onSubmit({
       listId: groceryListId,
+      itemId,
       item: {
         name: itemInputValue,
         category: category,
         quantity: quantity,
         unit: unit,
-        isChecked: false,
         notes: notesInputValue,
       },
     });
     reset();
-
-    toast.success(`${itemInputValue} added`);
   };
 
   const onSelect = (item: BaseGroceryItem) => {
@@ -95,12 +133,12 @@ export const AddItemProvider = ({
   };
 
   return (
-    <addItemContext.Provider
+    <itemSheetContext.Provider
       value={{
         onSelect,
         selectedItem,
         setSelectedItem,
-        addItem,
+        onSubmit: submitItem,
         itemInputValue,
         itemInputRef,
         notesInputValue,
@@ -114,9 +152,13 @@ export const AddItemProvider = ({
         setQuantity,
         unit,
         setUnit,
+        reset,
+        itemId,
+        setItemId,
+        setFromItem,
       }}
     >
       {children}
-    </addItemContext.Provider>
+    </itemSheetContext.Provider>
   );
 };

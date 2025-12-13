@@ -3,14 +3,14 @@ import { CheckIcon, ScaleIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 
-import { WithLayoutTransition } from '../../../../components/animated/with-layout-transition';
-import { BottomSheet } from '../../../../components/bottom-sheet';
-import { BackButton } from '../../../../components/ui/back-button';
-import { HapticPressable } from '../../../../components/ui/haptic-pressable';
-import { Icon } from '../../../../components/ui/icon';
-import { Pill } from '../../../../components/ui/pill';
-import { Text } from '../../../../components/ui/text';
-import { cn } from '../../../../lib/utils';
+import { cn } from '../../lib/utils';
+import { WithLayoutTransition } from '../animated/with-layout-transition';
+import { BottomSheet } from '../bottom-sheet';
+import { BackButton } from '../ui/back-button';
+import { HapticPressable } from '../ui/haptic-pressable';
+import { Icon } from '../ui/icon';
+import { Pill } from '../ui/pill';
+import { Text } from '../ui/text';
 
 const unitOptions = [
   { label: 'Each', value: 'each' },
