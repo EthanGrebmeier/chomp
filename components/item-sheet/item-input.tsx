@@ -33,6 +33,7 @@ export const ItemInput = ({ placeholder }: ItemInputProps) => {
         value={itemInputValue}
         onChangeText={onChangeItemText}
         onBlur={() => setShowMatchingItems(false)}
+        autoCorrect={false}
       />
       {showMatchingItems && (
         <Animated.View
