@@ -10,9 +10,11 @@ type GroceryListHeaderProps = {
   itemCount: number;
   listName?: string;
   listId?: string;
+  ownerId?: string;
   openRecipeSheet: () => void;
   onClearListPress: () => void;
   onSharePress: () => void;
+  onDeleteOrLeave: () => void;
   onTitlePress?: () => void;
 };
 
@@ -20,9 +22,11 @@ export const GroceryListHeader = ({
   itemCount,
   listName,
   listId,
+  ownerId,
   openRecipeSheet,
   onClearListPress,
   onSharePress,
+  onDeleteOrLeave,
   onTitlePress,
 }: GroceryListHeaderProps) => {
   return (
@@ -46,10 +50,12 @@ export const GroceryListHeader = ({
         {listId && (
           <GroceryListDropdownMenu
             listId={listId}
+            ownerId={ownerId}
             trigger={<Icon as={MoreHorizontal} size={24} />}
             openRecipeSheet={openRecipeSheet}
             onClearListPress={onClearListPress}
             onSharePress={onSharePress}
+            onDeleteOrLeave={onDeleteOrLeave}
           />
         )}
       </View>

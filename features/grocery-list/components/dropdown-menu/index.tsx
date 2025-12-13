@@ -7,6 +7,7 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '../../../../components/ui/dropdown-menu';
+import { db } from '../../../../lib/instant';
 import { clearCheckedItems } from '../../instant/clear-checked-items';
 import { useGroceryListItems } from '../../instant/use-grocery-list-items';
 
@@ -15,7 +16,9 @@ type GroceryListDropdownMenuProps = {
   openRecipeSheet: () => void;
   onClearListPress: () => void;
   onSharePress: () => void;
+  onDeleteOrLeave: () => void;
   listId: string;
+  ownerId?: string;
 };
 
 export const GroceryListDropdownMenu = ({
@@ -23,12 +26,16 @@ export const GroceryListDropdownMenu = ({
   openRecipeSheet,
   onClearListPress,
   onSharePress,
+  onDeleteOrLeave,
   listId,
+  ownerId,
 }: GroceryListDropdownMenuProps) => {
+  const { user } = db.useAuth();
   const { data: groceryListItems } = useGroceryListItems(listId);
   const checkedItems =
     groceryListItems?.grocery_items.filter(item => item.isChecked) ?? [];
   const hasCheckedItems = checkedItems.length > 0;
+  const isOwner = user?.id === ownerId;
 
   return (
     <DropdownMenuRoot trigger={trigger}>
@@ -60,6 +67,20 @@ export const GroceryListDropdownMenu = ({
           <DropdownMenuItemIcon
             ios={{
               name: 'trash',
+            }}
+          />
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          destructive
+          key="delete-or-leave"
+          onSelect={onDeleteOrLeave}
+        >
+          <DropdownMenuItemTitle>
+            {isOwner ? 'Delete List' : 'Leave List'}
+          </DropdownMenuItemTitle>
+          <DropdownMenuItemIcon
+            ios={{
+              name: isOwner ? 'trash' : 'rectangle.portrait.and.arrow.right',
             }}
           />
         </DropdownMenuItem>

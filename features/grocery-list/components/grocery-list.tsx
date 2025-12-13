@@ -5,6 +5,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
+import { db } from '../../../lib/instant';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { clearGroceryList } from '../instant/clear-list';
@@ -15,6 +16,7 @@ import { BaseGroceryItem } from '../types';
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { AddRecipeSheet, AddRecipeSheetRef } from './add-recipe-sheet';
 import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
+import { DeleteListConfirmationSheet } from './delete-list-confirmation-sheet';
 import { GroceryItemsList } from './grocery-items-list';
 import { GroceryListHeader } from './grocery-list-header';
 import { GroupBySelector } from './group-by-selector';
@@ -25,25 +27,31 @@ type GroceryListProps = {
   listId?: string;
   listName?: string;
   joinCode?: string;
+  ownerId?: string;
   groupBy: 'category' | 'none' | 'recipe';
   sortBy: 'name' | 'recent';
   onTitlePress?: () => void;
+  onDeleteOrLeave: () => void;
 };
 
 export const GroceryList = ({
   listId,
   listName,
   joinCode,
+  ownerId,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
   onTitlePress,
+  onDeleteOrLeave,
 }: GroceryListProps) => {
   const recipeSheetRef = useRef<AddRecipeSheetRef>(null);
   const shareListSheetRef = useRef<ShareListSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
+  const { user } = db.useAuth();
 
   const { data } = useGroceryListItems(listId);
   const items = data?.grocery_items ?? [];
+  const isOwner = user?.id === ownerId;
 
   const [conflictItem, setConflictItem] = useState<{
     existingItemId: string;
@@ -56,6 +64,7 @@ export const GroceryList = ({
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
+  const deleteListConfirmationSheetRef = useRef<TrueSheet | null>(null);
 
   const handleGroupByChange = (newGroupBy: 'category' | 'none' | 'recipe') => {
     setGroupBy(newGroupBy);
@@ -113,17 +122,32 @@ export const GroceryList = ({
     }
   };
 
+  const handleDeleteOrLeavePress = () => {
+    deleteListConfirmationSheetRef.current?.present();
+  };
+
+  const handleConfirmDeleteOrLeave = () => {
+    deleteListConfirmationSheetRef.current?.dismiss();
+    onDeleteOrLeave();
+  };
+
+  const handleCancelDeleteOrLeave = () => {
+    deleteListConfirmationSheetRef.current?.dismiss();
+  };
+
   return (
     <>
       <View className="flex-1 gap-2">
         {/** Header */}
         <GroceryListHeader
           listId={listId}
+          ownerId={ownerId}
           itemCount={items.length}
           listName={listName}
           openRecipeSheet={() => recipeSheetRef.current?.present()}
           onClearListPress={handleClearListPress}
           onSharePress={handleSharePress}
+          onDeleteOrLeave={handleDeleteOrLeavePress}
           onTitlePress={onTitlePress}
         />
         <EditItemProvider groceryListId={listId ?? ''}>
@@ -152,6 +176,12 @@ export const GroceryList = ({
           ref={clearListConfirmationSheetRef}
           onConfirm={handleConfirmClearList}
           onCancel={handleCancelClearList}
+        />
+        <DeleteListConfirmationSheet
+          ref={deleteListConfirmationSheetRef}
+          isOwner={isOwner}
+          onConfirm={handleConfirmDeleteOrLeave}
+          onCancel={handleCancelDeleteOrLeave}
         />
         <ShareListSheet ref={shareListSheetRef} />
       </View>

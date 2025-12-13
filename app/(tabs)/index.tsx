@@ -7,7 +7,10 @@ import {
   SelectGroceryListSheetRef,
 } from '@/features/grocery-lists/components/select-grocery-list-sheet';
 import { useCreateGroceryList } from '@/features/grocery-lists/instant/useCreateGroceryList';
+import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDeleteGroceryList';
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
+import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
+import { db } from '@/lib/instant';
 
 import { Text } from '../../components/ui/text';
 import { useSettings } from '../../features/grocery-list/hooks/useSettings';
@@ -18,7 +21,10 @@ export default function List() {
     undefined
   );
   const { data: lists, isLoading: listsLoading } = useGroceryLists();
+  const { user } = db.useAuth();
   const createGroceryList = useCreateGroceryList();
+  const deleteGroceryList = useDeleteGroceryList();
+  const leaveGroceryList = useLeaveGroceryList();
   const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
 
   useEffect(() => {
@@ -37,6 +43,28 @@ export default function List() {
     list => list.id === activeListId
   );
 
+  const handleDeleteOrLeave = async () => {
+    if (!activeListId || !activeList) return;
+
+    const isOwner = user?.id === activeList.ownerId;
+
+    if (isOwner) {
+      await deleteGroceryList(activeListId);
+    } else {
+      await leaveGroceryList(activeListId);
+    }
+
+    // Switch to another list if available
+    const remainingLists = lists?.grocery_lists.filter(
+      list => list.id !== activeListId
+    );
+    if (remainingLists && remainingLists.length > 0) {
+      setActiveListId(remainingLists[0].id);
+    } else {
+      setActiveListId(undefined);
+    }
+  };
+
   if (listsLoading || settingsLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
@@ -54,9 +82,11 @@ export default function List() {
           listId={activeListId}
           listName={activeList?.name}
           joinCode={activeList?.joinCode}
+          ownerId={activeList?.ownerId}
           groupBy={settings.groupBy}
           sortBy={settings.sortBy}
           onTitlePress={() => selectListSheetRef.current?.present()}
+          onDeleteOrLeave={handleDeleteOrLeave}
         />
       </View>
       <SelectGroceryListSheet

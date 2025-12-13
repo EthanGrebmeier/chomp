@@ -17,6 +17,7 @@ export const useCreateGroceryList = () => {
       db.tx.grocery_lists[listId].create({
         name,
         joinCode,
+        ownerId: user.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
