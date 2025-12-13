@@ -60,14 +60,10 @@ const AddItem = ({ groceryListId }: AddItemProps) => {
   }: {
     item: BaseGroceryItem;
     listId: string;
-    itemId: string | null;
   }) => {
     addGroceryListItem({
       listId,
-      item: {
-        ...item,
-        isChecked: false,
-      },
+      item,
     });
     toast.success(`${item.name} added`);
   };

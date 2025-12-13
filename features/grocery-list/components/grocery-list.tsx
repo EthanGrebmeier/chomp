@@ -85,7 +85,6 @@ export const GroceryList = ({
         ...conflictItem.newItem,
         quantity: 1,
         unit: 'each',
-        isChecked: false,
       },
     });
   };

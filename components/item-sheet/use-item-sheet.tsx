@@ -1,10 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { TextInput } from 'react-native';
 
-import {
-  BaseGroceryItem,
-  GroceryListItem,
-} from '../../features/grocery-list/types';
+import { BaseGroceryItem } from '../../features/grocery-list/types';
 
 const itemSheetContext = createContext<{
   onSelect: (item: BaseGroceryItem) => void;
@@ -26,9 +23,7 @@ const itemSheetContext = createContext<{
   unit: string;
   setUnit: (unit: string) => void;
   reset: () => void;
-  itemId: string | null;
-  setItemId: (id: string | null) => void;
-  setFromItem: (item: GroceryListItem) => void;
+  setFromItem: (item: BaseGroceryItem) => void;
 } | null>(null);
 
 export const useItemSheet = () => {
@@ -45,15 +40,11 @@ type ItemSheetProviderProps = {
   onSubmit: ({
     item,
     listId,
-    itemId,
   }: {
     item: BaseGroceryItem;
     listId: string;
-    itemId: string | null;
   }) => void;
-  setFromItemRef?: React.MutableRefObject<
-    ((item: GroceryListItem) => void) | null
-  >;
+  setFromItemRef?: React.RefObject<((item: BaseGroceryItem) => void) | null>;
 };
 
 export const ItemSheetProvider = ({
@@ -72,7 +63,6 @@ export const ItemSheetProvider = ({
   const [unit, setUnit] = useState('each');
   const itemInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
-  const [itemId, setItemId] = useState<string | null>(null);
 
   const reset = () => {
     setSelectedItem(null);
@@ -82,11 +72,9 @@ export const ItemSheetProvider = ({
     setQuantity(1);
     setUnit('each');
     setShowMatchingItems(false);
-    setItemId(null);
   };
 
-  const setFromItem = (item: GroceryListItem) => {
-    setItemId(item.id);
+  const setFromItem = (item: BaseGroceryItem) => {
     setItemInputValue(item.name);
     setCategory(item.category);
     setQuantity(item.quantity);
@@ -98,14 +86,13 @@ export const ItemSheetProvider = ({
   // Expose setFromItem to parent via ref
   useEffect(() => {
     if (setFromItemRef) {
-      setFromItemRef.current = setFromItem;
+      setFromItemRef.current = (item: BaseGroceryItem) => setFromItem(item);
     }
   }, [setFromItemRef]);
 
   const submitItem = () => {
     onSubmit({
       listId: groceryListId,
-      itemId,
       item: {
         name: itemInputValue,
         category: category,
@@ -153,8 +140,6 @@ export const ItemSheetProvider = ({
         unit,
         setUnit,
         reset,
-        itemId,
-        setItemId,
         setFromItem,
       }}
     >

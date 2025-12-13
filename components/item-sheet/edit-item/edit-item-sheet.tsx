@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { createContext, useContext, useRef } from 'react';
+import { createContext, useContext, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -74,21 +74,15 @@ type EditItemProps = {
 };
 
 const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const sheetRef = useRef<TrueSheet>(null);
-  const setFromItemRef = useRef<((item: GroceryListItem) => void) | null>(null);
+  const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
 
-  const onSubmit = ({
-    item,
-    itemId,
-  }: {
-    item: BaseGroceryItem;
-    listId: string;
-    itemId: string | null;
-  }) => {
-    if (!itemId) return;
+  const onSubmit = ({ item }: { item: BaseGroceryItem; listId: string }) => {
+    if (!selectedItemId) return;
 
     updateGroceryListItem({
-      itemId,
+      itemId: selectedItemId,
       item: {
         name: item.name,
         category: item.category,
@@ -103,6 +97,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
 
   const present = (item: GroceryListItem) => {
     setFromItemRef.current?.(item);
+    setSelectedItemId(item.id);
     sheetRef.current?.present();
   };
 

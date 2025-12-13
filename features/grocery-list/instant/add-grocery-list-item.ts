@@ -1,14 +1,14 @@
 import { id } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
-import { GroceryListItem } from '../types';
+import { BaseGroceryItem } from '../types';
 
 export const addGroceryListItem = async ({
   listId,
   item,
 }: {
   listId: string;
-  item: Omit<GroceryListItem, 'id'>;
+  item: BaseGroceryItem;
 }) => {
   const itemId = id();
 
