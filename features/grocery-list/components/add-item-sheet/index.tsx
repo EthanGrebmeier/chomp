@@ -14,7 +14,11 @@ import { AddItemProvider, useAddItem } from './useAddItem';
 
 const AddItemSheet = () => {
   const ref = useRef<TrueSheet>(null);
-  const { inputRef } = useAddItem();
+  const {
+    itemInputRef: inputRef,
+    notesInputValue,
+    onChangeNotesText,
+  } = useAddItem();
 
   const openSheet = () => {
     ref.current?.present();
@@ -38,6 +42,8 @@ const AddItemSheet = () => {
         <View>
           <ItemInput placeholder="Add Item" />
           <BottomSheet.BareTextInput
+            value={notesInputValue}
+            onChangeText={onChangeNotesText}
             placeholder="Notes"
             multiline
             style={{ textAlignVertical: 'top' }}

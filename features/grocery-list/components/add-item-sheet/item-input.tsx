@@ -15,23 +15,23 @@ type ItemInputProps = {
 
 export const ItemInput = ({ placeholder }: ItemInputProps) => {
   const {
-    inputValue,
-    inputRef,
+    itemInputValue,
+    itemInputRef,
     showMatchingItems,
     setShowMatchingItems,
-    onChangeText,
+    onChangeItemText,
     onSelect,
   } = useAddItem();
-  const { matchingItems } = useMatchingItems(inputValue);
+  const { matchingItems } = useMatchingItems(itemInputValue);
 
   return (
     <View className="w-full">
       <BottomSheet.BareTextInput
-        ref={inputRef}
+        ref={itemInputRef}
         className="text-2xl font-bold text-foreground"
         placeholder={placeholder}
-        value={inputValue}
-        onChangeText={onChangeText}
+        value={itemInputValue}
+        onChangeText={onChangeItemText}
         onBlur={() => setShowMatchingItems(false)}
       />
       {showMatchingItems && (

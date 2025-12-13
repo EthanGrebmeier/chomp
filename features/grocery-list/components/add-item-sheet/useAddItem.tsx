@@ -10,9 +10,12 @@ const addItemContext = createContext<{
   selectedItem: BaseGroceryItem | null;
   setSelectedItem: (item: BaseGroceryItem | null) => void;
   addItem: () => void;
-  inputValue: string;
-  onChangeText: (text: string) => void;
-  inputRef: React.RefObject<TextInput | null>;
+  itemInputValue: string;
+  itemInputRef: React.RefObject<TextInput | null>;
+  onChangeItemText: (text: string) => void;
+  notesInputValue: string;
+
+  onChangeNotesText: (text: string) => void;
   showMatchingItems: boolean;
   setShowMatchingItems: (show: boolean) => void;
   category?: string;
@@ -41,47 +44,54 @@ export const AddItemProvider = ({
   const [selectedItem, setSelectedItem] = useState<BaseGroceryItem | null>(
     null
   );
-  const [inputValue, setInputValue] = useState('');
+  const [itemInputValue, setItemInputValue] = useState('');
+  const [notesInputValue, setNotesInputValue] = useState('');
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
   const [unit, setUnit] = useState('each');
-  const inputRef = useRef<TextInput>(null);
+  const itemInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
 
   const reset = () => {
     setSelectedItem(null);
-    setInputValue('');
+    setItemInputValue('');
+    setNotesInputValue('');
     setCategory(undefined);
     setQuantity(1);
     setUnit('each');
+    setShowMatchingItems(false);
   };
 
   const addItem = () => {
     addGroceryListItem({
       listId: groceryListId,
       item: {
-        name: inputValue,
+        name: itemInputValue,
         category: category,
         quantity: quantity,
         unit: unit,
         isChecked: false,
+        notes: notesInputValue,
       },
     });
     reset();
 
-    toast.success(`${inputValue} added`);
+    toast.success(`${itemInputValue} added`);
   };
 
   const onSelect = (item: BaseGroceryItem) => {
     setSelectedItem(item);
-    setInputValue(item.name);
+    setItemInputValue(item.name);
     setCategory(item.category);
     setShowMatchingItems(false);
   };
 
-  const onChangeText = (text: string) => {
-    setInputValue(text);
+  const onChangeItemText = (text: string) => {
+    setItemInputValue(text);
     setShowMatchingItems(true);
+  };
+  const onChangeNotesText = (text: string) => {
+    setNotesInputValue(text);
   };
 
   return (
@@ -91,11 +101,13 @@ export const AddItemProvider = ({
         selectedItem,
         setSelectedItem,
         addItem,
-        inputValue,
-        inputRef,
+        itemInputValue,
+        itemInputRef,
+        notesInputValue,
+        onChangeNotesText,
         showMatchingItems,
         setShowMatchingItems,
-        onChangeText,
+        onChangeItemText,
         category,
         setCategory,
         quantity,
