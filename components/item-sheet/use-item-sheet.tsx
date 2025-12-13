@@ -24,6 +24,7 @@ const itemSheetContext = createContext<{
   setUnit: (unit: string) => void;
   reset: () => void;
   setFromItem: (item: BaseGroceryItem) => void;
+  isValid: boolean;
 } | null>(null);
 
 export const useItemSheet = () => {
@@ -141,6 +142,7 @@ export const ItemSheetProvider = ({
         setUnit,
         reset,
         setFromItem,
+        isValid: !!itemInputValue.length && !!quantity && !!unit,
       }}
     >
       {children}
