@@ -14,8 +14,6 @@ import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 
-import AddItemBottomBar from './add-item-bottom-bar';
-
 const AddItemSheet = () => {
   const ref = useRef<TrueSheet>(null);
   const { reset, itemInputRef } = useItemSheet();
@@ -48,8 +46,7 @@ const AddItemSheet = () => {
       >
         <View>
           <ItemForm />
-          <MetaBar />
-          <AddItemBottomBar />
+          <MetaBar submitLabel="Create" />
         </View>
       </BottomSheet>
     </>

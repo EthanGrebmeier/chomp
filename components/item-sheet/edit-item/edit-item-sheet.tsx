@@ -13,8 +13,6 @@ import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 
-import EditItemBottomBar from './edit-item-bottom-bar';
-
 type EditItemContextType = {
   present: (item: GroceryListItem) => void;
 };
@@ -43,8 +41,7 @@ const EditItemContents = () => {
     >
       <View>
         <ItemForm />
-        <MetaBar />
-        <EditItemBottomBar />
+        <MetaBar submitLabel="Update" />
       </View>
     </BottomSheet>
   );
