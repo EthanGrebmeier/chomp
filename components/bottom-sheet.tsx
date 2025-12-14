@@ -1,7 +1,8 @@
-import { SheetSize, TrueSheet } from '@lodev09/react-native-true-sheet';
+import { SheetDetent, TrueSheet } from '@lodev09/react-native-true-sheet';
 import { useColorScheme } from 'nativewind';
-import { ComponentProps, forwardRef } from 'react';
+import { ComponentProps, ReactElement, forwardRef } from 'react';
 import { TextInput as RNTextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { cn } from '@/lib/utils';
 
@@ -16,8 +17,8 @@ type BottomSheetProps = {
   onOpen?: () => void;
   onStartClose?: () => void;
   viewClassName?: string;
-  ignoreSafeArea?: boolean;
-  snapPoints?: SheetSize[];
+  detents?: SheetDetent[];
+  footer?: ReactElement;
 };
 
 export const BottomSheet = ({
@@ -27,35 +28,31 @@ export const BottomSheet = ({
   onStartClose,
   onOpen,
   viewClassName,
-  ignoreSafeArea = false,
-  snapPoints,
+  footer,
+  detents,
 }: BottomSheetProps) => {
   const colorscheme = useColorScheme();
 
+  const { bottom } = useSafeAreaInsets();
+
   return (
     <TrueSheet
-      edgeToEdge={true}
       ref={ref}
       name={name}
-      sizes={snapPoints ?? ['auto']}
-      onPresent={onOpen}
-      onDismiss={onStartClose}
+      detents={detents ?? ['auto']}
+      onDidPresent={onOpen}
+      onDidDismiss={onStartClose}
       backgroundColor={
         colorscheme.colorScheme === 'dark' ? THEME.dark.card : THEME.light.card
       }
-      grabberProps={{
-        style: {
-          backgroundColor:
-            colorscheme.colorScheme === 'dark'
-              ? THEME.dark.cardForeground
-              : THEME.light.cardForeground,
-        },
-      }}
-      cornerRadius={16}
-      dimmedIndex={0}
+      grabber
+      dimmedDetentIndex={0}
+      pageSizing
+      footer={footer}
     >
       <View
-        className={cn('px-4 pt-6', !ignoreSafeArea && 'pb-safe', viewClassName)}
+        className={cn('px-4', viewClassName)}
+        style={{ paddingTop: bottom }}
       >
         {children}
       </View>

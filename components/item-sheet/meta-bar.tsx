@@ -24,7 +24,7 @@ export const MetaBar = ({ submitLabel }: MetaBarProps) => {
   } = useItemSheet();
 
   return (
-    <View className="my-3 flex-row items-center justify-between gap-2">
+    <View className="mt-3 flex-row items-center justify-between gap-2">
       <View className="flex-row items-center gap-2">
         <CategorySheet category={category} onSelect={setCategory} />
         <UnitSheet

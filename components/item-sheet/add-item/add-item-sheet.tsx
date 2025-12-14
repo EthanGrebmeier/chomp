@@ -132,13 +132,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
           className="text-primary-foreground"
         />
       </Button>
-      <BottomSheet
-        viewClassName="pb-4"
-        ignoreSafeArea
-        name="add-item-sheet"
-        ref={ref}
-        onStartClose={handleClose}
-      >
+      <BottomSheet name="add-item-sheet" ref={ref} onStartClose={handleClose}>
         <View>
           {!selectedRecipe && (
             <ModeToggle mode={mode} onModeChange={handleModeChange} />
