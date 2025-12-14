@@ -1,10 +1,16 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { CheckIcon, LinkIcon, PlusIcon } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Button } from '../../../components/ui/button';
+import {
+  ContextMenuItemIcon,
+  ContextMenuItemTitle,
+  ContextMenuRoot,
+  ContextMenuItem,
+} from '../../../components/ui/context-menu';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -14,8 +20,11 @@ import {
 } from '../../../components/ui/dropdown-menu';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
+import { db } from '../../../lib/instant';
 import { cn } from '../../../lib/utils';
+import { useDeleteGroceryList } from '../instant/useDeleteGroceryList';
 import { useGroceryLists } from '../instant/useGroceryLists';
+import { useLeaveGroceryList } from '../instant/useLeaveGroceryList';
 
 import {
   CreateGroceryListSheet,
@@ -42,6 +51,9 @@ export const SelectGroceryListSheet = forwardRef<
   const joinSheetRef = useRef<JoinByCodeSheetRef>(null);
 
   const { data: lists } = useGroceryLists();
+  const { user } = db.useAuth();
+  const deleteGroceryList = useDeleteGroceryList();
+  const leaveGroceryList = useLeaveGroceryList();
 
   useImperativeHandle(ref, () => ({
     present: () => sheetRef.current?.present(),
@@ -61,6 +73,58 @@ export const SelectGroceryListSheet = forwardRef<
   const handleJoined = (listId: string) => {
     onSelectList(listId);
     sheetRef.current?.dismiss();
+  };
+
+  const handleDeleteList = (listId: string, listName: string) => {
+    Alert.alert(
+      'Delete List',
+      `Are you sure you want to delete "${listName}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteGroceryList(listId);
+            // If the deleted list was selected, clear selection
+            if (selectedListId === listId) {
+              const remainingLists = lists?.grocery_lists.filter(
+                l => l.id !== listId
+              );
+              if (remainingLists && remainingLists.length > 0) {
+                onSelectList(remainingLists[0].id);
+              }
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleLeaveList = (listId: string, listName: string) => {
+    Alert.alert(
+      'Leave List',
+      `Are you sure you want to leave "${listName}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: async () => {
+            await leaveGroceryList(listId);
+            // If the left list was selected, select another list
+            if (selectedListId === listId) {
+              const remainingLists = lists?.grocery_lists.filter(
+                l => l.id !== listId
+              );
+              if (remainingLists && remainingLists.length > 0) {
+                onSelectList(remainingLists[0].id);
+              }
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -103,28 +167,56 @@ export const SelectGroceryListSheet = forwardRef<
         <View className="mt-4 gap-1">
           {lists?.grocery_lists.map(list => {
             const isSelected = list.id === selectedListId;
+            const isOwner = user?.id === list.ownerId;
 
             return (
-              <Pressable
+              <ContextMenuRoot
                 key={list.id}
-                onPress={() => handleSelectList(list.id)}
-                className={cn(
-                  'flex-row items-center justify-between rounded-xl px-4 py-3',
-                  isSelected ? 'bg-primary/10' : 'active:bg-muted'
-                )}
+                trigger={
+                  <Pressable
+                    onPress={() => handleSelectList(list.id)}
+                    className={cn(
+                      'flex-row items-center justify-between rounded-xl px-4 py-3',
+                      isSelected ? 'bg-primary/10' : 'active:bg-muted'
+                    )}
+                  >
+                    <Text
+                      className={cn(
+                        'text-lg',
+                        isSelected && 'font-semibold text-primary'
+                      )}
+                    >
+                      {list.name}
+                    </Text>
+                    {isSelected && (
+                      <Icon as={CheckIcon} size={20} className="text-primary" />
+                    )}
+                  </Pressable>
+                }
               >
-                <Text
-                  className={cn(
-                    'text-lg',
-                    isSelected && 'font-semibold text-primary'
-                  )}
+                <ContextMenuItem
+                  key={`delete-or-leave-${list.id}`}
+                  destructive
+                  onSelect={() => {
+                    if (isOwner) {
+                      handleDeleteList(list.id, list.name);
+                    } else {
+                      handleLeaveList(list.id, list.name);
+                    }
+                  }}
                 >
-                  {list.name}
-                </Text>
-                {isSelected && (
-                  <Icon as={CheckIcon} size={20} className="text-primary" />
-                )}
-              </Pressable>
+                  <ContextMenuItemTitle>
+                    {isOwner ? 'Delete List' : 'Leave List'}
+                  </ContextMenuItemTitle>
+                  <ContextMenuItemIcon
+                    ios={{
+                      name: isOwner
+                        ? 'trash'
+                        : 'rectangle.portrait.and.arrow.right',
+                    }}
+                  />
+                </ContextMenuItem>
+              </ContextMenuRoot>
             );
           })}
         </View>
