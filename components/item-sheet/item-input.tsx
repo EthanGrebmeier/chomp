@@ -21,6 +21,7 @@ export const ItemInput = ({ placeholder }: ItemInputProps) => {
     setShowMatchingItems,
     onChangeItemText,
     onSelect,
+    onSubmit,
   } = useItemSheet();
   const { matchingItems } = useMatchingItems(itemInputValue);
 
@@ -34,6 +35,7 @@ export const ItemInput = ({ placeholder }: ItemInputProps) => {
         onChangeText={onChangeItemText}
         onBlur={() => setShowMatchingItems(false)}
         autoCorrect={false}
+        onSubmitEditing={onSubmit}
       />
       {showMatchingItems && matchingItems.length > 0 && (
         <Animated.View
