@@ -2,8 +2,6 @@ import { TrashIcon } from 'lucide-react-native';
 import { View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  FadeInDown,
-  FadeOut,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -63,10 +61,7 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
 
   return (
     <View>
-      <Animated.View
-        entering={FadeInDown.duration(140)}
-        exiting={FadeOut.duration(140)}
-      >
+      <Animated.View>
         <GestureDetector
           gesture={Gesture.Pan()
             .activeOffsetX([-10, 100])
