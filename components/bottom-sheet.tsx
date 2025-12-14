@@ -108,7 +108,7 @@ const Header = ({
     <View className="flex-1 flex-row justify-between">
       <View className="flex-row items-center gap-2">
         {dismissButton}
-        <Text className="text-2xl font-bold">{title}</Text>
+        <Text className="text-2xl font-bold leading-tight">{title}</Text>
       </View>
       {button}
     </View>

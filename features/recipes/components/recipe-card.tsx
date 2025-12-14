@@ -1,6 +1,7 @@
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { View } from 'react-native';
 
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { RecipeWithIngredients } from '../types';
 
@@ -11,7 +12,11 @@ type RecipeCardProps = {
 
 export const RecipeCard = ({ recipe, className }: RecipeCardProps) => {
   return (
-    <Link href={`/recipes/${recipe.id}`}>
+    <HapticPressable
+      className="w-full"
+      hapticType="selection"
+      onPress={() => router.push(`/recipes/${recipe.id}`)}
+    >
       <View className={className}>
         <View className="w-full flex-row items-center justify-between">
           <Text
@@ -25,6 +30,6 @@ export const RecipeCard = ({ recipe, className }: RecipeCardProps) => {
           {recipe.recipe_ingredients.length} ingredients
         </Text>
       </View>
-    </Link>
+    </HapticPressable>
   );
 };
