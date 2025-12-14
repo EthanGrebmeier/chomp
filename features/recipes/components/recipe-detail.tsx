@@ -76,7 +76,7 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
           )}
         />
       </View>
-      <View className="absolute bottom-4 right-4 z-20">
+      <View className="absolute bottom-6 right-6 z-20">
         <Button size="iconLg" onPress={() => present()}>
           <Icon
             as={PlusIcon}

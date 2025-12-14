@@ -17,7 +17,7 @@ export default function Recipes() {
         <Heading>Recipes</Heading>
       </View>
       <View
-        className="absolute right-4 z-10"
+        className="absolute right-6 z-10"
         style={{ bottom: NATIVE_TABS_OFFSET }}
       >
         <CreateRecipeButton />

@@ -1,1 +1,1 @@
-export const NATIVE_TABS_OFFSET = 88;
+export const NATIVE_TABS_OFFSET = 92;

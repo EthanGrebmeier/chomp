@@ -42,7 +42,9 @@ const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
         <Text
           className={cn(
             'text-base font-semibold',
-            mode === 'item' ? 'text-primary-foreground' : 'text-muted-foreground'
+            mode === 'item'
+              ? 'text-primary-foreground'
+              : 'text-muted-foreground'
           )}
         >
           Item
@@ -121,7 +123,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         size="iconLg"
         style={{ bottom: NATIVE_TABS_OFFSET }}
         onPress={openSheet}
-        className="absolute right-4 z-10"
+        className="absolute right-6 z-10"
       >
         <Icon
           as={PlusIcon}
