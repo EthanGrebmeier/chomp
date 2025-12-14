@@ -13,7 +13,7 @@ export const useCreateGroceryList = () => {
       throw new Error('User not authenticated');
     }
 
-    const list = await db.transact([
+    await db.transact([
       db.tx.grocery_lists[listId].create({
         name,
         joinCode,
@@ -30,7 +30,7 @@ export const useCreateGroceryList = () => {
           grocery_list: listId,
         }),
     ]);
-    return list;
+    return { listId };
   };
 
   return createGroceryList;

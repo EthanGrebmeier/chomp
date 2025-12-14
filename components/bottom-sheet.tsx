@@ -97,14 +97,19 @@ BareTextInput.displayName = 'BareTextInput';
 
 const Header = ({
   title,
+  dismissButton,
   button,
 }: {
   title: string;
+  dismissButton?: React.ReactNode;
   button?: React.ReactNode;
 }) => {
   return (
-    <View className="flex-1 flex-row items-center justify-between ">
-      <Text className="text-2xl font-bold">{title}</Text>
+    <View className="flex-1 flex-row justify-between">
+      <View className="flex-row items-center gap-2">
+        {dismissButton}
+        <Text className="text-2xl font-bold">{title}</Text>
+      </View>
       {button}
     </View>
   );

@@ -1,12 +1,20 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { ActivityIndicator, TextInput, View } from 'react-native';
+import { useColorScheme } from 'nativewind';
+import {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
+import { OtpInput, OtpInputRef } from 'react-native-otp-entry';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { Button } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
+import { CloseButton } from '../../../components/ui/close-button';
+import { THEME } from '../../../lib/theme';
 import { useJoinGroceryListByCode } from '../instant/useJoinGroceryListByCode';
 
 export type JoinByCodeSheetRef = {
@@ -18,106 +26,133 @@ type JoinByCodeSheetProps = {
   onJoined: (listId: string) => void;
 };
 
-export const JoinByCodeSheet = forwardRef<JoinByCodeSheetRef, JoinByCodeSheetProps>(
-  ({ onJoined }, ref) => {
-    const sheetRef = useRef<TrueSheet>(null);
-    const [joinCode, setJoinCode] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const inputRef = useRef<TextInput>(null);
+const CODE_LENGTH = 8;
 
-    const joinGroceryListByCode = useJoinGroceryListByCode();
+export const JoinByCodeSheet = forwardRef<
+  JoinByCodeSheetRef,
+  JoinByCodeSheetProps
+>(({ onJoined }, ref) => {
+  const sheetRef = useRef<TrueSheet>(null);
+  const otpRef = useRef<OtpInputRef>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { colorScheme } = useColorScheme();
 
-    useImperativeHandle(ref, () => ({
-      present: () => {
-        sheetRef.current?.present();
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 100);
-      },
-      dismiss: () => sheetRef.current?.dismiss(),
-    }));
+  const theme = useMemo(
+    () => (colorScheme === 'dark' ? THEME.dark : THEME.light),
+    [colorScheme]
+  );
 
-    const handleJoinByCode = async () => {
-      if (joinCode.length !== 8) {
-        toast.error('Join code must be 8 characters');
-        return;
+  const joinGroceryListByCode = useJoinGroceryListByCode();
+
+  const resetCode = () => {
+    otpRef.current?.clear();
+  };
+
+  const handleDismiss = () => {
+    KeyboardController.dismiss();
+    resetCode();
+    sheetRef.current?.dismiss();
+  };
+
+  useImperativeHandle(ref, () => ({
+    present: () => {
+      sheetRef.current?.present();
+      setTimeout(() => {
+        otpRef.current?.focus();
+      }, 100);
+    },
+    dismiss: () => sheetRef.current?.dismiss(),
+  }));
+
+  const handleJoinByCode = async (joinCode: string) => {
+    if (joinCode.length !== CODE_LENGTH) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await joinGroceryListByCode(joinCode);
+      if (result.success) {
+        toast.success(`Joined "${result.listName}"`);
+        onJoined(result.listId);
+        resetCode();
+        sheetRef.current?.dismiss();
+      } else {
+        toast.error(result.error);
+        // Clear and refocus on error so user can try again
+        resetCode();
+        otpRef.current?.focus();
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      setIsLoading(true);
-      try {
-        const result = await joinGroceryListByCode(joinCode);
-        if (result.success) {
-          toast.success(`Joined "${result.listName}"`);
-          onJoined(result.listId);
-          setJoinCode('');
-          sheetRef.current?.dismiss();
-        } else {
-          toast.error(result.error);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  return (
+    <BottomSheet
+      name="join-by-code-sheet"
+      ref={sheetRef}
+      onStartClose={() => {
+        KeyboardController.dismiss();
+        resetCode();
+      }}
+    >
+      <BottomSheet.Header
+        title="Join by Code"
+        button={<CloseButton onPress={handleDismiss} />}
+      />
 
-    const handleCancel = () => {
-      setJoinCode('');
-      sheetRef.current?.dismiss();
-    };
-
-    return (
-      <BottomSheet
-        name="join-by-code-sheet"
-        ref={sheetRef}
-        onStartClose={() => {
-          KeyboardController.dismiss();
-          setJoinCode('');
-        }}
-      >
-        <BottomSheet.Header title="Join by Code" />
-
-        <View className="mt-6 gap-4">
-          <Text className="text-center text-muted-foreground">
-            Enter the 8-character code to join a shared list
-          </Text>
-          <TextInput
-            ref={inputRef}
-            value={joinCode}
-            onChangeText={text => setJoinCode(text.slice(0, 8))}
-            placeholder="Enter 8-character code"
-            placeholderTextColor="#9ca3af"
-            className="h-12 rounded-xl border border-input bg-input px-4 text-center font-mono text-lg tracking-widest text-foreground"
-            onSubmitEditing={handleJoinByCode}
-            returnKeyType="done"
-            autoCapitalize="none"
-            autoCorrect={false}
-            maxLength={8}
-          />
-          <View className="flex-row gap-2">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onPress={handleCancel}
-              disabled={isLoading}
-            >
-              <Text>Cancel</Text>
-            </Button>
-            <Button
-              className="flex-1"
-              onPress={handleJoinByCode}
-              disabled={joinCode.length !== 8 || isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="white" size="small" />
-              ) : (
-                <Text>Join</Text>
-              )}
-            </Button>
+      <BottomSheet.Subtext>
+        Enter the 8-character, case-sensitive code
+      </BottomSheet.Subtext>
+      <BottomSheet.Subtext>to join a shared list</BottomSheet.Subtext>
+      <View className="mt-6 items-center justify-center gap-6">
+        {isLoading ? (
+          <View className="h-12 items-center justify-center">
+            <ActivityIndicator size="small" />
           </View>
-        </View>
-      </BottomSheet>
-    );
-  }
-);
+        ) : (
+          <OtpInput
+            ref={otpRef}
+            numberOfDigits={CODE_LENGTH}
+            onFilled={handleJoinByCode}
+            autoFocus={false}
+            hideStick={false}
+            type="alphanumeric"
+            textInputProps={{
+              accessibilityLabel: 'Join code input',
+              autoCapitalize: 'none',
+              autoCorrect: false,
+            }}
+            theme={{
+              containerStyle: {
+                gap: 8,
+              },
+              pinCodeContainerStyle: {
+                width: 36,
+                height: 48,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: theme.input,
+                backgroundColor: theme.input,
+              },
+              pinCodeTextStyle: {
+                fontSize: 20,
+                fontFamily: 'monospace',
+                color: theme.foreground,
+              },
+              focusedPinCodeContainerStyle: {
+                borderColor: theme.primary,
+              },
+              focusStickStyle: {
+                backgroundColor: theme.primary,
+              },
+            }}
+          />
+        )}
+      </View>
+    </BottomSheet>
+  );
+});
 
 JoinByCodeSheet.displayName = 'JoinByCodeSheet';
-

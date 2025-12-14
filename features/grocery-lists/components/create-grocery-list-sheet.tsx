@@ -1,11 +1,11 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { Button } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
+import { TextInput } from '../../../components/text-input';
+import { CloseButton } from '../../../components/ui/close-button';
 import { useCreateGroceryList } from '../instant/useCreateGroceryList';
 
 export type CreateGroceryListSheetRef = {
@@ -23,7 +23,7 @@ export const CreateGroceryListSheet = forwardRef<
 >(({ onCreated }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
   const [newListName, setNewListName] = useState('');
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const createGroceryList = useCreateGroceryList();
 
@@ -41,7 +41,7 @@ export const CreateGroceryListSheet = forwardRef<
     if (!newListName.trim()) return;
 
     const result = await createGroceryList(newListName.trim());
-    onCreated(result.clientId);
+    onCreated(result.listId);
     setNewListName('');
     sheetRef.current?.dismiss();
   };
@@ -60,9 +60,12 @@ export const CreateGroceryListSheet = forwardRef<
         setNewListName('');
       }}
     >
-      <BottomSheet.Header title="Create New List" />
+      <BottomSheet.Header
+        title="Create New List"
+        button={<CloseButton onPress={handleCancel} />}
+      />
 
-      <View className="mt-6 gap-4">
+      <View className="my-4">
         <TextInput
           ref={inputRef}
           value={newListName}
@@ -73,22 +76,9 @@ export const CreateGroceryListSheet = forwardRef<
           onSubmitEditing={handleCreateList}
           returnKeyType="done"
         />
-        <View className="flex-row gap-2">
-          <Button variant="outline" className="flex-1" onPress={handleCancel}>
-            <Text>Cancel</Text>
-          </Button>
-          <Button
-            className="flex-1"
-            onPress={handleCreateList}
-            disabled={!newListName.trim()}
-          >
-            <Text>Create</Text>
-          </Button>
-        </View>
       </View>
     </BottomSheet>
   );
 });
 
 CreateGroceryListSheet.displayName = 'CreateGroceryListSheet';
-
