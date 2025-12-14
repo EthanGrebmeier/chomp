@@ -13,7 +13,6 @@ import { GroceryListItemWithRecipe } from '../../types';
 
 type GroceryListDropdownMenuProps = {
   trigger: ReactNode;
-  openRecipeSheet: () => void;
   onClearListPress: () => void;
   onSharePress: () => void;
   onDeleteOrLeave: () => void;
@@ -23,7 +22,6 @@ type GroceryListDropdownMenuProps = {
 
 export const GroceryListDropdownMenu = ({
   trigger,
-  openRecipeSheet,
   onClearListPress,
   onSharePress,
   onDeleteOrLeave,
@@ -41,10 +39,6 @@ export const GroceryListDropdownMenu = ({
         <DropdownMenuItem onSelect={onSharePress} key="share-list">
           <DropdownMenuItemTitle>Share</DropdownMenuItemTitle>
           <DropdownMenuItemIcon ios={{ name: 'square.and.arrow.up' }} />
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={openRecipeSheet} key="open-recipe-sheet">
-          <DropdownMenuItemTitle>Add Recipe</DropdownMenuItemTitle>
-          <DropdownMenuItemIcon ios={{ name: 'book' }} />
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={onClearListPress}

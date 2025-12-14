@@ -13,7 +13,6 @@ import { incrementGroceryListItem } from '../instant/increment-grocery-list-item
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
-import { AddRecipeSheet, AddRecipeSheetRef } from './add-recipe-sheet';
 import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
 import { DeleteListConfirmationSheet } from './delete-list-confirmation-sheet';
 import { GroceryItemsList } from './grocery-items-list';
@@ -45,7 +44,6 @@ export const GroceryList = ({
   onTitlePress,
   onDeleteOrLeave,
 }: GroceryListProps) => {
-  const recipeSheetRef = useRef<AddRecipeSheetRef>(null);
   const shareListSheetRef = useRef<ShareListSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
   const { user } = db.useAuth();
@@ -143,7 +141,6 @@ export const GroceryList = ({
           ownerId={ownerId}
           items={items}
           listName={listName}
-          openRecipeSheet={() => recipeSheetRef.current?.present()}
           onClearListPress={handleClearListPress}
           onSharePress={handleSharePress}
           onDeleteOrLeave={handleDeleteOrLeavePress}
@@ -164,7 +161,6 @@ export const GroceryList = ({
             <GroceryItemsList items={items} groupBy={groupBy} sortBy={sortBy} />
           </View>
         </EditItemProvider>
-        {listId && <AddRecipeSheet ref={recipeSheetRef} listId={listId} />}
         <AddItemConflictSheet
           ref={addItemConflictSheetRef}
           onIncrement={handleIncrementExistingItem}

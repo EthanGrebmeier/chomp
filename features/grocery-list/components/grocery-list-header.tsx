@@ -12,7 +12,6 @@ type GroceryListHeaderProps = {
   listName?: string;
   listId?: string;
   ownerId?: string;
-  openRecipeSheet: () => void;
   onClearListPress: () => void;
   onSharePress: () => void;
   onDeleteOrLeave: () => void;
@@ -24,7 +23,6 @@ export const GroceryListHeader = ({
   listName,
   listId,
   ownerId,
-  openRecipeSheet,
   onClearListPress,
   onSharePress,
   onDeleteOrLeave,
@@ -53,14 +51,15 @@ export const GroceryListHeader = ({
             items={items}
             ownerId={ownerId}
             trigger={<Icon as={MoreHorizontal} size={24} />}
-            openRecipeSheet={openRecipeSheet}
             onClearListPress={onClearListPress}
             onSharePress={onSharePress}
             onDeleteOrLeave={onDeleteOrLeave}
           />
         )}
       </View>
-      <Text className="text-lg text-muted-foreground">{items.length} items</Text>
+      <Text className="text-lg text-muted-foreground">
+        {items.length} items
+      </Text>
     </View>
   );
 };
