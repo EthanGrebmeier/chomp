@@ -35,11 +35,11 @@ export const ItemInput = ({ placeholder }: ItemInputProps) => {
         onBlur={() => setShowMatchingItems(false)}
         autoCorrect={false}
       />
-      {showMatchingItems && (
+      {showMatchingItems && matchingItems.length > 0 && (
         <Animated.View
           entering={FadeIn.duration(300)}
           exiting={FadeOut.duration(300)}
-          className="absolute left-0 right-0 top-full z-10 flex-row flex-wrap gap-2.5 pt-4"
+          className="absolute left-0 right-0 top-full z-10 max-h-36 flex-row flex-wrap gap-2.5 overflow-hidden pt-4"
         >
           {matchingItems.map(item => (
             <Animated.View key={item.name}>

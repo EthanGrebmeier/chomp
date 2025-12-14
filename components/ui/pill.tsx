@@ -39,7 +39,7 @@ export const Pill = ({
         {icon}
         <Text
           className={cn(
-            'text-base font-medium',
+            'text-base font-medium leading-[18px]',
             'text-muted-foreground',
             textClassName
           )}

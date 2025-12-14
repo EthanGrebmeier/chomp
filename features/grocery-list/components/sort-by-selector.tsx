@@ -9,7 +9,6 @@ import {
 } from '../../../components/native-dropdown';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
-import { cn } from '../../../lib/utils';
 
 type SortBySelectorProps = {
   value?: 'name' | 'recent';
@@ -35,22 +34,15 @@ export const SortBySelector = ({
     <DropdownMenuRoot>
       <DropdownMenuTrigger>
         <Pill
+          hasValue={value !== 'recent'}
+          textClassName="text-muted-foreground"
           icon={
             <Icon
-              className={cn(
-                value !== 'recent' && 'text-accent-purple-foreground'
-              )}
+              className="text-muted-foreground"
               as={ArrowDownUpIcon}
               size={16}
             />
           }
-          className={cn(
-            value !== 'recent' &&
-              'border-accent-purple-foreground bg-accent-purple-background '
-          )}
-          textClassName={cn(
-            value !== 'recent' && 'text-accent-purple-foreground'
-          )}
         >
           {getDisplayLabel(value)}
         </Pill>
