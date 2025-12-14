@@ -11,14 +11,10 @@ export const addMealPlanToGroceryList = async ({
   mealPlanId,
   listId,
 }: AddMealPlanToGroceryListArgs) => {
-  // Get all recipes in the meal plan with their ingredients
+  // Query all meal plans and filter client-side
+  // This ensures offline-created meal plans are found (where clauses don't work for unsynced data)
   const result = await db.queryOnce({
     meal_plans: {
-      $: {
-        where: {
-          id: mealPlanId,
-        },
-      },
       meal_plan_recipes: {
         recipe: {
           recipe_ingredients: {},
@@ -27,7 +23,7 @@ export const addMealPlanToGroceryList = async ({
     },
   });
 
-  const mealPlan = result.data.meal_plans[0];
+  const mealPlan = result.data.meal_plans.find(mp => mp.id === mealPlanId);
 
   if (!mealPlan) {
     throw new Error('Meal plan not found');

@@ -7,6 +7,7 @@ import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
 import { BackButton } from '../ui/back-button';
+import { Button } from '../ui/button';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
@@ -70,7 +71,7 @@ export const UnitSheet = ({
 
   const selectedUnit = unitOptions.find(opt => opt.value === localUnit);
 
-  const isDefault = quantity === 1 && unit === 'each';
+  const isValid = !!localQuantity.length && parseInt(localQuantity, 10) > 0;
 
   const formatDisplay = () => {
     if (unit === 'each') {
@@ -83,9 +84,6 @@ export const UnitSheet = ({
     setLocalQuantity(quantity.toString());
     setLocalUnit(unit);
     sheetRef.current?.present();
-    setTimeout(() => {
-      quantityInputRef.current?.focus();
-    }, 100);
   };
 
   const handleQuantityChange = (text: string) => {
@@ -110,11 +108,16 @@ export const UnitSheet = ({
       <WithLayoutTransition>
         <HapticPressable onPress={openSheet} hapticType="light">
           <Pill
-            className={cn('border-0 bg-[#AE51E7]')}
-            textClassName="text-black font-semibold"
-            closeIconClassName="text-black"
-            icon={<Icon as={ScaleIcon} className="text-black" size={16} />}
-            hasValue={!isDefault}
+            textClassName="font-semibold"
+            icon={
+              <Icon
+                className="text-muted-foreground"
+                as={ScaleIcon}
+                size={16}
+              />
+            }
+            hasValue={true}
+            className="min-w-16 justify-between"
           >
             {formatDisplay()}
           </Pill>
@@ -125,17 +128,18 @@ export const UnitSheet = ({
         <View className="flex-row items-center gap-2 pb-2">
           <BackButton onPress={() => sheetRef.current?.dismiss()} />
           <BottomSheet.Header title="Quantity" />
-          <HapticPressable
+          <Button
             onPress={handleConfirm}
-            hapticType="light"
-            className="ml-auto rounded-full bg-primary p-2"
+            size="circle"
+            className="ml-auto"
+            disabled={!isValid}
           >
             <Icon
               as={CheckIcon}
               size={20}
               className="text-primary-foreground"
             />
-          </HapticPressable>
+          </Button>
         </View>
 
         <View className="mb-4 flex-row items-center gap-3 rounded-xl bg-muted px-4 py-3">

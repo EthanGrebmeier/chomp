@@ -52,6 +52,7 @@ export default function List() {
   const activeList = lists?.grocery_lists.find(
     list => list.id === activeListId
   );
+  const activeListItems = activeList?.grocery_items ?? [];
 
   const handleDeleteOrLeave = async () => {
     if (!activeListId || !activeList) return;
@@ -93,6 +94,7 @@ export default function List() {
           listName={activeList?.name}
           joinCode={activeList?.joinCode}
           ownerId={activeList?.ownerId}
+          items={activeListItems}
           groupBy={settings.groupBy}
           sortBy={settings.sortBy}
           onTitlePress={() => selectListSheetRef.current?.present()}

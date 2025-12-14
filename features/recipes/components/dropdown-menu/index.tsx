@@ -27,7 +27,7 @@ import { useDeleteRecipe } from '../../hooks/useDeleteRecipe';
 import { useDuplicateRecipe } from '../../hooks/useDuplicateRecipe';
 import { useIncrementRecipeQuantities } from '../../hooks/useIncrementRecipeQuantities';
 import { useUpdateRecipe } from '../../hooks/useUpdateRecipe';
-import { Recipe } from '../../types';
+import { RecipeWithIngredients } from '../../types';
 import {
   CreateRecipeSheet,
   CreateRecipeSheetRef,
@@ -35,7 +35,7 @@ import {
 
 type RecipeDropdownMenuProps = {
   trigger: ReactNode;
-  recipe: Recipe;
+  recipe: RecipeWithIngredients;
   listId?: string;
 };
 
@@ -61,7 +61,11 @@ export const RecipeDropdownMenu = ({
 
   const performAddToList = (targetListId: string) => {
     addToList(
-      { recipeId: recipe.id, listId: targetListId },
+      {
+        recipeId: recipe.id,
+        listId: targetListId,
+        ingredients: recipe.recipe_ingredients,
+      },
       {
         onSuccess: () => {
           router.push(navigation.goToList(targetListId));
@@ -99,7 +103,13 @@ export const RecipeDropdownMenu = ({
   };
 
   const handleDuplicate = () => {
-    duplicateRecipe(recipe.id);
+    duplicateRecipe({
+      name: recipe.name,
+      description: recipe.description,
+      imageSrc: recipe.imageSrc,
+      visibility: recipe.visibility,
+      ingredients: recipe.recipe_ingredients,
+    });
   };
 
   const handleDelete = () => {
@@ -132,7 +142,11 @@ export const RecipeDropdownMenu = ({
   const handleCreateSeparateItems = () => {
     if (!listId) return;
     addAsSeparate(
-      { recipeId: recipe.id, listId },
+      {
+        recipeId: recipe.id,
+        listId,
+        ingredients: recipe.recipe_ingredients,
+      },
       {
         onSuccess: () => {
           conflictSheetRef.current?.dismiss();

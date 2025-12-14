@@ -4,6 +4,7 @@ import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { Button } from '../../../components/ui/button';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -70,9 +71,9 @@ export const SelectGroceryListSheet = forwardRef<
           button={
             <DropdownMenuRoot
               trigger={
-                <Pressable className="rounded-full p-2 active:bg-muted">
+                <Button variant="ghost" size="circle">
                   <Icon as={PlusIcon} size={24} className="text-primary" />
-                </Pressable>
+                </Button>
               }
             >
               <DropdownMenuContent>

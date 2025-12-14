@@ -2,36 +2,27 @@ import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 
+export type RecipeIngredientInput = {
+  name: string;
+  quantity: number;
+  unit: string;
+  notes?: string | null;
+  category?: string | null;
+};
+
 export type AddRecipeToListArgs = {
   recipeId: string;
   listId: string;
+  // Pass ingredients directly to avoid queryOnce which doesn't work offline
+  ingredients: RecipeIngredientInput[];
 };
 
 export const addRecipeToList = async ({
   recipeId,
   listId,
+  ingredients,
 }: AddRecipeToListArgs) => {
-  // Query the recipe ingredients
-  const result = await db.queryOnce({
-    recipes: {
-      $: {
-        where: {
-          id: recipeId,
-        },
-      },
-      recipe_ingredients: {},
-    },
-  });
-
-  const recipe = result.data.recipes[0];
-
-  if (!recipe) {
-    throw new Error('Recipe not found');
-  }
-
-  const ingredients = recipe.recipe_ingredients || [];
   const now = new Date().toISOString();
-
   const transactions = [];
 
   // Convert recipe ingredients to grocery list items

@@ -10,8 +10,7 @@ import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { clearGroceryList } from '../instant/clear-list';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
-import { useGroceryListItems } from '../instant/use-grocery-list-items';
-import { BaseGroceryItem } from '../types';
+import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { AddRecipeSheet, AddRecipeSheetRef } from './add-recipe-sheet';
@@ -28,6 +27,7 @@ type GroceryListProps = {
   listName?: string;
   joinCode?: string;
   ownerId?: string;
+  items: GroceryListItemWithRecipe[];
   groupBy: 'category' | 'none' | 'recipe';
   sortBy: 'name' | 'recent';
   onTitlePress?: () => void;
@@ -39,6 +39,7 @@ export const GroceryList = ({
   listName,
   joinCode,
   ownerId,
+  items,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
   onTitlePress,
@@ -49,8 +50,6 @@ export const GroceryList = ({
   const { mutate: updateSettings } = useUpdateSettings();
   const { user } = db.useAuth();
 
-  const { data } = useGroceryListItems(listId);
-  const items = data?.grocery_items ?? [];
   const isOwner = user?.id === ownerId;
 
   const [conflictItem, setConflictItem] = useState<{
@@ -142,7 +141,7 @@ export const GroceryList = ({
         <GroceryListHeader
           listId={listId}
           ownerId={ownerId}
-          itemCount={items.length}
+          items={items}
           listName={listName}
           openRecipeSheet={() => recipeSheetRef.current?.present()}
           onClearListPress={handleClearListPress}

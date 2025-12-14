@@ -9,7 +9,7 @@ import {
 } from '../../../../components/ui/dropdown-menu';
 import { db } from '../../../../lib/instant';
 import { clearCheckedItems } from '../../instant/clear-checked-items';
-import { useGroceryListItems } from '../../instant/use-grocery-list-items';
+import { GroceryListItemWithRecipe } from '../../types';
 
 type GroceryListDropdownMenuProps = {
   trigger: ReactNode;
@@ -17,7 +17,7 @@ type GroceryListDropdownMenuProps = {
   onClearListPress: () => void;
   onSharePress: () => void;
   onDeleteOrLeave: () => void;
-  listId: string;
+  items: GroceryListItemWithRecipe[];
   ownerId?: string;
 };
 
@@ -27,13 +27,11 @@ export const GroceryListDropdownMenu = ({
   onClearListPress,
   onSharePress,
   onDeleteOrLeave,
-  listId,
+  items,
   ownerId,
 }: GroceryListDropdownMenuProps) => {
   const { user } = db.useAuth();
-  const { data: groceryListItems } = useGroceryListItems(listId);
-  const checkedItems =
-    groceryListItems?.grocery_items.filter(item => item.isChecked) ?? [];
+  const checkedItems = items.filter(item => item.isChecked);
   const hasCheckedItems = checkedItems.length > 0;
   const isOwner = user?.id === ownerId;
 
@@ -52,7 +50,7 @@ export const GroceryListDropdownMenu = ({
           onSelect={onClearListPress}
           destructive
           key="clear-list"
-          disabled={!groceryListItems?.grocery_items.length}
+          disabled={!items.length}
         >
           <DropdownMenuItemTitle>Clear Grocery List</DropdownMenuItemTitle>
           <DropdownMenuItemIcon ios={{ name: 'trash' }} />

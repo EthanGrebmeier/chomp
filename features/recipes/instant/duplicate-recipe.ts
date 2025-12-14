@@ -2,42 +2,33 @@ import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 
-export const duplicateRecipe = async (recipeId: string) => {
-  // First, query the recipe and its ingredients
-  const result = await db.queryOnce({
-    recipes: {
-      $: {
-        where: {
-          id: recipeId,
-        },
-      },
-      recipe_ingredients: {},
-    },
-  });
+import { RecipeIngredientInput } from './add-recipe-to-list';
 
-  const originalRecipe = result.data.recipes[0];
+export type DuplicateRecipeArgs = {
+  name: string;
+  description?: string;
+  imageSrc?: string;
+  visibility?: string;
+  ingredients: RecipeIngredientInput[];
+};
 
-  if (!originalRecipe) {
-    throw new Error('Recipe not found');
-  }
-
+export const duplicateRecipe = async (recipe: DuplicateRecipeArgs) => {
   const newRecipeId = id();
   const now = new Date().toISOString();
 
   const transactions = [
     tx.recipes[newRecipeId].update({
-      name: `${originalRecipe.name} (Copy)`,
-      description: originalRecipe.description,
-      imageSrc: originalRecipe.imageSrc,
-      visibility: originalRecipe.visibility,
+      name: `${recipe.name} (Copy)`,
+      description: recipe.description,
+      imageSrc: recipe.imageSrc,
+      visibility: recipe.visibility,
       createdAt: now,
       updatedAt: now,
     }),
   ];
 
   // Duplicate ingredients
-  const ingredients = originalRecipe.recipe_ingredients || [];
-  for (const ingredient of ingredients) {
+  for (const ingredient of recipe.ingredients) {
     const newIngredientId = id();
     transactions.push(
       tx.recipe_ingredients[newIngredientId].update({
@@ -46,7 +37,6 @@ export const duplicateRecipe = async (recipeId: string) => {
         unit: ingredient.unit,
         notes: ingredient.notes,
         category: ingredient.category,
-        order: ingredient.order,
       }),
       tx.recipe_ingredients[newIngredientId].link({
         recipe: newRecipeId,

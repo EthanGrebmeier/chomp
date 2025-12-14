@@ -56,6 +56,7 @@ const buttonVariants = cva(
         ),
         icon: 'size-8',
         iconLg: 'size-14',
+        circle: 'rounded-full p-2',
       },
     },
     defaultVariants: {
@@ -94,6 +95,7 @@ const buttonTextVariants = cva(
         lg: '',
         icon: '',
         iconLg: '',
+        circle: '',
       },
     },
     defaultVariants: {

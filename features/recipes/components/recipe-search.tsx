@@ -14,9 +14,14 @@ import { useTheme } from '../../../hooks/use-theme';
 import { navigation } from '../../../lib/navigation';
 import { useCreateRecipe } from '../hooks/useCreateRecipe';
 import { useRecipes } from '../hooks/useRecipes';
+import { RecipeIngredient } from '../types';
 
 type RecipeSearchProps = {
-  onItemSelect: (recipe: { id: string; name: string }) => void;
+  onItemSelect: (recipe: {
+    id: string;
+    name: string;
+    ingredients: RecipeIngredient[];
+  }) => void;
   onBack: () => void;
   canGoBack: boolean;
   sheetRef: RefObject<TrueSheet | null>;
@@ -51,7 +56,7 @@ export const RecipeSearch = ({
       {
         onSuccess: ({ id }) => {
           setSearch('');
-          onItemSelect({ id, name: search });
+          onItemSelect({ id, name: search, ingredients: [] });
 
           toast.custom(
             <View className="px-4">
@@ -115,7 +120,13 @@ export const RecipeSearch = ({
           scrollEnabled
           renderItem={({ item }) => (
             <Pressable
-              onPress={() => onItemSelect({ id: item.id, name: item.name })}
+              onPress={() =>
+                onItemSelect({
+                  id: item.id,
+                  name: item.name,
+                  ingredients: item.recipe_ingredients,
+                })
+              }
               className="py-1"
             >
               <View className="flex-row justify-between">

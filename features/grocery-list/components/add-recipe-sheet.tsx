@@ -8,6 +8,7 @@ import { RecipeSearch } from '../../recipes/components/recipe-search';
 import { useAddRecipeAsSeparateItems } from '../../recipes/hooks/useAddRecipeAsSeparateItems';
 import { useAddRecipeToList } from '../../recipes/hooks/useAddRecipeToList';
 import { useIncrementRecipeQuantities } from '../../recipes/hooks/useIncrementRecipeQuantities';
+import { RecipeIngredient } from '../../recipes/types';
 
 import {
   RecipeConflictSheet,
@@ -37,6 +38,7 @@ export const AddRecipeSheet = forwardRef<
   const [selectedRecipe, setSelectedRecipe] = useState<{
     id: string;
     name: string;
+    ingredients: RecipeIngredient[];
   } | null>(null);
 
   const { mutate: addRecipeToList, isPending: isAddingRecipe } =
@@ -46,12 +48,21 @@ export const AddRecipeSheet = forwardRef<
   const { mutate: addAsSeparate, isPending: isAddingSeparate } =
     useAddRecipeAsSeparateItems();
 
-  const handleRecipeSelect = (recipe: { id: string; name: string }) => {
-    setSelectedRecipe({ id: recipe.id, name: recipe.name });
+  const handleRecipeSelect = (recipe: {
+    id: string;
+    name: string;
+    ingredients: RecipeIngredient[];
+  }) => {
+    setSelectedRecipe({
+      id: recipe.id,
+      name: recipe.name,
+      ingredients: recipe.ingredients,
+    });
     addRecipeToList(
       {
         recipeId: recipe.id,
         listId,
+        ingredients: recipe.ingredients,
       },
       {
         onSuccess: () => {
@@ -86,6 +97,7 @@ export const AddRecipeSheet = forwardRef<
       {
         recipeId: selectedRecipe.id,
         listId,
+        ingredients: selectedRecipe.ingredients,
       },
       {
         onSuccess: () => {

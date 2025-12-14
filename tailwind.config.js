@@ -64,6 +64,10 @@ module.exports = {
             background: '#d908d920',
             foreground: '#d908d9',
           },
+          brown: {
+            background: '#c4956a20',
+            foreground: '#c4956a',
+          },
         },
         popover: {
           DEFAULT: 'hsl(var(--popover))',

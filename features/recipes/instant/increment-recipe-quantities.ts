@@ -11,20 +11,21 @@ export const incrementRecipeQuantities = async ({
   recipeId,
   listId,
 }: IncrementRecipeQuantitiesArgs) => {
-  // Get all existing grocery list items for this recipe
+  // Query all grocery items with their links and filter client-side
+  // This ensures offline-created items are found (where clauses don't work for unsynced data)
   const result = await db.queryOnce({
     grocery_items: {
-      $: {
-        where: {
-          'recipe.id': recipeId,
-          'grocery_list.id': listId,
-          isDeleted: false,
-        },
-      },
+      recipe: {},
+      grocery_list: {},
     },
   });
 
-  const existingItems = result.data.grocery_items || [];
+  const existingItems = (result.data.grocery_items || []).filter(
+    item =>
+      item.recipe?.id === recipeId &&
+      item.grocery_list?.id === listId &&
+      !item.isDeleted
+  );
 
   // Double the quantity for each item
   const transactions = existingItems.map(item =>

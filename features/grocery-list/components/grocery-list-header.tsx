@@ -3,11 +3,12 @@ import { Pressable, Text, View } from 'react-native';
 
 import { Heading } from '../../../components/text/heading';
 import { Icon } from '../../../components/ui/icon';
+import { GroceryListItemWithRecipe } from '../types';
 
 import { GroceryListDropdownMenu } from './dropdown-menu';
 
 type GroceryListHeaderProps = {
-  itemCount: number;
+  items: GroceryListItemWithRecipe[];
   listName?: string;
   listId?: string;
   ownerId?: string;
@@ -19,7 +20,7 @@ type GroceryListHeaderProps = {
 };
 
 export const GroceryListHeader = ({
-  itemCount,
+  items,
   listName,
   listId,
   ownerId,
@@ -49,7 +50,7 @@ export const GroceryListHeader = ({
         </Pressable>
         {listId && (
           <GroceryListDropdownMenu
-            listId={listId}
+            items={items}
             ownerId={ownerId}
             trigger={<Icon as={MoreHorizontal} size={24} />}
             openRecipeSheet={openRecipeSheet}
@@ -59,7 +60,7 @@ export const GroceryListHeader = ({
           />
         )}
       </View>
-      <Text className="text-lg text-muted-foreground">{itemCount} items</Text>
+      <Text className="text-lg text-muted-foreground">{items.length} items</Text>
     </View>
   );
 };

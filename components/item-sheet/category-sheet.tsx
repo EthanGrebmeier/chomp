@@ -82,11 +82,21 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
         <HapticPressable onPress={openSheet} hapticType="light">
           <Pill
             icon={
-              <Icon as={ShoppingBasketIcon} className="text-black" size={16} />
+              <Icon
+                className={
+                  selectedCategory?.style.textClassName ??
+                  'text-muted-foreground'
+                }
+                as={selectedCategory?.style.icon ?? ShoppingBasketIcon}
+                size={16}
+              />
             }
-            className={cn('border-0 bg-[#D9EC4B]')}
-            textClassName="text-black font-semibold"
-            closeIconClassName="text-black"
+            className={selectedCategory?.style.className}
+            textClassName={cn(
+              'font-semibold',
+              selectedCategory?.style.textClassName
+            )}
+            closeIconClassName={selectedCategory?.style.textClassName}
             hasValue={!!selectedCategory}
             onClear={() => onSelect(undefined)}
           >
