@@ -121,7 +121,7 @@ export const RecipeSearch = ({
               <View className="flex-row justify-between">
                 <Text className="text-lg text-foreground">{item.name}</Text>
                 <Text className="text-sm text-muted-foreground">
-                  {item.ingredients.length} ingredients
+                  {item.recipe_ingredients.length} ingredients
                 </Text>
               </View>
             </Pressable>

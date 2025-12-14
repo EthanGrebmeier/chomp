@@ -1,9 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { launchImageLibraryAsync } from 'expo-image-picker';
 import { MoreHorizontal, PlusIcon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
 import { Animated, View } from 'react-native';
-import { toast } from 'sonner-native';
 
 import { Heading } from '../../../components/text/heading';
 import { BackButton } from '../../../components/ui/back-button';
@@ -11,73 +7,24 @@ import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import { BaseGroceryItem } from '../../grocery-list/types';
-import { AddItemNew } from '../../shared/add-item-new';
-import { ItemSheetRef } from '../../shared/components';
-import { useAddRecipeIngredient } from '../hooks/useAddRecipeIngredient';
-import { useUpdateRecipe } from '../hooks/useUpdateRecipe';
-import { recipeQueryKeys } from '../query-keys';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
 
-import { AddIngredientSheet } from './add-ingredient-sheet';
+import {
+  AddIngredientProvider,
+  useAddIngredientSheet,
+} from './add-ingredient-sheet';
 import { RecipeDropdownMenu } from './dropdown-menu';
-import RecipeImage from './recipe-image';
 import { RecipeIngredientItem } from './recipe-ingredient-item';
 
-type RecipeDetailProps = {
+type RecipeDetailContentProps = {
   recipe: RecipeWithIngredients;
 };
 
-export const RecipeDetail = ({ recipe }: RecipeDetailProps) => {
-  const { mutate: updateRecipe } = useUpdateRecipe();
-  const { mutate: addIngredient } = useAddRecipeIngredient();
-  const queryClient = useQueryClient();
-
-  const addIngredientSheetRef = useRef<ItemSheetRef>(null);
-  const [editingIngredient, setEditingIngredient] =
-    useState<RecipeIngredient | null>(null);
-  const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
+  const { present } = useAddIngredientSheet();
 
   const handleEditIngredient = (ingredient: RecipeIngredient) => {
-    setEditingIngredient(ingredient);
-    addIngredientSheetRef.current?.present();
-  };
-
-  const handleCloseIngredientSheet = () => {
-    setEditingIngredient(null);
-  };
-
-  const handleSelectImage = async () => {
-    const result = await launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
-
-    if (result.assets?.[0]) {
-      updateRecipe({ recipe: { ...recipe, imageSrc: result.assets[0].uri } });
-    }
-  };
-
-  const handleAddIngredient = (item: BaseGroceryItem) => {
-    addIngredient(
-      {
-        recipeId: recipe.id,
-        name: item.name,
-        quantity: 1,
-        unit: 'each',
-        category: item.category ?? null,
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: recipeQueryKeys.all(),
-          });
-          toast.success(`${item.name} added`);
-        },
-      }
-    );
+    present(ingredient);
   };
 
   return (
@@ -91,15 +38,11 @@ export const RecipeDetail = ({ recipe }: RecipeDetailProps) => {
       </View>
       {/* Header */}
       <View className="w-full flex-row gap-2 px-4">
-        <RecipeImage
-          imageSrc={recipe.imageSrc}
-          onSelectImage={handleSelectImage}
-        />
         <View className="flex-row gap-4">
           <View>
             <Heading>{recipe.name}</Heading>
             <Text className="text-lg text-muted-foreground">
-              {recipe.ingredients.length} ingredients
+              {recipe.recipe_ingredients.length} ingredients
             </Text>
           </View>
         </View>
@@ -119,11 +62,11 @@ export const RecipeDetail = ({ recipe }: RecipeDetailProps) => {
         </View>
         <Animated.FlatList
           className="gap-2"
-          data={recipe.ingredients}
+          data={recipe.recipe_ingredients}
           renderItem={({ item, index }) => (
             <RecipeIngredientItem
               className={cn(
-                index < recipe.ingredients.length - 1 &&
+                index < recipe.recipe_ingredients.length - 1 &&
                   'border-b border-dashed border-border'
               )}
               key={item.id}
@@ -134,12 +77,7 @@ export const RecipeDetail = ({ recipe }: RecipeDetailProps) => {
         />
       </View>
       <View className="absolute bottom-4 right-4 z-20">
-        <Button
-          size="iconLg"
-          onPress={() => {
-            setIsAddItemOpen(true);
-          }}
-        >
+        <Button size="iconLg" onPress={() => present()}>
           <Icon
             as={PlusIcon}
             size={28}
@@ -148,17 +86,18 @@ export const RecipeDetail = ({ recipe }: RecipeDetailProps) => {
           />
         </Button>
       </View>
-      <AddIngredientSheet
-        ref={addIngredientSheetRef}
-        recipeId={recipe.id}
-        onClose={handleCloseIngredientSheet}
-        defaultValues={editingIngredient}
-      />
-      <AddItemNew
-        isOpen={isAddItemOpen}
-        setIsOpen={setIsAddItemOpen}
-        onAddItem={handleAddIngredient}
-      />
     </View>
+  );
+};
+
+type RecipeDetailProps = {
+  recipe: RecipeWithIngredients;
+};
+
+export const RecipeDetail = ({ recipe }: RecipeDetailProps) => {
+  return (
+    <AddIngredientProvider recipeId={recipe.id}>
+      <RecipeDetailContent recipe={recipe} />
+    </AddIngredientProvider>
   );
 };

@@ -1,14 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createRecipe } from '../db/create-recipe';
-import { recipeQueryKeys } from '../query-keys';
+import { useMutation } from '@tanstack/react-query';
+
+import { createRecipe } from '../instant/create-recipe';
 
 export const useCreateRecipe = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: createRecipe,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.lists() });
-    },
+    // No need to invalidate queries - InstantDB updates in real-time
   });
 };

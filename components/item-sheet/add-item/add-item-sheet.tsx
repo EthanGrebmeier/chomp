@@ -63,8 +63,9 @@ const AddItem = ({ groceryListId }: AddItemProps) => {
     listId,
   }: {
     item: BaseGroceryItem;
-    listId: string;
+    listId?: string;
   }) => {
+    if (!listId) return;
     addGroceryListItem({
       listId,
       item,
@@ -73,7 +74,7 @@ const AddItem = ({ groceryListId }: AddItemProps) => {
   };
 
   return (
-    <ItemSheetProvider groceryListId={groceryListId} onSubmit={onSubmit}>
+    <ItemSheetProvider listId={groceryListId} onSubmit={onSubmit}>
       <AddItemSheet />
     </ItemSheetProvider>
   );

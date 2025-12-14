@@ -1,10 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
-import { getMealPlans } from '../db/get-meal-plans';
-import { MEAL_PLAN_QUERY_KEYS } from '../query-keys';
+import { useMealPlans as useMealPlansQuery } from '../instant/use-meal-plans';
 
 export const useMealPlans = () => {
-  return useQuery({
-    queryKey: MEAL_PLAN_QUERY_KEYS.all,
-    queryFn: getMealPlans,
-  });
+  const { data, isLoading, error } = useMealPlansQuery();
+
+  // Transform data to match the expected format
+  const mealPlans = data?.meal_plans ?? [];
+
+  return {
+    data: mealPlans,
+    isLoading,
+    error,
+  };
 };

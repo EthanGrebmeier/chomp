@@ -46,6 +46,22 @@ const _schema = i.schema({
       category: i.string().optional(),
       order: i.number(),
     }),
+    meal_plans: i.entity({
+      name: i.string(),
+      startDate: i.string(),
+      endDate: i.string(),
+      isArchived: i.boolean(),
+      createdAt: i.string(),
+      updatedAt: i.string(),
+    }),
+    meal_plan_recipes: i.entity({
+      mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
+      date: i.string(),
+      servings: i.number(),
+      order: i.number(),
+      createdAt: i.string(),
+      updatedAt: i.string(),
+    }),
   },
   links: {
     grocery_listsGrocery_items: {
@@ -97,6 +113,31 @@ const _schema = i.schema({
         on: 'grocery_lists',
         has: 'many',
         label: 'shares',
+      },
+    },
+    meal_plan_recipes_meal_plans: {
+      forward: {
+        on: 'meal_plan_recipes',
+        has: 'one',
+        label: 'meal_plan',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: 'meal_plans',
+        has: 'many',
+        label: 'meal_plan_recipes',
+      },
+    },
+    meal_plan_recipes_recipes: {
+      forward: {
+        on: 'meal_plan_recipes',
+        has: 'one',
+        label: 'recipe',
+      },
+      reverse: {
+        on: 'recipes',
+        has: 'many',
+        label: 'meal_plan_recipes',
       },
     },
   },

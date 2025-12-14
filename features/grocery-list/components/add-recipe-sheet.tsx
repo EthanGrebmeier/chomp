@@ -19,7 +19,14 @@ export type AddRecipeSheetRef = {
   dismiss: () => void;
 };
 
-export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
+type AddRecipeSheetProps = {
+  listId: string;
+};
+
+export const AddRecipeSheet = forwardRef<
+  AddRecipeSheetRef,
+  AddRecipeSheetProps
+>(({ listId }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
 
   useImperativeHandle(ref, () => ({
@@ -44,15 +51,11 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
     addRecipeToList(
       {
         recipeId: recipe.id,
+        listId,
       },
       {
-        onSuccess: result => {
-          if (result.isDuplicate) {
-            // Show conflict resolution sheet
-            conflictSheetRef.current?.present();
-          } else {
-            toast.success(`${recipe.name} added`);
-          }
+        onSuccess: () => {
+          toast.success(`${recipe.name} added`);
         },
       }
     );
@@ -64,6 +67,7 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
     incrementQuantities(
       {
         recipeId: selectedRecipe.id,
+        listId,
       },
       {
         onSuccess: () => {
@@ -81,6 +85,7 @@ export const AddRecipeSheet = forwardRef<AddRecipeSheetRef>((props, ref) => {
     addAsSeparate(
       {
         recipeId: selectedRecipe.id,
+        listId,
       },
       {
         onSuccess: () => {

@@ -16,6 +16,11 @@ import {
   RecipeConflictSheet,
   RecipeConflictSheetRef,
 } from '../../../grocery-list/components/recipe-conflict-sheet';
+import {
+  SelectGroceryListSheet,
+  SelectGroceryListSheetRef,
+} from '../../../grocery-lists/components/select-grocery-list-sheet';
+import { useGroceryLists } from '../../../grocery-lists/instant/useGroceryLists';
 import { useAddRecipeAsSeparateItems } from '../../hooks/useAddRecipeAsSeparateItems';
 import { useAddRecipeToList } from '../../hooks/useAddRecipeToList';
 import { useDeleteRecipe } from '../../hooks/useDeleteRecipe';
@@ -31,16 +36,20 @@ import {
 type RecipeDropdownMenuProps = {
   trigger: ReactNode;
   recipe: Recipe;
+  listId?: string;
 };
 
 export const RecipeDropdownMenu = ({
   trigger,
   recipe,
+  listId,
 }: RecipeDropdownMenuProps) => {
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
+  const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
   const [showConflict, setShowConflict] = useState(false);
 
+  const { data: groceryLists } = useGroceryLists();
   const { mutate: addToList } = useAddRecipeToList();
   const { mutate: incrementQuantities, isPending: isIncrementing } =
     useIncrementRecipeQuantities();
@@ -50,20 +59,13 @@ export const RecipeDropdownMenu = ({
   const { mutate: deleteRecipe } = useDeleteRecipe();
   const { mutate: updateRecipe } = useUpdateRecipe();
 
-  const handleAddToList = () => {
+  const performAddToList = (targetListId: string) => {
     addToList(
-      { recipeId: recipe.id },
+      { recipeId: recipe.id, listId: targetListId },
       {
-        onSuccess: result => {
-          if (result.isDuplicate) {
-            // Show conflict resolution sheet
-            setShowConflict(true);
-            conflictSheetRef.current?.present();
-          } else {
-            // Recipe added successfully, navigate to list
-            router.push(navigation.goToList());
-            toast.success(`${recipe.name} added to list`);
-          }
+        onSuccess: () => {
+          router.push(navigation.goToList(targetListId));
+          toast.success(`${recipe.name} added to list`);
         },
         onError: error => {
           console.error('Failed to add recipe to grocery list:', error);
@@ -71,6 +73,29 @@ export const RecipeDropdownMenu = ({
         },
       }
     );
+  };
+
+  const handleAddToList = () => {
+    // If listId prop provided, use it directly
+    if (listId) {
+      performAddToList(listId);
+      return;
+    }
+
+    const lists = groceryLists?.grocery_lists ?? [];
+
+    // If only one list, add directly to it
+    if (lists.length === 1) {
+      performAddToList(lists[0].id);
+      return;
+    }
+
+    // Multiple lists (or none) - show selection sheet
+    selectListSheetRef.current?.present();
+  };
+
+  const handleListSelected = (selectedListId: string) => {
+    performAddToList(selectedListId);
   };
 
   const handleDuplicate = () => {
@@ -86,8 +111,9 @@ export const RecipeDropdownMenu = ({
   };
 
   const handleIncrementQuantities = () => {
+    if (!listId) return;
     incrementQuantities(
-      { recipeId: recipe.id },
+      { recipeId: recipe.id, listId },
       {
         onSuccess: () => {
           conflictSheetRef.current?.dismiss();
@@ -104,8 +130,9 @@ export const RecipeDropdownMenu = ({
   };
 
   const handleCreateSeparateItems = () => {
+    if (!listId) return;
     addAsSeparate(
-      { recipeId: recipe.id },
+      { recipeId: recipe.id, listId },
       {
         onSuccess: () => {
           conflictSheetRef.current?.dismiss();
@@ -123,7 +150,7 @@ export const RecipeDropdownMenu = ({
 
   const handleEditRecipe = (data: { name: string }) => {
     updateRecipe(
-      { recipe: { ...recipe, name: data.name } },
+      { recipeId: recipe.id, updates: { name: data.name } },
       {
         onSuccess: () => {
           toast.success('Recipe updated');
@@ -188,6 +215,11 @@ export const RecipeDropdownMenu = ({
         ref={createRecipeSheetRef}
         onSubmit={handleEditRecipe}
         defaultValues={{ name: recipe.name }}
+      />
+      <SelectGroceryListSheet
+        ref={selectListSheetRef}
+        selectedListId={undefined}
+        onSelectList={handleListSelected}
       />
     </>
   );

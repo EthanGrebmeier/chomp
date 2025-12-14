@@ -50,6 +50,22 @@ const rules = {
       delete: 'true',
     },
   },
+  meal_plans: {
+    allow: {
+      create: 'true',
+      view: 'true',
+      update: 'true',
+      delete: 'true',
+    },
+  },
+  meal_plan_recipes: {
+    allow: {
+      create: 'true',
+      view: 'true',
+      update: 'true',
+      delete: 'true',
+    },
+  },
 } satisfies InstantRules;
 
 export default rules;

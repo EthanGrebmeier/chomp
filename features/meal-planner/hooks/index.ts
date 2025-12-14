@@ -6,4 +6,5 @@ export { useDeleteMealPlan } from './useDeleteMealPlan';
 export { useMealPlan } from './useMealPlan';
 export { useMealPlans } from './useMealPlans';
 export { useRemoveRecipeFromMealPlan } from './useRemoveRecipeFromMealPlan';
+export { useUpdateMealPlan } from './useUpdateMealPlan';
 export { useUpdateMealPlanRecipe } from './useUpdateMealPlanRecipe';

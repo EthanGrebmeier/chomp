@@ -1,10 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
-import { getRecipes } from '../db/get-recipes';
-import { recipeQueryKeys } from '../query-keys';
+import { useRecipes as useRecipesQuery } from '../instant/use-recipes';
 
 export const useRecipes = () => {
-  return useQuery({
-    queryKey: recipeQueryKeys.lists(),
-    queryFn: getRecipes,
-  });
+  const { data, isLoading, error } = useRecipesQuery();
+
+  // Transform data to match the expected format
+  const recipes = data?.recipes ?? [];
+
+  return {
+    data: recipes,
+    isLoading,
+    error,
+  };
 };

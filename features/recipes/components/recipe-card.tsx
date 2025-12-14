@@ -1,5 +1,6 @@
 import { Link } from 'expo-router';
 import { View } from 'react-native';
+
 import { Text } from '../../../components/ui/text';
 import { RecipeWithIngredients } from '../types';
 
@@ -21,7 +22,7 @@ export const RecipeCard = ({ recipe, className }: RecipeCardProps) => {
           </Text>
         </View>
         <Text className="text-sm text-muted-foreground">
-          {recipe.ingredients.length} ingredients
+          {recipe.recipe_ingredients.length} ingredients
         </Text>
       </View>
     </Link>

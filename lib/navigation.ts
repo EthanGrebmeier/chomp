@@ -30,6 +30,10 @@ import { Href } from 'expo-router';
 export type TabRoute = 'list' | 'plans' | 'recipes';
 
 // Dynamic route parameters
+export interface ListParams {
+  listId?: string;
+}
+
 export interface MealPlanParams {
   mealPlanId: string;
   autofocus?: boolean;
@@ -59,8 +63,9 @@ export function buildPlansUrl(): Href {
 /**
  * Builds a URL for the single grocery list page
  */
-export function buildListUrl(): Href {
-  return `/(tabs)` as const;
+export function buildListUrl(params?: ListParams): Href {
+  const query = params?.listId ? `?listId=${params.listId}` : '';
+  return `/(tabs)${query}` as Href;
 }
 
 /**
@@ -85,7 +90,7 @@ export function buildRecipeUrl(params: RecipeParams) {
  */
 export const navigation = {
   // Tab navigation
-  goToList: buildListUrl,
+  goToList: (listId?: string) => buildListUrl(listId ? { listId } : undefined),
   goToPlans: buildPlansUrl,
   goToRecipes: buildRecipesUrl,
 
@@ -104,7 +109,7 @@ export const navigation = {
 export function useNavigation() {
   return {
     // Tab navigation
-    goToList: () => navigation.goToList(),
+    goToList: (listId?: string) => navigation.goToList(listId),
     goToPlans: () => navigation.goToPlans(),
     goToRecipes: () => navigation.goToRecipes(),
 
@@ -123,7 +128,7 @@ export function useNavigation() {
  */
 export const navActions = {
   // Tab navigation
-  goToList: () => buildListUrl(),
+  goToList: (listId?: string) => buildListUrl(listId ? { listId } : undefined),
   goToPlans: () => buildPlansUrl(),
   goToRecipes: () => buildRecipesUrl(),
 

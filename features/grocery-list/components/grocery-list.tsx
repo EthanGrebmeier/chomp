@@ -165,7 +165,7 @@ export const GroceryList = ({
             <GroceryItemsList items={items} groupBy={groupBy} sortBy={sortBy} />
           </View>
         </EditItemProvider>
-        <AddRecipeSheet ref={recipeSheetRef} />
+        {listId && <AddRecipeSheet ref={recipeSheetRef} listId={listId} />}
         <AddItemConflictSheet
           ref={addItemConflictSheetRef}
           onIncrement={handleIncrementExistingItem}

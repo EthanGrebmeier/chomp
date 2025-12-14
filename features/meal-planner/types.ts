@@ -1,20 +1,27 @@
-import { mealPlanRecipeTable, mealPlanTable } from '../../db/schema';
+import { InstaQLEntity } from '@instantdb/react-native';
+
+import schema from '../../instant.schema';
 import { Recipe } from '../recipes/types';
 
-export type MealPlan = typeof mealPlanTable.$inferSelect;
-export type MealPlanInsert = typeof mealPlanTable.$inferInsert;
-
-export type MealPlanRecipe = typeof mealPlanRecipeTable.$inferSelect;
-export type MealPlanRecipeInsert = typeof mealPlanRecipeTable.$inferInsert;
+export type MealPlan = InstaQLEntity<typeof schema, 'meal_plans'>;
+export type MealPlanRecipe = InstaQLEntity<typeof schema, 'meal_plan_recipes'>;
 
 export type MealTag = 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert';
 
+export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
+  recipe: Recipe;
+};
+
 export type MealPlanWithRecipes = MealPlan & {
-  recipes: (MealPlanRecipe & { recipe: Recipe })[];
+  meal_plan_recipes: MealPlanRecipeWithRecipe[];
 };
 
 export type CreateMealPlanArgs = {
-  mealPlan: Omit<MealPlanInsert, 'id' | 'createdAt' | 'updatedAt'>;
+  mealPlan: {
+    name: string;
+    startDate: string;
+    endDate: string;
+  };
 };
 
 export type UpdateMealPlanArgs = {
@@ -23,6 +30,7 @@ export type UpdateMealPlanArgs = {
     name?: string;
     startDate?: string;
     endDate?: string;
+    isArchived?: boolean;
   };
 };
 
@@ -49,11 +57,12 @@ export type RemoveRecipeFromMealPlanArgs = {
   mealPlanRecipeId: string;
 };
 
-export type GenerateGroceryListFromMealPlanArgs = {
+export type AddMealPlanToGroceryListArgs = {
   mealPlanId: string;
+  listId: string;
 };
 
 export type MealPlanDay = {
   date: string;
-  recipes: (MealPlanRecipe & { recipe: Recipe })[];
+  recipes: MealPlanRecipeWithRecipe[];
 };

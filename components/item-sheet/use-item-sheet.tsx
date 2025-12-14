@@ -37,20 +37,14 @@ export const useItemSheet = () => {
 
 type ItemSheetProviderProps = {
   children: React.ReactNode;
-  groceryListId: string;
-  onSubmit: ({
-    item,
-    listId,
-  }: {
-    item: BaseGroceryItem;
-    listId: string;
-  }) => void;
+  listId?: string;
+  onSubmit: (args: { item: BaseGroceryItem; listId?: string }) => void;
   setFromItemRef?: React.RefObject<((item: BaseGroceryItem) => void) | null>;
 };
 
 export const ItemSheetProvider = ({
   children,
-  groceryListId,
+  listId,
   onSubmit,
   setFromItemRef,
 }: ItemSheetProviderProps) => {
@@ -93,7 +87,7 @@ export const ItemSheetProvider = ({
 
   const submitItem = () => {
     onSubmit({
-      listId: groceryListId,
+      listId,
       item: {
         name: itemInputValue,
         category: category,

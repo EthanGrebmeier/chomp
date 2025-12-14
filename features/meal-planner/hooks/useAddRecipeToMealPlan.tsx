@@ -1,19 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addRecipeToMealPlan } from '../db/add-recipe-to-meal-plan';
-import { MEAL_PLAN_QUERY_KEYS } from '../query-keys';
+import { useMutation } from '@tanstack/react-query';
+
+import { addRecipeToMealPlan } from '../instant/add-recipe-to-meal-plan';
 
 export const useAddRecipeToMealPlan = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: addRecipeToMealPlan,
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: MEAL_PLAN_QUERY_KEYS.detail(variables.mealPlanId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: MEAL_PLAN_QUERY_KEYS.all,
-      });
-    },
+    // No need to invalidate queries - InstantDB updates in real-time
   });
 };

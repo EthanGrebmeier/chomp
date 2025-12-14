@@ -49,7 +49,7 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
 
   const getRecipesForDate = (date: Date): MealPlanDay['recipes'] => {
     if (!mealPlan) return [];
-    return mealPlan.recipes.filter(
+    return (mealPlan.meal_plan_recipes || []).filter(
       recipe => recipe.date === format(date, 'yyyy-MM-dd')
     );
   };

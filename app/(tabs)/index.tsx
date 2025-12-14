@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 
@@ -16,6 +17,7 @@ import { Text } from '../../components/ui/text';
 import { useSettings } from '../../features/grocery-list/hooks/useSettings';
 
 export default function List() {
+  const { listId: listIdParam } = useLocalSearchParams<{ listId?: string }>();
   const { data: settings, isLoading: settingsLoading } = useSettings();
   const [activeListId, setActiveListId] = useState<string | undefined>(
     undefined
@@ -27,6 +29,14 @@ export default function List() {
   const leaveGroceryList = useLeaveGroceryList();
   const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
 
+  // Set active list from URL param if provided
+  useEffect(() => {
+    if (listIdParam && lists?.grocery_lists.some(l => l.id === listIdParam)) {
+      setActiveListId(listIdParam);
+    }
+  }, [listIdParam, lists]);
+
+  // Set default list if none selected
   useEffect(() => {
     const setDefaultList = async () => {
       if (lists && !activeListId) {

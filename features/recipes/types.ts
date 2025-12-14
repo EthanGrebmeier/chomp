@@ -1,32 +1,31 @@
-import { recipeIngredientTable, recipeTable } from '../../db/schema';
-import { QuantityUnit } from '../shared/types';
+import { InstaQLEntity } from '@instantdb/react-native';
 
-export type Recipe = typeof recipeTable.$inferSelect;
-export type RecipeInsert = typeof recipeTable.$inferInsert;
+import schema from '../../instant.schema';
 
-export type RecipeIngredient = typeof recipeIngredientTable.$inferSelect;
-export type RecipeIngredientInsert = typeof recipeIngredientTable.$inferInsert;
-
+export type Recipe = InstaQLEntity<typeof schema, 'recipes'>;
+export type RecipeIngredient = InstaQLEntity<
+  typeof schema,
+  'recipe_ingredients'
+>;
 export type RecipeWithIngredients = Recipe & {
-  ingredients: RecipeIngredient[];
+  recipe_ingredients: RecipeIngredient[];
 };
 
 export type CreateRecipeArgs = {
-  recipe: Omit<RecipeInsert, 'id' | 'createdAt' | 'updatedAt'>;
+  recipe: {
+    name: string;
+    description?: string;
+    imageSrc?: string;
+    visibility?: string;
+  };
   ingredients: {
     name: string;
     quantity: number;
-    unit: QuantityUnit;
+    unit: string;
     notes?: string;
     category?: string | null;
     order?: number;
   }[];
-};
-
-export type AddRecipeToListResult = {
-  addedItems: number;
-  isDuplicate?: boolean;
-  existingItems?: any[];
 };
 
 export type UpdateRecipeArgs = {
@@ -34,10 +33,11 @@ export type UpdateRecipeArgs = {
   updates: {
     name?: string;
     description?: string;
+    imageSrc?: string;
+    visibility?: string;
   };
 };
 
 export type RemoveRecipeIngredientArgs = {
-  itemId: string;
-  recipeId: string;
+  ingredientId: string;
 };

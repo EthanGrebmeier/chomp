@@ -75,7 +75,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
 
-  const onSubmit = ({ item }: { item: BaseGroceryItem; listId: string }) => {
+  const onSubmit = ({ item }: { item: BaseGroceryItem; listId?: string }) => {
     if (!selectedItemId) return;
 
     updateGroceryListItem({
@@ -102,7 +102,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
     <EditItemContext.Provider value={{ present }}>
       <EditItemInternalContext.Provider value={{ sheetRef }}>
         <ItemSheetProvider
-          groceryListId={groceryListId}
+          listId={groceryListId}
           onSubmit={onSubmit}
           setFromItemRef={setFromItemRef}
         >

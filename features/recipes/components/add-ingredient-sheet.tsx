@@ -1,102 +1,148 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { forwardRef } from 'react';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { createContext, useContext, useRef, useState } from 'react';
+import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
-import { CategorySelector } from '../../grocery-list/components/category-selector';
-import { ItemFormData, ItemSheet, ItemSheetRef } from '../../shared/components';
-import { useAddRecipeIngredient } from '../hooks/useAddRecipeIngredient';
-import { useUpdateRecipeIngredient } from '../hooks/useUpdateRecipeIngredient';
-import { recipeQueryKeys } from '../query-keys';
+import { BottomSheet } from '../../../components/bottom-sheet';
+import { ItemForm } from '../../../components/item-sheet/item-form';
+import { MetaBar } from '../../../components/item-sheet/meta-bar';
+import {
+  ItemSheetProvider,
+  useItemSheet,
+} from '../../../components/item-sheet/use-item-sheet';
+import { BaseGroceryItem } from '../../grocery-list/types';
+import { addRecipeIngredient } from '../instant/add-recipe-ingredient';
+import { updateRecipeIngredient } from '../instant/update-recipe-ingredient';
 import { RecipeIngredient } from '../types';
 
-type AddIngredientSheetProps = {
-  recipeId: string;
-  onClose?: () => void;
-  defaultValues?: RecipeIngredient | null;
+type AddIngredientContextType = {
+  present: (ingredient?: RecipeIngredient) => void;
 };
 
-export const AddIngredientSheet = forwardRef<
-  ItemSheetRef,
-  AddIngredientSheetProps
->(({ recipeId, onClose, defaultValues }, ref) => {
-  const { mutate: addIngredient } = useAddRecipeIngredient();
-  const { mutate: updateIngredient } = useUpdateRecipeIngredient();
-  const queryClient = useQueryClient();
-  const isEditing = !!defaultValues;
+const AddIngredientContext = createContext<AddIngredientContextType | null>(
+  null
+);
 
-  const handleSubmit = (data: ItemFormData) => {
-    if (isEditing && defaultValues) {
-      updateIngredient(
-        {
-          itemId: defaultValues.id,
-          recipeId,
-          updates: {
-            name: data.name,
-            quantity: parseInt(data.quantity),
-            unit: data.unit,
-            category:
-              data.category === '' ? null : (data.category ?? undefined),
-          },
-        },
-        {
-          onSuccess: () => {
-            queryClient.invalidateQueries({
-              queryKey: recipeQueryKeys.all(),
-            });
-            onClose?.();
-            if (typeof ref !== 'function' && ref?.current) {
-              ref.current.dismiss();
-            }
-            toast.success(`${defaultValues.name} updated`);
-          },
-        }
-      );
-    } else {
-      addIngredient(
-        {
-          recipeId,
-          name: data.name,
-          quantity: parseInt(data.quantity),
-          unit: data.unit,
-          category: data.category === '' ? null : (data.category ?? undefined),
-        },
-        {
-          onSuccess: () => {
-            queryClient.invalidateQueries({
-              queryKey: recipeQueryKeys.all(),
-            });
-            onClose?.();
-            toast.success(`${data.name} added`);
-          },
-        }
-      );
-    }
-  };
+export const useAddIngredientSheet = () => {
+  const context = useContext(AddIngredientContext);
+  if (!context) {
+    throw new Error(
+      'useAddIngredientSheet must be used within an AddIngredientProvider'
+    );
+  }
+  return context;
+};
 
-  const formData: ItemFormData | null = defaultValues
-    ? {
-        name: defaultValues.name ?? '',
-        quantity: defaultValues.quantity?.toString() ?? '1',
-        unit: defaultValues.unit ?? 'each',
-        category: defaultValues.category ?? '',
-      }
-    : null;
+const AddIngredientContents = ({ submitLabel }: { submitLabel: string }) => {
+  const { reset, itemInputRef } = useItemSheet();
+  const { sheetRef } = useAddIngredientSheetInternal();
 
   return (
-    <ItemSheet
-      ref={ref}
-      sheetName="add-ingredient-sheet"
-      onClose={onClose}
-      defaultValues={formData}
-      onSubmit={handleSubmit}
-      namePlaceholder="Ingredient Name"
-      buttonText={isEditing ? 'Update Ingredient' : 'Add Ingredient'}
-      showAddButton={false}
-      categoryComponent={(category, onSelect) => (
-        <CategorySelector category={category} onSelect={onSelect} />
-      )}
-    />
+    <BottomSheet
+      viewClassName="pb-4"
+      ignoreSafeArea
+      name="add-ingredient-sheet"
+      ref={sheetRef}
+      onStartClose={reset}
+      onOpen={() => {
+        itemInputRef.current?.focus();
+      }}
+    >
+      <View>
+        <ItemForm />
+        <MetaBar submitLabel={submitLabel} />
+      </View>
+    </BottomSheet>
   );
-});
+};
 
-AddIngredientSheet.displayName = 'AddIngredientSheet';
+// Internal context for sharing the sheet ref
+type AddIngredientInternalContextType = {
+  sheetRef: React.RefObject<TrueSheet | null>;
+};
+
+const AddIngredientInternalContext =
+  createContext<AddIngredientInternalContextType | null>(null);
+
+const useAddIngredientSheetInternal = () => {
+  const context = useContext(AddIngredientInternalContext);
+  if (!context) {
+    throw new Error(
+      'useAddIngredientSheetInternal must be used within an AddIngredientProvider'
+    );
+  }
+  return context;
+};
+
+type AddIngredientProviderProps = {
+  recipeId: string;
+  children: React.ReactNode;
+};
+
+export const AddIngredientProvider = ({
+  recipeId,
+  children,
+}: AddIngredientProviderProps) => {
+  const [editingIngredient, setEditingIngredient] =
+    useState<RecipeIngredient | null>(null);
+  const sheetRef = useRef<TrueSheet>(null);
+  const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
+
+  const isEditing = !!editingIngredient;
+
+  const onSubmit = ({ item }: { item: BaseGroceryItem }) => {
+    if (isEditing && editingIngredient) {
+      updateRecipeIngredient({
+        ingredientId: editingIngredient.id,
+        updates: {
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          category: item.category,
+          notes: item.notes,
+        },
+      });
+      toast.success(`${item.name} updated`);
+    } else {
+      addRecipeIngredient({
+        recipeId,
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        category: item.category ?? null,
+        notes: item.notes,
+      });
+      toast.success(`${item.name} added`);
+    }
+    sheetRef.current?.dismiss();
+  };
+
+  const present = (ingredient?: RecipeIngredient) => {
+    if (ingredient) {
+      setEditingIngredient(ingredient);
+      setFromItemRef.current?.({
+        name: ingredient.name ?? '',
+        quantity: ingredient.quantity ?? 1,
+        unit: ingredient.unit ?? 'each',
+        category: ingredient.category ?? undefined,
+        notes: ingredient.notes ?? undefined,
+      });
+    } else {
+      setEditingIngredient(null);
+    }
+    sheetRef.current?.present();
+  };
+
+  return (
+    <AddIngredientContext.Provider value={{ present }}>
+      <AddIngredientInternalContext.Provider value={{ sheetRef }}>
+        <ItemSheetProvider onSubmit={onSubmit} setFromItemRef={setFromItemRef}>
+          <AddIngredientContents
+            submitLabel={isEditing ? 'Update' : 'Create'}
+          />
+          {children}
+        </ItemSheetProvider>
+      </AddIngredientInternalContext.Provider>
+    </AddIngredientContext.Provider>
+  );
+};

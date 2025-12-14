@@ -20,9 +20,7 @@ export const RecipeIngredientItem = ({
   const { mutate: removeItem } = useRemoveRecipeIngredient();
   return (
     <ListItem
-      onDelete={() =>
-        removeItem({ itemId: ingredient.id, recipeId: ingredient.recipeId })
-      }
+      onDelete={() => removeItem({ ingredientId: ingredient.id })}
       className={className}
     >
       <Pressable className="flex-1 gap-1" onPress={() => onEdit?.(ingredient)}>

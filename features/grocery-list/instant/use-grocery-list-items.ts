@@ -11,6 +11,7 @@ export const useGroceryListItems = (listId?: string) => {
                 'grocery_list.id': listId,
               },
             },
+            recipe: {},
           },
         }
       : null

@@ -69,7 +69,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         setSelectedDate(mealPlanRecipe.date);
         setSelectedRecipe(recipe);
         setMealPlanRecipeToEdit(mealPlanRecipe);
-        setMealTag(mealPlanRecipe.mealTag ?? undefined);
+        setMealTag((mealPlanRecipe.mealTag as MealTag) ?? undefined);
         setCurrentView('recipe');
         sheetRef.current?.present();
       },
@@ -111,8 +111,9 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       sheetRef.current?.dismiss();
     };
 
-    const handleRecipeChange = (recipe: Recipe) => {
-      setSelectedRecipe(recipe);
+    const handleRecipeChange = (recipe: { id: string; name: string }) => {
+      // We receive minimal recipe info from the search, so we need to cast it
+      setSelectedRecipe(recipe as Recipe);
       setCurrentView('recipe');
     };
 
@@ -128,7 +129,11 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           name="edit-meal-calendar-sheet"
           ref={calendarSheetRef}
           headerTitle="Select Date"
-          selectedDate={selectedDate ? startOfDay(parseISO(selectedDate + 'T00:00:00')) : undefined}
+          selectedDate={
+            selectedDate
+              ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
+              : undefined
+          }
           validStartDate={startOfDay(parseISO(props.startDate))}
           validEndDate={startOfDay(parseISO(props.endDate))}
           onClose={() => {

@@ -1,17 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 
-import { MEAL_PLAN_QUERY_KEYS } from '../../meal-planner/query-keys';
-import { deleteRecipe } from '../db/delete-recipe';
-import { recipeQueryKeys } from '../query-keys';
+import { deleteRecipe } from '../instant/delete-recipe';
 
 export const useDeleteRecipe = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: deleteRecipe,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: MEAL_PLAN_QUERY_KEYS.all });
-    },
+    // No need to invalidate queries - InstantDB updates in real-time
   });
 };
