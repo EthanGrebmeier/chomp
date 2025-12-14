@@ -41,9 +41,9 @@ export const CreateGroceryListSheet = forwardRef<
     if (!newListName.trim()) return;
 
     const result = await createGroceryList(newListName.trim());
-    onCreated(result.listId);
     setNewListName('');
     sheetRef.current?.dismiss();
+    onCreated(result.listId);
   };
 
   const handleCancel = () => {

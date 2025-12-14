@@ -74,9 +74,9 @@ export const JoinByCodeSheet = forwardRef<
       const result = await joinGroceryListByCode(joinCode);
       if (result.success) {
         toast.success(`Joined "${result.listName}"`);
-        onJoined(result.listId);
         resetCode();
         sheetRef.current?.dismiss();
+        onJoined(result.listId);
       } else {
         toast.error(result.error);
         // Clear and refocus on error so user can try again

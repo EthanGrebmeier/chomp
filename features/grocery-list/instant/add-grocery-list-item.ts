@@ -18,6 +18,7 @@ export const addGroceryListItem = async ({
       quantity: item.quantity,
       unit: item.unit,
       category: item.category,
+      notes: item.notes,
       isChecked: false,
       isDeleted: false,
       createdAt: new Date().toISOString(),
