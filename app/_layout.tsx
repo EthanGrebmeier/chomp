@@ -1,4 +1,5 @@
 import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
+import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { PortalHost } from '@rn-primitives/portal';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { Stack } from 'expo-router';
@@ -31,7 +32,11 @@ export default function RootLayout() {
     useDrizzleStudio(db);
   }
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+    <ClerkProvider
+      __experimental_resourceCache={resourceCache}
+      tokenCache={tokenCache}
+      publishableKey={publishableKey}
+    >
       <ClerkLoaded>
         <QueryClientProvider>
           <KeyboardProvider>
