@@ -1,9 +1,16 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Platform } from 'react-native';
+import { GestureResponderEvent, Platform } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
+
+const AnimatedHapticPressable = Animated.createAnimatedComponent(HapticPressable);
 
 const buttonVariants = cva(
   cn(
@@ -131,11 +138,36 @@ function Button({
   size,
   haptic = true,
   hapticType = 'light',
+  onPressIn,
+  onPressOut,
+  style,
   ...props
 }: ButtonProps) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = (event: GestureResponderEvent) => {
+    scale.value = withSpring(0.97, {
+      damping: 20,
+      stiffness: 600,
+    });
+    onPressIn?.(event);
+  };
+
+  const handlePressOut = (event: GestureResponderEvent) => {
+    scale.value = withSpring(1, {
+      damping: 20,
+      stiffness: 600,
+    });
+    onPressOut?.(event);
+  };
+
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
-      <HapticPressable
+      <AnimatedHapticPressable
         className={cn(
           props.disabled && 'opacity-50',
           buttonVariants({ variant, size }),
@@ -144,6 +176,9 @@ function Button({
         role="button"
         haptic={haptic}
         hapticType={hapticType}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={[animatedStyle, style]}
         {...props}
       />
     </TextClassContext.Provider>
