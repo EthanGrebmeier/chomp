@@ -6,10 +6,10 @@ import { Alert, Pressable, View } from 'react-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Button } from '../../../components/ui/button';
 import {
+  ContextMenuItem,
   ContextMenuItemIcon,
   ContextMenuItemTitle,
   ContextMenuRoot,
-  ContextMenuItem,
 } from '../../../components/ui/context-menu';
 import {
   DropdownMenuContent,
@@ -102,29 +102,25 @@ export const SelectGroceryListSheet = forwardRef<
   };
 
   const handleLeaveList = (listId: string, listName: string) => {
-    Alert.alert(
-      'Leave List',
-      `Are you sure you want to leave "${listName}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Leave',
-          style: 'destructive',
-          onPress: async () => {
-            await leaveGroceryList(listId);
-            // If the left list was selected, select another list
-            if (selectedListId === listId) {
-              const remainingLists = lists?.grocery_lists.filter(
-                l => l.id !== listId
-              );
-              if (remainingLists && remainingLists.length > 0) {
-                onSelectList(remainingLists[0].id);
-              }
+    Alert.alert('Leave List', `Are you sure you want to leave "${listName}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Leave',
+        style: 'destructive',
+        onPress: async () => {
+          await leaveGroceryList(listId);
+          // If the left list was selected, select another list
+          if (selectedListId === listId) {
+            const remainingLists = lists?.grocery_lists.filter(
+              l => l.id !== listId
+            );
+            if (remainingLists && remainingLists.length > 0) {
+              onSelectList(remainingLists[0].id);
             }
-          },
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
