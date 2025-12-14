@@ -1,21 +1,38 @@
+import { router } from 'expo-router';
 import { SearchIcon } from 'lucide-react-native';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { FlatList, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { toast } from 'sonner-native';
 
-import { useRecipes } from '../../../features/recipes/hooks';
+import {
+  CreateRecipeSheet,
+  CreateRecipeSheetRef,
+} from '../../../features/recipes/components/create-recipe-sheet';
+import { useCreateRecipe, useRecipes } from '../../../features/recipes/hooks';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
+import { navigation } from '../../../lib/navigation';
+import { cn } from '../../../lib/utils';
 import { TextInput } from '../../text-input';
 import { HapticPressable } from '../../ui/haptic-pressable';
 import { Icon } from '../../ui/icon';
 import { Text } from '../../ui/text';
 
+import { CreateRecipeInlineButton } from './create-recipe-inline-button';
+
 type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
+  onDismiss?: () => void;
 };
 
-export const RecipeSelector = ({ onSelectRecipe }: RecipeSelectorProps) => {
+export const RecipeSelector = ({
+  onSelectRecipe,
+  onDismiss,
+}: RecipeSelectorProps) => {
   const { data: recipes, isLoading } = useRecipes();
+  const { mutate: createRecipe } = useCreateRecipe();
   const [searchQuery, setSearchQuery] = useState('');
+  const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
 
   const filteredRecipes = (recipes ?? []).filter(recipe =>
     recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -29,15 +46,47 @@ export const RecipeSelector = ({ onSelectRecipe }: RecipeSelectorProps) => {
     );
   }
 
+  const handleCreateRecipe = (data: { name: string }) => {
+    createRecipe(
+      {
+        recipe: {
+          name: data.name,
+          description: '',
+        },
+        ingredients: [],
+      },
+      {
+        onSuccess: result => {
+          onDismiss?.();
+          router.push(navigation.goToRecipe(result.id));
+          toast.success('Recipe created');
+        },
+      }
+    );
+  };
+
   if (!recipes || recipes.length === 0) {
     return (
-      <View style={{ minHeight: 600 }} className="items-center justify-center">
-        <Text className="text-lg font-semibold text-foreground">
-          No recipes yet
-        </Text>
-        <Text className="text-muted-foreground">
-          Create some recipes first to add them to your list
-        </Text>
+      <View
+        style={{ minHeight: 600 }}
+        className="items-center justify-center gap-4"
+      >
+        <View className="items-center">
+          <Text className="text-lg font-semibold text-foreground">
+            No recipes yet
+          </Text>
+          <Text className="text-muted-foreground">
+            Create a recipe to add ingredients to your list
+          </Text>
+        </View>
+        <CreateRecipeInlineButton
+          label="Create Recipe"
+          onPress={() => createRecipeSheetRef.current?.present()}
+        />
+        <CreateRecipeSheet
+          ref={createRecipeSheetRef}
+          onSubmit={handleCreateRecipe}
+        />
       </View>
     );
   }
@@ -55,29 +104,49 @@ export const RecipeSelector = ({ onSelectRecipe }: RecipeSelectorProps) => {
         />
       </View>
       {filteredRecipes.length === 0 ? (
-        <View className="items-center justify-center py-8">
+        <Animated.View
+          key="no-results"
+          entering={FadeIn.duration(150)}
+          exiting={FadeOut.duration(150)}
+          className="items-center justify-center gap-4 py-8"
+        >
           <Text className="text-muted-foreground">No recipes found</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredRecipes}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <HapticPressable
-              onPress={() => onSelectRecipe(item)}
-              className="border-b border-border py-3"
-              hapticType="light"
-            >
-              <Text className="text-lg font-semibold text-foreground">
-                {item.name}
-              </Text>
-              <Text className="text-sm text-muted-foreground">
-                {item.recipe_ingredients.length} ingredients
-              </Text>
-            </HapticPressable>
+          {searchQuery.trim() && (
+            <CreateRecipeInlineButton
+              label={`Create "${searchQuery.trim()}"`}
+              onPress={() => handleCreateRecipe({ name: searchQuery.trim() })}
+            />
           )}
-          showsVerticalScrollIndicator={false}
-        />
+        </Animated.View>
+      ) : (
+        <Animated.View
+          key="results"
+          entering={FadeIn.duration(150)}
+          exiting={FadeOut.duration(150)}
+        >
+          <FlatList
+            data={filteredRecipes}
+            keyExtractor={item => item.id}
+            renderItem={({ item, index }) => (
+              <HapticPressable
+                onPress={() => onSelectRecipe(item)}
+                className={cn(
+                  'py-3',
+                  index < filteredRecipes.length - 1 && 'border-b border-border'
+                )}
+                hapticType="light"
+              >
+                <Text className="text-lg font-semibold text-foreground">
+                  {item.name}
+                </Text>
+                <Text className="text-sm text-muted-foreground">
+                  {item.recipe_ingredients.length} ingredients
+                </Text>
+              </HapticPressable>
+            )}
+            showsVerticalScrollIndicator={false}
+          />
+        </Animated.View>
       )}
     </View>
   );

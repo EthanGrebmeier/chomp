@@ -155,7 +155,10 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
               onDismiss={() => ref.current?.dismiss()}
             />
           ) : (
-            <RecipeSelector onSelectRecipe={handleRecipeSelect} />
+            <RecipeSelector
+              onSelectRecipe={handleRecipeSelect}
+              onDismiss={() => ref.current?.dismiss()}
+            />
           )}
         </View>
       </BottomSheet>
