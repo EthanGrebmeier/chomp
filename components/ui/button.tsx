@@ -32,7 +32,7 @@ const buttonVariants = cva(
           })
         ),
         secondary: cn(
-          'bg-secondary active:bg-secondary/80 shadow-sm shadow-black/5',
+          'bg-secondary active:bg-secondary/80 shadow-sm shadow-black/5 text-secondary-foreground',
           Platform.select({ web: 'hover:bg-secondary/80' })
         ),
         ghost: cn(

@@ -103,7 +103,7 @@ const Header = ({
   button?: React.ReactNode;
 }) => {
   return (
-    <View className="flex-row items-center justify-between">
+    <View className="flex-1 flex-row items-center justify-between ">
       <Text className="text-2xl font-bold">{title}</Text>
       {button}
     </View>
