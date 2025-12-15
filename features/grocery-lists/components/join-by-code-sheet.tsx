@@ -97,60 +97,62 @@ export const JoinByCodeSheet = forwardRef<
         resetCode();
       }}
     >
-      <BottomSheet.Header
-        title="Join by Code"
-        button={<CloseButton onPress={handleDismiss} />}
-      />
+      <BottomSheet.SheetView>
+        <BottomSheet.Header
+          title="Join by Code"
+          button={<CloseButton onPress={handleDismiss} />}
+        />
 
-      <BottomSheet.Subtext>
-        Enter the 8-character, case-sensitive code
-      </BottomSheet.Subtext>
-      <BottomSheet.Subtext>to join a shared list</BottomSheet.Subtext>
-      <View className="mt-6 items-center justify-center gap-6">
-        {isLoading ? (
-          <View className="h-12 items-center justify-center">
-            <ActivityIndicator size="small" />
-          </View>
-        ) : (
-          <OtpInput
-            ref={otpRef}
-            numberOfDigits={CODE_LENGTH}
-            onFilled={handleJoinByCode}
-            autoFocus={false}
-            hideStick={false}
-            type="alphanumeric"
-            textInputProps={{
-              accessibilityLabel: 'Join code input',
-              autoCapitalize: 'none',
-              autoCorrect: false,
-            }}
-            theme={{
-              containerStyle: {
-                gap: 8,
-              },
-              pinCodeContainerStyle: {
-                width: 36,
-                height: 48,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: theme.input,
-                backgroundColor: theme.input,
-              },
-              pinCodeTextStyle: {
-                fontSize: 20,
-                fontFamily: 'monospace',
-                color: theme.foreground,
-              },
-              focusedPinCodeContainerStyle: {
-                borderColor: theme.primary,
-              },
-              focusStickStyle: {
-                backgroundColor: theme.primary,
-              },
-            }}
-          />
-        )}
-      </View>
+        <BottomSheet.Subtext>
+          Enter the 8-character, case-sensitive code
+        </BottomSheet.Subtext>
+        <BottomSheet.Subtext>to join a shared list</BottomSheet.Subtext>
+        <View className="mt-6 items-center justify-center gap-6">
+          {isLoading ? (
+            <View className="h-12 items-center justify-center">
+              <ActivityIndicator size="small" />
+            </View>
+          ) : (
+            <OtpInput
+              ref={otpRef}
+              numberOfDigits={CODE_LENGTH}
+              onFilled={handleJoinByCode}
+              autoFocus={false}
+              hideStick={false}
+              type="alphanumeric"
+              textInputProps={{
+                accessibilityLabel: 'Join code input',
+                autoCapitalize: 'none',
+                autoCorrect: false,
+              }}
+              theme={{
+                containerStyle: {
+                  gap: 8,
+                },
+                pinCodeContainerStyle: {
+                  width: 36,
+                  height: 48,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: theme.input,
+                  backgroundColor: theme.input,
+                },
+                pinCodeTextStyle: {
+                  fontSize: 20,
+                  fontFamily: 'monospace',
+                  color: theme.foreground,
+                },
+                focusedPinCodeContainerStyle: {
+                  borderColor: theme.primary,
+                },
+                focusStickStyle: {
+                  backgroundColor: theme.primary,
+                },
+              }}
+            />
+          )}
+        </View>
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 });

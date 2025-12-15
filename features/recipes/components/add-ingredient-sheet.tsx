@@ -1,6 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createContext, useContext, useRef, useState } from 'react';
-import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -47,10 +46,10 @@ const AddIngredientContents = ({ submitLabel }: { submitLabel: string }) => {
         itemInputRef.current?.focus();
       }}
     >
-      <View>
+      <BottomSheet.SheetView>
         <ItemForm />
         <MetaBar submitLabel={submitLabel} />
-      </View>
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 };

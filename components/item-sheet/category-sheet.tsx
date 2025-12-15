@@ -106,35 +106,37 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
       </WithLayoutTransition>
 
       <BottomSheet ref={sheetRef} name="category-sheet">
-        <View className="flex-row items-center gap-2 pb-2">
-          <BackButton onPress={() => sheetRef.current?.dismiss()} />
-          <BottomSheet.Header title="Category" />
-        </View>
-        <ScrollView
-          className="max-h-96"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        >
-          <CategoryOption
-            label="None"
-            icon={TagIcon}
-            iconClassName="text-muted-foreground"
-            isSelected={!category}
-            onPress={() => handleSelect(undefined)}
-          />
-
-          {categoryOptions.map(categoryOption => (
+        <BottomSheet.SheetView>
+          <View className="flex-row items-center gap-2 pb-2">
+            <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            <BottomSheet.Header title="Category" />
+          </View>
+          <ScrollView
+            className="max-h-96"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          >
             <CategoryOption
-              key={categoryOption.value}
-              label={categoryOption.label}
-              icon={categoryOption.style.icon}
-              iconClassName={categoryOption.style.textClassName}
-              iconContainerClassName={categoryOption.style.className}
-              isSelected={category === categoryOption.value}
-              onPress={() => handleSelect(categoryOption.value)}
+              label="None"
+              icon={TagIcon}
+              iconClassName="text-muted-foreground"
+              isSelected={!category}
+              onPress={() => handleSelect(undefined)}
             />
-          ))}
-        </ScrollView>
+
+            {categoryOptions.map(categoryOption => (
+              <CategoryOption
+                key={categoryOption.value}
+                label={categoryOption.label}
+                icon={categoryOption.style.icon}
+                iconClassName={categoryOption.style.textClassName}
+                iconContainerClassName={categoryOption.style.className}
+                isSelected={category === categoryOption.value}
+                onPress={() => handleSelect(categoryOption.value)}
+              />
+            ))}
+          </ScrollView>
+        </BottomSheet.SheetView>
       </BottomSheet>
     </>
   );

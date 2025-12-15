@@ -107,32 +107,34 @@ export const MealTimeSheet = ({ mealTime, onSelect }: MealTimeSheetProps) => {
       </HapticPressable>
 
       <BottomSheet ref={sheetRef} name="meal-time-sheet">
-        <View className="flex-row items-center gap-2 pb-2">
-          <BackButton onPress={() => sheetRef.current?.dismiss()} />
-          <BottomSheet.Header title="Meal Time" />
-        </View>
-        <ScrollView
-          className="max-h-96"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        >
-          <MealTimeOption
-            label="None"
-            icon={ClockIcon}
-            isSelected={!mealTime}
-            onPress={() => handleSelect(undefined)}
-          />
-
-          {mealTimeOptions.map(option => (
+        <BottomSheet.SheetView>
+          <View className="flex-row items-center gap-2 pb-2">
+            <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            <BottomSheet.Header title="Meal Time" />
+          </View>
+          <ScrollView
+            className="max-h-96"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          >
             <MealTimeOption
-              key={option.value}
-              label={option.label}
-              icon={option.icon}
-              isSelected={mealTime === option.value}
-              onPress={() => handleSelect(option.value)}
+              label="None"
+              icon={ClockIcon}
+              isSelected={!mealTime}
+              onPress={() => handleSelect(undefined)}
             />
-          ))}
-        </ScrollView>
+
+            {mealTimeOptions.map(option => (
+              <MealTimeOption
+                key={option.value}
+                label={option.label}
+                icon={option.icon}
+                isSelected={mealTime === option.value}
+                onPress={() => handleSelect(option.value)}
+              />
+            ))}
+          </ScrollView>
+        </BottomSheet.SheetView>
       </BottomSheet>
     </>
   );

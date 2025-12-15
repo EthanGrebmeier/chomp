@@ -133,8 +133,18 @@ const Subtext = ({
   );
 };
 
+const SheetView = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return <View className={cn('px-4', className)}>{children}</View>;
+};
+
 BottomSheet.Header = Header;
 BottomSheet.Subtext = Subtext;
 BottomSheet.BareTextInput = BareTextInput;
-
 BottomSheet.TextInput = TextInput;
+BottomSheet.SheetView = SheetView;

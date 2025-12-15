@@ -41,40 +41,42 @@ export const RecipeConflictSheet = forwardRef<
 
     return (
       <BottomSheet name="recipe-conflict-sheet" ref={bottomSheetRef}>
-        <BottomSheet.Header title={`"${recipeName}" Already Exists`} />
-        <View className="gap-4">
-          <Text className="text-muted-foreground">
-            This recipe already exists in the list. What would you like to do?
-          </Text>
+        <BottomSheet.SheetView>
+          <BottomSheet.Header title={`"${recipeName}" Already Exists`} />
+          <View className="gap-4">
+            <Text className="text-muted-foreground">
+              This recipe already exists in the list. What would you like to do?
+            </Text>
 
-          <View className="gap-2">
-            <Button
-              onPress={onIncrement}
-              disabled={isPending}
-              className="w-full"
-            >
-              <Text>Increment Quantities</Text>
-            </Button>
+            <View className="gap-2">
+              <Button
+                onPress={onIncrement}
+                disabled={isPending}
+                className="w-full"
+              >
+                <Text>Increment Quantities</Text>
+              </Button>
 
-            <Button
-              onPress={onCreateSeparate}
-              disabled={isPending}
-              variant="outline"
-              className="w-full"
-            >
-              <Text>Create Separate Items</Text>
-            </Button>
+              <Button
+                onPress={onCreateSeparate}
+                disabled={isPending}
+                variant="outline"
+                className="w-full"
+              >
+                <Text>Create Separate Items</Text>
+              </Button>
 
-            <Button
-              onPress={handleClose}
-              disabled={isPending}
-              variant="ghost"
-              className="w-full"
-            >
-              <Text>Cancel</Text>
-            </Button>
+              <Button
+                onPress={handleClose}
+                disabled={isPending}
+                variant="ghost"
+                className="w-full"
+              >
+                <Text>Cancel</Text>
+              </Button>
+            </View>
           </View>
-        </View>
+        </BottomSheet.SheetView>
       </BottomSheet>
     );
   }

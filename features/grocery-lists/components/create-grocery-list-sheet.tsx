@@ -60,23 +60,25 @@ export const CreateGroceryListSheet = forwardRef<
         setNewListName('');
       }}
     >
-      <BottomSheet.Header
-        title="Create New List"
-        button={<CloseButton onPress={handleCancel} />}
-      />
-
-      <View className="my-4">
-        <TextInput
-          ref={inputRef}
-          value={newListName}
-          onChangeText={setNewListName}
-          placeholder="List name"
-          placeholderTextColor="#9ca3af"
-          className="h-12 rounded-xl border border-input bg-input px-4 text-base text-foreground"
-          onSubmitEditing={handleCreateList}
-          returnKeyType="done"
+      <BottomSheet.SheetView>
+        <BottomSheet.Header
+          title="Create New List"
+          button={<CloseButton onPress={handleCancel} />}
         />
-      </View>
+
+        <View className="my-4">
+          <TextInput
+            ref={inputRef}
+            value={newListName}
+            onChangeText={setNewListName}
+            placeholder="List name"
+            placeholderTextColor="#9ca3af"
+            className="h-12 rounded-xl border border-input bg-input px-4 text-base text-foreground"
+            onSubmitEditing={handleCreateList}
+            returnKeyType="done"
+          />
+        </View>
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 });

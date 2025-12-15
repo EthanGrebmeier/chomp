@@ -61,7 +61,7 @@ export const CreateRecipeSheet = forwardRef<
       ref={sheetRef}
       onStartClose={handleClose}
     >
-      <View className="gap-6">
+      <BottomSheet.SheetView className="gap-6">
         <BottomSheet.Header
           title={isEditing ? 'Edit Recipe' : 'Create Recipe'}
         />
@@ -88,7 +88,7 @@ export const CreateRecipeSheet = forwardRef<
         >
           <Text>{isEditing ? 'Update Recipe' : 'Create Recipe'}</Text>
         </Button>
-      </View>
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 });

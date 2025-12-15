@@ -20,23 +20,25 @@ export const AddItemConflictSheet = ({
 }: AddItemConflictSheetProps) => {
   return (
     <BottomSheet name="add-item-conflict-sheet" ref={ref}>
-      <BottomSheet.Header title="Item Already Exists" />
-      <View className="gap-4">
-        <Text className="text-muted-foreground">
-          This item already exists in the list. What would you like to do?
-        </Text>
-        <View className="gap-2">
-          <Button variant="default" onPress={onIncrement}>
-            <Text>Increment Quantities</Text>
-          </Button>
-          <Button variant="outline" onPress={onCreateSeparate}>
-            <Text>Create Separate Items</Text>
-          </Button>
-          <Button onPress={onCancel} variant="ghost">
-            <Text>Cancel</Text>
-          </Button>
+      <BottomSheet.SheetView>
+        <BottomSheet.Header title="Item Already Exists" />
+        <View className="gap-4">
+          <Text className="text-muted-foreground">
+            This item already exists in the list. What would you like to do?
+          </Text>
+          <View className="gap-2">
+            <Button variant="default" onPress={onIncrement}>
+              <Text>Increment Quantities</Text>
+            </Button>
+            <Button variant="outline" onPress={onCreateSeparate}>
+              <Text>Create Separate Items</Text>
+            </Button>
+            <Button onPress={onCancel} variant="ghost">
+              <Text>Cancel</Text>
+            </Button>
+          </View>
         </View>
-      </View>
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 };

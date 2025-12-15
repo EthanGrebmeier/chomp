@@ -299,7 +299,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
         ref={bottomSheetRef}
         insetAdjustment="never"
       >
-        <View className="gap-4">
+        <BottomSheet.SheetView className="gap-4">
           {/* Header with close and confirm buttons, centered title */}
           <View className="flex-row items-center justify-between pb-2">
             <CloseButton onPress={handleClose} />
@@ -338,7 +338,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
           >
             {months.map(renderMonth)}
           </ScrollView>
-        </View>
+        </BottomSheet.SheetView>
       </BottomSheet>
     );
   }

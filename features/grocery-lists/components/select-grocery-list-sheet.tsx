@@ -126,101 +126,103 @@ export const SelectGroceryListSheet = forwardRef<
   return (
     <>
       <BottomSheet name="select-grocery-list-sheet" ref={sheetRef}>
-        <BottomSheet.Header
-          title="Select List"
-          button={
-            <DropdownMenuRoot
-              trigger={
-                <Button variant="ghost" size="circle">
-                  <Icon as={PlusIcon} size={24} className="text-primary" />
-                </Button>
-              }
-            >
-              <DropdownMenuContent>
-                <DropdownMenuItem
-                  key="create"
-                  onSelect={() => createSheetRef.current?.present()}
-                >
-                  <DropdownMenuItemIcon ios={{ name: 'plus' }}>
-                    <Icon as={PlusIcon} size={16} />
-                  </DropdownMenuItemIcon>
-                  <DropdownMenuItemTitle>Create New List</DropdownMenuItemTitle>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  key="join"
-                  onSelect={() => joinSheetRef.current?.present()}
-                >
-                  <DropdownMenuItemIcon ios={{ name: 'link' }}>
-                    <Icon as={LinkIcon} size={16} />
-                  </DropdownMenuItemIcon>
-                  <DropdownMenuItemTitle>Join by Code</DropdownMenuItemTitle>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenuRoot>
-          }
-        />
-
-        <View className="mt-4 gap-1">
-          {lists?.grocery_lists.map(list => {
-            const isSelected = list.id === selectedListId;
-            const isOwner = user?.id === list.ownerId;
-
-            return (
-              <ContextMenuRoot
-                key={list.id}
+        <BottomSheet.SheetView>
+          <BottomSheet.Header
+            title="Select List"
+            button={
+              <DropdownMenuRoot
                 trigger={
-                  <Pressable
-                    onPress={() => handleSelectList(list.id)}
-                    className={cn(
-                      'flex-row items-center justify-between rounded-xl px-4 py-3',
-                      isSelected ? 'bg-primary/10' : 'active:bg-muted'
-                    )}
-                  >
-                    <Text
-                      className={cn(
-                        'text-lg',
-                        isSelected && 'font-semibold text-primary'
-                      )}
-                    >
-                      {list.name}
-                    </Text>
-                    {isSelected && (
-                      <Icon as={CheckIcon} size={20} className="text-primary" />
-                    )}
-                  </Pressable>
+                  <Button variant="ghost" size="circle">
+                    <Icon as={PlusIcon} size={24} className="text-primary" />
+                  </Button>
                 }
               >
-                <ContextMenuItem
-                  key={`delete-or-leave-${list.id}`}
-                  destructive
-                  onSelect={() => {
-                    if (isOwner) {
-                      handleDeleteList(list.id, list.name);
-                    } else {
-                      handleLeaveList(list.id, list.name);
-                    }
-                  }}
+                <DropdownMenuContent>
+                  <DropdownMenuItem
+                    key="create"
+                    onSelect={() => createSheetRef.current?.present()}
+                  >
+                    <DropdownMenuItemIcon ios={{ name: 'plus' }}>
+                      <Icon as={PlusIcon} size={16} />
+                    </DropdownMenuItemIcon>
+                    <DropdownMenuItemTitle>Create New List</DropdownMenuItemTitle>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key="join"
+                    onSelect={() => joinSheetRef.current?.present()}
+                  >
+                    <DropdownMenuItemIcon ios={{ name: 'link' }}>
+                      <Icon as={LinkIcon} size={16} />
+                    </DropdownMenuItemIcon>
+                    <DropdownMenuItemTitle>Join by Code</DropdownMenuItemTitle>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenuRoot>
+            }
+          />
+
+          <View className="mt-4 gap-1">
+            {lists?.grocery_lists.map(list => {
+              const isSelected = list.id === selectedListId;
+              const isOwner = user?.id === list.ownerId;
+
+              return (
+                <ContextMenuRoot
+                  key={list.id}
+                  trigger={
+                    <Pressable
+                      onPress={() => handleSelectList(list.id)}
+                      className={cn(
+                        'flex-row items-center justify-between rounded-xl px-4 py-3',
+                        isSelected ? 'bg-primary/10' : 'active:bg-muted'
+                      )}
+                    >
+                      <Text
+                        className={cn(
+                          'text-lg',
+                          isSelected && 'font-semibold text-primary'
+                        )}
+                      >
+                        {list.name}
+                      </Text>
+                      {isSelected && (
+                        <Icon as={CheckIcon} size={20} className="text-primary" />
+                      )}
+                    </Pressable>
+                  }
                 >
-                  <ContextMenuItemTitle>
-                    {isOwner ? 'Delete List' : 'Leave List'}
-                  </ContextMenuItemTitle>
-                  <ContextMenuItemIcon
-                    ios={{
-                      name: isOwner
-                        ? 'trash'
-                        : 'rectangle.portrait.and.arrow.right',
+                  <ContextMenuItem
+                    key={`delete-or-leave-${list.id}`}
+                    destructive
+                    onSelect={() => {
+                      if (isOwner) {
+                        handleDeleteList(list.id, list.name);
+                      } else {
+                        handleLeaveList(list.id, list.name);
+                      }
                     }}
-                  />
-                </ContextMenuItem>
-              </ContextMenuRoot>
-            );
-          })}
-        </View>
-        <CreateGroceryListSheet
-          ref={createSheetRef}
-          onCreated={handleCreated}
-        />
-        <JoinByCodeSheet ref={joinSheetRef} onJoined={handleJoined} />
+                  >
+                    <ContextMenuItemTitle>
+                      {isOwner ? 'Delete List' : 'Leave List'}
+                    </ContextMenuItemTitle>
+                    <ContextMenuItemIcon
+                      ios={{
+                        name: isOwner
+                          ? 'trash'
+                          : 'rectangle.portrait.and.arrow.right',
+                      }}
+                    />
+                  </ContextMenuItem>
+                </ContextMenuRoot>
+              );
+            })}
+          </View>
+          <CreateGroceryListSheet
+            ref={createSheetRef}
+            onCreated={handleCreated}
+          />
+          <JoinByCodeSheet ref={joinSheetRef} onJoined={handleJoined} />
+        </BottomSheet.SheetView>
       </BottomSheet>
     </>
   );

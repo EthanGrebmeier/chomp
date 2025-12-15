@@ -35,26 +35,28 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
 
     return (
       <BottomSheet name="share-list-sheet" ref={sheetRef}>
-        <BottomSheet.Header title="Share List" />
-        <BottomSheet.Subtext>
-          Others can use this code to join your list
-        </BottomSheet.Subtext>
-        <View className="mt-6 items-center gap-4">
-          <HapticPressable
-            hapticType="selection"
-            onPress={handleCopyCode}
-            className="flex-row items-center gap-3 rounded-2xl bg-muted px-6 py-4 active:opacity-70"
-          >
-            <Text className="font-mono text-2xl font-bold tracking-widest">
-              {joinCode}
-            </Text>
-            <Icon as={CopyIcon} size={20} className="text-muted-foreground" />
-          </HapticPressable>
+        <BottomSheet.SheetView>
+          <BottomSheet.Header title="Share List" />
+          <BottomSheet.Subtext>
+            Others can use this code to join your list
+          </BottomSheet.Subtext>
+          <View className="mt-6 items-center gap-4">
+            <HapticPressable
+              hapticType="selection"
+              onPress={handleCopyCode}
+              className="flex-row items-center gap-3 rounded-2xl bg-muted px-6 py-4 active:opacity-70"
+            >
+              <Text className="font-mono text-2xl font-bold tracking-widest">
+                {joinCode}
+              </Text>
+              <Icon as={CopyIcon} size={20} className="text-muted-foreground" />
+            </HapticPressable>
 
-          <Text className="text-center text-sm text-muted-foreground">
-            Tap to copy
-          </Text>
-        </View>
+            <Text className="text-center text-sm text-muted-foreground">
+              Tap to copy
+            </Text>
+          </View>
+        </BottomSheet.SheetView>
       </BottomSheet>
     );
   }

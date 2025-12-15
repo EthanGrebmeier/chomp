@@ -83,31 +83,34 @@ export const ListSheet = ({ listId, onSelect }: ListSheetProps) => {
       </WithLayoutTransition>
 
       <BottomSheet ref={sheetRef} name="list-sheet">
-        <View className="flex-row items-center gap-2 pb-2">
-          <BackButton onPress={() => sheetRef.current?.dismiss()} />
-          <BottomSheet.Header title="Select List" />
-        </View>
-        <ScrollView
-          className="max-h-96 min-h-48"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        >
-          {groceryLists.length === 0 ? (
-            <Text className="py-4 text-center text-muted-foreground">
-              No lists available
-            </Text>
-          ) : (
-            groceryLists.map(list => (
-              <ListOption
-                key={list.id}
-                name={list.name}
-                isSelected={listId === list.id}
-                onPress={() => handleSelect(list.id)}
-              />
-            ))
-          )}
-        </ScrollView>
+        <BottomSheet.SheetView>
+          <View className="flex-row items-center gap-2 pb-2">
+            <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            <BottomSheet.Header title="Select List" />
+          </View>
+          <ScrollView
+            className="max-h-96 min-h-48"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          >
+            {groceryLists.length === 0 ? (
+              <Text className="py-4 text-center text-muted-foreground">
+                No lists available
+              </Text>
+            ) : (
+              groceryLists.map(list => (
+                <ListOption
+                  key={list.id}
+                  name={list.name}
+                  isSelected={listId === list.id}
+                  onPress={() => handleSelect(list.id)}
+                />
+              ))
+            )}
+          </ScrollView>
+        </BottomSheet.SheetView>
       </BottomSheet>
     </>
   );
 };
+

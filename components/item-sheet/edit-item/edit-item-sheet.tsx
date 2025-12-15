@@ -1,6 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createContext, useContext, useRef, useState } from 'react';
-import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
@@ -39,10 +38,10 @@ const EditItemContents = () => {
       ref={sheetRef}
       onStartClose={reset}
     >
-      <View>
+      <BottomSheet.SheetView>
         <ItemForm />
         <MetaBar submitLabel="Update" />
-      </View>
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 };

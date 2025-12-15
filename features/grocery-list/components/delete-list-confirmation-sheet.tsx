@@ -26,18 +26,20 @@ export const DeleteListConfirmationSheet = ({
 
   return (
     <BottomSheet name="delete-list-confirmation-sheet" ref={ref}>
-      <BottomSheet.Header title={title} />
-      <View className="gap-4">
-        <Text className="text-muted-foreground">{description}</Text>
-        <View className="gap-2">
-          <Button variant="destructive" onPress={onConfirm}>
-            <Text>{confirmText}</Text>
-          </Button>
-          <Button onPress={onCancel} variant="outline">
-            <Text>Cancel</Text>
-          </Button>
+      <BottomSheet.SheetView>
+        <BottomSheet.Header title={title} />
+        <View className="gap-4">
+          <Text className="text-muted-foreground">{description}</Text>
+          <View className="gap-2">
+            <Button variant="destructive" onPress={onConfirm}>
+              <Text>{confirmText}</Text>
+            </Button>
+            <Button onPress={onCancel} variant="outline">
+              <Text>Cancel</Text>
+            </Button>
+          </View>
         </View>
-      </View>
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 };

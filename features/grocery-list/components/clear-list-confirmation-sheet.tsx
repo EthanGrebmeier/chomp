@@ -23,21 +23,23 @@ export const ClearListConfirmationSheet = ({
 
   return (
     <BottomSheet name="clear-list-confirmation-sheet" ref={ref}>
-      <BottomSheet.Header title="Clear Grocery List" />
-      <View className="gap-4">
-        <Text className="text-muted-foreground">
-          Are you sure you want to clear your entire grocery list? This action
-          cannot be undone.
-        </Text>
-        <View className="gap-2">
-          <Button variant="destructive" onPress={handleConfirm}>
-            <Text>Clear List</Text>
-          </Button>
-          <Button onPress={onCancel} variant="outline">
-            <Text>Cancel</Text>
-          </Button>
+      <BottomSheet.SheetView>
+        <BottomSheet.Header title="Clear Grocery List" />
+        <View className="gap-4">
+          <Text className="text-muted-foreground">
+            Are you sure you want to clear your entire grocery list? This action
+            cannot be undone.
+          </Text>
+          <View className="gap-2">
+            <Button variant="destructive" onPress={handleConfirm}>
+              <Text>Clear List</Text>
+            </Button>
+            <Button onPress={onCancel} variant="outline">
+              <Text>Cancel</Text>
+            </Button>
+          </View>
         </View>
-      </View>
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 };

@@ -125,57 +125,59 @@ export const UnitSheet = ({
       </WithLayoutTransition>
 
       <BottomSheet ignoreSafeArea ref={sheetRef} name="unit-sheet">
-        <View className="flex-row items-center gap-2 pb-2">
-          <BackButton onPress={() => sheetRef.current?.dismiss()} />
-          <BottomSheet.Header title="Quantity" />
-          <Button
-            onPress={handleConfirm}
-            size="circle"
-            className="ml-auto"
-            disabled={!isValid}
-          >
-            <Icon
-              as={CheckIcon}
-              size={20}
-              className="text-primary-foreground"
-            />
-          </Button>
-        </View>
+        <BottomSheet.SheetView>
+          <View className="flex-row items-center gap-2 pb-2">
+            <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            <BottomSheet.Header title="Quantity" />
+            <Button
+              onPress={handleConfirm}
+              size="circle"
+              className="ml-auto"
+              disabled={!isValid}
+            >
+              <Icon
+                as={CheckIcon}
+                size={20}
+                className="text-primary-foreground"
+              />
+            </Button>
+          </View>
 
-        <View className="mb-4 flex-row items-center gap-3 rounded-xl bg-muted px-4 py-3">
-          <TextInput
-            ref={quantityInputRef}
-            value={localQuantity}
-            onChangeText={handleQuantityChange}
-            keyboardType="number-pad"
-            className="flex-1 text-2xl font-bold text-foreground"
-            placeholder="1"
-            placeholderTextColor="#9ca3af"
-            selectTextOnFocus
-          />
-          <Text className="text-lg text-muted-foreground">
-            {selectedUnit?.label ?? 'Each'}
+          <View className="mb-4 flex-row items-center gap-3 rounded-xl bg-muted px-4 py-3">
+            <TextInput
+              ref={quantityInputRef}
+              value={localQuantity}
+              onChangeText={handleQuantityChange}
+              keyboardType="number-pad"
+              className="flex-1 text-2xl font-bold text-foreground"
+              placeholder="1"
+              placeholderTextColor="#9ca3af"
+              selectTextOnFocus
+            />
+            <Text className="text-lg text-muted-foreground">
+              {selectedUnit?.label ?? 'Each'}
+            </Text>
+          </View>
+
+          <Text className="mb-2 text-sm font-medium text-muted-foreground">
+            Unit
           </Text>
-        </View>
-
-        <Text className="mb-2 text-sm font-medium text-muted-foreground">
-          Unit
-        </Text>
-        <ScrollView
-          className="max-h-72"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {unitOptions.map(option => (
-            <UnitOption
-              key={option.value}
-              label={option.label}
-              isSelected={localUnit === option.value}
-              onPress={() => handleUnitSelect(option.value)}
-            />
-          ))}
-        </ScrollView>
+          <ScrollView
+            className="max-h-72"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {unitOptions.map(option => (
+              <UnitOption
+                key={option.value}
+                label={option.label}
+                isSelected={localUnit === option.value}
+                onPress={() => handleUnitSelect(option.value)}
+              />
+            ))}
+          </ScrollView>
+        </BottomSheet.SheetView>
       </BottomSheet>
     </>
   );

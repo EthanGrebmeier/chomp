@@ -93,7 +93,7 @@ export const CreateMealPlanSheet = () => {
         validStartDate={startDate}
       />
       <BottomSheet name="create-meal-plan-sheet" onStartClose={onClose} ref={bottomSheetRef}>
-        <View className="gap-4">
+        <BottomSheet.SheetView className="gap-4">
           <BottomSheet.BareTextInput
             className="text-2xl font-semibold text-foreground"
             placeholder="Meal Plan Name"
@@ -133,7 +133,7 @@ export const CreateMealPlanSheet = () => {
           <Button onPress={handleCreateMealPlan}>
             <Text>Create Meal Plan</Text>
           </Button>
-        </View>
+        </BottomSheet.SheetView>
       </BottomSheet>
     </>
   );

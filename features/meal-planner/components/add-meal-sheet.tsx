@@ -79,33 +79,35 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
           resetState();
         }}
       >
-        {selectedRecipe ? (
-          <View>
-            <Pressable
-              onPress={handleBackToRecipes}
-              className="mb-4 flex-row items-center gap-2"
-            >
-              <Icon as={ArrowLeftIcon} size={16} />
-              <Text className="text-sm font-bold text-foreground">Back</Text>
-            </Pressable>
-            <View className="gap-4">
-              <Text className="text-2xl font-semibold text-foreground">
-                {selectedRecipe.name}
-              </Text>
-              <View className="flex-row items-center justify-between">
-                <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
-                <Button onPress={handleAddMeal}>
-                  <Text>Add Meal</Text>
-                </Button>
+        <BottomSheet.SheetView>
+          {selectedRecipe ? (
+            <View>
+              <Pressable
+                onPress={handleBackToRecipes}
+                className="mb-4 flex-row items-center gap-2"
+              >
+                <Icon as={ArrowLeftIcon} size={16} />
+                <Text className="text-sm font-bold text-foreground">Back</Text>
+              </Pressable>
+              <View className="gap-4">
+                <Text className="text-2xl font-semibold text-foreground">
+                  {selectedRecipe.name}
+                </Text>
+                <View className="flex-row items-center justify-between">
+                  <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
+                  <Button onPress={handleAddMeal}>
+                    <Text>Add Meal</Text>
+                  </Button>
+                </View>
               </View>
             </View>
-          </View>
-        ) : (
-          <RecipeSelector
-            onSelectRecipe={handleSelectRecipe}
-            onDismiss={() => sheetRef.current?.dismiss()}
-          />
-        )}
+          ) : (
+            <RecipeSelector
+              onSelectRecipe={handleSelectRecipe}
+              onDismiss={() => sheetRef.current?.dismiss()}
+            />
+          )}
+        </BottomSheet.SheetView>
       </BottomSheet>
     );
   }
