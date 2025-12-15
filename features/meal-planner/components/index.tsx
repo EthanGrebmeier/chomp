@@ -1,4 +1,5 @@
 import { eachDayOfInterval, format, isSameDay, startOfDay } from 'date-fns';
+import { PlusIcon } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
@@ -9,7 +10,10 @@ import {
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
 import { Heading } from '../../../components/text/heading';
+import { Button } from '../../../components/ui/button';
+import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
+import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
 import { MealPlanDay, MealPlanWithRecipes } from '../types';
 
@@ -83,6 +87,11 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
     setCurrentPageIndex(e.nativeEvent.position);
   };
 
+  const handleAddMealPress = () => {
+    const dateStr = format(currentDate, 'yyyy-MM-dd');
+    addMealSheet.current?.open({ date: dateStr });
+  };
+
   return (
     <Animated.View
       entering={FadeIn.duration(140)}
@@ -153,17 +162,26 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
             </Text>
             <MealPlanDateView
               recipes={getRecipesForDate(date)}
-              date={format(date, 'yyyy-MM-dd')}
               onMealPress={({ mealPlanRecipe, recipe }) =>
                 editMealSheet.current?.open({ mealPlanRecipe, recipe })
-              }
-              onAddMealPress={({ date: mealDate, mealTime }) =>
-                addMealSheet.current?.open({ date: mealDate, mealTime })
               }
             />
           </View>
         ))}
       </PagerView>
+      <Button
+        size="iconLg"
+        style={{ bottom: NATIVE_TABS_OFFSET }}
+        onPress={handleAddMealPress}
+        className="absolute right-6 z-10"
+      >
+        <Icon
+          as={PlusIcon}
+          size={28}
+          strokeWidth={3}
+          className="text-primary-foreground"
+        />
+      </Button>
     </Animated.View>
   );
 };

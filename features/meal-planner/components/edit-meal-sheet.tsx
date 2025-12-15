@@ -23,7 +23,7 @@ import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { MealPlanRecipe, MealTag } from '../types';
 
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
-import { MealTimeSelector } from './meal-time-selector';
+import { MealTimeSheet } from './meal-time-sheet';
 
 type EditMealSheetProps = {
   startDate: string;
@@ -197,7 +197,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                       </Text>
                     </Pill>
                   </Pressable>
-                  <MealTimeSelector onSelect={setMealTag} mealTime={mealTag} />
+                  <MealTimeSheet onSelect={setMealTag} mealTime={mealTag} />
                 </View>
                 <Button onPress={handleUpdateMealPlanRecipe}>
                   <Text>Update Meal</Text>
