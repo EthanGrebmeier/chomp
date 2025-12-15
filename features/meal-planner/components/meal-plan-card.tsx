@@ -1,6 +1,8 @@
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Pressable } from 'react-native';
+
+import { cn } from '@/lib/utils';
+
 import { Text } from '../../../components/ui/text';
 import { MealPlan } from '../types';
 

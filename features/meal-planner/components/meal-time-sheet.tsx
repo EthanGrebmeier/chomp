@@ -20,13 +20,13 @@ import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { MealTag } from '../types';
 
-type MealTimeOption = {
+type MealTimeOptionType = {
   value: MealTag;
   label: string;
   icon: LucideIcon;
 };
 
-const mealTimeOptions: MealTimeOption[] = [
+const mealTimeOptions: MealTimeOptionType[] = [
   { value: 'Breakfast', label: 'Breakfast', icon: CroissantIcon },
   { value: 'Lunch', label: 'Lunch', icon: SandwichIcon },
   { value: 'Dinner', label: 'Dinner', icon: CookingPotIcon },
@@ -137,4 +137,3 @@ export const MealTimeSheet = ({ mealTime, onSelect }: MealTimeSheetProps) => {
     </>
   );
 };
-

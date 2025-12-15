@@ -11,13 +11,14 @@ import {
   CalendarSheet,
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
+import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
+import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
 import { navigation } from '../../../lib/navigation';
-import { RecipeSearch } from '../../recipes/components/recipe-search';
-import { Recipe } from '../../recipes/types';
+import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { MealPlanRecipe, MealTag } from '../types';
@@ -111,9 +112,8 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       sheetRef.current?.dismiss();
     };
 
-    const handleRecipeChange = (recipe: { id: string; name: string }) => {
-      // We receive minimal recipe info from the search, so we need to cast it
-      setSelectedRecipe(recipe as Recipe);
+    const handleRecipeChange = (recipe: RecipeWithIngredients) => {
+      setSelectedRecipe(recipe);
       setCurrentView('recipe');
     };
 
@@ -145,14 +145,13 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           }}
         />
         {currentView === 'search' ? (
-          <RecipeSearch
-            sheetRef={sheetRef}
-            canGoBack={true}
-            onItemSelect={handleRecipeChange}
-            onBack={() => {
-              setCurrentView('recipe');
-            }}
-          />
+          <View className="gap-2">
+            <BackButton onPress={() => setCurrentView('recipe')} />
+            <RecipeSelector
+              onSelectRecipe={handleRecipeChange}
+              onDismiss={() => sheetRef.current?.dismiss()}
+            />
+          </View>
         ) : (
           <View>
             <View className="gap-2">
@@ -188,13 +187,11 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                       hasValue={!!selectedDate}
                       icon={<Icon as={CalendarIcon} size={16} />}
                     >
-                      <Text className="text-left">
-                        {selectedDate
-                          ? startOfDay(
-                              parseISO(selectedDate + 'T00:00:00')
-                            ).toLocaleDateString()
-                          : 'Select Date'}
-                      </Text>
+                      {selectedDate
+                        ? startOfDay(
+                            parseISO(selectedDate + 'T00:00:00')
+                          ).toLocaleDateString()
+                        : 'Select Date'}
                     </Pill>
                   </Pressable>
                   <MealTimeSheet onSelect={setMealTag} mealTime={mealTag} />

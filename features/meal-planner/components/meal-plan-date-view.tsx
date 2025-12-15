@@ -1,17 +1,15 @@
-import { Image } from 'expo-image';
-import { CameraIcon, CookingPotIcon, Trash2Icon } from 'lucide-react-native';
+import { CookingPotIcon } from 'lucide-react-native';
 import { FlatList, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
-import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
-import { useTheme } from '../../../hooks/use-theme';
 import { Recipe } from '../../recipes/types';
-import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { MealPlanRecipe, MealTag } from '../types';
+
+import MealPlanMealCard from './meal-plan-meal-card';
 
 type MealPlanDateViewProps = {
   recipes: (MealPlanRecipe & { recipe: Recipe })[];
@@ -36,9 +34,6 @@ export const MealPlanDateView = ({
   recipes,
   onMealPress,
 }: MealPlanDateViewProps) => {
-  const theme = useTheme();
-  const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
-
   // Group recipes by meal time
   const groupedRecipes = recipes.reduce(
     (acc, recipe) => {
@@ -90,50 +85,12 @@ export const MealPlanDateView = ({
                 if (!recipe) return null;
 
                 return (
-                  <HapticPressable
+                  <MealPlanMealCard
                     key={mealPlanRecipe.id}
-                    onPress={() =>
-                      onMealPress({
-                        mealPlanRecipe,
-                        recipe,
-                      })
-                    }
-                  >
-                    <View className="w-full flex-row items-center gap-4 rounded-xl bg-muted px-4 py-2">
-                      <View className="size-14 items-center justify-center overflow-hidden rounded-sm bg-gray-200">
-                        {recipe.imageSrc ? (
-                          <Image
-                            source={{ uri: recipe.imageSrc }}
-                            style={{ width: '100%', height: '100%' }}
-                          />
-                        ) : (
-                          <Icon
-                            className="text-muted-foreground"
-                            as={CameraIcon}
-                            size={24}
-                          />
-                        )}
-                      </View>
-                      <View className="flex-1 flex-row justify-between">
-                        <Text className="text-lg font-semibold text-foreground">
-                          {recipe.name}
-                        </Text>
-                        <HapticPressable
-                          onPress={() =>
-                            removeRecipeFromMealPlan({
-                              mealPlanRecipeId: mealPlanRecipe.id,
-                            })
-                          }
-                        >
-                          <Icon
-                            as={Trash2Icon}
-                            size={20}
-                            color={theme.destructive}
-                          />
-                        </HapticPressable>
-                      </View>
-                    </View>
-                  </HapticPressable>
+                    mealPlanRecipe={mealPlanRecipe}
+                    recipe={recipe}
+                    onMealPress={onMealPress}
+                  />
                 );
               })}
             </View>
