@@ -1,6 +1,7 @@
 import { isSameDay } from 'date-fns';
 import { useRef } from 'react';
 import { ScrollView } from 'react-native';
+
 import { MealPlanDateSelectorDate } from './meal-plan-date-selector-date';
 
 type MealPlanDateSelectorProps = {
@@ -40,7 +41,7 @@ const MealPlanDateSelector = ({
   return (
     <ScrollView
       ref={scrollViewRef}
-      contentContainerClassName="flex-row items-center gap-4 px-4 py-4"
+      contentContainerClassName="flex-row items-center gap-3 px-4 py-4"
       className="flex-shrink-0 flex-grow-0"
       horizontal
       showsHorizontalScrollIndicator={false}
