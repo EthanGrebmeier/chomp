@@ -1,4 +1,8 @@
-import { SheetDetent, TrueSheet } from '@lodev09/react-native-true-sheet';
+import {
+  InsetAdjustment,
+  SheetDetent,
+  TrueSheet,
+} from '@lodev09/react-native-true-sheet';
 import { useColorScheme } from 'nativewind';
 import { ComponentProps, ReactElement, forwardRef } from 'react';
 import { TextInput as RNTextInput, View } from 'react-native';
@@ -19,6 +23,7 @@ type BottomSheetProps = {
   viewClassName?: string;
   detents?: SheetDetent[];
   footer?: ReactElement;
+  insetAdjustment?: InsetAdjustment;
 };
 
 export const BottomSheet = ({
@@ -30,6 +35,7 @@ export const BottomSheet = ({
   viewClassName,
   footer,
   detents,
+  insetAdjustment,
 }: BottomSheetProps) => {
   const colorscheme = useColorScheme();
 
@@ -49,6 +55,7 @@ export const BottomSheet = ({
       dimmedDetentIndex={0}
       pageSizing
       footer={footer}
+      insetAdjustment={insetAdjustment}
     >
       <View
         className={cn('px-4', viewClassName)}

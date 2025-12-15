@@ -11,7 +11,7 @@ import {
   startOfWeek,
   subDays,
 } from 'date-fns';
-import { Check, X } from 'lucide-react-native';
+import { Check } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
@@ -22,6 +22,7 @@ import { useTheme } from '../hooks/use-theme';
 
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './ui/button';
+import { CloseButton } from './ui/close-button';
 import { Icon } from './ui/icon';
 import { Text } from './ui/text';
 
@@ -296,32 +297,25 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
         onOpen={() => KeyboardController.dismiss()}
         onStartClose={onClose}
         ref={bottomSheetRef}
+        insetAdjustment="never"
       >
         <View className="gap-4">
-          {/* Custom header with close and confirm buttons */}
-          <View className="flex-row items-center justify-between">
-            <Button variant="ghost" size="icon" onPress={handleClose}>
-              <Icon as={X} color={theme.primary} size={28} />
-            </Button>
-
-            <Text className="text-2xl font-bold text-foreground">
-              {headerTitle}
-            </Text>
-
+          {/* Header with close and confirm buttons, centered title */}
+          <View className="flex-row items-center justify-between pb-2">
+            <CloseButton onPress={handleClose} />
+            <Text className="text-2xl font-bold">{headerTitle}</Text>
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon"
               onPress={handleConfirm}
               disabled={!internalSelectedDate}
             >
               <Icon
                 as={Check}
-                size={28}
+                size={20}
+                strokeWidth={3}
                 color={theme.primary}
-                className={cn(
-                  'text-foreground',
-                  !internalSelectedDate && 'opacity-50'
-                )}
+                className={cn(!internalSelectedDate && 'opacity-50')}
               />
             </Button>
           </View>
