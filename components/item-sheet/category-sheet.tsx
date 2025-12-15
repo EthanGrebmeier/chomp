@@ -105,7 +105,7 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
         </HapticPressable>
       </WithLayoutTransition>
 
-      <BottomSheet ignoreSafeArea ref={sheetRef} name="category-sheet">
+      <BottomSheet ref={sheetRef} name="category-sheet">
         <View className="flex-row items-center gap-2 pb-2">
           <BackButton onPress={() => sheetRef.current?.dismiss()} />
           <BottomSheet.Header title="Category" />

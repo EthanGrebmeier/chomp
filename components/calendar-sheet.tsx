@@ -294,7 +294,6 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
       <BottomSheet
         name={name}
         onOpen={() => KeyboardController.dismiss()}
-        ignoreSafeArea
         onStartClose={onClose}
         ref={bottomSheetRef}
       >

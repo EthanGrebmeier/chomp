@@ -40,7 +40,6 @@ const AddIngredientContents = ({ submitLabel }: { submitLabel: string }) => {
   return (
     <BottomSheet
       viewClassName="pb-4"
-      ignoreSafeArea
       name="add-ingredient-sheet"
       ref={sheetRef}
       onStartClose={reset}

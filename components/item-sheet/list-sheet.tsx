@@ -82,7 +82,7 @@ export const ListSheet = ({ listId, onSelect }: ListSheetProps) => {
         </HapticPressable>
       </WithLayoutTransition>
 
-      <BottomSheet ignoreSafeArea ref={sheetRef} name="list-sheet">
+      <BottomSheet ref={sheetRef} name="list-sheet">
         <View className="flex-row items-center gap-2 pb-2">
           <BackButton onPress={() => sheetRef.current?.dismiss()} />
           <BottomSheet.Header title="Select List" />
@@ -111,4 +111,3 @@ export const ListSheet = ({ listId, onSelect }: ListSheetProps) => {
     </>
   );
 };
-

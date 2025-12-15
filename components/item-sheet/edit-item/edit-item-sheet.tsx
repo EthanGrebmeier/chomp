@@ -3,10 +3,11 @@ import { createContext, useContext, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
 import { updateGroceryListItem } from '../../../features/grocery-list/instant/update-grocery-list-item';
 import {
   BaseGroceryItem,
-  GroceryListItem,
+  GroceryListItemWithRecipe,
 } from '../../../features/grocery-list/types';
 import { BottomSheet } from '../../bottom-sheet';
 import { ItemForm } from '../item-form';
@@ -14,7 +15,7 @@ import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 
 type EditItemContextType = {
-  present: (item: GroceryListItem) => void;
+  present: (item: GroceryListItemWithRecipe) => void;
 };
 
 const EditItemContext = createContext<EditItemContextType | null>(null);
@@ -34,7 +35,6 @@ const EditItemContents = () => {
   return (
     <BottomSheet
       viewClassName="pb-4"
-      ignoreSafeArea
       name="edit-item-sheet"
       ref={sheetRef}
       onStartClose={reset}
@@ -73,9 +73,18 @@ type EditItemProps = {
 const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const sheetRef = useRef<TrueSheet>(null);
-  const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
+  const setFromItemRef = useRef<
+    ((item: GroceryListItemWithRecipe) => void) | null
+  >(null);
 
-  const onSubmit = ({ item }: { item: BaseGroceryItem; listId?: string }) => {
+  const onSubmit = ({
+    item,
+    clearedRecipeId,
+  }: {
+    item: BaseGroceryItem;
+    listId?: string;
+    clearedRecipeId?: string;
+  }) => {
     if (!selectedItemId) return;
 
     updateGroceryListItem({
@@ -88,11 +97,20 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
         notes: item.notes,
       },
     });
+
+    // Unlink recipe if it was cleared
+    if (clearedRecipeId) {
+      unlinkRecipeFromItem({
+        itemId: selectedItemId,
+        recipeId: clearedRecipeId,
+      });
+    }
+
     toast.success(`${item.name} updated`);
     sheetRef.current?.dismiss();
   };
 
-  const present = (item: GroceryListItem) => {
+  const present = (item: GroceryListItemWithRecipe) => {
     setFromItemRef.current?.(item);
     setSelectedItemId(item.id);
     sheetRef.current?.present();
