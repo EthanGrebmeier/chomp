@@ -86,9 +86,11 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
 
   const openSheet = () => {
     ref.current?.present();
-    if (mode === 'item') {
-      itemInputRef.current?.focus();
-    }
+    setTimeout(() => {
+      if (mode === 'item') {
+        itemInputRef.current?.focus();
+      }
+    }, 100);
   };
 
   const handleClose = () => {
