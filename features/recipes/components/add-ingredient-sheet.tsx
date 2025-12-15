@@ -113,7 +113,6 @@ export const AddIngredientProvider = ({
       });
       toast.success(`${item.name} added`);
     }
-    sheetRef.current?.dismiss();
   };
 
   const present = (ingredient?: RecipeIngredient) => {
