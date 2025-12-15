@@ -6,7 +6,7 @@ export const clearGroceryList = async ({ listId }: { listId: string }) => {
       $: {
         where: {
           isDeleted: false,
-          'grocery_lists.id': listId,
+          'grocery_list.id': listId,
         },
       },
     },

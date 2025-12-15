@@ -28,6 +28,8 @@ export const GroceryListHeader = ({
   onDeleteOrLeave,
   onTitlePress,
 }: GroceryListHeaderProps) => {
+  const uncheckedItems = items.filter(item => !item.isChecked);
+
   return (
     <View className="px-4">
       <View className="flex-row items-center justify-between">
@@ -58,7 +60,7 @@ export const GroceryListHeader = ({
         )}
       </View>
       <Text className="text-lg text-muted-foreground">
-        {items.length} items
+        {uncheckedItems.length} items
       </Text>
     </View>
   );

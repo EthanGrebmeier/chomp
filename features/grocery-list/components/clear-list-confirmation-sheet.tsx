@@ -16,6 +16,11 @@ export const ClearListConfirmationSheet = ({
   onConfirm,
   onCancel,
 }: ClearListConfirmationSheetProps) => {
+  const handleConfirm = () => {
+    onConfirm();
+    ref.current?.dismiss();
+  };
+
   return (
     <BottomSheet name="clear-list-confirmation-sheet" ref={ref}>
       <BottomSheet.Header title="Clear Grocery List" />
@@ -25,7 +30,7 @@ export const ClearListConfirmationSheet = ({
           cannot be undone.
         </Text>
         <View className="gap-2">
-          <Button variant="destructive" onPress={onConfirm}>
+          <Button variant="destructive" onPress={handleConfirm}>
             <Text>Clear List</Text>
           </Button>
           <Button onPress={onCancel} variant="outline">
@@ -36,4 +41,3 @@ export const ClearListConfirmationSheet = ({
     </BottomSheet>
   );
 };
-
