@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { SearchIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
@@ -92,8 +92,8 @@ export const RecipeSelector = ({
   }
 
   return (
-    <View style={{ minHeight: 600 }}>
-      <View className="mb-3 flex-row items-center gap-2">
+    <View>
+      <View className="mb-3 flex-row items-center gap-2 px-4">
         <Icon as={SearchIcon} size={20} className="text-muted-foreground" />
         <TextInput
           className="flex-1"
@@ -119,34 +119,31 @@ export const RecipeSelector = ({
           )}
         </Animated.View>
       ) : (
-        <Animated.View
-          key="results"
-          entering={FadeIn.duration(150)}
-          exiting={FadeOut.duration(150)}
+        <ScrollView
+          className="px-4"
+          contentContainerClassName="pb-4"
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={false}
         >
-          <FlatList
-            data={filteredRecipes}
-            keyExtractor={item => item.id}
-            renderItem={({ item, index }) => (
-              <HapticPressable
-                onPress={() => onSelectRecipe(item)}
-                className={cn(
-                  'py-3',
-                  index < filteredRecipes.length - 1 && 'border-b border-border'
-                )}
-                hapticType="light"
-              >
-                <Text className="text-lg font-semibold text-foreground">
-                  {item.name}
-                </Text>
-                <Text className="text-sm text-muted-foreground">
-                  {item.recipe_ingredients.length} ingredients
-                </Text>
-              </HapticPressable>
-            )}
-            showsVerticalScrollIndicator={false}
-          />
-        </Animated.View>
+          {filteredRecipes.map((item, index) => (
+            <HapticPressable
+              key={item.id}
+              onPress={() => onSelectRecipe(item)}
+              className={cn(
+                'w-full py-3',
+                index < filteredRecipes.length - 1 && 'border-b border-border'
+              )}
+              hapticType="light"
+            >
+              <Text className="text-lg font-semibold text-foreground">
+                {item.name}
+              </Text>
+              <Text className="text-sm text-muted-foreground">
+                {item.recipe_ingredients.length} ingredients
+              </Text>
+            </HapticPressable>
+          ))}
+        </ScrollView>
       )}
     </View>
   );

@@ -1,6 +1,6 @@
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { SheetDetent, TrueSheet } from '@lodev09/react-native-true-sheet';
 import { PlusIcon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -84,6 +84,13 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
 
+  const detents = useMemo<SheetDetent[]>(() => {
+    if (mode === 'item') {
+      return ['auto'];
+    }
+    return [0.5, 1];
+  }, [mode]);
+
   const openSheet = () => {
     ref.current?.present();
     setTimeout(() => {
@@ -134,16 +141,23 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
           className="text-primary-foreground"
         />
       </Button>
-      <BottomSheet name="add-item-sheet" ref={ref} onStartClose={handleClose}>
+      <BottomSheet
+        detents={detents}
+        name="add-item-sheet"
+        ref={ref}
+        onStartClose={handleClose}
+        scrollable={true}
+        viewClassName="flex-1"
+      >
         <View>
           {!selectedRecipe && (
             <ModeToggle mode={mode} onModeChange={handleModeChange} />
           )}
           {mode === 'item' ? (
-            <>
+            <View className="px-4">
               <ItemForm />
               <MetaBar submitLabel="Create" />
-            </>
+            </View>
           ) : selectedRecipe ? (
             <IngredientSelector
               recipe={selectedRecipe}

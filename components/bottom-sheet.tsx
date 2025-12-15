@@ -24,6 +24,7 @@ type BottomSheetProps = {
   detents?: SheetDetent[];
   footer?: ReactElement;
   insetAdjustment?: InsetAdjustment;
+  scrollable?: boolean;
 };
 
 export const BottomSheet = ({
@@ -36,6 +37,7 @@ export const BottomSheet = ({
   footer,
   detents,
   insetAdjustment,
+  scrollable,
 }: BottomSheetProps) => {
   const colorscheme = useColorScheme();
 
@@ -56,11 +58,9 @@ export const BottomSheet = ({
       pageSizing
       footer={footer}
       insetAdjustment={insetAdjustment}
+      scrollable={scrollable}
     >
-      <View
-        className={cn('px-4', viewClassName)}
-        style={{ paddingTop: bottom }}
-      >
+      <View className={cn(viewClassName)} style={{ paddingTop: bottom }}>
         {children}
       </View>
     </TrueSheet>
