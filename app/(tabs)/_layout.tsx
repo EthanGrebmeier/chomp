@@ -1,13 +1,20 @@
 import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 
+import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { InstantClerkAuth } from '@/lib/instant/use-clerk-auth';
 
-import { useActiveMealPlan } from '../../features/meal-planner/hooks';
+import {
+  useActiveMealPlan,
+  useMealPlans,
+} from '../../features/meal-planner/hooks';
 import { useRecipes } from '../../features/recipes/hooks';
 
 export default function Layout() {
+  // Preload all essential queries for instant availability
   useActiveMealPlan();
+  useMealPlans();
   useRecipes();
+  useGroceryLists();
 
   return (
     <>

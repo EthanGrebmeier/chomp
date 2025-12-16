@@ -4,7 +4,9 @@ export const useMealPlans = () => {
   return db.useQuery({
     meal_plans: {
       meal_plan_recipes: {
-        recipe: {},
+        recipe: {
+          recipe_ingredients: {},
+        },
       },
     },
   });
