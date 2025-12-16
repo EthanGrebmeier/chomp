@@ -15,6 +15,20 @@
       "when": 1762841071932,
       "tag": "0001_thin_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1765921952997,
+      "tag": "0002_fluffy_amazoness",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1765922395224,
+      "tag": "0003_nappy_shadowcat",
+      "breakpoints": true
     }
   ]
 }

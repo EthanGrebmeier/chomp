@@ -7,11 +7,11 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import { removeSavedItem } from '../instant/remove-saved-item';
-import { SavedItem } from '../types';
+import { UnifiedSavedItem } from '../types';
+import { deleteSavedItem } from '../unified/delete-saved-item';
 
 type SavedItemRowProps = {
-  item: SavedItem;
+  item: UnifiedSavedItem;
   isLast: boolean;
   onDelete: () => void;
   onPress: () => void;
@@ -43,13 +43,13 @@ const SavedItemRow = ({
 };
 
 type SavedItemsListProps = {
-  items: SavedItem[];
-  onEditItem: (item: SavedItem) => void;
+  items: UnifiedSavedItem[];
+  onEditItem: (item: UnifiedSavedItem) => void;
 };
 
 export const SavedItemsList = ({ items, onEditItem }: SavedItemsListProps) => {
-  const handleDelete = (itemId: string) => {
-    removeSavedItem({ itemId });
+  const handleDelete = (item: UnifiedSavedItem) => {
+    deleteSavedItem({ item });
   };
 
   if (items.length === 0) {
@@ -75,7 +75,7 @@ export const SavedItemsList = ({ items, onEditItem }: SavedItemsListProps) => {
         <SavedItemRow
           item={item}
           isLast={index === sortedItems.length - 1}
-          onDelete={() => handleDelete(item.id)}
+          onDelete={() => handleDelete(item)}
           onPress={() => onEditItem(item)}
         />
       )}

@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 
 import { BaseGroceryItem } from '../../features/grocery-list/types';
-import { useSavedItems } from '../../features/saved-items/instant/use-saved-items';
+import { useUnifiedSavedItems } from '../../features/saved-items/unified/use-unified-saved-items';
 
 export const useMatchingItems = (
   value: string
 ): { matchingItems: BaseGroceryItem[] } => {
-  const { data: savedItems } = useSavedItems();
+  const { data: savedItems } = useUnifiedSavedItems();
 
   const matchingItems = useMemo((): BaseGroceryItem[] => {
     if (value.length === 0) {

@@ -15,10 +15,10 @@ import {
   useSavedItemSheet,
 } from '@/features/saved-items/components/add-saved-item-sheet';
 import { SavedItemsList } from '@/features/saved-items/components/saved-items-list';
-import { useSavedItems } from '@/features/saved-items/instant/use-saved-items';
+import { useUnifiedSavedItems } from '@/features/saved-items/unified/use-unified-saved-items';
 
 const SavedItemsContent = () => {
-  const { data: savedItems, isLoading } = useSavedItems();
+  const { data: savedItems, isLoading } = useUnifiedSavedItems();
   const { present } = useSavedItemSheet();
   const [searchQuery, setSearchQuery] = useState('');
 

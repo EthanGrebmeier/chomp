@@ -1,0 +1,1 @@
+ALTER TABLE `app_settings` ADD `hasSeededSavedItems` integer DEFAULT false NOT NULL;

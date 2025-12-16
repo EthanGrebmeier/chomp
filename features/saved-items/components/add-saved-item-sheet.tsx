@@ -14,11 +14,11 @@ import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { BaseGroceryItem } from '../../grocery-list/types';
 import { addSavedItem } from '../instant/add-saved-item';
-import { updateSavedItem } from '../instant/update-saved-item';
-import { SavedItem } from '../types';
+import { UnifiedSavedItem } from '../types';
+import { updateSavedItem } from '../unified/update-saved-item';
 
 type SavedItemSheetContextType = {
-  present: (item?: SavedItem) => void;
+  present: (item?: UnifiedSavedItem) => void;
 };
 
 const SavedItemSheetContext = createContext<SavedItemSheetContextType | null>(
@@ -95,7 +95,7 @@ type SavedItemSheetProviderProps = {
 export const SavedItemSheetProvider = ({
   children,
 }: SavedItemSheetProviderProps) => {
-  const [editingItem, setEditingItem] = useState<SavedItem | null>(null);
+  const [editingItem, setEditingItem] = useState<UnifiedSavedItem | null>(null);
   const sheetRef = useRef<TrueSheet>(null);
   const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
 
@@ -104,7 +104,7 @@ export const SavedItemSheetProvider = ({
   const onSubmit = ({ item }: { item: BaseGroceryItem }) => {
     if (isEditing && editingItem) {
       updateSavedItem({
-        itemId: editingItem.id,
+        item: editingItem,
         updates: {
           name: item.name,
           category: item.category,
@@ -120,7 +120,7 @@ export const SavedItemSheetProvider = ({
     }
   };
 
-  const present = (item?: SavedItem) => {
+  const present = (item?: UnifiedSavedItem) => {
     if (item) {
       setEditingItem(item);
       setFromItemRef.current?.({

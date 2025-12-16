@@ -17,6 +17,7 @@ export const appSettingsTable = sqliteTable('app_settings', {
   sortBy: text({ enum: ['name', 'recent'] })
     .notNull()
     .default('recent'),
+  hasSeededSavedItems: int({ mode: 'boolean' }).notNull().default(false),
   ...timestamps,
 });
 
@@ -120,3 +121,11 @@ export const recipeIngredientRelations = relations(
 export const mealPlanRelations = relations(mealPlanTable, ({ many }) => ({
   recipes: many(mealPlanRecipeTable),
 }));
+
+// Local saved items (default grocery items stored locally to save cloud storage)
+export const localSavedItemTable = sqliteTable('local_saved_item', {
+  id: text().primaryKey(),
+  name: text().notNull(),
+  category: text(),
+  ...timestamps,
+});
