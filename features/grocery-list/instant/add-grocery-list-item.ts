@@ -1,6 +1,7 @@
 import { id } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { addSavedItemIfNotExists } from '../../saved-items/instant/add-saved-item-if-not-exists';
 import { BaseGroceryItem } from '../types';
 
 export const addGroceryListItem = async ({
@@ -28,4 +29,10 @@ export const addGroceryListItem = async ({
       grocery_items: itemId,
     }),
   ]);
+
+  // Auto-save item to user's saved items if it doesn't exist
+  addSavedItemIfNotExists({
+    name: item.name,
+    category: item.category,
+  });
 };

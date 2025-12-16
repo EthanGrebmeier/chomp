@@ -6,6 +6,13 @@ const _schema = i.schema({
   entities: {
     $users: i.entity({
       email: i.string(),
+      hasInitializedSavedItems: i.boolean().optional(),
+    }),
+    saved_items: i.entity({
+      name: i.string(),
+      category: i.string().optional(),
+      createdAt: i.string(),
+      updatedAt: i.string(),
     }),
     grocery_lists: i.entity({
       name: i.string(),
@@ -138,6 +145,19 @@ const _schema = i.schema({
         on: 'recipes',
         has: 'many',
         label: 'meal_plan_recipes',
+      },
+    },
+    saved_items_users: {
+      forward: {
+        on: 'saved_items',
+        has: 'one',
+        label: 'user',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: '$users',
+        has: 'many',
+        label: 'saved_items',
       },
     },
   },

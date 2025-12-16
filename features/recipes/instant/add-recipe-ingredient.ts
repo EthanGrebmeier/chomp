@@ -1,6 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { addSavedItemIfNotExists } from '../../saved-items/instant/add-saved-item-if-not-exists';
 
 export type AddRecipeIngredientArgs = {
   recipeId: string;
@@ -36,6 +37,12 @@ export const addRecipeIngredient = async ({
       recipe: recipeId,
     }),
   ]);
+
+  // Auto-save ingredient to user's saved items if it doesn't exist
+  addSavedItemIfNotExists({
+    name,
+    category: category ?? undefined,
+  });
 
   return { id: ingredientId };
 };

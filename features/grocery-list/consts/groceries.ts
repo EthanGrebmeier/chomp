@@ -15,8 +15,10 @@ type HasDuplicates<T extends readonly unknown[]> = T extends readonly [
     : HasDuplicates<Rest>
   : false;
 
+type StoredGroceryItem = Pick<BaseGroceryItem, 'name' | 'category'>;
+
 // Helper function to enforce unique names at compile time
-function createGroceryList<const T extends readonly BaseGroceryItem[]>(
+function createGroceryList<const T extends readonly StoredGroceryItem[]>(
   items: HasDuplicates<ExtractNames<T>> extends true
     ? { error: 'Duplicate names found'; items: never }
     : T

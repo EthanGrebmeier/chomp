@@ -1,12 +1,31 @@
-import { groceries } from '../../features/grocery-list/consts/groceries';
+import { useMemo } from 'react';
 
-export const useMatchingItems = (value: string) => {
-  const matchingItems =
-    value.length > 0
-      ? groceries
-          .filter(item => item.name.toLowerCase().includes(value.toLowerCase()))
-          .slice(0, 7)
-          .sort((a, b) => b.name.localeCompare(a.name))
-      : [];
+import { BaseGroceryItem } from '../../features/grocery-list/types';
+import { useSavedItems } from '../../features/saved-items/instant/use-saved-items';
+
+export const useMatchingItems = (
+  value: string
+): { matchingItems: BaseGroceryItem[] } => {
+  const { data: savedItems } = useSavedItems();
+
+  const matchingItems = useMemo((): BaseGroceryItem[] => {
+    if (value.length === 0) {
+      return [];
+    }
+
+    return savedItems
+      .filter(item => item.name.toLowerCase().includes(value.toLowerCase()))
+      .slice(0, 7)
+      .sort((a, b) => b.name.localeCompare(a.name))
+      .map(
+        (item): BaseGroceryItem => ({
+          name: item.name,
+          category: item.category,
+          quantity: 1,
+          unit: 'each',
+        })
+      );
+  }, [savedItems, value]);
+
   return { matchingItems };
 };

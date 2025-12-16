@@ -1,10 +1,14 @@
 import { useAuth } from '@clerk/clerk-expo';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+
+import { initializeSavedItems } from '../../features/saved-items/instant/initialize-saved-items';
 
 import { db } from '.';
 
 export const InstantClerkAuth = () => {
   const { getToken } = useAuth();
+  const { user } = db.useAuth();
+  const initializationAttemptedRef = useRef(false);
 
   const signInToInstantWithClerkToken = async () => {
     // getToken gets the jwt from Clerk for your signed in user.
@@ -27,6 +31,41 @@ export const InstantClerkAuth = () => {
   useEffect(() => {
     signInToInstantWithClerkToken();
   }, []);
+
+  // Initialize saved items for new users
+  useEffect(() => {
+    const initializeSavedItemsForUser = async () => {
+      if (!user || initializationAttemptedRef.current) {
+        return;
+      }
+
+      initializationAttemptedRef.current = true;
+
+      // Query the user to check if they've already been initialized
+      const { data } = await db.queryOnce({
+        $users: {
+          $: {
+            where: {
+              id: user.id,
+            },
+          },
+        },
+      });
+
+      const currentUser = data?.$users?.[0];
+
+      // If user hasn't initialized saved items yet, do it now
+      if (currentUser && !currentUser.hasInitializedSavedItems) {
+        try {
+          await initializeSavedItems(user.id);
+        } catch (error) {
+          console.error('Failed to initialize saved items:', error);
+        }
+      }
+    };
+
+    initializeSavedItemsForUser();
+  }, [user]);
 
   return null;
 };

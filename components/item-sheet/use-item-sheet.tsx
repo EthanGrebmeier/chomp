@@ -31,6 +31,7 @@ const itemSheetContext = createContext<{
   reset: () => void;
   setFromItem: (item: GroceryListItemWithRecipe) => void;
   isValid: boolean;
+  disableAutocomplete: boolean;
 } | null>(null);
 
 export const useItemSheet = () => {
@@ -52,6 +53,7 @@ type ItemSheetProviderProps = {
   setFromItemRef?: React.RefObject<
     ((item: GroceryListItemWithRecipe) => void) | null
   >;
+  disableAutocomplete?: boolean;
 };
 
 export const ItemSheetProvider = ({
@@ -59,6 +61,7 @@ export const ItemSheetProvider = ({
   listId,
   onSubmit,
   setFromItemRef,
+  disableAutocomplete = false,
 }: ItemSheetProviderProps) => {
   const [selectedItem, setSelectedItem] = useState<BaseGroceryItem | null>(
     null
@@ -164,6 +167,7 @@ export const ItemSheetProvider = ({
         reset,
         setFromItem,
         isValid: !!itemInputValue.length && !!quantity && !!unit,
+        disableAutocomplete,
       }}
     >
       {children}

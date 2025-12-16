@@ -22,8 +22,12 @@ export const ItemInput = ({ placeholder }: ItemInputProps) => {
     onChangeItemText,
     onSelect,
     onSubmit,
+    disableAutocomplete,
   } = useItemSheet();
   const { matchingItems } = useMatchingItems(itemInputValue);
+
+  const shouldShowAutocomplete =
+    !disableAutocomplete && showMatchingItems && matchingItems.length > 0;
 
   return (
     <View className="w-full">
@@ -37,7 +41,7 @@ export const ItemInput = ({ placeholder }: ItemInputProps) => {
         autoCorrect={false}
         onSubmitEditing={onSubmit}
       />
-      {showMatchingItems && matchingItems.length > 0 && (
+      {shouldShowAutocomplete && (
         <Animated.View
           entering={FadeIn.duration(300)}
           exiting={FadeOut.duration(300)}

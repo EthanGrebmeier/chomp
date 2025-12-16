@@ -1,11 +1,13 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
+import { ChevronRightIcon, BookmarkIcon } from 'lucide-react-native';
 import { useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { Heading } from '@/components/text/heading';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 
 import { db } from '../../lib/instant';
@@ -28,6 +30,10 @@ export default function Settings() {
     }
   };
 
+  const handleNavigateToSavedItems = () => {
+    router.push('/saved-items');
+  };
+
   return (
     <View className="pt-safe flex-1 bg-background">
       <View className="px-4">
@@ -44,6 +50,28 @@ export default function Settings() {
             </Text>
           </View>
         )}
+
+        {/* Settings Menu */}
+        <View className="mb-8">
+          <Pressable
+            onPress={handleNavigateToSavedItems}
+            className="flex-row items-center justify-between rounded-xl bg-muted/50 p-4 active:opacity-70"
+          >
+            <View className="flex-row items-center gap-3">
+              <Icon
+                as={BookmarkIcon}
+                size={20}
+                className="text-muted-foreground"
+              />
+              <Text className="font-medium">My Saved Items</Text>
+            </View>
+            <Icon
+              as={ChevronRightIcon}
+              size={20}
+              className="text-muted-foreground"
+            />
+          </Pressable>
+        </View>
 
         <Button
           variant="destructive"
