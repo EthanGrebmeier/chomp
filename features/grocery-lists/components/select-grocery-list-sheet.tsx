@@ -145,7 +145,9 @@ export const SelectGroceryListSheet = forwardRef<
                     <DropdownMenuItemIcon ios={{ name: 'plus' }}>
                       <Icon as={PlusIcon} size={16} />
                     </DropdownMenuItemIcon>
-                    <DropdownMenuItemTitle>Create New List</DropdownMenuItemTitle>
+                    <DropdownMenuItemTitle>
+                      Create New List
+                    </DropdownMenuItemTitle>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     key="join"
@@ -161,7 +163,7 @@ export const SelectGroceryListSheet = forwardRef<
             }
           />
 
-          <View className="mt-4 gap-1">
+          <View className="mt-4 gap-1 pb-4">
             {lists?.grocery_lists.map(list => {
               const isSelected = list.id === selectedListId;
               const isOwner = user?.id === list.ownerId;
@@ -186,7 +188,11 @@ export const SelectGroceryListSheet = forwardRef<
                         {list.name}
                       </Text>
                       {isSelected && (
-                        <Icon as={CheckIcon} size={20} className="text-primary" />
+                        <Icon
+                          as={CheckIcon}
+                          size={20}
+                          className="text-primary"
+                        />
                       )}
                     </Pressable>
                   }
