@@ -36,35 +36,39 @@ const rules = {
   },
   recipe_ingredients: {
     allow: {
-      create: 'true',
+      create: 'isOwner',
       view: 'true',
-      update: 'true',
-      delete: 'true',
+      update: 'isOwner',
+      delete: 'isOwner',
     },
+    bind: ['isOwner', "auth.id in data.ref('recipe.user.id')"],
   },
   recipes: {
     allow: {
-      create: 'true',
+      create: 'isOwner',
       view: 'true || data.visibility == "public"',
-      update: 'true',
-      delete: 'true',
+      update: 'isOwner',
+      delete: 'isOwner',
     },
+    bind: ['isOwner', "auth.id in data.ref('user.id')"],
   },
   meal_plans: {
     allow: {
-      create: 'true',
-      view: 'true',
-      update: 'true',
-      delete: 'true',
+      create: 'isOwner',
+      view: 'isOwner',
+      update: 'isOwner',
+      delete: 'isOwner',
     },
+    bind: ['isOwner', "auth.id in data.ref('meal_plan.user.id')"],
   },
   meal_plan_recipes: {
     allow: {
-      create: 'true',
-      view: 'true',
-      update: 'true',
-      delete: 'true',
+      create: 'isOwner',
+      view: 'isOwner',
+      update: 'isOwner',
+      delete: 'isOwner',
     },
+    bind: ['isOwner', "auth.id in data.ref('meal_plan.user.id')"],
   },
   saved_items: {
     allow: {
