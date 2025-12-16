@@ -28,7 +28,7 @@ export const useEditItemSheet = () => {
 };
 
 const EditItemContents = () => {
-  const { reset } = useItemSheet();
+  const { reset, itemInputRef } = useItemSheet();
   const { sheetRef } = useEditItemSheetInternal();
 
   return (
@@ -37,6 +37,9 @@ const EditItemContents = () => {
       name="edit-item-sheet"
       ref={sheetRef}
       onStartClose={reset}
+      onOpen={() => {
+        itemInputRef.current?.focus();
+      }}
     >
       <BottomSheet.SheetView>
         <ItemForm />

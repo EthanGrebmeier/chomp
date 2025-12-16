@@ -93,11 +93,6 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
 
   const openSheet = () => {
     ref.current?.present();
-    setTimeout(() => {
-      if (mode === 'item') {
-        itemInputRef.current?.focus();
-      }
-    }, 100);
   };
 
   const handleClose = () => {
@@ -145,6 +140,9 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         detents={detents}
         name="add-item-sheet"
         ref={ref}
+        onOpen={() => {
+          itemInputRef.current?.focus();
+        }}
         onStartClose={handleClose}
         scrollable={true}
         viewClassName="flex-1"
