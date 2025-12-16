@@ -160,6 +160,19 @@ const _schema = i.schema({
         label: 'saved_items',
       },
     },
+    grocery_lists_owners: {
+      forward: {
+        on: 'grocery_lists',
+        has: 'one',
+        label: 'owner',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: '$users',
+        has: 'many',
+        label: 'grocery_lists',
+      },
+    },
   },
 });
 

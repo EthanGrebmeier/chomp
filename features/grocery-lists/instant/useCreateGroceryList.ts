@@ -14,17 +14,21 @@ export const useCreateGroceryList = () => {
     }
 
     await db.transact([
-      db.tx.grocery_lists[listId].create({
-        name,
-        joinCode,
-        ownerId: user.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }),
+      db.tx.grocery_lists[listId]
+        .create({
+          name,
+          joinCode,
+          ownerId: user.id,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        .link({
+          owner: user.id,
+        }),
       db.tx.grocery_list_shares[shareId]
         .create({
           grocery_list_id: listId,
-          user_id: user?.id,
+          user_id: user.id,
         })
         .link({
           grocery_list: listId,

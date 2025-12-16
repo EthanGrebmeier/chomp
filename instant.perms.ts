@@ -6,7 +6,7 @@ const rules = {
       create: 'true',
       view: 'isMember || isKnownList',
       update: 'isMember || isKnownList',
-      delete: 'isOwner',
+      delete: 'isOwner && hasMultipleLists',
     },
     bind: [
       'isOwner',
@@ -15,6 +15,8 @@ const rules = {
       "auth.id in data.ref('shares.user_id')",
       'isKnownList',
       'data.joinCode == ruleParams.knownJoinCode',
+      'hasMultipleLists',
+      "size(data.ref('owner.grocery_lists.id')) > 1",
     ],
   },
   grocery_list_shares: {

@@ -85,9 +85,9 @@ export const SelectGroceryListSheet = forwardRef<
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await deleteGroceryList(listId);
-            // If the deleted list was selected, clear selection
-            if (selectedListId === listId) {
+            const deleted = await deleteGroceryList(listId);
+            // If the deleted list was selected, select another list
+            if (deleted && selectedListId === listId) {
               const remainingLists = lists?.grocery_lists.filter(
                 l => l.id !== listId
               );
