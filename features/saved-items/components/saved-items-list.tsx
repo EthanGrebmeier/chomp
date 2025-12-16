@@ -3,6 +3,7 @@ import { FlatList, View } from 'react-native';
 import { CategoryTag } from '../../../components/category-tag';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
@@ -13,29 +14,40 @@ type SavedItemRowProps = {
   item: SavedItem;
   isLast: boolean;
   onDelete: () => void;
+  onPress: () => void;
 };
 
-const SavedItemRow = ({ item, isLast, onDelete }: SavedItemRowProps) => {
+const SavedItemRow = ({
+  item,
+  isLast,
+  onDelete,
+  onPress,
+}: SavedItemRowProps) => {
   return (
     <ListItem
       className={cn(!isLast && 'border-b border-dashed border-border')}
       onDelete={onDelete}
     >
-      <View className="flex-1 flex-row items-center justify-between py-1">
+      <HapticPressable
+        onPress={onPress}
+        hapticType="light"
+        className="flex-1 flex-row items-center justify-between py-1"
+      >
         <Text className="text-base font-medium text-foreground">
           {item.name}
         </Text>
         {item.category && <CategoryTag category={item.category} />}
-      </View>
+      </HapticPressable>
     </ListItem>
   );
 };
 
 type SavedItemsListProps = {
   items: SavedItem[];
+  onEditItem: (item: SavedItem) => void;
 };
 
-export const SavedItemsList = ({ items }: SavedItemsListProps) => {
+export const SavedItemsList = ({ items, onEditItem }: SavedItemsListProps) => {
   const handleDelete = (itemId: string) => {
     removeSavedItem({ itemId });
   };
@@ -64,6 +76,7 @@ export const SavedItemsList = ({ items }: SavedItemsListProps) => {
           item={item}
           isLast={index === sortedItems.length - 1}
           onDelete={() => handleDelete(item.id)}
+          onPress={() => onEditItem(item)}
         />
       )}
       keyExtractor={item => item.id}

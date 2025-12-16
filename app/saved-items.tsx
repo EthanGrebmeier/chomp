@@ -4,22 +4,22 @@ import { PlusIcon, SearchIcon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
-import { Heading } from '@/components/text/heading';
 import { TextInput } from '@/components/text-input';
+import { Heading } from '@/components/text/heading';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import {
-  AddSavedItemProvider,
-  useAddSavedItemSheet,
+  SavedItemSheetProvider,
+  useSavedItemSheet,
 } from '@/features/saved-items/components/add-saved-item-sheet';
 import { SavedItemsList } from '@/features/saved-items/components/saved-items-list';
 import { useSavedItems } from '@/features/saved-items/instant/use-saved-items';
 
 const SavedItemsContent = () => {
   const { data: savedItems, isLoading } = useSavedItems();
-  const { present } = useAddSavedItemSheet();
+  const { present } = useSavedItemSheet();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredItems = useMemo(() => {
@@ -43,11 +43,7 @@ const SavedItemsContent = () => {
       <View className="mt-4 px-4">
         <View className="relative">
           <View className="pointer-events-none absolute left-3 top-0 z-10 h-full justify-center">
-            <Icon
-              as={SearchIcon}
-              size={18}
-              className="text-muted-foreground"
-            />
+            <Icon as={SearchIcon} size={18} className="text-muted-foreground" />
           </View>
           <TextInput
             className="pl-10"
@@ -74,13 +70,13 @@ const SavedItemsContent = () => {
             <Text className="text-muted-foreground">Loading...</Text>
           </View>
         ) : (
-          <SavedItemsList items={filteredItems} />
+          <SavedItemsList items={filteredItems} onEditItem={present} />
         )}
       </View>
 
       {/* Add button */}
       <View className="absolute bottom-6 right-6 z-20">
-        <Button size="iconLg" onPress={present}>
+        <Button size="iconLg" onPress={() => present()}>
           <Icon
             as={PlusIcon}
             size={28}
@@ -101,9 +97,8 @@ export default function SavedItemsPage() {
   }
 
   return (
-    <AddSavedItemProvider>
+    <SavedItemSheetProvider>
       <SavedItemsContent />
-    </AddSavedItemProvider>
+    </SavedItemSheetProvider>
   );
 }
-

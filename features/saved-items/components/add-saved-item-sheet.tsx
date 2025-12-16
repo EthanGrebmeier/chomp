@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { createContext, useContext, useRef } from 'react';
+import { createContext, useContext, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -14,44 +14,48 @@ import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { BaseGroceryItem } from '../../grocery-list/types';
 import { addSavedItem } from '../instant/add-saved-item';
+import { updateSavedItem } from '../instant/update-saved-item';
+import { SavedItem } from '../types';
 
-type AddSavedItemContextType = {
-  present: () => void;
+type SavedItemSheetContextType = {
+  present: (item?: SavedItem) => void;
 };
 
-const AddSavedItemContext = createContext<AddSavedItemContextType | null>(null);
+const SavedItemSheetContext = createContext<SavedItemSheetContextType | null>(
+  null
+);
 
-export const useAddSavedItemSheet = () => {
-  const context = useContext(AddSavedItemContext);
+export const useSavedItemSheet = () => {
+  const context = useContext(SavedItemSheetContext);
   if (!context) {
     throw new Error(
-      'useAddSavedItemSheet must be used within an AddSavedItemProvider'
+      'useSavedItemSheet must be used within a SavedItemSheetProvider'
     );
   }
   return context;
 };
 
-const SavedItemMetaBar = () => {
+const SavedItemMetaBar = ({ submitLabel }: { submitLabel: string }) => {
   const { category, setCategory, onSubmit, isValid } = useItemSheet();
 
   return (
     <View className="mt-3 flex-row items-center justify-between gap-2">
       <CategorySheet category={category} onSelect={setCategory} />
       <Button variant="default" onPress={onSubmit} disabled={!isValid}>
-        <Text>Add</Text>
+        <Text>{submitLabel}</Text>
       </Button>
     </View>
   );
 };
 
-const AddSavedItemContents = () => {
+const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
   const { reset, itemInputRef } = useItemSheet();
-  const { sheetRef } = useAddSavedItemSheetInternal();
+  const { sheetRef } = useSavedItemSheetInternal();
 
   return (
     <BottomSheet
       viewClassName="pb-4"
-      name="add-saved-item-sheet"
+      name="saved-item-sheet"
       ref={sheetRef}
       onStartClose={reset}
       onOpen={() => {
@@ -60,59 +64,92 @@ const AddSavedItemContents = () => {
     >
       <BottomSheet.SheetView>
         <ItemInput placeholder="Item name" />
-        <SavedItemMetaBar />
+        <SavedItemMetaBar submitLabel={submitLabel} />
       </BottomSheet.SheetView>
     </BottomSheet>
   );
 };
 
 // Internal context for sharing the sheet ref
-type AddSavedItemInternalContextType = {
+type SavedItemSheetInternalContextType = {
   sheetRef: React.RefObject<TrueSheet | null>;
 };
 
-const AddSavedItemInternalContext =
-  createContext<AddSavedItemInternalContextType | null>(null);
+const SavedItemSheetInternalContext =
+  createContext<SavedItemSheetInternalContextType | null>(null);
 
-const useAddSavedItemSheetInternal = () => {
-  const context = useContext(AddSavedItemInternalContext);
+const useSavedItemSheetInternal = () => {
+  const context = useContext(SavedItemSheetInternalContext);
   if (!context) {
     throw new Error(
-      'useAddSavedItemSheetInternal must be used within an AddSavedItemProvider'
+      'useSavedItemSheetInternal must be used within a SavedItemSheetProvider'
     );
   }
   return context;
 };
 
-type AddSavedItemProviderProps = {
+type SavedItemSheetProviderProps = {
   children: React.ReactNode;
 };
 
-export const AddSavedItemProvider = ({
+export const SavedItemSheetProvider = ({
   children,
-}: AddSavedItemProviderProps) => {
+}: SavedItemSheetProviderProps) => {
+  const [editingItem, setEditingItem] = useState<SavedItem | null>(null);
   const sheetRef = useRef<TrueSheet>(null);
+  const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
+
+  const isEditing = !!editingItem;
 
   const onSubmit = ({ item }: { item: BaseGroceryItem }) => {
-    addSavedItem({
-      name: item.name,
-      category: item.category,
-    });
-    toast.success(`${item.name} added to saved items`);
+    if (isEditing && editingItem) {
+      updateSavedItem({
+        itemId: editingItem.id,
+        updates: {
+          name: item.name,
+          category: item.category,
+        },
+      });
+      toast.success(`${item.name} updated`);
+    } else {
+      addSavedItem({
+        name: item.name,
+        category: item.category,
+      });
+      toast.success(`${item.name} added to saved items`);
+    }
   };
 
-  const present = () => {
+  const present = (item?: SavedItem) => {
+    if (item) {
+      setEditingItem(item);
+      setFromItemRef.current?.({
+        name: item.name,
+        quantity: 1,
+        unit: 'each',
+        category: item.category ?? undefined,
+      });
+    } else {
+      setEditingItem(null);
+    }
     sheetRef.current?.present();
   };
 
   return (
-    <AddSavedItemContext.Provider value={{ present }}>
-      <AddSavedItemInternalContext.Provider value={{ sheetRef }}>
-        <ItemSheetProvider onSubmit={onSubmit} disableAutocomplete>
-          <AddSavedItemContents />
+    <SavedItemSheetContext.Provider value={{ present }}>
+      <SavedItemSheetInternalContext.Provider value={{ sheetRef }}>
+        <ItemSheetProvider
+          onSubmit={onSubmit}
+          setFromItemRef={setFromItemRef}
+          disableAutocomplete
+        >
+          <SavedItemSheetContents submitLabel={isEditing ? 'Update' : 'Add'} />
           {children}
         </ItemSheetProvider>
-      </AddSavedItemInternalContext.Provider>
-    </AddSavedItemContext.Provider>
+      </SavedItemSheetInternalContext.Provider>
+    </SavedItemSheetContext.Provider>
   );
 };
+
+// Keep the old export for backwards compatibility
+export const AddSavedItemProvider = SavedItemSheetProvider;
