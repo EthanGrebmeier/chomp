@@ -1,35 +1,14 @@
-import { useAuth, useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import { BookmarkIcon, ChevronRightIcon } from 'lucide-react-native';
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
-import { toast } from 'sonner-native';
+import { Pressable, View } from 'react-native';
 
 import { Heading } from '@/components/text/heading';
-import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 
-import { db } from '../../lib/instant';
+import Account from '../../features/settings/components/account';
 
 export default function Settings() {
-  const { signOut } = useAuth();
-  const { user } = useUser();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-    try {
-      await signOut();
-      await db.auth.signOut();
-    } catch (error) {
-      toast.error('Failed to sign out. Please try again.');
-    } finally {
-      setIsSigningOut(false);
-      router.replace('/(auth)/sign-in-email');
-    }
-  };
-
   const handleNavigateToSavedItems = () => {
     router.push('/saved-items');
   };
@@ -40,30 +19,7 @@ export default function Settings() {
         <Heading>Settings</Heading>
       </View>
       <View className="flex-1 gap-4 px-4 pt-6">
-        {user?.primaryEmailAddress && (
-          <View className="gap-4 rounded-xl bg-muted/50 p-4">
-            <View>
-              <Text variant="muted" className="mb-1">
-                Signed in as
-              </Text>
-              <Text className="font-medium">
-                {user.primaryEmailAddress.emailAddress}
-              </Text>
-            </View>
-            <Button
-              variant="destructive"
-              onPress={handleSignOut}
-              disabled={isSigningOut}
-              className="w-full"
-            >
-              {isSigningOut ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text>Sign Out</Text>
-              )}
-            </Button>
-          </View>
-        )}
+        <Account />
 
         {/* Settings Menu */}
         <View className="mb-8">

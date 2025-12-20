@@ -1,5 +1,3 @@
-import { useAuth } from '@clerk/clerk-expo';
-import { Redirect } from 'expo-router';
 import { PlusIcon, SearchIcon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -90,12 +88,6 @@ const SavedItemsContent = () => {
 };
 
 export default function SavedItemsPage() {
-  const { isSignedIn } = useAuth();
-
-  if (!isSignedIn) {
-    return <Redirect href="/(auth)/sign-in-email" />;
-  }
-
   return (
     <SavedItemSheetProvider>
       <SavedItemsContent />

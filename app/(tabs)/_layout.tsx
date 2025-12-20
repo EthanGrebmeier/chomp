@@ -1,7 +1,7 @@
 import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
-import { InstantClerkAuth } from '@/lib/instant/use-clerk-auth';
+import { InstantAuthHandler } from '@/lib/instant/use-clerk-auth';
 
 import {
   useActiveMealPlan,
@@ -18,7 +18,7 @@ export default function Layout() {
 
   return (
     <>
-      <InstantClerkAuth />
+      <InstantAuthHandler />
       <NativeTabs>
         <NativeTabs.Trigger name="index">
           <Icon sf="square.and.pencil" />

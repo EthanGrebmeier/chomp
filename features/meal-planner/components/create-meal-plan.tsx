@@ -52,7 +52,7 @@ export const CreateMealPlan = () => {
         onPress={handleCreateMealPlan}
         disabled={createMealPlan.isPending}
         size="sm"
-        variant="outline"
+        variant="secondary"
       >
         <Text className="leading-6">
           {createMealPlan.isPending ? 'Creating...' : 'Create Meal Plan'}

@@ -1,10 +1,9 @@
-import { ClerkLoaded, ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
 import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { PortalHost } from '@rn-primitives/portal';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SQLite from 'expo-sqlite';
-import { useEffect } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
@@ -28,24 +27,6 @@ if (!publishableKey) {
 }
 
 function InitialLayout() {
-  const { isSignedIn, isLoaded } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (isSignedIn && inAuthGroup) {
-      // User is signed in but on an auth screen, redirect to main app
-      router.replace('/(tabs)');
-    } else if (!isSignedIn && !inAuthGroup) {
-      // User is not signed in and not on an auth screen, redirect to sign in
-      router.replace('/(auth)/sign-in-email');
-    }
-  }, [isSignedIn, isLoaded, segments, router]);
-
   return (
     <View className="flex-1 bg-background">
       <Stack
