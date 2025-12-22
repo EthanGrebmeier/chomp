@@ -10,7 +10,8 @@ import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 
-const AnimatedHapticPressable = Animated.createAnimatedComponent(HapticPressable);
+const AnimatedHapticPressable =
+  Animated.createAnimatedComponent(HapticPressable);
 
 const buttonVariants = cva(
   cn(
@@ -151,7 +152,7 @@ function Button({
 
   const handlePressIn = (event: GestureResponderEvent) => {
     scale.value = withSpring(0.97, {
-      damping: 20,
+      damping: 80,
       stiffness: 600,
     });
     onPressIn?.(event);
