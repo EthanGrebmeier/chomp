@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { toast } from 'sonner-native';
@@ -35,16 +36,14 @@ const Account = () => {
         </View>
         <Button
           variant="default"
-          onPress={handleSignOut}
-          disabled={isSigningOut}
+          onPress={() => router.push('/(auth)/sign-up-email')}
           className="w-full"
         >
           <Text> Create an Account </Text>
         </Button>
         <Button
           variant="secondary"
-          onPress={handleSignOut}
-          disabled={isSigningOut}
+          onPress={() => router.push('/(auth)/sign-in-email')}
           className="w-full"
         >
           <Text> Sign in with email </Text>
