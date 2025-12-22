@@ -5,7 +5,9 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { TextInput } from '../../../components/text-input';
+import { Button } from '../../../components/ui/button';
 import { CloseButton } from '../../../components/ui/close-button';
+import { Text } from '../../../components/ui/text';
 import { useCreateGroceryList } from '../instant/useCreateGroceryList';
 
 export type CreateGroceryListSheetRef = {
@@ -78,6 +80,9 @@ export const CreateGroceryListSheet = forwardRef<
             returnKeyType="done"
           />
         </View>
+        <Button>
+          <Text>Create List</Text>
+        </Button>
       </BottomSheet.SheetView>
     </BottomSheet>
   );
