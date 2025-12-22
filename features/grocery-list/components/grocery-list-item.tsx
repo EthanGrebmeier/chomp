@@ -91,7 +91,7 @@ export const GroceryListItem = ({
         hapticType="light"
       >
         <View className="flex-row items-center justify-between">
-          <View className="relative">
+          <View className="relative flex-1">
             <Text
               className={cn(
                 'text-xl font-medium text-foreground',
@@ -115,11 +115,13 @@ export const GroceryListItem = ({
               ]}
             />
           </View>
-          <Text className="text-lg text-muted-foreground">
-            {item.unit === 'each' && 'x'}
-            {item.quantity}
-            {item.unit !== 'each' && ` ${item.unit}`}
-          </Text>
+          <View className="w-12 shrink-0 items-end justify-center">
+            <Text className="text-lg text-muted-foreground">
+              {item.unit === 'each' && 'x'}
+              {item.quantity}
+              {item.unit !== 'each' && ` ${item.unit}`}
+            </Text>
+          </View>
         </View>
         {(item.recipe ?? item.category) && (
           <View className="flex-row items-center gap-2">
