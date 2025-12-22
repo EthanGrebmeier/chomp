@@ -14,6 +14,8 @@ import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 
+import { BackButton } from '../../components/ui/back-button';
+
 export default function SignInEmail() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
@@ -86,6 +88,9 @@ export default function SignInEmail() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <View className="top-safe absolute left-4 ">
+        <BackButton />
+      </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
