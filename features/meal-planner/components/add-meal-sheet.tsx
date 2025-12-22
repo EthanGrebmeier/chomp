@@ -11,7 +11,6 @@ import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddRecipeToMealPlan } from '../hooks/useAddRecipeToMealPlan';
-import { MealTag } from '../types';
 
 import { MealTimeSheet } from './meal-time-sheet';
 
@@ -25,7 +24,7 @@ export type AddMealSheetRef = {
 
 export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
   (props, ref) => {
-    const [mealTag, setMealTag] = useState<MealTag | undefined>(undefined);
+    const [mealTag, setMealTag] = useState<string | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<string | undefined>(
       undefined
     );
@@ -50,6 +49,7 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
 
     const handleSelectRecipe = (recipe: RecipeWithIngredients) => {
       setSelectedRecipe(recipe);
+      setMealTag(recipe.mealTag ?? undefined);
     };
 
     const handleBackToRecipes = () => {
