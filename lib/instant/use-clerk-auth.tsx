@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import { ActivityIndicator } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
+import { useInitializeDefaultGroceryList } from '../../features/grocery-lists/instant/useInitializeDefaultGroceryList';
+
 import { db } from '.';
 
 export const InstantAuthHandler = () => {
@@ -13,6 +15,9 @@ export const InstantAuthHandler = () => {
     error: errorInstant,
     user: userInstant,
   } = db.useAuth();
+
+  // Initialize default grocery list for new users
+  useInitializeDefaultGroceryList();
 
   const signInToInstant = async () => {
     // getToken gets the jwt from Clerk for your signed in user.

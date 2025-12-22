@@ -7,6 +7,7 @@ const _schema = i.schema({
     $users: i.entity({
       email: i.string(),
       hasInitializedSavedItems: i.boolean().optional(),
+      hasInitializedGroceryList: i.boolean().optional(),
     }),
     saved_items: i.entity({
       name: i.string(),

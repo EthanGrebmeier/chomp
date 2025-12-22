@@ -43,9 +43,6 @@ export default function List() {
 
       if (!activeListId && lists?.grocery_lists.length) {
         setActiveListId(lists.grocery_lists[0].id);
-      } else if (!activeListId && !lists?.grocery_lists.length) {
-        const { listId } = await createGroceryList('Shopping List');
-        setActiveListId(listId);
       }
     };
 
