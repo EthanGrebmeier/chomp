@@ -55,7 +55,10 @@ export const ItemInput = ({ placeholder }: ItemInputProps) => {
                 )}
                 onPress={() => onSelect(item)}
               >
-                <Text className={cn('text-lg font-bold text-black')}>
+                <Text
+                  allowFontScaling={false}
+                  className={cn('text-lg font-bold text-black')}
+                >
                   {item.name}
                 </Text>
               </HapticPressable>
