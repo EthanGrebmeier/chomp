@@ -31,11 +31,7 @@ export const MigrationProvider = ({
   }
 
   if (!success) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-2xl font-bold">Loading migrations</Text>
-      </View>
-    );
+    return null;
   }
 
   return <>{children}</>;
