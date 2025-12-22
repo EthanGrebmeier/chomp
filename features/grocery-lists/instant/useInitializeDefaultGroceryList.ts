@@ -24,13 +24,7 @@ export const useInitializeDefaultGroceryList = () => {
 
       // Check if user has already been initialized
       const { data } = await db.queryOnce({
-        $users: {
-          $: {
-            where: {
-              id: user.id,
-            },
-          },
-        },
+        $users: {},
       });
 
       const currentUser = data?.$users?.[0];
@@ -77,4 +71,3 @@ export const useInitializeDefaultGroceryList = () => {
     });
   }, [user, isLoading]);
 };
-
