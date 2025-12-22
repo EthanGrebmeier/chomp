@@ -6,12 +6,14 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
+import { MealTimeSheet } from '../../meal-planner/components/meal-time-sheet';
 
 type CreateRecipeSheetProps = {
   onSubmit: (data: { name: string }) => void;
   onClose?: () => void;
   defaultValues?: {
     name: string;
+    mealTag?: string;
   } | null;
 };
 
@@ -26,6 +28,7 @@ export const CreateRecipeSheet = forwardRef<
 >(({ onSubmit, onClose, defaultValues }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
   const [name, setName] = useState(defaultValues?.name ?? '');
+  const [mealTag, setMealTag] = useState<string | undefined>(undefined);
   const nameInputRef = useRef<TextInput>(null);
   const isEditing = !!defaultValues;
 
@@ -33,6 +36,7 @@ export const CreateRecipeSheet = forwardRef<
     present: () => {
       // Reset or set initial values when opening
       setName(defaultValues?.name ?? '');
+      setMealTag(defaultValues?.mealTag ?? undefined);
       nameInputRef.current?.focus();
       sheetRef.current?.present();
     },
@@ -79,6 +83,7 @@ export const CreateRecipeSheet = forwardRef<
               autoFocus
             />
           </View>
+          <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
         </View>
 
         <Button

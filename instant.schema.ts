@@ -45,6 +45,7 @@ const _schema = i.schema({
       visibility: i.string(),
       createdAt: i.string(),
       updatedAt: i.string(),
+      mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
     }),
     recipe_ingredients: i.entity({
       name: i.string(),

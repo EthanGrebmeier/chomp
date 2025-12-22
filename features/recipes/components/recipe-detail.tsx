@@ -37,12 +37,12 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
         />
       </View>
       {/* Header */}
-      <View className="w-full flex-row gap-2 px-4">
+      <View className="w-full gap-2 px-4">
         <View className="flex-row gap-4">
           <View>
             <Heading>{recipe.name}</Heading>
             <Text className="text-lg text-muted-foreground">
-              {recipe.recipe_ingredients.length} ingredients
+              {recipe.mealTag}
             </Text>
           </View>
         </View>

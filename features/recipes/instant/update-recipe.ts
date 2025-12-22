@@ -9,6 +9,7 @@ export type UpdateRecipeArgs = {
     description?: string;
     imageSrc?: string;
     visibility?: string;
+    mealTag?: string;
   };
 };
 

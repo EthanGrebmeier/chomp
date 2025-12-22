@@ -8,6 +8,7 @@ export type CreateRecipeArgs = {
     description?: string;
     imageSrc?: string;
     visibility?: string;
+    mealTag?: string;
   };
   ingredients: {
     name: string;
@@ -39,6 +40,7 @@ export const createRecipe = async ({
       visibility: recipe.visibility ?? 'private',
       createdAt: now,
       updatedAt: now,
+      mealTag: recipe.mealTag ?? undefined,
     }),
     tx.recipes[recipeId].link({
       user: user.id,

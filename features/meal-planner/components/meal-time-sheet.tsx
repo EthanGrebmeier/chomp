@@ -18,10 +18,9 @@ import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import { MealTag } from '../types';
 
 type MealTimeOptionType = {
-  value: MealTag;
+  value: string;
   label: string;
   icon: LucideIcon;
 };
@@ -70,11 +69,16 @@ const MealTimeOption = ({
 );
 
 type MealTimeSheetProps = {
-  mealTime?: MealTag;
-  onSelect: (mealTime?: MealTag) => void;
+  mealTime?: string;
+  onSelect: (mealTime?: string) => void;
+  canGoBack?: boolean;
 };
 
-export const MealTimeSheet = ({ mealTime, onSelect }: MealTimeSheetProps) => {
+export const MealTimeSheet = ({
+  mealTime,
+  onSelect,
+  canGoBack = true,
+}: MealTimeSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
 
   const selectedMealTime = mealTimeOptions.find(opt => opt.value === mealTime);
@@ -83,7 +87,7 @@ export const MealTimeSheet = ({ mealTime, onSelect }: MealTimeSheetProps) => {
     sheetRef.current?.present();
   };
 
-  const handleSelect = (value?: MealTag) => {
+  const handleSelect = (value?: string) => {
     onSelect(value);
     sheetRef.current?.dismiss();
   };
@@ -109,7 +113,9 @@ export const MealTimeSheet = ({ mealTime, onSelect }: MealTimeSheetProps) => {
       <BottomSheet ref={sheetRef} name="meal-time-sheet">
         <BottomSheet.SheetView>
           <View className="flex-row items-center gap-2 pb-2">
-            <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            {canGoBack && (
+              <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            )}
             <BottomSheet.Header title="Meal Time" />
           </View>
           <ScrollView

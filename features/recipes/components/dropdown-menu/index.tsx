@@ -228,7 +228,7 @@ export const RecipeDropdownMenu = ({
       <CreateRecipeSheet
         ref={createRecipeSheetRef}
         onSubmit={handleEditRecipe}
-        defaultValues={{ name: recipe.name }}
+        defaultValues={{ name: recipe.name, mealTag: recipe.mealTag }}
       />
       <SelectGroceryListSheet
         ref={selectListSheetRef}
