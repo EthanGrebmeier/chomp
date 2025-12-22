@@ -1,21 +1,15 @@
-import { useAuth } from '@clerk/clerk-expo';
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { RecipeDetail } from '@/features/recipes/components/recipe-detail';
 import { useRecipe } from '@/features/recipes/hooks/useRecipe';
 
 export default function RecipeDetailPage() {
-  const { isSignedIn } = useAuth();
   const { recipeId } = useLocalSearchParams<{
     recipeId: string;
   }>();
 
   const { data: recipe, isLoading } = useRecipe(recipeId);
-
-  if (!isSignedIn) {
-    return <Redirect href="/(auth)/sign-in-email" />;
-  }
 
   if (isLoading) {
     return (

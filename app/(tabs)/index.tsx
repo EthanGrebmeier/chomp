@@ -38,16 +38,19 @@ export default function List() {
 
   // Set default list if none selected
   useEffect(() => {
-    const setDefaultList = async () => {
-      if (lists && !activeListId) {
-        if (lists.grocery_lists.length > 0) {
-          setActiveListId(lists.grocery_lists[0].id);
-        }
+    const setOrCreateDefaultList = async () => {
+      if (listsLoading) return;
+
+      if (!activeListId && lists?.grocery_lists.length) {
+        setActiveListId(lists.grocery_lists[0].id);
+      } else if (!activeListId && !lists?.grocery_lists.length) {
+        const { listId } = await createGroceryList('Shopping List');
+        setActiveListId(listId);
       }
     };
 
-    setDefaultList();
-  }, [lists, activeListId, createGroceryList]);
+    setOrCreateDefaultList();
+  }, [lists, activeListId, createGroceryList, listsLoading]);
 
   const activeList = lists?.grocery_lists.find(
     list => list.id === activeListId

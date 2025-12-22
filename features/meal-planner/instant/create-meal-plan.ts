@@ -11,6 +11,11 @@ export type CreateMealPlanArgs = {
 };
 
 export const createMealPlan = async ({ mealPlan }: CreateMealPlanArgs) => {
+  const user = await db.getAuth();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
   const mealPlanId = id();
   const now = new Date().toISOString();
 
@@ -36,7 +41,6 @@ export const createMealPlan = async ({ mealPlan }: CreateMealPlanArgs) => {
       })
     );
   }
-
   // Create the new meal plan
   transactions.push(
     tx.meal_plans[mealPlanId].update({
@@ -46,6 +50,9 @@ export const createMealPlan = async ({ mealPlan }: CreateMealPlanArgs) => {
       isArchived: false,
       createdAt: now,
       updatedAt: now,
+    }),
+    tx.meal_plans[mealPlanId].link({
+      user: user.id,
     })
   );
 

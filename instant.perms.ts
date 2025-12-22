@@ -47,8 +47,8 @@ const rules = {
   },
   recipes: {
     allow: {
-      create: 'isOwner',
-      view: 'true || data.visibility == "public"',
+      create: 'auth.id != null',
+      view: 'isOwner || data.visibility == "public"',
       update: 'isOwner',
       delete: 'isOwner',
     },
@@ -56,12 +56,12 @@ const rules = {
   },
   meal_plans: {
     allow: {
-      create: 'isOwner',
+      create: 'auth.id != null',
       view: 'isOwner',
       update: 'isOwner',
       delete: 'isOwner',
     },
-    bind: ['isOwner', "auth.id in data.ref('meal_plan.user.id')"],
+    bind: ['isOwner', "auth.id in data.ref('user.id')"],
   },
   meal_plan_recipes: {
     allow: {

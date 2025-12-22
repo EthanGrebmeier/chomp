@@ -23,6 +23,11 @@ export const createRecipe = async ({
   recipe,
   ingredients,
 }: CreateRecipeArgs) => {
+  const user = await db.getAuth();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
   const recipeId = id();
   const now = new Date().toISOString();
 
@@ -34,6 +39,9 @@ export const createRecipe = async ({
       visibility: recipe.visibility ?? 'private',
       createdAt: now,
       updatedAt: now,
+    }),
+    tx.recipes[recipeId].link({
+      user: user.id,
     }),
   ];
 

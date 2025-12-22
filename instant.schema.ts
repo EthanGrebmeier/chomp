@@ -173,6 +173,32 @@ const _schema = i.schema({
         label: 'grocery_lists',
       },
     },
+    recipes_users: {
+      forward: {
+        on: 'recipes',
+        has: 'one',
+        label: 'user',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: '$users',
+        has: 'many',
+        label: 'recipes',
+      },
+    },
+    meal_plans_users: {
+      forward: {
+        on: 'meal_plans',
+        has: 'one',
+        label: 'user',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: '$users',
+        has: 'many',
+        label: 'meal_plans',
+      },
+    },
   },
 });
 

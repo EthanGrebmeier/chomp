@@ -1,5 +1,4 @@
-import { useAuth } from '@clerk/clerk-expo';
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 
 import { Heading } from '@/components/text/heading';
@@ -9,13 +8,8 @@ import { useMealPlan } from '@/features/meal-planner/hooks/useMealPlan';
 import { BackButton } from '../../components/ui/back-button';
 
 export default function MealPlanDetailPage() {
-  const { isSignedIn } = useAuth();
   const { mealPlanId } = useLocalSearchParams<{ mealPlanId: string }>();
   const { data: mealPlan, isLoading } = useMealPlan(mealPlanId!);
-
-  if (!isSignedIn) {
-    return <Redirect href="/(auth)/sign-in-email" />;
-  }
 
   if (isLoading) {
     return (
