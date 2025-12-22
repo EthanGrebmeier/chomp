@@ -7,6 +7,7 @@ import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { Recipe } from '../../recipes/types';
+import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { MealPlanRecipe, MealTag } from '../types';
 
 import MealPlanMealCard from './meal-plan-meal-card';
@@ -58,7 +59,12 @@ export const MealPlanDateView = ({
         exiting={FadeOut.duration(140)}
         className="flex-1 items-center justify-center gap-2 px-4"
       >
-        <Icon as={CookingPotIcon} size={48} className="text-muted-foreground" />
+        <Icon
+          as={CookingPotIcon}
+          size={48}
+          className="text-muted-foreground"
+          style={{ marginTop: -NATIVE_TABS_OFFSET }}
+        />
         <EmptyHeading>No meals planned</EmptyHeading>
         <EmptySubtext>Tap the + button to add a meal</EmptySubtext>
       </Animated.View>
