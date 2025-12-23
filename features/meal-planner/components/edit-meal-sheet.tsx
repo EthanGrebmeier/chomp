@@ -21,7 +21,7 @@ import { navigation } from '../../../lib/navigation';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
-import { MealPlanRecipe, MealTag } from '../types';
+import { MealPlanRecipe } from '../types';
 
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 import { MealTimeSheet } from './meal-time-sheet';
@@ -46,7 +46,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const [currentView, setCurrentView] = useState<'recipe' | 'search'>(
       'recipe'
     );
-    const [mealTag, setMealTag] = useState<MealTag | undefined>(undefined);
+    const [mealTag, setMealTag] = useState<string | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<string | undefined>(
       undefined
     );
@@ -70,7 +70,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         setSelectedDate(mealPlanRecipe.date);
         setSelectedRecipe(recipe);
         setMealPlanRecipeToEdit(mealPlanRecipe);
-        setMealTag((mealPlanRecipe.mealTag as MealTag) ?? undefined);
+        setMealTag(mealPlanRecipe.mealTag ?? undefined);
         setCurrentView('recipe');
         sheetRef.current?.present();
       },

@@ -1,12 +1,11 @@
 import { tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
-import { MealTag } from '../types';
 
 export type UpdateMealPlanRecipeArgs = {
   mealPlanRecipeId: string;
   updates: {
-    mealTag?: MealTag;
+    mealTag?: string;
     servings?: number;
     order?: number;
     recipeId?: string;
