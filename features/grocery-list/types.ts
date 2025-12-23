@@ -9,7 +9,7 @@ export type GroceryListItemWithRecipe = GroceryListItem & {
 
 export type BaseGroceryItem = Omit<
   GroceryListItem,
-  'id' | 'isChecked' | 'createdAt' | 'updatedAt'
+  'id' | 'isChecked' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'
 >;
 
 export type GroceryListItem = {
@@ -22,4 +22,6 @@ export type GroceryListItem = {
   createdAt: string;
   updatedAt: string;
   isChecked: boolean;
+  isDeleted: boolean;
+  deletedAt?: string;
 };
