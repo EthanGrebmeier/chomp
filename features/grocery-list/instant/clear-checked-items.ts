@@ -1,23 +1,35 @@
+import { useMutation } from '@tanstack/react-query';
+
 import { db } from '../../../lib/instant';
+import { GroceryListItem } from '../types';
 
-export const clearCheckedItems = async () => {
-  const { data: checkedItems } = await db.queryOnce({
-    grocery_items: {
-      $: {
-        where: {
-          isChecked: true,
-          isDeleted: false,
-        },
-      },
-    },
-  });
+type clearCheckedItemsArgs = {
+  itemIds: string[];
+};
 
+const clearCheckedItems = async ({ itemIds }: clearCheckedItemsArgs) => {
   return db.transact(
-    checkedItems.grocery_items.map(item =>
-      db.tx.grocery_items[item.id].update({
+    itemIds.map(itemId =>
+      db.tx.grocery_items[itemId].update({
         isDeleted: true,
         deletedAt: new Date().toISOString(),
       })
     )
   );
+};
+
+type useClearCheckedItemsArgs = {
+  groceryItems: GroceryListItem[];
+};
+
+export const useClearCheckedItems = ({
+  groceryItems,
+}: useClearCheckedItemsArgs) => {
+  const checkedItemIds = groceryItems
+    .filter(item => item.isChecked)
+    .map(item => item.id);
+
+  return useMutation({
+    mutationFn: () => clearCheckedItems({ itemIds: checkedItemIds }),
+  });
 };

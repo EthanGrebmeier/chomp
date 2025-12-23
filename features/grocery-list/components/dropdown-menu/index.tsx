@@ -8,7 +8,7 @@ import {
   DropdownMenuRoot,
 } from '../../../../components/ui/dropdown-menu';
 import { db } from '../../../../lib/instant';
-import { clearCheckedItems } from '../../instant/clear-checked-items';
+import { useClearCheckedItems } from '../../instant/clear-checked-items';
 import { GroceryListItemWithRecipe } from '../../types';
 
 type GroceryListDropdownMenuProps = {
@@ -32,6 +32,9 @@ export const GroceryListDropdownMenu = ({
   const checkedItems = items.filter(item => item.isChecked);
   const hasCheckedItems = checkedItems.length > 0;
   const isOwner = user?.id === ownerId;
+  const { mutate: clearCheckedItems } = useClearCheckedItems({
+    groceryItems: checkedItems,
+  });
 
   return (
     <DropdownMenuRoot trigger={trigger}>
