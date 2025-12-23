@@ -21,19 +21,17 @@ export const createMealPlan = async ({ mealPlan }: CreateMealPlanArgs) => {
 
   // First, archive all existing meal plans
   const existingPlans = await db.queryOnce({
-    meal_plans: {
-      $: {
-        where: {
-          isArchived: false,
-        },
-      },
-    },
+    meal_plans: {},
   });
+
+  const activePlans = existingPlans.data.meal_plans?.filter(
+    plan => !plan.isArchived
+  );
 
   const transactions = [];
 
   // Archive existing plans
-  for (const plan of existingPlans.data.meal_plans || []) {
+  for (const plan of activePlans) {
     transactions.push(
       tx.meal_plans[plan.id].update({
         isArchived: true,
