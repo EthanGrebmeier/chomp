@@ -39,6 +39,7 @@ function InitialLayout() {
       </Stack>
       <Toaster
         position="top-center"
+        duration={2000}
         toastOptions={{
           style: {
             borderRadius: 100,
