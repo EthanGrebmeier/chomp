@@ -124,7 +124,7 @@ export const UnitSheet = ({
         </HapticPressable>
       </WithLayoutTransition>
 
-      <BottomSheet ignoreSafeArea ref={sheetRef} name="unit-sheet">
+      <BottomSheet ref={sheetRef} name="unit-sheet">
         <BottomSheet.SheetView>
           <View className="flex-row items-center gap-2 pb-2">
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
