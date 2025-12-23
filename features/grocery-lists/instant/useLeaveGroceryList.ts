@@ -8,6 +8,7 @@ export const useLeaveGroceryList = () => {
     }
 
     // Find the user's share for this list
+    // We need this query once, but we can still use it offline since we supply no where clause
     const { data } = await db.queryOnce({
       grocery_list_shares: {},
     });
