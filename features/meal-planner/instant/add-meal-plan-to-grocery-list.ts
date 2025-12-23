@@ -12,6 +12,7 @@ export const addMealPlanToGroceryList = async ({
   listId,
 }: AddMealPlanToGroceryListArgs) => {
   // Query all meal plans and filter client-side
+  // We can query once, but we can still use it offline since we supply no where clause
   // This ensures offline-created meal plans are found (where clauses don't work for unsynced data)
   const result = await db.queryOnce({
     meal_plans: {
