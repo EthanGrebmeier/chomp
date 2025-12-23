@@ -28,8 +28,10 @@ const itemSheetContext = createContext<{
   setUnit: (unit: string) => void;
   recipe?: Recipe | null;
   setRecipe: (recipe?: Recipe | null) => void;
+  storeId?: string;
+  setStoreId: (storeId?: string) => void;
   reset: () => void;
-  setFromItem: (item: GroceryListItemWithRecipe) => void;
+  setFromItem: (item: GroceryListItemWithRecipe | BaseGroceryItem) => void;
   isValid: boolean;
   disableAutocomplete: boolean;
 } | null>(null);
@@ -51,7 +53,7 @@ type ItemSheetProviderProps = {
     clearedRecipeId?: string;
   }) => void;
   setFromItemRef?: React.RefObject<
-    ((item: GroceryListItemWithRecipe) => void) | null
+    ((item: GroceryListItemWithRecipe | BaseGroceryItem) => void) | null
   >;
   disableAutocomplete?: boolean;
 };
@@ -75,6 +77,7 @@ export const ItemSheetProvider = ({
   const [initialRecipeId, setInitialRecipeId] = useState<string | undefined>(
     undefined
   );
+  const [storeId, setStoreId] = useState<string | undefined>(undefined);
   const itemInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
 
@@ -87,25 +90,36 @@ export const ItemSheetProvider = ({
     setUnit('each');
     setRecipe(undefined);
     setInitialRecipeId(undefined);
+    setStoreId(undefined);
     setShowMatchingItems(false);
   };
 
-  const setFromItem = (item: GroceryListItemWithRecipe) => {
+  const setFromItem = (item: GroceryListItemWithRecipe | BaseGroceryItem) => {
     setItemInputValue(item.name);
     setCategory(item.category);
     setQuantity(item.quantity);
     setUnit(item.unit);
     setNotesInputValue(item.notes ?? '');
-    setRecipe(item.recipe);
-    setInitialRecipeId(item.recipe?.id);
+    // Handle recipe - only available on GroceryListItemWithRecipe
+    if ('recipe' in item) {
+      setRecipe(item.recipe);
+      setInitialRecipeId(item.recipe?.id);
+    }
+    // Handle store - check both store object and storeId
+    if ('store' in item && item.store) {
+      setStoreId(item.store.id);
+    } else if ('storeId' in item) {
+      setStoreId(item.storeId);
+    }
     setShowMatchingItems(false);
   };
 
   // Expose setFromItem to parent via ref
   useEffect(() => {
     if (setFromItemRef) {
-      setFromItemRef.current = (item: GroceryListItemWithRecipe) =>
-        setFromItem(item);
+      setFromItemRef.current = (
+        item: GroceryListItemWithRecipe | BaseGroceryItem
+      ) => setFromItem(item);
     }
   }, [setFromItemRef]);
 
@@ -121,6 +135,7 @@ export const ItemSheetProvider = ({
         quantity: quantity,
         unit: unit,
         notes: notesInputValue,
+        storeId: storeId,
       },
       clearedRecipeId: recipeCleared ? initialRecipeId : undefined,
     });
@@ -164,6 +179,8 @@ export const ItemSheetProvider = ({
         setUnit,
         recipe,
         setRecipe,
+        storeId,
+        setStoreId,
         reset,
         setFromItem,
         isValid: !!itemInputValue.length && !!quantity && !!unit,

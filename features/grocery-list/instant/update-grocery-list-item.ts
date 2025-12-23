@@ -1,12 +1,29 @@
 import { db } from '../../../lib/instant';
 import { GroceryListItem } from '../types';
+import { linkStoreToItem } from './link-store-to-item';
 
 export const updateGroceryListItem = async ({
   itemId,
   item,
+  currentStoreId,
 }: {
   itemId: string;
-  item: Partial<GroceryListItem>;
+  item: Partial<GroceryListItem> & { storeId?: string };
+  currentStoreId?: string;
 }) => {
-  await db.transact([db.tx.grocery_items[itemId].update(item)]);
+  const { storeId, ...updateData } = item;
+
+  const transactions = [db.tx.grocery_items[itemId].update(updateData)];
+
+  // Handle store linking/unlinking separately
+  if (storeId !== undefined || currentStoreId) {
+    await db.transact(transactions);
+    await linkStoreToItem({
+      itemId,
+      storeId,
+      currentStoreId,
+    });
+  } else {
+    await db.transact(transactions);
+  }
 };

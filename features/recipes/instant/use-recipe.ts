@@ -9,7 +9,9 @@ export const useRecipe = (recipeId: string | undefined) => {
     recipeId
       ? {
           recipes: {
-            recipe_ingredients: {},
+            recipe_ingredients: {
+              store: {},
+            },
           },
         }
       : null

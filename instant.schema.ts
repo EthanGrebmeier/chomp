@@ -69,6 +69,11 @@ const _schema = i.schema({
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
+    stores: i.entity({
+      name: i.string(),
+      createdAt: i.string(),
+      updatedAt: i.string(),
+    }),
   },
   links: {
     grocery_listsGrocery_items: {
@@ -197,6 +202,43 @@ const _schema = i.schema({
         on: '$users',
         has: 'many',
         label: 'meal_plans',
+      },
+    },
+    stores_users: {
+      forward: {
+        on: 'stores',
+        has: 'one',
+        label: 'user',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: '$users',
+        has: 'many',
+        label: 'stores',
+      },
+    },
+    grocery_items_stores: {
+      forward: {
+        on: 'grocery_items',
+        has: 'one',
+        label: 'store',
+      },
+      reverse: {
+        on: 'stores',
+        has: 'many',
+        label: 'grocery_items',
+      },
+    },
+    recipe_ingredients_stores: {
+      forward: {
+        on: 'recipe_ingredients',
+        has: 'one',
+        label: 'store',
+      },
+      reverse: {
+        on: 'stores',
+        has: 'many',
+        label: 'recipe_ingredients',
       },
     },
   },

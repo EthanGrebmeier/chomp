@@ -1,6 +1,7 @@
 import { tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { linkStoreToIngredient } from './link-store-to-ingredient';
 
 export type UpdateRecipeIngredientArgs = {
   ingredientId: string;
@@ -11,21 +12,35 @@ export type UpdateRecipeIngredientArgs = {
     notes?: string;
     category?: string | null;
     order?: number;
+    storeId?: string;
   };
+  currentStoreId?: string;
 };
 
 export const updateRecipeIngredient = async ({
   ingredientId,
   updates,
+  currentStoreId,
 }: UpdateRecipeIngredientArgs) => {
+  const { storeId, ...otherUpdates } = updates;
   const processedUpdates = {
-    ...updates,
-    category: updates.category === null ? undefined : updates.category,
+    ...otherUpdates,
+    category: otherUpdates.category === null ? undefined : otherUpdates.category,
   };
 
-  await db.transact([
-    tx.recipe_ingredients[ingredientId].update(processedUpdates),
-  ]);
+  const transactions = [tx.recipe_ingredients[ingredientId].update(processedUpdates)];
+
+  // Handle store linking/unlinking separately
+  if (storeId !== undefined || currentStoreId) {
+    await db.transact(transactions);
+    await linkStoreToIngredient({
+      ingredientId,
+      storeId,
+      currentStoreId,
+    });
+  } else {
+    await db.transact(transactions);
+  }
 
   return { ingredientId };
 };

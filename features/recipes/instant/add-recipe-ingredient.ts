@@ -10,6 +10,7 @@ export type AddRecipeIngredientArgs = {
   unit: string;
   notes?: string;
   category?: string | null;
+  storeId?: string;
 };
 
 export const addRecipeIngredient = async ({
@@ -19,10 +20,11 @@ export const addRecipeIngredient = async ({
   unit,
   notes,
   category,
+  storeId,
 }: AddRecipeIngredientArgs) => {
   const ingredientId = id();
 
-  await db.transact([
+  const transactions = [
     tx.recipe_ingredients[ingredientId].create({
       name,
       quantity,
@@ -33,7 +35,18 @@ export const addRecipeIngredient = async ({
     tx.recipe_ingredients[ingredientId].link({
       recipe: recipeId,
     }),
-  ]);
+  ];
+
+  // Link store if provided
+  if (storeId) {
+    transactions.push(
+      tx.recipe_ingredients[ingredientId].link({
+        store: storeId,
+      })
+    );
+  }
+
+  await db.transact(transactions);
 
   // Auto-save ingredient to user's saved items if it doesn't exist
   addSavedItemIfNotExists({

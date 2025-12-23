@@ -83,6 +83,9 @@ export const AddIngredientProvider = ({
 }: AddIngredientProviderProps) => {
   const [editingIngredient, setEditingIngredient] =
     useState<RecipeIngredient | null>(null);
+  const [currentStoreId, setCurrentStoreId] = useState<string | undefined>(
+    undefined
+  );
   const sheetRef = useRef<TrueSheet>(null);
   const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
 
@@ -98,7 +101,9 @@ export const AddIngredientProvider = ({
           unit: item.unit,
           category: item.category,
           notes: item.notes,
+          storeId: item.storeId,
         },
+        currentStoreId,
       });
       toast.success(`${item.name} updated`);
     } else {
@@ -109,6 +114,7 @@ export const AddIngredientProvider = ({
         unit: item.unit,
         category: item.category ?? null,
         notes: item.notes,
+        storeId: item.storeId,
       });
       toast.success(`${item.name} added`);
     }
@@ -117,15 +123,18 @@ export const AddIngredientProvider = ({
   const present = (ingredient?: RecipeIngredient) => {
     if (ingredient) {
       setEditingIngredient(ingredient);
+      setCurrentStoreId(ingredient.store?.id);
       setFromItemRef.current?.({
         name: ingredient.name ?? '',
         quantity: ingredient.quantity ?? 1,
         unit: ingredient.unit ?? 'each',
         category: ingredient.category ?? undefined,
         notes: ingredient.notes ?? undefined,
+        storeId: ingredient.store?.id,
       });
     } else {
       setEditingIngredient(null);
+      setCurrentStoreId(undefined);
     }
     sheetRef.current?.present();
   };

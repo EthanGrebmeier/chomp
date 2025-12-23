@@ -74,6 +74,9 @@ type EditItemProps = {
 
 const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [currentStoreId, setCurrentStoreId] = useState<string | undefined>(
+    undefined
+  );
   const sheetRef = useRef<TrueSheet>(null);
   const setFromItemRef = useRef<
     ((item: GroceryListItemWithRecipe) => void) | null
@@ -97,7 +100,9 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
         quantity: item.quantity,
         unit: item.unit,
         notes: item.notes,
+        storeId: item.storeId,
       },
+      currentStoreId,
     });
 
     // Unlink recipe if it was cleared
@@ -115,6 +120,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   const present = (item: GroceryListItemWithRecipe) => {
     setFromItemRef.current?.(item);
     setSelectedItemId(item.id);
+    setCurrentStoreId(item.store?.id);
     sheetRef.current?.present();
   };
 

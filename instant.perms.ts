@@ -81,6 +81,20 @@ const rules = {
     },
     bind: ['isOwner', "auth.id in data.ref('user.id')"],
   },
+  stores: {
+    allow: {
+      create: 'auth.id != null',
+      view: 'isOwner || canViewViaItem',
+      update: 'isOwner',
+      delete: 'isOwner',
+    },
+    bind: [
+      'isOwner',
+      "auth.id in data.ref('user.id')",
+      'canViewViaItem',
+      "auth.id in data.ref('grocery_items.grocery_list.shares.user_id')",
+    ],
+  },
 } satisfies InstantRules;
 
 export default rules;

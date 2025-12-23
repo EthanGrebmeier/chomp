@@ -13,7 +13,7 @@ export const addGroceryListItem = async ({
 }) => {
   const itemId = id();
 
-  await db.transact([
+  const transactions = [
     db.tx.grocery_items[itemId].create({
       name: item.name,
       quantity: item.quantity,
@@ -28,7 +28,18 @@ export const addGroceryListItem = async ({
     db.tx.grocery_lists[listId].link({
       grocery_items: itemId,
     }),
-  ]);
+  ];
+
+  // Link store if provided
+  if (item.storeId) {
+    transactions.push(
+      db.tx.grocery_items[itemId].link({
+        store: item.storeId,
+      })
+    );
+  }
+
+  await db.transact(transactions);
 
   // Auto-save item to user's saved items if it doesn't exist
   addSavedItemIfNotExists({
