@@ -60,11 +60,21 @@ export const RecipeDropdownMenu = ({
   const { mutate: updateRecipe } = useUpdateRecipe();
 
   const performAddToList = (targetListId: string) => {
+    // Transform ingredients to include storeId from store object
+    const ingredients = recipe.recipe_ingredients.map(ingredient => ({
+      name: ingredient.name,
+      quantity: ingredient.quantity,
+      unit: ingredient.unit,
+      notes: ingredient.notes ?? null,
+      category: ingredient.category ?? null,
+      storeId: ingredient.store?.id,
+    }));
+
     addToList(
       {
         recipeId: recipe.id,
         listId: targetListId,
-        ingredients: recipe.recipe_ingredients,
+        ingredients,
       },
       {
         onSuccess: () => {
@@ -141,11 +151,21 @@ export const RecipeDropdownMenu = ({
 
   const handleCreateSeparateItems = () => {
     if (!listId) return;
+    // Transform ingredients to include storeId from store object
+    const ingredients = recipe.recipe_ingredients.map(ingredient => ({
+      name: ingredient.name,
+      quantity: ingredient.quantity,
+      unit: ingredient.unit,
+      notes: ingredient.notes ?? null,
+      category: ingredient.category ?? null,
+      storeId: ingredient.store?.id,
+    }));
+
     addAsSeparate(
       {
         recipeId: recipe.id,
         listId,
-        ingredients: recipe.recipe_ingredients,
+        ingredients,
       },
       {
         onSuccess: () => {

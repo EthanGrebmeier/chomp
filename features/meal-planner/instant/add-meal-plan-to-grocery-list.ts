@@ -18,7 +18,9 @@ export const addMealPlanToGroceryList = async ({
     meal_plans: {
       meal_plan_recipes: {
         recipe: {
-          recipe_ingredients: {},
+          recipe_ingredients: {
+            store: {},
+          },
         },
       },
     },
@@ -62,6 +64,15 @@ export const addMealPlanToGroceryList = async ({
           recipe: recipe.id,
         })
       );
+
+      // Link store if ingredient has one
+      if (ingredient.store?.id) {
+        transactions.push(
+          tx.grocery_items[itemId].link({
+            store: ingredient.store.id,
+          })
+        );
+      }
     }
   }
 

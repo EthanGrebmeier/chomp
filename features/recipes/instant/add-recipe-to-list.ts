@@ -8,6 +8,7 @@ export type RecipeIngredientInput = {
   unit: string;
   notes?: string | null;
   category?: string | null;
+  storeId?: string;
 };
 
 export type AddRecipeToListArgs = {
@@ -45,6 +46,15 @@ export const addRecipeToList = async ({
         recipe: recipeId,
       })
     );
+
+    // Link store if provided
+    if (ingredient.storeId) {
+      transactions.push(
+        tx.grocery_items[itemId].link({
+          store: ingredient.storeId,
+        })
+      );
+    }
   }
 
   if (transactions.length > 0) {

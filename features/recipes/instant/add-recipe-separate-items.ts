@@ -38,6 +38,15 @@ export const addRecipeAsSeparateItems = async ({
         // Note: Not linking to recipe for separate items
       })
     );
+
+    // Link store if provided
+    if (ingredient.storeId) {
+      transactions.push(
+        tx.grocery_items[itemId].link({
+          store: ingredient.storeId,
+        })
+      );
+    }
   }
 
   if (transactions.length > 0) {
