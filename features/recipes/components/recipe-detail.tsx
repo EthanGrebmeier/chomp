@@ -41,9 +41,11 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
         <View className="flex-row gap-4">
           <View>
             <Heading>{recipe.name}</Heading>
-            <Text className="text-lg text-muted-foreground">
-              {recipe.mealTag}
-            </Text>
+            {recipe.mealTag && (
+              <Text className="text-lg text-muted-foreground">
+                {recipe.mealTag}
+              </Text>
+            )}
           </View>
         </View>
       </View>
