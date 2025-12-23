@@ -9,8 +9,6 @@ export const useStores = () => {
     },
   });
 
-  console.log(result.data);
-
   if (!user) {
     return {
       data: [],
