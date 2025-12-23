@@ -10,7 +10,6 @@ export type AddRecipeIngredientArgs = {
   unit: string;
   notes?: string;
   category?: string | null;
-  order?: number;
 };
 
 export const addRecipeIngredient = async ({
@@ -20,7 +19,6 @@ export const addRecipeIngredient = async ({
   unit,
   notes,
   category,
-  order = 0,
 }: AddRecipeIngredientArgs) => {
   const ingredientId = id();
 
@@ -31,7 +29,6 @@ export const addRecipeIngredient = async ({
       unit,
       notes,
       category: category ?? undefined,
-      order,
     }),
     tx.recipe_ingredients[ingredientId].link({
       recipe: recipeId,

@@ -16,7 +16,6 @@ export type CreateRecipeArgs = {
     unit: string;
     notes?: string;
     category?: string | null;
-    order?: number;
   }[];
 };
 
@@ -48,7 +47,7 @@ export const createRecipe = async ({
   ];
 
   // Create ingredients and link them to the recipe
-  for (const [index, ingredient] of ingredients.entries()) {
+  for (const ingredient of ingredients) {
     const ingredientId = id();
     transactions.push(
       tx.recipe_ingredients[ingredientId].update({
@@ -57,7 +56,6 @@ export const createRecipe = async ({
         unit: ingredient.unit,
         notes: ingredient.notes,
         category: ingredient.category ?? undefined,
-        order: ingredient.order ?? index,
       }),
       tx.recipe_ingredients[ingredientId].link({
         recipe: recipeId,

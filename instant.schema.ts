@@ -53,7 +53,6 @@ const _schema = i.schema({
       unit: i.string(),
       notes: i.string().optional(),
       category: i.string().optional(),
-      order: i.number(),
     }),
     meal_plans: i.entity({
       name: i.string(),
@@ -67,7 +66,6 @@ const _schema = i.schema({
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string(),
       servings: i.number(),
-      order: i.number(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
