@@ -18,17 +18,12 @@ const clearGroceryList = async ({ itemIds }: clearGroceryListArgs) => {
   );
 };
 
-type useClearGroceryListArgs = {
-  groceryItems: GroceryListItem[];
+export const filterActiveItems = (groceryItems: GroceryListItem[]) => {
+  return groceryItems.filter(item => !item.isDeleted).map(item => item.id);
 };
 
-export const useClearGroceryList = ({
-  groceryItems,
-}: useClearGroceryListArgs) => {
-  const itemsToClear = groceryItems
-    .filter(item => !item.isDeleted)
-    .map(item => item.id);
+export const useClearGroceryList = () => {
   return useMutation({
-    mutationFn: () => clearGroceryList({ itemIds: itemsToClear }),
+    mutationFn: clearGroceryList,
   });
 };

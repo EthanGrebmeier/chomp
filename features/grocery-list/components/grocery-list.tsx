@@ -8,7 +8,10 @@ import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item
 import { db } from '../../../lib/instant';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
-import { useClearGroceryList } from '../instant/clear-list';
+import {
+  filterActiveItems,
+  useClearGroceryList,
+} from '../instant/clear-list';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 
@@ -47,9 +50,8 @@ export const GroceryList = ({
   const shareListSheetRef = useRef<ShareListSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
   const { user } = db.useAuth();
-  const { mutate: clearGroceryList } = useClearGroceryList({
-    groceryItems: items,
-  });
+  const activeItemIds = filterActiveItems(items);
+  const { mutate: clearGroceryList } = useClearGroceryList();
 
   const isOwner = user?.id === ownerId;
 
@@ -109,7 +111,7 @@ export const GroceryList = ({
 
   const handleConfirmClearList = () => {
     if (!listId) return;
-    clearGroceryList();
+    clearGroceryList({ itemIds: activeItemIds });
   };
 
   const handleCancelClearList = () => {
