@@ -15,13 +15,7 @@ export const addSavedItemIfNotExists = async (item: BaseSavedItem) => {
 
   // Check if item already exists (case-insensitive name match)
   const { data } = await db.queryOnce({
-    saved_items: {
-      $: {
-        where: {
-          'user.id': user.id,
-        },
-      },
-    },
+    saved_items: {},
   });
 
   const existingItem = data?.saved_items?.find(
@@ -48,4 +42,3 @@ export const addSavedItemIfNotExists = async (item: BaseSavedItem) => {
     }),
   ]);
 };
-
