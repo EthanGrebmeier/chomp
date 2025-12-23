@@ -49,15 +49,6 @@ export const GroceryListDropdownMenu = ({
         </DropdownMenuItem>
         <DropdownMenuGroup>
           <DropdownMenuItem
-            onSelect={onClearListPress}
-            destructive
-            key="clear-list"
-            disabled={!items.length}
-          >
-            <DropdownMenuItemTitle>Clear Grocery List</DropdownMenuItemTitle>
-            <DropdownMenuItemIcon ios={{ name: 'trash' }} />
-          </DropdownMenuItem>
-          <DropdownMenuItem
             destructive
             key="delete-checked"
             onSelect={() => clearCheckedItems({ itemIds: checkedItems })}
@@ -66,9 +57,18 @@ export const GroceryListDropdownMenu = ({
             <DropdownMenuItemTitle>Clear Checked Items</DropdownMenuItemTitle>
             <DropdownMenuItemIcon
               ios={{
-                name: 'trash',
+                name: 'checkmark.circle.badge.xmark',
               }}
             />
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={onClearListPress}
+            destructive
+            key="clear-list"
+            disabled={!items.length}
+          >
+            <DropdownMenuItemTitle>Clear Grocery List</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'xmark.circle' }} />
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuGroup>
