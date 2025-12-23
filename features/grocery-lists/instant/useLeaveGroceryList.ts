@@ -9,25 +9,19 @@ export const useLeaveGroceryList = () => {
 
     // Find the user's share for this list
     const { data } = await db.queryOnce({
-      grocery_list_shares: {
-        $: {
-          where: {
-            grocery_list_id: listId,
-            user_id: user.id,
-          },
-        },
-      },
+      grocery_list_shares: {},
     });
 
-    const share = data?.grocery_list_shares?.[0];
-    if (!share) {
-      throw new Error('You are not a member of this list');
-    }
+    const userShare = data?.grocery_list_shares?.find(
+      share => share.user_id === user.id && share.grocery_list_id === listId
+    );
 
+    if (!userShare) {
+      return;
+    }
     // Delete the share to leave the list
-    await db.transact([db.tx.grocery_list_shares[share.id].delete()]);
+    await db.transact([db.tx.grocery_list_shares[userShare.id].delete()]);
   };
 
   return leaveGroceryList;
 };
-
