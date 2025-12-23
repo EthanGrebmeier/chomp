@@ -1,17 +1,14 @@
+import { CheckIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { Button } from '../ui/button';
-import { Text } from '../ui/text';
+import { Icon } from '../ui/icon';
 
 import { CategorySheet } from './category-sheet';
 import { UnitSheet } from './unit-sheet';
 import { useItemSheet } from './use-item-sheet';
 
-type MetaBarProps = {
-  submitLabel: string;
-};
-
-export const MetaBar = ({ submitLabel }: MetaBarProps) => {
+export const MetaBar = () => {
   const {
     category,
     setCategory,
@@ -34,8 +31,18 @@ export const MetaBar = ({ submitLabel }: MetaBarProps) => {
           onUnitChange={setUnit}
         />
       </View>
-      <Button variant="default" onPress={onSubmit} disabled={!isValid}>
-        <Text>{submitLabel}</Text>
+      <Button
+        variant="default"
+        size="icon"
+        onPress={onSubmit}
+        disabled={!isValid}
+      >
+        <Icon
+          as={CheckIcon}
+          size={18}
+          strokeWidth={3}
+          className="text-primary-foreground"
+        />
       </Button>
     </View>
   );

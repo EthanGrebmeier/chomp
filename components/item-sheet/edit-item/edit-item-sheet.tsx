@@ -43,7 +43,7 @@ const EditItemContents = () => {
     >
       <BottomSheet.SheetView>
         <ItemForm />
-        <MetaBar submitLabel="Update" />
+        <MetaBar />
       </BottomSheet.SheetView>
     </BottomSheet>
   );

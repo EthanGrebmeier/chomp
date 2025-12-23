@@ -32,7 +32,7 @@ export const useAddIngredientSheet = () => {
   return context;
 };
 
-const AddIngredientContents = ({ submitLabel }: { submitLabel: string }) => {
+const AddIngredientContents = () => {
   const { reset, itemInputRef } = useItemSheet();
   const { sheetRef } = useAddIngredientSheetInternal();
 
@@ -48,7 +48,7 @@ const AddIngredientContents = ({ submitLabel }: { submitLabel: string }) => {
     >
       <BottomSheet.SheetView>
         <ItemForm />
-        <MetaBar submitLabel={submitLabel} />
+        <MetaBar />
       </BottomSheet.SheetView>
     </BottomSheet>
   );
@@ -134,9 +134,7 @@ export const AddIngredientProvider = ({
     <AddIngredientContext.Provider value={{ present }}>
       <AddIngredientInternalContext.Provider value={{ sheetRef }}>
         <ItemSheetProvider onSubmit={onSubmit} setFromItemRef={setFromItemRef}>
-          <AddIngredientContents
-            submitLabel={isEditing ? 'Update' : 'Create'}
-          />
+          <AddIngredientContents />
           {children}
         </ItemSheetProvider>
       </AddIngredientInternalContext.Provider>
