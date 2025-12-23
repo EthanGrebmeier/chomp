@@ -18,18 +18,12 @@ const clearCheckedItems = async ({ itemIds }: clearCheckedItemsArgs) => {
   );
 };
 
-type useClearCheckedItemsArgs = {
-  groceryItems: GroceryListItem[];
+export const filterCheckedItems = (groceryItems: GroceryListItem[]) => {
+  return groceryItems.filter(item => item.isChecked).map(item => item.id);
 };
 
-export const useClearCheckedItems = ({
-  groceryItems,
-}: useClearCheckedItemsArgs) => {
-  const checkedItemIds = groceryItems
-    .filter(item => item.isChecked)
-    .map(item => item.id);
-
+export const useClearCheckedItems = () => {
   return useMutation({
-    mutationFn: () => clearCheckedItems({ itemIds: checkedItemIds }),
+    mutationFn: clearCheckedItems,
   });
 };

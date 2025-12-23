@@ -8,7 +8,10 @@ import {
   DropdownMenuRoot,
 } from '../../../../components/ui/dropdown-menu';
 import { db } from '../../../../lib/instant';
-import { useClearCheckedItems } from '../../instant/clear-checked-items';
+import {
+  filterCheckedItems,
+  useClearCheckedItems,
+} from '../../instant/clear-checked-items';
 import { GroceryListItemWithRecipe } from '../../types';
 
 type GroceryListDropdownMenuProps = {
@@ -29,12 +32,10 @@ export const GroceryListDropdownMenu = ({
   ownerId,
 }: GroceryListDropdownMenuProps) => {
   const { user } = db.useAuth();
-  const checkedItems = items.filter(item => item.isChecked);
+  const checkedItems = filterCheckedItems(items);
   const hasCheckedItems = checkedItems.length > 0;
   const isOwner = user?.id === ownerId;
-  const { mutate: clearCheckedItems } = useClearCheckedItems({
-    groceryItems: checkedItems,
-  });
+  const { mutate: clearCheckedItems } = useClearCheckedItems();
 
   return (
     <DropdownMenuRoot trigger={trigger}>
@@ -55,7 +56,7 @@ export const GroceryListDropdownMenu = ({
         <DropdownMenuItem
           destructive
           key="delete-checked"
-          onSelect={clearCheckedItems}
+          onSelect={() => clearCheckedItems({ itemIds: checkedItems })}
           disabled={!hasCheckedItems}
         >
           <DropdownMenuItemTitle>Clear Checked Items</DropdownMenuItemTitle>
