@@ -1,4 +1,5 @@
 import { Alert } from 'react-native';
+import { toast } from 'sonner-native';
 
 import { db } from '../../../lib/instant';
 
@@ -12,21 +13,14 @@ export const useDeleteGroceryList = () => {
 
     // Check if user has more than one list before allowing deletion
     const { data } = await db.queryOnce({
-      grocery_lists: {
-        $: {
-          where: {
-            ownerId: user.id,
-          },
-        },
-      },
+      grocery_lists: {},
     });
 
-    const ownedListCount = data?.grocery_lists?.length ?? 0;
-    if (ownedListCount <= 1) {
-      Alert.alert(
-        'Cannot Delete',
-        'You must have at least one grocery list. Create a new list first if you want to delete this one.'
-      );
+    const ownedLists = data?.grocery_lists?.filter(
+      list => list.ownerId === user.id
+    );
+    if (ownedLists?.length === 1) {
+      toast.error('You cannot delete your only list.');
       return false;
     }
 
@@ -37,4 +31,22 @@ export const useDeleteGroceryList = () => {
   };
 
   return deleteGroceryList;
+};
+
+export const useCanDeleteGroceryList = () => {
+  const { user } = db.useAuth();
+
+  const groceryLists = db.useQuery({
+    grocery_lists: {},
+  });
+
+  if (!user || !groceryLists.data) {
+    return false;
+  }
+
+  const myLists = groceryLists.data?.grocery_lists?.filter(
+    list => list.ownerId === user.id
+  );
+
+  return myLists?.length > 1;
 };

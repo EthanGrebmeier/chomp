@@ -22,7 +22,10 @@ import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { db } from '../../../lib/instant';
 import { cn } from '../../../lib/utils';
-import { useDeleteGroceryList } from '../instant/useDeleteGroceryList';
+import {
+  useCanDeleteGroceryList,
+  useDeleteGroceryList,
+} from '../instant/useDeleteGroceryList';
 import { useGroceryLists } from '../instant/useGroceryLists';
 import { useLeaveGroceryList } from '../instant/useLeaveGroceryList';
 
@@ -53,6 +56,7 @@ export const SelectGroceryListSheet = forwardRef<
   const { data: lists } = useGroceryLists();
   const { user } = db.useAuth();
   const deleteGroceryList = useDeleteGroceryList();
+  const canDeleteList = useCanDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
 
   useImperativeHandle(ref, () => ({
@@ -200,6 +204,7 @@ export const SelectGroceryListSheet = forwardRef<
                   <ContextMenuItem
                     key={`delete-or-leave-${list.id}`}
                     destructive
+                    disabled={!canDeleteList}
                     onSelect={() => {
                       if (isOwner) {
                         handleDeleteList(list.id, list.name);

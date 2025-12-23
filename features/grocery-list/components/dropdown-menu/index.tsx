@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 
+import { DropdownMenuGroup } from '../../../../components/native-dropdown';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -8,6 +9,7 @@ import {
   DropdownMenuRoot,
 } from '../../../../components/ui/dropdown-menu';
 import { db } from '../../../../lib/instant';
+import { useCanDeleteGroceryList } from '../../../grocery-lists/instant/useDeleteGroceryList';
 import {
   filterCheckedItems,
   useClearCheckedItems,
@@ -36,6 +38,7 @@ export const GroceryListDropdownMenu = ({
   const hasCheckedItems = checkedItems.length > 0;
   const isOwner = user?.id === ownerId;
   const { mutate: clearCheckedItems } = useClearCheckedItems();
+  const canDeleteList = useCanDeleteGroceryList();
 
   return (
     <DropdownMenuRoot trigger={trigger}>
@@ -44,42 +47,47 @@ export const GroceryListDropdownMenu = ({
           <DropdownMenuItemTitle>Share</DropdownMenuItemTitle>
           <DropdownMenuItemIcon ios={{ name: 'square.and.arrow.up' }} />
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onSelect={onClearListPress}
-          destructive
-          key="clear-list"
-          disabled={!items.length}
-        >
-          <DropdownMenuItemTitle>Clear Grocery List</DropdownMenuItemTitle>
-          <DropdownMenuItemIcon ios={{ name: 'trash' }} />
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          destructive
-          key="delete-checked"
-          onSelect={() => clearCheckedItems({ itemIds: checkedItems })}
-          disabled={!hasCheckedItems}
-        >
-          <DropdownMenuItemTitle>Clear Checked Items</DropdownMenuItemTitle>
-          <DropdownMenuItemIcon
-            ios={{
-              name: 'trash',
-            }}
-          />
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          destructive
-          key="delete-or-leave"
-          onSelect={onDeleteOrLeave}
-        >
-          <DropdownMenuItemTitle>
-            {isOwner ? 'Delete List' : 'Leave List'}
-          </DropdownMenuItemTitle>
-          <DropdownMenuItemIcon
-            ios={{
-              name: isOwner ? 'trash' : 'rectangle.portrait.and.arrow.right',
-            }}
-          />
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            onSelect={onClearListPress}
+            destructive
+            key="clear-list"
+            disabled={!items.length}
+          >
+            <DropdownMenuItemTitle>Clear Grocery List</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'trash' }} />
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            destructive
+            key="delete-checked"
+            onSelect={() => clearCheckedItems({ itemIds: checkedItems })}
+            disabled={!hasCheckedItems}
+          >
+            <DropdownMenuItemTitle>Clear Checked Items</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon
+              ios={{
+                name: 'trash',
+              }}
+            />
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            destructive
+            disabled={isOwner && !canDeleteList}
+            key="delete-or-leave"
+            onSelect={onDeleteOrLeave}
+          >
+            <DropdownMenuItemTitle>
+              {isOwner ? 'Delete List' : 'Leave List'}
+            </DropdownMenuItemTitle>
+            <DropdownMenuItemIcon
+              ios={{
+                name: isOwner ? 'trash' : 'rectangle.portrait.and.arrow.right',
+              }}
+            />
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenuRoot>
   );
