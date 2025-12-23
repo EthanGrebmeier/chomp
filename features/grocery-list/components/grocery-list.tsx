@@ -30,7 +30,7 @@ type GroceryListProps = {
   joinCode?: string;
   ownerId?: string;
   items: GroceryListItemWithRecipe[];
-  groupBy: 'category' | 'none' | 'recipe';
+  groupBy: 'category' | 'none' | 'recipe' | 'store';
   sortBy: 'name' | 'recent';
   onTitlePress?: () => void;
   onDeleteOrLeave: () => void;
@@ -59,16 +59,18 @@ export const GroceryList = ({
     existingItemId: string;
     newItem: BaseGroceryItem;
   } | null>(null);
-  const [groupBy, setGroupBy] = useState<'category' | 'none' | 'recipe'>(
-    initialGroupBy
-  );
+  const [groupBy, setGroupBy] = useState<
+    'category' | 'none' | 'recipe' | 'store'
+  >(initialGroupBy);
   const [sortBy, setSortBy] = useState<'name' | 'recent'>(initialSortBy);
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
   const deleteListConfirmationSheetRef = useRef<TrueSheet | null>(null);
 
-  const handleGroupByChange = (newGroupBy: 'category' | 'none' | 'recipe') => {
+  const handleGroupByChange = (
+    newGroupBy: 'category' | 'none' | 'recipe' | 'store'
+  ) => {
     setGroupBy(newGroupBy);
     updateSettings({ groupBy: newGroupBy });
   };

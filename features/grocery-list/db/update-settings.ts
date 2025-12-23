@@ -5,7 +5,7 @@ import { db } from '../../../providers/migration-provider';
 
 type UpdateSettingsArgs = {
   listName?: string;
-  groupBy?: 'category' | 'none' | 'recipe';
+  groupBy?: 'category' | 'none' | 'recipe' | 'store';
   sortBy?: 'name' | 'recent';
 };
 

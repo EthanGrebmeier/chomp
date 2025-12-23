@@ -126,8 +126,9 @@ export const IngredientSelector = ({
           name: i.name,
           quantity: i.quantity,
           unit: i.unit,
-          notes: i.notes,
-          category: i.category,
+          notes: i.notes ?? null,
+          category: i.category ?? null,
+          storeId: i.store?.id,
         }));
 
       await addRecipeToList({

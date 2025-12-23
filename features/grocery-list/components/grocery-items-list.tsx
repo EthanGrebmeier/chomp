@@ -20,7 +20,7 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 
 type GroceryItemsListProps = {
   items: GroceryListItemWithRecipe[];
-  groupBy: 'category' | 'none' | 'recipe';
+  groupBy: 'category' | 'none' | 'recipe' | 'store';
   sortBy: 'name' | 'recent';
 };
 

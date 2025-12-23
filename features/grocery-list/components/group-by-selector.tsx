@@ -12,20 +12,22 @@ import { Pill } from '../../../components/ui/pill';
 import { cn } from '../../../lib/utils';
 
 type GroupBySelectorProps = {
-  value?: 'category' | 'none' | 'recipe';
-  onChange: (value: 'category' | 'none' | 'recipe') => void;
+  value?: 'category' | 'none' | 'recipe' | 'store';
+  onChange: (value: 'category' | 'none' | 'recipe' | 'store') => void;
 };
 
 export const GroupBySelector = ({
   value = 'none',
   onChange,
 }: GroupBySelectorProps) => {
-  const getDisplayLabel = (value: 'category' | 'none' | 'recipe') => {
+  const getDisplayLabel = (value: 'category' | 'none' | 'recipe' | 'store') => {
     switch (value) {
       case 'category':
         return 'Group by: Category';
       case 'recipe':
         return 'Group by: Recipe';
+      case 'store':
+        return 'Group by: Store';
       case 'none':
         return 'Group by: None';
       default:
@@ -78,6 +80,13 @@ export const GroupBySelector = ({
           onValueChange={() => onChange('recipe')}
         >
           <DropdownMenuItemTitle>Recipe</DropdownMenuItemTitle>
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          key="store"
+          value={value === 'store' ? 'on' : 'off'}
+          onValueChange={() => onChange('store')}
+        >
+          <DropdownMenuItemTitle>Store</DropdownMenuItemTitle>
         </DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenuRoot>

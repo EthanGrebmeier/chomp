@@ -25,7 +25,7 @@ const sortItems = (
 
 export const groupItemsBy = (
   items: GroceryListItemWithRecipe[],
-  groupBy: 'category' | 'none' | 'recipe',
+  groupBy: 'category' | 'none' | 'recipe' | 'store',
   sortBy: 'name' | 'recent' = 'recent'
 ): Map<string, GroceryListItemWithRecipe[]> => {
   const groups = new Map<string, GroceryListItemWithRecipe[]>();
@@ -54,6 +54,16 @@ export const groupItemsBy = (
         groups.set(recipeName, []);
       }
       groups.get(recipeName)!.push(item);
+    });
+  }
+
+  if (groupBy === 'store') {
+    items.forEach(item => {
+      const storeName = item.store?.name ?? 'No Store';
+      if (!groups.has(storeName)) {
+        groups.set(storeName, []);
+      }
+      groups.get(storeName)!.push(item);
     });
   }
 
@@ -90,6 +100,13 @@ export const groupItemsBy = (
         return aEarliest - bEarliest;
       }
     );
+  } else if (groupBy === 'store') {
+    // Sort store groups: put No Store at the bottom, others alphabetically
+    sortedGroups = Array.from(groups.entries()).sort(([a], [b]) => {
+      if (a === 'No Store') return 1;
+      if (b === 'No Store') return -1;
+      return a.localeCompare(b);
+    });
   } else {
     // For 'none' grouping, no additional sorting needed
     sortedGroups = Array.from(groups.entries());

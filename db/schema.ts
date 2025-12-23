@@ -11,7 +11,7 @@ const timestamps = {
 export const appSettingsTable = sqliteTable('app_settings', {
   id: text().primaryKey().default('default'),
   listName: text().notNull().default('Shopping List'),
-  groupBy: text({ enum: ['category', 'none', 'recipe'] })
+  groupBy: text({ enum: ['category', 'none', 'recipe', 'store'] })
     .notNull()
     .default('none'),
   sortBy: text({ enum: ['name', 'recent'] })
