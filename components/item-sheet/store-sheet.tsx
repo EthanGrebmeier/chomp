@@ -135,7 +135,7 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
         </HapticPressable>
       </WithLayoutTransition>
 
-      <BottomSheet ref={sheetRef} name="store-sheet">
+      <BottomSheet detents={[0.7]} scrollable ref={sheetRef} name="store-sheet">
         <BottomSheet.Header
           className="px-4"
           dismissButton={

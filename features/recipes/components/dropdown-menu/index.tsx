@@ -1,7 +1,10 @@
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
-import { ReactNode, useRef, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner-native';
 
+import { BottomSheet } from '@/components/bottom-sheet';
+import { IngredientSelector } from '@/components/item-sheet/add-item/ingredient-selector';
 import {
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -22,7 +25,6 @@ import {
 } from '../../../grocery-lists/components/select-grocery-list-sheet';
 import { useGroceryLists } from '../../../grocery-lists/instant/useGroceryLists';
 import { useAddRecipeAsSeparateItems } from '../../hooks/useAddRecipeAsSeparateItems';
-import { useAddRecipeToList } from '../../hooks/useAddRecipeToList';
 import { useDeleteRecipe } from '../../hooks/useDeleteRecipe';
 import { useDuplicateRecipe } from '../../hooks/useDuplicateRecipe';
 import { useIncrementRecipeQuantities } from '../../hooks/useIncrementRecipeQuantities';
@@ -47,10 +49,12 @@ export const RecipeDropdownMenu = ({
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
   const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
+  const ingredientSelectorSheetRef = useRef<TrueSheet>(null);
   const [showConflict, setShowConflict] = useState(false);
+  const [selectedListIdForIngredients, setSelectedListIdForIngredients] =
+    useState<string | null>(null);
 
   const { data: groceryLists } = useGroceryLists();
-  const { mutate: addToList } = useAddRecipeToList();
   const { mutate: incrementQuantities, isPending: isIncrementing } =
     useIncrementRecipeQuantities();
   const { mutate: addAsSeparate, isPending: isAddingSeparate } =
@@ -59,57 +63,63 @@ export const RecipeDropdownMenu = ({
   const { mutate: deleteRecipe } = useDeleteRecipe();
   const { mutate: updateRecipe } = useUpdateRecipe();
 
-  const performAddToList = (targetListId: string) => {
-    // Transform ingredients to include storeId from store object
-    const ingredients = recipe.recipe_ingredients.map(ingredient => ({
-      name: ingredient.name,
-      quantity: ingredient.quantity,
-      unit: ingredient.unit,
-      notes: ingredient.notes ?? null,
-      category: ingredient.category ?? null,
-      storeId: ingredient.store?.id,
-    }));
-
-    addToList(
-      {
-        recipeId: recipe.id,
-        listId: targetListId,
-        ingredients,
-      },
-      {
-        onSuccess: () => {
-          router.push(navigation.goToList(targetListId));
-          toast.success(`${recipe.name} added to list`);
-        },
-        onError: error => {
-          console.error('Failed to add recipe to grocery list:', error);
-          toast.error('Failed to add recipe');
-        },
-      }
-    );
+  const handleIngredientSelectorComplete = () => {
+    const listIdToNavigate = selectedListIdForIngredients;
+    ingredientSelectorSheetRef.current?.dismiss();
+    setSelectedListIdForIngredients(null);
+    if (listIdToNavigate) {
+      router.push(navigation.goToList(listIdToNavigate));
+    }
   };
 
+  const handleIngredientSelectorDismiss = () => {
+    setSelectedListIdForIngredients(null);
+  };
+
+  const handleIngredientSelectorBack = () => {
+    ingredientSelectorSheetRef.current?.dismiss();
+    setSelectedListIdForIngredients(null);
+    // If we came from list selection, show it again
+    if (!listId) {
+      const lists = groceryLists?.grocery_lists ?? [];
+      if (lists.length > 1) {
+        selectListSheetRef.current?.present();
+      }
+    }
+  };
+
+  const showIngredientSelector = (targetListId: string) => {
+    setSelectedListIdForIngredients(targetListId);
+  };
+
+  // Present the sheet when a list ID is selected
+  useEffect(() => {
+    if (selectedListIdForIngredients) {
+      ingredientSelectorSheetRef.current?.present();
+    }
+  }, [selectedListIdForIngredients]);
+
   const handleAddToList = () => {
-    // If listId prop provided, use it directly
+    // If listId prop provided, show ingredient selector directly
     if (listId) {
-      performAddToList(listId);
+      showIngredientSelector(listId);
       return;
     }
 
     const lists = groceryLists?.grocery_lists ?? [];
 
-    // If only one list, add directly to it
+    // If only one list, show ingredient selector directly
     if (lists.length === 1) {
-      performAddToList(lists[0].id);
+      showIngredientSelector(lists[0].id);
       return;
     }
 
-    // Multiple lists (or none) - show selection sheet
+    // Multiple lists (or none) - show selection sheet first
     selectListSheetRef.current?.present();
   };
 
   const handleListSelected = (selectedListId: string) => {
-    performAddToList(selectedListId);
+    showIngredientSelector(selectedListId);
   };
 
   const handleDuplicate = () => {
@@ -255,6 +265,24 @@ export const RecipeDropdownMenu = ({
         selectedListId={undefined}
         onSelectList={handleListSelected}
       />
+      <BottomSheet
+        detents={['auto']}
+        name="recipe-ingredient-selector-sheet"
+        ref={ingredientSelectorSheetRef}
+        onStartClose={handleIngredientSelectorDismiss}
+        scrollable
+        viewClassName="flex-1"
+      >
+        {selectedListIdForIngredients && (
+          <IngredientSelector
+            recipe={recipe}
+            listId={selectedListIdForIngredients}
+            onBack={handleIngredientSelectorBack}
+            onComplete={handleIngredientSelectorComplete}
+            onDismiss={() => ingredientSelectorSheetRef.current?.dismiss()}
+          />
+        )}
+      </BottomSheet>
     </>
   );
 };

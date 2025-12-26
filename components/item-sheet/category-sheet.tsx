@@ -105,7 +105,12 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
         </HapticPressable>
       </WithLayoutTransition>
 
-      <BottomSheet scrollable ref={sheetRef} name="category-sheet">
+      <BottomSheet
+        detents={[0.7]}
+        scrollable
+        ref={sheetRef}
+        name="category-sheet"
+      >
         <BottomSheet.Header
           className="px-4"
           title="Category"
