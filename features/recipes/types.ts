@@ -3,7 +3,11 @@ import { InstaQLEntity } from '@instantdb/react-native';
 import schema from '../../instant.schema';
 import { Store } from '../stores/types';
 
-export type Recipe = InstaQLEntity<typeof schema, 'recipes'>;
+export type User = InstaQLEntity<typeof schema, '$users'>;
+
+export type Recipe = InstaQLEntity<typeof schema, 'recipes'> & {
+  user?: User | null;
+};
 export type RecipeIngredient = InstaQLEntity<
   typeof schema,
   'recipe_ingredients'

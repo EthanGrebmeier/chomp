@@ -48,11 +48,16 @@ const rules = {
   recipes: {
     allow: {
       create: 'auth.id != null',
-      view: 'isOwner || data.visibility == "public"',
+      view: 'isOwner || data.visibility == "public" || canViewViaGroceryList',
       update: 'isOwner',
       delete: 'isOwner',
     },
-    bind: ['isOwner', "auth.id in data.ref('user.id')"],
+    bind: [
+      'isOwner',
+      "auth.id in data.ref('user.id')",
+      'canViewViaGroceryList',
+      "auth.id in data.ref('grocery_items.grocery_list.shares.user_id')",
+    ],
   },
   meal_plans: {
     allow: {

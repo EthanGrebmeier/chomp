@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { SearchIcon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
@@ -34,9 +34,11 @@ export const RecipeSelector = ({
   const [searchQuery, setSearchQuery] = useState('');
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
 
-  const filteredRecipes = (recipes ?? []).filter(recipe =>
-    recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRecipes = useMemo(() => {
+    return (recipes ?? []).filter(recipe =>
+      recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [recipes, searchQuery]);
 
   if (isLoading) {
     return (

@@ -36,7 +36,7 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
     return (
       <BottomSheet name="share-list-sheet" ref={sheetRef}>
         <BottomSheet.SheetView>
-          <BottomSheet.Header title="Share List" />
+          <BottomSheet.Header className="mb-2" title="Share List" />
           <BottomSheet.Subtext>
             Others can use this code to join your list
           </BottomSheet.Subtext>

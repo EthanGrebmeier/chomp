@@ -6,6 +6,7 @@ import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
+import { db } from '../../../lib/instant';
 import { cn } from '../../../lib/utils';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
 
@@ -21,7 +22,11 @@ type RecipeDetailContentProps = {
 };
 
 const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
+  const { user } = db.useAuth();
   const { present } = useAddIngredientSheet();
+
+  // Check if current user owns the recipe
+  const isOwner = recipe.user?.id === user?.id;
 
   const handleEditIngredient = (ingredient: RecipeIngredient) => {
     present(ingredient);
@@ -73,21 +78,24 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
               )}
               key={item.id}
               ingredient={item}
-              onEdit={handleEditIngredient}
+              onEdit={isOwner ? handleEditIngredient : undefined}
+              canDelete={isOwner}
             />
           )}
         />
       </View>
-      <View className="absolute bottom-6 right-6 z-20">
-        <Button size="iconLg" onPress={() => present()}>
-          <Icon
-            as={PlusIcon}
-            size={28}
-            strokeWidth={3}
-            className="text-primary-foreground"
-          />
-        </Button>
-      </View>
+      {isOwner && (
+        <View className="absolute bottom-6 right-6 z-20">
+          <Button size="iconLg" onPress={() => present()}>
+            <Icon
+              as={PlusIcon}
+              size={28}
+              strokeWidth={3}
+              className="text-primary-foreground"
+            />
+          </Button>
+        </View>
+      )}
     </View>
   );
 };

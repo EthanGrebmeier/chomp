@@ -130,7 +130,9 @@ const Subtext = ({
   className?: string;
 }) => {
   return (
-    <Text className={cn('text-base text-muted-foreground', className)}>
+    <Text
+      className={cn('text-center text-base text-muted-foreground', className)}
+    >
       {children}
     </Text>
   );

@@ -13,6 +13,7 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
+import { db } from '@/lib/instant';
 import { navigation } from '@/lib/navigation';
 
 import {
@@ -46,6 +47,7 @@ export const RecipeDropdownMenu = ({
   recipe,
   listId,
 }: RecipeDropdownMenuProps) => {
+  const { user } = db.useAuth();
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
   const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
@@ -55,6 +57,9 @@ export const RecipeDropdownMenu = ({
     useState<string | null>(null);
 
   const { data: groceryLists } = useGroceryLists();
+
+  // Check if current user owns the recipe
+  const isOwner = recipe.user?.id === user?.id;
   const { mutate: incrementQuantities, isPending: isIncrementing } =
     useIncrementRecipeQuantities();
   const { mutate: addAsSeparate, isPending: isAddingSeparate } =
@@ -217,34 +222,40 @@ export const RecipeDropdownMenu = ({
     <>
       <DropdownMenuRoot trigger={trigger}>
         <DropdownMenuContent>
-          <DropdownMenuItem onSelect={handleAddToList} key="add-to-list">
-            <DropdownMenuItemTitle>Add to List</DropdownMenuItemTitle>
-            <DropdownMenuItemIcon ios={{ name: 'cart' }} />
-          </DropdownMenuItem>
+          {isOwner && (
+            <DropdownMenuItem onSelect={handleAddToList} key="add-to-list">
+              <DropdownMenuItemTitle>Add to List</DropdownMenuItemTitle>
+              <DropdownMenuItemIcon ios={{ name: 'cart' }} />
+            </DropdownMenuItem>
+          )}
 
           <DropdownMenuGroup>
-            <DropdownMenuItem
-              onSelect={() => createRecipeSheetRef.current?.present()}
-              key="edit-recipe"
-            >
-              <DropdownMenuItemTitle>Edit Recipe</DropdownMenuItemTitle>
-              <DropdownMenuItemIcon ios={{ name: 'pencil' }} />
-            </DropdownMenuItem>
+            {isOwner && (
+              <DropdownMenuItem
+                onSelect={() => createRecipeSheetRef.current?.present()}
+                key="edit-recipe"
+              >
+                <DropdownMenuItemTitle>Edit Recipe</DropdownMenuItemTitle>
+                <DropdownMenuItemIcon ios={{ name: 'pencil' }} />
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onSelect={handleDuplicate} key="duplicate">
               <DropdownMenuItemTitle>Duplicate Recipe</DropdownMenuItemTitle>
               <DropdownMenuItemIcon ios={{ name: 'doc.on.doc' }} />
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              onSelect={handleDelete}
-              destructive
-              key="delete-recipe"
-            >
-              <DropdownMenuItemTitle>Delete Recipe</DropdownMenuItemTitle>
-              <DropdownMenuItemIcon ios={{ name: 'trash' }} />
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
+          {isOwner && (
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                onSelect={handleDelete}
+                destructive
+                key="delete-recipe"
+              >
+                <DropdownMenuItemTitle>Delete Recipe</DropdownMenuItemTitle>
+                <DropdownMenuItemIcon ios={{ name: 'trash' }} />
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          )}
         </DropdownMenuContent>
       </DropdownMenuRoot>
       <RecipeConflictSheet

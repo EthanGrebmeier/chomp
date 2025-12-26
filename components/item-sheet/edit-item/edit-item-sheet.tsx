@@ -15,6 +15,7 @@ import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 
 type EditItemContextType = {
   present: (item: GroceryListItemWithRecipe) => void;
+  dismiss: () => void;
 };
 
 const EditItemContext = createContext<EditItemContextType | null>(null);
@@ -116,8 +117,12 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
     sheetRef.current?.present();
   };
 
+  const dismiss = () => {
+    sheetRef.current?.dismiss();
+  };
+
   return (
-    <EditItemContext.Provider value={{ present }}>
+    <EditItemContext.Provider value={{ present, dismiss }}>
       <EditItemInternalContext.Provider value={{ sheetRef }}>
         <ItemSheetProvider
           listId={groceryListId}

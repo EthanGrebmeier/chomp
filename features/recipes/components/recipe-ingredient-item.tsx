@@ -10,17 +10,19 @@ type RecipeIngredientItemProps = {
   ingredient: RecipeIngredient;
   className?: string;
   onEdit?: (ingredient: RecipeIngredient) => void;
+  canDelete?: boolean;
 };
 
 export const RecipeIngredientItem = ({
   ingredient,
   className,
   onEdit,
+  canDelete = true,
 }: RecipeIngredientItemProps) => {
   const { mutate: removeItem } = useRemoveRecipeIngredient();
   return (
     <ListItem
-      onDelete={() => removeItem({ ingredientId: ingredient.id })}
+      onDelete={canDelete ? () => removeItem({ ingredientId: ingredient.id }) : undefined}
       className={className}
     >
       <Pressable className="flex-1 gap-1" onPress={() => onEdit?.(ingredient)}>

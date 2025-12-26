@@ -6,6 +6,7 @@ export const useRecipes = () => {
       recipe_ingredients: {
         store: {},
       },
+      user: {},
     },
   });
 };

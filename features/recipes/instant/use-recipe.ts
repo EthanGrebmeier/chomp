@@ -12,6 +12,7 @@ export const useRecipe = (recipeId: string | undefined) => {
             recipe_ingredients: {
               store: {},
             },
+            user: {},
           },
         }
       : null
