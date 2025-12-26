@@ -65,7 +65,7 @@ export const CreateGroceryListSheet = forwardRef<
       <BottomSheet.SheetView>
         <BottomSheet.Header
           title="Create New List"
-          button={<CloseButton onPress={handleCancel} />}
+          dismissButton={<CloseButton onPress={handleCancel} />}
         />
 
         <View className="my-4">

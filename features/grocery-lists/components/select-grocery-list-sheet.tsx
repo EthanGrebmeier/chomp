@@ -136,8 +136,12 @@ export const SelectGroceryListSheet = forwardRef<
             button={
               <DropdownMenuRoot
                 trigger={
-                  <Button variant="ghost" size="icon">
-                    <Icon as={PlusIcon} size={24} className="text-primary" />
+                  <Button size="icon">
+                    <Icon
+                      as={PlusIcon}
+                      size={24}
+                      className="text-primary-foreground"
+                    />
                   </Button>
                 }
               >
@@ -180,13 +184,13 @@ export const SelectGroceryListSheet = forwardRef<
                       onPress={() => handleSelectList(list.id)}
                       className={cn(
                         'flex-row items-center justify-between rounded-xl px-4 py-3',
-                        isSelected ? 'bg-primary/10' : 'active:bg-muted'
+                        isSelected ? 'bg-muted' : 'active:bg-muted'
                       )}
                     >
                       <Text
                         className={cn(
                           'text-lg',
-                          isSelected && 'font-semibold text-primary'
+                          isSelected && 'font-medium text-foreground'
                         )}
                       >
                         {list.name}
@@ -195,7 +199,7 @@ export const SelectGroceryListSheet = forwardRef<
                         <Icon
                           as={CheckIcon}
                           size={20}
-                          className="text-primary"
+                          className="text-foreground"
                         />
                       )}
                     </Pressable>
