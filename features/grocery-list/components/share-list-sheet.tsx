@@ -1,14 +1,16 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import * as Clipboard from 'expo-clipboard';
-import { CopyIcon } from 'lucide-react-native';
+import { CopyIcon, LinkIcon } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
+import { buildListDeepLinkUrl } from '../../../lib/navigation';
 
 export type ShareListSheetRef = {
   present: (joinCode: string) => void;
@@ -33,6 +35,12 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
       toast.success('Code copied to clipboard');
     };
 
+    const handleCopyLink = async () => {
+      const deepLinkUrl = buildListDeepLinkUrl(joinCode);
+      await Clipboard.setStringAsync(deepLinkUrl);
+      toast.success('Link copied to clipboard');
+    };
+
     return (
       <BottomSheet name="share-list-sheet" ref={sheetRef}>
         <BottomSheet.SheetView>
@@ -53,8 +61,19 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
             </HapticPressable>
 
             <Text className="text-center text-sm text-muted-foreground">
-              Tap to copy
+              Tap to copy code
             </Text>
+
+            <View className="mt-4 w-full">
+              <Button
+                variant="outline"
+                onPress={handleCopyLink}
+                className="w-full"
+              >
+                <Icon as={LinkIcon} size={20} />
+                <Text>Copy Link</Text>
+              </Button>
+            </View>
           </View>
         </BottomSheet.SheetView>
       </BottomSheet>

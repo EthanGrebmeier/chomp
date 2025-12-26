@@ -86,6 +86,13 @@ export function buildRecipeUrl(params: RecipeParams) {
 }
 
 /**
+ * Builds a deep link URL for sharing a grocery list by join code
+ */
+export function buildListDeepLinkUrl(joinCode: string): string {
+  return `chomp://list/${joinCode}`;
+}
+
+/**
  * Navigation helper functions that can be used with expo-router
  */
 export const navigation = {
