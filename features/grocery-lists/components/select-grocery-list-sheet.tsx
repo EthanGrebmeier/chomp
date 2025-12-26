@@ -1,7 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { CheckIcon, LinkIcon, PlusIcon } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Pressable, ScrollView } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Button } from '../../../components/ui/button';
@@ -129,115 +129,121 @@ export const SelectGroceryListSheet = forwardRef<
 
   return (
     <>
-      <BottomSheet name="select-grocery-list-sheet" ref={sheetRef}>
-        <BottomSheet.SheetView>
-          <BottomSheet.Header
-            title="Select List"
-            button={
-              <DropdownMenuRoot
+      <BottomSheet
+        detents={[0.7]}
+        name="select-grocery-list-sheet"
+        ref={sheetRef}
+        scrollable
+      >
+        <BottomSheet.Header
+          className="px-4"
+          title="Select List"
+          button={
+            <DropdownMenuRoot
+              trigger={
+                <Button size="icon">
+                  <Icon
+                    as={PlusIcon}
+                    size={24}
+                    className="text-primary-foreground"
+                  />
+                </Button>
+              }
+            >
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  key="create"
+                  onSelect={() => createSheetRef.current?.present()}
+                >
+                  <DropdownMenuItemIcon ios={{ name: 'plus' }}>
+                    <Icon as={PlusIcon} size={16} />
+                  </DropdownMenuItemIcon>
+                  <DropdownMenuItemTitle>Create New List</DropdownMenuItemTitle>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  key="join"
+                  onSelect={() => joinSheetRef.current?.present()}
+                >
+                  <DropdownMenuItemIcon ios={{ name: 'link' }}>
+                    <Icon as={LinkIcon} size={16} />
+                  </DropdownMenuItemIcon>
+                  <DropdownMenuItemTitle>Join by Code</DropdownMenuItemTitle>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenuRoot>
+          }
+        />
+
+        <ScrollView
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={false}
+          className="mt-4 gap-1 px-4 pb-4"
+        >
+          {lists?.grocery_lists.map(list => {
+            const isSelected = list.id === selectedListId;
+            const isOwner = user?.id === list.ownerId;
+
+            return (
+              <ContextMenuRoot
+                key={list.id}
                 trigger={
-                  <Button size="icon">
-                    <Icon
-                      as={PlusIcon}
-                      size={24}
-                      className="text-primary-foreground"
-                    />
-                  </Button>
-                }
-              >
-                <DropdownMenuContent>
-                  <DropdownMenuItem
-                    key="create"
-                    onSelect={() => createSheetRef.current?.present()}
+                  <Pressable
+                    onPress={() => handleSelectList(list.id)}
+                    className={cn(
+                      'flex-row items-center justify-between rounded-xl px-4 py-3',
+                      isSelected ? 'bg-muted' : 'active:bg-muted'
+                    )}
                   >
-                    <DropdownMenuItemIcon ios={{ name: 'plus' }}>
-                      <Icon as={PlusIcon} size={16} />
-                    </DropdownMenuItemIcon>
-                    <DropdownMenuItemTitle>
-                      Create New List
-                    </DropdownMenuItemTitle>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    key="join"
-                    onSelect={() => joinSheetRef.current?.present()}
-                  >
-                    <DropdownMenuItemIcon ios={{ name: 'link' }}>
-                      <Icon as={LinkIcon} size={16} />
-                    </DropdownMenuItemIcon>
-                    <DropdownMenuItemTitle>Join by Code</DropdownMenuItemTitle>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenuRoot>
-            }
-          />
-
-          <View className="mt-4 gap-1 pb-4">
-            {lists?.grocery_lists.map(list => {
-              const isSelected = list.id === selectedListId;
-              const isOwner = user?.id === list.ownerId;
-
-              return (
-                <ContextMenuRoot
-                  key={list.id}
-                  trigger={
-                    <Pressable
-                      onPress={() => handleSelectList(list.id)}
+                    <Text
                       className={cn(
-                        'flex-row items-center justify-between rounded-xl px-4 py-3',
-                        isSelected ? 'bg-muted' : 'active:bg-muted'
+                        'text-lg',
+                        isSelected && 'font-medium text-foreground'
                       )}
                     >
-                      <Text
-                        className={cn(
-                          'text-lg',
-                          isSelected && 'font-medium text-foreground'
-                        )}
-                      >
-                        {list.name}
-                      </Text>
-                      {isSelected && (
-                        <Icon
-                          as={CheckIcon}
-                          size={20}
-                          className="text-foreground"
-                        />
-                      )}
-                    </Pressable>
-                  }
+                      {list.name}
+                    </Text>
+                    {isSelected && (
+                      <Icon
+                        as={CheckIcon}
+                        size={20}
+                        className="text-foreground"
+                      />
+                    )}
+                  </Pressable>
+                }
+              >
+                <ContextMenuItem
+                  key={`delete-or-leave-${list.id}`}
+                  destructive
+                  disabled={!canDeleteList}
+                  onSelect={() => {
+                    if (isOwner) {
+                      handleDeleteList(list.id, list.name);
+                    } else {
+                      handleLeaveList(list.id, list.name);
+                    }
+                  }}
                 >
-                  <ContextMenuItem
-                    key={`delete-or-leave-${list.id}`}
-                    destructive
-                    disabled={!canDeleteList}
-                    onSelect={() => {
-                      if (isOwner) {
-                        handleDeleteList(list.id, list.name);
-                      } else {
-                        handleLeaveList(list.id, list.name);
-                      }
+                  <ContextMenuItemTitle>
+                    {isOwner ? 'Delete List' : 'Leave List'}
+                  </ContextMenuItemTitle>
+                  <ContextMenuItemIcon
+                    ios={{
+                      name: isOwner
+                        ? 'trash'
+                        : 'rectangle.portrait.and.arrow.right',
                     }}
-                  >
-                    <ContextMenuItemTitle>
-                      {isOwner ? 'Delete List' : 'Leave List'}
-                    </ContextMenuItemTitle>
-                    <ContextMenuItemIcon
-                      ios={{
-                        name: isOwner
-                          ? 'trash'
-                          : 'rectangle.portrait.and.arrow.right',
-                      }}
-                    />
-                  </ContextMenuItem>
-                </ContextMenuRoot>
-              );
-            })}
-          </View>
-          <CreateGroceryListSheet
-            ref={createSheetRef}
-            onCreated={handleCreated}
-          />
-          <JoinByCodeSheet ref={joinSheetRef} onJoined={handleJoined} />
-        </BottomSheet.SheetView>
+                  />
+                </ContextMenuItem>
+              </ContextMenuRoot>
+            );
+          })}
+        </ScrollView>
+        <CreateGroceryListSheet
+          ref={createSheetRef}
+          onCreated={handleCreated}
+        />
+        <JoinByCodeSheet ref={joinSheetRef} onJoined={handleJoined} />
       </BottomSheet>
     </>
   );
