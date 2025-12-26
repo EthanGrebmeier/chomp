@@ -24,11 +24,12 @@ export const MetaBar = () => {
   } = useItemSheet();
 
   return (
-    <View className="-ml-4 mt-3 flex-row items-center justify-between">
+    <View className="-ml-4 flex-row items-center justify-between">
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerClassName="flex-row items-center gap-2 pl-4 pr-2"
+        className="min-h-10 flex-1"
+        contentContainerClassName="flex-row items-center justify-center gap-2 pl-4 pr-2"
       >
         <CategorySheet category={category} onSelect={setCategory} />
         <UnitSheet
@@ -43,12 +44,13 @@ export const MetaBar = () => {
         <Button
           variant="default"
           size="icon"
+          className="size-10"
           onPress={onSubmit}
           disabled={!isValid}
         >
           <Icon
             as={CheckIcon}
-            size={18}
+            size={24}
             strokeWidth={3}
             className="text-primary-foreground"
           />
