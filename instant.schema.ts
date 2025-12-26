@@ -37,6 +37,7 @@ const _schema = i.schema({
     grocery_list_shares: i.entity({
       grocery_list_id: i.string(),
       user_id: i.string(),
+      lastAccessedAt: i.string().optional(),
     }),
     recipes: i.entity({
       name: i.string(),

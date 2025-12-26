@@ -28,6 +28,7 @@ import {
 } from '../instant/useDeleteGroceryList';
 import { useGroceryLists } from '../instant/useGroceryLists';
 import { useLeaveGroceryList } from '../instant/useLeaveGroceryList';
+import { useTrackListAccess } from '../instant/useTrackListAccess';
 
 import {
   CreateGroceryListSheet,
@@ -58,6 +59,7 @@ export const SelectGroceryListSheet = forwardRef<
   const deleteGroceryList = useDeleteGroceryList();
   const canDeleteList = useCanDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
+  const trackListAccess = useTrackListAccess();
 
   useImperativeHandle(ref, () => ({
     present: () => sheetRef.current?.present(),
@@ -65,16 +67,19 @@ export const SelectGroceryListSheet = forwardRef<
   }));
 
   const handleSelectList = (listId: string) => {
+    trackListAccess(listId);
     onSelectList(listId);
     sheetRef.current?.dismiss();
   };
 
   const handleCreated = (listId: string) => {
+    trackListAccess(listId);
     onSelectList(listId);
     sheetRef.current?.dismiss();
   };
 
   const handleJoined = (listId: string) => {
+    trackListAccess(listId);
     onSelectList(listId);
     sheetRef.current?.dismiss();
   };

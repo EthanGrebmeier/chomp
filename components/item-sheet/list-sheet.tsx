@@ -9,6 +9,7 @@ import { useRef } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { useGroceryLists } from '../../features/grocery-lists/instant/useGroceryLists';
+import { useTrackListAccess } from '../../features/grocery-lists/instant/useTrackListAccess';
 import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
@@ -55,6 +56,7 @@ type ListSheetProps = {
 export const ListSheet = ({ listId, onSelect }: ListSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const { data } = useGroceryLists();
+  const trackListAccess = useTrackListAccess();
 
   const groceryLists = data?.grocery_lists ?? [];
   const selectedList = groceryLists.find(list => list.id === listId);
@@ -64,6 +66,7 @@ export const ListSheet = ({ listId, onSelect }: ListSheetProps) => {
   };
 
   const handleSelect = (id: string) => {
+    trackListAccess(id);
     onSelect(id);
     sheetRef.current?.dismiss();
   };

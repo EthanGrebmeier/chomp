@@ -23,7 +23,7 @@ const rules = {
     allow: {
       create: 'auth.id != null',
       view: 'auth.id == data.user_id',
-      update: 'false',
+      update: 'auth.id == data.user_id',
       delete: 'auth.id == data.user_id',
     },
   },

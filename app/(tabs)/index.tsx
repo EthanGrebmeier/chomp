@@ -11,6 +11,7 @@ import { useCreateGroceryList } from '@/features/grocery-lists/instant/useCreate
 import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDeleteGroceryList';
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
+import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
 import { db } from '@/lib/instant';
 
 import { Text } from '../../components/ui/text';
@@ -27,14 +28,16 @@ export default function List() {
   const createGroceryList = useCreateGroceryList();
   const deleteGroceryList = useDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
+  const trackListAccess = useTrackListAccess();
   const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
 
   // Set active list from URL param if provided
   useEffect(() => {
     if (listIdParam && lists?.grocery_lists.some(l => l.id === listIdParam)) {
       setActiveListId(listIdParam);
+      trackListAccess(listIdParam);
     }
-  }, [listIdParam, lists]);
+  }, [listIdParam, lists, trackListAccess]);
 
   // Set default list if none selected
   useEffect(() => {
@@ -42,12 +45,14 @@ export default function List() {
       if (listsLoading) return;
 
       if (!activeListId && lists?.grocery_lists.length) {
-        setActiveListId(lists.grocery_lists[0].id);
+        const defaultListId = lists.grocery_lists[0].id;
+        setActiveListId(defaultListId);
+        trackListAccess(defaultListId);
       }
     };
 
     setOrCreateDefaultList();
-  }, [lists, activeListId, createGroceryList, listsLoading]);
+  }, [lists, activeListId, createGroceryList, listsLoading, trackListAccess]);
 
   const activeList = lists?.grocery_lists.find(
     list => list.id === activeListId
