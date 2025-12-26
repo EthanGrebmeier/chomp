@@ -33,18 +33,17 @@ const UnitOption = ({ label, isSelected, onPress }: UnitOptionProps) => (
     <View
       className={cn(
         'flex-row items-center gap-3 rounded-xl px-2 py-3',
-        isSelected ? 'bg-primary/10' : 'active:bg-muted'
+        isSelected && 'bg-muted'
       )}
     >
       <Text
         className={cn(
-          'flex-1 text-lg',
-          isSelected && 'font-semibold text-primary'
+          'flex-1 text-base font-medium',
+          isSelected ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
         {label}
       </Text>
-      {isSelected && <Icon as={CheckIcon} size={20} className="text-primary" />}
     </View>
   </HapticPressable>
 );
@@ -123,23 +122,24 @@ export const UnitSheet = ({
       </WithLayoutTransition>
 
       <BottomSheet ref={sheetRef} name="unit-sheet">
-        <BottomSheet.SheetView>
-          <BottomSheet.Header
-            title="Quantity"
-            dismissButton={
-              <BackButton onPress={() => sheetRef.current?.dismiss()} />
-            }
-            button={
-              <Button onPress={handleConfirm} size="icon" disabled={!isValid}>
-                <Icon
-                  as={CheckIcon}
-                  size={20}
-                  className="text-primary-foreground"
-                />
-              </Button>
-            }
-          />
+        <BottomSheet.Header
+          className="px-4"
+          title="Quantity"
+          dismissButton={
+            <BackButton onPress={() => sheetRef.current?.dismiss()} />
+          }
+          button={
+            <Button onPress={handleConfirm} size="icon" disabled={!isValid}>
+              <Icon
+                as={CheckIcon}
+                size={20}
+                className="text-primary-foreground"
+              />
+            </Button>
+          }
+        />
 
+        <View className="px-4">
           <View className="mb-4 flex-row items-center gap-3 rounded-xl bg-muted px-4 py-3">
             <TextInput
               ref={quantityInputRef}
@@ -159,7 +159,7 @@ export const UnitSheet = ({
           <Text className="mb-2 text-sm font-medium text-muted-foreground">
             Unit
           </Text>
-          <View className=" gap-2">
+          <View className="gap-2">
             {unitOptions.map(option => (
               <UnitOption
                 key={option.value}
@@ -169,7 +169,7 @@ export const UnitSheet = ({
               />
             ))}
           </View>
-        </BottomSheet.SheetView>
+        </View>
       </BottomSheet>
     </>
   );

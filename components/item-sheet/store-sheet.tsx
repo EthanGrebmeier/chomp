@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { CheckIcon, PlusIcon, StoreIcon } from 'lucide-react-native';
+import { PlusIcon, StoreIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 import { toast } from 'sonner-native';
@@ -27,18 +27,17 @@ const StoreOption = ({ label, isSelected, onPress }: StoreOptionProps) => (
     <View
       className={cn(
         'flex-row items-center gap-3 rounded-xl px-2 py-3',
-        isSelected ? 'bg-primary/10' : 'active:bg-muted'
+        isSelected && 'bg-muted'
       )}
     >
       <Text
         className={cn(
-          'flex-1 text-lg',
-          isSelected && 'font-semibold text-primary'
+          'flex-1 text-base font-medium',
+          isSelected ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
         {label}
       </Text>
-      {isSelected && <Icon as={CheckIcon} size={20} className="text-primary" />}
     </View>
   </HapticPressable>
 );
@@ -137,52 +136,47 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
       </WithLayoutTransition>
 
       <BottomSheet ref={sheetRef} name="store-sheet">
-        <BottomSheet.SheetView>
-          <BottomSheet.Header
-            dismissButton={
-              <BackButton onPress={() => sheetRef.current?.dismiss()} />
-            }
-            title="Store"
-            button={
-              <Button
-                onPress={handleOpenCreateStore}
-                size="icon"
-                variant="ghost"
-              >
-                <Icon as={PlusIcon} size={24} className="text-primary" />
-              </Button>
-            }
+        <BottomSheet.Header
+          className="px-4"
+          dismissButton={
+            <BackButton onPress={() => sheetRef.current?.dismiss()} />
+          }
+          title="Store"
+          button={
+            <Button onPress={handleOpenCreateStore} size="icon" variant="ghost">
+              <Icon as={PlusIcon} size={24} className="text-primary" />
+            </Button>
+          }
+        />
+
+        <ScrollView
+          className="max-h-96 px-2"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        >
+          <StoreOption
+            label="None"
+            isSelected={!storeId}
+            onPress={() => handleSelect(undefined)}
           />
 
-          <ScrollView
-            className="max-h-96"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
-          >
-            <StoreOption
-              label="None"
-              isSelected={!storeId}
-              onPress={() => handleSelect(undefined)}
-            />
-
-            {isLoading ? (
-              <View className="py-4">
-                <Text className="text-center text-muted-foreground">
-                  Loading stores...
-                </Text>
-              </View>
-            ) : (
-              stores.map(store => (
-                <StoreOption
-                  key={store.id}
-                  label={store.name}
-                  isSelected={store.id === storeId}
-                  onPress={() => handleSelect(store.id)}
-                />
-              ))
-            )}
-          </ScrollView>
-        </BottomSheet.SheetView>
+          {isLoading ? (
+            <View className="py-4">
+              <Text className="text-center text-muted-foreground">
+                Loading stores...
+              </Text>
+            </View>
+          ) : (
+            stores.map(store => (
+              <StoreOption
+                key={store.id}
+                label={store.name}
+                isSelected={store.id === storeId}
+                onPress={() => handleSelect(store.id)}
+              />
+            ))
+          )}
+        </ScrollView>
       </BottomSheet>
 
       {/* Create Store Sheet */}

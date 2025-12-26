@@ -1,10 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import {
-  CheckIcon,
-  LucideIcon,
-  ShoppingBasketIcon,
-  TagIcon,
-} from 'lucide-react-native';
+import { LucideIcon, ShoppingBasketIcon, TagIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -39,7 +34,7 @@ const CategoryOption = ({
     <View
       className={cn(
         'flex-row items-center gap-3 rounded-xl px-2 py-3',
-        isSelected ? 'bg-primary/10' : 'active:bg-muted'
+        isSelected && 'bg-muted'
       )}
     >
       <View
@@ -52,13 +47,12 @@ const CategoryOption = ({
       </View>
       <Text
         className={cn(
-          'flex-1 text-lg',
-          isSelected && 'font-semibold text-primary'
+          'flex-1 text-base font-medium',
+          isSelected ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
         {label}
       </Text>
-      {isSelected && <Icon as={CheckIcon} size={20} className="text-primary" />}
     </View>
   </HapticPressable>
 );
@@ -111,10 +105,7 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
         </HapticPressable>
       </WithLayoutTransition>
 
-      {/* TODO: Fix padding on sheet with scrollable
-            Fixing by adding scrollable causes pressables to not work within
-          */}
-      <BottomSheet ref={sheetRef} name="category-sheet">
+      <BottomSheet scrollable ref={sheetRef} name="category-sheet">
         <BottomSheet.Header
           className="px-4"
           title="Category"
