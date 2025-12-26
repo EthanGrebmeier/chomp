@@ -111,7 +111,10 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
         </HapticPressable>
       </WithLayoutTransition>
 
-      <BottomSheet scrollable ref={sheetRef} name="category-sheet">
+      {/* TODO: Fix padding on sheet with scrollable
+            Fixing by adding scrollable causes pressables to not work within
+          */}
+      <BottomSheet ref={sheetRef} name="category-sheet">
         <BottomSheet.Header
           className="px-4"
           title="Category"
