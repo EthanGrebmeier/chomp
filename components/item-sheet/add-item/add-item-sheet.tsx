@@ -154,7 +154,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
           {mode === 'item' ? (
             <View className="px-4">
               <ItemForm />
-              <MetaBar submitLabel="Create" />
+              <MetaBar />
             </View>
           ) : selectedRecipe ? (
             <IngredientSelector
