@@ -94,7 +94,7 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
               <Text className="text-2xl font-semibold text-foreground">
                 {selectedRecipe.name}
               </Text>
-              <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center justify-between ">
                 <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
                 <Button onPress={handleAddMeal}>
                   <Text>Add Meal</Text>
