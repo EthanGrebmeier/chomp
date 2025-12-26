@@ -157,7 +157,7 @@ export const IngredientSelector = ({
 
   return (
     <View>
-      <View className="mb-3 w-full flex-row items-center gap-2">
+      <View className="mb-3 w-full flex-row items-center gap-2 px-4">
         <BackButton onPress={onBack} />
         <BottomSheet.Header
           title={recipe.name}
@@ -170,14 +170,14 @@ export const IngredientSelector = ({
               <Icon
                 as={ExternalLinkIcon}
                 size={20}
-                className="text-muted-foreground"
+                className="text-secondary-foreground"
               />
             </Button>
           }
         />
       </View>
 
-      <View className="flex-row items-center justify-between">
+      <View className="flex-row items-center justify-between px-4">
         <View>
           <Text className="text-lg font-medium text-foreground">
             Ingredients
@@ -195,6 +195,7 @@ export const IngredientSelector = ({
 
       <ScrollView
         className="max-h-64 min-h-24"
+        contentContainerClassName="px-4"
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -212,7 +213,7 @@ export const IngredientSelector = ({
         ))}
       </ScrollView>
 
-      <View className="mt-4 flex-row items-center justify-end">
+      <View className="mt-4 flex-row items-center justify-end px-4">
         <Button
           onPress={handleAdd}
           disabled={selectedIds.size === 0 || isAdding}

@@ -88,8 +88,11 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
     if (mode === 'item') {
       return ['auto'];
     }
+    if (mode === 'recipe' && selectedRecipe) {
+      return ['auto'];
+    }
     return [0.5, 1];
-  }, [mode]);
+  }, [mode, selectedRecipe]);
 
   const openSheet = () => {
     ref.current?.present();
