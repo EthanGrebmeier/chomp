@@ -72,7 +72,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   );
   const sheetRef = useRef<TrueSheet>(null);
   const setFromItemRef = useRef<
-    ((item: GroceryListItemWithRecipe) => void) | null
+    ((item: GroceryListItemWithRecipe | BaseGroceryItem) => void) | null
   >(null);
 
   const onSubmit = ({
