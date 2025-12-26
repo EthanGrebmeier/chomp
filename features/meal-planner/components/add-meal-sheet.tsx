@@ -1,6 +1,8 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { router } from 'expo-router';
+import { ExternalLinkIcon } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -8,7 +10,9 @@ import { BottomSheet } from '../../../components/bottom-sheet';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
+import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
+import { formatQuantity } from '../../../lib/grocery-item';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddRecipeToMealPlan } from '../hooks/useAddRecipeToMealPlan';
 
@@ -70,6 +74,12 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
       sheetRef.current?.dismiss();
     };
 
+    const handleGoToRecipe = () => {
+      if (!selectedRecipe) return;
+      sheetRef.current?.dismiss();
+      router.push(`/recipes/${selectedRecipe.id}`);
+    };
+
     return (
       <BottomSheet
         name="add-meal-sheet"
@@ -87,13 +97,47 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
             exiting={FadeOut.duration(150)}
             className="px-4"
           >
-            <View className="mb-4">
-              <BackButton onPress={handleBackToRecipes} />
-            </View>
+            <BottomSheet.Header
+              title={selectedRecipe.name}
+              dismissButton={<BackButton onPress={handleBackToRecipes} />}
+              button={
+                <Button
+                  variant="secondary"
+                  onPress={handleGoToRecipe}
+                  size="icon"
+                >
+                  <Icon
+                    as={ExternalLinkIcon}
+                    size={20}
+                    className="text-secondary-foreground"
+                  />
+                </Button>
+              }
+            />
             <View className="gap-4">
-              <Text className="text-2xl font-semibold text-foreground">
-                {selectedRecipe.name}
-              </Text>
+              <View>
+                <Text className="text-lg font-medium text-foreground">
+                  Ingredients
+                </Text>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {selectedRecipe.recipe_ingredients.map(ingredient => (
+                    <View
+                      key={ingredient.id}
+                      className="flex-row items-center justify-between"
+                    >
+                      <Text className="text-base font-medium text-foreground">
+                        {ingredient.name}
+                      </Text>
+                      <Text className="text-sm text-muted-foreground">
+                        {formatQuantity({
+                          quantity: ingredient.quantity,
+                          unit: ingredient.unit,
+                        })}
+                      </Text>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
               <View className="flex-row items-center justify-between ">
                 <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
                 <Button onPress={handleAddMeal}>

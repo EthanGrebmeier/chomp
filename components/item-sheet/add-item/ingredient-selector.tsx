@@ -9,6 +9,7 @@ import {
   RecipeIngredient,
   RecipeWithIngredients,
 } from '../../../features/recipes/types';
+import { formatQuantity } from '../../../lib/grocery-item';
 import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
 import { BackButton } from '../../ui/back-button';
@@ -30,13 +31,6 @@ const IngredientRow = ({
   isSelected,
   onToggle,
 }: IngredientRowProps) => {
-  const formatQuantity = () => {
-    if (ingredient.unit === 'each') {
-      return `x${ingredient.quantity}`;
-    }
-    return `${ingredient.quantity} ${ingredient.unit}`;
-  };
-
   return (
     <HapticPressable
       onPress={onToggle}
@@ -62,13 +56,13 @@ const IngredientRow = ({
         >
           {ingredient.name}
         </Text>
-        {ingredient.notes && (
-          <Text className="text-sm text-muted-foreground">
-            {ingredient.notes}
-          </Text>
-        )}
       </View>
-      <Text className="text-sm text-muted-foreground">{formatQuantity()}</Text>
+      <Text className="text-sm text-muted-foreground">
+        {formatQuantity({
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+        })}
+      </Text>
     </HapticPressable>
   );
 };
