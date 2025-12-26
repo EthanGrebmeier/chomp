@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { PlusIcon, StoreIcon } from 'lucide-react-native';
+import { CheckIcon, PlusIcon, StoreIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 import { toast } from 'sonner-native';
@@ -27,20 +27,18 @@ const StoreOption = ({ label, isSelected, onPress }: StoreOptionProps) => (
     <View
       className={cn(
         'flex-row items-center gap-3 rounded-xl px-2 py-3',
-        isSelected && 'bg-muted'
+        isSelected ? 'bg-primary/10' : 'active:bg-muted'
       )}
     >
-      <View className="size-10 items-center justify-center rounded-full bg-muted">
-        <Icon as={StoreIcon} size={20} className="text-muted-foreground" />
-      </View>
       <Text
         className={cn(
-          'flex-1 text-base font-medium',
-          isSelected ? 'text-foreground' : 'text-muted-foreground'
+          'flex-1 text-lg',
+          isSelected && 'font-semibold text-primary'
         )}
       >
         {label}
       </Text>
+      {isSelected && <Icon as={CheckIcon} size={20} className="text-primary" />}
     </View>
   </HapticPressable>
 );

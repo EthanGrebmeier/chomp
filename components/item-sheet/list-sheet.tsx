@@ -27,8 +27,8 @@ const ListOption = ({ name, isSelected, onPress }: ListOptionProps) => (
   <HapticPressable onPress={onPress} hapticType="selection">
     <View
       className={cn(
-        'flex-row items-center gap-3 rounded-xl px-2 py-3',
-        isSelected && 'bg-muted'
+        'flex-row items-center gap-3 rounded-xl px-4 py-3',
+        isSelected ? 'bg-primary/10' : 'active:bg-muted'
       )}
     >
       <View className="size-10 items-center justify-center rounded-full bg-muted">
@@ -36,8 +36,8 @@ const ListOption = ({ name, isSelected, onPress }: ListOptionProps) => (
       </View>
       <Text
         className={cn(
-          'flex-1 text-base font-medium',
-          isSelected ? 'text-foreground' : 'text-muted-foreground'
+          'flex-1 text-lg',
+          isSelected && 'font-semibold text-primary'
         )}
       >
         {name}
