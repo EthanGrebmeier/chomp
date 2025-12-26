@@ -113,10 +113,14 @@ export const MealTimeSheet = ({
       <BottomSheet ref={sheetRef} name="meal-time-sheet">
         <BottomSheet.SheetView>
           <View className="flex-row items-center gap-2 pb-2">
-            {canGoBack && (
-              <BackButton onPress={() => sheetRef.current?.dismiss()} />
-            )}
-            <BottomSheet.Header title="Meal Time" />
+            <BottomSheet.Header
+              dismissButton={
+                canGoBack && (
+                  <BackButton onPress={() => sheetRef.current?.dismiss()} />
+                )
+              }
+              title="Meal Time"
+            />
           </View>
           <ScrollView
             className="max-h-96"
