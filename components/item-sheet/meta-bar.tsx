@@ -30,6 +30,7 @@ export const MetaBar = () => {
         showsHorizontalScrollIndicator={false}
         className="min-h-10 flex-1"
         contentContainerClassName="flex-row items-center justify-center gap-2 pl-4 pr-2"
+        keyboardShouldPersistTaps="handled"
       >
         <CategorySheet category={category} onSelect={setCategory} />
         <UnitSheet
