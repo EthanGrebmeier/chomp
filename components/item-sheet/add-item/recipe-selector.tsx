@@ -67,10 +67,7 @@ export const RecipeSelector = ({
 
   if (!recipes || recipes.length === 0) {
     return (
-      <View
-        style={{ minHeight: 600 }}
-        className="items-center justify-center gap-4"
-      >
+      <View className="items-center justify-center gap-4">
         <View className="items-center">
           <Text className="text-lg font-semibold text-foreground">
             No recipes yet
@@ -93,7 +90,7 @@ export const RecipeSelector = ({
 
   return (
     <View>
-      <View className="mb-3 flex-row items-center gap-2 px-4">
+      <View className="flex-row items-center gap-2 px-4 ">
         <Icon as={SearchIcon} size={20} className="text-muted-foreground" />
         <TextInput
           className="flex-1"
@@ -121,7 +118,6 @@ export const RecipeSelector = ({
       ) : (
         <ScrollView
           className="px-4"
-          contentContainerClassName="pb-4"
           nestedScrollEnabled
           showsVerticalScrollIndicator={false}
         >
