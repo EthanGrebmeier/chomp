@@ -147,33 +147,33 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
           itemInputRef.current?.focus();
         }}
         onStartClose={handleClose}
-        scrollable={true}
+        scrollable={mode !== 'item'}
         viewClassName="flex-1"
       >
-        <View>
-          {!selectedRecipe && (
-            <ModeToggle mode={mode} onModeChange={handleModeChange} />
-          )}
-          {mode === 'item' ? (
-            <View className="px-4">
+        {!selectedRecipe && (
+          <ModeToggle mode={mode} onModeChange={handleModeChange} />
+        )}
+        {mode === 'item' ? (
+          <>
+            <View className="flex-1 px-4">
               <ItemForm />
               <MetaBar />
             </View>
-          ) : selectedRecipe ? (
-            <IngredientSelector
-              recipe={selectedRecipe}
-              listId={groceryListId}
-              onBack={handleBackToRecipes}
-              onComplete={handleAddComplete}
-              onDismiss={() => ref.current?.dismiss()}
-            />
-          ) : (
-            <RecipeSelector
-              onSelectRecipe={handleRecipeSelect}
-              onDismiss={() => ref.current?.dismiss()}
-            />
-          )}
-        </View>
+          </>
+        ) : selectedRecipe ? (
+          <IngredientSelector
+            recipe={selectedRecipe}
+            listId={groceryListId}
+            onBack={handleBackToRecipes}
+            onComplete={handleAddComplete}
+            onDismiss={() => ref.current?.dismiss()}
+          />
+        ) : (
+          <RecipeSelector
+            onSelectRecipe={handleRecipeSelect}
+            onDismiss={() => ref.current?.dismiss()}
+          />
+        )}
       </BottomSheet>
     </>
   );

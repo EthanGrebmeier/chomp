@@ -29,7 +29,9 @@ export const DeleteListConfirmationSheet = ({
       <BottomSheet.SheetView>
         <BottomSheet.Header title={title} />
         <View className="gap-4">
-          <Text className="text-muted-foreground">{description}</Text>
+          <Text className="text-center text-muted-foreground">
+            {description}
+          </Text>
           <View className="gap-2">
             <Button variant="destructive" onPress={onConfirm}>
               <Text>{confirmText}</Text>
@@ -43,4 +45,3 @@ export const DeleteListConfirmationSheet = ({
     </BottomSheet>
   );
 };
-

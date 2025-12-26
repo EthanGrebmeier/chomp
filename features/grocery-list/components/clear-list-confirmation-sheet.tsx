@@ -25,8 +25,8 @@ export const ClearListConfirmationSheet = ({
     <BottomSheet name="clear-list-confirmation-sheet" ref={ref}>
       <BottomSheet.SheetView>
         <BottomSheet.Header title="Clear Grocery List" />
-        <View className="gap-4">
-          <Text className="text-muted-foreground">
+        <View className="gap-6">
+          <Text className="text-center text-muted-foreground">
             Are you sure you want to clear your entire grocery list? This action
             cannot be undone.
           </Text>

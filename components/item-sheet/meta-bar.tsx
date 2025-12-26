@@ -28,8 +28,8 @@ export const MetaBar = () => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="min-h-10 flex-1"
-        contentContainerClassName="flex-row items-center justify-center gap-2 pl-4 pr-2"
+        className="min-h-10"
+        contentContainerClassName="flex-row items-center gap-2 pl-4 pr-2 overflow-hidden"
         keyboardShouldPersistTaps="handled"
       >
         <CategorySheet category={category} onSelect={setCategory} />

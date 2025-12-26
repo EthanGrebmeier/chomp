@@ -102,7 +102,7 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
       toast.success(`Store "${trimmedName}" created`);
       createStoreSheetRef.current?.dismiss();
       sheetRef.current?.dismiss();
-    } catch (error) {
+    } catch {
       toast.error('Failed to create store');
     } finally {
       setIsCreating(false);
@@ -140,18 +140,21 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
 
       <BottomSheet ref={sheetRef} name="store-sheet">
         <BottomSheet.SheetView>
-          <View className="flex-row items-center gap-2 pb-2">
-            <BackButton onPress={() => sheetRef.current?.dismiss()} />
-            <BottomSheet.Header title="Store" />
-            <Button
-              onPress={handleOpenCreateStore}
-              size="icon"
-              variant="ghost"
-              className="ml-auto"
-            >
-              <Icon as={PlusIcon} size={24} className="text-primary" />
-            </Button>
-          </View>
+          <BottomSheet.Header
+            dismissButton={
+              <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            }
+            title="Store"
+            button={
+              <Button
+                onPress={handleOpenCreateStore}
+                size="icon"
+                variant="ghost"
+              >
+                <Icon as={PlusIcon} size={24} className="text-primary" />
+              </Button>
+            }
+          />
 
           <ScrollView
             className="max-h-96"

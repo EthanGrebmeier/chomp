@@ -136,7 +136,7 @@ export const SelectGroceryListSheet = forwardRef<
             button={
               <DropdownMenuRoot
                 trigger={
-                  <Button variant="ghost" size="circle">
+                  <Button variant="ghost" size="icon">
                     <Icon as={PlusIcon} size={24} className="text-primary" />
                   </Button>
                 }

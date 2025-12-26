@@ -28,19 +28,11 @@ export const useEditItemSheet = () => {
 };
 
 const EditItemContents = () => {
-  const { reset, itemInputRef } = useItemSheet();
+  const { reset } = useItemSheet();
   const { sheetRef } = useEditItemSheetInternal();
 
   return (
-    <BottomSheet
-      viewClassName="pb-4"
-      name="edit-item-sheet"
-      ref={sheetRef}
-      onStartClose={reset}
-      onOpen={() => {
-        itemInputRef.current?.focus();
-      }}
-    >
+    <BottomSheet name="edit-item-sheet" ref={sheetRef} onStartClose={reset}>
       <BottomSheet.SheetView>
         <ItemForm />
         <MetaBar />

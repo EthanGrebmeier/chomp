@@ -107,10 +107,12 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
 
       <BottomSheet ref={sheetRef} name="category-sheet">
         <BottomSheet.SheetView>
-          <View className="flex-row items-center gap-2 pb-2">
-            <BackButton onPress={() => sheetRef.current?.dismiss()} />
-            <BottomSheet.Header title="Category" />
-          </View>
+          <BottomSheet.Header
+            title="Category"
+            dismissButton={
+              <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            }
+          />
           <ScrollView
             className="max-h-96"
             showsVerticalScrollIndicator={false}

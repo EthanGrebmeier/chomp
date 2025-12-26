@@ -126,22 +126,21 @@ export const UnitSheet = ({
 
       <BottomSheet ref={sheetRef} name="unit-sheet">
         <BottomSheet.SheetView>
-          <View className="flex-row items-center gap-2 pb-2">
-            <BackButton onPress={() => sheetRef.current?.dismiss()} />
-            <BottomSheet.Header title="Quantity" />
-            <Button
-              onPress={handleConfirm}
-              size="circle"
-              className="ml-auto"
-              disabled={!isValid}
-            >
-              <Icon
-                as={CheckIcon}
-                size={20}
-                className="text-primary-foreground"
-              />
-            </Button>
-          </View>
+          <BottomSheet.Header
+            title="Quantity"
+            dismissButton={
+              <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            }
+            button={
+              <Button onPress={handleConfirm} size="icon" disabled={!isValid}>
+                <Icon
+                  as={CheckIcon}
+                  size={20}
+                  className="text-primary-foreground"
+                />
+              </Button>
+            }
+          />
 
           <View className="mb-4 flex-row items-center gap-3 rounded-xl bg-muted px-4 py-3">
             <TextInput

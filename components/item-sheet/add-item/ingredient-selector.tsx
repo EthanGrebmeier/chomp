@@ -157,25 +157,20 @@ export const IngredientSelector = ({
 
   return (
     <View>
-      <View className="mb-3 w-full flex-row items-center gap-2 px-4">
-        <BackButton onPress={onBack} />
-        <BottomSheet.Header
-          title={recipe.name}
-          button={
-            <Button
-              variant="secondary"
-              onPress={handleGoToRecipe}
-              size="circle"
-            >
-              <Icon
-                as={ExternalLinkIcon}
-                size={20}
-                className="text-secondary-foreground"
-              />
-            </Button>
-          }
-        />
-      </View>
+      <BottomSheet.Header
+        className="px-4"
+        title={recipe.name}
+        dismissButton={<BackButton onPress={onBack} />}
+        button={
+          <Button variant="secondary" onPress={handleGoToRecipe} size="circle">
+            <Icon
+              as={ExternalLinkIcon}
+              size={20}
+              className="text-secondary-foreground"
+            />
+          </Button>
+        }
+      />
 
       <View className="flex-row items-center justify-between px-4">
         <View>

@@ -1,13 +1,12 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { ArrowLeftIcon } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
+import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
-import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddRecipeToMealPlan } from '../hooks/useAddRecipeToMealPlan';
@@ -82,13 +81,9 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
         <BottomSheet.SheetView>
           {selectedRecipe ? (
             <View>
-              <Pressable
-                onPress={handleBackToRecipes}
-                className="mb-4 flex-row items-center gap-2"
-              >
-                <Icon as={ArrowLeftIcon} size={16} />
-                <Text className="text-sm font-bold text-foreground">Back</Text>
-              </Pressable>
+              <View className="mb-4">
+                <BackButton onPress={handleBackToRecipes} />
+              </View>
               <View className="gap-4">
                 <Text className="text-2xl font-semibold text-foreground">
                   {selectedRecipe.name}
@@ -102,10 +97,18 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
               </View>
             </View>
           ) : (
-            <RecipeSelector
-              onSelectRecipe={handleSelectRecipe}
-              onDismiss={() => sheetRef.current?.dismiss()}
-            />
+            <View className="px-4">
+              <BottomSheet.Header
+                title="Add Meal"
+                dismissButton={
+                  <BackButton onPress={() => sheetRef.current?.dismiss()} />
+                }
+              />
+              <RecipeSelector
+                onSelectRecipe={handleSelectRecipe}
+                onDismiss={() => sheetRef.current?.dismiss()}
+              />
+            </View>
           )}
         </BottomSheet.SheetView>
       </BottomSheet>

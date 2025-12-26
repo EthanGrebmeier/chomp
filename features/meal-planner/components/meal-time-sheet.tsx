@@ -94,7 +94,11 @@ export const MealTimeSheet = ({
 
   return (
     <>
-      <HapticPressable onPress={openSheet} hapticType="light">
+      <HapticPressable
+        onPress={openSheet}
+        hapticType="light"
+        className="self-start"
+      >
         <Pill
           icon={
             <Icon

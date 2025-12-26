@@ -99,22 +99,25 @@ const BareTextInput = forwardRef<
 });
 BareTextInput.displayName = 'BareTextInput';
 
-const Header = ({
-  title,
-  dismissButton,
-  button,
-}: {
+type HeaderProps = {
   title: string;
   dismissButton?: React.ReactNode;
   button?: React.ReactNode;
-}) => {
+  className?: string;
+};
+
+const Header = ({ title, dismissButton, button, className }: HeaderProps) => {
   return (
-    <View className="flex-1 flex-row justify-between">
-      <View className="flex-row items-center gap-2">
-        {dismissButton}
-        <Text className="text-2xl font-bold leading-tight">{title}</Text>
+    <View className={cn('mb-6 flex-1 flex-row justify-between', className)}>
+      <View className="w-full flex-row items-center justify-center gap-2 ">
+        <View className="absolute left-0 top-1/2 -translate-y-1/2">
+          {dismissButton}
+        </View>
+        <Text className="text-2xl font-bold leading-none">{title}</Text>
+        <View className="absolute right-0 top-1/2 -translate-y-1/2">
+          {button}
+        </View>
       </View>
-      {button}
     </View>
   );
 };

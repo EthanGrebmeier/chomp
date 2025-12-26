@@ -4,7 +4,6 @@ import { TextInput, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { createStore } from '../instant/create-store';
@@ -54,7 +53,6 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
 
   return (
     <BottomSheet
-      viewClassName="pb-4"
       name="store-sheet"
       ref={sheetRef}
       onStartClose={reset}
@@ -63,13 +61,10 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
       }}
     >
       <BottomSheet.SheetView>
-        <View className="flex-row items-center gap-2 pb-2">
-          <BackButton onPress={() => sheetRef.current?.dismiss()} />
-          <BottomSheet.Header
-            title={submitLabel === 'Update' ? 'Edit Store' : 'New Store'}
-          />
-        </View>
-        <View className="mt-4">
+        <BottomSheet.Header
+          title={submitLabel === 'Update' ? 'Edit Store' : 'Add Store'}
+        />
+        <View>
           <Text className="mb-2 text-sm font-medium text-muted-foreground">
             Store Name
           </Text>
@@ -99,9 +94,7 @@ type StoreSheetProviderProps = {
   children: React.ReactNode;
 };
 
-export const StoreSheetProvider = ({
-  children,
-}: StoreSheetProviderProps) => {
+export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
   const [editingStore, setEditingStore] = useState<Store | null>(null);
   const [name, setName] = useState('');
   const nameInputRef = useRef<TextInput>(null);
@@ -170,4 +163,3 @@ export const StoreSheetProvider = ({
     </StoreSheetContext.Provider>
   );
 };
-
