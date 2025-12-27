@@ -80,7 +80,7 @@ export const CreateGroceryListSheet = forwardRef<
             returnKeyType="done"
           />
         </View>
-        <Button onPress={handleCreateList}>
+        <Button className="self-end" onPress={handleCreateList}>
           <Text>Create List</Text>
         </Button>
       </BottomSheet.SheetView>
