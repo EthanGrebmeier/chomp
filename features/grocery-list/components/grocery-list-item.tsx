@@ -123,21 +123,19 @@ export const GroceryListItem = ({
             </Text>
           </View>
         </View>
-        {(item.recipe ?? item.category) && (
-          <View className="flex-row items-center gap-2">
-            {item.category && <CategoryTag category={item.category} />}
-            {item.recipe && (
-              <View>
-                <View className="flex-row items-center gap-1">
-                  <Icon as={CookingPotIcon} size={14} />
-                  <Text className="text-sm text-muted-foreground">
-                    {item.recipe.name}
-                  </Text>
-                </View>
+        <View className="min-h-6 flex-row items-center gap-2">
+          {item.category && <CategoryTag category={item.category} />}
+          {item.recipe && (
+            <View>
+              <View className="flex-row items-center gap-1">
+                <Icon as={CookingPotIcon} size={14} />
+                <Text className="text-sm text-muted-foreground">
+                  {item.recipe.name}
+                </Text>
               </View>
-            )}
-          </View>
-        )}
+            </View>
+          )}
+        </View>
       </HapticPressable>
     </ListItem>
   );
