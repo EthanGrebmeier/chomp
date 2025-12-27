@@ -1,6 +1,7 @@
 import { PlusIcon, SearchIcon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { TextInput } from '@/components/text-input';
 import { Heading } from '@/components/text/heading';
@@ -8,6 +9,7 @@ import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { SavedItemsListSkeleton } from '@/features/saved-items/components/saved-items-list-skeleton';
 import {
   StoreSheetProvider,
   useStoreSheet,
@@ -64,11 +66,23 @@ const StoresContent = () => {
       {/* List */}
       <View className="mt-2 flex-1">
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-muted-foreground">Loading...</Text>
-          </View>
+          <Animated.View
+            key="skeleton"
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+            className="flex-1"
+          >
+            <SavedItemsListSkeleton />
+          </Animated.View>
         ) : (
-          <StoresList stores={filteredStores} onEditStore={present} />
+          <Animated.View
+            key="content"
+            entering={FadeIn.duration(300)}
+            exiting={FadeOut.duration(200)}
+            className="flex-1"
+          >
+            <StoresList stores={filteredStores} onEditStore={present} />
+          </Animated.View>
         )}
       </View>
 

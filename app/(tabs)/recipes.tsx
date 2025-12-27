@@ -1,7 +1,8 @@
-import { Text as RNText, View } from 'react-native';
-import { LayoutAnimationConfig } from 'react-native-reanimated';
+import { View } from 'react-native';
+import Animated, { FadeIn, FadeOut, LayoutAnimationConfig } from 'react-native-reanimated';
 
 import { RecipeList } from '@/features/recipes/components/recipe-list';
+import { RecipeListSkeleton } from '@/features/recipes/components/recipe-list-skeleton';
 import { useRecipes } from '@/features/recipes/hooks';
 
 import { Heading } from '../../components/text/heading';
@@ -24,13 +25,25 @@ export default function Recipes() {
       </View>
       <View className="flex-1">
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <RNText className="text-gray-500">Loading recipes...</RNText>
-          </View>
+          <Animated.View
+            key="skeleton"
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+            className="flex-1"
+          >
+            <RecipeListSkeleton />
+          </Animated.View>
         ) : (
-          <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
-            <RecipeList recipes={recipes ?? []} />
-          </LayoutAnimationConfig>
+          <Animated.View
+            key="content"
+            entering={FadeIn.duration(300)}
+            exiting={FadeOut.duration(200)}
+            className="flex-1"
+          >
+            <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
+              <RecipeList recipes={recipes ?? []} />
+            </LayoutAnimationConfig>
+          </Animated.View>
         )}
       </View>
     </View>

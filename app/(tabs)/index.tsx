@@ -1,8 +1,10 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
+import { GroceryListSkeleton } from '@/features/grocery-list/components/grocery-list-skeleton';
 import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
@@ -14,7 +16,6 @@ import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGr
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
 import { db } from '@/lib/instant';
 
-import { Text } from '../../components/ui/text';
 import { useSettings } from '../../features/grocery-list/hooks/useSettings';
 
 export default function List() {
@@ -81,30 +82,40 @@ export default function List() {
     }
   };
 
-  if (listsLoading || settingsLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (!settings) return null;
+  const isLoading = listsLoading || settingsLoading;
 
   return (
     <View className="flex-1 bg-background">
       <View className="pt-safe flex-1">
-        <GroceryList
-          listId={activeListId}
-          listName={activeList?.name}
-          joinCode={activeList?.joinCode}
-          ownerId={activeList?.ownerId}
-          items={activeListItems}
-          groupBy={settings.groupBy}
-          sortBy={settings.sortBy}
-          onTitlePress={() => selectListSheetRef.current?.present()}
-          onDeleteOrLeave={handleDeleteOrLeave}
-        />
+        {isLoading ? (
+          <Animated.View
+            key="skeleton"
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+            className="flex-1"
+          >
+            <GroceryListSkeleton />
+          </Animated.View>
+        ) : settings ? (
+          <Animated.View
+            key="content"
+            entering={FadeIn.duration(300)}
+            exiting={FadeOut.duration(200)}
+            className="flex-1"
+          >
+            <GroceryList
+              listId={activeListId}
+              listName={activeList?.name}
+              joinCode={activeList?.joinCode}
+              ownerId={activeList?.ownerId}
+              items={activeListItems}
+              groupBy={settings.groupBy}
+              sortBy={settings.sortBy}
+              onTitlePress={() => selectListSheetRef.current?.present()}
+              onDeleteOrLeave={handleDeleteOrLeave}
+            />
+          </Animated.View>
+        ) : null}
       </View>
       <SelectGroceryListSheet
         ref={selectListSheetRef}

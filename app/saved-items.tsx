@@ -1,6 +1,7 @@
 import { PlusIcon, SearchIcon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { TextInput } from '@/components/text-input';
 import { Heading } from '@/components/text/heading';
@@ -13,6 +14,7 @@ import {
   useSavedItemSheet,
 } from '@/features/saved-items/components/add-saved-item-sheet';
 import { SavedItemsList } from '@/features/saved-items/components/saved-items-list';
+import { SavedItemsListSkeleton } from '@/features/saved-items/components/saved-items-list-skeleton';
 import { useUnifiedSavedItems } from '@/features/saved-items/unified/use-unified-saved-items';
 
 const SavedItemsContent = () => {
@@ -64,11 +66,23 @@ const SavedItemsContent = () => {
       {/* List */}
       <View className="mt-2 flex-1">
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-muted-foreground">Loading...</Text>
-          </View>
+          <Animated.View
+            key="skeleton"
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+            className="flex-1"
+          >
+            <SavedItemsListSkeleton />
+          </Animated.View>
         ) : (
-          <SavedItemsList items={filteredItems} onEditItem={present} />
+          <Animated.View
+            key="content"
+            entering={FadeIn.duration(300)}
+            exiting={FadeOut.duration(200)}
+            className="flex-1"
+          >
+            <SavedItemsList items={filteredItems} onEditItem={present} />
+          </Animated.View>
         )}
       </View>
 
