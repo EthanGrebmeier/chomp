@@ -15,21 +15,26 @@ import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useUpdateMealPlan } from '../hooks/useUpdateMealPlan';
-import { MealPlanDay, MealPlanWithRecipes } from '../types';
+import { MealPlanItemWithStore, MealPlanWithRecipesAndItems } from '../types';
 
-import { AddMealSheet, AddMealSheetRef } from './add-meal-sheet';
+import {
+  AddToMealPlanSheet,
+  AddToMealPlanSheetRef,
+} from './add-to-meal-plan-sheet';
 import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
+import { EditItemSheet, EditItemSheetRef } from './edit-item-sheet';
 import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
 import { MealPlanDateView } from './meal-plan-date-view';
 import { MealPlanDropdownMenu } from './meal-plan-dropdown-menu';
 
 type MealPlannerProps = {
-  mealPlan: MealPlanWithRecipes;
+  mealPlan: MealPlanWithRecipesAndItems;
 };
 
 export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
-  const addMealSheet = useRef<AddMealSheetRef>(null);
+  const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
+  const editItemSheet = useRef<EditItemSheetRef>(null);
   const startDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const endDateSheetRef = useRef<CalendarSheetRef | null>(null);
   const pagerRef = useRef<PagerView>(null);
@@ -51,10 +56,17 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
 
   const currentDate = daysOfPlan[currentPageIndex] || daysOfPlan[0];
 
-  const getRecipesForDate = (date: Date): MealPlanDay['recipes'] => {
+  const getRecipesForDate = (date: Date) => {
     if (!mealPlan) return [];
     return (mealPlan.meal_plan_recipes || []).filter(
       recipe => recipe.date === format(date, 'yyyy-MM-dd')
+    );
+  };
+
+  const getItemsForDate = (date: Date): MealPlanItemWithStore[] => {
+    if (!mealPlan) return [];
+    return (mealPlan.meal_plan_items || []).filter(
+      item => item.date === format(date, 'yyyy-MM-dd')
     );
   };
 
@@ -87,9 +99,13 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
     setCurrentPageIndex(e.nativeEvent.position);
   };
 
-  const handleAddMealPress = () => {
+  const handleItemPress = (item: MealPlanItemWithStore) => {
+    editItemSheet.current?.open(item);
+  };
+
+  const handleAddPress = () => {
     const dateStr = format(currentDate, 'yyyy-MM-dd');
-    addMealSheet.current?.open({ date: dateStr });
+    addToMealPlanSheet.current?.present({ defaultDate: dateStr });
   };
 
   return (
@@ -138,9 +154,14 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
         selectedDate={new Date(mealPlan.endDate)}
         validStartDate={new Date(mealPlan.startDate)}
       />
-      <AddMealSheet ref={addMealSheet} mealPlanId={mealPlan.id} />
+      <AddToMealPlanSheet ref={addToMealPlanSheet} mealPlanId={mealPlan.id} />
       <EditMealSheet
         ref={editMealSheet}
+        startDate={mealPlan.startDate}
+        endDate={mealPlan.endDate}
+      />
+      <EditItemSheet
+        sheetRef={editItemSheet}
         startDate={mealPlan.startDate}
         endDate={mealPlan.endDate}
       />
@@ -159,9 +180,11 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
           <View key={date.toISOString()} style={{ flex: 1 }}>
             <MealPlanDateView
               recipes={getRecipesForDate(date)}
+              items={getItemsForDate(date)}
               onMealPress={({ mealPlanRecipe, recipe }) =>
                 editMealSheet.current?.open({ mealPlanRecipe, recipe })
               }
+              onItemPress={handleItemPress}
             />
           </View>
         ))}
@@ -169,7 +192,7 @@ export const MealPlanner = ({ mealPlan }: MealPlannerProps) => {
       <Button
         size="iconLg"
         style={{ bottom: NATIVE_TABS_OFFSET }}
-        onPress={handleAddMealPress}
+        onPress={handleAddPress}
         className="absolute right-6 z-10"
       >
         <Icon

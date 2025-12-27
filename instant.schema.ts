@@ -70,6 +70,17 @@ const _schema = i.schema({
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
+    meal_plan_items: i.entity({
+      name: i.string(),
+      quantity: i.number(),
+      unit: i.string(),
+      notes: i.string().optional(),
+      category: i.string().optional(),
+      mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
+      date: i.string().indexed(),
+      createdAt: i.string(),
+      updatedAt: i.string(),
+    }),
     stores: i.entity({
       name: i.string(),
       createdAt: i.string(),
@@ -151,6 +162,31 @@ const _schema = i.schema({
         on: 'recipes',
         has: 'many',
         label: 'meal_plan_recipes',
+      },
+    },
+    meal_plan_items_meal_plans: {
+      forward: {
+        on: 'meal_plan_items',
+        has: 'one',
+        label: 'meal_plan',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: 'meal_plans',
+        has: 'many',
+        label: 'meal_plan_items',
+      },
+    },
+    meal_plan_items_stores: {
+      forward: {
+        on: 'meal_plan_items',
+        has: 'one',
+        label: 'store',
+      },
+      reverse: {
+        on: 'stores',
+        has: 'many',
+        label: 'meal_plan_items',
       },
     },
     saved_items_users: {

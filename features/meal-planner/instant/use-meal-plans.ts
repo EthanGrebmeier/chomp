@@ -8,6 +8,9 @@ export const useMealPlans = () => {
           recipe_ingredients: {},
         },
       },
+      meal_plan_items: {
+        store: {},
+      },
     },
   });
 };

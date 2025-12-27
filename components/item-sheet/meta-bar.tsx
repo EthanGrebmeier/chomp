@@ -1,6 +1,6 @@
 import { CheckIcon } from 'lucide-react-native';
-import { ScrollView, View } from 'react-native';
 
+import { ScrollingMetaBar } from '../scrolling-meta-bar';
 import { Button } from '../ui/button';
 import { Icon } from '../ui/icon';
 
@@ -24,24 +24,8 @@ export const MetaBar = () => {
   } = useItemSheet();
 
   return (
-    <View className="-ml-4 flex-row items-center justify-between">
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        className="min-h-10"
-        contentContainerClassName="flex-row items-center gap-2 pl-4 pr-2 overflow-hidden"
-        keyboardShouldPersistTaps="handled"
-      >
-        <CategorySheet category={category} onSelect={setCategory} />
-        <UnitSheet
-          quantity={quantity}
-          unit={unit}
-          onQuantityChange={setQuantity}
-          onUnitChange={setUnit}
-        />
-        <StoreSheet storeId={storeId} onSelect={setStoreId} />
-      </ScrollView>
-      <View className="border-l border-border pl-2">
+    <ScrollingMetaBar
+      action={
         <Button
           variant="default"
           size="icon"
@@ -56,7 +40,16 @@ export const MetaBar = () => {
             className="text-primary-foreground"
           />
         </Button>
-      </View>
-    </View>
+      }
+    >
+      <CategorySheet category={category} onSelect={setCategory} />
+      <UnitSheet
+        quantity={quantity}
+        unit={unit}
+        onQuantityChange={setQuantity}
+        onUnitChange={setUnit}
+      />
+      <StoreSheet storeId={storeId} onSelect={setStoreId} />
+    </ScrollingMetaBar>
   );
 };

@@ -8,12 +8,14 @@ import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { Recipe } from '../../recipes/types';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
-import { MealPlanRecipe, MealTag } from '../types';
+import { MealPlanItemWithStore, MealPlanRecipe, MealTag } from '../types';
 
+import MealPlanItemCard from './meal-plan-item-card';
 import MealPlanMealCard from './meal-plan-meal-card';
 
 type MealPlanDateViewProps = {
   recipes: (MealPlanRecipe & { recipe: Recipe })[];
+  items: MealPlanItemWithStore[];
   onMealPress: ({
     mealPlanRecipe,
     recipe,
@@ -21,6 +23,7 @@ type MealPlanDateViewProps = {
     mealPlanRecipe: MealPlanRecipe;
     recipe: Recipe;
   }) => void;
+  onItemPress: (item: MealPlanItemWithStore) => void;
 };
 
 const mealTimeOrder: MealTag[] = [
@@ -33,7 +36,9 @@ const mealTimeOrder: MealTag[] = [
 
 export const MealPlanDateView = ({
   recipes,
+  items,
   onMealPress,
+  onItemPress,
 }: MealPlanDateViewProps) => {
   // Group recipes by meal time
   const groupedRecipes = recipes.reduce(
@@ -46,13 +51,26 @@ export const MealPlanDateView = ({
     {} as Record<MealTag, (MealPlanRecipe & { recipe: Recipe })[]>
   );
 
-  // Only include meal times that have recipes
-  const mealTimesWithRecipes = mealTimeOrder.filter(
-    mealTime => groupedRecipes[mealTime]?.length > 0
+  // Group items by meal time
+  const groupedItems = items.reduce(
+    (acc, item) => {
+      const tag = (item.mealTag as MealTag) ?? 'Dinner'; // Default to Dinner if no mealTag
+      acc[tag] = [...(acc[tag] ?? []), item];
+      return acc;
+    },
+    {} as Record<MealTag, MealPlanItemWithStore[]>
   );
 
-  // Empty state when no meals
-  if (mealTimesWithRecipes.length === 0) {
+  // Only include meal times that have recipes or items
+  const mealTimesWithContent = mealTimeOrder.filter(
+    mealTime =>
+      (groupedRecipes[mealTime]?.length ?? 0) +
+        (groupedItems[mealTime]?.length ?? 0) >
+      0
+  );
+
+  // Empty state when no meals or items
+  if (mealTimesWithContent.length === 0) {
     return (
       <Animated.View
         entering={FadeIn.duration(140)}
@@ -74,7 +92,7 @@ export const MealPlanDateView = ({
   return (
     <FlatList
       contentContainerClassName="pb-20"
-      data={mealTimesWithRecipes}
+      data={mealTimesWithContent}
       keyExtractor={item => item}
       renderItem={({ item: mealTime }) => (
         <View className="mb-4 gap-2 px-4">
@@ -86,7 +104,7 @@ export const MealPlanDateView = ({
             exiting={FadeOut.duration(140)}
           >
             <View className="gap-2">
-              {groupedRecipes[mealTime].map(mealPlanRecipe => {
+              {groupedRecipes[mealTime]?.map(mealPlanRecipe => {
                 const recipe = mealPlanRecipe.recipe;
                 if (!recipe) return null;
 
@@ -99,6 +117,13 @@ export const MealPlanDateView = ({
                   />
                 );
               })}
+              {groupedItems[mealTime]?.map(mealPlanItem => (
+                <MealPlanItemCard
+                  key={mealPlanItem.id}
+                  mealPlanItem={mealPlanItem}
+                  onItemPress={onItemPress}
+                />
+              ))}
             </View>
           </Animated.View>
         </View>

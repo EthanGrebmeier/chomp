@@ -8,6 +8,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
+import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
@@ -138,12 +139,16 @@ export const AddMealSheet = forwardRef<AddMealSheetRef, AddMealSheetProps>(
                   ))}
                 </ScrollView>
               </View>
-              <View className="flex-row items-center justify-between ">
+              <ScrollingMetaBar
+                className="ml-0"
+                action={
+                  <Button onPress={handleAddMeal}>
+                    <Text>Add Meal</Text>
+                  </Button>
+                }
+              >
                 <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
-                <Button onPress={handleAddMeal}>
-                  <Text>Add Meal</Text>
-                </Button>
-              </View>
+              </ScrollingMetaBar>
             </View>
           </Animated.View>
         ) : (

@@ -23,6 +23,9 @@ export const addMealPlanToGroceryList = async ({
           },
         },
       },
+      meal_plan_items: {
+        store: {},
+      },
     },
   });
 
@@ -76,11 +79,42 @@ export const addMealPlanToGroceryList = async ({
     }
   }
 
+  // Add meal plan items to the grocery list
+  for (const mealPlanItem of mealPlan.meal_plan_items || []) {
+    const itemId = id();
+
+    transactions.push(
+      tx.grocery_items[itemId].update({
+        name: mealPlanItem.name,
+        quantity: mealPlanItem.quantity,
+        unit: mealPlanItem.unit,
+        notes: mealPlanItem.notes,
+        category: mealPlanItem.category,
+        isChecked: false,
+        isDeleted: false,
+        createdAt: now,
+        updatedAt: now,
+      }),
+      tx.grocery_items[itemId].link({
+        grocery_list: listId,
+      })
+    );
+
+    // Link store if item has one
+    if (mealPlanItem.store?.id) {
+      transactions.push(
+        tx.grocery_items[itemId].link({
+          store: mealPlanItem.store.id,
+        })
+      );
+    }
+  }
+
   if (transactions.length > 0) {
     await db.transact(transactions);
   }
 
   return {
-    addedItems: transactions.length / 2, // Each item has 2 transactions (update + link)
+    addedItems: Math.floor(transactions.length / 2), // Each item has at least 2 transactions (update + link)
   };
 };

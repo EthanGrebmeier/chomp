@@ -14,6 +14,9 @@ export const useMealPlan = (mealPlanId: string | undefined) => {
                 recipe_ingredients: {},
               },
             },
+            meal_plan_items: {
+              store: {},
+            },
           },
         }
       : null

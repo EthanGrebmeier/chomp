@@ -16,6 +16,9 @@ export const useActiveMealPlan = () => {
       meal_plan_recipes: {
         recipe: {},
       },
+      meal_plan_items: {
+        store: {},
+      },
     },
   });
 };
