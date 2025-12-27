@@ -33,7 +33,7 @@ const CategoryOption = ({
   <HapticPressable onPress={onPress} hapticType="selection">
     <View
       className={cn(
-        'flex-row items-center gap-3 rounded-xl px-2 py-3',
+        'w-full flex-row items-center gap-3 rounded-xl px-2 py-3',
         isSelected && 'bg-muted'
       )}
     >
@@ -64,8 +64,12 @@ type CategorySheetProps = {
 
 export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const selectedCategory = categoryOptions.find(opt => opt.value === category);
+  const selectedCategoryIndex = categoryOptions.findIndex(
+    opt => opt.value === category
+  );
+  const selectedCategory = categoryOptions[selectedCategoryIndex];
 
   const openSheet = () => {
     sheetRef.current?.present();
@@ -74,6 +78,16 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
   const handleSelect = (value?: string) => {
     onSelect(value);
     sheetRef.current?.dismiss();
+  };
+
+  const handleScrollToSelectedCategory = () => {
+    if (selectedCategoryIndex !== -1) {
+      console.log('SCROLLING TO', selectedCategoryIndex * 60);
+      scrollViewRef.current?.scrollTo({
+        y: selectedCategoryIndex * 60,
+        animated: false,
+      });
+    }
   };
 
   return (
@@ -109,6 +123,7 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
         detents={[0.7]}
         scrollable
         ref={sheetRef}
+        onOpen={handleScrollToSelectedCategory}
         name="category-sheet"
       >
         <BottomSheet.Header
@@ -119,9 +134,12 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
           }
         />
         <ScrollView
-          className="max-h-96 px-2"
+          ref={scrollViewRef}
+          className="px-2"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{
+            paddingBottom: 20,
+          }}
         >
           <CategoryOption
             label="None"
