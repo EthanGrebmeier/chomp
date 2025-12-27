@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
 import { PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
-import { toast } from 'sonner-native';
 
 import { navigation } from '@/lib/navigation';
 
@@ -40,7 +39,6 @@ export const CreateRecipeButton = ({
       {
         onSuccess: result => {
           router.push(navigation.goToRecipe(result.id));
-          toast.success('Recipe created');
           onSuccess?.(result);
         },
       }

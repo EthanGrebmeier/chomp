@@ -83,16 +83,13 @@ export const CreateRecipeSheet = forwardRef<
               autoFocus
             />
           </View>
-          <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
+          <View className="flex-row items-center justify-between gap-2">
+            <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
+            <Button onPress={handleSubmit} disabled={!name.trim()}>
+              <Text>{isEditing ? 'Update Recipe' : 'Create Recipe'}</Text>
+            </Button>
+          </View>
         </View>
-
-        <Button
-          onPress={handleSubmit}
-          disabled={!name.trim()}
-          className="w-full"
-        >
-          <Text>{isEditing ? 'Update Recipe' : 'Create Recipe'}</Text>
-        </Button>
       </BottomSheet.SheetView>
     </BottomSheet>
   );
