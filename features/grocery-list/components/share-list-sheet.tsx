@@ -1,8 +1,8 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import * as Clipboard from 'expo-clipboard';
-import { CopyIcon, LinkIcon } from 'lucide-react-native';
+import { CopyIcon, ShareIcon } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Share, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -41,6 +41,23 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
       toast.success('Link copied to clipboard');
     };
 
+    const handleShareLink = async () => {
+      try {
+        const deepLinkUrl = buildListDeepLinkUrl(joinCode);
+        const result = await Share.share({
+          message: `Join my grocery list: ${deepLinkUrl}`,
+        });
+
+        if (result.action === Share.sharedAction) {
+          // Content was shared
+          toast.success('Invite link shared');
+        }
+      } catch (error) {
+        toast.error('Failed to share invite link');
+        console.error('Error sharing:', error);
+      }
+    };
+
     return (
       <BottomSheet name="share-list-sheet" ref={sheetRef}>
         <BottomSheet.SheetView>
@@ -64,14 +81,10 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
               Tap to copy code
             </Text>
 
-            <View className="mt-4 w-full">
-              <Button
-                variant="outline"
-                onPress={handleCopyLink}
-                className="w-full"
-              >
-                <Icon as={LinkIcon} size={20} />
-                <Text>Copy Link</Text>
+            <View className="mt-4 w-full gap-3">
+              <Button onPress={handleShareLink} className="w-full">
+                <Icon as={ShareIcon} size={20} />
+                <Text>Share Invite Link</Text>
               </Button>
             </View>
           </View>
