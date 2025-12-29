@@ -196,6 +196,7 @@ export const EditItemSheet = ({
     if (externalRef) {
       externalRef.current = {
         open: (item: MealPlanItemWithStore) => {
+          console.log('open', item);
           setItemToEdit(item);
           setInitialValues({
             itemName: item.name,

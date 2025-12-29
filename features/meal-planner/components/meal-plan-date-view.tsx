@@ -32,6 +32,7 @@ const mealTimeOrder: MealTag[] = [
   'Dinner',
   'Snack',
   'Dessert',
+  'None',
 ];
 
 export const MealPlanDateView = ({
@@ -44,7 +45,7 @@ export const MealPlanDateView = ({
   const groupedRecipes = recipes.reduce(
     (acc, recipe) => {
       if (!recipe.recipe) return acc;
-      const tag = (recipe.mealTag as MealTag) || 'Dinner'; // Default to Dinner if no mealTag
+      const tag = (recipe.mealTag as MealTag) || 'None'; // Default to None if no mealTag
       acc[tag] = [...(acc[tag] || []), recipe];
       return acc;
     },
@@ -54,12 +55,14 @@ export const MealPlanDateView = ({
   // Group items by meal time
   const groupedItems = items.reduce(
     (acc, item) => {
-      const tag = (item.mealTag as MealTag) ?? 'Dinner'; // Default to Dinner if no mealTag
+      const tag = (item.mealTag as MealTag) || 'None'; // Default to None if no mealTag
       acc[tag] = [...(acc[tag] ?? []), item];
       return acc;
     },
     {} as Record<MealTag, MealPlanItemWithStore[]>
   );
+
+  console.log('groupedItems', JSON.stringify(groupedItems, null, 2));
 
   // Only include meal times that have recipes or items
   const mealTimesWithContent = mealTimeOrder.filter(

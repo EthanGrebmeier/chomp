@@ -37,4 +37,3 @@ const MealPlanItemCard = ({
 };
 
 export default MealPlanItemCard;
-
