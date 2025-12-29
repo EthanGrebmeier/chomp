@@ -2,44 +2,38 @@ import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 
-export type AddMealPlanToGroceryListArgs = {
-  mealPlanId: string;
+export type AddMealsToGroceryListArgs = {
   listId: string;
 };
 
-export const addMealPlanToGroceryList = async ({
-  mealPlanId,
+export const addMealsToGroceryList = async ({
   listId,
-}: AddMealPlanToGroceryListArgs) => {
-  // Query all meal plans and filter client-side
-  // We can query once, but we can still use it offline since we supply no where clause
-  // This ensures offline-created meal plans are found (where clauses don't work for unsynced data)
+}: AddMealsToGroceryListArgs) => {
+  // Query all user's meal plan recipes and items without where clauses (for offline support)
+  // Permissions will automatically filter to the current user's data
   const result = await db.queryOnce({
-    meal_plans: {
-      meal_plan_recipes: {
-        recipe: {
-          recipe_ingredients: {
-            store: {},
-          },
+    meal_plan_recipes: {
+      recipe: {
+        recipe_ingredients: {
+          store: {},
         },
       },
-      meal_plan_items: {
-        store: {},
-      },
+    },
+    meal_plan_items: {
+      store: {},
     },
   });
 
-  const mealPlan = result.data.meal_plans.find(mp => mp.id === mealPlanId);
-
-  if (!mealPlan) {
-    throw new Error('Meal plan not found');
-  }
-
   const now = new Date().toISOString();
   const transactions = [];
+  const updateTransactions = [];
+
+  // Filter for recipes that haven't been added to a list yet
+  const unaddedRecipes =
+    result.data.meal_plan_recipes?.filter(mpr => !mpr.addedToList) || [];
 
   // Add each recipe's ingredients to the grocery list
-  for (const mealPlanRecipe of mealPlan.meal_plan_recipes || []) {
+  for (const mealPlanRecipe of unaddedRecipes) {
     const recipe = mealPlanRecipe.recipe;
     if (!recipe) continue;
 
@@ -77,10 +71,23 @@ export const addMealPlanToGroceryList = async ({
         );
       }
     }
+
+    // Mark the meal plan recipe as added to list
+    updateTransactions.push(
+      tx.meal_plan_recipes[mealPlanRecipe.id].update({
+        addedToList: true,
+        addedToListAt: now,
+        updatedAt: now,
+      })
+    );
   }
 
+  // Filter for items that haven't been added to a list yet
+  const unaddedItems =
+    result.data.meal_plan_items?.filter(mpi => !mpi.addedToList) || [];
+
   // Add meal plan items to the grocery list
-  for (const mealPlanItem of mealPlan.meal_plan_items || []) {
+  for (const mealPlanItem of unaddedItems) {
     const itemId = id();
 
     transactions.push(
@@ -108,13 +115,26 @@ export const addMealPlanToGroceryList = async ({
         })
       );
     }
+
+    // Mark the meal plan item as added to list
+    updateTransactions.push(
+      tx.meal_plan_items[mealPlanItem.id].update({
+        addedToList: true,
+        addedToListAt: now,
+        updatedAt: now,
+      })
+    );
   }
 
-  if (transactions.length > 0) {
-    await db.transact(transactions);
+  // Combine all transactions
+  const allTransactions = [...transactions, ...updateTransactions];
+
+  if (allTransactions.length > 0) {
+    await db.transact(allTransactions);
   }
 
   return {
-    addedItems: Math.floor(transactions.length / 2), // Each item has at least 2 transactions (update + link)
+    addedRecipes: unaddedRecipes.length,
+    addedItems: unaddedItems.length,
   };
 };

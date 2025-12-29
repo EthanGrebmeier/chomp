@@ -1,10 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
 
-import { addItemToMealPlan } from '../instant/add-item-to-meal-plan';
+import { addItemToDate } from '../instant/add-item-to-meal-plan';
 
-export const useAddItemToMealPlan = () => {
+export const useAddItemToDate = () => {
   return useMutation({
-    mutationFn: addItemToMealPlan,
+    mutationFn: addItemToDate,
     // No need to invalidate queries - InstantDB updates in real-time
   });
 };

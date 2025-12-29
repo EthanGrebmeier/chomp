@@ -55,18 +55,12 @@ const _schema = i.schema({
       notes: i.string().optional(),
       category: i.string().optional(),
     }),
-    meal_plans: i.entity({
-      name: i.string(),
-      startDate: i.string(),
-      endDate: i.string(),
-      isArchived: i.boolean(),
-      createdAt: i.string(),
-      updatedAt: i.string(),
-    }),
     meal_plan_recipes: i.entity({
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string(),
       servings: i.number(),
+      addedToList: i.boolean(),
+      addedToListAt: i.string().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
@@ -78,6 +72,8 @@ const _schema = i.schema({
       category: i.string().optional(),
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string().indexed(),
+      addedToList: i.boolean(),
+      addedToListAt: i.string().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
@@ -139,19 +135,6 @@ const _schema = i.schema({
         label: 'shares',
       },
     },
-    meal_plan_recipes_meal_plans: {
-      forward: {
-        on: 'meal_plan_recipes',
-        has: 'one',
-        label: 'meal_plan',
-        onDelete: 'cascade',
-      },
-      reverse: {
-        on: 'meal_plans',
-        has: 'many',
-        label: 'meal_plan_recipes',
-      },
-    },
     meal_plan_recipes_recipes: {
       forward: {
         on: 'meal_plan_recipes',
@@ -164,15 +147,28 @@ const _schema = i.schema({
         label: 'meal_plan_recipes',
       },
     },
-    meal_plan_items_meal_plans: {
+    meal_plan_recipes_users: {
       forward: {
-        on: 'meal_plan_items',
+        on: 'meal_plan_recipes',
         has: 'one',
-        label: 'meal_plan',
+        label: 'user',
         onDelete: 'cascade',
       },
       reverse: {
-        on: 'meal_plans',
+        on: '$users',
+        has: 'many',
+        label: 'meal_plan_recipes',
+      },
+    },
+    meal_plan_items_users: {
+      forward: {
+        on: 'meal_plan_items',
+        has: 'one',
+        label: 'user',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: '$users',
         has: 'many',
         label: 'meal_plan_items',
       },
@@ -226,19 +222,6 @@ const _schema = i.schema({
         on: '$users',
         has: 'many',
         label: 'recipes',
-      },
-    },
-    meal_plans_users: {
-      forward: {
-        on: 'meal_plans',
-        has: 'one',
-        label: 'user',
-        onDelete: 'cascade',
-      },
-      reverse: {
-        on: '$users',
-        has: 'many',
-        label: 'meal_plans',
       },
     },
     stores_users: {

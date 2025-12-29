@@ -2,21 +2,24 @@ import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 
-export type AddRecipeToMealPlanArgs = {
-  mealPlanId: string;
+export type AddRecipeToDateArgs = {
   recipeId: string;
   date: string;
   mealTag?: string;
   servings?: number;
 };
 
-export const addRecipeToMealPlan = async ({
-  mealPlanId,
+export const addRecipeToDate = async ({
   recipeId,
   date,
   mealTag,
   servings = 1,
-}: AddRecipeToMealPlanArgs) => {
+}: AddRecipeToDateArgs) => {
+  const user = await db.getAuth();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
   const mealPlanRecipeId = id();
   const now = new Date().toISOString();
 
@@ -25,11 +28,12 @@ export const addRecipeToMealPlan = async ({
       mealTag: mealTag,
       date: date,
       servings: servings,
+      addedToList: false,
       createdAt: now,
       updatedAt: now,
     }),
     tx.meal_plan_recipes[mealPlanRecipeId].link({
-      meal_plan: mealPlanId,
+      user: user.id,
       recipe: recipeId,
     }),
   ]);

@@ -18,8 +18,8 @@ import { Text } from '../../../components/ui/text';
 import { formatQuantity } from '../../../lib/grocery-item';
 import { cn } from '../../../lib/utils';
 import { RecipeWithIngredients } from '../../recipes/types';
-import { useAddItemToMealPlan } from '../hooks/useAddItemToMealPlan';
-import { useAddRecipeToMealPlan } from '../hooks/useAddRecipeToMealPlan';
+import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
+import { useAddRecipeToDate } from '../hooks/useAddRecipeToMealPlan';
 
 import { DatePillSheet } from './date-pill-sheet';
 import {
@@ -82,13 +82,7 @@ const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
 };
 
 // Component that uses the context for item mode
-const AddItemMode = ({
-  mealPlanId,
-  onSuccess,
-}: {
-  mealPlanId: string;
-  onSuccess: () => void;
-}) => {
+const AddItemMode = ({ onSuccess }: { onSuccess: () => void }) => {
   const {
     itemName,
     quantity,
@@ -101,14 +95,13 @@ const AddItemMode = ({
     resetState,
   } = useMealPlanItem();
 
-  const { mutate: addItemToMealPlan } = useAddItemToMealPlan();
+  const { mutate: addItemToDate } = useAddItemToDate();
 
   const handleAddItem = () => {
     if (!itemName || !selectedDate) return;
 
-    addItemToMealPlan(
+    addItemToDate(
       {
-        mealPlanId,
         name: itemName,
         quantity,
         unit,
@@ -139,7 +132,6 @@ const AddItemMode = ({
 };
 
 type AddToMealPlanSheetProps = {
-  mealPlanId: string;
   ref?: React.RefObject<AddToMealPlanSheetRef | null>;
 };
 
@@ -148,10 +140,7 @@ export type AddToMealPlanSheetRef = {
   dismiss: () => void;
 };
 
-export const AddToMealPlanSheet = ({
-  mealPlanId,
-  ref,
-}: AddToMealPlanSheetProps) => {
+export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
 
   const [mode, setMode] = useState<AddMode>('recipe');
@@ -164,7 +153,7 @@ export const AddToMealPlanSheet = ({
     undefined
   );
 
-  const { mutate: addRecipeToMealPlan } = useAddRecipeToMealPlan();
+  const { mutate: addRecipeToDate } = useAddRecipeToDate();
 
   // Expose methods via ref
   if (ref) {
@@ -200,9 +189,8 @@ export const AddToMealPlanSheet = ({
   const handleAddRecipe = () => {
     if (!selectedRecipe || !recipeDate) return;
 
-    addRecipeToMealPlan(
+    addRecipeToDate(
       {
-        mealPlanId,
         recipeId: selectedRecipe.id,
         date: recipeDate,
         mealTag: recipeMealTag,
@@ -339,7 +327,7 @@ export const AddToMealPlanSheet = ({
         )
       ) : (
         <MealPlanItemProvider initialValues={{ selectedDate: defaultDate }}>
-          <AddItemMode mealPlanId={mealPlanId} onSuccess={handleItemSuccess} />
+          <AddItemMode onSuccess={handleItemSuccess} />
         </MealPlanItemProvider>
       )}
     </BottomSheet>

@@ -17,7 +17,10 @@ export const MealPlanDateSelectorDate = ({
   onPress,
 }: MealPlanDateSelectorDateProps) => {
   return (
-    <HapticPressable onPress={() => onPress(date)} className="items-center">
+    <HapticPressable
+      onPress={() => onPress(date)}
+      className="flex-1 items-center"
+    >
       <View
         className={cn(
           'items-center justify-center rounded-xl px-3 py-2',

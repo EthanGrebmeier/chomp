@@ -59,7 +59,7 @@ const rules = {
       "auth.id in data.ref('grocery_items.grocery_list.shares.user_id')",
     ],
   },
-  meal_plans: {
+  meal_plan_recipes: {
     allow: {
       create: 'auth.id != null',
       view: 'isOwner',
@@ -68,14 +68,14 @@ const rules = {
     },
     bind: ['isOwner', "auth.id in data.ref('user.id')"],
   },
-  meal_plan_recipes: {
+  meal_plan_items: {
     allow: {
-      create: 'isOwner',
+      create: 'auth.id != null',
       view: 'isOwner',
       update: 'isOwner',
       delete: 'isOwner',
     },
-    bind: ['isOwner', "auth.id in data.ref('meal_plan.user.id')"],
+    bind: ['isOwner', "auth.id in data.ref('user.id')"],
   },
   saved_items: {
     allow: {

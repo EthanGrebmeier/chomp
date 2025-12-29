@@ -26,10 +26,7 @@ import { MealPlanRecipe } from '../types';
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 import { MealTimeSheet } from './meal-time-sheet';
 
-type EditMealSheetProps = {
-  startDate: string;
-  endDate: string;
-};
+type EditMealSheetProps = {};
 
 export type EditMealSheetRef = {
   open: ({
@@ -135,8 +132,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                 ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
                 : undefined
             }
-            validStartDate={startOfDay(parseISO(props.startDate))}
-            validEndDate={startOfDay(parseISO(props.endDate))}
             onClose={() => {
               setCurrentView('recipe');
             }}

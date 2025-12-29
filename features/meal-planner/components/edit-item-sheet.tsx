@@ -19,8 +19,6 @@ import { MealPlanItemInput } from './meal-plan-item-input';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
 
 type EditItemSheetProps = {
-  startDate: string;
-  endDate: string;
   sheetRef?: React.RefObject<EditItemSheetRef | null>;
 };
 
@@ -181,8 +179,6 @@ const EditItemSheetContent = ({
 };
 
 export const EditItemSheet = ({
-  startDate,
-  endDate,
   sheetRef: externalRef,
 }: EditItemSheetProps) => {
   const [itemToEdit, setItemToEdit] = useState<MealPlanItemWithStore | null>(
