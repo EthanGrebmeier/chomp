@@ -12,7 +12,13 @@ export type MealPlanItemWithStore = MealPlanItem & {
   store?: Store;
 };
 
-export type MealTag = 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert';
+export type MealTag =
+  | 'Breakfast'
+  | 'Lunch'
+  | 'Dinner'
+  | 'Snack'
+  | 'Dessert'
+  | 'None';
 
 export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
   recipe: Recipe;
