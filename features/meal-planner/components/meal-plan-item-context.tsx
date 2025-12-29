@@ -33,18 +33,20 @@ const MealPlanItemContext = createContext<MealPlanItemContextValue | undefined>(
   undefined
 );
 
+export type MealPlanItemInitialValues = {
+  itemName?: string;
+  itemNotes?: string;
+  quantity?: number;
+  unit?: string;
+  category?: string;
+  storeId?: string;
+  selectedDate?: string;
+  mealTag?: string;
+};
+
 type MealPlanItemProviderProps = {
   children: React.ReactNode;
-  initialValues?: {
-    itemName?: string;
-    itemNotes?: string;
-    quantity?: number;
-    unit?: string;
-    category?: string;
-    storeId?: string;
-    selectedDate?: string;
-    mealTag?: string;
-  };
+  initialValues?: MealPlanItemInitialValues;
 };
 
 export const MealPlanItemProvider = ({
@@ -132,4 +134,3 @@ export const useMealPlanItem = () => {
   }
   return context;
 };
-

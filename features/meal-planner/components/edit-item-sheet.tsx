@@ -11,6 +11,7 @@ import { MealPlanItemWithStore } from '../types';
 
 import { MealItemDropdownMenu } from './meal-item-dropdown-menu';
 import {
+  MealPlanItemInitialValues,
   MealPlanItemProvider,
   useMealPlanItem,
 } from './meal-plan-item-context';
@@ -187,7 +188,9 @@ export const EditItemSheet = ({
   const [itemToEdit, setItemToEdit] = useState<MealPlanItemWithStore | null>(
     null
   );
-  const [initialValues, setInitialValues] = useState<any>(undefined);
+  const [initialValues, setInitialValues] = useState<
+    MealPlanItemInitialValues | undefined
+  >(undefined);
 
   const sheetRef = useRef<TrueSheet>(null);
 
