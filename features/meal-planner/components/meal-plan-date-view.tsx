@@ -62,8 +62,6 @@ export const MealPlanDateView = ({
     {} as Record<MealTag, MealPlanItemWithStore[]>
   );
 
-  console.log('groupedItems', JSON.stringify(groupedItems, null, 2));
-
   // Only include meal times that have recipes or items
   const mealTimesWithContent = mealTimeOrder.filter(
     mealTime =>
