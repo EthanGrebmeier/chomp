@@ -14,10 +14,6 @@ import { NATIVE_TABS_OFFSET } from '../../features/shared/consts';
 export default function MealPlansPage() {
   const { data: activeMealPlan, isLoading } = useActiveMealPlan();
 
-  if (!activeMealPlan && !isLoading) {
-    return null;
-  }
-
   return (
     <View className="pt-safe flex-1 bg-background">
       {isLoading ? (
