@@ -1,6 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, TextInput, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
@@ -57,7 +57,7 @@ const EditItemSheetContent = ({
     isValid,
   } = useMealPlanItem();
 
-  const itemInputRef = useRef<any>(null);
+  const itemInputRef = useRef<TextInput>(null);
   const { mutate: updateMealPlanItem } = useUpdateMealPlanItem();
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
 
