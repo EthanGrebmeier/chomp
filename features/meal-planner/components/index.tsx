@@ -2,18 +2,15 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
 import { PlusIcon, ShoppingCartIcon } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '../../../components/bottom-sheet';
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
-import { cn } from '../../../lib/utils';
-import { useGroceryLists } from '../../grocery-lists/instant/useGroceryLists';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useAddMealsToGroceryList, useUserMealPlanData } from '../hooks';
 import { MealPlanItemWithStore } from '../types';
@@ -25,6 +22,7 @@ import {
 import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
 import { EditItemSheet, EditItemSheetRef } from './edit-item-sheet';
 import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
+import { ListSelectorSheet } from './list-selector-sheet';
 import { MealPlanDateView } from './meal-plan-date-view';
 
 const DAYS_RANGE = 30; // Show 30 days before and after today
@@ -36,7 +34,6 @@ export const MealPlanner = () => {
   const addToListSheetRef = useRef<TrueSheet>(null);
   const pagerRef = useRef<PagerView>(null);
   const { recipes, items } = useUserMealPlanData();
-  const { data: lists } = useGroceryLists();
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
     useAddMealsToGroceryList();
 
@@ -127,40 +124,11 @@ export const MealPlanner = () => {
       <View className="flex-row items-center justify-between px-4">
         <Heading>Meal Plan</Heading>
       </View>
-      <BottomSheet
-        name="add-meals-to-list-sheet"
+      <ListSelectorSheet
         ref={addToListSheetRef}
-        detents={['auto']}
-      >
-        <BottomSheet.Header
-          className="px-4"
-          title="Add Meal Plan Items to List"
-        />
-        <ScrollView className="max-h-80 px-4 pb-4">
-          {lists?.grocery_lists.map(list => (
-            <Pressable
-              key={list.id}
-              onPress={() => handleAddToList(list.id)}
-              disabled={isAddingToList}
-              className={cn(
-                'mb-2 rounded-xl px-4 py-3',
-                isAddingToList ? 'bg-muted/50' : 'bg-muted active:bg-muted/80'
-              )}
-            >
-              <Text className="text-lg">{list.name}</Text>
-              <Text className="text-sm text-muted-foreground">
-                {list.grocery_items?.filter(i => !i.isDeleted).length || 0}{' '}
-                items
-              </Text>
-            </Pressable>
-          ))}
-          {(!lists?.grocery_lists || lists.grocery_lists.length === 0) && (
-            <Text className="text-center text-muted-foreground">
-              No lists available
-            </Text>
-          )}
-        </ScrollView>
-      </BottomSheet>
+        onListSelect={handleAddToList}
+        isLoading={isAddingToList}
+      />
       <AddToMealPlanSheet ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} />
       <EditItemSheet sheetRef={editItemSheet} />
