@@ -22,10 +22,11 @@ const rules = {
   grocery_list_shares: {
     allow: {
       create: 'auth.id != null',
-      view: 'auth.id == data.user_id',
+      view: 'auth.id == data.user_id || isMember',
       update: 'auth.id == data.user_id',
       delete: 'auth.id == data.user_id',
     },
+    bind: ['isMember', "auth.id in data.ref('grocery_list.shares.user_id')"],
   },
   grocery_items: {
     allow: {

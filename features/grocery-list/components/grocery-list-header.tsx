@@ -1,4 +1,8 @@
-import { ChevronDownIcon, MoreHorizontal } from 'lucide-react-native';
+import {
+  ChevronDownIcon,
+  MoreHorizontal,
+  UsersIcon,
+} from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
 import { Heading } from '../../../components/text/heading';
@@ -12,6 +16,7 @@ type GroceryListHeaderProps = {
   listName?: string;
   listId?: string;
   ownerId?: string;
+  isShared?: boolean;
   onClearListPress: () => void;
   onSharePress: () => void;
   onDeleteOrLeave: () => void;
@@ -24,6 +29,7 @@ export const GroceryListHeader = ({
   listName,
   listId,
   ownerId,
+  isShared = false,
   onClearListPress,
   onSharePress,
   onDeleteOrLeave,
@@ -41,11 +47,14 @@ export const GroceryListHeader = ({
           className="flex-row items-center gap-1 active:opacity-70"
         >
           <Heading>{listName ?? 'Grocery List'}</Heading>
+          {isShared && (
+            <Icon as={UsersIcon} size={20} className="text-muted-foreground" />
+          )}
           {onTitlePress && (
             <Icon
               as={ChevronDownIcon}
               size={24}
-              className="text-foreground"
+              className="text-muted-foreground"
               strokeWidth={2.5}
             />
           )}

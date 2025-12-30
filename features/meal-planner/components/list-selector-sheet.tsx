@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { ShoppingCartIcon } from 'lucide-react-native';
+import { ShoppingCartIcon, UsersIcon } from 'lucide-react-native';
 import { useMemo, useRef } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
@@ -60,23 +60,35 @@ export const ListSelectorSheet = () => {
           title="Add Meal Plan Items to List"
         />
         <ScrollView className="max-h-80 px-4 pb-4">
-          {lists?.grocery_lists.map(list => (
-            <Pressable
-              key={list.id}
-              onPress={() => handleAddToList(list.id)}
-              disabled={isAddingToList}
-              className={cn(
-                'mb-2 rounded-xl px-4 py-3',
-                isAddingToList ? 'bg-muted/50' : 'bg-muted active:bg-muted/80'
-              )}
-            >
-              <Text className="text-lg">{list.name}</Text>
-              <Text className="text-sm text-muted-foreground">
-                {list.grocery_items?.filter(i => !i.isDeleted).length || 0}{' '}
-                items
-              </Text>
-            </Pressable>
-          ))}
+          {lists?.grocery_lists.map(list => {
+            const isShared = (list.shares?.length ?? 0) > 1;
+            return (
+              <Pressable
+                key={list.id}
+                onPress={() => handleAddToList(list.id)}
+                disabled={isAddingToList}
+                className={cn(
+                  'mb-2 rounded-xl px-4 py-3',
+                  isAddingToList ? 'bg-muted/50' : 'bg-muted active:bg-muted/80'
+                )}
+              >
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-lg">{list.name}</Text>
+                  {isShared && (
+                    <Icon
+                      as={UsersIcon}
+                      size={16}
+                      className="text-muted-foreground"
+                    />
+                  )}
+                </View>
+                <Text className="text-sm text-muted-foreground">
+                  {list.grocery_items?.filter(i => !i.isDeleted).length || 0}{' '}
+                  items
+                </Text>
+              </Pressable>
+            );
+          })}
           {(!lists?.grocery_lists || lists.grocery_lists.length === 0) && (
             <Text className="text-center text-muted-foreground">
               No lists available
@@ -113,4 +125,3 @@ export const ListSelectorSheet = () => {
 };
 
 ListSelectorSheet.displayName = 'ListSelectorSheet';
-

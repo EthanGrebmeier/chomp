@@ -59,6 +59,7 @@ export default function List() {
     list => list.id === activeListId
   );
   const activeListItems = activeList?.grocery_items ?? [];
+  const isActiveListShared = (activeList?.shares?.length ?? 0) > 1;
 
   const handleDeleteOrLeave = async () => {
     if (!activeListId || !activeList) return;
@@ -108,6 +109,7 @@ export default function List() {
               listName={activeList?.name}
               joinCode={activeList?.joinCode}
               ownerId={activeList?.ownerId}
+              isShared={isActiveListShared}
               items={activeListItems}
               groupBy={settings.groupBy}
               sortBy={settings.sortBy}

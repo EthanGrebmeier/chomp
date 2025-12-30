@@ -8,10 +8,7 @@ import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item
 import { db } from '../../../lib/instant';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
-import {
-  filterActiveItems,
-  useClearGroceryList,
-} from '../instant/clear-list';
+import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 
@@ -33,6 +30,7 @@ type GroceryListProps = {
   listName?: string;
   joinCode?: string;
   ownerId?: string;
+  isShared?: boolean;
   items: GroceryListItemWithRecipe[];
   groupBy: 'category' | 'none' | 'recipe' | 'store';
   sortBy: 'name' | 'recent';
@@ -45,6 +43,7 @@ export const GroceryList = ({
   listName,
   joinCode,
   ownerId,
+  isShared = false,
   items,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
@@ -157,6 +156,7 @@ export const GroceryList = ({
         <GroceryListHeader
           listId={listId}
           ownerId={ownerId}
+          isShared={isShared}
           items={items}
           listName={listName}
           onClearListPress={handleClearListPress}

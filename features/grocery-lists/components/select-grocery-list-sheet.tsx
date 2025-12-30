@@ -1,7 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { CheckIcon, LinkIcon, PlusIcon } from 'lucide-react-native';
+import { CheckIcon, LinkIcon, PlusIcon, UsersIcon } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import { Alert, Pressable, ScrollView } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Button } from '../../../components/ui/button';
@@ -187,6 +187,7 @@ export const SelectGroceryListSheet = forwardRef<
           {lists?.grocery_lists.map(list => {
             const isSelected = list.id === selectedListId;
             const isOwner = user?.id === list.ownerId;
+            const isShared = (list.shares?.length ?? 0) > 1;
 
             return (
               <ContextMenuRoot
@@ -199,14 +200,23 @@ export const SelectGroceryListSheet = forwardRef<
                       isSelected ? 'bg-muted' : 'active:bg-muted'
                     )}
                   >
-                    <Text
-                      className={cn(
-                        'text-lg',
-                        isSelected && 'font-medium text-foreground'
+                    <View className="flex-row items-center gap-2">
+                      <Text
+                        className={cn(
+                          'text-lg',
+                          isSelected && 'font-medium text-foreground'
+                        )}
+                      >
+                        {list.name}
+                      </Text>
+                      {isShared && (
+                        <Icon
+                          as={UsersIcon}
+                          size={16}
+                          className="text-muted-foreground"
+                        />
                       )}
-                    >
-                      {list.name}
-                    </Text>
+                    </View>
                     {isSelected && (
                       <Icon
                         as={CheckIcon}
