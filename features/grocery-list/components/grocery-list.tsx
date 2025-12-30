@@ -18,6 +18,10 @@ import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
 import { DeleteListConfirmationSheet } from './delete-list-confirmation-sheet';
+import {
+  EditListNameSheet,
+  EditListNameSheetRef,
+} from './edit-list-name-sheet';
 import { GroceryItemsList } from './grocery-items-list';
 import { GroceryListHeader } from './grocery-list-header';
 import { GroupBySelector } from './group-by-selector';
@@ -48,6 +52,7 @@ export const GroceryList = ({
   onDeleteOrLeave,
 }: GroceryListProps) => {
   const shareListSheetRef = useRef<ShareListSheetRef>(null);
+  const editListNameSheetRef = useRef<EditListNameSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
   const { user } = db.useAuth();
   const activeItemIds = filterActiveItems(items);
@@ -139,6 +144,12 @@ export const GroceryList = ({
     deleteListConfirmationSheetRef.current?.dismiss();
   };
 
+  const handleEditNamePress = () => {
+    if (listId && listName) {
+      editListNameSheetRef.current?.present(listId, listName);
+    }
+  };
+
   return (
     <>
       <View className="flex-1 gap-2">
@@ -151,6 +162,7 @@ export const GroceryList = ({
           onClearListPress={handleClearListPress}
           onSharePress={handleSharePress}
           onDeleteOrLeave={handleDeleteOrLeavePress}
+          onEditNamePress={handleEditNamePress}
           onTitlePress={onTitlePress}
         />
         <EditItemProvider groceryListId={listId ?? ''}>
@@ -186,6 +198,7 @@ export const GroceryList = ({
           onCancel={handleCancelDeleteOrLeave}
         />
         <ShareListSheet ref={shareListSheetRef} />
+        <EditListNameSheet ref={editListNameSheetRef} />
       </View>
       {listId && <AddItemSheet groceryListId={listId} />}
     </>

@@ -15,6 +15,7 @@ type GroceryListHeaderProps = {
   onClearListPress: () => void;
   onSharePress: () => void;
   onDeleteOrLeave: () => void;
+  onEditNamePress: () => void;
   onTitlePress?: () => void;
 };
 
@@ -26,6 +27,7 @@ export const GroceryListHeader = ({
   onClearListPress,
   onSharePress,
   onDeleteOrLeave,
+  onEditNamePress,
   onTitlePress,
 }: GroceryListHeaderProps) => {
   const uncheckedItems = items.filter(item => !item.isChecked);
@@ -56,6 +58,7 @@ export const GroceryListHeader = ({
             onClearListPress={onClearListPress}
             onSharePress={onSharePress}
             onDeleteOrLeave={onDeleteOrLeave}
+            onEditNamePress={onEditNamePress}
           />
         )}
       </View>

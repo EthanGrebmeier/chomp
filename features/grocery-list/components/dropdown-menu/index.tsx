@@ -21,6 +21,7 @@ type GroceryListDropdownMenuProps = {
   onClearListPress: () => void;
   onSharePress: () => void;
   onDeleteOrLeave: () => void;
+  onEditNamePress: () => void;
   items: GroceryListItemWithRecipe[];
   ownerId?: string;
 };
@@ -30,6 +31,7 @@ export const GroceryListDropdownMenu = ({
   onClearListPress,
   onSharePress,
   onDeleteOrLeave,
+  onEditNamePress,
   items,
   ownerId,
 }: GroceryListDropdownMenuProps) => {
@@ -47,6 +49,12 @@ export const GroceryListDropdownMenu = ({
           <DropdownMenuItemTitle>Share</DropdownMenuItemTitle>
           <DropdownMenuItemIcon ios={{ name: 'square.and.arrow.up' }} />
         </DropdownMenuItem>
+        {isOwner && (
+          <DropdownMenuItem onSelect={onEditNamePress} key="edit-name">
+            <DropdownMenuItemTitle>Edit Name</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'pencil' }} />
+          </DropdownMenuItem>
+        )}
         <DropdownMenuGroup>
           <DropdownMenuItem
             destructive

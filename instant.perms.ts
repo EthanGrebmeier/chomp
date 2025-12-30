@@ -5,7 +5,7 @@ const rules = {
     allow: {
       create: 'true',
       view: 'isMember || isKnownList',
-      update: 'isMember || isKnownList',
+      update: 'isOwner',
       delete: 'isOwner && hasMultipleLists',
     },
     bind: [
