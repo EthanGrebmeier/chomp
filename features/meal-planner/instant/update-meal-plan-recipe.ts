@@ -22,6 +22,7 @@ export const updateMealPlanRecipe = async ({
   const transactions = [
     tx.meal_plan_recipes[mealPlanRecipeId].update({
       ...otherUpdates,
+      mealTag: otherUpdates.mealTag ?? null,
       updatedAt: new Date().toISOString(),
     }),
   ];

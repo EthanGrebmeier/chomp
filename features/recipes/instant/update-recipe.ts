@@ -17,6 +17,7 @@ export const updateRecipe = async ({ recipeId, updates }: UpdateRecipeArgs) => {
   await db.transact([
     tx.recipes[recipeId].update({
       ...updates,
+      mealTag: updates.mealTag ?? null,
       updatedAt: new Date().toISOString(),
     }),
   ]);

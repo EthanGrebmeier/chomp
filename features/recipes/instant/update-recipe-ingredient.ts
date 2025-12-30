@@ -25,7 +25,8 @@ export const updateRecipeIngredient = async ({
   const { storeId, ...otherUpdates } = updates;
   const processedUpdates = {
     ...otherUpdates,
-    category: otherUpdates.category === null ? undefined : otherUpdates.category,
+    category: otherUpdates.category ?? null,
+    notes: otherUpdates.notes ?? null,
   };
 
   const transactions = [tx.recipe_ingredients[ingredientId].update(processedUpdates)];

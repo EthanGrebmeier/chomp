@@ -25,6 +25,9 @@ export const updateMealPlanItem = async ({
   const transactions = [
     tx.meal_plan_items[mealPlanItemId].update({
       ...otherUpdates,
+      notes: otherUpdates.notes ?? null,
+      category: otherUpdates.category ?? null,
+      mealTag: otherUpdates.mealTag ?? null,
       updatedAt: new Date().toISOString(),
     }),
   ];

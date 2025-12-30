@@ -13,6 +13,7 @@ export const updateSavedItem = async ({
   await db.transact([
     db.tx.saved_items[itemId].update({
       ...updates,
+      category: updates.category ?? null,
       updatedAt: new Date().toISOString(),
     }),
   ]);
