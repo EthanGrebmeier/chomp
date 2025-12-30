@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { toast } from 'sonner-native';
 
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -9,29 +10,26 @@ import { useJoinGroceryListByCode } from '@/features/grocery-lists/instant/useJo
 import { db } from '@/lib/instant';
 import { navigation } from '@/lib/navigation';
 
-type Status = 'checking' | 'joining' | 'error' | 'success';
-
 export default function JoinListByCode() {
   const { joinCode } = useLocalSearchParams<{ joinCode: string }>();
   const router = useRouter();
   const { user, isLoading: authLoading } = db.useAuth();
   const connectionStatus = db.useConnectionStatus();
   const { data: lists, isLoading: listsLoading } = useGroceryLists();
-  const joinGroceryListByCode = useJoinGroceryListByCode();
 
-  const [status, setStatus] = useState<Status>('checking');
-  const [errorMessage, setErrorMessage] = useState<string>('');
-
-  // Check if user is authenticated
-  useEffect(() => {
-    if (authLoading) return;
-
-    if (!user) {
-      // Redirect to auth if not authenticated
-      router.replace('/(auth)/sign-in-email');
-      return;
-    }
-  }, [user, authLoading, router]);
+  const {
+    mutate: joinGroceryListByCode,
+    isPending,
+    data: joinResult,
+    error: joinError,
+  } = useJoinGroceryListByCode({
+    onSuccess: result => {
+      if (result.success) {
+        toast.success(`Joined "${result.listName}"`);
+        router.replace(navigation.goToList(result.listId));
+      }
+    },
+  });
 
   // Check connection status and user access
   useEffect(() => {
@@ -41,10 +39,6 @@ export default function JoinListByCode() {
     // Allow 'connecting' and 'opened' states as they indicate connection in progress
     // Only show error for 'closed' or 'errored' states
     if (connectionStatus === 'closed' || connectionStatus === 'errored') {
-      setStatus('error');
-      setErrorMessage(
-        'You are offline. Please check your internet connection and try again.'
-      );
       return;
     }
 
@@ -60,26 +54,14 @@ export default function JoinListByCode() {
 
     if (listWithCode) {
       // User already has access, navigate to the list
-      setStatus('success');
       router.replace(navigation.goToList(listWithCode.id));
       return;
     }
 
-    // User doesn't have access, attempt to join
-    const attemptJoin = async () => {
-      setStatus('joining');
-      const result = await joinGroceryListByCode(joinCode);
-
-      if (result.success) {
-        setStatus('success');
-        router.replace(navigation.goToList(result.listId));
-      } else {
-        setStatus('error');
-        setErrorMessage(result.error);
-      }
-    };
-
-    attemptJoin();
+    // User doesn't have access, attempt to join (only if not already pending/completed)
+    if (!isPending && !joinResult) {
+      joinGroceryListByCode(joinCode);
+    }
   }, [
     user,
     authLoading,
@@ -89,26 +71,50 @@ export default function JoinListByCode() {
     connectionStatus,
     joinGroceryListByCode,
     router,
+    isPending,
+    joinResult,
   ]);
 
   const handleGoToLists = () => {
     router.replace(navigation.goToList());
   };
 
+  // Determine error message
+  const getErrorMessage = () => {
+    // Connection errors
+    if (connectionStatus === 'closed' || connectionStatus === 'errored') {
+      return 'You are offline. Please check your internet connection and try again.';
+    }
+
+    // Join result error (e.g., list not found, already a member)
+    if (joinResult && !joinResult.success) {
+      return joinResult.error;
+    }
+
+    // Unexpected mutation error
+    if (joinError) {
+      return 'An unexpected error occurred';
+    }
+
+    return null;
+  };
+
+  const errorMessage = getErrorMessage();
+
   // Loading state
-  if (status === 'checking' || status === 'joining' || authLoading || listsLoading) {
+  if (authLoading || listsLoading || isPending) {
     return (
       <View className="flex-1 items-center justify-center bg-background px-6">
         <ActivityIndicator size="large" />
         <Text className="mt-4 text-center text-lg text-muted-foreground">
-          {status === 'joining' ? 'Joining list...' : 'Loading...'}
+          {isPending ? 'Joining list...' : 'Loading...'}
         </Text>
       </View>
     );
   }
 
   // Error state
-  if (status === 'error') {
+  if (errorMessage) {
     return (
       <View className="flex-1 items-center justify-center bg-background px-6">
         <Text className="mb-2 text-center text-2xl font-bold text-foreground">
@@ -131,4 +137,3 @@ export default function JoinListByCode() {
     </View>
   );
 }
-
