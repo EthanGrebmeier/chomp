@@ -20,6 +20,7 @@ import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
 import { EditItemSheet, EditItemSheetRef } from './edit-item-sheet';
 import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
 import { ListSelectorSheet } from './list-selector-sheet';
+import { MealPlanDate } from './meal-plan-date';
 import { MealPlanDateView } from './meal-plan-date-view';
 
 const DAYS_RANGE = 30; // Show 30 days before and after today
@@ -29,6 +30,7 @@ export const MealPlanner = () => {
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
   const pagerRef = useRef<PagerView>(null);
+  const isProgrammaticNavigationRef = useRef(false);
   const { recipes, items } = useUserMealPlanData();
 
   // Generate date range: 30 days before today to 30 days after
@@ -63,7 +65,8 @@ export const MealPlanner = () => {
   const handleDatePress = (date: Date) => {
     const index = daysOfPlan.findIndex(d => isSameDay(d, date));
     if (index !== -1) {
-      pagerRef.current?.setPage(index);
+      isProgrammaticNavigationRef.current = true;
+      pagerRef.current?.setPageWithoutAnimation(index);
       setCurrentPageIndex(index);
     }
   };
@@ -81,6 +84,11 @@ export const MealPlanner = () => {
     addToMealPlanSheet.current?.present({ defaultDate: dateStr });
   };
 
+  const handleTodayPress = () => {
+    const today = startOfDay(new Date());
+    handleDatePress(today);
+  };
+
   return (
     <Animated.View
       entering={FadeIn.duration(140)}
@@ -94,10 +102,12 @@ export const MealPlanner = () => {
       <AddToMealPlanSheet ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} />
       <EditItemSheet sheetRef={editItemSheet} />
+      <MealPlanDate currentDate={currentDate} onTodayPress={handleTodayPress} />
       <MealPlanDateSelector
         dates={daysOfPlan}
         currentDate={currentDate}
         onDatePress={handleDatePress}
+        isProgrammaticNavigationRef={isProgrammaticNavigationRef}
       />
       <PagerView
         ref={pagerRef}

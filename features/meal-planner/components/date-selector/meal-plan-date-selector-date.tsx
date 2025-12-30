@@ -48,7 +48,7 @@ export const MealPlanDateSelectorDate = ({
               : 'text-muted-foreground'
           )}
         >
-          {format(date, 'EEEEEE')}
+          {format(date, 'EE')}
         </Text>
       </View>
     </HapticPressable>

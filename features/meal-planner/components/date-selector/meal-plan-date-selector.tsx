@@ -1,5 +1,5 @@
 import { addWeeks, endOfWeek, isSameDay, startOfWeek } from 'date-fns';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
@@ -9,6 +9,7 @@ type MealPlanDateSelectorProps = {
   dates: Date[];
   currentDate: Date;
   onDatePress: (date: Date) => void;
+  isProgrammaticNavigationRef: MutableRefObject<boolean>;
 };
 
 // Generate weeks from a range of -30 to +30 weeks
@@ -17,6 +18,7 @@ const WEEK_RANGE = 30;
 const MealPlanDateSelector = ({
   currentDate,
   onDatePress,
+  isProgrammaticNavigationRef,
 }: MealPlanDateSelectorProps) => {
   const pagerRef = useRef<PagerView>(null);
   const { width } = useWindowDimensions();
@@ -62,12 +64,13 @@ const MealPlanDateSelector = ({
       isAutoScrollingRef.current = true;
       pagerRef.current?.setPage(targetWeekIndex);
       setCurrentWeekIndex(targetWeekIndex);
-      // Reset auto-scrolling flag after animation completes
-      setTimeout(() => {
-        isAutoScrollingRef.current = false;
-      }, 300);
+      // Note: Don't reset isAutoScrollingRef here - let handlePageSelected do it
+    } else if (targetWeekIndex === currentWeekIndex) {
+      // Week doesn't need to change, but we still need to reset the programmatic flag
+      // since handlePageSelected won't fire
+      isProgrammaticNavigationRef.current = false;
     }
-  }, [currentDate, currentWeekIndex, weeks]);
+  }, [currentDate, currentWeekIndex, weeks, isProgrammaticNavigationRef]);
 
   // Initialize scroll position to current week
   useEffect(() => {
@@ -95,15 +98,29 @@ const MealPlanDateSelector = ({
     const newIndex = e.nativeEvent.position;
     setCurrentWeekIndex(newIndex);
 
-    // When user finishes swiping to a new week (not auto-scroll), select the first day of that week
+    // Capture flag states before resetting
+    const wasAutoScrolling = isAutoScrollingRef.current;
+    const wasProgrammatic = isProgrammaticNavigationRef.current;
+
+    // When user finishes swiping to a new week (not auto-scroll or programmatic navigation),
+    // select the first day of that week
     if (
-      !isAutoScrollingRef.current &&
+      !wasAutoScrolling &&
+      !wasProgrammatic &&
       newIndex !== scrollStartWeekIndexRef.current &&
       weeks[newIndex]
     ) {
       const firstDayOfWeek = weeks[newIndex][0]; // Sunday is the first day
       onDatePress(firstDayOfWeek);
     }
+
+    // Update scrollStartWeekIndexRef to the new settled position
+    // This ensures the next scroll has the correct baseline
+    scrollStartWeekIndexRef.current = newIndex;
+
+    // Reset flags after handling
+    isAutoScrollingRef.current = false;
+    isProgrammaticNavigationRef.current = false;
   };
   const dateWidth = (width - 32 - 4 * 6) / 7; // Account for px-4 and gap-1 (16px each side = 32px total)
 
