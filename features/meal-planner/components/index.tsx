@@ -1,18 +1,15 @@
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
-import { PlusIcon, ShoppingCartIcon } from 'lucide-react-native';
+import { PlusIcon } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { toast } from 'sonner-native';
 
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
-import { Text } from '../../../components/ui/text';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
-import { useAddMealsToGroceryList, useUserMealPlanData } from '../hooks';
+import { useUserMealPlanData } from '../hooks';
 import { MealPlanItemWithStore } from '../types';
 
 import {
@@ -31,11 +28,8 @@ export const MealPlanner = () => {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
-  const addToListSheetRef = useRef<TrueSheet>(null);
   const pagerRef = useRef<PagerView>(null);
   const { recipes, items } = useUserMealPlanData();
-  const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
-    useAddMealsToGroceryList();
 
   // Generate date range: 30 days before today to 30 days after
   const daysOfPlan = useMemo(() => {
@@ -87,34 +81,6 @@ export const MealPlanner = () => {
     addToMealPlanSheet.current?.present({ defaultDate: dateStr });
   };
 
-  const handleAddToList = (listId: string) => {
-    addMealsToGroceryList(
-      { listId },
-      {
-        onSuccess: result => {
-          const totalAdded = result.addedRecipes + result.addedItems;
-          if (totalAdded === 0) {
-            toast.info('No new meals to add - all meals already added to list');
-          } else {
-            toast.success(
-              `Added ${totalAdded} item${totalAdded > 1 ? 's' : ''} to list`
-            );
-          }
-          addToListSheetRef.current?.dismiss();
-        },
-        onError: () => {
-          toast.error('Failed to add meals to list');
-        },
-      }
-    );
-  };
-
-  const unaddedCount = useMemo(() => {
-    const unaddedRecipes = recipes.filter(r => !r.addedToList).length;
-    const unaddedItems = items.filter(i => !i.addedToList).length;
-    return unaddedRecipes + unaddedItems;
-  }, [recipes, items]);
-
   return (
     <Animated.View
       entering={FadeIn.duration(140)}
@@ -124,11 +90,7 @@ export const MealPlanner = () => {
       <View className="flex-row items-center justify-between px-4">
         <Heading>Meal Plan</Heading>
       </View>
-      <ListSelectorSheet
-        ref={addToListSheetRef}
-        onListSelect={handleAddToList}
-        isLoading={isAddingToList}
-      />
+      <ListSelectorSheet />
       <AddToMealPlanSheet ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} />
       <EditItemSheet sheetRef={editItemSheet} />
@@ -169,30 +131,6 @@ export const MealPlanner = () => {
           className="text-primary-foreground"
         />
       </Button>
-      {unaddedCount > 0 && (
-        <Button
-          size="iconLg"
-          variant="secondary"
-          className="absolute left-6 z-10"
-          style={{ bottom: NATIVE_TABS_OFFSET }}
-          onPress={() => addToListSheetRef.current?.present()}
-          disabled={isAddingToList}
-        >
-          <Icon
-            as={ShoppingCartIcon}
-            size={20}
-            strokeWidth={3}
-            className="text-secondary-foreground"
-          />
-          {unaddedCount > 0 && (
-            <View className="absolute -right-3 -top-3 ml-1 rounded-full bg-primary px-2 ">
-              <Text className="text-base font-semibold text-primary-foreground">
-                {unaddedCount}
-              </Text>
-            </View>
-          )}
-        </Button>
-      )}
     </Animated.View>
   );
 };
