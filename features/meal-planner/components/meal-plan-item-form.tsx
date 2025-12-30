@@ -68,7 +68,7 @@ export const MealPlanItemForm = ({
       : 'min-h-24 rounded-md border border-border bg-card px-3 py-2 text-base text-foreground';
 
   return (
-    <View className="flex-1 gap-4">
+    <View className="flex-1">
       <MealPlanItemInput
         ref={itemInputRef}
         value={itemName}
@@ -105,4 +105,3 @@ export const MealPlanItemForm = ({
     </View>
   );
 };
-

@@ -69,7 +69,7 @@ export const RecipeSelector = ({
 
   if (!recipes || recipes.length === 0) {
     return (
-      <View className="items-center justify-center gap-4">
+      <View className="flex-1 items-center justify-center gap-4">
         <View className="items-center">
           <Text className="text-lg font-semibold text-foreground">
             No recipes yet

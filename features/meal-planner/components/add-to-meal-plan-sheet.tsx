@@ -126,7 +126,7 @@ const AddItemMode = ({ onSuccess }: { onSuccess: () => void }) => {
 
   return (
     <View className="flex-1 px-4">
-      <MealPlanItemForm onSubmit={handleAddItem} autoFocus />
+      <MealPlanItemForm onSubmit={handleAddItem} />
     </View>
   );
 };
@@ -317,13 +317,10 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
             </View>
           </Animated.View>
         ) : (
-          <>
-            <BottomSheet.Header className="px-4" title="Select Recipe" />
-            <RecipeSelector
-              onSelectRecipe={handleSelectRecipe}
-              onDismiss={() => sheetRef.current?.dismiss()}
-            />
-          </>
+          <RecipeSelector
+            onSelectRecipe={handleSelectRecipe}
+            onDismiss={() => sheetRef.current?.dismiss()}
+          />
         )
       ) : (
         <MealPlanItemProvider initialValues={{ selectedDate: defaultDate }}>
