@@ -1,6 +1,6 @@
 import { addWeeks, endOfWeek, isSameDay, startOfWeek } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
 import { MealPlanDateSelectorDate } from './meal-plan-date-selector-date';
@@ -19,6 +19,7 @@ const MealPlanDateSelector = ({
   onDatePress,
 }: MealPlanDateSelectorProps) => {
   const pagerRef = useRef<PagerView>(null);
+  const { width } = useWindowDimensions();
 
   // Generate all weeks to display (30 weeks before and after today)
   const weeks = useMemo(() => {
@@ -104,6 +105,7 @@ const MealPlanDateSelector = ({
       onDatePress(firstDayOfWeek);
     }
   };
+  const dateWidth = (width - 32 - 4 * 6) / 7; // Account for px-4 and gap-1 (16px each side = 32px total)
 
   return (
     <PagerView
@@ -114,13 +116,17 @@ const MealPlanDateSelector = ({
       onPageScrollStateChanged={handlePageScrollStateChanged}
     >
       {weeks.map((weekDates, weekIndex) => (
-        <View key={weekIndex} className="flex-row items-center px-4">
+        <View
+          key={weekIndex}
+          className="flex-row items-center justify-between gap-1 px-4"
+        >
           {weekDates.map(date => (
             <MealPlanDateSelectorDate
               key={date.toISOString()}
               date={date}
               isSelected={isSameDay(date, currentDate)}
               onPress={onDatePress}
+              width={dateWidth}
             />
           ))}
         </View>

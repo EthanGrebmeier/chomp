@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { View } from 'react-native';
 
 import { HapticPressable } from '../../../../components/ui/haptic-pressable';
@@ -9,27 +9,32 @@ type MealPlanDateSelectorDateProps = {
   date: Date;
   isSelected: boolean;
   onPress: (date: Date) => void;
+  width: number;
 };
 
 export const MealPlanDateSelectorDate = ({
   date,
   isSelected,
   onPress,
+  width,
 }: MealPlanDateSelectorDateProps) => {
+  const isDateToday = isToday(date);
   return (
     <HapticPressable
+      style={{ width }}
       onPress={() => onPress(date)}
-      className="flex-1 items-center"
+      className={cn(
+        'shrink-0 grow-0 items-center rounded-xl px-2 py-3',
+        isSelected && 'bg-muted'
+      )}
     >
-      <View
-        className={cn(
-          'items-center justify-center rounded-xl px-3 py-2',
-          isSelected && 'bg-muted'
-        )}
-      >
+      {isDateToday && (
+        <View className="absolute top-2 z-10 size-1.5 rounded-full bg-accent-orange-foreground"></View>
+      )}
+      <View className={cn('items-center justify-center  ')}>
         <Text
           className={cn(
-            'text-base font-semibold text-muted-foreground',
+            '-mb-1 text-xl font-semibold text-muted-foreground',
             isSelected && 'text-foreground'
           )}
         >
