@@ -1,6 +1,9 @@
 import { id } from '@instantdb/react-native';
+import { eq } from 'drizzle-orm';
 
+import { localSavedItemTable } from '../../../db/schema';
 import { db } from '../../../lib/instant';
+import { db as sqliteDb } from '../../../providers/migration-provider';
 import { BaseSavedItem } from '../types';
 
 /**
@@ -13,7 +16,12 @@ export const addSavedItemIfNotExists = async (item: BaseSavedItem) => {
     return;
   }
 
-  // Check if item already exists (case-insensitive name match)
+  const sqliteItem = await sqliteDb
+    .select()
+    .from(localSavedItemTable)
+    .where(eq(localSavedItemTable.name, item.name));
+
+  // Check if instantdb item already exists (case-insensitive name match)
   const { data } = await db.queryOnce({
     saved_items: {},
   });
@@ -22,7 +30,7 @@ export const addSavedItemIfNotExists = async (item: BaseSavedItem) => {
     savedItem => savedItem.name.toLowerCase() === item.name.toLowerCase()
   );
 
-  if (existingItem) {
+  if (existingItem || sqliteItem.length > 0) {
     return;
   }
 
