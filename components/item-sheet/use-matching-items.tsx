@@ -13,10 +13,27 @@ export const useMatchingItems = (
       return [];
     }
 
+    const lowerValue = value.toLowerCase();
+
     return savedItems
-      .filter(item => item.name.toLowerCase().includes(value.toLowerCase()))
+      .filter(item => item.name.toLowerCase().includes(lowerValue))
+      .sort((a, b) => {
+        const aLower = a.name.toLowerCase();
+        const bLower = b.name.toLowerCase();
+        const aIndex = aLower.indexOf(lowerValue);
+        const bIndex = bLower.indexOf(lowerValue);
+
+        // Exact match comes first
+        if (aLower === lowerValue && bLower !== lowerValue) return -1;
+        if (bLower === lowerValue && aLower !== lowerValue) return 1;
+
+        // Then by position of match (earlier = better)
+        if (aIndex !== bIndex) return aIndex - bIndex;
+
+        // Then alphabetically
+        return aLower.localeCompare(bLower);
+      })
       .slice(0, 7)
-      .sort((a, b) => b.name.localeCompare(a.name))
       .map(
         (item): BaseGroceryItem => ({
           name: item.name,
