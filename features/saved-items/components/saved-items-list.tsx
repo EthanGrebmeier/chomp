@@ -108,6 +108,7 @@ export const SavedItemsList = ({
   return (
     <FlatList
       data={sortedItems}
+      contentContainerClassName="pb-safe-offset-12"
       renderItem={({ item, index }) => (
         <SavedItemRow
           item={item}

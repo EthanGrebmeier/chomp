@@ -4,8 +4,8 @@ import { View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { Heading } from '@/components/text/heading';
 import { TextInput } from '@/components/text-input';
+import { Heading } from '@/components/text/heading';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -93,7 +93,7 @@ const SavedItemsContent = () => {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="flex-row gap-2 px-4 pb-2"
-        className="mt-3 flex-grow-0"
+        className=" mt-3 flex-grow-0"
       >
         <SortBySelector value={sortBy} onChange={handleSortByChange} />
         <CategoryFilterSelector
