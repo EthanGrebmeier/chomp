@@ -7,6 +7,8 @@ type UpdateSettingsArgs = {
   listName?: string;
   groupBy?: 'category' | 'none' | 'recipe' | 'store';
   sortBy?: 'name' | 'recent';
+  savedItemsSortBy?: 'name' | 'category';
+  savedItemsFilterCategory?: string | null;
 };
 
 export const updateSettings = async (updates: UpdateSettingsArgs) => {

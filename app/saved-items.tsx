@@ -1,35 +1,68 @@
 import { PlusIcon, SearchIcon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { TextInput } from '@/components/text-input';
 import { Heading } from '@/components/text/heading';
+import { TextInput } from '@/components/text-input';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { useSettings } from '@/features/grocery-list/hooks/useSettings';
+import { useUpdateSettings } from '@/features/grocery-list/hooks/useUpdateSettings';
 import {
   SavedItemSheetProvider,
   useSavedItemSheet,
 } from '@/features/saved-items/components/add-saved-item-sheet';
+import { CategoryFilterSelector } from '@/features/saved-items/components/category-filter-selector';
 import { SavedItemsList } from '@/features/saved-items/components/saved-items-list';
 import { SavedItemsListSkeleton } from '@/features/saved-items/components/saved-items-list-skeleton';
+import { SortBySelector } from '@/features/saved-items/components/sort-by-selector';
 import { useUnifiedSavedItems } from '@/features/saved-items/unified/use-unified-saved-items';
 
 const SavedItemsContent = () => {
   const { data: savedItems, isLoading } = useUnifiedSavedItems();
+  const { data: settings } = useSettings();
+  const { mutate: updateSettings } = useUpdateSettings();
   const { present } = useSavedItemSheet();
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [sortBy, setSortBy] = useState<'name' | 'category'>(
+    settings?.savedItemsSortBy ?? 'name'
+  );
+  const [filterCategory, setFilterCategory] = useState<string | undefined>(
+    settings?.savedItemsFilterCategory ?? undefined
+  );
+
+  const handleSortByChange = (newSortBy: 'name' | 'category') => {
+    setSortBy(newSortBy);
+    updateSettings({ savedItemsSortBy: newSortBy });
+  };
+
+  const handleFilterCategoryChange = (category?: string) => {
+    setFilterCategory(category);
+    updateSettings({ savedItemsFilterCategory: category ?? null });
+  };
+
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return savedItems;
+    let items = savedItems;
+
+    // Apply category filter
+    if (filterCategory) {
+      items = items.filter(item => item.category === filterCategory);
     }
-    return savedItems.filter(item =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [savedItems, searchQuery]);
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      items = items.filter(item =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return items;
+  }, [savedItems, filterCategory, searchQuery]);
 
   return (
     <View className="pt-safe flex-1 bg-background">
@@ -55,11 +88,26 @@ const SavedItemsContent = () => {
         </View>
       </View>
 
+      {/* Sort and Filter */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerClassName="flex-row gap-2 px-4 pb-2"
+        className="mt-3 flex-grow-0"
+      >
+        <SortBySelector value={sortBy} onChange={handleSortByChange} />
+        <CategoryFilterSelector
+          category={filterCategory}
+          onSelect={handleFilterCategoryChange}
+        />
+      </ScrollView>
+
       {/* Item count */}
-      <View className="mt-3 px-4">
+      <View className="px-4">
         <Text className="text-sm text-muted-foreground">
           {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
           {searchQuery && ` matching "${searchQuery}"`}
+          {filterCategory && !searchQuery && ' in this category'}
         </Text>
       </View>
 
@@ -81,7 +129,11 @@ const SavedItemsContent = () => {
             exiting={FadeOut.duration(200)}
             className="flex-1"
           >
-            <SavedItemsList items={filteredItems} onEditItem={present} />
+            <SavedItemsList
+              items={filteredItems}
+              sortBy={sortBy}
+              onEditItem={present}
+            />
           </Animated.View>
         )}
       </View>

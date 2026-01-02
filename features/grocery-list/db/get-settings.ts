@@ -18,6 +18,8 @@ export const getSettings = async () => {
       listName: 'Shopping List',
       groupBy: 'none' as const,
       sortBy: 'recent' as const,
+      savedItemsSortBy: 'name' as const,
+      savedItemsFilterCategory: null,
       createdAt: now,
       updatedAt: now,
     };

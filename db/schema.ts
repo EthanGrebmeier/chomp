@@ -18,6 +18,11 @@ export const appSettingsTable = sqliteTable('app_settings', {
     .notNull()
     .default('recent'),
   hasSeededSavedItems: int({ mode: 'boolean' }).notNull().default(false),
+  // Saved items view settings
+  savedItemsSortBy: text({ enum: ['name', 'category'] })
+    .notNull()
+    .default('name'),
+  savedItemsFilterCategory: text(),
   ...timestamps,
 });
 
