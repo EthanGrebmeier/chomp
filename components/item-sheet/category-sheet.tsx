@@ -82,7 +82,6 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
 
   const handleScrollToSelectedCategory = () => {
     if (selectedCategoryIndex !== -1) {
-      console.log('SCROLLING TO', selectedCategoryIndex * 60);
       scrollViewRef.current?.scrollTo({
         y: selectedCategoryIndex * 60,
         animated: false,

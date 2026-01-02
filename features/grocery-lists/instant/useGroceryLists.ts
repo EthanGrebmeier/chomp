@@ -20,11 +20,6 @@ export const useGroceryLists = () => {
     },
   });
 
-  console.log(
-    'groceryListsQuery.data',
-    JSON.stringify(groceryListsQuery.data, null, 2)
-  );
-
   // Sort grocery lists by lastAccessedAt (most recent first)
   const sortedData = useMemo(() => {
     if (!groceryListsQuery.data || !user) {

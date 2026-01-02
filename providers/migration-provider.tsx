@@ -15,7 +15,6 @@ export const MigrationProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  console.log(migrations.journal);
   const { success, error } = useMigrations(db, migrations);
 
   // Seed local items in the background after migrations complete (non-blocking)
