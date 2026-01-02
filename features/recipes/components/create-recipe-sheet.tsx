@@ -9,7 +9,7 @@ import { Text } from '../../../components/ui/text';
 import { MealTimeSheet } from '../../meal-planner/components/meal-time-sheet';
 
 type CreateRecipeSheetProps = {
-  onSubmit: (data: { name: string }) => void;
+  onSubmit: (data: { name: string; mealTag?: string }) => void;
   onClose?: () => void;
   defaultValues?: {
     name: string;
@@ -50,7 +50,7 @@ export const CreateRecipeSheet = forwardRef<
       return;
     }
 
-    onSubmit({ name: name.trim() });
+    onSubmit({ name: name.trim(), mealTag });
     sheetRef.current?.dismiss();
   };
 

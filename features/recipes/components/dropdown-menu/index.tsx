@@ -197,9 +197,12 @@ export const RecipeDropdownMenu = ({
     );
   };
 
-  const handleEditRecipe = (data: { name: string }) => {
+  const handleEditRecipe = (data: { name: string; mealTag?: string }) => {
     updateRecipe(
-      { recipeId: recipe.id, updates: { name: data.name } },
+      {
+        recipeId: recipe.id,
+        updates: { name: data.name, mealTag: data.mealTag },
+      },
       {
         onSuccess: () => {
           toast.success('Recipe updated');
