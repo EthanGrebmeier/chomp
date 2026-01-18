@@ -6,7 +6,6 @@ import { toast } from 'sonner-native';
 
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
-import { db } from '../../../lib/instant';
 
 const Account = () => {
   const { signOut } = useAuth();
@@ -17,7 +16,6 @@ const Account = () => {
     setIsSigningOut(true);
     try {
       await signOut();
-      await db.auth.signOut();
     } catch {
       toast.error('Failed to sign out. Please try again.');
     } finally {

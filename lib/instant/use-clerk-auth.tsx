@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/clerk-expo';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -7,8 +7,40 @@ import { useInitializeDefaultGroceryList } from '../../features/grocery-lists/in
 
 import { db } from '.';
 
-export const InstantAuthHandler = () => {
+let activeAuthControllerId: string | null = null;
+
+const signInWithClerkToken = async (getToken: () => Promise<string | null>) => {
+  const idToken = await getToken();
+
+  if (!idToken) {
+    throw new Error('Missing Clerk ID token');
+  }
+
+  await db.auth.signInWithIdToken({
+    clientName: process.env.EXPO_PUBLIC_INSTANT_CLIENT_NAME!,
+    idToken,
+  });
+};
+
+export const useInstantSignIn = () => {
   const { getToken } = useAuth();
+
+  return useCallback(async () => {
+    try {
+      await signInWithClerkToken(getToken);
+    } catch {
+      // Avoid blocking UI when Instant sign-in fails
+    }
+  }, [getToken]);
+};
+
+export const InstantAuthHandler = () => {
+  const { isSignedIn } = useAuth();
+  const signInToInstant = useInstantSignIn();
+  const authTransitionRef = useRef(false);
+  const instanceIdRef = useRef(`auth-handler-${Math.random().toString(36).slice(2)}`);
+  const [guestInitKey, setGuestInitKey] = useState(0);
+  const [isAuthController, setIsAuthController] = useState(false);
 
   const {
     isLoading: isLoadingInstant,
@@ -16,35 +48,66 @@ export const InstantAuthHandler = () => {
     user: userInstant,
   } = db.useAuth();
 
-  // Initialize default grocery list for new users
-  useInitializeDefaultGroceryList();
+  const isInstantReady =
+    !isLoadingInstant && Boolean(userInstant) && !errorInstant;
 
-  const signInToInstant = async () => {
-    // getToken gets the jwt from Clerk for your signed in user.
-    const idToken = await getToken();
-
-    if (!idToken) {
-      // No jwt, can't sign in to instant
-      await db.auth.signInAsGuest();
-      return;
-    }
-
-    // Create a long-lived session with Instant for your clerk user
-    // It will look up the user by email or create a new user with
-    // the email address in the session token.
-    db.auth.signInWithIdToken({
-      clientName: process.env.EXPO_PUBLIC_INSTANT_CLIENT_NAME!,
-      idToken: idToken,
-    });
-  };
+  // Initialize default grocery list after Instant auth settles
+  useInitializeDefaultGroceryList({
+    enabled: isInstantReady && isAuthController,
+    initKey: guestInitKey,
+  });
 
   useEffect(() => {
-    if (isLoadingInstant || userInstant || errorInstant) {
+    const instanceId = instanceIdRef.current;
+    if (!activeAuthControllerId) {
+      activeAuthControllerId = instanceId;
+      setIsAuthController(true);
+    }
+    return () => {
+      if (activeAuthControllerId === instanceId) {
+        activeAuthControllerId = null;
+        setIsAuthController(false);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (
+      isSignedIn === undefined ||
+      isLoadingInstant ||
+      authTransitionRef.current ||
+      !isAuthController
+    ) {
       return;
     }
 
-    signInToInstant();
-  }, []);
+    const runAuthTransition = async () => {
+      authTransitionRef.current = true;
+      try {
+        const existingAuth = await db.getAuth();
+        if (isSignedIn) {
+          if (existingAuth?.email) {
+            return;
+          }
+          await db.auth.signOut();
+          await signInToInstant();
+          return;
+        }
+
+        if (existingAuth && !existingAuth.email) {
+          return;
+        }
+
+        await db.auth.signOut();
+        await db.auth.signInAsGuest();
+        setGuestInitKey(prev => prev + 1);
+      } finally {
+        authTransitionRef.current = false;
+      }
+    };
+
+    void runAuthTransition();
+  }, [isSignedIn, isLoadingInstant, isAuthController, signInToInstant]);
 
   if (isLoadingInstant) {
     return (

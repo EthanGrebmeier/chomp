@@ -6,68 +6,148 @@ import { generateJoinCode } from '../utils/generate-join-code';
 
 const DEFAULT_LIST_NAME = 'Shopping List';
 
+type InitializeDefaultListOptions = {
+  enabled?: boolean;
+  initKey?: number;
+};
+
 /**
  * Hook that creates a default grocery list for new users.
- * Safe to call multiple times - initialization only happens once per user.
+ * Safe to call multiple times - initialization only happens once per auth id.
  */
-export const useInitializeDefaultGroceryList = () => {
-  const hasAttemptedRef = useRef(false);
+export const useInitializeDefaultGroceryList = (
+  options: InitializeDefaultListOptions = {}
+) => {
+  const { enabled = true, initKey } = options;
+  const initStateRef = useRef({
+    inFlight: false,
+    lastAuthId: null as string | null,
+    lastInitKey: null as number | null,
+  });
   const { user, isLoading } = db.useAuth();
 
   useEffect(() => {
-    if (isLoading || !user || hasAttemptedRef.current) {
+    if (
+      !enabled ||
+      isLoading ||
+      !user ||
+      initStateRef.current.inFlight ||
+      (initKey !== undefined && initKey === initStateRef.current.lastInitKey)
+    ) {
       return;
     }
 
     const initializeDefaultList = async () => {
-      hasAttemptedRef.current = true;
+      initStateRef.current.inFlight = true;
 
-      // Check if user has already been initialized
-      const { data } = await db.queryOnce({
-        $users: {},
-      });
+      try {
+        const authUser = await db.getAuth();
+        if (!authUser?.id) {
+          return;
+        }
 
-      const currentUser = data?.$users?.[0];
-      if (currentUser?.hasInitializedGroceryList) {
-        return;
+        if (initStateRef.current.lastAuthId === authUser.id) {
+          return;
+        }
+
+        const isGuest = !authUser.email;
+        let currentUser:
+          | { hasInitializedGroceryList?: boolean; grocery_lists?: unknown[] }
+          | undefined;
+        let existingListCount = 0;
+
+        if (!isGuest) {
+          try {
+            const { data } = await db.queryOnce({
+              $users: {
+                grocery_lists: {},
+              },
+            });
+
+            currentUser = data?.$users?.[0];
+            existingListCount = currentUser?.grocery_lists?.length ?? 0;
+          } catch {
+            // If the check fails, proceed with creation to avoid missing lists
+          }
+
+          if (currentUser?.hasInitializedGroceryList || existingListCount > 0) {
+            initStateRef.current.lastAuthId = authUser.id;
+            initStateRef.current.lastInitKey = initKey ?? null;
+            return;
+          }
+        }
+
+        const listId = id();
+        const shareId = id();
+        const joinCode = generateJoinCode();
+        const now = new Date().toISOString();
+
+        const transactions: Parameters<typeof db.transact>[0] = [
+          db.tx.grocery_lists[listId]
+            .create({
+              name: DEFAULT_LIST_NAME,
+              joinCode,
+              ownerId: authUser.id,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .link({
+              owner: authUser.id,
+            }),
+          db.tx.grocery_list_shares[shareId]
+            .create({
+              grocery_list_id: listId,
+              user_id: authUser.id,
+              lastAccessedAt: now,
+            })
+            .link({
+              grocery_list: listId,
+            }),
+        ];
+
+        if (!isGuest) {
+          transactions.push(
+            db.tx.$users[authUser.id].update({
+              hasInitializedGroceryList: true,
+            })
+          );
+        }
+
+        await db.transact(transactions);
+        initStateRef.current.lastAuthId = authUser.id;
+        initStateRef.current.lastInitKey = initKey ?? null;
+
+        if (isGuest) {
+          try {
+            const { data } = await db.queryOnce({
+              $users: {
+                grocery_lists: {},
+              },
+            });
+
+            const guestLists =
+              data?.$users?.[0]?.grocery_lists
+                ?.map(list => list.id)
+                .filter(listIdValue => listIdValue !== listId) ?? [];
+
+            if (guestLists.length > 0) {
+              await db.transact(
+                guestLists.map(existingId =>
+                  db.tx.grocery_lists[existingId].delete()
+                )
+              );
+            }
+          } catch {
+            // If cleanup fails, keep the new list to avoid blocking guests
+          }
+        }
+      } finally {
+        initStateRef.current.inFlight = false;
       }
-
-      // Create default grocery list
-      const listId = id();
-      const shareId = id();
-      const joinCode = generateJoinCode();
-      const now = new Date().toISOString();
-
-      await db.transact([
-        db.tx.grocery_lists[listId]
-          .create({
-            name: DEFAULT_LIST_NAME,
-            joinCode,
-            ownerId: user.id,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .link({
-            owner: user.id,
-          }),
-        db.tx.grocery_list_shares[shareId]
-          .create({
-            grocery_list_id: listId,
-            user_id: user.id,
-          })
-          .link({
-            grocery_list: listId,
-          }),
-        db.tx.$users[user.id].update({
-          hasInitializedGroceryList: true,
-        }),
-      ]);
     };
 
-    initializeDefaultList().catch(err => {
-      console.error('Failed to initialize default grocery list:', err);
-      // Reset attempt flag so it can retry on next render
-      hasAttemptedRef.current = false;
+    initializeDefaultList().catch(() => {
+      initStateRef.current.inFlight = false;
     });
-  }, [user, isLoading]);
+  }, [enabled, isLoading, user, initKey]);
 };

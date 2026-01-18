@@ -40,15 +40,25 @@ export default function List() {
     }
   }, [listIdParam, lists, trackListAccess]);
 
-  // Set default list if none selected
+  // Set default list if none selected or selection is stale
   useEffect(() => {
     const setOrCreateDefaultList = async () => {
       if (listsLoading) return;
 
-      if (!activeListId && lists?.grocery_lists.length) {
+      const hasLists = Boolean(lists?.grocery_lists.length);
+      const activeListStillExists = Boolean(
+        activeListId && lists?.grocery_lists.some(l => l.id === activeListId)
+      );
+
+      if (hasLists && (!activeListId || !activeListStillExists)) {
         const defaultListId = lists.grocery_lists[0].id;
         setActiveListId(defaultListId);
         trackListAccess(defaultListId);
+        return;
+      }
+
+      if (!hasLists) {
+        setActiveListId(undefined);
       }
     };
 

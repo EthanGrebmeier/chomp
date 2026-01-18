@@ -1,5 +1,4 @@
 import { useSignInWithApple, useSSO } from '@clerk/clerk-expo';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
@@ -7,6 +6,7 @@ import { Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 
+import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 // Ensure web browser auth sessions are properly closed
 WebBrowser.maybeCompleteAuthSession();
 
@@ -27,6 +27,7 @@ export function useOAuthFlow() {
   const { startSSOFlow } = useSSO();
   const { startAppleAuthenticationFlow } = useSignInWithApple();
   const router = useRouter();
+  const signInToInstant = useInstantSignIn();
 
   const [isLoading, setIsLoading] = useState<OAuthStrategy | null>(null);
 
@@ -49,6 +50,7 @@ export function useOAuthFlow() {
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
+        await signInToInstant();
         router.replace('/');
         return;
       }
@@ -80,7 +82,7 @@ export function useOAuthFlow() {
     } finally {
       setIsLoading(null);
     }
-  }, [router, startSSOFlow]);
+  }, [router, signInToInstant, startSSOFlow]);
 
   const handleAppleSignIn = useCallback(async () => {
     try {
@@ -91,6 +93,7 @@ export function useOAuthFlow() {
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
+        await signInToInstant();
         router.replace('/');
         return;
       }
@@ -120,7 +123,7 @@ export function useOAuthFlow() {
     } finally {
       setIsLoading(null);
     }
-  }, [router, startAppleAuthenticationFlow]);
+  }, [router, signInToInstant, startAppleAuthenticationFlow]);
 
   const signInWithGoogle = useCallback(() => {
     return handleGoogleOAuth();

@@ -14,12 +14,14 @@ import { SocialButtons } from '@/components/auth/social-buttons';
 import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 
 import { BackButton } from '../../components/ui/back-button';
 
 export default function SignInEmail() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
+  const signInToInstant = useInstantSignIn();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,6 +47,7 @@ export default function SignInEmail() {
 
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId });
+        await signInToInstant();
         router.replace('/');
       } else {
         // Handle other statuses if needed

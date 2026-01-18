@@ -5,20 +5,22 @@ import { db } from '../../../lib/instant';
 export const useGroceryLists = () => {
   const { user } = db.useAuth();
 
-  const groceryListsQuery = db.useQuery({
-    grocery_lists: {
-      shares: {},
-      grocery_items: {
-        $: {
-          where: {
-            isDeleted: false,
+  const groceryListsQuery = db.useQuery(
+    {
+      grocery_lists: {
+        shares: {},
+        grocery_items: {
+          $: {
+            where: {
+              isDeleted: false,
+            },
           },
+          recipe: {},
+          store: {},
         },
-        recipe: {},
-        store: {},
       },
-    },
-  });
+    }
+  );
 
   // Sort grocery lists by lastAccessedAt (most recent first)
   const sortedData = useMemo(() => {

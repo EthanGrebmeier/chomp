@@ -1,13 +1,52 @@
-import { InstantRules } from '@instantdb/react-native';
+// Docs: https://www.instantdb.com/docs/permissions
+
+import type { InstantRules } from '@instantdb/react-native';
 
 const rules = {
-  grocery_lists: {
+  grocery_items: {
+    bind: ['isOwner', "auth.id in data.ref('grocery_list.shares.user_id')"],
     allow: {
-      create: 'true',
-      view: 'isMember || isKnownList',
-      update: 'isOwner || isMember',
-      delete: 'isOwner && hasMultipleLists',
+      view: 'isOwner',
+      create: 'isOwner',
+      delete: 'isOwner',
+      update: 'isOwner',
     },
+  },
+  $users: {
+    bind: [
+      'isSelf',
+      'auth.id == data.id',
+    ],
+    allow: {
+      view: 'isSelf',
+      create: 'false',
+      update: 'isSelf',
+    },
+  },
+  recipes: {
+    bind: [
+      'isOwner',
+      "auth.id in data.ref('user.id')",
+      'canViewViaGroceryList',
+      "auth.id in data.ref('grocery_items.grocery_list.shares.user_id')",
+    ],
+    allow: {
+      view: 'isOwner || data.visibility == "public" || canViewViaGroceryList',
+      create: 'auth.id != null',
+      delete: 'isOwner',
+      update: 'isOwner',
+    },
+  },
+  meal_plan_items: {
+    bind: ['isOwner', "auth.id in data.ref('user.id')"],
+    allow: {
+      view: 'isOwner',
+      create: 'auth.id != null',
+      delete: 'isOwner',
+      update: 'isOwner',
+    },
+  },
+  grocery_lists: {
     bind: [
       'isOwner',
       'auth.id == data.ownerId',
@@ -18,88 +57,67 @@ const rules = {
       'hasMultipleLists',
       "size(data.ref('owner.grocery_lists.id')) > 1",
     ],
-  },
-  grocery_list_shares: {
     allow: {
-      create: 'auth.id != null',
-      view: 'auth.id == data.user_id || isMember',
-      update: 'auth.id == data.user_id',
-      delete: 'auth.id == data.user_id',
+      view: 'isOwner || isMember || isKnownList',
+      create: 'true',
+      delete: 'isOwner && hasMultipleLists',
+      update: 'isOwner || isMember',
     },
-    bind: ['isMember', "auth.id in data.ref('grocery_list.shares.user_id')"],
-  },
-  grocery_items: {
-    allow: {
-      create: 'isOwner',
-      view: 'isOwner',
-      update: 'isOwner',
-      delete: 'isOwner',
-    },
-    bind: ['isOwner', "auth.id in data.ref('grocery_list.shares.user_id')"],
-  },
-  recipe_ingredients: {
-    allow: {
-      create: 'isOwner',
-      view: 'true',
-      update: 'isOwner',
-      delete: 'isOwner',
-    },
-    bind: ['isOwner', "auth.id in data.ref('recipe.user.id')"],
-  },
-  recipes: {
-    allow: {
-      create: 'auth.id != null',
-      view: 'isOwner || data.visibility == "public" || canViewViaGroceryList',
-      update: 'isOwner',
-      delete: 'isOwner',
-    },
-    bind: [
-      'isOwner',
-      "auth.id in data.ref('user.id')",
-      'canViewViaGroceryList',
-      "auth.id in data.ref('grocery_items.grocery_list.shares.user_id')",
-    ],
-  },
-  meal_plan_recipes: {
-    allow: {
-      create: 'auth.id != null',
-      view: 'isOwner',
-      update: 'isOwner',
-      delete: 'isOwner',
-    },
-    bind: ['isOwner', "auth.id in data.ref('user.id')"],
-  },
-  meal_plan_items: {
-    allow: {
-      create: 'auth.id != null',
-      view: 'isOwner',
-      update: 'isOwner',
-      delete: 'isOwner',
-    },
-    bind: ['isOwner', "auth.id in data.ref('user.id')"],
-  },
-  saved_items: {
-    allow: {
-      create: 'isOwner',
-      view: 'isOwner',
-      update: 'isOwner',
-      delete: 'isOwner',
-    },
-    bind: ['isOwner', "auth.id in data.ref('user.id')"],
   },
   stores: {
-    allow: {
-      create: 'auth.id != null',
-      view: 'isOwner || canViewViaItem',
-      update: 'isOwner',
-      delete: 'isOwner',
-    },
     bind: [
       'isOwner',
       "auth.id in data.ref('user.id')",
       'canViewViaItem',
       "auth.id in data.ref('grocery_items.grocery_list.shares.user_id')",
     ],
+    allow: {
+      view: 'isOwner || canViewViaItem',
+      create: 'auth.id != null',
+      delete: 'isOwner',
+      update: 'isOwner',
+    },
+  },
+  meal_plan_recipes: {
+    bind: ['isOwner', "auth.id in data.ref('user.id')"],
+    allow: {
+      view: 'isOwner',
+      create: 'auth.id != null',
+      delete: 'isOwner',
+      update: 'isOwner',
+    },
+  },
+  saved_items: {
+    bind: ['isOwner', "auth.id in data.ref('user.id')"],
+    allow: {
+      view: 'isOwner',
+      create: 'isOwner',
+      delete: 'isOwner',
+      update: 'isOwner',
+    },
+  },
+  recipe_ingredients: {
+    bind: ['isOwner', "auth.id in data.ref('recipe.user.id')"],
+    allow: {
+      view: 'true',
+      create: 'isOwner',
+      delete: 'isOwner',
+      update: 'isOwner',
+    },
+  },
+  grocery_list_shares: {
+    bind: [
+      'isMember',
+      "auth.id in data.ref('grocery_list.shares.user_id')",
+      'isSelf',
+      'auth.id == data.user_id',
+    ],
+    allow: {
+      view: 'isSelf || isMember',
+      create: 'isSelf',
+      delete: 'isSelf',
+      update: 'isSelf',
+    },
   },
 } satisfies InstantRules;
 
