@@ -18,13 +18,11 @@ export default function Settings() {
   };
 
   return (
-    <View className="pt-safe flex-1 bg-background">
+    <View className="pt-safe pb-safe-offset-16 flex-1 bg-background">
       <View className="px-4">
         <Heading>Settings</Heading>
       </View>
-      <View className="flex-1 gap-4 px-4 pt-6">
-        <Account />
-
+      <View className="flex-1 justify-between gap-4 px-4 pt-6 ">
         {/* Settings Menu */}
         <View className="mb-8 gap-3">
           <Pressable
@@ -64,6 +62,7 @@ export default function Settings() {
             />
           </Pressable>
         </View>
+        <Account />
       </View>
     </View>
   );

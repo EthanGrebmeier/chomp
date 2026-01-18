@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
+import { SocialButtons } from '@/components/auth/social-buttons';
 import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -106,6 +107,10 @@ export default function SignInEmail() {
           </View>
 
           <View className="gap-4">
+            {/* Social Sign-In Buttons */}
+            <SocialButtons disabled={isSigningIn} />
+
+            {/* Email/Password Form */}
             <TextInput
               placeholder="Email"
               value={email}

@@ -18,7 +18,7 @@ const Account = () => {
     try {
       await signOut();
       await db.auth.signOut();
-    } catch (error) {
+    } catch {
       toast.error('Failed to sign out. Please try again.');
     } finally {
       setIsSigningOut(false);
@@ -39,14 +39,14 @@ const Account = () => {
           onPress={() => router.push('/(auth)/sign-up-email')}
           className="w-full"
         >
-          <Text> Create an Account </Text>
+          <Text>Create an Account</Text>
         </Button>
         <Button
           variant="secondary"
           onPress={() => router.push('/(auth)/sign-in-email')}
           className="w-full"
         >
-          <Text> Sign in with email </Text>
+          <Text>Sign In</Text>
         </Button>
       </View>
     );

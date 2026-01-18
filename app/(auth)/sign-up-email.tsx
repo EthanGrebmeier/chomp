@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
+import { SocialButtons } from '@/components/auth/social-buttons';
 import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -27,6 +28,7 @@ export default function SignUpEmail() {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [pendingVerification, setPendingVerification] = useState(false);
+  const isFormLoading = isSigningUp || isVerifying;
 
   const onSignUpPress = async () => {
     if (!isLoaded) {
@@ -198,6 +200,7 @@ export default function SignUpEmail() {
               </View>
 
               <View className="gap-4">
+                {/* Email/Password Form */}
                 <TextInput
                   placeholder="Email"
                   value={email}
@@ -206,7 +209,7 @@ export default function SignUpEmail() {
                   keyboardType="email-address"
                   autoComplete="email"
                   textContentType="emailAddress"
-                  editable={!isSigningUp}
+                  editable={!isFormLoading}
                 />
 
                 <TextInput
@@ -217,7 +220,7 @@ export default function SignUpEmail() {
                   autoCapitalize="none"
                   autoComplete="password-new"
                   textContentType="newPassword"
-                  editable={!isSigningUp}
+                  editable={!isFormLoading}
                 />
 
                 <TextInput
@@ -228,12 +231,12 @@ export default function SignUpEmail() {
                   autoCapitalize="none"
                   autoComplete="password-new"
                   textContentType="newPassword"
-                  editable={!isSigningUp}
+                  editable={!isFormLoading}
                 />
 
                 <Button
                   onPress={onSignUpPress}
-                  disabled={isSigningUp}
+                  disabled={isFormLoading}
                   size="lg"
                   className="mt-4"
                 >
@@ -243,6 +246,7 @@ export default function SignUpEmail() {
                     <Text>Sign Up</Text>
                   )}
                 </Button>
+                <SocialButtons disabled={isFormLoading} />
 
                 <View className="mt-6 flex-row items-center justify-center">
                   <Text variant="muted" className="text-sm">
@@ -252,7 +256,7 @@ export default function SignUpEmail() {
                     variant="ghost"
                     size="sm"
                     onPress={() => router.push('/(auth)/sign-in-email')}
-                    disabled={isSigningUp}
+                    disabled={isFormLoading}
                   >
                     <Text className="text-sm font-semibold">Sign In</Text>
                   </Button>
