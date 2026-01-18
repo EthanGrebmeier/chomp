@@ -1,6 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export type AddMealsToGroceryListArgs = {
   listId: string;
@@ -45,17 +46,19 @@ export const addMealsToGroceryList = async ({
       const adjustedQuantity = ingredient.quantity * servings;
 
       transactions.push(
-        tx.grocery_items[itemId].update({
-          name: ingredient.name,
-          quantity: adjustedQuantity,
-          unit: ingredient.unit,
-          notes: ingredient.notes,
-          category: ingredient.category,
-          isChecked: false,
-          isDeleted: false,
-          createdAt: now,
-          updatedAt: now,
-        }),
+        tx.grocery_items[itemId].update(
+          trimStringFields({
+            name: ingredient.name,
+            quantity: adjustedQuantity,
+            unit: ingredient.unit,
+            notes: ingredient.notes,
+            category: ingredient.category,
+            isChecked: false,
+            isDeleted: false,
+            createdAt: now,
+            updatedAt: now,
+          })
+        ),
         tx.grocery_items[itemId].link({
           grocery_list: listId,
           recipe: recipe.id,
@@ -74,11 +77,13 @@ export const addMealsToGroceryList = async ({
 
     // Mark the meal plan recipe as added to list
     updateTransactions.push(
-      tx.meal_plan_recipes[mealPlanRecipe.id].update({
-        addedToList: true,
-        addedToListAt: now,
-        updatedAt: now,
-      })
+      tx.meal_plan_recipes[mealPlanRecipe.id].update(
+        trimStringFields({
+          addedToList: true,
+          addedToListAt: now,
+          updatedAt: now,
+        })
+      )
     );
   }
 
@@ -91,17 +96,19 @@ export const addMealsToGroceryList = async ({
     const itemId = id();
 
     transactions.push(
-      tx.grocery_items[itemId].update({
-        name: mealPlanItem.name,
-        quantity: mealPlanItem.quantity,
-        unit: mealPlanItem.unit,
-        notes: mealPlanItem.notes,
-        category: mealPlanItem.category,
-        isChecked: false,
-        isDeleted: false,
-        createdAt: now,
-        updatedAt: now,
-      }),
+      tx.grocery_items[itemId].update(
+        trimStringFields({
+          name: mealPlanItem.name,
+          quantity: mealPlanItem.quantity,
+          unit: mealPlanItem.unit,
+          notes: mealPlanItem.notes,
+          category: mealPlanItem.category,
+          isChecked: false,
+          isDeleted: false,
+          createdAt: now,
+          updatedAt: now,
+        })
+      ),
       tx.grocery_items[itemId].link({
         grocery_list: listId,
       })
@@ -118,11 +125,13 @@ export const addMealsToGroceryList = async ({
 
     // Mark the meal plan item as added to list
     updateTransactions.push(
-      tx.meal_plan_items[mealPlanItem.id].update({
-        addedToList: true,
-        addedToListAt: now,
-        updatedAt: now,
-      })
+      tx.meal_plan_items[mealPlanItem.id].update(
+        trimStringFields({
+          addedToList: true,
+          addedToListAt: now,
+          updatedAt: now,
+        })
+      )
     );
   }
 

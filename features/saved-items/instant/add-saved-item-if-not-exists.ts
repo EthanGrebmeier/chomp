@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 
 import { localSavedItemTable } from '../../../db/schema';
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { db as sqliteDb } from '../../../providers/migration-provider';
 import { BaseSavedItem } from '../types';
 
@@ -39,12 +40,14 @@ export const addSavedItemIfNotExists = async (item: BaseSavedItem) => {
   const now = new Date().toISOString();
 
   await db.transact([
-    db.tx.saved_items[itemId].update({
-      name: item.name,
-      category: item.category,
-      createdAt: now,
-      updatedAt: now,
-    }),
+    db.tx.saved_items[itemId].update(
+      trimStringFields({
+        name: item.name,
+        category: item.category,
+        createdAt: now,
+        updatedAt: now,
+      })
+    ),
     db.tx.saved_items[itemId].link({
       user: user.id,
     }),

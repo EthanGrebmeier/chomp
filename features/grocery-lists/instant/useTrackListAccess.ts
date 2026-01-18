@@ -1,4 +1,5 @@
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export const useTrackListAccess = () => {
   const trackListAccess = async (listId: string) => {
@@ -23,9 +24,11 @@ export const useTrackListAccess = () => {
 
       // Update only the lastAccessedAt field to enforce field-level restrictions
       await db.transact([
-        db.tx.grocery_list_shares[userShare.id].update({
-          lastAccessedAt: new Date().toISOString(),
-        }),
+        db.tx.grocery_list_shares[userShare.id].update(
+          trimStringFields({
+            lastAccessedAt: new Date().toISOString(),
+          })
+        ),
       ]);
     } catch (error) {
       console.error('Failed to track list access:', error);

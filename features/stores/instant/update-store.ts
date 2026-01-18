@@ -1,4 +1,5 @@
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export type UpdateStoreArgs = {
   storeId: string;
@@ -12,10 +13,12 @@ export const updateStore = async ({
   updates,
 }: UpdateStoreArgs) => {
   await db.transact([
-    db.tx.stores[storeId].update({
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    }),
+    db.tx.stores[storeId].update(
+      trimStringFields({
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      })
+    ),
   ]);
 };
 

@@ -1,4 +1,5 @@
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { BaseSavedItem } from '../types';
 
 export type UpdateSavedItemArgs = {
@@ -11,11 +12,13 @@ export const updateSavedItem = async ({
   updates,
 }: UpdateSavedItemArgs) => {
   await db.transact([
-    db.tx.saved_items[itemId].update({
-      ...updates,
-      category: updates.category ?? null,
-      updatedAt: new Date().toISOString(),
-    }),
+    db.tx.saved_items[itemId].update(
+      trimStringFields({
+        ...updates,
+        category: updates.category ?? null,
+        updatedAt: new Date().toISOString(),
+      })
+    ),
   ]);
 };
 

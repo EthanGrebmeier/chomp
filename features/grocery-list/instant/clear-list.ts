@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { GroceryListItem } from '../types';
 
 type clearGroceryListArgs = {
@@ -10,10 +11,12 @@ type clearGroceryListArgs = {
 const clearGroceryList = async ({ itemIds }: clearGroceryListArgs) => {
   return db.transact(
     itemIds.map(itemId =>
-      db.tx.grocery_items[itemId].update({
-        isDeleted: true,
-        deletedAt: new Date().toISOString(),
-      })
+      db.tx.grocery_items[itemId].update(
+        trimStringFields({
+          isDeleted: true,
+          deletedAt: new Date().toISOString(),
+        })
+      )
     )
   );
 };

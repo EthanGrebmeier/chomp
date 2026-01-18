@@ -3,6 +3,7 @@ import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 type JoinResult =
   | { success: true; listId: string; listName: string }
@@ -56,10 +57,12 @@ const joinGroceryListByCode = async (joinCode: string): Promise<JoinResult> => {
     const shareId = id();
     await db.transact([
       db.tx.grocery_list_shares[shareId]
-        .create({
-          grocery_list_id: list.id,
-          user_id: user.id,
-        })
+        .create(
+          trimStringFields({
+            grocery_list_id: list.id,
+            user_id: user.id,
+          })
+        )
         .link({
           grocery_list: list.id,
         }),

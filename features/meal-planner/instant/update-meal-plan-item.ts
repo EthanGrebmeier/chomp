@@ -1,6 +1,7 @@
 import { tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export type UpdateMealPlanItemArgs = {
   mealPlanItemId: string;
@@ -23,13 +24,15 @@ export const updateMealPlanItem = async ({
   const { storeId, ...otherUpdates } = updates;
 
   const transactions = [
-    tx.meal_plan_items[mealPlanItemId].update({
-      ...otherUpdates,
-      notes: otherUpdates.notes ?? null,
-      category: otherUpdates.category ?? null,
-      mealTag: otherUpdates.mealTag ?? null,
-      updatedAt: new Date().toISOString(),
-    }),
+    tx.meal_plan_items[mealPlanItemId].update(
+      trimStringFields({
+        ...otherUpdates,
+        notes: otherUpdates.notes ?? null,
+        category: otherUpdates.category ?? null,
+        mealTag: otherUpdates.mealTag ?? null,
+        updatedAt: new Date().toISOString(),
+      })
+    ),
   ];
 
   // If store is being changed, update the link

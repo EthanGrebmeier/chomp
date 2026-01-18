@@ -1,4 +1,5 @@
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export const incrementGroceryListItem = async ({
   itemId,
@@ -24,6 +25,8 @@ export const incrementGroceryListItem = async ({
   const newQuantity = existingItem.quantity + quantityToAdd;
 
   return db.transact([
-    db.tx.grocery_items[itemId].update({ quantity: newQuantity }),
+    db.tx.grocery_items[itemId].update(
+      trimStringFields({ quantity: newQuantity })
+    ),
   ]);
 };

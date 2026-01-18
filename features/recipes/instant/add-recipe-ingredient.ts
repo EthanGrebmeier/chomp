@@ -1,6 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { addSavedItemIfNotExists } from '../../saved-items/instant/add-saved-item-if-not-exists';
 
 export type AddRecipeIngredientArgs = {
@@ -25,13 +26,15 @@ export const addRecipeIngredient = async ({
   const ingredientId = id();
 
   const transactions = [
-    tx.recipe_ingredients[ingredientId].create({
-      name,
-      quantity,
-      unit,
-      notes,
-      category: category ?? undefined,
-    }),
+    tx.recipe_ingredients[ingredientId].create(
+      trimStringFields({
+        name,
+        quantity,
+        unit,
+        notes,
+        category: category ?? undefined,
+      })
+    ),
     tx.recipe_ingredients[ingredientId].link({
       recipe: recipeId,
     }),

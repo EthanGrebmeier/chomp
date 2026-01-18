@@ -1,6 +1,7 @@
 import { tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { linkStoreToIngredient } from './link-store-to-ingredient';
 
 export type UpdateRecipeIngredientArgs = {
@@ -23,11 +24,11 @@ export const updateRecipeIngredient = async ({
   currentStoreId,
 }: UpdateRecipeIngredientArgs) => {
   const { storeId, ...otherUpdates } = updates;
-  const processedUpdates = {
+  const processedUpdates = trimStringFields({
     ...otherUpdates,
     category: otherUpdates.category ?? null,
     notes: otherUpdates.notes ?? null,
-  };
+  });
 
   const transactions = [tx.recipe_ingredients[ingredientId].update(processedUpdates)];
 

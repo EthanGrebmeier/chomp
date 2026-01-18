@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 
 import { appSettingsTable } from '../../../db/schema';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { db } from '../../../providers/migration-provider';
 
 type UpdateSettingsArgs = {
@@ -12,10 +13,10 @@ type UpdateSettingsArgs = {
 };
 
 export const updateSettings = async (updates: UpdateSettingsArgs) => {
-  const processedUpdates = {
+  const processedUpdates = trimStringFields({
     ...updates,
     updatedAt: new Date().toISOString(),
-  };
+  });
 
   const result = await db
     .update(appSettingsTable)

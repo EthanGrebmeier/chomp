@@ -1,6 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export type AddItemToDateArgs = {
   name: string;
@@ -32,18 +33,20 @@ export const addItemToDate = async ({
   const now = new Date().toISOString();
 
   const transactions = [
-    tx.meal_plan_items[mealPlanItemId].update({
-      name,
-      quantity,
-      unit,
-      notes,
-      category,
-      mealTag,
-      date,
-      addedToList: false,
-      createdAt: now,
-      updatedAt: now,
-    }),
+    tx.meal_plan_items[mealPlanItemId].update(
+      trimStringFields({
+        name,
+        quantity,
+        unit,
+        notes,
+        category,
+        mealTag,
+        date,
+        addedToList: false,
+        createdAt: now,
+        updatedAt: now,
+      })
+    ),
     tx.meal_plan_items[mealPlanItemId].link({
       user: user.id,
     }),

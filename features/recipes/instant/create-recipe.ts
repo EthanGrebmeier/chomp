@@ -1,6 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export type CreateRecipeArgs = {
   recipe: {
@@ -32,15 +33,17 @@ export const createRecipe = async ({
   const now = new Date().toISOString();
 
   const transactions = [
-    tx.recipes[recipeId].update({
-      name: recipe.name,
-      description: recipe.description ?? '',
-      imageSrc: recipe.imageSrc ?? '',
-      visibility: recipe.visibility ?? 'private',
-      createdAt: now,
-      updatedAt: now,
-      mealTag: recipe.mealTag ?? undefined,
-    }),
+    tx.recipes[recipeId].update(
+      trimStringFields({
+        name: recipe.name,
+        description: recipe.description ?? '',
+        imageSrc: recipe.imageSrc ?? '',
+        visibility: recipe.visibility ?? 'private',
+        createdAt: now,
+        updatedAt: now,
+        mealTag: recipe.mealTag ?? undefined,
+      })
+    ),
     tx.recipes[recipeId].link({
       user: user.id,
     }),
@@ -50,13 +53,15 @@ export const createRecipe = async ({
   for (const ingredient of ingredients) {
     const ingredientId = id();
     transactions.push(
-      tx.recipe_ingredients[ingredientId].update({
-        name: ingredient.name,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit,
-        notes: ingredient.notes,
-        category: ingredient.category ?? undefined,
-      }),
+      tx.recipe_ingredients[ingredientId].update(
+        trimStringFields({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          notes: ingredient.notes,
+          category: ingredient.category ?? undefined,
+        })
+      ),
       tx.recipe_ingredients[ingredientId].link({
         recipe: recipeId,
       })

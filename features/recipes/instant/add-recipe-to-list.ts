@@ -1,6 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export type RecipeIngredientInput = {
   name: string;
@@ -30,17 +31,19 @@ export const addRecipeToList = async ({
   for (const ingredient of ingredients) {
     const itemId = id();
     transactions.push(
-      tx.grocery_items[itemId].update({
-        name: ingredient.name,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit,
-        notes: ingredient.notes,
-        category: ingredient.category,
-        isChecked: false,
-        isDeleted: false,
-        createdAt: now,
-        updatedAt: now,
-      }),
+      tx.grocery_items[itemId].update(
+        trimStringFields({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          notes: ingredient.notes,
+          category: ingredient.category,
+          isChecked: false,
+          isDeleted: false,
+          createdAt: now,
+          updatedAt: now,
+        })
+      ),
       tx.grocery_items[itemId].link({
         grocery_list: listId,
         recipe: recipeId,

@@ -1,6 +1,7 @@
 import { id } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { addSavedItemIfNotExists } from '../../saved-items/instant/add-saved-item-if-not-exists';
 import { BaseGroceryItem } from '../types';
 
@@ -14,17 +15,19 @@ export const addGroceryListItem = async ({
   const itemId = id();
 
   const transactions = [
-    db.tx.grocery_items[itemId].create({
-      name: item.name,
-      quantity: item.quantity,
-      unit: item.unit,
-      category: item.category,
-      notes: item.notes,
-      isChecked: false,
-      isDeleted: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }),
+    db.tx.grocery_items[itemId].create(
+      trimStringFields({
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        category: item.category,
+        notes: item.notes,
+        isChecked: false,
+        isDeleted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    ),
     db.tx.grocery_lists[listId].link({
       grocery_items: itemId,
     }),

@@ -1,6 +1,7 @@
 import { tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export type IncrementRecipeQuantitiesArgs = {
   recipeId: string;
@@ -29,10 +30,12 @@ export const incrementRecipeQuantities = async ({
 
   // Double the quantity for each item
   const transactions = existingItems.map(item =>
-    tx.grocery_items[item.id].update({
-      quantity: item.quantity * 2,
-      updatedAt: new Date().toISOString(),
-    })
+    tx.grocery_items[item.id].update(
+      trimStringFields({
+        quantity: item.quantity * 2,
+        updatedAt: new Date().toISOString(),
+      })
+    )
   );
 
   if (transactions.length > 0) {

@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 
 import { appSettingsTable, localSavedItemTable } from '../../../db/schema';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { db } from '../../../providers/migration-provider';
 import { groceries } from '../../grocery-list/consts/groceries';
 
@@ -22,15 +23,17 @@ export const seedLocalSavedItems = async () => {
 
   if (settings.length === 0) {
     // Create the settings row if it doesn't exist
-    await db.insert(appSettingsTable).values({
-      id: APP_SETTINGS_ID,
-      listName: 'Shopping List',
-      groupBy: 'none',
-      sortBy: 'recent',
-      hasSeededSavedItems: false,
-      createdAt: now,
-      updatedAt: now,
-    });
+    await db.insert(appSettingsTable).values(
+      trimStringFields({
+        id: APP_SETTINGS_ID,
+        listName: 'Shopping List',
+        groupBy: 'none',
+        sortBy: 'recent',
+        hasSeededSavedItems: false,
+        createdAt: now,
+        updatedAt: now,
+      })
+    );
   }
 
   // Check if we've already seeded
@@ -46,13 +49,15 @@ export const seedLocalSavedItems = async () => {
   }
 
   // Generate IDs using the item name as a stable key (prefixed with 'local-')
-  const itemsToInsert = groceries.map((grocery, index) => ({
-    id: `local-${index}`,
-    name: grocery.name,
-    category: grocery.category ?? null,
-    createdAt: now,
-    updatedAt: now,
-  }));
+  const itemsToInsert = groceries.map((grocery, index) =>
+    trimStringFields({
+      id: `local-${index}`,
+      name: grocery.name,
+      category: grocery.category ?? null,
+      createdAt: now,
+      updatedAt: now,
+    })
+  );
 
   // Insert in chunks to avoid hitting SQLite limits
   const CHUNK_SIZE = 100;
@@ -64,7 +69,12 @@ export const seedLocalSavedItems = async () => {
   // Mark as seeded
   await db
     .update(appSettingsTable)
-    .set({ hasSeededSavedItems: true, updatedAt: now })
+    .set(
+      trimStringFields({
+        hasSeededSavedItems: true,
+        updatedAt: now,
+      })
+    )
     .where(eq(appSettingsTable.id, APP_SETTINGS_ID));
 
   console.log(`Seeded ${itemsToInsert.length} local saved items`);

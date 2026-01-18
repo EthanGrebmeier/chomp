@@ -2,6 +2,7 @@ import { id } from '@instantdb/react-native';
 import { useEffect, useRef } from 'react';
 
 import { db } from '../../../lib/instant';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { generateJoinCode } from '../utils/generate-join-code';
 
 const DEFAULT_LIST_NAME = 'Shopping List';
@@ -84,22 +85,26 @@ export const useInitializeDefaultGroceryList = (
 
         const transactions: Parameters<typeof db.transact>[0] = [
           db.tx.grocery_lists[listId]
-            .create({
-              name: DEFAULT_LIST_NAME,
-              joinCode,
-              ownerId: authUser.id,
-              createdAt: now,
-              updatedAt: now,
-            })
+            .create(
+              trimStringFields({
+                name: DEFAULT_LIST_NAME,
+                joinCode,
+                ownerId: authUser.id,
+                createdAt: now,
+                updatedAt: now,
+              })
+            )
             .link({
               owner: authUser.id,
             }),
           db.tx.grocery_list_shares[shareId]
-            .create({
-              grocery_list_id: listId,
-              user_id: authUser.id,
-              lastAccessedAt: now,
-            })
+            .create(
+              trimStringFields({
+                grocery_list_id: listId,
+                user_id: authUser.id,
+                lastAccessedAt: now,
+              })
+            )
             .link({
               grocery_list: listId,
             }),
@@ -107,9 +112,11 @@ export const useInitializeDefaultGroceryList = (
 
         if (!isGuest) {
           transactions.push(
-            db.tx.$users[authUser.id].update({
-              hasInitializedGroceryList: true,
-            })
+            db.tx.$users[authUser.id].update(
+              trimStringFields({
+                hasInitializedGroceryList: true,
+              })
+            )
           );
         }
 
