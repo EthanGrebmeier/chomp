@@ -107,8 +107,6 @@ export default function SignInEmail() {
           </View>
 
           <View className="gap-4">
-            {/* Social Sign-In Buttons */}
-            <SocialButtons disabled={isSigningIn} />
 
             {/* Email/Password Form */}
             <TextInput
@@ -145,7 +143,8 @@ export default function SignInEmail() {
                 <Text>Sign In</Text>
               )}
             </Button>
-
+            {/* Social Sign-In Buttons */}
+            <SocialButtons disabled={isSigningIn} />
             <View className="mt-6 flex-row items-center justify-center">
               <Text variant="muted" className="text-sm">
                 Don&apos;t have an account?{' '}

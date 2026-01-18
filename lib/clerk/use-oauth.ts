@@ -1,4 +1,4 @@
-import { useOAuth, useSSO, useSignIn, useSignUp } from '@clerk/clerk-expo';
+import { useSignInWithApple, useSSO } from '@clerk/clerk-expo';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
@@ -24,14 +24,9 @@ const useWarmUpBrowser = () => {
 };
 
 export function useOAuthFlow() {
-  const { signIn, setActive: setSignInActive } = useSignIn();
-  const { signUp, setActive: setSignUpActive } = useSignUp();
   const { startSSOFlow } = useSSO();
+  const { startAppleAuthenticationFlow } = useSignInWithApple();
   const router = useRouter();
-
-  const { startOAuthFlow: startAppleOAuth } = useOAuth({
-    strategy: 'oauth_apple',
-  });
 
   const [isLoading, setIsLoading] = useState<OAuthStrategy | null>(null);
 
@@ -87,105 +82,54 @@ export function useOAuthFlow() {
     }
   }, [router, startSSOFlow]);
 
-  const handleAppleOAuth = useCallback(async () => {
+  const handleAppleSignIn = useCallback(async () => {
     try {
       setIsLoading('oauth_apple');
 
-      const { createdSessionId, setActive } = await startAppleOAuth({
-        redirectUrl: AuthSession.makeRedirectUri({
-          scheme: 'chomp',
-          path: 'oauth-callback',
-        }),
-      });
+      const { createdSessionId, setActive, signIn, signUp } =
+        await startAppleAuthenticationFlow();
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
         router.replace('/');
-      }
-    } catch (err) {
-      console.error('OAuth error:', err);
-      // Don't show error for user cancellation
-      if (
-        err &&
-        typeof err === 'object' &&
-        'message' in err &&
-        typeof err.message === 'string' &&
-        !err.message.includes('cancelled') &&
-        !err.message.includes('canceled')
-      ) {
-        toast.error('Sign in failed. Please try again.');
-      }
-    } finally {
-      setIsLoading(null);
-    }
-  }, [router, startAppleOAuth]);
-
-  const handleNativeAppleSignIn = useCallback(async () => {
-    if (!signIn || !signUp) return;
-
-    try {
-      setIsLoading('oauth_apple');
-
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-
-      const { identityToken } = credential;
-
-      if (!identityToken) {
-        throw new Error('No identity token received from Apple');
-      }
-
-      // Try to sign in with the Apple ID token
-      const signInAttempt = await signIn.create({
-        strategy: 'oauth_token_apple',
-        token: identityToken,
-      });
-
-      if (signInAttempt.status === 'complete') {
-        await setSignInActive({ session: signInAttempt.createdSessionId });
         return;
       }
 
-      // If sign in didn't complete, try sign up
-      const signUpAttempt = await signUp.create({
-        strategy: 'oauth_token_apple',
-        token: identityToken,
-      });
-
-      if (signUpAttempt.status === 'complete') {
-        await setSignUpActive({ session: signUpAttempt.createdSessionId });
+      if (signUp?.status === 'missing_requirements') {
+        router.push('/(auth)/continue');
+        return;
       }
-    } catch (err) {
-      console.error('Apple sign in error:', err);
-      // Don't show error for user cancellation (error code 1001)
+
+      if (signIn?.status === 'needs_first_factor') {
+        toast.error('Additional verification required. Please try again.');
+        return;
+      }
+
+      toast.error('Sign in incomplete. Please try again.');
+    } catch (err: unknown) {
       if (
         err &&
         typeof err === 'object' &&
         'code' in err &&
-        err.code !== 'ERR_REQUEST_CANCELED'
+        err.code === 'ERR_REQUEST_CANCELED'
       ) {
-        toast.error('Apple sign in failed. Please try again.');
+        return;
       }
+      console.error('Apple sign in error:', err);
+      toast.error('Apple sign in failed. Please try again.');
     } finally {
       setIsLoading(null);
     }
-  }, [signIn, signUp, setSignInActive, setSignUpActive]);
+  }, [router, startAppleAuthenticationFlow]);
 
   const signInWithGoogle = useCallback(() => {
     return handleGoogleOAuth();
   }, [handleGoogleOAuth]);
 
   const signInWithApple = useCallback(async () => {
-    // Use native Apple Sign-In on iOS, fall back to web OAuth on other platforms
-    if (Platform.OS === 'ios') {
-      return handleNativeAppleSignIn();
-    }
-    return handleAppleOAuth();
-  }, [handleNativeAppleSignIn, handleAppleOAuth]);
+    if (Platform.OS !== 'ios') return;
+    return handleAppleSignIn();
+  }, [handleAppleSignIn]);
 
   return {
     signInWithGoogle,
