@@ -152,11 +152,11 @@ export const navActions = {
  */
 export const ROUTES = {
   TABS: {
-    LIST: '/(tabs)/list',
+    LIST: '/(tabs)',
     PLANS: '/(tabs)/plans',
     RECIPES: '/(tabs)/recipes',
   },
-  LIST: '/(tabs)/list',
+  LIST: '/(tabs)',
   PLANS: {
     INDEX: '/(tabs)/plans',
     DETAIL: (mealPlanId: string) => `/(tabs)/plans/${mealPlanId}`,
