@@ -24,6 +24,7 @@ type GroceryItemsListProps = {
   sortBy: 'name' | 'recent';
   searchQuery?: string;
   onFilteredCountChange?: (count: number) => void;
+  onListInteraction?: () => void;
 };
 
 export const GroceryItemsList = ({
@@ -32,6 +33,7 @@ export const GroceryItemsList = ({
   sortBy,
   searchQuery = '',
   onFilteredCountChange,
+  onListInteraction,
 }: GroceryItemsListProps) => {
   const { present: presentEditSheet } = useEditItemSheet();
   const deferredQuery = useDeferredValue(searchQuery.trim());
@@ -171,6 +173,8 @@ export const GroceryItemsList = ({
         sections={sections}
         keyExtractor={item => item.id}
         contentContainerStyle={{ flexGrow: 1 }}
+        onScrollBeginDrag={onListInteraction}
+        onTouchStart={onListInteraction}
         renderSectionHeader={({ section }) => {
           if (groupBy === 'none' && !section.title) return null;
 

@@ -1,7 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { SearchIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
@@ -76,6 +76,12 @@ export const GroceryList = ({
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
   const deleteListConfirmationSheetRef = useRef<TrueSheet | null>(null);
+  const searchInputRef = useRef<RNTextInput>(null);
+
+  const dismissSearch = () => {
+    searchInputRef.current?.blur();
+    Keyboard.dismiss();
+  };
 
   const handleGroupByChange = (
     newGroupBy: 'category' | 'none' | 'recipe' | 'store'
@@ -156,7 +162,13 @@ export const GroceryList = ({
 
   return (
     <>
-      <View className="flex-1 gap-2">
+      <View
+        className="flex-1 gap-2"
+        onStartShouldSetResponderCapture={() => {
+          dismissSearch();
+          return false;
+        }}
+      >
         {/** Header */}
         <GroceryListHeader
           listId={listId}
@@ -184,6 +196,7 @@ export const GroceryList = ({
                   />
                 </View>
                 <TextInput
+                  ref={searchInputRef}
                   className="pl-10"
                   placeholder="Search items..."
                   value={searchQuery}
@@ -197,6 +210,8 @@ export const GroceryList = ({
               showsHorizontalScrollIndicator={false}
               contentContainerClassName="flex-row gap-2 px-4 pb-2 pt-3"
               className="flex-grow-0"
+              onScrollBeginDrag={dismissSearch}
+              onTouchStart={dismissSearch}
             >
               <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
               <SortBySelector value={sortBy} onChange={handleSortByChange} />
@@ -208,6 +223,7 @@ export const GroceryList = ({
               sortBy={sortBy}
               searchQuery={searchQuery}
               onFilteredCountChange={setFilteredCount}
+              onListInteraction={dismissSearch}
             />
           </View>
         </EditItemProvider>
