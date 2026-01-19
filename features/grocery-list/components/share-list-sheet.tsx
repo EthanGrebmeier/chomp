@@ -10,7 +10,7 @@ import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
-import { buildListDeepLinkUrl } from '../../../lib/navigation';
+import { buildListURL } from '../../../lib/navigation';
 
 export type ShareListSheetRef = {
   present: (joinCode: string) => void;
@@ -35,15 +35,9 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
       toast.success('Code copied to clipboard');
     };
 
-    const handleCopyLink = async () => {
-      const deepLinkUrl = buildListDeepLinkUrl(joinCode);
-      await Clipboard.setStringAsync(deepLinkUrl);
-      toast.success('Link copied to clipboard');
-    };
-
     const handleShareLink = async () => {
       try {
-        const deepLinkUrl = buildListDeepLinkUrl(joinCode);
+        const deepLinkUrl = buildListURL(joinCode);
         const result = await Share.share({
           message: `Join my grocery list: ${deepLinkUrl}`,
         });

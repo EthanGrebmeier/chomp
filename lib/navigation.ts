@@ -88,8 +88,8 @@ export function buildRecipeUrl(params: RecipeParams) {
 /**
  * Builds a deep link URL for sharing a grocery list by join code
  */
-export function buildListDeepLinkUrl(joinCode: string): string {
-  return `chomp://list/${joinCode}`;
+export function buildListURL(joinCode: string): string {
+  return `https://chompgrocery.com/join-list/${joinCode}`;
 }
 
 /**
