@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { CategoryTag } from '../../../components/category-tag';
+import { StoreTag } from '../../../components/store-tag';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
@@ -125,6 +126,7 @@ export const GroceryListItem = ({
         </View>
         <View className="min-h-6 flex-row items-center gap-2">
           {item.category && <CategoryTag category={item.category} />}
+          {item.store?.name && <StoreTag name={item.store.name} />}
           {item.recipe && (
             <View>
               <View className="flex-row items-center gap-1">
