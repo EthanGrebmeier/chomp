@@ -1,10 +1,13 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { SearchIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
+import { TextInput } from '../../../components/text-input';
+import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
@@ -67,6 +70,8 @@ export const GroceryList = ({
     'category' | 'none' | 'recipe' | 'store'
   >(initialGroupBy);
   const [sortBy, setSortBy] = useState<'name' | 'recent'>(initialSortBy);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCount, setFilteredCount] = useState(items.length);
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
@@ -159,6 +164,8 @@ export const GroceryList = ({
           isShared={isShared}
           items={items}
           listName={listName}
+          searchQuery={searchQuery}
+          matchingCount={filteredCount}
           onClearListPress={handleClearListPress}
           onSharePress={handleSharePress}
           onDeleteOrLeave={handleDeleteOrLeavePress}
@@ -167,17 +174,41 @@ export const GroceryList = ({
         />
         <EditItemProvider groceryListId={listId ?? ''}>
           <View className="flex-1">
+            <View className="mt-3 px-4">
+              <View className="relative">
+                <View className="pointer-events-none absolute left-3 top-0 z-10 h-full justify-center">
+                  <Icon
+                    as={SearchIcon}
+                    size={18}
+                    className="text-muted-foreground"
+                  />
+                </View>
+                <TextInput
+                  className="pl-10"
+                  placeholder="Search items..."
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerClassName="flex-row gap-2 px-4 pb-2"
+              contentContainerClassName="flex-row gap-2 px-4 pb-2 pt-3"
               className="flex-grow-0"
             >
               <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
               <SortBySelector value={sortBy} onChange={handleSortByChange} />
             </ScrollView>
 
-            <GroceryItemsList items={items} groupBy={groupBy} sortBy={sortBy} />
+            <GroceryItemsList
+              items={items}
+              groupBy={groupBy}
+              sortBy={sortBy}
+              searchQuery={searchQuery}
+              onFilteredCountChange={setFilteredCount}
+            />
           </View>
         </EditItemProvider>
         <AddItemConflictSheet

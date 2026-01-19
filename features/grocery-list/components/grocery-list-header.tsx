@@ -17,6 +17,8 @@ type GroceryListHeaderProps = {
   listId?: string;
   ownerId?: string;
   isShared?: boolean;
+  searchQuery?: string;
+  matchingCount?: number;
   onClearListPress: () => void;
   onSharePress: () => void;
   onDeleteOrLeave: () => void;
@@ -30,6 +32,8 @@ export const GroceryListHeader = ({
   listId,
   ownerId,
   isShared = false,
+  searchQuery,
+  matchingCount,
   onClearListPress,
   onSharePress,
   onDeleteOrLeave,
@@ -37,6 +41,8 @@ export const GroceryListHeader = ({
   onTitlePress,
 }: GroceryListHeaderProps) => {
   const uncheckedItems = items.filter(item => !item.isChecked);
+  const trimmedQuery = searchQuery?.trim() ?? '';
+  const hasSearch = trimmedQuery.length > 0;
 
   return (
     <View className="px-4">
@@ -72,7 +78,11 @@ export const GroceryListHeader = ({
         )}
       </View>
       <Text className="text-lg text-muted-foreground">
-        {uncheckedItems.length} items
+        {hasSearch
+          ? `${matchingCount ?? 0} item${
+              (matchingCount ?? 0) !== 1 ? 's' : ''
+            } matching "${trimmedQuery}"`
+          : `${uncheckedItems.length} items`}
       </Text>
     </View>
   );

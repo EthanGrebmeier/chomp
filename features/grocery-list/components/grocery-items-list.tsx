@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { SectionList, SectionListData, View } from 'react-native';
 import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 
@@ -22,14 +22,20 @@ type GroceryItemsListProps = {
   items: GroceryListItemWithRecipe[];
   groupBy: 'category' | 'none' | 'recipe' | 'store';
   sortBy: 'name' | 'recent';
+  searchQuery?: string;
+  onFilteredCountChange?: (count: number) => void;
 };
 
 export const GroceryItemsList = ({
   items,
   groupBy,
   sortBy,
+  searchQuery = '',
+  onFilteredCountChange,
 }: GroceryItemsListProps) => {
   const { present: presentEditSheet } = useEditItemSheet();
+  const deferredQuery = useDeferredValue(searchQuery.trim());
+  const normalizedQuery = deferredQuery.toLowerCase();
 
   // Track which sections are collapsed by their title
   // By default, all sections start expanded except "Checked"
@@ -49,9 +55,33 @@ export const GroceryItemsList = ({
     });
   };
 
+  const filteredItems = useMemo(() => {
+    if (!normalizedQuery) return items;
+
+    return items.filter(item => {
+      const name = item.name.toLowerCase();
+      const category = item.category?.toLowerCase() ?? '';
+      const notes = item.notes?.toLowerCase() ?? '';
+      const recipeName = item.recipe?.name?.toLowerCase() ?? '';
+      const storeName = item.store?.name?.toLowerCase() ?? '';
+
+      return (
+        name.includes(normalizedQuery) ||
+        category.includes(normalizedQuery) ||
+        notes.includes(normalizedQuery) ||
+        recipeName.includes(normalizedQuery) ||
+        storeName.includes(normalizedQuery)
+      );
+    });
+  }, [items, normalizedQuery]);
+
+  useEffect(() => {
+    onFilteredCountChange?.(filteredItems.length);
+  }, [filteredItems.length, onFilteredCountChange]);
+
   // Separate checked and unchecked items
-  const uncheckedItems = items.filter(item => !item.isChecked);
-  let checkedItems = items.filter(item => item.isChecked);
+  const uncheckedItems = filteredItems.filter(item => !item.isChecked);
+  let checkedItems = filteredItems.filter(item => item.isChecked);
 
   // Sort checked items based on selected sorting
   if (sortBy === 'recent') {
@@ -117,6 +147,17 @@ export const GroceryItemsList = ({
             Add some items to get started!
           </EmptySubtext>
         </View>
+      </View>
+    );
+  }
+
+  if (filteredItems.length === 0) {
+    return (
+      <View className="flex-1 items-center justify-center px-6">
+        <EmptyHeading className="px-4">No matches found</EmptyHeading>
+        <EmptySubtext className="px-4">
+          Try a different search or clear the filter.
+        </EmptySubtext>
       </View>
     );
   }

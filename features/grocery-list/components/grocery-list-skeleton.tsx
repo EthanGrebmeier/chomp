@@ -19,8 +19,13 @@ export const GroceryListSkeleton = () => {
         <SkeletonText width="sm" height="xs" />
       </View>
 
+      {/* Search bar */}
+      <View className="mt-3 px-4">
+        <View className="h-11 rounded-full bg-muted" />
+      </View>
+
       {/* Filter pills */}
-      <View className="flex-row gap-2 px-4 pb-2">
+      <View className="flex-row gap-2 px-4 pb-2 pt-3">
         <View className="h-8 w-24 rounded-full bg-muted" />
         <View className="h-8 w-24 rounded-full bg-muted" />
       </View>
