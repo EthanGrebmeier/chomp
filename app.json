@@ -11,6 +11,9 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.ethangrebmeier.chomp",
+      "associatedDomains": [
+        "applinks:chompgrocery.com"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
