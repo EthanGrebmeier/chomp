@@ -1,7 +1,7 @@
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
 import { PlusIcon } from 'lucide-react-native';
-import { useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -33,21 +33,40 @@ export const MealPlanner = () => {
   const isProgrammaticNavigationRef = useRef(false);
   const { recipes, items } = useUserMealPlanData();
 
+  // Track when the date array was generated to detect day changes
+  const [dateAnchor, setDateAnchor] = useState(() => startOfDay(new Date()));
+
   // Generate date range: 30 days before today to 30 days after
   const daysOfPlan = useMemo(() => {
-    const today = startOfDay(new Date());
     const dates = [];
     for (let i = -DAYS_RANGE; i <= DAYS_RANGE; i++) {
-      dates.push(i < 0 ? subDays(today, Math.abs(i)) : addDays(today, i));
+      dates.push(i < 0 ? subDays(dateAnchor, Math.abs(i)) : addDays(dateAnchor, i));
     }
     return dates;
-  }, []);
+  }, [dateAnchor]);
 
   // Initial page index is today (middle of the range)
   const initialPageIndex = DAYS_RANGE;
 
   const [currentPageIndex, setCurrentPageIndex] =
     useState<number>(initialPageIndex);
+
+  // When app becomes active, check if the day has changed and navigate to today
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        const realToday = startOfDay(new Date());
+        if (!isSameDay(realToday, dateAnchor)) {
+          // Day has changed - update the date anchor and navigate to today
+          setDateAnchor(realToday);
+          isProgrammaticNavigationRef.current = true;
+          pagerRef.current?.setPageWithoutAnimation(initialPageIndex);
+          setCurrentPageIndex(initialPageIndex);
+        }
+      }
+    });
+    return () => subscription.remove();
+  }, [dateAnchor, initialPageIndex]);
 
   const currentDate =
     daysOfPlan[currentPageIndex] ?? daysOfPlan[initialPageIndex];
