@@ -2,6 +2,7 @@ import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import { addSavedItemIfNotExists } from '../../saved-items/instant/add-saved-item-if-not-exists';
 
 export type AddItemToDateArgs = {
   name: string;
@@ -62,6 +63,11 @@ export const addItemToDate = async ({
   }
 
   await db.transact(transactions);
+
+  addSavedItemIfNotExists({
+    name,
+    category,
+  });
 
   return { id: mealPlanItemId };
 };

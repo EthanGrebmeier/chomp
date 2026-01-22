@@ -4,6 +4,7 @@ import { TextInput, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { MealTimeSheet } from '../../meal-planner/components/meal-time-sheet';
@@ -83,12 +84,17 @@ export const CreateRecipeSheet = forwardRef<
               autoFocus
             />
           </View>
-          <View className="flex-row items-center justify-between gap-2">
-            <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
-            <Button onPress={handleSubmit} disabled={!name.trim()}>
-              <Text>{isEditing ? 'Update Recipe' : 'Create Recipe'}</Text>
-            </Button>
-          </View>
+          <MetaBarLayout
+            action={
+              <Button onPress={handleSubmit} disabled={!name.trim()}>
+                <Text>{isEditing ? 'Update Recipe' : 'Create Recipe'}</Text>
+              </Button>
+            }
+          >
+            <View className="flex-row">
+              <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
+            </View>
+          </MetaBarLayout>
         </View>
       </BottomSheet.SheetView>
     </BottomSheet>

@@ -7,6 +7,7 @@ import { Pressable, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import {
   CalendarSheet,
   CalendarSheetRef,
@@ -174,7 +175,13 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                   </View>
                 )}
 
-                <View className="gap-4">
+                <MetaBarLayout
+                  action={
+                    <Button onPress={handleUpdateMealPlanRecipe}>
+                      <Text>Update Meal</Text>
+                    </Button>
+                  }
+                >
                   <View className="flex-row items-center gap-2">
                     <Pressable
                       onPress={() => calendarSheetRef.current?.present()}
@@ -192,10 +199,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                     </Pressable>
                     <MealTimeSheet onSelect={setMealTag} mealTime={mealTag} />
                   </View>
-                  <Button onPress={handleUpdateMealPlanRecipe}>
-                    <Text>Update Meal</Text>
-                  </Button>
-                </View>
+                </MetaBarLayout>
               </View>
             </View>
           )}

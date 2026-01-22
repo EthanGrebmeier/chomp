@@ -125,6 +125,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
     <EditItemContext.Provider value={{ present, dismiss }}>
       <EditItemInternalContext.Provider value={{ sheetRef }}>
         <ItemSheetProvider
+          mode="update"
           listId={groceryListId}
           onSubmit={onSubmit}
           setFromItemRef={setFromItemRef}

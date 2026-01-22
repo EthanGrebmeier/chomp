@@ -10,6 +10,7 @@ import {
   ItemSheetProvider,
   useItemSheet,
 } from '../../../components/item-sheet/use-item-sheet';
+import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { BaseGroceryItem } from '../../grocery-list/types';
@@ -39,12 +40,17 @@ const SavedItemMetaBar = ({ submitLabel }: { submitLabel: string }) => {
   const { category, setCategory, onSubmit, isValid } = useItemSheet();
 
   return (
-    <View className="mt-3 flex-row items-center justify-between gap-2">
-      <CategorySheet category={category} onSelect={setCategory} />
-      <Button variant="default" onPress={onSubmit} disabled={!isValid}>
-        <Text>{submitLabel}</Text>
-      </Button>
-    </View>
+    <MetaBarLayout
+      action={
+        <Button variant="default" onPress={onSubmit} disabled={!isValid}>
+          <Text>{submitLabel}</Text>
+        </Button>
+      }
+    >
+      <View className="flex-row">
+        <CategorySheet category={category} onSelect={setCategory} />
+      </View>
+    </MetaBarLayout>
   );
 };
 
@@ -139,6 +145,7 @@ export const SavedItemSheetProvider = ({
     <SavedItemSheetContext.Provider value={{ present }}>
       <SavedItemSheetInternalContext.Provider value={{ sheetRef }}>
         <ItemSheetProvider
+          mode="add"
           onSubmit={onSubmit}
           setFromItemRef={setFromItemRef}
           disableAutocomplete

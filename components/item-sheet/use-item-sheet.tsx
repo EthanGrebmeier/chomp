@@ -34,6 +34,7 @@ const itemSheetContext = createContext<{
   setFromItem: (item: GroceryListItemWithRecipe | BaseGroceryItem) => void;
   isValid: boolean;
   disableAutocomplete: boolean;
+  mode: ItemSheetMode;
 } | null>(null);
 
 export const useItemSheet = () => {
@@ -44,7 +45,10 @@ export const useItemSheet = () => {
   return context;
 };
 
+type ItemSheetMode = 'add' | 'update';
+
 type ItemSheetProviderProps = {
+  mode: ItemSheetMode;
   children: React.ReactNode;
   listId?: string;
   onSubmit: (args: {
@@ -64,6 +68,7 @@ export const ItemSheetProvider = ({
   onSubmit,
   setFromItemRef,
   disableAutocomplete = false,
+  mode      
 }: ItemSheetProviderProps) => {
   const [selectedItem, setSelectedItem] = useState<BaseGroceryItem | null>(
     null
@@ -185,6 +190,7 @@ export const ItemSheetProvider = ({
         setFromItem,
         isValid: !!itemInputValue.length && !!quantity && !!unit,
         disableAutocomplete,
+        mode,
       }}
     >
       {children}

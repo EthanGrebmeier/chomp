@@ -202,7 +202,7 @@ export const IngredientSelector = ({
         ))}
       </ScrollView>
 
-      <View className="mt-4 flex-row items-center justify-end px-4">
+      <View className="mt-4 px-4">
         <Button
           onPress={handleAdd}
           disabled={selectedIds.size === 0 || isAdding}

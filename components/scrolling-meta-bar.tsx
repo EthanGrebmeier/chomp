@@ -4,19 +4,17 @@ import { cn } from '../lib/utils';
 
 type ScrollingMetaBarProps = {
   children: React.ReactNode;
-  action?: React.ReactNode;
   className?: string;
   contentClassName?: string;
 };
 
 export const ScrollingMetaBar = ({
   children,
-  action,
   className,
   contentClassName,
 }: ScrollingMetaBarProps) => {
   return (
-    <View className={cn('-ml-4 flex-row items-center justify-between', className)}>
+    <View className={cn('-mx-4 flex-row items-center', className)}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -29,12 +27,6 @@ export const ScrollingMetaBar = ({
       >
         {children}
       </ScrollView>
-      {action && (
-        <View className="border-l border-border pl-2">
-          {action}
-        </View>
-      )}
     </View>
   );
 };
-

@@ -200,7 +200,7 @@ const AddItem = ({ groceryListId }: AddItemProps) => {
   };
 
   return (
-    <ItemSheetProvider listId={groceryListId} onSubmit={onSubmit}>
+    <ItemSheetProvider listId={groceryListId} onSubmit={onSubmit} mode="add">
       <AddItemSheet groceryListId={groceryListId} />
     </ItemSheetProvider>
   );

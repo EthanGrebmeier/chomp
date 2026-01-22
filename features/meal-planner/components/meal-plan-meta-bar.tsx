@@ -1,11 +1,10 @@
-import { CheckIcon } from 'lucide-react-native';
-
 import { CategorySheet } from '../../../components/item-sheet/category-sheet';
 import { StoreSheet } from '../../../components/item-sheet/store-sheet';
 import { UnitSheet } from '../../../components/item-sheet/unit-sheet';
+import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { Button } from '../../../components/ui/button';
-import { Icon } from '../../../components/ui/icon';
+import { Text } from '../../../components/ui/text';
 
 import { DatePillSheet } from './date-pill-sheet';
 import { MealTimeSheet } from './meal-time-sheet';
@@ -25,6 +24,7 @@ type MealPlanMetaBarProps = {
   onStoreIdChange: (storeId?: string) => void;
   onSubmit: () => void;
   isValid: boolean;
+  submitLabel?: string;
 };
 
 export const MealPlanMetaBar = ({
@@ -42,36 +42,28 @@ export const MealPlanMetaBar = ({
   onStoreIdChange,
   onSubmit,
   isValid,
+  submitLabel = 'Add Item',
 }: MealPlanMetaBarProps) => {
   return (
-    <ScrollingMetaBar
+    <MetaBarLayout
       action={
-        <Button
-          variant="default"
-          size="icon"
-          className="size-10"
-          onPress={onSubmit}
-          disabled={!isValid}
-        >
-          <Icon
-            as={CheckIcon}
-            size={24}
-            strokeWidth={3}
-            className="text-primary-foreground"
-          />
+        <Button variant="default" onPress={onSubmit} disabled={!isValid}>
+          <Text className="text-primary-foreground">{submitLabel}</Text>
         </Button>
       }
     >
-      <DatePillSheet date={date} onSelect={onDateChange} />
-      <MealTimeSheet mealTime={mealTag} onSelect={onMealTagChange} />
-      <UnitSheet
-        quantity={quantity}
-        unit={unit}
-        onQuantityChange={onQuantityChange}
-        onUnitChange={onUnitChange}
-      />
-      <CategorySheet category={category} onSelect={onCategoryChange} />
-      <StoreSheet storeId={storeId} onSelect={onStoreIdChange} />
-    </ScrollingMetaBar>
+      <ScrollingMetaBar>
+        <DatePillSheet date={date} onSelect={onDateChange} />
+        <MealTimeSheet mealTime={mealTag} onSelect={onMealTagChange} />
+        <UnitSheet
+          quantity={quantity}
+          unit={unit}
+          onQuantityChange={onQuantityChange}
+          onUnitChange={onUnitChange}
+        />
+        <CategorySheet category={category} onSelect={onCategoryChange} />
+        <StoreSheet storeId={storeId} onSelect={onStoreIdChange} />
+      </ScrollingMetaBar>
+    </MetaBarLayout>
   );
 };

@@ -142,7 +142,7 @@ export const AddIngredientProvider = ({
   return (
     <AddIngredientContext.Provider value={{ present }}>
       <AddIngredientInternalContext.Provider value={{ sheetRef }}>
-        <ItemSheetProvider onSubmit={onSubmit} setFromItemRef={setFromItemRef}>
+        <ItemSheetProvider mode="add" onSubmit={onSubmit} setFromItemRef={setFromItemRef}>
           <AddIngredientContents />
           {children}
         </ItemSheetProvider>

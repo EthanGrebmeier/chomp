@@ -172,6 +172,7 @@ const EditItemSheetContent = ({
           onStoreIdChange={setStoreId}
           onSubmit={handleUpdateItem}
           isValid={isValid()}
+          submitLabel="Update Item"
         />
       </View>
     </View>

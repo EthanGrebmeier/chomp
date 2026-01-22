@@ -9,6 +9,7 @@ import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
+import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
@@ -278,7 +279,6 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
                 </Text>
                 <ScrollView
                   showsVerticalScrollIndicator={false}
-                  className="max-h-32"
                 >
                   {selectedRecipe.recipe_ingredients.map(ingredient => (
                     <View
@@ -298,22 +298,21 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
                   ))}
                 </ScrollView>
               </View>
-              <ScrollingMetaBar
+              <MetaBarLayout
                 action={
-                  <Button
-                    onPress={handleAddRecipe}
-                    disabled={!isRecipeModeValid}
-                  >
+                  <Button onPress={handleAddRecipe} disabled={!isRecipeModeValid}>
                     <Text>Add to Plan</Text>
                   </Button>
                 }
               >
-                <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
-                <MealTimeSheet
-                  mealTime={recipeMealTag}
-                  onSelect={setRecipeMealTag}
-                />
-              </ScrollingMetaBar>
+                <ScrollingMetaBar>
+                  <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
+                  <MealTimeSheet
+                    mealTime={recipeMealTag}
+                    onSelect={setRecipeMealTag}
+                  />
+                </ScrollingMetaBar>
+              </MetaBarLayout>
             </View>
           </Animated.View>
         ) : (
