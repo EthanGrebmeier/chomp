@@ -5,6 +5,7 @@ export { useCreateRecipe } from './useCreateRecipe';
 export { useDeleteRecipe } from './useDeleteRecipe';
 export { useDuplicateRecipe } from './useDuplicateRecipe';
 export { useIncrementRecipeQuantities } from './useIncrementRecipeQuantities';
+export { useParseRecipeUrl } from './useParseRecipeUrl';
 export { useRecipe } from './useRecipe';
 export { useRecipes } from './useRecipes';
 export { useRemoveRecipeIngredient } from './useRemoveRecipeIngredient';

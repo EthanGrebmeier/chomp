@@ -62,7 +62,7 @@ npx instant-cli push schema --app $EXPO_PUBLIC_INSTANT_APP_ID --token $INSTANT_A
 
 **Sprint Goal**: Call the recipe parsing API from a test component and see structured results.
 
-### Task 1.1: Define API Types
+### Task 1.1: Define API Types ✅ COMPLETED (2026-01-24)
 
 **Description**: Create TypeScript types for the recipe parsing API request, response, and errors.
 
@@ -131,7 +131,7 @@ export type RateLimitInfo = {
 
 ---
 
-### Task 1.2: Create Error Message Constants
+### Task 1.2: Create Error Message Constants ✅ COMPLETED (2026-01-24)
 
 **Description**: Create user-friendly error messages for each API error code.
 
@@ -167,7 +167,7 @@ export const getImportErrorMessage = (code: ParseRecipeUrlErrorCode): string => 
 
 ---
 
-### Task 1.3: Create URL Validation Utility
+### Task 1.3: Create URL Validation Utility ✅ COMPLETED (2026-01-24)
 
 **Description**: Create a utility function to validate recipe URLs before submission.
 
@@ -218,7 +218,7 @@ export const validateRecipeUrl = (input: string): UrlValidationResult => {
 
 ---
 
-### Task 1.4: Create Recipe Parsing API Client
+### Task 1.4: Create Recipe Parsing API Client ✅ COMPLETED (2026-01-24)
 
 **Description**: Create the API client function that calls the recipe parsing endpoint.
 
@@ -297,7 +297,7 @@ export const parseRecipeUrl = async (
 
 ---
 
-### Task 1.5: Create useParseRecipeUrl Hook
+### Task 1.5: Create useParseRecipeUrl Hook ✅ COMPLETED (2026-01-24)
 
 **Description**: Create a React hook that wraps the API client with TanStack Query mutation and handles auth.
 

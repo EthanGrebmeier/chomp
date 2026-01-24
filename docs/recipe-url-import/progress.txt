@@ -21,3 +21,35 @@
   - `lib/clerk/use-oauth.ts` - AppleAuthentication not found
 - These should be addressed separately from the recipe import feature
 - Next priority: Sprint 1 - API Client Foundation (Task 1.1: Define API Types)
+
+---
+
+### Completed: Sprint 1 - Tasks 1.1-1.5: API Client Foundation
+
+Completed the API client foundation layer for recipe URL parsing. This includes all types, error handling, URL validation, the API client, and the React hook.
+
+**Tasks completed:**
+1. **Task 1.1: Define API Types** - Created TypeScript types for API request/response/errors
+2. **Task 1.2: Create Error Message Constants** - Added user-friendly error messages
+3. **Task 1.3: Create URL Validation Utility** - Added URL validation with tests
+4. **Task 1.4: Create Recipe Parsing API Client** - Implemented fetch-based API client
+5. **Task 1.5: Create useParseRecipeUrl Hook** - Created TanStack Query mutation hook
+
+**Files created:**
+- `features/recipes/api/types.ts` - API types (request, response, error codes, rate limit info)
+- `features/recipes/api/parse-recipe-url.ts` - API client with RecipeParseError class
+- `features/recipes/api/index.ts` - Barrel exports
+- `features/recipes/constants/import-errors.ts` - User-friendly error messages
+- `features/recipes/utils/validate-recipe-url.ts` - URL validation utility
+- `features/recipes/utils/__tests__/validate-recipe-url.test.ts` - Test cases (requires vitest)
+- `features/recipes/hooks/useParseRecipeUrl.tsx` - React hook wrapping API client
+
+**Files modified:**
+- `features/recipes/hooks/index.ts` - Added export for useParseRecipeUrl
+- `tsconfig.json` - Excluded test files (no testing framework installed)
+
+**Notes for next developer:**
+- No testing framework is installed yet; test file exists but won't run
+- Consider adding vitest for testing in a separate task
+- Pre-existing TypeScript errors remain unchanged
+- Next priority: Task 1.6 (Create Test Screen) or skip to Sprint 2 (UI Components)
