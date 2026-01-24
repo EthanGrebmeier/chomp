@@ -53,6 +53,7 @@ export const ImportRecipeSheet = forwardRef<
 
   const {
     state,
+    submitUrl,
     parseSuccess,
     parseError,
     editName,
@@ -95,6 +96,9 @@ export const ImportRecipeSheet = forwardRef<
     }
     setValidationError(undefined);
 
+    // Transition to loading state first
+    submitUrl(validation.url);
+
     // Call API
     parseRecipe.mutate(
       { url: validation.url },
@@ -113,7 +117,7 @@ export const ImportRecipeSheet = forwardRef<
         },
       }
     );
-  }, [url, parseRecipe, parseSuccess, parseError]);
+  }, [url, submitUrl, parseRecipe, parseSuccess, parseError]);
 
   const handleConfirmImport = useCallback(() => {
     if (state.status !== 'preview') return;
@@ -240,6 +244,7 @@ export const ImportRecipeSheet = forwardRef<
             />
             <ScrollView
               className="-mx-4 max-h-96 px-4"
+              contentContainerClassName="pb-4"
               showsVerticalScrollIndicator={false}
             >
               <ParsedRecipePreview

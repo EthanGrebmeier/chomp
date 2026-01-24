@@ -60,7 +60,7 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
   });
 
   return (
-    <View>
+    <View className="overflow-hidden">
       <Animated.View>
         <GestureDetector
           gesture={Gesture.Pan()

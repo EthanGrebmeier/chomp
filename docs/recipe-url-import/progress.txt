@@ -168,3 +168,28 @@ Completed the full integration layer for recipe import. Users can now import rec
 - Task 3.6 (Remove Test Screen) should be done after validating the feature works in production
 - Sprint 3 is complete - recipe import is fully functional end-to-end
 - Next priority: Sprint 4 - Error Handling & Polish (Task 4.1: Implement Error State UI)
+
+---
+
+### In Progress: Sprint 4 - Task 4.2: Add Loading States (Partial)
+
+Fixed several UI issues in the recipe import preview screen:
+
+**Issues fixed:**
+1. **Missing loading state**: The loading spinner was not showing when waiting for the API because `submitUrl()` was never called to transition to the loading state before the API request
+2. **Visible delete areas**: The red swipe-to-delete background was visible on the right side of each ingredient because the `ListItem` container lacked `overflow-hidden`
+3. **Button overlapping content**: The "Import Ingredients" button was overlapping the last item in the list because the ScrollView content needed bottom padding
+
+**Files modified:**
+- `features/recipes/components/import/import-recipe-sheet.tsx`:
+  - Added `submitUrl` to the destructured hook return
+  - Call `submitUrl()` before starting the API request to show loading state
+  - Added `contentContainerClassName="pb-4"` to ScrollView for bottom padding
+- `components/ui/list-item.tsx`:
+  - Added `overflow-hidden` class to the outer View container to clip the red background
+
+**Notes for next developer:**
+- Pre-existing TypeScript errors remain unchanged (not related to this feature)
+- Task 4.2 is partially complete - loading state and layout issues fixed
+- Still to do for Task 4.2: Optional cancel button, disable interactions during loading
+- Next priority: Continue Sprint 4 polish or mark Task 4.1/4.2 as complete
