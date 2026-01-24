@@ -53,3 +53,40 @@ Completed the API client foundation layer for recipe URL parsing. This includes 
 - Consider adding vitest for testing in a separate task
 - Pre-existing TypeScript errors remain unchanged
 - Next priority: Task 1.6 (Create Test Screen) or skip to Sprint 2 (UI Components)
+
+---
+
+### Completed: Sprint 1 - Task 1.6: Create Test Screen for API Validation
+
+Created a temporary test screen at `app/test-import.tsx` to validate the API integration works end-to-end.
+
+**Features implemented:**
+- Text input for entering recipe URL with URL keyboard type
+- Parse button that triggers the `useParseRecipeUrl` hook
+- Real-time URL validation before API call
+- Loading state with spinner during API request
+- Error state showing user-friendly messages and error codes
+- Rate limit info display when available
+- Success state showing:
+  - Recipe name (with fallback for unnamed recipes)
+  - Servings info
+  - Source URL
+  - All parsed ingredients with quantity, unit, name, and notes
+  - Category tags using existing `CategoryTag` component
+  - Raw JSON response for debugging
+- Reset button to clear all state
+
+**Files created:**
+- `app/test-import.tsx` - Temporary test screen (to be removed in Sprint 3, Task 3.6)
+
+**How to test:**
+1. Run the app and navigate to `/test-import`
+2. Enter a recipe URL (e.g., from a popular recipe site)
+3. Tap "Parse Recipe" and observe loading state
+4. View parsed recipe data on success, or error message on failure
+5. Use "Reset" to try another URL
+
+**Notes for next developer:**
+- Pre-existing TypeScript errors remain unchanged (not related to this feature)
+- This test screen validates Sprint 1 completion - API foundation is working
+- Next priority: Sprint 2 - UI Components (Task 2.1: URL Input Component)
