@@ -1,0 +1,23 @@
+# Recipe URL Import Feature - Progress Log
+
+## 2026-01-24
+
+### Completed: Sprint 0 - Task 0.1: Add Schema Fields for Recipe Import
+
+- Added `sourceUrl` (optional string) field to `recipes` entity
+- Added `servings` (optional string) field to `recipes` entity
+- Successfully pushed schema to InstantDB
+- TypeScript types automatically updated via InstantDB schema
+
+**Files changed:**
+- `instant.schema.ts` - Added two new optional fields to recipes entity
+
+**Notes for next developer:**
+- Pre-existing TypeScript errors exist in codebase (unrelated to this change):
+  - `app/(tabs)/index.tsx` - lists possibly undefined
+  - `app/_layout.tsx` - SQLite type mismatch (library version issue)
+  - `features/grocery-lists/components/join-by-code-sheet.tsx` - mutation not callable
+  - `features/meal-planner/hooks/useUserMealPlanData.tsx` - type predicate mismatch (Recipe vs query return type)
+  - `lib/clerk/use-oauth.ts` - AppleAuthentication not found
+- These should be addressed separately from the recipe import feature
+- Next priority: Sprint 1 - API Client Foundation (Task 1.1: Define API Types)

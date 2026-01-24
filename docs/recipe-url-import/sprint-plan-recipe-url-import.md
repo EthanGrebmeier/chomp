@@ -28,7 +28,7 @@ The import flow uses a state machine pattern: `idle → loading → preview → 
 
 ## Sprint 0: Schema Preparation
 
-### Task 0.1: Add Schema Fields for Recipe Import
+### Task 0.1: Add Schema Fields for Recipe Import ✅ COMPLETED (2026-01-24)
 
 **Description**: Add `sourceUrl` and `servings` fields to the `recipes` entity to store import metadata.
 

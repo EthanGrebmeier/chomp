@@ -47,6 +47,8 @@ const _schema = i.schema({
       createdAt: i.string(),
       updatedAt: i.string(),
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
+      sourceUrl: i.string().optional(), // URL the recipe was imported from
+      servings: i.string().optional(), // Serving size info from source
     }),
     recipe_ingredients: i.entity({
       name: i.string(),
