@@ -367,7 +367,7 @@ export const useParseRecipeUrl = () => {
 
 **Sprint Goal**: Complete UI flow for recipe import with mock data.
 
-### Task 2.1: Create URL Input Component
+### Task 2.1: Create URL Input Component ✅ COMPLETED (2026-01-24)
 
 **Description**: Create a text input component for entering recipe URLs with validation and clipboard paste.
 
@@ -403,7 +403,7 @@ type UrlInputProps = {
 
 ---
 
-### Task 2.2: Create Parsed Recipe Preview Component
+### Task 2.2: Create Parsed Recipe Preview Component ✅ COMPLETED (2026-01-24)
 
 **Description**: Create a component to display the parsed recipe metadata with editable name.
 
@@ -436,7 +436,7 @@ type ParsedRecipePreviewProps = {
 
 ---
 
-### Task 2.3: Create Ingredient List Preview Component
+### Task 2.3: Create Ingredient List Preview Component ✅ COMPLETED (2026-01-24)
 
 **Description**: Create a component to display parsed ingredients with remove capability.
 
@@ -469,7 +469,7 @@ type IngredientListPreviewProps = {
 
 ---
 
-### Task 2.4: Define Import State Machine Types
+### Task 2.4: Define Import State Machine Types ✅ COMPLETED (2026-01-24)
 
 **Description**: Define the state machine types and transitions for the import flow.
 
@@ -507,7 +507,7 @@ export type ImportAction =
 
 ---
 
-### Task 2.5: Create useImportRecipeState Hook
+### Task 2.5: Create useImportRecipeState Hook ✅ COMPLETED (2026-01-24)
 
 **Description**: Create a hook that manages the import state machine.
 
@@ -527,7 +527,7 @@ export type ImportAction =
 
 ---
 
-### Task 2.6: Create Import Recipe Sheet
+### Task 2.6: Create Import Recipe Sheet ✅ COMPLETED (2026-01-24)
 
 **Description**: Create the main bottom sheet component that orchestrates the import flow.
 

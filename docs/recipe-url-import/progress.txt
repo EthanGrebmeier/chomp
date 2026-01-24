@@ -90,3 +90,44 @@ Created a temporary test screen at `app/test-import.tsx` to validate the API int
 - Pre-existing TypeScript errors remain unchanged (not related to this feature)
 - This test screen validates Sprint 1 completion - API foundation is working
 - Next priority: Sprint 2 - UI Components (Task 2.1: URL Input Component)
+
+---
+
+### Completed: Sprint 2 - Tasks 2.1-2.6: Recipe Import UI Components
+
+Completed the entire UI layer for recipe import. All components are built and wired together into a functional import sheet that can preview recipes with mock save functionality.
+
+**Tasks completed:**
+1. **Task 2.1: Create URL Input Component** - Text input with paste from clipboard, clear button, validation feedback
+2. **Task 2.2: Create Parsed Recipe Preview Component** - Editable recipe name, servings display, source URL link, ingredient count badge
+3. **Task 2.3: Create Ingredient List Preview Component** - Swipe-to-remove ingredients with category tags, empty state handling
+4. **Task 2.4: Define Import State Machine Types** - Full state machine definition (idle → loading → preview/error → saving → success)
+5. **Task 2.5: Create useImportRecipeState Hook** - useReducer-based state machine with helper methods
+6. **Task 2.6: Create Import Recipe Sheet** - Bottom sheet orchestrating the entire import flow
+
+**Files created:**
+- `features/recipes/components/import/url-input.tsx` - URL input with paste/clear buttons
+- `features/recipes/components/import/parsed-recipe-preview.tsx` - Recipe metadata preview
+- `features/recipes/components/import/ingredient-list-preview.tsx` - Swipeable ingredient list
+- `features/recipes/components/import/import-recipe-sheet.tsx` - Main import flow sheet
+- `features/recipes/components/import/index.ts` - Barrel exports
+- `features/recipes/types/import-state.ts` - State machine types
+- `features/recipes/hooks/useImportRecipeState.tsx` - State management hook
+
+**Files modified:**
+- `features/recipes/hooks/index.ts` - Added export for useImportRecipeState
+
+**Technical details:**
+- Uses existing `BottomSheet` component pattern
+- Uses `ListItem` for swipe-to-delete on ingredients
+- Uses `CategoryTag` for displaying ingredient categories
+- State machine supports all transitions: URL input → loading → preview (edit/remove) → saving → success
+- Error states show user-friendly messages with retry/edit options
+- Theme-aware with dark/light mode support via nativewind's useColorScheme
+
+**Notes for next developer:**
+- Pre-existing TypeScript errors remain unchanged
+- Import sheet is functional but uses mock save (TODO in Task 3.4)
+- The `onImportSuccess` callback will be wired to navigation in Sprint 3
+- Sprint 2 is complete - UI flow works end-to-end with real API parsing
+- Next priority: Sprint 3 - Full Integration (Task 3.1: Add Entry Point to Recipes Tab)
