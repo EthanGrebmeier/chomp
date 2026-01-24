@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
+import { toast } from 'sonner-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/ui/button';
@@ -19,8 +20,10 @@ import { THEME } from '@/lib/theme';
 import { RecipeParseError } from '../../api/parse-recipe-url';
 import { ParseRecipeUrlErrorCode } from '../../api/types';
 import { getImportErrorMessage } from '../../constants/import-errors';
+import { useCreateRecipe } from '../../hooks/useCreateRecipe';
 import { useImportRecipeState } from '../../hooks/useImportRecipeState';
 import { useParseRecipeUrl } from '../../hooks/useParseRecipeUrl';
+import { transformParsedRecipe } from '../../utils/transform-parsed-recipe';
 import { validateRecipeUrl } from '../../utils/validate-recipe-url';
 
 import { IngredientListPreview } from './ingredient-list-preview';
@@ -61,6 +64,7 @@ export const ImportRecipeSheet = forwardRef<
   } = useImportRecipeState();
 
   const parseRecipe = useParseRecipeUrl();
+  const { mutate: createRecipe } = useCreateRecipe();
 
   useImperativeHandle(ref, () => ({
     present: () => {
@@ -116,15 +120,27 @@ export const ImportRecipeSheet = forwardRef<
 
     confirmImport();
 
-    // TODO: This will be wired to useCreateRecipe in Sprint 3
-    // For now, simulate success after a delay for UI testing
-    setTimeout(() => {
-      const mockRecipeId = 'mock-recipe-id';
-      saveSuccess(mockRecipeId);
-      onImportSuccess?.(mockRecipeId);
-      sheetRef.current?.dismiss();
-    }, 1000);
-  }, [state, confirmImport, saveSuccess, onImportSuccess]);
+    const createRecipeArgs = transformParsedRecipe(
+      state.data,
+      state.editedName,
+      state.selectedIngredients
+    );
+
+    createRecipe(createRecipeArgs, {
+      onSuccess: (result) => {
+        saveSuccess(result.id);
+        toast.success('Recipe imported successfully');
+        onImportSuccess?.(result.id);
+        sheetRef.current?.dismiss();
+      },
+      onError: (error) => {
+        console.error('Failed to create recipe:', error);
+        toast.error('Failed to import recipe');
+        // Go back to preview state so user can retry
+        goBack();
+      },
+    });
+  }, [state, confirmImport, createRecipe, saveSuccess, onImportSuccess, goBack]);
 
   const handleRetry = useCallback(() => {
     goBack();

@@ -560,7 +560,7 @@ export type ImportAction =
 
 **Sprint Goal**: End-to-end recipe import working with real API and data persistence.
 
-### Task 3.1: Add Entry Point to Recipes Tab
+### Task 3.1: Add Entry Point to Recipes Tab ✅ COMPLETED (2026-01-24)
 
 **Description**: Add an "Import from URL" option accessible from the recipes screen.
 
@@ -584,7 +584,7 @@ export type ImportAction =
 
 ---
 
-### Task 3.2: Create Data Transformation Utility
+### Task 3.2: Create Data Transformation Utility ✅ COMPLETED (2026-01-24)
 
 **Description**: Create a function to transform parsed API data to `CreateRecipeArgs` format.
 
@@ -637,7 +637,7 @@ export const transformParsedRecipe = (
 
 ---
 
-### Task 3.3: Wire Import Sheet to API
+### Task 3.3: Wire Import Sheet to API ✅ COMPLETED (2026-01-24)
 
 **Description**: Connect the import sheet to the real `useParseRecipeUrl` hook.
 
@@ -659,7 +659,7 @@ export const transformParsedRecipe = (
 
 ---
 
-### Task 3.4: Wire Import Confirmation to Recipe Creation
+### Task 3.4: Wire Import Confirmation to Recipe Creation ✅ COMPLETED (2026-01-24)
 
 **Description**: On import confirmation, create the recipe using existing `useCreateRecipe` hook.
 
@@ -682,7 +682,7 @@ export const transformParsedRecipe = (
 
 ---
 
-### Task 3.5: Add Success Flow
+### Task 3.5: Add Success Flow ✅ COMPLETED (2026-01-24)
 
 **Description**: Handle successful import with navigation and feedback.
 
