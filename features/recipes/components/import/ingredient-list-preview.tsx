@@ -51,7 +51,7 @@ export const IngredientListPreview = ({
   }
 
   return (
-    <View className="gap-1 pb-24">
+    <View className="gap-1">
       <View className="mb-2 gap-2">
         <Text className="text-sm font-medium text-muted-foreground">
           Ingredients ({ingredients.length})

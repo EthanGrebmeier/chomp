@@ -278,9 +278,8 @@ export const ImportRecipeSheet = forwardRef<
         );
 
       case 'preview': {
-        const isNameTooLong = state.editedName.length > MAX_RECIPE_NAME_LENGTH;
-        const hasNoIngredients = state.selectedIngredients.length === 0;
         const originalHadIngredients = state.data.ingredients.length > 0;
+        const hasNoIngredients = state.selectedIngredients.length === 0;
 
         // Handle name change with length limit enforcement
         const handleNameChange = (name: string) => {
@@ -300,8 +299,8 @@ export const ImportRecipeSheet = forwardRef<
               }
             />
             <ScrollView
-              className="-mx-4 max-h-96 px-4"
-              contentContainerClassName="pb-4"
+              className="-mx-4 flex-1 px-4"
+              contentContainerClassName="pb-16"
               showsVerticalScrollIndicator={false}
             >
               <ParsedRecipePreview
@@ -344,23 +343,6 @@ export const ImportRecipeSheet = forwardRef<
                 </View>
               )}
             </ScrollView>
-            <View className="mt-4">
-              <Button
-                onPress={handleConfirmImport}
-                disabled={isNameTooLong || !state.editedName.trim()}
-              >
-                <Text>
-                  {hasNoIngredients
-                    ? 'Import Recipe'
-                    : `Import ${state.selectedIngredients.length} Ingredient${state.selectedIngredients.length !== 1 ? 's' : ''}`}
-                </Text>
-              </Button>
-              {!state.editedName.trim() && (
-                <Text className="mt-2 text-center text-sm text-destructive">
-                  Please enter a recipe name
-                </Text>
-              )}
-            </View>
           </>
         );
       }
@@ -396,12 +378,44 @@ export const ImportRecipeSheet = forwardRef<
     }
   };
 
+  const isPreview = state.status === 'preview';
+
+  const renderFooter = () => {
+    if (state.status !== 'preview') return undefined;
+
+    const isNameTooLong = state.editedName.length > MAX_RECIPE_NAME_LENGTH;
+    const hasNoIngredients = state.selectedIngredients.length === 0;
+
+    return (
+      <View className="px-8 pb-4">
+        <Button
+          onPress={handleConfirmImport}
+          disabled={isNameTooLong || !state.editedName.trim()}
+        >
+          <Text>
+            {hasNoIngredients
+              ? 'Import Recipe'
+              : `Import ${state.selectedIngredients.length} Ingredient${state.selectedIngredients.length !== 1 ? 's' : ''}`}
+          </Text>
+        </Button>
+        {!state.editedName.trim() && (
+          <Text className="mt-2 text-center text-sm text-destructive">
+            Please enter a recipe name
+          </Text>
+        )}
+      </View>
+    );
+  };
+
   return (
     <BottomSheet
       name="import-recipe-sheet"
       ref={sheetRef}
       onStartClose={handleClose}
-      scrollable={state.status === 'preview'}
+      scrollable={isPreview}
+      detents={isPreview ? [0.9] : ['auto']}
+      viewClassName={isPreview ? 'flex-1' : undefined}
+      footer={renderFooter()}
     >
       <BottomSheet.SheetView className="gap-4">
         {renderContent()}
