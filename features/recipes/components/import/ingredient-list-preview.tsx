@@ -24,22 +24,13 @@ const formatIngredient = (ingredient: ParsedIngredient): string => {
   }
 
   // Add unit if present and not empty
-  if (ingredient.unit && ingredient.unit.trim()) {
+  if (ingredient.unit?.trim()) {
     parts.push(ingredient.unit);
   }
 
   // Add name
   parts.push(ingredient.name);
-
-  // Combine base parts
-  let result = parts.join(' ');
-
-  // Add notes in parentheses if present
-  if (ingredient.notes && ingredient.notes.trim()) {
-    result += ` (${ingredient.notes})`;
-  }
-
-  return result;
+  return parts.join(' ');
 };
 
 export const IngredientListPreview = ({
@@ -60,20 +51,30 @@ export const IngredientListPreview = ({
   }
 
   return (
-    <View className="gap-1">
-      <Text className="mb-2 text-sm font-medium text-muted-foreground">
-        Ingredients ({ingredients.length})
-      </Text>
+    <View className="gap-1 pb-24">
+      <View className="mb-2 gap-2">
+        <Text className="text-sm font-medium text-muted-foreground">
+          Ingredients ({ingredients.length})
+        </Text>
+        <Text className="text-xs text-muted-foreground">
+          Swipe left to remove an ingredient
+        </Text>
+      </View>
       {ingredients.map((ingredient, index) => (
         <ListItem
           key={`${ingredient.name}-${index}`}
           onDelete={() => onRemove(index)}
-          className="rounded-lg bg-card"
+          className="rounded-lg bg-card px-0"
         >
           <View className="flex-1 gap-1">
             <Text className="text-base text-foreground">
               {formatIngredient(ingredient)}
             </Text>
+            {ingredient.notes && (
+              <Text className="text-xs text-muted-foreground">
+                {ingredient.notes}
+              </Text>
+            )}
             {ingredient.category && (
               <View className="flex-row">
                 <CategoryTag category={ingredient.category} />
@@ -82,9 +83,6 @@ export const IngredientListPreview = ({
           </View>
         </ListItem>
       ))}
-      <Text className="mt-2 text-center text-xs text-muted-foreground">
-        Swipe left to remove an ingredient
-      </Text>
     </View>
   );
 };

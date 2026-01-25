@@ -251,7 +251,7 @@ export const ImportRecipeSheet = forwardRef<
             <View className="items-center justify-center py-12">
               <ActivityIndicator size="large" color={theme.primary} />
               <Text className="mt-4 text-base text-muted-foreground">
-                Parsing recipe...
+                Retrieving recipe...
               </Text>
             </View>
           </>

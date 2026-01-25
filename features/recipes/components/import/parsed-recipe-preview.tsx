@@ -1,4 +1,4 @@
-import { ExternalLinkIcon, UtensilsIcon } from 'lucide-react-native';
+import { ExternalLinkIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useRef } from 'react';
 import { Linking, TextInput as RNTextInput, View } from 'react-native';
@@ -29,9 +29,10 @@ export const ParsedRecipePreview = ({
   const nameInputRef = useRef<RNTextInput>(null);
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
-  
+
   // Show character counter when within 20 characters of limit
-  const showCharCount = maxNameLength && recipeName.length >= maxNameLength - 20;
+  const showCharCount =
+    maxNameLength && recipeName.length >= maxNameLength - 20;
   const isNearLimit = maxNameLength && recipeName.length >= maxNameLength - 10;
   const isAtLimit = maxNameLength && recipeName.length >= maxNameLength;
 
@@ -45,7 +46,9 @@ export const ParsedRecipePreview = ({
       }
       return display;
     } catch {
-      return url.length > maxLength ? url.substring(0, maxLength - 3) + '...' : url;
+      return url.length > maxLength
+        ? url.substring(0, maxLength - 3) + '...'
+        : url;
     }
   };
 
@@ -100,21 +103,6 @@ export const ParsedRecipePreview = ({
             {truncateUrl(sourceUrl)}
           </Text>
         </Button>
-      </View>
-
-      {/* Servings and Ingredient Count - Read-only */}
-      <View className="flex-row items-center gap-4">
-        {servings && (
-          <View className="flex-row items-center gap-2 rounded-lg bg-secondary px-3 py-2">
-            <UtensilsIcon size={14} color={theme.mutedForeground} />
-            <Text className="text-sm text-muted-foreground">{servings}</Text>
-          </View>
-        )}
-        <View className="rounded-lg bg-primary/10 px-3 py-2">
-          <Text className="text-sm font-medium text-primary">
-            {ingredientCount} ingredient{ingredientCount !== 1 ? 's' : ''}
-          </Text>
-        </View>
       </View>
     </View>
   );
