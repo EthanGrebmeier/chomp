@@ -14,6 +14,8 @@ export type ParsedRecipePreviewProps = {
   servings: string | null;
   sourceUrl: string;
   ingredientCount: number;
+  /** Maximum character length for the recipe name */
+  maxNameLength?: number;
 };
 
 export const ParsedRecipePreview = ({
@@ -22,10 +24,16 @@ export const ParsedRecipePreview = ({
   servings,
   sourceUrl,
   ingredientCount,
+  maxNameLength,
 }: ParsedRecipePreviewProps) => {
   const nameInputRef = useRef<RNTextInput>(null);
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
+  
+  // Show character counter when within 20 characters of limit
+  const showCharCount = maxNameLength && recipeName.length >= maxNameLength - 20;
+  const isNearLimit = maxNameLength && recipeName.length >= maxNameLength - 10;
+  const isAtLimit = maxNameLength && recipeName.length >= maxNameLength;
 
   // Truncate URL to show domain + path start
   const truncateUrl = (url: string, maxLength = 40) => {
@@ -49,15 +57,31 @@ export const ParsedRecipePreview = ({
     <View className="gap-4">
       {/* Recipe Name - Editable */}
       <View>
-        <Text className="mb-2 text-sm font-medium text-muted-foreground">
-          Recipe Name
-        </Text>
+        <View className="mb-2 flex-row items-center justify-between">
+          <Text className="text-sm font-medium text-muted-foreground">
+            Recipe Name
+          </Text>
+          {showCharCount && maxNameLength && (
+            <Text
+              className={`text-xs ${
+                isAtLimit
+                  ? 'text-destructive'
+                  : isNearLimit
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-muted-foreground'
+              }`}
+            >
+              {recipeName.length}/{maxNameLength}
+            </Text>
+          )}
+        </View>
         <BottomSheet.TextInput
           ref={nameInputRef}
           value={recipeName}
           onChangeText={onNameChange}
           placeholder="Enter recipe name"
           selectTextOnFocus
+          maxLength={maxNameLength}
         />
       </View>
 

@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { ArrowLeftIcon, CheckCircleIcon } from 'lucide-react-native';
+import { AlertTriangleIcon, ArrowLeftIcon, CheckCircleIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import {
   forwardRef,
@@ -15,6 +15,7 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { checkNetworkStatus } from '@/hooks/use-network-status';
 import { THEME } from '@/lib/theme';
 
 import { RecipeParseError } from '../../api/parse-recipe-url';
@@ -28,6 +29,9 @@ import { ImportError } from './import-error';
 import { IngredientListPreview } from './ingredient-list-preview';
 import { ParsedRecipePreview } from './parsed-recipe-preview';
 import { UrlInput, UrlInputRef } from './url-input';
+
+/** Maximum character length for recipe names */
+const MAX_RECIPE_NAME_LENGTH = 100;
 
 export type ImportRecipeSheetRef = {
   present: () => void;
@@ -46,6 +50,11 @@ export const ImportRecipeSheet = forwardRef<
   const urlInputRef = useRef<UrlInputRef>(null);
   const [url, setUrl] = useState('');
   const [validationError, setValidationError] = useState<string | undefined>();
+  
+  // Track if sheet is open to ignore responses after dismissal
+  const isSheetOpenRef = useRef(false);
+  // Track if confirm action is in progress to prevent double-tap
+  const isConfirmingRef = useRef(false);
 
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
@@ -71,29 +80,46 @@ export const ImportRecipeSheet = forwardRef<
       reset();
       setUrl('');
       setValidationError(undefined);
+      isSheetOpenRef.current = true;
+      isConfirmingRef.current = false;
       sheetRef.current?.present();
       // Focus input after a slight delay to ensure sheet is visible
       setTimeout(() => urlInputRef.current?.focus(), 100);
     },
     dismiss: () => {
+      isSheetOpenRef.current = false;
       sheetRef.current?.dismiss();
     },
   }));
 
   const handleClose = useCallback(() => {
     KeyboardController.dismiss();
+    isSheetOpenRef.current = false;
+    isConfirmingRef.current = false;
     reset();
     setUrl('');
     setValidationError(undefined);
   }, [reset]);
 
-  const handleSubmitUrl = useCallback(() => {
+  const handleSubmitUrl = useCallback(async () => {
     const validation = validateRecipeUrl(url);
     if (!validation.valid) {
       setValidationError(validation.error);
       return;
     }
     setValidationError(undefined);
+
+    // Check network connectivity before making API call
+    const isOnline = await checkNetworkStatus();
+    if (!isOnline) {
+      parseError(
+        new RecipeParseError(
+          'fetch_timeout',
+          'No internet connection. Please check your connection and try again.'
+        )
+      );
+      return;
+    }
 
     // Transition to loading state first
     submitUrl(validation.url);
@@ -103,9 +129,14 @@ export const ImportRecipeSheet = forwardRef<
       { url: validation.url },
       {
         onSuccess: (data) => {
+          // Ignore response if sheet was dismissed during loading
+          if (!isSheetOpenRef.current) return;
           parseSuccess(data);
         },
         onError: (error) => {
+          // Ignore error if sheet was dismissed during loading
+          if (!isSheetOpenRef.current) return;
+          
           if (error instanceof RecipeParseError) {
             parseError(error);
           } else {
@@ -118,8 +149,20 @@ export const ImportRecipeSheet = forwardRef<
     );
   }, [url, submitUrl, parseRecipe, parseSuccess, parseError]);
 
-  const handleConfirmImport = useCallback(() => {
+  const handleConfirmImport = useCallback(async () => {
     if (state.status !== 'preview') return;
+    
+    // Double-tap prevention: ignore if already confirming
+    if (isConfirmingRef.current) return;
+    isConfirmingRef.current = true;
+
+    // Check network connectivity before saving
+    const isOnline = await checkNetworkStatus();
+    if (!isOnline) {
+      isConfirmingRef.current = false;
+      toast.error('No internet connection. Please check your connection and try again.');
+      return;
+    }
 
     confirmImport();
 
@@ -131,12 +174,20 @@ export const ImportRecipeSheet = forwardRef<
 
     createRecipe(createRecipeArgs, {
       onSuccess: (result) => {
+        isConfirmingRef.current = false;
+        // Ignore if sheet was dismissed
+        if (!isSheetOpenRef.current) return;
+        
         saveSuccess(result.id);
         toast.success('Recipe imported successfully');
         onImportSuccess?.(result.id);
         sheetRef.current?.dismiss();
       },
       onError: (error) => {
+        isConfirmingRef.current = false;
+        // Ignore if sheet was dismissed
+        if (!isSheetOpenRef.current) return;
+        
         console.error('Failed to create recipe:', error);
         toast.error('Failed to import recipe');
         // Go back to preview state so user can retry
@@ -210,7 +261,18 @@ export const ImportRecipeSheet = forwardRef<
           </>
         );
 
-      case 'preview':
+      case 'preview': {
+        const isNameTooLong = state.editedName.length > MAX_RECIPE_NAME_LENGTH;
+        const hasNoIngredients = state.selectedIngredients.length === 0;
+        const originalHadIngredients = state.data.ingredients.length > 0;
+        
+        // Handle name change with length limit enforcement
+        const handleNameChange = (name: string) => {
+          // Allow typing but truncate to max length
+          const truncatedName = name.slice(0, MAX_RECIPE_NAME_LENGTH);
+          editName(truncatedName);
+        };
+        
         return (
           <>
             <BottomSheet.Header
@@ -228,31 +290,62 @@ export const ImportRecipeSheet = forwardRef<
             >
               <ParsedRecipePreview
                 recipeName={state.editedName}
-                onNameChange={editName}
+                onNameChange={handleNameChange}
                 servings={state.data.servings}
                 sourceUrl={state.data.sourceUrl}
                 ingredientCount={state.selectedIngredients.length}
+                maxNameLength={MAX_RECIPE_NAME_LENGTH}
               />
-              <View className="mt-4">
-                <IngredientListPreview
-                  ingredients={state.selectedIngredients}
-                  onRemove={removeIngredient}
-                />
-              </View>
+              
+              {/* Empty ingredients warning - only shown when API returned no ingredients */}
+              {hasNoIngredients && !originalHadIngredients && (
+                <View className="mt-4 flex-row items-center gap-3 rounded-lg bg-amber-500/10 p-3">
+                  <AlertTriangleIcon size={20} color="#f59e0b" />
+                  <Text className="flex-1 text-sm text-amber-700 dark:text-amber-400">
+                    No ingredients were found on this page. You can still import the recipe and add ingredients manually.
+                  </Text>
+                </View>
+              )}
+              
+              {/* Warning when user removed all ingredients */}
+              {hasNoIngredients && originalHadIngredients && (
+                <View className="mt-4 flex-row items-center gap-3 rounded-lg bg-muted/50 p-3">
+                  <AlertTriangleIcon size={20} color={theme.mutedForeground} />
+                  <Text className="flex-1 text-sm text-muted-foreground">
+                    All ingredients have been removed. You can still import the recipe without ingredients.
+                  </Text>
+                </View>
+              )}
+              
+              {state.selectedIngredients.length > 0 && (
+                <View className="mt-4">
+                  <IngredientListPreview
+                    ingredients={state.selectedIngredients}
+                    onRemove={removeIngredient}
+                  />
+                </View>
+              )}
             </ScrollView>
             <View className="mt-4">
               <Button
                 onPress={handleConfirmImport}
-                disabled={state.selectedIngredients.length === 0}
+                disabled={isNameTooLong || !state.editedName.trim()}
               >
                 <Text>
-                  Import {state.selectedIngredients.length} Ingredient
-                  {state.selectedIngredients.length !== 1 ? 's' : ''}
+                  {hasNoIngredients
+                    ? 'Import Recipe'
+                    : `Import ${state.selectedIngredients.length} Ingredient${state.selectedIngredients.length !== 1 ? 's' : ''}`}
                 </Text>
               </Button>
+              {!state.editedName.trim() && (
+                <Text className="mt-2 text-center text-sm text-destructive">
+                  Please enter a recipe name
+                </Text>
+              )}
             </View>
           </>
         );
+      }
 
       case 'saving':
         return (

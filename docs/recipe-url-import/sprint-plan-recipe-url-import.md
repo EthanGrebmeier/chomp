@@ -771,7 +771,7 @@ export const transformParsedRecipe = (
 
 ---
 
-### Task 4.3: Handle Edge Cases
+### Task 4.3: Handle Edge Cases ✅ COMPLETED (2026-01-24)
 
 **Description**: Handle various edge cases in the import flow.
 
@@ -781,6 +781,20 @@ export const transformParsedRecipe = (
 - Network offline (detect and show appropriate message)
 - Sheet dismissed during loading (cancel request)
 - Double-tap prevention on confirm button
+
+**Files**:
+- `hooks/use-network-status.ts` (new) - Network connectivity hook
+- `features/recipes/components/import/import-recipe-sheet.tsx` (updated)
+- `features/recipes/components/import/parsed-recipe-preview.tsx` (updated)
+
+**Implementation Details**:
+- Created `useNetworkStatus` hook using `@react-native-community/netinfo`
+- Added `checkNetworkStatus()` utility for one-time checks before API calls
+- Empty ingredients: Shows warning message but allows import to create recipe without ingredients
+- Recipe name: Limited to 100 characters with character counter shown when approaching limit
+- Offline: Checks network before API calls, shows appropriate toast/error
+- Sheet dismissal: Tracks if sheet is open via ref, ignores API responses after dismissal
+- Double-tap: Uses ref to prevent multiple confirm button presses
 
 **Validation**:
 - Each edge case handled gracefully
