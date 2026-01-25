@@ -45,7 +45,7 @@
 
 ---
 
-### Task 2: Create EditParsedIngredientSheet component
+### Task 2: Create EditParsedIngredientSheet component ✅ COMPLETED
 
 **Description**: Create a new bottom sheet component for editing a parsed ingredient. This will reuse `ItemForm` and `MetaBar` components but manage local state instead of InstantDB.
 

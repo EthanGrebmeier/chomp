@@ -347,3 +347,42 @@ Extended the import state machine to support updating an ingredient at a specifi
 - Pre-existing TypeScript errors remain unchanged (not related to this feature)
 - Task 1 is complete - state machine now supports ingredient updates
 - Next priority: Task 2 - Create EditParsedIngredientSheet component
+
+---
+
+### Completed: Ingredient Editing Sprint - Task 2: Create EditParsedIngredientSheet component
+
+Created a new bottom sheet component for editing parsed ingredients in the import flow. Reuses existing `ItemForm` and `MetaBar` components with local state management.
+
+**Files created:**
+- `features/recipes/utils/parsed-ingredient-converters.ts` - Helper functions for type conversion:
+  - `parsedIngredientToBaseGroceryItem()` - Converts ParsedIngredient to form-compatible format
+  - `baseGroceryItemToParsedIngredient()` - Converts form data back to ParsedIngredient
+- `features/recipes/components/import/edit-parsed-ingredient-sheet.tsx` - Edit sheet component:
+  - Ref-based API: `present(index, ingredient)` and `dismiss()`
+  - Uses `ItemSheetProvider` with `mode="update"` and `disableAutocomplete={true}`
+  - Includes `ItemForm` and `MetaBar` for editing
+  - Uses `setFromItemRef` pattern to populate form with ingredient data
+  - Validates: non-empty name, quantity > 0, non-empty unit
+  - Preserves original category through edit cycle
+  - Auto-focuses name input on open
+  - Dismisses keyboard on close
+
+**Files modified:**
+- `features/recipes/components/import/index.ts` - Added export for edit-parsed-ingredient-sheet
+
+**Implementation notes:**
+- Follows `AddIngredientProvider` pattern from `add-ingredient-sheet.tsx`
+- Type conversions handle null values from ParsedIngredient (quantity, unit, notes)
+- Default values: quantity → 1, unit → 'each', notes → undefined
+- Category is preserved from original ingredient (form category used if changed)
+
+**Validation:**
+- TypeScript compiles (only pre-existing errors unrelated to this feature)
+- No linter errors in new/modified files
+- Component follows existing patterns and conventions
+
+**Notes for next developer:**
+- Pre-existing TypeScript errors remain unchanged (not related to this feature)
+- Task 2 is complete - edit sheet component is ready for integration
+- Next priority: Task 3 - Make IngredientListPreview items tappable
