@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { AlertCircleIcon, ArrowLeftIcon, CheckCircleIcon } from 'lucide-react-native';
+import { ArrowLeftIcon, CheckCircleIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import {
   forwardRef,
@@ -18,14 +18,13 @@ import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 
 import { RecipeParseError } from '../../api/parse-recipe-url';
-import { ParseRecipeUrlErrorCode } from '../../api/types';
-import { getImportErrorMessage } from '../../constants/import-errors';
 import { useCreateRecipe } from '../../hooks/useCreateRecipe';
 import { useImportRecipeState } from '../../hooks/useImportRecipeState';
 import { useParseRecipeUrl } from '../../hooks/useParseRecipeUrl';
 import { transformParsedRecipe } from '../../utils/transform-parsed-recipe';
 import { validateRecipeUrl } from '../../utils/validate-recipe-url';
 
+import { ImportError } from './import-error';
 import { IngredientListPreview } from './ingredient-list-preview';
 import { ParsedRecipePreview } from './parsed-recipe-preview';
 import { UrlInput, UrlInputRef } from './url-input';
@@ -192,12 +191,6 @@ export const ImportRecipeSheet = forwardRef<
         );
 
       case 'error':
-        const errorCode = state.error.code as ParseRecipeUrlErrorCode;
-        const errorMessage = getImportErrorMessage(errorCode);
-        const isRetryable = ['fetch_timeout', 'server_error', 'rate_limited'].includes(
-          errorCode
-        );
-
         return (
           <>
             <BottomSheet.Header
@@ -208,26 +201,12 @@ export const ImportRecipeSheet = forwardRef<
                 </Button>
               }
             />
-            <View className="items-center justify-center py-8">
-              <AlertCircleIcon size={48} color={theme.destructive} />
-              <Text className="mt-4 text-center text-base text-foreground">
-                {errorMessage}
-              </Text>
-            </View>
-            <View className="mt-4 gap-2">
-              {isRetryable ? (
-                <Button onPress={handleSubmitUrl}>
-                  <Text>Try Again</Text>
-                </Button>
-              ) : (
-                <Button onPress={handleRetry}>
-                  <Text>Edit URL</Text>
-                </Button>
-              )}
-              <Button variant="outline" onPress={() => sheetRef.current?.dismiss()}>
-                <Text>Cancel</Text>
-              </Button>
-            </View>
+            <ImportError
+              error={state.error}
+              onRetry={handleSubmitUrl}
+              onEditUrl={handleRetry}
+              onCancel={() => sheetRef.current?.dismiss()}
+            />
           </>
         );
 

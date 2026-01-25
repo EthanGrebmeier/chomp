@@ -212,3 +212,42 @@ Removed the temporary test screen that was created in Sprint 1 for API validatio
 - Sprint 3 is now fully complete (all 6 tasks done)
 - The recipe import feature is accessible from Recipes tab → + button → Import from URL
 - Next priority: Sprint 4 - Error Handling & Polish (Task 4.1: Implement Error State UI)
+
+---
+
+### Completed: Sprint 4 - Task 4.1: Implement Error State UI
+
+Created a dedicated `import-error.tsx` component with contextual error icons and helpful hints based on error type.
+
+**Features implemented:**
+- Contextual icons for different error types:
+  - `LinkIcon` - invalid_url (URL/link issue)
+  - `LockIcon` - unauthorized (auth issue)
+  - `WifiOffIcon` - fetch_timeout (network issue)
+  - `ClockIcon` - rate_limited (need to wait)
+  - `ServerCrashIcon` - server_error (server issue)
+  - `FileXIcon` - not_found, parse_failed, unsupported_content, content_too_large (content/page issue)
+  - `AlertCircleIcon` - default fallback
+- User-friendly error messages from existing constants
+- Contextual hint text to help users understand the error
+- Rate limit info display (shows countdown when available)
+- Retry button for transient errors (fetch_timeout, server_error, rate_limited)
+- "Edit URL" button for non-retryable errors (invalid_url, unsupported_content, etc.)
+- Styled error icon in circular destructive background
+
+**Files created:**
+- `features/recipes/components/import/import-error.tsx` - Polished error display component
+
+**Files modified:**
+- `features/recipes/components/import/import-recipe-sheet.tsx` - Replaced inline error rendering with ImportError component
+- `features/recipes/components/import/index.ts` - Added export for import-error.tsx
+
+**Validation:**
+- TypeScript compiles (only pre-existing errors unrelated to this feature)
+- No linter errors in new/modified files
+- Component properly typed with RecipeParseError
+
+**Notes for next developer:**
+- Pre-existing TypeScript errors remain unchanged (not related to this feature)
+- Task 4.1 is complete - error UI is now polished with contextual icons and hints
+- Next priority: Task 4.3 - Handle Edge Cases (or Task 4.4 - Rate Limit Handling if desired)
