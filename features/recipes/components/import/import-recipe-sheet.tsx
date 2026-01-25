@@ -78,7 +78,8 @@ export const ImportRecipeSheet = forwardRef<
     parseSuccess,
     parseError,
     editName,
-    removeIngredient,
+    toggleIngredientSelection,
+    toggleAllIngredients,
     updateIngredient,
     confirmImport,
     saveSuccess,
@@ -192,10 +193,15 @@ export const ImportRecipeSheet = forwardRef<
 
     confirmImport();
 
+    // Get only the selected ingredients
+    const selectedIngredients = state.ingredients.filter((_, index) =>
+      state.selectedIndices.has(index)
+    );
+
     const createRecipeArgs = transformParsedRecipe(
       state.data,
       state.editedName,
-      state.selectedIngredients
+      selectedIngredients
     );
 
     createRecipe(createRecipeArgs, {
@@ -322,7 +328,7 @@ export const ImportRecipeSheet = forwardRef<
 
       case 'preview': {
         const originalHadIngredients = state.data.ingredients.length > 0;
-        const hasNoIngredients = state.selectedIngredients.length === 0;
+        const hasNoSelectedIngredients = state.selectedIndices.size === 0;
 
         // Handle name change with length limit enforcement
         const handleNameChange = (name: string) => {
@@ -349,7 +355,7 @@ export const ImportRecipeSheet = forwardRef<
               />
 
               {/* Empty ingredients warning - only shown when API returned no ingredients */}
-              {hasNoIngredients && !originalHadIngredients && (
+              {!originalHadIngredients && (
                 <View className="mt-4 flex-row items-center gap-3 rounded-lg bg-amber-500/10 p-3">
                   <AlertTriangleIcon size={20} color="#f59e0b" />
                   <Text className="flex-1 text-sm text-amber-700 dark:text-amber-400">
@@ -359,22 +365,24 @@ export const ImportRecipeSheet = forwardRef<
                 </View>
               )}
 
-              {/* Warning when user removed all ingredients */}
-              {hasNoIngredients && originalHadIngredients && (
+              {/* Warning when user deselected all ingredients */}
+              {hasNoSelectedIngredients && originalHadIngredients && (
                 <View className="mt-4 flex-row items-center gap-3 rounded-lg bg-muted/50 p-3">
                   <AlertTriangleIcon size={20} color={theme.mutedForeground} />
                   <Text className="flex-1 text-sm text-muted-foreground">
-                    All ingredients have been removed. You can still import the
-                    recipe without ingredients.
+                    No ingredients selected. You can still import the recipe
+                    without ingredients.
                   </Text>
                 </View>
               )}
 
-              {state.selectedIngredients.length > 0 && (
+              {state.ingredients.length > 0 && (
                 <View className="mt-4">
                   <IngredientListPreview
-                    ingredients={state.selectedIngredients}
-                    onRemove={removeIngredient}
+                    ingredients={state.ingredients}
+                    selectedIndices={state.selectedIndices}
+                    onToggleSelection={toggleIngredientSelection}
+                    onToggleAll={toggleAllIngredients}
                     onEdit={handleEditIngredient}
                   />
                 </View>
@@ -421,7 +429,7 @@ export const ImportRecipeSheet = forwardRef<
     if (state.status !== 'preview') return undefined;
 
     const isNameTooLong = state.editedName.length > MAX_RECIPE_NAME_LENGTH;
-    const hasNoIngredients = state.selectedIngredients.length === 0;
+    const selectedCount = state.selectedIndices.size;
 
     return (
       <View className="px-8 pb-4">
@@ -430,9 +438,9 @@ export const ImportRecipeSheet = forwardRef<
           disabled={isNameTooLong || !state.editedName.trim()}
         >
           <Text>
-            {hasNoIngredients
+            {selectedCount === 0
               ? 'Import Recipe'
-              : `Import ${state.selectedIngredients.length} Ingredient${state.selectedIngredients.length !== 1 ? 's' : ''}`}
+              : `Import ${selectedCount} Ingredient${selectedCount !== 1 ? 's' : ''}`}
           </Text>
         </Button>
         {!state.editedName.trim() && (

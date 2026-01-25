@@ -17,13 +17,20 @@ export function importReducer(state: ImportState, action: ImportAction): ImportS
     case 'SUBMIT_URL':
       return { status: 'loading' };
 
-    case 'PARSE_SUCCESS':
+    case 'PARSE_SUCCESS': {
+      const ingredients = [...action.data.ingredients];
+      // Start with all ingredients selected
+      const selectedIndices = new Set<number>(
+        ingredients.map((_, index) => index)
+      );
       return {
         status: 'preview',
         data: action.data,
         editedName: action.data.recipeName ?? '',
-        selectedIngredients: [...action.data.ingredients],
+        ingredients,
+        selectedIndices,
       };
+    }
 
     case 'PARSE_ERROR':
       return { status: 'error', error: action.error };
@@ -35,24 +42,41 @@ export function importReducer(state: ImportState, action: ImportAction): ImportS
         editedName: action.name,
       };
 
-    case 'REMOVE_INGREDIENT':
+    case 'TOGGLE_INGREDIENT': {
       if (state.status !== 'preview') return state;
+      const newSelectedIndices = new Set(state.selectedIndices);
+      if (newSelectedIndices.has(action.index)) {
+        newSelectedIndices.delete(action.index);
+      } else {
+        newSelectedIndices.add(action.index);
+      }
       return {
         ...state,
-        selectedIngredients: state.selectedIngredients.filter(
-          (_, i) => i !== action.index
-        ),
+        selectedIndices: newSelectedIndices,
       };
+    }
+
+    case 'TOGGLE_ALL_INGREDIENTS': {
+      if (state.status !== 'preview') return state;
+      const allSelected = state.selectedIndices.size === state.ingredients.length;
+      const newSelectedIndices = allSelected
+        ? new Set<number>()
+        : new Set<number>(state.ingredients.map((_, index) => index));
+      return {
+        ...state,
+        selectedIndices: newSelectedIndices,
+      };
+    }
 
     case 'UPDATE_INGREDIENT':
       if (state.status !== 'preview') return state;
       // Validate index bounds
-      if (action.index < 0 || action.index >= state.selectedIngredients.length) {
+      if (action.index < 0 || action.index >= state.ingredients.length) {
         return state;
       }
       return {
         ...state,
-        selectedIngredients: state.selectedIngredients.map((ingredient, i) =>
+        ingredients: state.ingredients.map((ingredient, i) =>
           i === action.index ? action.ingredient : ingredient
         ),
       };
@@ -107,8 +131,12 @@ export const useImportRecipeState = () => {
     dispatch({ type: 'EDIT_NAME', name });
   }, []);
 
-  const removeIngredient = useCallback((index: number) => {
-    dispatch({ type: 'REMOVE_INGREDIENT', index });
+  const toggleIngredientSelection = useCallback((index: number) => {
+    dispatch({ type: 'TOGGLE_INGREDIENT', index });
+  }, []);
+
+  const toggleAllIngredients = useCallback(() => {
+    dispatch({ type: 'TOGGLE_ALL_INGREDIENTS' });
   }, []);
 
   const updateIngredient = useCallback(
@@ -146,7 +174,8 @@ export const useImportRecipeState = () => {
     parseSuccess,
     parseError,
     editName,
-    removeIngredient,
+    toggleIngredientSelection,
+    toggleAllIngredients,
     updateIngredient,
     confirmImport,
     saveSuccess,

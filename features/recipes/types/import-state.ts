@@ -18,7 +18,8 @@ export type ImportState =
       status: 'preview';
       data: ParseRecipeUrlResponse;
       editedName: string;
-      selectedIngredients: ParsedIngredient[];
+      ingredients: ParsedIngredient[];
+      selectedIndices: Set<number>;
     }
   | { status: 'saving' }
   | { status: 'success'; recipeId: string };
@@ -31,7 +32,8 @@ export type ImportAction =
   | { type: 'PARSE_SUCCESS'; data: ParseRecipeUrlResponse }
   | { type: 'PARSE_ERROR'; error: RecipeParseError }
   | { type: 'EDIT_NAME'; name: string }
-  | { type: 'REMOVE_INGREDIENT'; index: number }
+  | { type: 'TOGGLE_INGREDIENT'; index: number }
+  | { type: 'TOGGLE_ALL_INGREDIENTS' }
   | { type: 'UPDATE_INGREDIENT'; index: number; ingredient: ParsedIngredient }
   | { type: 'CONFIRM_IMPORT' }
   | { type: 'SAVE_SUCCESS'; recipeId: string }
