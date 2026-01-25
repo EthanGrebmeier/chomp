@@ -69,6 +69,7 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
         </View>
         <Animated.FlatList
           className="gap-2"
+          contentContainerClassName="pb-16"
           data={recipe.recipe_ingredients}
           renderItem={({ item, index }) => (
             <RecipeIngredientItem
