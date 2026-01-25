@@ -11,6 +11,7 @@ export type UpdateRecipeArgs = {
     imageSrc?: string;
     visibility?: string;
     mealTag?: string;
+    sourceUrl?: string;
   };
 };
 
@@ -20,6 +21,7 @@ export const updateRecipe = async ({ recipeId, updates }: UpdateRecipeArgs) => {
       trimStringFields({
         ...updates,
         mealTag: updates.mealTag ?? null,
+        sourceUrl: updates.sourceUrl ?? null,
         updatedAt: new Date().toISOString(),
       })
     ),

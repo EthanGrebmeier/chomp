@@ -41,12 +41,19 @@ export const CreateRecipeButton = ({
     importSheetRef.current?.present();
   };
 
-  const handleSubmit = (data: { name: string }) => {
+  const handleSubmit = (data: {
+    name: string;
+    mealTag?: string;
+    description?: string;
+    sourceUrl?: string;
+  }) => {
     createRecipe(
       {
         recipe: {
           name: data.name,
-          description: '',
+          mealTag: data.mealTag,
+          description: data.description ?? '',
+          sourceUrl: data.sourceUrl,
         },
         ingredients: [],
       },

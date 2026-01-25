@@ -197,11 +197,21 @@ export const RecipeDropdownMenu = ({
     );
   };
 
-  const handleEditRecipe = (data: { name: string; mealTag?: string }) => {
+  const handleEditRecipe = (data: {
+    name: string;
+    mealTag?: string;
+    description?: string;
+    sourceUrl?: string;
+  }) => {
     updateRecipe(
       {
         recipeId: recipe.id,
-        updates: { name: data.name, mealTag: data.mealTag },
+        updates: {
+          name: data.name,
+          mealTag: data.mealTag,
+          description: data.description,
+          sourceUrl: data.sourceUrl,
+        },
       },
       {
         onSuccess: () => {
@@ -272,7 +282,12 @@ export const RecipeDropdownMenu = ({
       <CreateRecipeSheet
         ref={createRecipeSheetRef}
         onSubmit={handleEditRecipe}
-        defaultValues={{ name: recipe.name, mealTag: recipe.mealTag }}
+        defaultValues={{
+          name: recipe.name,
+          mealTag: recipe.mealTag,
+          description: recipe.description,
+          sourceUrl: recipe.sourceUrl,
+        }}
       />
       <SelectGroceryListSheet
         ref={selectListSheetRef}
