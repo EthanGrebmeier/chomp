@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { CategoryTag } from '@/components/category-tag';
 import { ListItem } from '@/components/ui/list-item';
@@ -9,6 +9,7 @@ import { ParsedIngredient } from '../../api/types';
 export type IngredientListPreviewProps = {
   ingredients: ParsedIngredient[];
   onRemove: (index: number) => void;
+  onEdit?: (index: number, ingredient: ParsedIngredient) => void;
 };
 
 /**
@@ -36,6 +37,7 @@ const formatIngredient = (ingredient: ParsedIngredient): string => {
 export const IngredientListPreview = ({
   ingredients,
   onRemove,
+  onEdit,
 }: IngredientListPreviewProps) => {
   if (ingredients.length === 0) {
     return (
@@ -57,7 +59,7 @@ export const IngredientListPreview = ({
           Ingredients ({ingredients.length})
         </Text>
         <Text className="text-xs text-muted-foreground">
-          Swipe left to remove an ingredient
+          {onEdit ? 'Tap to edit, swipe left to remove' : 'Swipe left to remove an ingredient'}
         </Text>
       </View>
       {ingredients.map((ingredient, index) => (
@@ -66,7 +68,17 @@ export const IngredientListPreview = ({
           onDelete={() => onRemove(index)}
           className="rounded-lg bg-card px-0"
         >
-          <View className="flex-1 gap-1">
+          <Pressable
+            className="flex-1 gap-1"
+            onPress={() => onEdit?.(index, ingredient)}
+            disabled={!onEdit}
+            accessibilityLabel={`Edit ingredient: ${ingredient.name}`}
+            accessibilityHint="Double tap to edit this ingredient"
+            accessibilityRole="button"
+            style={({ pressed }) => ({
+              opacity: pressed && onEdit ? 0.7 : 1,
+            })}
+          >
             <Text className="text-base text-foreground">
               {formatIngredient(ingredient)}
             </Text>
@@ -80,7 +92,7 @@ export const IngredientListPreview = ({
                 <CategoryTag category={ingredient.category} />
               </View>
             )}
-          </View>
+          </Pressable>
         </ListItem>
       ))}
     </View>

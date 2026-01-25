@@ -123,7 +123,7 @@ function baseGroceryItemToParsedIngredient(
 
 ---
 
-### Task 3: Make IngredientListPreview items tappable
+### Task 3: Make IngredientListPreview items tappable ✅ COMPLETED
 
 **Description**: Add tap handling to ingredients in the preview list to trigger editing.
 
@@ -152,7 +152,7 @@ function baseGroceryItemToParsedIngredient(
 
 ---
 
-### Task 4: Wire edit sheet to import sheet
+### Task 4: Wire edit sheet to import sheet ✅ COMPLETED
 
 **Description**: Integrate the EditParsedIngredientSheet into the ImportRecipeSheet.
 
@@ -184,7 +184,7 @@ function baseGroceryItemToParsedIngredient(
 
 ---
 
-### Task 5: Handle remaining edge cases
+### Task 5: Handle remaining edge cases ✅ COMPLETED
 
 **Description**: Handle edge cases and error scenarios not covered in previous tasks.
 

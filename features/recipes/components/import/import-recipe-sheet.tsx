@@ -23,12 +23,17 @@ import { checkNetworkStatus } from '@/hooks/use-network-status';
 import { THEME } from '@/lib/theme';
 
 import { RecipeParseError } from '../../api/parse-recipe-url';
+import { ParsedIngredient } from '../../api/types';
 import { useCreateRecipe } from '../../hooks/useCreateRecipe';
 import { useImportRecipeState } from '../../hooks/useImportRecipeState';
 import { useParseRecipeUrl } from '../../hooks/useParseRecipeUrl';
 import { transformParsedRecipe } from '../../utils/transform-parsed-recipe';
 import { validateRecipeUrl } from '../../utils/validate-recipe-url';
 
+import {
+  EditParsedIngredientSheet,
+  EditParsedIngredientSheetRef,
+} from './edit-parsed-ingredient-sheet';
 import { ImportError } from './import-error';
 import { IngredientListPreview } from './ingredient-list-preview';
 import { ParsedRecipePreview } from './parsed-recipe-preview';
@@ -52,6 +57,7 @@ export const ImportRecipeSheet = forwardRef<
 >(({ onImportSuccess }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
   const urlInputRef = useRef<UrlInputRef>(null);
+  const editSheetRef = useRef<EditParsedIngredientSheetRef>(null);
   const [url, setUrl] = useState('');
   const [validationError, setValidationError] = useState<string | undefined>();
 
@@ -59,6 +65,8 @@ export const ImportRecipeSheet = forwardRef<
   const isSheetOpenRef = useRef(false);
   // Track if confirm action is in progress to prevent double-tap
   const isConfirmingRef = useRef(false);
+  // Track if edit sheet is open to prevent multiple opens
+  const isEditingRef = useRef(false);
 
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
@@ -70,6 +78,7 @@ export const ImportRecipeSheet = forwardRef<
     parseError,
     editName,
     removeIngredient,
+    updateIngredient,
     confirmImport,
     saveSuccess,
     reset,
@@ -100,6 +109,9 @@ export const ImportRecipeSheet = forwardRef<
     KeyboardController.dismiss();
     isSheetOpenRef.current = false;
     isConfirmingRef.current = false;
+    isEditingRef.current = false;
+    // Dismiss edit sheet if open
+    editSheetRef.current?.dismiss();
     reset();
     setUrl('');
     setValidationError(undefined);
@@ -220,6 +232,28 @@ export const ImportRecipeSheet = forwardRef<
     goBack();
   }, [goBack]);
 
+  const handleEditIngredient = useCallback(
+    (index: number, ingredient: ParsedIngredient) => {
+      // Prevent multiple edit sheets from opening
+      if (isEditingRef.current) return;
+      isEditingRef.current = true;
+      editSheetRef.current?.present(index, ingredient);
+    },
+    []
+  );
+
+  const handleSaveIngredient = useCallback(
+    (index: number, ingredient: ParsedIngredient) => {
+      updateIngredient(index, ingredient);
+      isEditingRef.current = false;
+    },
+    [updateIngredient]
+  );
+
+  const handleEditCancel = useCallback(() => {
+    isEditingRef.current = false;
+  }, []);
+
   const renderContent = () => {
     switch (state.status) {
       case 'idle':
@@ -339,6 +373,7 @@ export const ImportRecipeSheet = forwardRef<
                   <IngredientListPreview
                     ingredients={state.selectedIngredients}
                     onRemove={removeIngredient}
+                    onEdit={handleEditIngredient}
                   />
                 </View>
               )}
@@ -408,19 +443,26 @@ export const ImportRecipeSheet = forwardRef<
   };
 
   return (
-    <BottomSheet
-      name="import-recipe-sheet"
-      ref={sheetRef}
-      onStartClose={handleClose}
-      scrollable={isPreview}
-      detents={isPreview ? [0.9] : ['auto']}
-      viewClassName={isPreview ? 'flex-1' : undefined}
-      footer={renderFooter()}
-    >
-      <BottomSheet.SheetView className="gap-4">
-        {renderContent()}
-      </BottomSheet.SheetView>
-    </BottomSheet>
+    <>
+      <BottomSheet
+        name="import-recipe-sheet"
+        ref={sheetRef}
+        onStartClose={handleClose}
+        scrollable={isPreview}
+        detents={isPreview ? [0.9] : ['auto']}
+        viewClassName={isPreview ? 'flex-1' : undefined}
+        footer={renderFooter()}
+      >
+        <BottomSheet.SheetView className="gap-4">
+          {renderContent()}
+        </BottomSheet.SheetView>
+      </BottomSheet>
+      <EditParsedIngredientSheet
+        ref={editSheetRef}
+        onSave={handleSaveIngredient}
+        onCancel={handleEditCancel}
+      />
+    </>
   );
 });
 
