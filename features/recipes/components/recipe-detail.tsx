@@ -1,5 +1,5 @@
-import { MoreHorizontal, PlusIcon } from 'lucide-react-native';
-import { Animated, View } from 'react-native';
+import { ExternalLinkIcon, MoreHorizontal, PlusIcon } from 'lucide-react-native';
+import { Animated, Linking, Pressable, View } from 'react-native';
 
 import { Heading } from '../../../components/text/heading';
 import { BackButton } from '../../../components/ui/back-button';
@@ -60,6 +60,15 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
             {recipe.description}
           </Text>
         </View>
+      )}
+      {recipe.sourceUrl && (
+        <Pressable
+          className="flex-row items-center gap-1 px-4"
+          onPress={() => Linking.openURL(recipe.sourceUrl!)}
+        >
+          <Icon as={ExternalLinkIcon} size={16} className="text-primary" />
+          <Text className="text-primary">Link</Text>
+        </Pressable>
       )}
 
       {/* Ingredients */}
