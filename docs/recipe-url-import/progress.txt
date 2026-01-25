@@ -310,3 +310,40 @@ Implemented comprehensive edge case handling for the recipe import flow to ensur
 - Task 4.3 is complete - all edge cases handled
 - Only Task 4.4 (Rate Limit Handling) remains, marked as optional/enhancement
 - Recipe import feature is now production-ready
+
+---
+
+### Completed: Ingredient Editing Sprint - Task 1: Add UPDATE_INGREDIENT action to import state machine
+
+Extended the import state machine to support updating an ingredient at a specific index. This is the foundational task for enabling ingredient editing in the import flow.
+
+**Changes implemented:**
+1. Added `UPDATE_INGREDIENT` action type with `index` and `ingredient` parameters
+2. Added reducer case that validates index bounds and updates the ingredient at the given index
+3. Added `updateIngredient(index, ingredient)` helper method to the hook
+4. Created comprehensive unit tests covering all validation scenarios
+
+**Files modified:**
+- `features/recipes/types/import-state.ts` - Added UPDATE_INGREDIENT to ImportAction union type
+- `features/recipes/hooks/useImportRecipeState.tsx` - Added reducer case and helper method
+
+**Files created:**
+- `features/recipes/hooks/__tests__/useImportRecipeState.test.ts` - Unit tests for the reducer (9 tests)
+
+**Test coverage:**
+- ✅ Updates first/middle/last ingredient correctly
+- ✅ Invalid index (negative, out of bounds) does not crash - returns unchanged state
+- ✅ State only changes when in 'preview' status
+- ✅ Updating ingredient preserves other ingredients unchanged
+- ✅ Is idempotent when updating with same data
+- ✅ State immutability - creates new array reference, doesn't mutate original
+
+**Validation:**
+- All 28 recipe-related tests pass (9 new + 19 existing)
+- No linter errors in modified files
+- TypeScript compiles (pre-existing errors unrelated to this change)
+
+**Notes for next developer:**
+- Pre-existing TypeScript errors remain unchanged (not related to this feature)
+- Task 1 is complete - state machine now supports ingredient updates
+- Next priority: Task 2 - Create EditParsedIngredientSheet component

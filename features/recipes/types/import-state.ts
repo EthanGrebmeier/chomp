@@ -32,6 +32,7 @@ export type ImportAction =
   | { type: 'PARSE_ERROR'; error: RecipeParseError }
   | { type: 'EDIT_NAME'; name: string }
   | { type: 'REMOVE_INGREDIENT'; index: number }
+  | { type: 'UPDATE_INGREDIENT'; index: number; ingredient: ParsedIngredient }
   | { type: 'CONFIRM_IMPORT' }
   | { type: 'SAVE_SUCCESS'; recipeId: string }
   | { type: 'SAVE_ERROR'; error: Error }

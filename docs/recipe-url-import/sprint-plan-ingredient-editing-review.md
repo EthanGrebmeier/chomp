@@ -20,7 +20,7 @@
 
 ## Revised Sprint Plan
 
-### Task 1: Add UPDATE_INGREDIENT action to import state machine
+### Task 1: Add UPDATE_INGREDIENT action to import state machine ✅ COMPLETED
 
 **Description**: Extend the import state machine to support updating an ingredient at a specific index.
 

@@ -1,7 +1,7 @@
 import { useCallback, useReducer } from 'react';
 
 import { RecipeParseError } from '../api/parse-recipe-url';
-import { ParseRecipeUrlResponse } from '../api/types';
+import { ParsedIngredient, ParseRecipeUrlResponse } from '../api/types';
 import {
   ImportAction,
   ImportState,
@@ -10,8 +10,9 @@ import {
 
 /**
  * Reducer function for import state machine.
+ * Exported for testing purposes.
  */
-function importReducer(state: ImportState, action: ImportAction): ImportState {
+export function importReducer(state: ImportState, action: ImportAction): ImportState {
   switch (action.type) {
     case 'SUBMIT_URL':
       return { status: 'loading' };
@@ -40,6 +41,19 @@ function importReducer(state: ImportState, action: ImportAction): ImportState {
         ...state,
         selectedIngredients: state.selectedIngredients.filter(
           (_, i) => i !== action.index
+        ),
+      };
+
+    case 'UPDATE_INGREDIENT':
+      if (state.status !== 'preview') return state;
+      // Validate index bounds
+      if (action.index < 0 || action.index >= state.selectedIngredients.length) {
+        return state;
+      }
+      return {
+        ...state,
+        selectedIngredients: state.selectedIngredients.map((ingredient, i) =>
+          i === action.index ? action.ingredient : ingredient
         ),
       };
 
@@ -97,6 +111,13 @@ export const useImportRecipeState = () => {
     dispatch({ type: 'REMOVE_INGREDIENT', index });
   }, []);
 
+  const updateIngredient = useCallback(
+    (index: number, ingredient: ParsedIngredient) => {
+      dispatch({ type: 'UPDATE_INGREDIENT', index, ingredient });
+    },
+    []
+  );
+
   const confirmImport = useCallback(() => {
     dispatch({ type: 'CONFIRM_IMPORT' });
   }, []);
@@ -126,6 +147,7 @@ export const useImportRecipeState = () => {
     parseError,
     editName,
     removeIngredient,
+    updateIngredient,
     confirmImport,
     saveSuccess,
     saveError,
