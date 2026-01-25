@@ -1,5 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
-import { ClipboardPasteIcon, XIcon } from 'lucide-react-native';
+import { XIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import { TextInput as RNTextInput, View } from 'react-native';
@@ -63,7 +63,7 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
               editable={!disabled}
               selectTextOnFocus
               className={cn(
-                'h-12 rounded-xl border bg-input px-4 pr-10 text-base text-foreground',
+                'h-12 rounded-xl border bg-input px-4 pr-10 text-sm leading-4 text-foreground',
                 error ? 'border-destructive' : 'border-input',
                 disabled && 'opacity-50'
               )}
@@ -82,20 +82,8 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
               </View>
             )}
           </View>
-          <Button
-            variant="outline"
-            onPress={handlePaste}
-            disabled={disabled}
-            className="h-12 gap-2 px-4"
-            haptic
-          >
-            <ClipboardPasteIcon size={18} color={iconColor} />
-            <Text className="text-sm font-medium">Paste</Text>
-          </Button>
         </View>
-        {error && (
-          <Text className="text-sm text-destructive">{error}</Text>
-        )}
+        {error && <Text className="text-sm text-destructive">{error}</Text>}
       </View>
     );
   }

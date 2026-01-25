@@ -45,19 +45,21 @@ export default function List() {
     const setOrCreateDefaultList = async () => {
       if (listsLoading) return;
 
-      const hasLists = Boolean(lists?.grocery_lists.length);
       const activeListStillExists = Boolean(
         activeListId && lists?.grocery_lists.some(l => l.id === activeListId)
       );
 
-      if (hasLists && (!activeListId || !activeListStillExists)) {
+      if (
+        lists?.grocery_lists.length &&
+        (!activeListId || !activeListStillExists)
+      ) {
         const defaultListId = lists.grocery_lists[0].id;
         setActiveListId(defaultListId);
         trackListAccess(defaultListId);
         return;
       }
 
-      if (!hasLists) {
+      if (!lists?.grocery_lists.length) {
         setActiveListId(undefined);
       }
     };

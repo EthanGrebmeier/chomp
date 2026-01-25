@@ -1,5 +1,9 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { AlertTriangleIcon, ArrowLeftIcon, CheckCircleIcon } from 'lucide-react-native';
+import {
+  AlertTriangleIcon,
+  ArrowLeftIcon,
+  CheckCircleIcon,
+} from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import {
   forwardRef,
@@ -50,7 +54,7 @@ export const ImportRecipeSheet = forwardRef<
   const urlInputRef = useRef<UrlInputRef>(null);
   const [url, setUrl] = useState('');
   const [validationError, setValidationError] = useState<string | undefined>();
-  
+
   // Track if sheet is open to ignore responses after dismissal
   const isSheetOpenRef = useRef(false);
   // Track if confirm action is in progress to prevent double-tap
@@ -128,20 +132,23 @@ export const ImportRecipeSheet = forwardRef<
     parseRecipe.mutate(
       { url: validation.url },
       {
-        onSuccess: (data) => {
+        onSuccess: data => {
           // Ignore response if sheet was dismissed during loading
           if (!isSheetOpenRef.current) return;
           parseSuccess(data);
         },
-        onError: (error) => {
+        onError: error => {
           // Ignore error if sheet was dismissed during loading
           if (!isSheetOpenRef.current) return;
-          
+
           if (error instanceof RecipeParseError) {
             parseError(error);
           } else {
             parseError(
-              new RecipeParseError('server_error', 'An unexpected error occurred')
+              new RecipeParseError(
+                'server_error',
+                'An unexpected error occurred'
+              )
             );
           }
         },
@@ -151,7 +158,7 @@ export const ImportRecipeSheet = forwardRef<
 
   const handleConfirmImport = useCallback(async () => {
     if (state.status !== 'preview') return;
-    
+
     // Double-tap prevention: ignore if already confirming
     if (isConfirmingRef.current) return;
     isConfirmingRef.current = true;
@@ -160,7 +167,9 @@ export const ImportRecipeSheet = forwardRef<
     const isOnline = await checkNetworkStatus();
     if (!isOnline) {
       isConfirmingRef.current = false;
-      toast.error('No internet connection. Please check your connection and try again.');
+      toast.error(
+        'No internet connection. Please check your connection and try again.'
+      );
       return;
     }
 
@@ -173,28 +182,35 @@ export const ImportRecipeSheet = forwardRef<
     );
 
     createRecipe(createRecipeArgs, {
-      onSuccess: (result) => {
+      onSuccess: result => {
         isConfirmingRef.current = false;
         // Ignore if sheet was dismissed
         if (!isSheetOpenRef.current) return;
-        
+
         saveSuccess(result.id);
         toast.success('Recipe imported successfully');
         onImportSuccess?.(result.id);
         sheetRef.current?.dismiss();
       },
-      onError: (error) => {
+      onError: error => {
         isConfirmingRef.current = false;
         // Ignore if sheet was dismissed
         if (!isSheetOpenRef.current) return;
-        
+
         console.error('Failed to create recipe:', error);
         toast.error('Failed to import recipe');
         // Go back to preview state so user can retry
         goBack();
       },
     });
-  }, [state, confirmImport, createRecipe, saveSuccess, onImportSuccess, goBack]);
+  }, [
+    state,
+    confirmImport,
+    createRecipe,
+    saveSuccess,
+    onImportSuccess,
+    goBack,
+  ]);
 
   const handleRetry = useCallback(() => {
     goBack();
@@ -209,7 +225,7 @@ export const ImportRecipeSheet = forwardRef<
       case 'idle':
         return (
           <>
-            <BottomSheet.Header title="Import Recipe" />
+            <BottomSheet.Header className="mb-2" title="Import Recipe" />
             <BottomSheet.Subtext className="mb-4">
               Paste a recipe URL to import ingredients
             </BottomSheet.Subtext>
@@ -265,14 +281,14 @@ export const ImportRecipeSheet = forwardRef<
         const isNameTooLong = state.editedName.length > MAX_RECIPE_NAME_LENGTH;
         const hasNoIngredients = state.selectedIngredients.length === 0;
         const originalHadIngredients = state.data.ingredients.length > 0;
-        
+
         // Handle name change with length limit enforcement
         const handleNameChange = (name: string) => {
           // Allow typing but truncate to max length
           const truncatedName = name.slice(0, MAX_RECIPE_NAME_LENGTH);
           editName(truncatedName);
         };
-        
+
         return (
           <>
             <BottomSheet.Header
@@ -296,27 +312,29 @@ export const ImportRecipeSheet = forwardRef<
                 ingredientCount={state.selectedIngredients.length}
                 maxNameLength={MAX_RECIPE_NAME_LENGTH}
               />
-              
+
               {/* Empty ingredients warning - only shown when API returned no ingredients */}
               {hasNoIngredients && !originalHadIngredients && (
                 <View className="mt-4 flex-row items-center gap-3 rounded-lg bg-amber-500/10 p-3">
                   <AlertTriangleIcon size={20} color="#f59e0b" />
                   <Text className="flex-1 text-sm text-amber-700 dark:text-amber-400">
-                    No ingredients were found on this page. You can still import the recipe and add ingredients manually.
+                    No ingredients were found on this page. You can still import
+                    the recipe and add ingredients manually.
                   </Text>
                 </View>
               )}
-              
+
               {/* Warning when user removed all ingredients */}
               {hasNoIngredients && originalHadIngredients && (
                 <View className="mt-4 flex-row items-center gap-3 rounded-lg bg-muted/50 p-3">
                   <AlertTriangleIcon size={20} color={theme.mutedForeground} />
                   <Text className="flex-1 text-sm text-muted-foreground">
-                    All ingredients have been removed. You can still import the recipe without ingredients.
+                    All ingredients have been removed. You can still import the
+                    recipe without ingredients.
                   </Text>
                 </View>
               )}
-              
+
               {state.selectedIngredients.length > 0 && (
                 <View className="mt-4">
                   <IngredientListPreview
@@ -385,7 +403,9 @@ export const ImportRecipeSheet = forwardRef<
       onStartClose={handleClose}
       scrollable={state.status === 'preview'}
     >
-      <BottomSheet.SheetView className="gap-4">{renderContent()}</BottomSheet.SheetView>
+      <BottomSheet.SheetView className="gap-4">
+        {renderContent()}
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 });
