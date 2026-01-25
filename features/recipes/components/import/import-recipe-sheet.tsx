@@ -22,6 +22,7 @@ import { Text } from '@/components/ui/text';
 import { checkNetworkStatus } from '@/hooks/use-network-status';
 import { THEME } from '@/lib/theme';
 
+import { BackButton } from '../../../../components/ui/back-button';
 import { RecipeParseError } from '../../api/parse-recipe-url';
 import { ParsedIngredient } from '../../api/types';
 import { useCreateRecipe } from '../../hooks/useCreateRecipe';
@@ -326,11 +327,7 @@ export const ImportRecipeSheet = forwardRef<
           <>
             <BottomSheet.Header
               title="Review Recipe"
-              dismissButton={
-                <Button variant="ghost" size="icon" onPress={handleGoBack}>
-                  <ArrowLeftIcon size={20} color={theme.foreground} />
-                </Button>
-              }
+              dismissButton={<BackButton onPress={handleGoBack} />}
             />
             <ScrollView
               className="-mx-4 flex-1 px-4"
@@ -340,9 +337,6 @@ export const ImportRecipeSheet = forwardRef<
               <ParsedRecipePreview
                 recipeName={state.editedName}
                 onNameChange={handleNameChange}
-                servings={state.data.servings}
-                sourceUrl={state.data.sourceUrl}
-                ingredientCount={state.selectedIngredients.length}
                 maxNameLength={MAX_RECIPE_NAME_LENGTH}
               />
 

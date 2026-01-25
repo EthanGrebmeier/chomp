@@ -54,12 +54,14 @@ export const IngredientListPreview = ({
 
   return (
     <View className="gap-1">
-      <View className="mb-2 gap-2">
-        <Text className="text-sm font-medium text-muted-foreground">
+      <View className="mb-2">
+        <Text className="text-xl font-semibold text-foreground">
           Ingredients ({ingredients.length})
         </Text>
         <Text className="text-xs text-muted-foreground">
-          {onEdit ? 'Tap to edit, swipe left to remove' : 'Swipe left to remove an ingredient'}
+          {onEdit
+            ? 'Tap to edit, swipe left to remove'
+            : 'Swipe left to remove an ingredient'}
         </Text>
       </View>
       {ingredients.map((ingredient, index) => (
