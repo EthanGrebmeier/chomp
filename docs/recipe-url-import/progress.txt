@@ -193,3 +193,22 @@ Fixed several UI issues in the recipe import preview screen:
 - Task 4.2 is partially complete - loading state and layout issues fixed
 - Still to do for Task 4.2: Optional cancel button, disable interactions during loading
 - Next priority: Continue Sprint 4 polish or mark Task 4.1/4.2 as complete
+
+---
+
+### Completed: Sprint 3 - Task 3.6: Remove Test Screen
+
+Removed the temporary test screen that was created in Sprint 1 for API validation. The feature is now fully integrated into the main app via the Recipes tab dropdown menu.
+
+**Files deleted:**
+- `app/test-import.tsx` - Temporary test screen (7.3KB)
+
+**Validation:**
+- File deleted successfully
+- No broken imports (file was standalone, only referenced in docs)
+- TypeScript errors unchanged (6 pre-existing errors unrelated to this feature)
+
+**Notes for next developer:**
+- Sprint 3 is now fully complete (all 6 tasks done)
+- The recipe import feature is accessible from Recipes tab → + button → Import from URL
+- Next priority: Sprint 4 - Error Handling & Polish (Task 4.1: Implement Error State UI)
