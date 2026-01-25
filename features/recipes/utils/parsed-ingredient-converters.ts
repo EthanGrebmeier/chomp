@@ -1,10 +1,11 @@
 import { BaseGroceryItem } from '@/features/grocery-list/types';
 
-import { IngredientCategory, ParsedIngredient } from '../api/types';
+import { ParsedIngredient } from '../api/types';
 
 /**
  * Convert a ParsedIngredient to a BaseGroceryItem for use with ItemSheetProvider.
  * Handles null values by providing sensible defaults.
+ * Note: Category is expected to already be normalized by the API response handler.
  */
 export function parsedIngredientToBaseGroceryItem(
   ingredient: ParsedIngredient

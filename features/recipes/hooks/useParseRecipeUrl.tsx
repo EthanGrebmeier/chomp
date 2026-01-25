@@ -1,8 +1,38 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { useMutation } from '@tanstack/react-query';
 
+import {
+  Category,
+  categoryOptions,
+} from '@/features/shared/category/categories';
+
 import { parseRecipeUrl, RecipeParseError } from '../api/parse-recipe-url';
-import { ParseRecipeUrlResponse } from '../api/types';
+import { IngredientCategory, ParseRecipeUrlResponse } from '../api/types';
+
+/**
+ * Normalize a category value to match the expected lowercase format.
+ * Returns the matching category value or 'other' as fallback.
+ */
+function normalizeCategory(category: string): IngredientCategory {
+  const lowerCategory = category.toLowerCase();
+  const match = categoryOptions.find(opt => opt.value === lowerCategory);
+  return (match?.value ?? 'other') as Category;
+}
+
+/**
+ * Normalize all ingredient categories in the API response.
+ */
+function normalizeResponse(
+  response: ParseRecipeUrlResponse
+): ParseRecipeUrlResponse {
+  return {
+    ...response,
+    ingredients: response.ingredients.map(ingredient => ({
+      ...ingredient,
+      category: normalizeCategory(ingredient.category),
+    })),
+  };
+}
 
 export const useParseRecipeUrl = () => {
   const { getToken } = useAuth();
@@ -14,7 +44,8 @@ export const useParseRecipeUrl = () => {
         if (!token) {
           throw new RecipeParseError('unauthorized', 'Not authenticated');
         }
-        return parseRecipeUrl({ url }, token);
+        const response = await parseRecipeUrl({ url }, token);
+        return normalizeResponse(response);
       },
     }
   );

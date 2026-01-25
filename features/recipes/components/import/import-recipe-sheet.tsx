@@ -149,6 +149,10 @@ export const ImportRecipeSheet = forwardRef<
           // Ignore response if sheet was dismissed during loading
           if (!isSheetOpenRef.current) return;
           parseSuccess(data);
+          console.log(
+            'Recipe parsed successfully',
+            JSON.stringify(data, null, 2)
+          );
         },
         onError: error => {
           // Ignore error if sheet was dismissed during loading
@@ -204,6 +208,10 @@ export const ImportRecipeSheet = forwardRef<
         toast.success('Recipe imported successfully');
         onImportSuccess?.(result.id);
         sheetRef.current?.dismiss();
+        console.log(
+          'Recipe imported successfully',
+          JSON.stringify(result, null, 2)
+        );
       },
       onError: error => {
         isConfirmingRef.current = false;

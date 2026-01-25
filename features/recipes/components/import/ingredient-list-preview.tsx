@@ -4,6 +4,7 @@ import { CategoryTag } from '@/components/category-tag';
 import { ListItem } from '@/components/ui/list-item';
 import { Text } from '@/components/ui/text';
 
+import { cn } from '../../../../lib/utils';
 import { ParsedIngredient } from '../../api/types';
 
 export type IngredientListPreviewProps = {
@@ -53,7 +54,7 @@ export const IngredientListPreview = ({
   }
 
   return (
-    <View className="gap-1">
+    <View>
       <View className="mb-2">
         <Text className="text-xl font-semibold text-foreground">
           Ingredients ({ingredients.length})
@@ -68,24 +69,26 @@ export const IngredientListPreview = ({
         <ListItem
           key={`${ingredient.name}-${index}`}
           onDelete={() => onRemove(index)}
-          className="rounded-lg bg-card px-0"
+          className={cn(
+            ' border-b border-dashed border-border px-0',
+            index === ingredients.length - 1 && 'border-b-0'
+          )}
         >
           <Pressable
-            className="flex-1 gap-1"
+            className="flex-1 gap-1 "
             onPress={() => onEdit?.(index, ingredient)}
             disabled={!onEdit}
             accessibilityLabel={`Edit ingredient: ${ingredient.name}`}
-            accessibilityHint="Double tap to edit this ingredient"
             accessibilityRole="button"
             style={({ pressed }) => ({
               opacity: pressed && onEdit ? 0.7 : 1,
             })}
           >
-            <Text className="text-base text-foreground">
+            <Text className="text-base leading-[18px] text-foreground">
               {formatIngredient(ingredient)}
             </Text>
             {ingredient.notes && (
-              <Text className="text-xs text-muted-foreground">
+              <Text className="text-xs leading-3 text-muted-foreground">
                 {ingredient.notes}
               </Text>
             )}
