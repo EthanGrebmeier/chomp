@@ -1,13 +1,10 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { SearchIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
-import { TextInput } from '../../../components/text-input';
-import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
@@ -25,6 +22,7 @@ import {
 import { GroceryItemsList } from './grocery-items-list';
 import { GroceryListHeader } from './grocery-list-header';
 import { GroupBySelector } from './group-by-selector';
+import { SearchBar } from './search-bar';
 import { ShareListSheet, ShareListSheetRef } from './share-list-sheet';
 import { SortBySelector } from './sort-by-selector';
 
@@ -176,8 +174,6 @@ export const GroceryList = ({
           isShared={isShared}
           items={items}
           listName={listName}
-          searchQuery={searchQuery}
-          matchingCount={filteredCount}
           onClearListPress={handleClearListPress}
           onSharePress={handleSharePress}
           onDeleteOrLeave={handleDeleteOrLeavePress}
@@ -186,25 +182,13 @@ export const GroceryList = ({
         />
         <EditItemProvider groceryListId={listId ?? ''}>
           <View className="flex-1">
-            <View className="mt-3 px-4">
-              <View className="relative">
-                <View className="pointer-events-none absolute left-3 top-0 z-10 h-full justify-center">
-                  <Icon
-                    as={SearchIcon}
-                    size={18}
-                    className="text-muted-foreground"
-                  />
-                </View>
-                <TextInput
-                  ref={searchInputRef}
-                  className="pl-10"
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  autoCorrect={false}
-                />
-              </View>
-            </View>
+            <SearchBar
+              ref={searchInputRef}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              totalItems={items.filter(item => !item.isChecked).length}
+              matchingCount={filteredCount}
+            />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
