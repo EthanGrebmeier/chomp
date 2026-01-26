@@ -37,6 +37,7 @@ export const RecipeSortBySelector = ({
       <DropdownMenuTrigger>
         <Pill
           hasValue={value !== 'recent'}
+          closeIconClassName="text-muted-foreground"
           textClassName="text-muted-foreground"
           icon={
             <Icon

@@ -53,6 +53,12 @@ export const Pill = ({
             event?.stopPropagation?.();
             onClear();
           }}
+          onPressIn={event => {
+            event?.stopPropagation?.();
+          }}
+          onPressOut={event => {
+            event?.stopPropagation?.();
+          }}
           hitSlop={10}
           className="absolute right-2 top-1/2 -translate-y-1/2"
           hapticType="light"

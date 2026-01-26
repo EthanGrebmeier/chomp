@@ -34,13 +34,16 @@ export const MealTagFilterSelector = ({
   mealTag,
   onSelect,
 }: MealTagFilterSelectorProps) => {
-  const selectedMealTag = mealTagOptions.find(option => option.value === mealTag);
+  const selectedMealTag = mealTagOptions.find(
+    option => option.value === mealTag
+  );
 
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger>
         <Pill
           hasValue={!!selectedMealTag}
+          closeIconClassName="text-muted-foreground"
           icon={
             <Icon
               as={selectedMealTag?.icon ?? ClockIcon}
