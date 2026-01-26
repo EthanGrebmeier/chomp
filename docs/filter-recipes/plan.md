@@ -27,7 +27,7 @@ quickly find recipes by name, description, ingredient, or meal type.
 
 ### 1) Build recipe filtering utility + tests
 
-- Status: Not Started
+- Status: Done
 - Work:
   - Add `features/recipes/utils/filter-recipes.ts` with typed filter params.
   - Implement search across name, description, and ingredient names.

@@ -1,0 +1,3 @@
+## 2026-01-26
+- Added recipe filtering utility and vitest coverage for search, meal tag, and sort.
+- Ran `pnpm tsc` (failed due to existing repo errors) and `pnpm vitest` (vitest not installed).
