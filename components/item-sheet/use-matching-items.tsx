@@ -40,6 +40,7 @@ export const useMatchingItems = (
           category: item.category,
           quantity: 1,
           unit: 'each',
+          storeId: item.storeId,
         })
       );
   }, [savedItems, value]);

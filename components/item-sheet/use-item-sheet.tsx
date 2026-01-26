@@ -151,6 +151,7 @@ export const ItemSheetProvider = ({
     setSelectedItem(item);
     setItemInputValue(item.name);
     setCategory(item.category);
+    setStoreId(item.storeId);
     setShowMatchingItems(false);
   };
 
