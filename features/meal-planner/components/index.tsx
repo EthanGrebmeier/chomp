@@ -33,6 +33,41 @@ export const MealPlanner = () => {
   const isProgrammaticNavigationRef = useRef(false);
   const { recipes, items } = useUserMealPlanData();
 
+  const { datesWithMeals, datesAllMealsAdded } = useMemo(() => {
+    const mealStatusByDate = new Map<
+      string,
+      { hasMeals: boolean; allMealsAdded: boolean }
+    >();
+
+    const register = (date: string, addedToList: boolean) => {
+      const status = mealStatusByDate.get(date) ?? {
+        hasMeals: false,
+        allMealsAdded: true,
+      };
+      status.hasMeals = true;
+      if (!addedToList) {
+        status.allMealsAdded = false;
+      }
+      mealStatusByDate.set(date, status);
+    };
+
+    recipes.forEach(recipe => register(recipe.date, recipe.addedToList));
+    items.forEach(item => register(item.date, item.addedToList));
+
+    const withMeals = new Set<string>();
+    const allAdded = new Set<string>();
+
+    mealStatusByDate.forEach((status, date) => {
+      if (!status.hasMeals) return;
+      withMeals.add(date);
+      if (status.allMealsAdded) {
+        allAdded.add(date);
+      }
+    });
+
+    return { datesWithMeals: withMeals, datesAllMealsAdded: allAdded };
+  }, [items, recipes]);
+
   // Track when the date array was generated to detect day changes
   const [dateAnchor, setDateAnchor] = useState(() => startOfDay(new Date()));
 
@@ -127,6 +162,8 @@ export const MealPlanner = () => {
         currentDate={currentDate}
         onDatePress={handleDatePress}
         isProgrammaticNavigationRef={isProgrammaticNavigationRef}
+        datesWithMeals={datesWithMeals}
+        datesAllMealsAdded={datesAllMealsAdded}
       />
       <PagerView
         ref={pagerRef}

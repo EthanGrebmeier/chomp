@@ -1,4 +1,4 @@
-import { addWeeks, endOfWeek, isSameDay, startOfWeek } from 'date-fns';
+import { addWeeks, endOfWeek, format, isSameDay, startOfWeek } from 'date-fns';
 import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import PagerView from 'react-native-pager-view';
@@ -10,6 +10,8 @@ type MealPlanDateSelectorProps = {
   currentDate: Date;
   onDatePress: (date: Date) => void;
   isProgrammaticNavigationRef: MutableRefObject<boolean>;
+  datesWithMeals: Set<string>;
+  datesAllMealsAdded: Set<string>;
 };
 
 // Generate weeks from a range of -30 to +30 weeks
@@ -19,6 +21,8 @@ const MealPlanDateSelector = ({
   currentDate,
   onDatePress,
   isProgrammaticNavigationRef,
+  datesWithMeals,
+  datesAllMealsAdded,
 }: MealPlanDateSelectorProps) => {
   const pagerRef = useRef<PagerView>(null);
   const { width } = useWindowDimensions();
@@ -127,7 +131,7 @@ const MealPlanDateSelector = ({
   return (
     <PagerView
       ref={pagerRef}
-      style={{ height: 80, flexShrink: 0, flexGrow: 0 }}
+      style={{ height: 100, flexShrink: 0, flexGrow: 0 }}
       initialPage={initialWeekIndex}
       onPageSelected={handlePageSelected}
       onPageScrollStateChanged={handlePageScrollStateChanged}
@@ -142,6 +146,8 @@ const MealPlanDateSelector = ({
               key={date.toISOString()}
               date={date}
               isSelected={isSameDay(date, currentDate)}
+              hasMeals={datesWithMeals.has(format(date, 'yyyy-MM-dd'))}
+              allMealsAdded={datesAllMealsAdded.has(format(date, 'yyyy-MM-dd'))}
               onPress={onDatePress}
               width={dateWidth}
             />
