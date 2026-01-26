@@ -250,7 +250,7 @@ export default function SignUpEmail() {
                     <Text>Sign Up</Text>
                   )}
                 </Button>
-                <SocialButtons disabled={isFormLoading} />
+                <SocialButtons disabled={isFormLoading} type="sign-up" />
 
                 <View className="mt-6 flex-row items-center justify-center">
                   <Text variant="muted" className="text-sm">
