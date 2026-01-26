@@ -2,6 +2,9 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+
+import { cn } from '@/lib/utils';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { TextInput } from '../../../components/text-input';
@@ -18,6 +21,8 @@ export type CreateGroceryListSheetRef = {
 type CreateGroceryListSheetProps = {
   onCreated: (listId: string) => void;
 };
+
+const MAX_LIST_NAME_LENGTH = 20;
 
 export const CreateGroceryListSheet = forwardRef<
   CreateGroceryListSheetRef,
@@ -42,6 +47,10 @@ export const CreateGroceryListSheet = forwardRef<
   const handleCreateList = async () => {
     if (!newListName.trim()) return;
 
+    if (newListName.length > MAX_LIST_NAME_LENGTH) {
+      return;
+    }
+
     const result = await createGroceryList(newListName.trim());
     setNewListName('');
     sheetRef.current?.dismiss();
@@ -52,6 +61,9 @@ export const CreateGroceryListSheet = forwardRef<
     setNewListName('');
     sheetRef.current?.dismiss();
   };
+
+  const showLimit = newListName.length > MAX_LIST_NAME_LENGTH - 8;
+  const overLimit = newListName.length > MAX_LIST_NAME_LENGTH;
 
   return (
     <BottomSheet
@@ -68,19 +80,41 @@ export const CreateGroceryListSheet = forwardRef<
           dismissButton={<CloseButton onPress={handleCancel} />}
         />
 
-        <View className="my-4">
+        <View className="my-4 gap-2">
+          <View className="flex-row items-center justify-between gap-2">
+            <Text className="text-sm text-muted-foreground">List name</Text>
+            {showLimit && (
+              <Animated.View
+                entering={FadeIn.duration(200)}
+                exiting={FadeOut.duration(200)}
+              >
+                <Text
+                  className={cn(
+                    'text-sm text-muted-foreground',
+                    overLimit && 'text-red-500'
+                  )}
+                >
+                  {newListName.length} / {MAX_LIST_NAME_LENGTH}
+                </Text>
+              </Animated.View>
+            )}
+          </View>
           <TextInput
             ref={inputRef}
             value={newListName}
             onChangeText={setNewListName}
-            placeholder="List name"
+            placeholder="My Grocery List"
             placeholderTextColor="#9ca3af"
-            className="h-12 rounded-xl border border-input bg-input px-4 text-base text-foreground"
+            className="h-12 rounded-xl border border-input bg-input px-4 text-base leading-5 text-foreground"
             onSubmitEditing={handleCreateList}
             returnKeyType="done"
           />
         </View>
-        <Button className="self-end" onPress={handleCreateList}>
+        <Button
+          className="self-end"
+          onPress={handleCreateList}
+          disabled={overLimit}
+        >
           <Text>Create List</Text>
         </Button>
       </BottomSheet.SheetView>
