@@ -68,7 +68,7 @@ const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
         itemInputRef.current?.focus();
       }}
     >
-      <BottomSheet.SheetView>
+      <BottomSheet.SheetView className="gap-4">
         <ItemInput placeholder="Item name" />
         <SavedItemMetaBar submitLabel={submitLabel} />
       </BottomSheet.SheetView>
