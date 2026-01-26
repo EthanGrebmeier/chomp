@@ -1,5 +1,5 @@
 import { PlusIcon, SearchIcon } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -36,6 +36,11 @@ const SavedItemsContent = () => {
     settings?.savedItemsFilterCategory ?? undefined
   );
 
+  // Defer filter values to keep UI responsive during filtering/sorting
+  const deferredSortBy = useDeferredValue(sortBy);
+  const deferredFilterCategory = useDeferredValue(filterCategory);
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
   const handleSortByChange = (newSortBy: 'name' | 'category') => {
     setSortBy(newSortBy);
     updateSettings({ savedItemsSortBy: newSortBy });
@@ -50,19 +55,19 @@ const SavedItemsContent = () => {
     let items = savedItems;
 
     // Apply category filter
-    if (filterCategory) {
-      items = items.filter(item => item.category === filterCategory);
+    if (deferredFilterCategory) {
+      items = items.filter(item => item.category === deferredFilterCategory);
     }
 
     // Apply search filter
-    if (searchQuery.trim()) {
+    if (deferredSearchQuery.trim()) {
       items = items.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        item.name.toLowerCase().includes(deferredSearchQuery.toLowerCase())
       );
     }
 
     return items;
-  }, [savedItems, filterCategory, searchQuery]);
+  }, [savedItems, deferredFilterCategory, deferredSearchQuery]);
 
   return (
     <View className="pt-safe flex-1 bg-background">
@@ -131,7 +136,7 @@ const SavedItemsContent = () => {
           >
             <SavedItemsList
               items={filteredItems}
-              sortBy={sortBy}
+              sortBy={deferredSortBy}
               onEditItem={present}
             />
           </Animated.View>
