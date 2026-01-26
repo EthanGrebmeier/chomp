@@ -6,6 +6,7 @@ import { BaseSavedItem, UnifiedSavedItem } from '../types';
 export type UpdateSavedItemArgs = {
   item: UnifiedSavedItem;
   updates: Partial<BaseSavedItem>;
+  currentStoreId?: string;
 };
 
 /**
@@ -16,12 +17,14 @@ export type UpdateSavedItemArgs = {
 export const updateSavedItem = async ({
   item,
   updates,
+  currentStoreId,
 }: UpdateSavedItemArgs) => {
   if (item.source === 'local') {
     // Promote local item to cloud: delete local and create cloud copy
     const updatedItem: BaseSavedItem = {
       name: updates.name ?? item.name,
       category: updates.category ?? item.category,
+      storeId: updates.storeId ?? item.storeId,
     };
 
     // Delete the local item first
@@ -36,6 +39,7 @@ export const updateSavedItem = async ({
     await updateCloudSavedItem({
       itemId: item.id,
       updates,
+      currentStoreId,
     });
 
     return { id: item.id, promoted: false };

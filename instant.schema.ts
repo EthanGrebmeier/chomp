@@ -200,6 +200,18 @@ const _schema = i.schema({
         label: 'saved_items',
       },
     },
+    saved_items_stores: {
+      forward: {
+        on: 'saved_items',
+        has: 'one',
+        label: 'store',
+      },
+      reverse: {
+        on: 'stores',
+        has: 'many',
+        label: 'saved_items',
+      },
+    },
     grocery_lists_owners: {
       forward: {
         on: 'grocery_lists',

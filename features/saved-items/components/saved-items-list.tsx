@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { FlatList, View } from 'react-native';
 
 import { CategoryTag } from '../../../components/category-tag';
+import { StoreTag } from '../../../components/store-tag';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
@@ -33,12 +34,15 @@ const SavedItemRow = ({
       <HapticPressable
         onPress={onPress}
         hapticType="light"
-        className="flex-1 flex-row items-center justify-between py-1"
+        className="flex-1 flex-col gap-1 py-1"
       >
         <Text className="text-base font-medium text-foreground">
           {item.name}
         </Text>
-        {item.category && <CategoryTag category={item.category} />}
+        <View className="flex-row gap-1">
+          {item.store && <StoreTag name={item.store.name} />}
+          {item.category && <CategoryTag category={item.category} />}
+        </View>
       </HapticPressable>
     </ListItem>
   );

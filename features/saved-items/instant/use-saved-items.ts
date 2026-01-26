@@ -12,6 +12,7 @@ export const useSavedItems = () => {
                 'user.id': user.id,
               },
             },
+            store: {},
           },
         }
       : null

@@ -15,7 +15,7 @@ export const addSavedItem = async (item: AddSavedItemArgs) => {
   const itemId = id();
   const now = new Date().toISOString();
 
-  await db.transact([
+  const transactions = [
     db.tx.saved_items[itemId].update(
       trimStringFields({
         name: item.name,
@@ -27,7 +27,18 @@ export const addSavedItem = async (item: AddSavedItemArgs) => {
     db.tx.saved_items[itemId].link({
       user: user.id,
     }),
-  ]);
+  ];
+
+  // Link store if provided
+  if (item.storeId) {
+    transactions.push(
+      db.tx.saved_items[itemId].link({
+        store: item.storeId,
+      })
+    );
+  }
+
+  await db.transact(transactions);
 
   return { id: itemId };
 };

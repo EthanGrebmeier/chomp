@@ -6,6 +6,7 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { CategorySheet } from '../../../components/item-sheet/category-sheet';
 import { ItemInput } from '../../../components/item-sheet/item-input';
+import { StoreSheet } from '../../../components/item-sheet/store-sheet';
 import {
   ItemSheetProvider,
   useItemSheet,
@@ -37,7 +38,8 @@ export const useSavedItemSheet = () => {
 };
 
 const SavedItemMetaBar = ({ submitLabel }: { submitLabel: string }) => {
-  const { category, setCategory, onSubmit, isValid } = useItemSheet();
+  const { category, setCategory, storeId, setStoreId, onSubmit, isValid } =
+    useItemSheet();
 
   return (
     <MetaBarLayout
@@ -47,8 +49,9 @@ const SavedItemMetaBar = ({ submitLabel }: { submitLabel: string }) => {
         </Button>
       }
     >
-      <View className="flex-row">
+      <View className="flex-row gap-2">
         <CategorySheet category={category} onSelect={setCategory} />
+        <StoreSheet storeId={storeId} onSelect={setStoreId} />
       </View>
     </MetaBarLayout>
   );
@@ -114,13 +117,17 @@ export const SavedItemSheetProvider = ({
         updates: {
           name: item.name,
           category: item.category,
+          storeId: item.storeId,
         },
+        currentStoreId: editingItem.storeId,
       });
       toast.success(`${item.name} updated`);
+      sheetRef.current?.dismiss();
     } else {
       addSavedItem({
         name: item.name,
         category: item.category,
+        storeId: item.storeId,
       });
       toast.success(`${item.name} added to saved items`);
     }
@@ -134,6 +141,7 @@ export const SavedItemSheetProvider = ({
         quantity: 1,
         unit: 'each',
         category: item.category ?? undefined,
+        storeId: item.storeId,
       });
     } else {
       setEditingItem(null);
