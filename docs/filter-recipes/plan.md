@@ -59,14 +59,14 @@ quickly find recipes by name, description, ingredient, or meal type.
 
 ### 4) Wire filters into recipes screen
 
-- Status: Not Started
+- Status: Done
 - Work:
-  - Add filter state to `app/(tabs)/recipes.tsx` (or a dedicated hook).
-  - Use `useDeferredValue` for search query and `useMemo` for filtering.
-  - Pass filtered list to `RecipeList`.
-  - Add result count display and a filtered empty state.
+  - Added filter state to `app/(tabs)/recipes.tsx`.
+  - Used `useDeferredValue` for search/filters and `useMemo` for filtering.
+  - Passed filtered list to `RecipeList`.
+  - Added result count display and a filtered empty state.
 - Validation:
-  - Manual check: result count updates, empty state toggles correctly.
+  - `pnpm tsc` (fails due to existing repo errors).
 
 ### 5) QA and validation checklist
 

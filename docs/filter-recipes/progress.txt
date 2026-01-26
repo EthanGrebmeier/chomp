@@ -4,3 +4,5 @@
 - Added meal tag filter selector component using dropdown + pill patterns.
 - Ran `pnpm tsc` (fails due to existing repo errors in auth, meal planner, and parsed ingredients).
 - Built `RecipeFilters` with search, meal tag, sort, and clear action.
+- Wired `RecipeFilters` into the recipes screen with deferred filtering, count text, and filtered empty state.
+- Ran `pnpm tsc` (fails due to existing repo errors in auth, meal planner, parsed ingredients, and sqlite types).
