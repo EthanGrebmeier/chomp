@@ -49,14 +49,13 @@ quickly find recipes by name, description, ingredient, or meal type.
 
 ### 3) Build RecipeFilters UI component
 
-- Status: Not Started
+- Status: Done
 - Work:
-  - Create `features/recipes/components/recipe-filters.tsx`.
-  - Reuse `SearchBar` and integrate `MealTagFilterSelector`.
-  - Add sort selector (adapt existing sort selector pattern).
+  - Create `features/recipes/components/recipe-filters.tsx` with search + selectors.
+  - Add `RecipeSortBySelector` following dropdown/pill pattern.
   - Add a "Clear filters" action when filters are active.
 - Validation:
-  - Manual check: typing, selecting filters, and clearing works.
+  - Not run (component not yet wired into a screen).
 
 ### 4) Wire filters into recipes screen
 
