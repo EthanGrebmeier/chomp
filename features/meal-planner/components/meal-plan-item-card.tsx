@@ -1,8 +1,14 @@
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 
+import {
+  ContextMenuItem,
+  ContextMenuItemTitle,
+  ContextMenuRoot,
+} from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { formatQuantity } from '../../../lib/grocery-item';
+import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { MealPlanItem } from '../types';
 
 type MealPlanItemCardProps = {
@@ -14,25 +20,51 @@ const MealPlanItemCard = ({
   mealPlanItem,
   onItemPress,
 }: MealPlanItemCardProps) => {
+  const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Item',
+      `Are you sure you want to delete "${mealPlanItem.name}" from your meal plan?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () =>
+            removeItemFromMealPlan({ mealPlanItemId: mealPlanItem.id }),
+        },
+      ]
+    );
+  };
+
   return (
-    <HapticPressable
-      key={mealPlanItem.id}
-      onPress={() => onItemPress(mealPlanItem)}
+    <ContextMenuRoot
+      trigger={
+        <HapticPressable
+          key={mealPlanItem.id}
+          onPress={() => onItemPress(mealPlanItem)}
+        >
+          <View className="w-full rounded-xl bg-muted px-4 py-3">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-xl font-semibold text-foreground">
+                {mealPlanItem.name}
+              </Text>
+              <Text className="text-sm text-muted-foreground">
+                {formatQuantity({
+                  quantity: mealPlanItem.quantity,
+                  unit: mealPlanItem.unit,
+                })}
+              </Text>
+            </View>
+          </View>
+        </HapticPressable>
+      }
     >
-      <View className="w-full rounded-xl bg-muted px-4 py-3">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-semibold text-foreground">
-            {mealPlanItem.name}
-          </Text>
-          <Text className="text-sm text-muted-foreground">
-            {formatQuantity({
-              quantity: mealPlanItem.quantity,
-              unit: mealPlanItem.unit,
-            })}
-          </Text>
-        </View>
-      </View>
-    </HapticPressable>
+      <ContextMenuItem key="delete-item" destructive onSelect={handleDelete}>
+        <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
+      </ContextMenuItem>
+    </ContextMenuRoot>
   );
 };
 

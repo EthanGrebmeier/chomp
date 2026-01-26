@@ -1,10 +1,15 @@
 import { useMemo } from 'react';
-import { FlatList, View } from 'react-native';
+import { Alert, FlatList, View } from 'react-native';
 
 import { CategoryTag } from '../../../components/category-tag';
 import { StoreTag } from '../../../components/store-tag';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
+import {
+  ContextMenuItem,
+  ContextMenuItemTitle,
+  ContextMenuRoot,
+} from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
@@ -26,25 +31,48 @@ const SavedItemRow = ({
   onDelete,
   onPress,
 }: SavedItemRowProps) => {
+  const handleConfirmDelete = () => {
+    Alert.alert(
+      'Delete Saved Item',
+      `Are you sure you want to delete "${item.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: onDelete },
+      ]
+    );
+  };
+
   return (
-    <ListItem
-      className={cn(!isLast && 'border-b border-dashed border-border')}
-      onDelete={onDelete}
+    <ContextMenuRoot
+      trigger={
+        <ListItem
+          className={cn(!isLast && 'border-b border-dashed border-border')}
+          onDelete={onDelete}
+        >
+          <HapticPressable
+            onPress={onPress}
+            hapticType="light"
+            className="flex-1 flex-col gap-1 py-1"
+          >
+            <Text className="text-base font-medium text-foreground">
+              {item.name}
+            </Text>
+            <View className="flex-row gap-1">
+              {item.store && <StoreTag name={item.store.name} />}
+              {item.category && <CategoryTag category={item.category} />}
+            </View>
+          </HapticPressable>
+        </ListItem>
+      }
     >
-      <HapticPressable
-        onPress={onPress}
-        hapticType="light"
-        className="flex-1 flex-col gap-1 py-1"
+      <ContextMenuItem
+        key={`delete-saved-item-${item.id}`}
+        destructive
+        onSelect={handleConfirmDelete}
       >
-        <Text className="text-base font-medium text-foreground">
-          {item.name}
-        </Text>
-        <View className="flex-row gap-1">
-          {item.store && <StoreTag name={item.store.name} />}
-          {item.category && <CategoryTag category={item.category} />}
-        </View>
-      </HapticPressable>
-    </ListItem>
+        <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
+      </ContextMenuItem>
+    </ContextMenuRoot>
   );
 };
 

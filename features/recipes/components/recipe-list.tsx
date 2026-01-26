@@ -1,7 +1,12 @@
-import { FlatList, View } from 'react-native';
+import { Alert, FlatList, View } from 'react-native';
 
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
+import {
+  ContextMenuItem,
+  ContextMenuItemTitle,
+  ContextMenuRoot,
+} from '../../../components/ui/context-menu';
 import { ListItem } from '../../../components/ui/list-item';
 import { cn } from '../../../lib/utils';
 import { useDeleteRecipe } from '../hooks';
@@ -18,6 +23,20 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
   const handleDelete = (recipeId: string) => {
     deleteRecipe(recipeId);
   };
+  const handleConfirmDelete = (recipe: RecipeWithIngredients) => {
+    Alert.alert(
+      'Delete Recipe',
+      `Are you sure you want to delete "${recipe.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => handleDelete(recipe.id),
+        },
+      ]
+    );
+  };
 
   if (recipes.length === 0) {
     return (
@@ -32,16 +51,28 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
     <FlatList
       data={recipes}
       renderItem={({ item, index }) => (
-        <ListItem
-          className={cn(
-            index !== (recipes.length ?? 0) - 1
-              ? 'border-b border-dashed border-border'
-              : ''
-          )}
-          onDelete={() => handleDelete(item.id)}
+        <ContextMenuRoot
+          trigger={
+            <ListItem
+              className={cn(
+                index !== (recipes.length ?? 0) - 1
+                  ? 'border-b border-dashed border-border'
+                  : ''
+              )}
+              onDelete={() => handleDelete(item.id)}
+            >
+              <RecipeCard className="w-full" recipe={item} />
+            </ListItem>
+          }
         >
-          <RecipeCard className="w-full" recipe={item} />
-        </ListItem>
+          <ContextMenuItem
+            key={`delete-recipe-${item.id}`}
+            destructive
+            onSelect={() => handleConfirmDelete(item)}
+          >
+            <ContextMenuItemTitle>Delete Recipe</ContextMenuItemTitle>
+          </ContextMenuItem>
+        </ContextMenuRoot>
       )}
       keyExtractor={item => item.id}
     />

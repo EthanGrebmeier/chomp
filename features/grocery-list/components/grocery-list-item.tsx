@@ -1,6 +1,6 @@
 import { CookingPotIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,6 +9,11 @@ import Animated, {
 
 import { CategoryTag } from '../../../components/category-tag';
 import { StoreTag } from '../../../components/store-tag';
+import {
+  ContextMenuItem,
+  ContextMenuItemTitle,
+  ContextMenuRoot,
+} from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
@@ -65,80 +70,103 @@ export const GroceryListItem = ({
     setInternalIsChecked(!internalIsChecked);
   };
 
-  return (
-    <ListItem
-      onDelete={() => removeGroceryListItem({ itemId: item.id })}
-      className={className}
-    >
-      <HapticPressable
-        hitSlop={10}
-        className={cn(
-          'mr-2 size-6 overflow-hidden rounded-sm border border-border p-0.5'
-        )}
-        onPress={onCheck}
-        hapticType="selection"
-      >
-        <View
-          className={cn(
-            'h-full w-full rounded-full',
-            internalIsChecked && 'bg-accent-foreground'
-          )}
-        ></View>
-      </HapticPressable>
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Item',
+      `Are you sure you want to delete "${item.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => removeGroceryListItem({ itemId: item.id }),
+        },
+      ]
+    );
+  };
 
-      <HapticPressable
-        className="flex-1 gap-1"
-        onPress={onEdit}
-        hapticType="light"
-      >
-        <View className="flex-row items-center justify-between">
-          <View className="relative flex-1">
-            <Text
+  return (
+    <ContextMenuRoot
+      trigger={
+        <ListItem
+          onDelete={() => removeGroceryListItem({ itemId: item.id })}
+          className={className}
+        >
+          <HapticPressable
+            hitSlop={10}
+            className={cn(
+              'mr-2 size-6 overflow-hidden rounded-sm border border-border p-0.5'
+            )}
+            onPress={onCheck}
+            hapticType="selection"
+          >
+            <View
               className={cn(
-                'text-xl font-medium text-foreground',
-                internalIsChecked && 'text-muted-foreground'
+                'h-full w-full rounded-full',
+                internalIsChecked && 'bg-accent-foreground'
               )}
-            >
-              {item.name}
-            </Text>
-            <Animated.View
-              style={[
-                strikethroughStyle,
-                {
-                  position: 'absolute',
-                  top: '50%',
-                  left: 0,
-                  height: 2,
-                  backgroundColor: internalIsChecked
-                    ? '#9ca3af'
-                    : 'transparent',
-                },
-              ]}
-            />
-          </View>
-          <View className="w-12 shrink-0 items-end justify-center">
-            <Text className="text-lg text-muted-foreground">
-              {item.unit === 'each' && 'x'}
-              {item.quantity}
-              {item.unit !== 'each' && ` ${item.unit}`}
-            </Text>
-          </View>
-        </View>
-        <View className="min-h-6 flex-row items-center gap-2">
-          {item.category && <CategoryTag category={item.category} />}
-          {item.store?.name && <StoreTag name={item.store.name} />}
-          {item.recipe && (
-            <View>
-              <View className="flex-row items-center gap-1">
-                <Icon as={CookingPotIcon} size={14} />
-                <Text className="text-sm text-muted-foreground">
-                  {item.recipe.name}
+            ></View>
+          </HapticPressable>
+
+          <HapticPressable
+            className="flex-1 gap-1"
+            onPress={onEdit}
+            hapticType="light"
+          >
+            <View className="flex-row items-center justify-between">
+              <View className="relative flex-1">
+                <Text
+                  className={cn(
+                    'text-xl font-medium text-foreground',
+                    internalIsChecked && 'text-muted-foreground'
+                  )}
+                >
+                  {item.name}
+                </Text>
+                <Animated.View
+                  style={[
+                    strikethroughStyle,
+                    {
+                      position: 'absolute',
+                      top: '50%',
+                      left: 0,
+                      height: 2,
+                      backgroundColor: internalIsChecked
+                        ? '#9ca3af'
+                        : 'transparent',
+                    },
+                  ]}
+                />
+              </View>
+              <View className="w-12 shrink-0 items-end justify-center">
+                <Text className="text-lg text-muted-foreground">
+                  {item.unit === 'each' && 'x'}
+                  {item.quantity}
+                  {item.unit !== 'each' && ` ${item.unit}`}
                 </Text>
               </View>
             </View>
-          )}
-        </View>
-      </HapticPressable>
-    </ListItem>
+            <View className="min-h-6 flex-row items-center gap-2">
+              {item.category && <CategoryTag category={item.category} />}
+              {item.store?.name && <StoreTag name={item.store.name} />}
+              {item.recipe && (
+                <View>
+                  <View className="flex-row items-center gap-1">
+                    <Icon as={CookingPotIcon} size={14} />
+                    <Text className="text-sm text-muted-foreground">
+                      {item.recipe.name}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </HapticPressable>
+        </ListItem>
+      }
+    >
+      <ContextMenuItem key="delete-grocery-item" destructive onSelect={handleDelete}>
+        <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
+      </ContextMenuItem>
+    </ContextMenuRoot>
   );
 };

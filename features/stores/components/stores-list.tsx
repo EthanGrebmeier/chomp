@@ -1,8 +1,13 @@
-import { FlatList, View } from 'react-native';
+import { Alert, FlatList, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
+import {
+  ContextMenuItem,
+  ContextMenuItemTitle,
+  ContextMenuRoot,
+} from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
@@ -18,21 +23,44 @@ type StoreRowProps = {
 };
 
 const StoreRow = ({ store, isLast, onDelete, onPress }: StoreRowProps) => {
+  const handleConfirmDelete = () => {
+    Alert.alert(
+      'Delete Store',
+      `Are you sure you want to delete "${store.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: onDelete },
+      ]
+    );
+  };
+
   return (
-    <ListItem
-      className={cn(!isLast && 'border-b border-dashed border-border')}
-      onDelete={onDelete}
+    <ContextMenuRoot
+      trigger={
+        <ListItem
+          className={cn(!isLast && 'border-b border-dashed border-border')}
+          onDelete={onDelete}
+        >
+          <HapticPressable
+            onPress={onPress}
+            hapticType="light"
+            className="flex-1 flex-row items-center justify-between py-1"
+          >
+            <Text className="text-base font-medium text-foreground">
+              {store.name}
+            </Text>
+          </HapticPressable>
+        </ListItem>
+      }
     >
-      <HapticPressable
-        onPress={onPress}
-        hapticType="light"
-        className="flex-1 flex-row items-center justify-between py-1"
+      <ContextMenuItem
+        key={`delete-store-${store.id}`}
+        destructive
+        onSelect={handleConfirmDelete}
       >
-        <Text className="text-base font-medium text-foreground">
-          {store.name}
-        </Text>
-      </HapticPressable>
-    </ListItem>
+        <ContextMenuItemTitle>Delete Store</ContextMenuItemTitle>
+      </ContextMenuItem>
+    </ContextMenuRoot>
   );
 };
 
