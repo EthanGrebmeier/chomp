@@ -40,12 +40,6 @@ export default function Recipes() {
   const hasFilteredEmptyState =
     filteredRecipes.length === 0 && (recipes?.length ?? 0) > 0 && hasActiveFilters;
 
-  const handleClearFilters = () => {
-    setSearchQuery('');
-    setMealTag(undefined);
-    setSortBy('recent');
-  };
-
   return (
     <View className="pt-safe flex-1 bg-background ">
       <View className="px-4">
@@ -59,7 +53,6 @@ export default function Recipes() {
           onMealTagChange={setMealTag}
           sortBy={sortBy}
           onSortByChange={setSortBy}
-          onClearFilters={handleClearFilters}
         />
       </View>
       <View className="px-4">

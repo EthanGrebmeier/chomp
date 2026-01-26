@@ -1,10 +1,8 @@
-import { SearchIcon, XIcon } from 'lucide-react-native';
+import { SearchIcon } from 'lucide-react-native';
 import { ScrollView, View } from 'react-native';
 
 import { TextInput } from '@/components/text-input';
-import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
-import { Text } from '@/components/ui/text';
 
 import { MealTagFilterSelector } from './meal-tag-filter-selector';
 import { RecipeSortBy, RecipeSortBySelector } from './recipe-sort-by-selector';
@@ -16,7 +14,6 @@ type RecipeFiltersProps = {
   onMealTagChange: (value?: string) => void;
   sortBy?: RecipeSortBy;
   onSortByChange: (value: RecipeSortBy) => void;
-  onClearFilters?: () => void;
 };
 
 export const RecipeFilters = ({
@@ -26,11 +23,7 @@ export const RecipeFilters = ({
   onMealTagChange,
   sortBy = 'recent',
   onSortByChange,
-  onClearFilters,
 }: RecipeFiltersProps) => {
-  const trimmedQuery = searchQuery.trim();
-  const hasActiveFilters = !!trimmedQuery || !!mealTag || sortBy !== 'recent';
-
   return (
     <View className="gap-2">
       <View className="px-4">
@@ -55,18 +48,6 @@ export const RecipeFilters = ({
       >
         <MealTagFilterSelector mealTag={mealTag} onSelect={onMealTagChange} />
         <RecipeSortBySelector value={sortBy} onChange={onSortByChange} />
-        {hasActiveFilters && onClearFilters ? (
-          <HapticPressable
-            onPress={onClearFilters}
-            className="flex-row items-center gap-2 rounded-full border border-border bg-muted px-3 py-1"
-            hapticType="light"
-          >
-            <Icon as={XIcon} size={16} className="text-muted-foreground" />
-            <Text className="text-base font-medium leading-[18px] text-muted-foreground">
-              Clear filters
-            </Text>
-          </HapticPressable>
-        ) : null}
       </ScrollView>
     </View>
   );

@@ -53,7 +53,7 @@ quickly find recipes by name, description, ingredient, or meal type.
 - Work:
   - Create `features/recipes/components/recipe-filters.tsx` with search + selectors.
   - Add `RecipeSortBySelector` following dropdown/pill pattern.
-  - Add a "Clear filters" action when filters are active.
+  - Remove "Clear filters" action; rely on per-pill clear affordances.
 - Validation:
   - Not run (component not yet wired into a screen).
 
