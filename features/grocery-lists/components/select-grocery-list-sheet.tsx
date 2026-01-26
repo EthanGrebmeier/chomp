@@ -182,7 +182,8 @@ export const SelectGroceryListSheet = forwardRef<
         <ScrollView
           nestedScrollEnabled
           showsVerticalScrollIndicator={false}
-          className="mt-4 gap-1 px-4 pb-4"
+          contentContainerClassName="mt-4"
+          className="gap-1 px-4 pb-4"
         >
           {lists?.grocery_lists.map(list => {
             const isSelected = list.id === selectedListId;
