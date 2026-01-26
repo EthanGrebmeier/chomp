@@ -108,16 +108,18 @@ type HeaderProps = {
 
 const Header = ({ title, dismissButton, button, className }: HeaderProps) => {
   return (
-    <View className={cn('mb-6 flex-1 flex-row justify-between', className)}>
-      <View className="w-full flex-row items-center justify-center gap-2 ">
-        <View className="absolute left-0 top-1/2 -translate-y-1/2">
-          {dismissButton}
-        </View>
-        <Text className="text-2xl font-bold leading-none">{title}</Text>
-        <View className="absolute right-0 top-1/2 -translate-y-1/2">
-          {button}
-        </View>
+    <View className={cn('mb-6 flex-row items-center', className)}>
+      <View className="w-12 items-start">{dismissButton}</View>
+      <View className="mx-2 flex-1">
+        <Text
+          className="text-center text-2xl font-bold leading-tight"
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {title}
+        </Text>
       </View>
+      <View className="w-12 items-end">{button}</View>
     </View>
   );
 };

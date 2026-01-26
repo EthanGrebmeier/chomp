@@ -268,6 +268,7 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
                     as={ExternalLinkIcon}
                     size={20}
                     className="text-secondary-foreground"
+                    strokeWidth={3}
                   />
                 </Button>
               }
@@ -277,9 +278,7 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
                 <Text className="text-lg font-medium text-foreground">
                   Ingredients
                 </Text>
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                >
+                <ScrollView showsVerticalScrollIndicator={false}>
                   {selectedRecipe.recipe_ingredients.map(ingredient => (
                     <View
                       key={ingredient.id}
@@ -300,7 +299,10 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
               </View>
               <MetaBarLayout
                 action={
-                  <Button onPress={handleAddRecipe} disabled={!isRecipeModeValid}>
+                  <Button
+                    onPress={handleAddRecipe}
+                    disabled={!isRecipeModeValid}
+                  >
                     <Text>Add to Plan</Text>
                   </Button>
                 }
