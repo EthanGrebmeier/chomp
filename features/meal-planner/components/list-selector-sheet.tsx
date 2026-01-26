@@ -83,7 +83,8 @@ export const ListSelectorSheet = () => {
                   )}
                 </View>
                 <Text className="text-sm text-muted-foreground">
-                  {list.grocery_items?.filter(i => !i.isDeleted).length || 0}{' '}
+                  {list.grocery_items?.filter(i => !i.isDeleted && !i.isChecked)
+                    .length || 0}{' '}
                   items
                 </Text>
               </Pressable>

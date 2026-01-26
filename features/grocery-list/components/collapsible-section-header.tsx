@@ -1,6 +1,7 @@
 import { ChevronDownIcon } from 'lucide-react-native';
-import { TouchableOpacity } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import { TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 
@@ -20,10 +21,7 @@ export const CollapsibleSectionHeader = ({
   showCollapse = true,
 }: CollapsibleSectionHeaderProps) => {
   return (
-    <Animated.View
-      layout={LinearTransition}
-      className="bg-background px-4 py-2"
-    >
+    <View className="mt-2 bg-background px-4">
       {showCollapse ? (
         <TouchableOpacity
           onPress={onToggle}
@@ -51,6 +49,6 @@ export const CollapsibleSectionHeader = ({
           {itemCount !== undefined && ` (${itemCount})`}
         </Text>
       )}
-    </Animated.View>
+    </View>
   );
 };

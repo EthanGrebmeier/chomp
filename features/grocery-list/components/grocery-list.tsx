@@ -1,6 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useRef, useState } from 'react';
-import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
+import { useDeferredValue, useMemo, useRef, useState } from 'react';
+import { Keyboard, TextInput as RNTextInput, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
@@ -69,7 +69,33 @@ export const GroceryList = ({
   >(initialGroupBy);
   const [sortBy, setSortBy] = useState<'name' | 'recent'>(initialSortBy);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredCount, setFilteredCount] = useState(items.length);
+
+  const deferredQuery = useDeferredValue(searchQuery.trim());
+  const normalizedQuery = deferredQuery.toLowerCase();
+
+  const filteredItems = useMemo(() => {
+    if (!normalizedQuery) return items;
+
+    return items.filter(item => {
+      const name = item.name.toLowerCase();
+      const category = item.category?.toLowerCase() ?? '';
+      const notes = item.notes?.toLowerCase() ?? '';
+      const recipeName = item.recipe?.name?.toLowerCase() ?? '';
+      const storeName = item.store?.name?.toLowerCase() ?? '';
+
+      return (
+        name.includes(normalizedQuery) ||
+        category.includes(normalizedQuery) ||
+        notes.includes(normalizedQuery) ||
+        recipeName.includes(normalizedQuery) ||
+        storeName.includes(normalizedQuery)
+      );
+    });
+  }, [items, normalizedQuery]);
+
+  const filteredCount = filteredItems.filter(item =>
+    searchQuery.trim() ? true : !item.isDeleted && !item.isChecked
+  ).length;
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
@@ -186,8 +212,6 @@ export const GroceryList = ({
               ref={searchInputRef}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              totalItems={items.filter(item => !item.isChecked).length}
-              matchingCount={filteredCount}
             />
             <ScrollView
               horizontal
@@ -200,13 +224,17 @@ export const GroceryList = ({
               <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
               <SortBySelector value={sortBy} onChange={handleSortByChange} />
             </ScrollView>
+            <Text className="px-4 pb-2 text-sm text-muted-foreground">
+              {searchQuery.trim()
+                ? `${filteredCount} item${filteredCount !== 1 ? 's' : ''} matching "${searchQuery.trim()}"`
+                : `${filteredCount} item${filteredCount !== 1 ? 's' : ''}`}
+            </Text>
 
             <GroceryItemsList
-              items={items}
+              items={filteredItems}
+              totalItemCount={items.length}
               groupBy={groupBy}
               sortBy={sortBy}
-              searchQuery={searchQuery}
-              onFilteredCountChange={setFilteredCount}
               onListInteraction={dismissSearch}
             />
           </View>
