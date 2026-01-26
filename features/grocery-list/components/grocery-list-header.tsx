@@ -1,7 +1,9 @@
+import { useNetworkState } from 'expo-network';
 import {
   ChevronDownIcon,
   MoreHorizontal,
   UsersIcon,
+  WifiOff,
 } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
@@ -36,6 +38,11 @@ export const GroceryListHeader = ({
   onEditNamePress,
   onTitlePress,
 }: GroceryListHeaderProps) => {
+  const networkState = useNetworkState();
+  const isDisconnected =
+    networkState.isConnected === false ||
+    networkState.isInternetReachable === false;
+
   return (
     <View className="px-4">
       <View className="flex-row items-center justify-between">
@@ -58,15 +65,20 @@ export const GroceryListHeader = ({
           )}
         </Pressable>
         {listId && (
-          <GroceryListDropdownMenu
-            items={items}
-            ownerId={ownerId}
-            trigger={<Icon as={MoreHorizontal} size={24} />}
-            onClearListPress={onClearListPress}
-            onSharePress={onSharePress}
-            onDeleteOrLeave={onDeleteOrLeave}
-            onEditNamePress={onEditNamePress}
-          />
+          <View className="flex-row items-center gap-2">
+            {isDisconnected && (
+              <Icon as={WifiOff} size={20} className="text-destructive" />
+            )}
+            <GroceryListDropdownMenu
+              items={items}
+              ownerId={ownerId}
+              trigger={<Icon as={MoreHorizontal} size={24} />}
+              onClearListPress={onClearListPress}
+              onSharePress={onSharePress}
+              onDeleteOrLeave={onDeleteOrLeave}
+              onEditNamePress={onEditNamePress}
+            />
+          </View>
         )}
       </View>
     </View>
