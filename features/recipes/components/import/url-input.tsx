@@ -1,4 +1,3 @@
-import * as Clipboard from 'expo-clipboard';
 import { XIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
@@ -33,13 +32,6 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
       focus: () => inputRef.current?.focus(),
     }));
 
-    const handlePaste = useCallback(async () => {
-      const text = await Clipboard.getStringAsync();
-      if (text) {
-        onChangeText(text.trim());
-      }
-    }, [onChangeText]);
-
     const handleClear = useCallback(() => {
       onChangeText('');
       inputRef.current?.focus();
@@ -47,7 +39,10 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
 
     return (
       <View className="gap-2">
-        <View className="flex-row items-center gap-2">
+        <View className="flex-col gap-2">
+          <Text className="text-sm font-medium text-muted-foreground">
+            Recipe URL
+          </Text>
           <View className="relative flex-1">
             <RNTextInput
               ref={inputRef}
@@ -64,7 +59,7 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
               selectTextOnFocus
               className={cn(
                 'h-12 rounded-xl border bg-input px-4 pr-10 text-sm leading-4 text-foreground',
-                error ? 'border-destructive' : 'border-input',
+                error ? 'border-destructive' : 'border-border',
                 disabled && 'opacity-50'
               )}
             />

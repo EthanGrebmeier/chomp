@@ -31,7 +31,7 @@
   }
 
   .dark:root {
-    --background: 334 10% 14%;
+    --background: 213 5% 15%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -41,13 +41,13 @@
     --primary-foreground: 234 100% 93%;
     --secondary: 0 0% 96%;
     --secondary-foreground: 0 0% 0%;
-    --muted: 0 0% 14.9%;
+    --muted: 235 5% 18%;
     --muted-foreground: 0 0% 63.9%;
     --accent: 0 0% 14.9%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 70.9% 59.4%;
     --border: 216 8% 30%;
-    --input: 0 0% 14.9%;
+    --input: 234 8% 13.9%;
     --ring: 300 0% 45%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;

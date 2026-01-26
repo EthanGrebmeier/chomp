@@ -112,7 +112,8 @@ export const CreateRecipeSheet = forwardRef<
               onChangeText={setDescription}
               placeholder="Add a description (optional)"
               multiline
-              numberOfLines={3}
+              numberOfLines={5}
+              className="h-24"
             />
           </View>
           <View>
