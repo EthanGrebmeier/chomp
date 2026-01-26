@@ -25,7 +25,7 @@ export const RecipeFilters = ({
   onSortByChange,
 }: RecipeFiltersProps) => {
   return (
-    <View className="gap-2">
+    <View>
       <View className="px-4">
         <View className="relative">
           <View className="pointer-events-none absolute left-3 top-0 z-10 h-full justify-center">

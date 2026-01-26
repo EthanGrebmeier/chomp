@@ -1,4 +1,8 @@
-import { ExternalLinkIcon, MoreHorizontal, PlusIcon } from 'lucide-react-native';
+import {
+  ExternalLinkIcon,
+  MoreHorizontal,
+  PlusIcon,
+} from 'lucide-react-native';
 import { Animated, Linking, Pressable, View } from 'react-native';
 
 import { Heading } from '../../../components/text/heading';
@@ -67,7 +71,7 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
           onPress={() => Linking.openURL(recipe.sourceUrl!)}
         >
           <Icon as={ExternalLinkIcon} size={16} className="text-primary" />
-          <Text className="text-primary">Link</Text>
+          <Text className="text-primary">View Recipe</Text>
         </Pressable>
       )}
 

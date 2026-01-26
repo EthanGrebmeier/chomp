@@ -1,13 +1,20 @@
 import { useDeferredValue, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn, FadeOut, LayoutAnimationConfig } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LayoutAnimationConfig,
+} from 'react-native-reanimated';
 
 import { Text } from '@/components/ui/text';
+import { RecipeFilters } from '@/features/recipes/components/recipe-filters';
 import { RecipeList } from '@/features/recipes/components/recipe-list';
 import { RecipeListSkeleton } from '@/features/recipes/components/recipe-list-skeleton';
-import { RecipeFilters } from '@/features/recipes/components/recipe-filters';
 import { useRecipes } from '@/features/recipes/hooks';
-import { filterRecipes, RecipeSortOption } from '@/features/recipes/utils/filter-recipes';
+import {
+  filterRecipes,
+  RecipeSortOption,
+} from '@/features/recipes/utils/filter-recipes';
 
 import { EmptyHeading } from '../../components/text/empty-heading';
 import { EmptySubtext } from '../../components/text/empty-subtext';
@@ -38,14 +45,16 @@ export default function Recipes() {
   const hasActiveFilters =
     !!searchQuery.trim() || !!mealTag || sortBy !== 'recent';
   const hasFilteredEmptyState =
-    filteredRecipes.length === 0 && (recipes?.length ?? 0) > 0 && hasActiveFilters;
+    filteredRecipes.length === 0 &&
+    (recipes?.length ?? 0) > 0 &&
+    hasActiveFilters;
 
   return (
     <View className="pt-safe flex-1 bg-background ">
       <View className="px-4">
         <Heading>Recipes</Heading>
       </View>
-      <View className="mt-4">
+      <View className="mt-2">
         <RecipeFilters
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -90,7 +99,9 @@ export default function Recipes() {
               {hasFilteredEmptyState ? (
                 <View className="flex-1 items-center justify-center px-4">
                   <EmptyHeading>No recipes found</EmptyHeading>
-                  <EmptySubtext>Try adjusting your search or filters.</EmptySubtext>
+                  <EmptySubtext>
+                    Try adjusting your search or filters.
+                  </EmptySubtext>
                 </View>
               ) : (
                 <RecipeList recipes={filteredRecipes} />
