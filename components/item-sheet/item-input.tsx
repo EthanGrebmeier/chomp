@@ -39,6 +39,7 @@ export const ItemInput = ({ placeholder }: ItemInputProps) => {
         onChangeText={onChangeItemText}
         onBlur={() => setShowMatchingItems(false)}
         autoCorrect={false}
+        autoCapitalize="words"
         onSubmitEditing={onSubmit}
       />
       {shouldShowAutocomplete && (

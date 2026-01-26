@@ -100,6 +100,7 @@ export const CreateRecipeSheet = forwardRef<
               onChangeText={setName}
               placeholder="Enter recipe name"
               autoFocus
+              autoCapitalize="words"
             />
           </View>
           <View>

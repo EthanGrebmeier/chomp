@@ -51,6 +51,7 @@ export const ParsedRecipePreview = ({
           value={recipeName}
           onChangeText={onNameChange}
           placeholder="Enter recipe name"
+          autoCapitalize="words"
           selectTextOnFocus
           maxLength={maxNameLength}
         />
