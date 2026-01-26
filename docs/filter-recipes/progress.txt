@@ -1,3 +1,5 @@
 ## 2026-01-26
 - Added recipe filtering utility and vitest coverage for search, meal tag, and sort.
 - Ran `pnpm tsc` (failed due to existing repo errors) and `pnpm vitest` (vitest not installed).
+- Added meal tag filter selector component using dropdown + pill patterns.
+- Ran `pnpm tsc` (fails due to existing repo errors in auth, meal planner, and parsed ingredients).

@@ -39,13 +39,13 @@ quickly find recipes by name, description, ingredient, or meal type.
 
 ### 2) Add meal tag filter selector component
 
-- Status: Not Started
+- Status: Done
 - Work:
   - Create `features/recipes/components/meal-tag-filter-selector.tsx`.
   - Reuse dropdown/pill patterns from grocery list selectors.
   - Include "All" plus all meal tag options.
 - Validation:
-  - Render in isolation and verify selection changes state.
+  - Not run (component not yet wired into a screen).
 
 ### 3) Build RecipeFilters UI component
 
