@@ -88,8 +88,10 @@ export function buildRecipeUrl(params: RecipeParams) {
 /**
  * Builds a deep link URL for sharing a grocery list by join code
  */
-export function buildListURL(joinCode: string): string {
-  return `https://chompgrocery.com/join-list/${joinCode}`;
+export function buildListURL(joinCode: string): string | null {
+  const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
+  if (!baseUrl) return null;
+  return `${baseUrl}/join-list/${joinCode}`;
 }
 
 /**
@@ -98,7 +100,7 @@ export function buildListURL(joinCode: string): string {
 export function buildRecipeShareURL(recipeId: string): string | null {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   if (!apiUrl) return null;
-  return `${apiUrl}/api/recipes/share/${recipeId}`;
+  return `${apiUrl}/recipes/share/${recipeId}`;
 }
 
 /**
