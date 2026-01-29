@@ -53,7 +53,7 @@ export interface NavigationOptions {
  * Builds a URL for a specific tab
  */
 export function buildRecipesUrl(): Href {
-  return `/recipes` as const;
+  return `/(tabs)/recipes` as const;
 }
 
 export function buildPlansUrl(): Href {

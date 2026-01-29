@@ -140,7 +140,7 @@ export const RecipeDropdownMenu = ({
   const handleDelete = () => {
     deleteRecipe(recipe.id, {
       onSuccess: () => {
-        router.push(navigation.goToRecipes());
+        router.replace(navigation.goToRecipes());
       },
     });
   };
