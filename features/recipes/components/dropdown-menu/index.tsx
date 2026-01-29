@@ -147,7 +147,7 @@ export const RecipeDropdownMenu = ({
 
     try {
       const result = await Share.share({
-        message: `Check out this recipe: ${shareUrl}`,
+        url: shareUrl,
       });
 
       if (result.action === Share.sharedAction) {

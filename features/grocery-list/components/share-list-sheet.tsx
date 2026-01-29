@@ -43,7 +43,7 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
           return;
         }
         const result = await Share.share({
-          message: `Join my grocery list: ${deepLinkUrl}`,
+          url: deepLinkUrl,
         });
 
         if (result.action === Share.sharedAction) {
@@ -52,7 +52,7 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
         }
       } catch (error) {
         toast.error('Failed to share invite link');
-        console.error('Error sharing:', error);
+        console.log('Error sharing:', error);
       }
     };
 

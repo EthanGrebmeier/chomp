@@ -89,7 +89,7 @@ export function buildRecipeUrl(params: RecipeParams) {
  * Builds a deep link URL for sharing a grocery list by join code
  */
 export function buildListURL(joinCode: string): string | null {
-  const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
+  const baseUrl = process.env.EXPO_PUBLIC_API_URL;
   if (!baseUrl) return null;
   return `${baseUrl}/join-list/${joinCode}`;
 }
