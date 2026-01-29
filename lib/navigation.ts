@@ -93,6 +93,15 @@ export function buildListURL(joinCode: string): string {
 }
 
 /**
+ * Builds a share URL for a recipe via the API redirect
+ */
+export function buildRecipeShareURL(recipeId: string): string | null {
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (!apiUrl) return null;
+  return `${apiUrl}/api/recipes/share/${recipeId}`;
+}
+
+/**
  * Navigation helper functions that can be used with expo-router
  */
 export const navigation = {

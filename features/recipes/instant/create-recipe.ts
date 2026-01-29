@@ -12,6 +12,7 @@ export type CreateRecipeArgs = {
     mealTag?: string;
     sourceUrl?: string;
     servings?: string;
+    sourceRecipeId?: string;
   };
   ingredients: {
     name: string;
@@ -46,6 +47,7 @@ export const createRecipe = async ({
         mealTag: recipe.mealTag ?? undefined,
         sourceUrl: recipe.sourceUrl ?? undefined,
         servings: recipe.servings ?? undefined,
+        sourceRecipeId: recipe.sourceRecipeId ?? undefined,
       })
     ),
     tx.recipes[recipeId].link({

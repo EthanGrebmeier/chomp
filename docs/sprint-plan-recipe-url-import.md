@@ -892,6 +892,39 @@ export const transformParsedRecipe = (
 
 ---
 
+## Sprint 5: Recipe Share Links
+
+**Sprint Goal**: Allow users to share a recipe and import it into their book.
+
+### Task 5.1: Share Recipe Link + Import Route
+
+**Description**: Add share links that go through the API redirect and add an app endpoint that imports the recipe once per user.
+
+**Files**:
+
+- `instant.schema.ts`
+- `lib/navigation.ts`
+- `features/recipes/components/dropdown-menu/index.tsx`
+- `app/recipes/import/[recipeId].tsx`
+- `features/recipes/instant/create-recipe.ts`
+
+**Changes**:
+
+- Add `sourceRecipeId` to recipes schema for tracking imports
+- Build a share URL using `EXPO_PUBLIC_API_URL` via the API redirect endpoint
+- Add share action in the recipe dropdown menu
+- Add import route that copies the recipe and reuses existing imports
+
+**Validation**:
+
+- Sharing a recipe uses the API redirect URL
+- Opening the link imports the recipe once and routes to the existing copy on repeat
+- Owners opening their own link are routed to the original recipe
+
+**Status**: Completed 2026-01-29
+
+---
+
 ## Post-Sprint: Future Enhancements (Not in MVP)
 
 These items are out of scope for the initial implementation but noted for future work:

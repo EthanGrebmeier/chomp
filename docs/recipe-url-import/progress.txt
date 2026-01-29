@@ -445,3 +445,30 @@ Completed the remaining tasks to enable users to tap and edit parsed ingredients
   - Edit multiple ingredients sequentially
   - Import works correctly after editing
   - VoiceOver/TalkBack accessibility
+
+---
+
+## 2026-01-29
+
+### Completed: Recipe Share Links (Share + Import)
+
+Implemented recipe share links that route through the API redirect and import shared recipes into a user's recipe book.
+
+**Features implemented:**
+- Added `sourceRecipeId` to recipes for tracking imported shares
+- Share action generates an API-based share URL
+- New import route copies a shared recipe and reuses the existing copy on repeat opens
+- Owners opening their own link are routed to the original recipe
+
+**Files modified:**
+- `instant.schema.ts` - Added `sourceRecipeId` field (indexed)
+- `features/recipes/instant/create-recipe.ts` - Accepts `sourceRecipeId`
+- `lib/navigation.ts` - Added `buildRecipeShareURL`
+- `features/recipes/components/dropdown-menu/index.tsx` - Share action added
+
+**Files created:**
+- `app/recipes/import/[recipeId].tsx` - Import flow endpoint
+
+**Notes for next developer:**
+- Share links use `EXPO_PUBLIC_API_URL` and expect the API to redirect to `/recipes/import/:recipeId`
+- Repeat opens of the same link route to the existing imported recipe

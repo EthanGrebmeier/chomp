@@ -1,6 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { ReactNode, useEffect, useRef, useState } from 'react';
+import { Share } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -14,7 +15,7 @@ import {
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
 import { db } from '@/lib/instant';
-import { navigation } from '@/lib/navigation';
+import { buildRecipeShareURL, navigation } from '@/lib/navigation';
 
 import {
   RecipeConflictSheet,
@@ -137,6 +138,27 @@ export const RecipeDropdownMenu = ({
     });
   };
 
+  const handleShareRecipe = async () => {
+    const shareUrl = buildRecipeShareURL(recipe.id);
+    if (!shareUrl) {
+      toast.error('Recipe sharing is unavailable right now');
+      return;
+    }
+
+    try {
+      const result = await Share.share({
+        message: `Check out this recipe: ${shareUrl}`,
+      });
+
+      if (result.action === Share.sharedAction) {
+        toast.success('Recipe link shared');
+      }
+    } catch (error) {
+      toast.error('Failed to share recipe link');
+      console.error('Error sharing recipe link:', error);
+    }
+  };
+
   const handleDelete = () => {
     deleteRecipe(recipe.id, {
       onSuccess: () => {
@@ -243,6 +265,10 @@ export const RecipeDropdownMenu = ({
           )}
 
           <DropdownMenuGroup>
+            <DropdownMenuItem onSelect={handleShareRecipe} key="share-recipe">
+              <DropdownMenuItemTitle>Share Recipe</DropdownMenuItemTitle>
+              <DropdownMenuItemIcon ios={{ name: 'square.and.arrow.up' }} />
+            </DropdownMenuItem>
             {isOwner && (
               <DropdownMenuItem
                 onSelect={() => createRecipeSheetRef.current?.present()}

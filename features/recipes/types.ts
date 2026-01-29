@@ -24,6 +24,10 @@ export type CreateRecipeArgs = {
     description?: string;
     imageSrc?: string;
     visibility?: string;
+    mealTag?: string;
+    sourceUrl?: string;
+    servings?: string;
+    sourceRecipeId?: string;
   };
   ingredients: {
     name: string;
