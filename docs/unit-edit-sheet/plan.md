@@ -42,7 +42,7 @@ Validation: Run a sample unit test in CI/local to confirm the setup works.
 
 ### Ticket 2: Unit catalog + helpers
 
-Status: todo  
+Status: done  
 Scope: Add expanded unit options (volume, weight, count, packaging) plus a “Custom” option, and create `normalizeUnit` + `formatQuantityUnit` helpers with a 16-char max length rule.  
 Validation: Unit tests for normalization and formatting, including `each`, custom units, and empty/null inputs.
 
