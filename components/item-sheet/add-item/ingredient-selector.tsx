@@ -1,7 +1,8 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { CheckIcon, ExternalLinkIcon } from 'lucide-react-native';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { addRecipeToList } from '../../../features/recipes/instant/add-recipe-to-list';
@@ -147,7 +148,7 @@ export const IngredientSelector = ({
   };
 
   return (
-    <View>
+    <View className="relative">
       <BottomSheet.Header
         className="px-4"
         title={recipe.name}
@@ -181,7 +182,7 @@ export const IngredientSelector = ({
 
       <ScrollView
         className="max-h-64 min-h-24"
-        contentContainerClassName="px-4"
+        contentContainerClassName="px-4 pb-20"
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -199,7 +200,14 @@ export const IngredientSelector = ({
         ))}
       </ScrollView>
 
-      <View className="mt-4 px-4">
+      <LinearGradient
+        colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0)']}
+        start={{ x: 0.5, y: 1 }}
+        end={{ x: 0.5, y: 0 }}
+        pointerEvents="none"
+        style={styles.footerGradient}
+      />
+      <View className="relative mt-4 px-4 pb-4">
         <Button
           onPress={handleAdd}
           disabled={selectedIds.size === 0 || isAdding}
@@ -210,3 +218,13 @@ export const IngredientSelector = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  footerGradient: {
+    position: 'absolute',
+    bottom: -40,
+    left: 0,
+    right: 0,
+    height: 120,
+  },
+});
