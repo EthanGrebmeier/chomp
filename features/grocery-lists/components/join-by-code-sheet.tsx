@@ -101,12 +101,13 @@ export const JoinByCodeSheet = forwardRef<
         <BottomSheet.Header
           title="Join by Code"
           button={<CloseButton onPress={handleDismiss} />}
+          subsection={
+            <BottomSheet.Subtext className="text-center text-sm text-muted-foreground">
+              Enter the 8-character, case-sensitive code
+            </BottomSheet.Subtext>
+          }
         />
 
-        <BottomSheet.Subtext>
-          Enter the 8-character, case-sensitive code
-        </BottomSheet.Subtext>
-        <BottomSheet.Subtext>to join a shared list</BottomSheet.Subtext>
         <View className="mt-6 items-center justify-center gap-6">
           {isLoading ? (
             <View className="h-12 items-center justify-center">

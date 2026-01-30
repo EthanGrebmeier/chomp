@@ -20,10 +20,25 @@ export const ListSelectorSheet = () => {
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
     useAddMealsToGroceryList();
 
-  const unaddedCount = useMemo(() => {
+  const { unaddedCount, subtext } = useMemo(() => {
     const unaddedRecipes = recipes.filter(r => !r.addedToList).length;
     const unaddedItems = items.filter(i => !i.addedToList).length;
-    return unaddedRecipes + unaddedItems;
+    const parts: string[] = [];
+
+    if (unaddedRecipes > 0) {
+      parts.push(`${unaddedRecipes} recipe${unaddedRecipes === 1 ? '' : 's'}`);
+    }
+
+    if (unaddedItems > 0) {
+      parts.push(`${unaddedItems} item${unaddedItems === 1 ? '' : 's'}`);
+    }
+
+    const summary = parts.length === 0 ? 'no items' : parts.join(' and ');
+
+    return {
+      unaddedCount: unaddedRecipes + unaddedItems,
+      subtext: `You have ${summary} to add`,
+    };
   }, [recipes, items]);
 
   const handleAddToList = (listId: string) => {
@@ -56,8 +71,9 @@ export const ListSelectorSheet = () => {
         detents={['auto']}
       >
         <BottomSheet.Header
-          className="px-4"
+          className="mb-0 px-4"
           title="Add Meal Plan Items to List"
+          subsection={<BottomSheet.Subtext>{subtext}</BottomSheet.Subtext>}
         />
         <ScrollView className="max-h-80 px-4 pb-4">
           {lists?.grocery_lists.map(list => {

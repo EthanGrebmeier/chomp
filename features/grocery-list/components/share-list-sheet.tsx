@@ -59,10 +59,15 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
     return (
       <BottomSheet name="share-list-sheet" ref={sheetRef}>
         <BottomSheet.SheetView>
-          <BottomSheet.Header className="mb-2" title="Share List" />
-          <BottomSheet.Subtext>
-            Others can use this code to join your list
-          </BottomSheet.Subtext>
+          <BottomSheet.Header
+            className="mb-2"
+            title="Share List"
+            subsection={
+              <BottomSheet.Subtext>
+                Others can use this code to join your list
+              </BottomSheet.Subtext>
+            }
+          />
           <View className="mt-6 items-center gap-4">
             <HapticPressable
               hapticType="selection"

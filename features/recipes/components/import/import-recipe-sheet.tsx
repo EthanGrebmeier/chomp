@@ -274,10 +274,15 @@ export const ImportRecipeSheet = forwardRef<
       case 'idle':
         return (
           <>
-            <BottomSheet.Header className="mb-2" title="Import Recipe" />
-            <BottomSheet.Subtext className="mb-4">
-              Paste a recipe URL to import ingredients
-            </BottomSheet.Subtext>
+            <BottomSheet.Header
+              subsection={
+                <BottomSheet.Subtext className="mb-4">
+                  Paste a recipe URL to import ingredients
+                </BottomSheet.Subtext>
+              }
+              className="mb-2"
+              title="Import Recipe"
+            />
             <UrlInput
               ref={urlInputRef}
               value={url}

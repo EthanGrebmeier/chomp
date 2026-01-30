@@ -101,28 +101,42 @@ BareTextInput.displayName = 'BareTextInput';
 
 type HeaderProps = {
   title: string;
+  subsection?: React.ReactNode;
   dismissButton?: React.ReactNode;
   button?: React.ReactNode;
   className?: string;
 };
 
-const Header = ({ title, dismissButton, button, className }: HeaderProps) => {
+const Header = ({
+  title,
+  subsection,
+  dismissButton,
+  button,
+  className,
+}: HeaderProps) => {
   return (
-    <View className={cn('mb-6 flex-row items-center', className)}>
-      {(dismissButton ?? button) && (
-        <View className="w-12 items-start">{dismissButton}</View>
-      )}
-      <View className="mx-2 flex-1">
-        <Text
-          className="text-center text-2xl font-bold leading-tight"
-          numberOfLines={2}
-          ellipsizeMode="tail"
-        >
-          {title}
-        </Text>
+    <View className="mb-6">
+      <View className={cn('mb-6 flex-row items-center', className)}>
+        {(dismissButton ?? button) && (
+          <View className="w-12 items-start">{dismissButton}</View>
+        )}
+        <View className="mx-2 flex-1">
+          <Text
+            className="text-center text-2xl font-bold leading-tight"
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {title}
+          </Text>
+        </View>
+        {(dismissButton ?? button) && (
+          <View className="w-12 items-end">{button}</View>
+        )}
       </View>
-      {(dismissButton ?? button) && (
-        <View className="w-12 items-end">{button}</View>
+      {subsection && (
+        <View className="mt-2 text-center text-sm text-muted-foreground">
+          {subsection}
+        </View>
       )}
     </View>
   );
