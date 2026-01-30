@@ -9,8 +9,8 @@ import {
   RecipeIngredient,
   RecipeWithIngredients,
 } from '../../../features/recipes/types';
-import { formatQuantity } from '../../../lib/grocery-item';
 import { cn } from '../../../lib/utils';
+import { formatQuantityUnit } from '../unit-utils';
 import { BottomSheet } from '../../bottom-sheet';
 import { BackButton } from '../../ui/back-button';
 import { Button } from '../../ui/button';
@@ -58,10 +58,7 @@ const IngredientRow = ({
         </Text>
       </View>
       <Text className="text-sm text-muted-foreground">
-        {formatQuantity({
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
-        })}
+        {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
       </Text>
     </HapticPressable>
   );

@@ -16,11 +16,11 @@ import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
-import { formatQuantity } from '../../../lib/grocery-item';
 import { cn } from '../../../lib/utils';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
 import { useAddRecipeToDate } from '../hooks/useAddRecipeToMealPlan';
+import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 
 import { DatePillSheet } from './date-pill-sheet';
 import {
@@ -288,10 +288,7 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
                         {ingredient.name}
                       </Text>
                       <Text className="text-sm text-muted-foreground">
-                        {formatQuantity({
-                          quantity: ingredient.quantity,
-                          unit: ingredient.unit,
-                        })}
+                        {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
                       </Text>
                     </View>
                   ))}

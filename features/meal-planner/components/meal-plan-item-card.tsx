@@ -7,7 +7,7 @@ import {
 } from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
-import { formatQuantity } from '../../../lib/grocery-item';
+import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { MealPlanItem } from '../types';
 
@@ -51,10 +51,7 @@ const MealPlanItemCard = ({
                 {mealPlanItem.name}
               </Text>
               <Text className="text-sm text-muted-foreground">
-                {formatQuantity({
-                  quantity: mealPlanItem.quantity,
-                  unit: mealPlanItem.unit,
-                })}
+                {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
               </Text>
             </View>
           </View>

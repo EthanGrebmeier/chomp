@@ -18,6 +18,7 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
+import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { cn } from '../../../lib/utils';
 import { checkListItem } from '../instant/check-list-item';
 import { removeGroceryListItem } from '../instant/remove-grocery-list-item';
@@ -140,9 +141,7 @@ export const GroceryListItem = ({
               </View>
               <View className="w-12 shrink-0 items-end justify-center">
                 <Text className="text-lg text-muted-foreground">
-                  {item.unit === 'each' && 'x'}
-                  {item.quantity}
-                  {item.unit !== 'each' && ` ${item.unit}`}
+                  {formatQuantityUnit(item.quantity, item.unit)}
                 </Text>
               </View>
             </View>

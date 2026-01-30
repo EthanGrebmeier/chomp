@@ -3,3 +3,4 @@
 - Added unit catalog constants plus normalize/format helpers with tests.
 - Added EditUnitSheet component with validation and helper text.
 - Integrated UnitSheet with shared catalog and custom unit editing.
+- Refactored unit displays to use formatQuantityUnit across list, recipe, and meal plan items.

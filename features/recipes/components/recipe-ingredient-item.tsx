@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 import { CategoryTag } from '../../../components/category-tag';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
+import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { useRemoveRecipeIngredient } from '../hooks/useRemoveRecipeIngredient';
 import { RecipeIngredient } from '../types';
 
@@ -31,9 +32,7 @@ export const RecipeIngredientItem = ({
             {ingredient.name}
           </Text>
           <Text className="text-lg text-muted-foreground">
-            {ingredient.unit === 'each' && 'x'}
-            {ingredient.quantity}
-            {ingredient.unit !== 'each' && ` ${ingredient.unit}`}
+            {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
           </Text>
         </View>
         <View className="flex-row items-center gap-2">

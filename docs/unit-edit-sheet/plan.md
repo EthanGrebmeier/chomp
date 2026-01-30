@@ -60,7 +60,7 @@ Validation: Manual check that custom units persist through add and edit item flo
 
 ### Ticket 5: Display consistency refactor
 
-Status: todo  
+Status: done  
 Scope: Replace inline unit display logic in list and recipe item components with `formatQuantityUnit`.  
 Validation: Manual check that grocery list items, recipe ingredients, and meal plan items all render units consistently.
 
