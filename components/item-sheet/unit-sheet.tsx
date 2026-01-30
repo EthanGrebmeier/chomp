@@ -1,7 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { CheckIcon, ScaleIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { ScrollView, TextInput, View } from 'react-native';
 
 import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
@@ -87,7 +87,7 @@ export const UnitSheet = ({
 
   const handleUnitSelect = (value: string) => {
     if (value === CUSTOM_UNIT_VALUE) {
-      editSheetRef.current?.present(normalizedLocalUnit);
+      editSheetRef.current?.present(isCatalogUnit ? '' : normalizedLocalUnit);
       return;
     }
     setLocalUnit(value);
@@ -123,7 +123,12 @@ export const UnitSheet = ({
         </HapticPressable>
       </WithLayoutTransition>
 
-      <BottomSheet ref={sheetRef} name="unit-sheet">
+      <BottomSheet
+        ref={sheetRef}
+        name="unit-sheet"
+        scrollable
+        detents={[0.7, 0.9]}
+      >
         <BottomSheet.Header
           className="px-4"
           title="Quantity"
@@ -141,40 +146,49 @@ export const UnitSheet = ({
           }
         />
 
-        <View className="px-4">
-          <View className="mb-4 flex-row items-center gap-3 rounded-xl bg-muted px-4 py-3">
-            <TextInput
-              ref={quantityInputRef}
-              value={localQuantity}
-              onChangeText={handleQuantityChange}
-              keyboardType="number-pad"
-              className="flex-1 text-2xl font-bold text-foreground"
-              placeholder="1"
-              placeholderTextColor="#9ca3af"
-              selectTextOnFocus
-            />
-            <Text className="text-lg text-muted-foreground">
-              {displayUnitLabel || DEFAULT_UNIT_VALUE}
-            </Text>
+        <View>
+          <View className="px-4">
+            <View className="mb-4 flex-row items-center gap-3 rounded-xl border border-border bg-muted px-4 py-3">
+              <TextInput
+                ref={quantityInputRef}
+                value={localQuantity}
+                onChangeText={handleQuantityChange}
+                keyboardType="number-pad"
+                className="flex-1 text-2xl font-bold text-foreground"
+                placeholder="1"
+                placeholderTextColor="#9ca3af"
+                selectTextOnFocus
+              />
+              <Text className="text-lg text-muted-foreground">
+                {displayUnitLabel || DEFAULT_UNIT_VALUE}
+              </Text>
+            </View>
           </View>
 
-          <Text className="mb-2 text-sm font-medium text-muted-foreground">
+          <Text className="mb-2 px-4 text-sm font-medium text-muted-foreground">
             Unit
           </Text>
-          <View className="gap-2">
-            {UNIT_OPTIONS.map(option => (
-              <UnitOption
-                key={option.value}
-                label={option.label}
-                isSelected={
-                  option.value === CUSTOM_UNIT_VALUE
-                    ? !isCatalogUnit
-                    : normalizedLocalUnit === option.value
-                }
-                onPress={() => handleUnitSelect(option.value)}
-              />
-            ))}
-          </View>
+          <ScrollView
+            className="max-h-80 px-4"
+            nestedScrollEnabled
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 24, paddingTop: 8 }}
+          >
+            <View className="gap-2">
+              {UNIT_OPTIONS.map(option => (
+                <UnitOption
+                  key={option.value}
+                  label={option.label}
+                  isSelected={
+                    option.value === CUSTOM_UNIT_VALUE
+                      ? !isCatalogUnit
+                      : normalizedLocalUnit === option.value
+                  }
+                  onPress={() => handleUnitSelect(option.value)}
+                />
+              ))}
+            </View>
+          </ScrollView>
         </View>
       </BottomSheet>
 

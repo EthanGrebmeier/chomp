@@ -68,13 +68,12 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
           />
 
           <View className="my-4 gap-2">
-            <TextInput
+            <BottomSheet.TextInput
               ref={inputRef}
               value={unitValue}
               onChangeText={setUnitValue}
               placeholder="e.g. bunch"
               placeholderTextColor="#9ca3af"
-              className="h-12 rounded-xl border border-input bg-input px-4 text-base text-foreground"
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="done"
@@ -87,9 +86,6 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
           </View>
 
           <View className="flex-row gap-3">
-            <Button className="flex-1" variant="outline" onPress={handleCancel}>
-              <Text>Cancel</Text>
-            </Button>
             <Button className="flex-1" onPress={handleSave} disabled={!canSave}>
               <Text>Save</Text>
             </Button>

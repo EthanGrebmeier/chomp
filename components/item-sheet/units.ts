@@ -8,6 +8,7 @@ export type UnitOption = {
 };
 
 export const UNIT_OPTIONS: UnitOption[] = [
+  { label: 'Custom', value: 'custom' },
   { label: 'Each', value: 'each' },
   { label: 'Teaspoon', value: 'tsp' },
   { label: 'Tablespoon', value: 'tbsp' },
@@ -35,5 +36,4 @@ export const UNIT_OPTIONS: UnitOption[] = [
   { label: 'Stick', value: 'stick' },
   { label: 'Bag', value: 'bag' },
   { label: 'Box', value: 'box' },
-  { label: 'Custom', value: 'custom' },
 ];
