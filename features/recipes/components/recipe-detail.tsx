@@ -12,6 +12,7 @@ import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { db } from '../../../lib/instant';
 import { cn } from '../../../lib/utils';
+import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
 
 import {
@@ -80,23 +81,35 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
         <View className="flex-row items-center justify-between px-4">
           <Text className="text-xl font-semibold">Ingredients:</Text>
         </View>
-        <Animated.FlatList
-          className="gap-2"
-          contentContainerClassName="pb-16"
-          data={recipe.recipe_ingredients}
-          renderItem={({ item, index }) => (
-            <RecipeIngredientItem
-              className={cn(
-                index < recipe.recipe_ingredients.length - 1 &&
-                  'border-b border-dashed border-border'
-              )}
-              key={item.id}
-              ingredient={item}
-              onEdit={isOwner ? handleEditIngredient : undefined}
-              canDelete={isOwner}
-            />
-          )}
-        />
+        {recipe.recipe_ingredients.length === 0 ? (
+          <View
+            className=" flex-1 items-center justify-center"
+            style={{ marginTop: -NATIVE_TABS_OFFSET }}
+          >
+            <Text className="text-muted-foreground">No ingredients found</Text>
+            <Text className="text-muted-foreground">
+              Press the + button to add ingredients
+            </Text>
+          </View>
+        ) : (
+          <Animated.FlatList
+            className="gap-2"
+            contentContainerClassName="pb-16"
+            data={recipe.recipe_ingredients}
+            renderItem={({ item, index }) => (
+              <RecipeIngredientItem
+                className={cn(
+                  index < recipe.recipe_ingredients.length - 1 &&
+                    'border-b border-dashed border-border'
+                )}
+                key={item.id}
+                ingredient={item}
+                onEdit={isOwner ? handleEditIngredient : undefined}
+                canDelete={isOwner}
+              />
+            )}
+          />
+        )}
       </View>
       {isOwner && (
         <View className="absolute bottom-6 right-6 z-20">
