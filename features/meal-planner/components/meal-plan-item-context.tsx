@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 
+import { normalizeUnit } from '../../../components/item-sheet/unit-utils';
 import { BaseGroceryItem } from '../../grocery-list/types';
 
 type MealPlanItemContextValue = {
@@ -56,7 +57,7 @@ export const MealPlanItemProvider = ({
   const [itemName, setItemName] = useState(initialValues?.itemName ?? '');
   const [itemNotes, setItemNotes] = useState(initialValues?.itemNotes ?? '');
   const [quantity, setQuantity] = useState(initialValues?.quantity ?? 1);
-  const [unit, setUnit] = useState(initialValues?.unit ?? 'each');
+  const [unit, setUnit] = useState(normalizeUnit(initialValues?.unit));
   const [category, setCategory] = useState<string | undefined>(
     initialValues?.category
   );
@@ -85,7 +86,7 @@ export const MealPlanItemProvider = ({
 
   const populateFromItem = (item: BaseGroceryItem) => {
     setItemName(item.name);
-    if (item.unit) setUnit(item.unit);
+    setUnit(normalizeUnit(item.unit));
     if (item.category) setCategory(item.category);
     setShowMatchingItems(false);
   };

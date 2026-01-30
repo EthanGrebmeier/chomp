@@ -5,6 +5,7 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { ItemForm } from '../../../components/item-sheet/item-form';
 import { MetaBar } from '../../../components/item-sheet/meta-bar';
+import { normalizeUnit } from '../../../components/item-sheet/unit-utils';
 import {
   ItemSheetProvider,
   useItemSheet,
@@ -127,7 +128,7 @@ export const AddIngredientProvider = ({
       setFromItemRef.current?.({
         name: ingredient.name ?? '',
         quantity: ingredient.quantity ?? 1,
-        unit: ingredient.unit ?? 'each',
+        unit: normalizeUnit(ingredient.unit),
         category: ingredient.category ?? undefined,
         notes: ingredient.notes ?? undefined,
         storeId: ingredient.store?.id,

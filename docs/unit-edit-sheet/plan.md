@@ -66,7 +66,7 @@ Validation: Manual check that grocery list items, recipe ingredients, and meal p
 
 ### Ticket 6: Edge-case handling
 
-Status: todo  
+Status: done  
 Scope: Normalize trimmed units, handle empty/null as `each`, enforce 16-char limit, and ensure custom units that match a catalog value behave predictably.  
 Validation: Manual checks with empty units, 16+ char units, and units with special characters.
 

@@ -43,7 +43,8 @@ function createPreviewState(
     status: 'preview',
     data: mockParseResponse,
     editedName: mockParseResponse.recipeName ?? '',
-    selectedIngredients: [...ingredients],
+    ingredients: [...ingredients],
+    selectedIndices: new Set(ingredients.map((_, index) => index)),
   };
 }
 
@@ -65,10 +66,10 @@ describe('importReducer', () => {
 
       expect(newState.status).toBe('preview');
       if (newState.status === 'preview') {
-        expect(newState.selectedIngredients[0]).toEqual(updatedIngredient);
+        expect(newState.ingredients[0]).toEqual(updatedIngredient);
         // Other ingredients should be unchanged
-        expect(newState.selectedIngredients[1]).toEqual(mockIngredient2);
-        expect(newState.selectedIngredients[2]).toEqual(mockIngredient3);
+        expect(newState.ingredients[1]).toEqual(mockIngredient2);
+        expect(newState.ingredients[2]).toEqual(mockIngredient3);
       }
     });
 
@@ -87,10 +88,10 @@ describe('importReducer', () => {
       });
 
       if (newState.status === 'preview') {
-        expect(newState.selectedIngredients[1]).toEqual(updatedIngredient);
+        expect(newState.ingredients[1]).toEqual(updatedIngredient);
         // Other ingredients should be unchanged
-        expect(newState.selectedIngredients[0]).toEqual(mockIngredient1);
-        expect(newState.selectedIngredients[2]).toEqual(mockIngredient3);
+        expect(newState.ingredients[0]).toEqual(mockIngredient1);
+        expect(newState.ingredients[2]).toEqual(mockIngredient3);
       }
     });
 
@@ -167,10 +168,10 @@ describe('importReducer', () => {
       });
 
       if (newState.status === 'preview') {
-        expect(newState.selectedIngredients.length).toBe(3);
-        expect(newState.selectedIngredients[0]).toEqual(updatedIngredient);
-        expect(newState.selectedIngredients[1]).toEqual(mockIngredient2);
-        expect(newState.selectedIngredients[2]).toEqual(mockIngredient3);
+        expect(newState.ingredients.length).toBe(3);
+        expect(newState.ingredients[0]).toEqual(updatedIngredient);
+        expect(newState.ingredients[1]).toEqual(mockIngredient2);
+        expect(newState.ingredients[2]).toEqual(mockIngredient3);
       }
     });
 
@@ -192,14 +193,14 @@ describe('importReducer', () => {
       });
 
       if (newState2.status === 'preview') {
-        expect(newState2.selectedIngredients[0]).toEqual(mockIngredient1);
+        expect(newState2.ingredients[0]).toEqual(mockIngredient1);
       }
     });
 
     it('creates a new array reference (state immutability)', () => {
       const state = createPreviewState();
       const originalArray =
-        state.status === 'preview' ? state.selectedIngredients : [];
+        state.status === 'preview' ? state.ingredients : [];
 
       const updatedIngredient: ParsedIngredient = {
         ...mockIngredient1,
@@ -214,7 +215,7 @@ describe('importReducer', () => {
 
       if (newState.status === 'preview') {
         // Should be a new array reference
-        expect(newState.selectedIngredients).not.toBe(originalArray);
+        expect(newState.ingredients).not.toBe(originalArray);
         // Original array should be unchanged
         expect(originalArray[0]).toEqual(mockIngredient1);
       }
@@ -235,10 +236,10 @@ describe('importReducer', () => {
       });
 
       if (newState.status === 'preview') {
-        expect(newState.selectedIngredients[2]).toEqual(updatedIngredient);
+        expect(newState.ingredients[2]).toEqual(updatedIngredient);
         // Other ingredients should be unchanged
-        expect(newState.selectedIngredients[0]).toEqual(mockIngredient1);
-        expect(newState.selectedIngredients[1]).toEqual(mockIngredient2);
+        expect(newState.ingredients[0]).toEqual(mockIngredient1);
+        expect(newState.ingredients[1]).toEqual(mockIngredient2);
       }
     });
   });

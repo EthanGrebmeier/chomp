@@ -1,3 +1,4 @@
+import { normalizeUnit } from '@/components/item-sheet/unit-utils';
 import { BaseGroceryItem } from '@/features/grocery-list/types';
 
 import { IngredientCategory, ParsedIngredient } from '../api/types';
@@ -13,7 +14,7 @@ export function parsedIngredientToBaseGroceryItem(
   return {
     name: ingredient.name,
     quantity: ingredient.quantity ?? 1,
-    unit: ingredient.unit ?? 'each',
+    unit: normalizeUnit(ingredient.unit),
     category: ingredient.category,
     notes: ingredient.notes ?? undefined,
   };
@@ -33,7 +34,7 @@ export function baseGroceryItemToParsedIngredient(
   return {
     name: item.name.trim(),
     quantity: item.quantity,
-    unit: item.unit,
+    unit: normalizeUnit(item.unit),
     // Use the form category if set, otherwise preserve original
     category: (item.category as IngredientCategory) ?? originalCategory,
     notes: item.notes ?? null,
