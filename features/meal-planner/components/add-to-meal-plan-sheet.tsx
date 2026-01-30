@@ -264,7 +264,7 @@ const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
             className="px-4"
           >
             <BottomSheet.Header
-              title={selectedRecipe.name}
+              title="Add Recipe"
               dismissButton={<BackButton onPress={handleBackToRecipes} />}
               button={
                 <Button
@@ -283,7 +283,12 @@ const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
             />
             <View className="gap-4">
               <View>
-                <Text className="text-lg font-medium text-foreground">
+                <Text className="text-2xl font-bold text-foreground">
+                  {selectedRecipe.name}
+                </Text>
+              </View>
+              <View>
+                <Text className="text-base font-semibold text-foreground">
                   Ingredients
                 </Text>
                 <ScrollView showsVerticalScrollIndicator={false}>

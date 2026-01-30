@@ -2,10 +2,10 @@ import React, { useRef } from 'react';
 import { TextInput, View } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { ItemInput } from '../../../components/item-sheet/item-input';
 import { BaseGroceryItem } from '../../grocery-list/types';
 
 import { useMealPlanItem } from './meal-plan-item-context';
-import { MealPlanItemInput } from './meal-plan-item-input';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
 
 type MealPlanItemFormProps = {
@@ -64,19 +64,20 @@ export const MealPlanItemForm = ({
 
   const notesClassName =
     notesStyle === 'inline'
-      ? 'min-h-36 flex-1 text-start text-lg font-bold text-foreground'
+      ? 'min-h-44 flex-1 text-start text-lg font-bold text-foreground'
       : 'min-h-24 rounded-md border border-border bg-card px-3 py-2 text-base text-foreground';
 
   return (
     <View className="flex-1">
-      <MealPlanItemInput
-        ref={itemInputRef}
+      <ItemInput
+        placeholder="Item name"
         value={itemName}
         onChangeText={handleItemTextChange}
         onSelect={handleSelectSavedItem}
         showMatchingItems={showMatchingItems}
         setShowMatchingItems={setShowMatchingItems}
         onSubmit={onSubmit}
+        inputRef={itemInputRef}
       />
       <BottomSheet.BareTextInput
         value={itemNotes}

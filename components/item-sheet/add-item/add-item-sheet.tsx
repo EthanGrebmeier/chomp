@@ -268,7 +268,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         )}
         {mode === 'item' ? (
           <>
-            <View className="pb-safe flex-1 px-4">
+            <View className="lex-1 px-4">
               <ItemForm />
               <MetaBar />
             </View>

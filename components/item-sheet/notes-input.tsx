@@ -12,7 +12,7 @@ export const NotesInput = () => {
       placeholder="Notes"
       multiline
       style={{ textAlignVertical: 'top' }}
-      className="min-h-36 flex-1 text-start text-lg font-medium text-muted-foreground"
+      className="min-h-40 flex-1 text-start text-lg font-medium text-muted-foreground"
     />
   );
 };

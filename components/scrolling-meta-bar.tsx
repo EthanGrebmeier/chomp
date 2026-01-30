@@ -14,13 +14,13 @@ export const ScrollingMetaBar = ({
   contentClassName,
 }: ScrollingMetaBarProps) => {
   return (
-    <View className={cn('-mx-4 flex-row items-center', className)}>
+    <View className={cn('-mx-4 flex-row items-center ', className)}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="min-h-10"
+        className="min-h-10 "
         contentContainerClassName={cn(
-          'flex-row items-center gap-2 pl-4 pr-2 overflow-hidden',
+          'flex-row items-center gap-2 pl-4 pr-4 overflow-hidden ',
           contentClassName
         )}
         keyboardShouldPersistTaps="handled"

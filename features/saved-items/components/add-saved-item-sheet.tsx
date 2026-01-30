@@ -51,7 +51,18 @@ const SavedItemMetaBar = () => {
 };
 
 const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
-  const { reset, itemInputRef, onSubmit, isValid } = useItemSheet();
+  const {
+    reset,
+    itemInputRef,
+    itemInputValue,
+    showMatchingItems,
+    setShowMatchingItems,
+    onChangeItemText,
+    onSelect,
+    onSubmit,
+    isValid,
+    disableAutocomplete,
+  } = useItemSheet();
   const { sheetRef } = useSavedItemSheetInternal();
 
   return (
@@ -72,7 +83,17 @@ const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
       }
     >
       <BottomSheet.SheetView className="pb-safe gap-4">
-        <ItemInput placeholder="Item name" />
+        <ItemInput
+          placeholder="Item name"
+          value={itemInputValue}
+          onChangeText={onChangeItemText}
+          onSelect={onSelect}
+          showMatchingItems={showMatchingItems}
+          setShowMatchingItems={setShowMatchingItems}
+          onSubmit={onSubmit}
+          inputRef={itemInputRef}
+          disableAutocomplete={disableAutocomplete}
+        />
         <SavedItemMetaBar />
       </BottomSheet.SheetView>
     </BottomSheet>

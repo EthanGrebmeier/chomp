@@ -5,6 +5,7 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { ItemInput } from '../../../components/item-sheet/item-input';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
@@ -17,7 +18,6 @@ import {
   MealPlanItemProvider,
   useMealPlanItem,
 } from './meal-plan-item-context';
-import { MealPlanItemInput } from './meal-plan-item-input';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
 
 type EditItemSheetProps = {
@@ -102,8 +102,8 @@ const EditItemSheetContent = ({
     <View className="gap-4">
       <View className="w-full flex-row items-center justify-between gap-2">
         <View className="flex-1">
-          <MealPlanItemInput
-            ref={itemInputRef}
+          <ItemInput
+            placeholder="Item name"
             value={itemName}
             onChangeText={text => {
               setItemName(text);
@@ -116,6 +116,7 @@ const EditItemSheetContent = ({
             showMatchingItems={showMatchingItems}
             setShowMatchingItems={setShowMatchingItems}
             onSubmit={onSubmit}
+            inputRef={itemInputRef}
           />
         </View>
         <MealItemDropdownMenu itemName={itemName} onRemove={handleRemoveItem} />
