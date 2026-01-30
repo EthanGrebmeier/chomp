@@ -15,11 +15,7 @@ import { Text } from '../ui/text';
 
 import { EditUnitSheet, EditUnitSheetRef } from './edit-unit-sheet';
 import { formatQuantityUnit, normalizeUnit } from './unit-utils';
-import {
-  CUSTOM_UNIT_VALUE,
-  DEFAULT_UNIT_VALUE,
-  UNIT_OPTIONS,
-} from './units';
+import { CUSTOM_UNIT_VALUE, DEFAULT_UNIT_VALUE, UNIT_OPTIONS } from './units';
 
 type UnitOptionProps = {
   label: string;
