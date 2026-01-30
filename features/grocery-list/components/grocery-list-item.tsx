@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { CategoryTag } from '../../../components/category-tag';
+import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { StoreTag } from '../../../components/store-tag';
 import {
   ContextMenuItem,
@@ -18,7 +19,6 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
-import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { cn } from '../../../lib/utils';
 import { checkListItem } from '../instant/check-list-item';
 import { removeGroceryListItem } from '../instant/remove-grocery-list-item';
@@ -163,7 +163,11 @@ export const GroceryListItem = ({
         </ListItem>
       }
     >
-      <ContextMenuItem key="delete-grocery-item" destructive onSelect={handleDelete}>
+      <ContextMenuItem
+        key="delete-grocery-item"
+        destructive
+        onSelect={handleDelete}
+      >
         <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
       </ContextMenuItem>
     </ContextMenuRoot>

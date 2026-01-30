@@ -1,7 +1,7 @@
 import { InstaQLEntity } from '@instantdb/react-native';
 
 import schema from '../../instant.schema';
-import { Recipe } from '../recipes/types';
+import { RecipeWithIngredients } from '../recipes/types';
 import { Store } from '../stores/types';
 
 export type MealPlanRecipe = InstaQLEntity<typeof schema, 'meal_plan_recipes'>;
@@ -20,7 +20,7 @@ export type MealTag =
   | 'None';
 
 export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
-  recipe: Recipe;
+  recipe: RecipeWithIngredients;
 };
 
 export type AddRecipeToDateArgs = {

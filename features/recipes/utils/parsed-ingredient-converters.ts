@@ -1,6 +1,6 @@
 import { BaseGroceryItem } from '@/features/grocery-list/types';
 
-import { ParsedIngredient } from '../api/types';
+import { IngredientCategory, ParsedIngredient } from '../api/types';
 
 /**
  * Convert a ParsedIngredient to a BaseGroceryItem for use with ItemSheetProvider.

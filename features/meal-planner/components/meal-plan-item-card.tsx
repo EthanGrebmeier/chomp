@@ -1,5 +1,6 @@
 import { Alert, View } from 'react-native';
 
+import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import {
   ContextMenuItem,
   ContextMenuItemTitle,
@@ -7,7 +8,6 @@ import {
 } from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
-import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { MealPlanItem } from '../types';
 

@@ -53,7 +53,7 @@ function InitialLayout() {
 export default function RootLayout() {
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    useDrizzleStudio(db);
+    useDrizzleStudio(db as unknown as Parameters<typeof useDrizzleStudio>[0]);
   }
   return (
     <ClerkProvider

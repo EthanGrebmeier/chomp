@@ -10,13 +10,13 @@ import {
   RecipeWithIngredients,
 } from '../../../features/recipes/types';
 import { cn } from '../../../lib/utils';
-import { formatQuantityUnit } from '../unit-utils';
 import { BottomSheet } from '../../bottom-sheet';
 import { BackButton } from '../../ui/back-button';
 import { Button } from '../../ui/button';
 import { HapticPressable } from '../../ui/haptic-pressable';
 import { Icon } from '../../ui/icon';
 import { Text } from '../../ui/text';
+import { formatQuantityUnit } from '../unit-utils';
 
 type IngredientRowProps = {
   className?: string;

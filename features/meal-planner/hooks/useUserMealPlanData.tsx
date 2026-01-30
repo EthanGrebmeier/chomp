@@ -5,10 +5,9 @@ export const useUserMealPlanData = () => {
   const { data, isLoading, error } = useUserMealPlanDataQuery();
 
   // Filter out recipes that don't have recipe data loaded
-  const recipes: MealPlanRecipeWithRecipe[] =
-    data?.meal_plan_recipes?.filter(
-      (r): r is MealPlanRecipeWithRecipe => r.recipe !== undefined
-    ) ?? [];
+  const recipes = (data?.meal_plan_recipes ?? []).filter(
+    recipe => recipe.recipe !== undefined
+  ) as MealPlanRecipeWithRecipe[];
 
   return {
     recipes,
@@ -17,4 +16,3 @@ export const useUserMealPlanData = () => {
     error,
   };
 };
-

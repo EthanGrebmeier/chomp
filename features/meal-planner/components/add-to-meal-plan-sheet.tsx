@@ -9,6 +9,7 @@ import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
+import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { BackButton } from '../../../components/ui/back-button';
@@ -20,7 +21,6 @@ import { cn } from '../../../lib/utils';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
 import { useAddRecipeToDate } from '../hooks/useAddRecipeToMealPlan';
-import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 
 import { DatePillSheet } from './date-pill-sheet';
 import {
@@ -288,7 +288,10 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
                         {ingredient.name}
                       </Text>
                       <Text className="text-sm text-muted-foreground">
-                        {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
+                        {formatQuantityUnit(
+                          ingredient.quantity,
+                          ingredient.unit
+                        )}
                       </Text>
                     </View>
                   ))}

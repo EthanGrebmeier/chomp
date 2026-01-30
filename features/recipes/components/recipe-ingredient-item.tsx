@@ -1,9 +1,9 @@
 import { Pressable, View } from 'react-native';
 
 import { CategoryTag } from '../../../components/category-tag';
+import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
-import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { useRemoveRecipeIngredient } from '../hooks/useRemoveRecipeIngredient';
 import { RecipeIngredient } from '../types';
 
@@ -23,7 +23,11 @@ export const RecipeIngredientItem = ({
   const { mutate: removeItem } = useRemoveRecipeIngredient();
   return (
     <ListItem
-      onDelete={canDelete ? () => removeItem({ ingredientId: ingredient.id }) : undefined}
+      onDelete={
+        canDelete
+          ? () => removeItem({ ingredientId: ingredient.id })
+          : undefined
+      }
       className={className}
     >
       <Pressable className="flex-1 gap-1" onPress={() => onEdit?.(ingredient)}>
