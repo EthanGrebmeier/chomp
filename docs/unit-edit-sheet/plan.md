@@ -48,7 +48,7 @@ Validation: Unit tests for normalization and formatting, including `each`, custo
 
 ### Ticket 3: Edit unit sheet component
 
-Status: todo  
+Status: done  
 Scope: Build `EditUnitSheet` with text input, helper text, Save/Cancel, and keyboard “Done” handling.  
 Validation: Manual check for open, save, cancel, and input validation.
 

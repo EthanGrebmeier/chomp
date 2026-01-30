@@ -1,3 +1,4 @@
 2026-01-29
 - Added Vitest setup with a sample unit test for trimStringFields.
 - Added unit catalog constants plus normalize/format helpers with tests.
+- Added EditUnitSheet component with validation and helper text.
