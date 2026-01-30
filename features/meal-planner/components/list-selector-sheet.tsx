@@ -108,12 +108,12 @@ export const ListSelectorSheet = () => {
         >
           <Icon
             as={ShoppingCartIcon}
-            size={20}
+            size={24}
             strokeWidth={3}
             className="text-secondary-foreground"
           />
           {unaddedCount > 0 && (
-            <View className="absolute -right-3 -top-3 ml-1 rounded-full bg-primary px-2 ">
+            <View className="absolute -right-4 -top-4 ml-1 rounded-full bg-primary px-2 ">
               <Text className="text-base font-semibold text-primary-foreground">
                 {unaddedCount}
               </Text>
