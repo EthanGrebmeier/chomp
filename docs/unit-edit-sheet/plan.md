@@ -54,7 +54,7 @@ Validation: Manual check for open, save, cancel, and input validation.
 
 ### Ticket 4: UnitSheet integration
 
-Status: todo  
+Status: done  
 Scope: Use the shared catalog; when the “Custom” option is tapped, open the edit unit sheet; update the header to show custom units.  
 Validation: Manual check that custom units persist through add and edit item flows.
 

@@ -13,14 +13,13 @@ import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
 import { Text } from '../ui/text';
 
-const unitOptions = [
-  { label: 'Each', value: 'each' },
-  { label: 'Kilogram', value: 'kg' },
-  { label: 'Gram', value: 'g' },
-  { label: 'Liter', value: 'l' },
-  { label: 'Milliliter', value: 'ml' },
-  { label: 'Pound', value: 'lb' },
-] as const;
+import { EditUnitSheet, EditUnitSheetRef } from './edit-unit-sheet';
+import { formatQuantityUnit, normalizeUnit } from './unit-utils';
+import {
+  CUSTOM_UNIT_VALUE,
+  DEFAULT_UNIT_VALUE,
+  UNIT_OPTIONS,
+} from './units';
 
 type UnitOptionProps = {
   label: string;
@@ -62,24 +61,27 @@ export const UnitSheet = ({
   onUnitChange,
 }: UnitSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const editSheetRef = useRef<EditUnitSheetRef>(null);
   const quantityInputRef = useRef<TextInput>(null);
   const [localQuantity, setLocalQuantity] = useState(quantity.toString());
-  const [localUnit, setLocalUnit] = useState(unit);
+  const [localUnit, setLocalUnit] = useState(normalizeUnit(unit));
 
-  const selectedUnit = unitOptions.find(opt => opt.value === localUnit);
+  const normalizedLocalUnit = normalizeUnit(localUnit);
+  const isCatalogUnit = UNIT_OPTIONS.some(
+    option =>
+      option.value !== CUSTOM_UNIT_VALUE && option.value === normalizedLocalUnit
+  );
+  const displayUnitLabel =
+    UNIT_OPTIONS.find(option => option.value === normalizedLocalUnit)?.label ??
+    normalizedLocalUnit;
 
   const isValid = !!localQuantity.length && parseInt(localQuantity, 10) > 0;
 
-  const formatDisplay = () => {
-    if (unit === 'each') {
-      return `x${quantity}`;
-    }
-    return `${quantity} ${unit}`;
-  };
+  const formatDisplay = () => formatQuantityUnit(quantity, unit);
 
   const openSheet = () => {
     setLocalQuantity(quantity.toString());
-    setLocalUnit(unit);
+    setLocalUnit(normalizeUnit(unit));
     sheetRef.current?.present();
   };
 
@@ -88,6 +90,10 @@ export const UnitSheet = ({
   };
 
   const handleUnitSelect = (value: string) => {
+    if (value === CUSTOM_UNIT_VALUE) {
+      editSheetRef.current?.present(normalizedLocalUnit);
+      return;
+    }
     setLocalUnit(value);
   };
 
@@ -96,7 +102,7 @@ export const UnitSheet = ({
     if (!isNaN(parsed) && parsed > 0) {
       onQuantityChange(parsed);
     }
-    onUnitChange(localUnit);
+    onUnitChange(normalizedLocalUnit);
     sheetRef.current?.dismiss();
   };
 
@@ -152,7 +158,7 @@ export const UnitSheet = ({
               selectTextOnFocus
             />
             <Text className="text-lg text-muted-foreground">
-              {selectedUnit?.label ?? 'Each'}
+              {displayUnitLabel || DEFAULT_UNIT_VALUE}
             </Text>
           </View>
 
@@ -160,17 +166,28 @@ export const UnitSheet = ({
             Unit
           </Text>
           <View className="gap-2">
-            {unitOptions.map(option => (
+            {UNIT_OPTIONS.map(option => (
               <UnitOption
                 key={option.value}
                 label={option.label}
-                isSelected={localUnit === option.value}
+                isSelected={
+                  option.value === CUSTOM_UNIT_VALUE
+                    ? !isCatalogUnit
+                    : normalizedLocalUnit === option.value
+                }
                 onPress={() => handleUnitSelect(option.value)}
               />
             ))}
           </View>
         </View>
       </BottomSheet>
+
+      <EditUnitSheet
+        ref={editSheetRef}
+        onSave={value => {
+          setLocalUnit(normalizeUnit(value));
+        }}
+      />
     </>
   );
 };
