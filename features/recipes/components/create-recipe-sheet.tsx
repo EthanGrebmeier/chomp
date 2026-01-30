@@ -84,7 +84,7 @@ export const CreateRecipeSheet = forwardRef<
       ref={sheetRef}
       onStartClose={handleClose}
     >
-      <BottomSheet.SheetView className="gap-6">
+      <BottomSheet.SheetView>
         <BottomSheet.Header
           title={isEditing ? 'Edit Recipe' : 'Create Recipe'}
         />

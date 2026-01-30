@@ -109,7 +109,9 @@ type HeaderProps = {
 const Header = ({ title, dismissButton, button, className }: HeaderProps) => {
   return (
     <View className={cn('mb-6 flex-row items-center', className)}>
-      <View className="w-12 items-start">{dismissButton}</View>
+      {(dismissButton ?? button) && (
+        <View className="w-12 items-start">{dismissButton}</View>
+      )}
       <View className="mx-2 flex-1">
         <Text
           className="text-center text-2xl font-bold leading-tight"
@@ -119,7 +121,9 @@ const Header = ({ title, dismissButton, button, className }: HeaderProps) => {
           {title}
         </Text>
       </View>
-      <View className="w-12 items-end">{button}</View>
+      {(dismissButton ?? button) && (
+        <View className="w-12 items-end">{button}</View>
+      )}
     </View>
   );
 };

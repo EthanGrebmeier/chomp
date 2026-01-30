@@ -97,30 +97,21 @@ export const ListSelectorSheet = () => {
           )}
         </ScrollView>
       </BottomSheet>
-      {unaddedCount > 0 && (
-        <Button
-          size="iconLg"
-          variant="secondary"
-          className="absolute left-6 z-10"
-          style={{ bottom: NATIVE_TABS_OFFSET }}
-          onPress={() => sheetRef.current?.present()}
-          disabled={isAddingToList}
-        >
-          <Icon
-            as={ShoppingCartIcon}
-            size={24}
-            strokeWidth={3}
-            className="text-secondary-foreground"
-          />
-          {unaddedCount > 0 && (
-            <View className="absolute -right-4 -top-4 ml-1 rounded-full bg-primary px-2 ">
-              <Text className="text-base font-semibold text-primary-foreground">
-                {unaddedCount}
-              </Text>
-            </View>
-          )}
-        </Button>
-      )}
+      <Button
+        size="iconLg"
+        variant="secondary"
+        className="absolute left-6 z-10"
+        style={{ bottom: NATIVE_TABS_OFFSET }}
+        onPress={() => sheetRef.current?.present()}
+        disabled={isAddingToList || unaddedCount === 0}
+      >
+        <Icon
+          as={ShoppingCartIcon}
+          size={20}
+          strokeWidth={3}
+          className="text-secondary-foreground"
+        />
+      </Button>
     </>
   );
 };
