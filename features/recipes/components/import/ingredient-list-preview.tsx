@@ -2,6 +2,11 @@ import { CheckIcon } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
 import { CategoryTag } from '@/components/category-tag';
+import {
+  formatQuantityUnit,
+  normalizeUnit,
+} from '@/components/item-sheet/unit-utils';
+import { DEFAULT_UNIT_VALUE } from '@/components/item-sheet/units';
 import { Button } from '@/components/ui/button';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
@@ -24,18 +29,13 @@ export type IngredientListPreviewProps = {
  */
 const formatIngredient = (ingredient: ParsedIngredient): string => {
   const parts: string[] = [];
-
-  // Add quantity if present
-  if (ingredient.quantity !== null) {
-    parts.push(String(ingredient.quantity));
+  const normalizedUnit = normalizeUnit(ingredient.unit);
+  if (ingredient.quantity != null) {
+    parts.push(formatQuantityUnit(ingredient.quantity, normalizedUnit));
+  } else if (normalizedUnit && normalizedUnit !== DEFAULT_UNIT_VALUE) {
+    parts.push(normalizedUnit);
   }
 
-  // Add unit if present and not empty
-  if (ingredient.unit?.trim()) {
-    parts.push(ingredient.unit);
-  }
-
-  // Add name
   parts.push(ingredient.name);
   return parts.join(' ');
 };

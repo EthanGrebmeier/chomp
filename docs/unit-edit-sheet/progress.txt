@@ -5,3 +5,4 @@
 - Integrated UnitSheet with shared catalog and custom unit editing.
 - Refactored unit displays to use formatQuantityUnit across list, recipe, and meal plan items.
 - Normalized imported and meal plan units to handle empty/trimmed values.
+- Updated recipe import ingredient preview to use shared unit formatting.

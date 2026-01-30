@@ -72,7 +72,7 @@ Validation: Manual checks with empty units, 16+ char units, and units with speci
 
 ### Ticket 7: Cross-feature QA pass
 
-Status: todo  
+Status: done  
 Scope: Validate custom units across recipe import edit flow, ingredient preview, meal plan items, and recipe-to-list actions.  
 Validation: End-to-end manual demo flow covering import → edit → save → display.
 
