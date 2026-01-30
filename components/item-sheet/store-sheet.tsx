@@ -143,8 +143,12 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
           }
           title="Store"
           button={
-            <Button onPress={handleOpenCreateStore} size="icon" variant="ghost">
-              <Icon as={PlusIcon} size={24} className="text-primary" />
+            <Button
+              onPress={handleOpenCreateStore}
+              size="icon"
+              variant="default"
+            >
+              <Icon as={PlusIcon} strokeWidth={3} size={24} />
             </Button>
           }
         />
@@ -152,7 +156,7 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
         <ScrollView
           className="max-h-96 px-2"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
         >
           <StoreOption
             label="None"
@@ -183,10 +187,14 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
       <BottomSheet ref={createStoreSheetRef} name="create-store-sheet">
         <BottomSheet.SheetView>
           <View className="flex-row items-center gap-2 pb-2">
-            <BackButton
-              onPress={() => createStoreSheetRef.current?.dismiss()}
+            <BottomSheet.Header
+              title="New Store"
+              dismissButton={
+                <BackButton
+                  onPress={() => createStoreSheetRef.current?.dismiss()}
+                />
+              }
             />
-            <BottomSheet.Header title="New Store" />
           </View>
           <View className="mt-4">
             <Text className="mb-2 text-sm font-medium text-muted-foreground">

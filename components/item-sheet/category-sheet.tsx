@@ -138,6 +138,7 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingBottom: 20,
+            paddingTop: 8,
           }}
         >
           <CategoryOption
