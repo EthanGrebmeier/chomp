@@ -148,7 +148,7 @@ export const UnitSheet = ({
 
         <View>
           <View className="px-4">
-            <View className="mb-4 flex-row items-center gap-3 rounded-xl border border-border bg-muted px-4 py-3">
+            <View className="mb-4 flex-row items-center justify-between gap-3 rounded-xl border border-border bg-muted px-4 py-3 ">
               <TextInput
                 ref={quantityInputRef}
                 value={localQuantity}
@@ -159,9 +159,13 @@ export const UnitSheet = ({
                 placeholderTextColor="#9ca3af"
                 selectTextOnFocus
               />
-              <Text className="text-lg text-muted-foreground">
-                {displayUnitLabel || DEFAULT_UNIT_VALUE}
-              </Text>
+              <HapticPressable
+                onPress={() => handleUnitSelect(CUSTOM_UNIT_VALUE)}
+              >
+                <Text className="text-lg text-muted-foreground">
+                  {displayUnitLabel || DEFAULT_UNIT_VALUE}
+                </Text>
+              </HapticPressable>
             </View>
           </View>
 
