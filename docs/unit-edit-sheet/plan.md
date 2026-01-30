@@ -36,7 +36,7 @@
 
 ### Ticket 1: Test tooling for unit utilities
 
-Status: todo  
+Status: done  
 Scope: Add a minimal test runner (Jest or Vitest) and config for TypeScript utility tests.  
 Validation: Run a sample unit test in CI/local to confirm the setup works.
 
