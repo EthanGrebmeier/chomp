@@ -184,8 +184,22 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
       </BottomSheet>
 
       {/* Create Store Sheet */}
-      <BottomSheet ref={createStoreSheetRef} name="create-store-sheet">
-        <BottomSheet.SheetView>
+      <BottomSheet
+        ref={createStoreSheetRef}
+        name="create-store-sheet"
+        footer={
+          <View className="px-10 pb-4">
+            <Button
+              variant="default"
+              onPress={handleCreateStore}
+              disabled={!canCreate}
+            >
+              <Text>Create</Text>
+            </Button>
+          </View>
+        }
+      >
+        <BottomSheet.SheetView className="pb-safe">
           <View className="flex-row items-center gap-2 pb-2">
             <BottomSheet.Header
               title="New Store"
@@ -211,15 +225,6 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
               onSubmitEditing={handleCreateStore}
               editable={!isCreating}
             />
-          </View>
-          <View className="mt-6">
-            <Button
-              variant="default"
-              onPress={handleCreateStore}
-              disabled={!canCreate}
-            >
-              <Text>Create</Text>
-            </Button>
           </View>
         </BottomSheet.SheetView>
       </BottomSheet>

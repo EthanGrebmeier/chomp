@@ -22,8 +22,18 @@ export const ClearListConfirmationSheet = ({
   };
 
   return (
-    <BottomSheet name="clear-list-confirmation-sheet" ref={ref}>
-      <BottomSheet.SheetView>
+    <BottomSheet
+      name="clear-list-confirmation-sheet"
+      ref={ref}
+      footer={
+        <View className="px-10 pb-4">
+          <Button variant="destructive" onPress={handleConfirm}>
+            <Text>Clear List</Text>
+          </Button>
+        </View>
+      }
+    >
+      <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header title="Clear Grocery List" />
         <View className="gap-6">
           <Text className="text-center text-muted-foreground">
@@ -31,9 +41,6 @@ export const ClearListConfirmationSheet = ({
             cannot be undone.
           </Text>
           <View className="gap-2">
-            <Button variant="destructive" onPress={handleConfirm}>
-              <Text>Clear List</Text>
-            </Button>
             <Button onPress={onCancel} variant="outline">
               <Text>Cancel</Text>
             </Button>

@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { CheckIcon, ExternalLinkIcon } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -67,28 +67,66 @@ const IngredientRow = ({
 
 type IngredientSelectorProps = {
   recipe: RecipeWithIngredients;
-  listId: string;
   onBack: () => void;
-  onComplete: () => void;
   onDismiss: () => void;
+  showFooter?: boolean;
+  listId?: string;
+  onComplete?: () => void;
+  selectedIds?: Set<string>;
+  onToggleIngredient?: (id: string) => void;
+  onToggleAll?: () => void;
+  onAddToList?: () => void;
+  isAdding?: boolean;
 };
 
 export const IngredientSelector = ({
   recipe,
-  listId,
   onBack,
-  onComplete,
   onDismiss,
+  selectedIds,
+  onToggleIngredient,
+  onToggleAll,
+  showFooter,
+  listId,
+  onComplete,
+  onAddToList,
+  isAdding,
 }: IngredientSelectorProps) => {
   const router = useRouter();
-  // Initialize with all ingredients selected
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    new Set(recipe.recipe_ingredients.map(i => i.id))
+  const isControlled = Boolean(
+    selectedIds && onToggleIngredient && onToggleAll
   );
-  const [isAdding, setIsAdding] = useState(false);
+  const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(
+    new Set(recipe.recipe_ingredients.map(ingredient => ingredient.id))
+  );
+  const [isAddingInternal, setIsAddingInternal] = useState(false);
 
-  const toggleIngredient = (id: string) => {
-    setSelectedIds(prev => {
+  useEffect(() => {
+    if (!isControlled) {
+      setInternalSelectedIds(
+        new Set(recipe.recipe_ingredients.map(ingredient => ingredient.id))
+      );
+    }
+  }, [isControlled, recipe.recipe_ingredients]);
+
+  const effectiveSelectedIds = isControlled
+    ? (selectedIds as Set<string>)
+    : internalSelectedIds;
+
+  const allSelected =
+    effectiveSelectedIds.size === recipe.recipe_ingredients.length;
+
+  const handleGoToRecipe = () => {
+    onDismiss();
+    router.push(`/recipes/${recipe.id}`);
+  };
+
+  const handleToggleIngredient = (id: string) => {
+    if (isControlled) {
+      onToggleIngredient?.(id);
+      return;
+    }
+    setInternalSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -99,28 +137,41 @@ export const IngredientSelector = ({
     });
   };
 
-  const toggleAll = () => {
-    if (selectedIds.size === recipe.recipe_ingredients.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(recipe.recipe_ingredients.map(i => i.id)));
+  const handleToggleAll = () => {
+    if (isControlled) {
+      onToggleAll?.();
+      return;
     }
+    setInternalSelectedIds(prev => {
+      const allSelectedInternal =
+        prev.size === recipe.recipe_ingredients.length;
+      if (allSelectedInternal) {
+        return new Set();
+      }
+      return new Set(
+        recipe.recipe_ingredients.map(ingredient => ingredient.id)
+      );
+    });
   };
 
   const handleAdd = async () => {
-    if (selectedIds.size === 0) return;
+    if (onAddToList) {
+      onAddToList();
+      return;
+    }
+    if (!listId || effectiveSelectedIds.size === 0) return;
 
-    setIsAdding(true);
+    setIsAddingInternal(true);
     try {
       const selectedIngredients = recipe.recipe_ingredients
-        .filter(i => selectedIds.has(i.id))
-        .map(i => ({
-          name: i.name,
-          quantity: i.quantity,
-          unit: i.unit,
-          notes: i.notes ?? null,
-          category: i.category ?? null,
-          storeId: i.store?.id,
+        .filter(ingredient => effectiveSelectedIds.has(ingredient.id))
+        .map(ingredient => ({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          notes: ingredient.notes ?? null,
+          category: ingredient.category ?? null,
+          storeId: ingredient.store?.id,
         }));
 
       await addRecipeToList({
@@ -132,20 +183,16 @@ export const IngredientSelector = ({
       toast.success(
         `Added ${selectedIngredients.length} item${selectedIngredients.length === 1 ? '' : 's'} from ${recipe.name}`
       );
-      onComplete();
+      onComplete?.();
     } catch {
       toast.error('Failed to add ingredients');
     } finally {
-      setIsAdding(false);
+      setIsAddingInternal(false);
     }
   };
 
-  const allSelected = selectedIds.size === recipe.recipe_ingredients.length;
-
-  const handleGoToRecipe = () => {
-    onDismiss();
-    router.push(`/recipes/${recipe.id}`);
-  };
+  const shouldShowFooter = showFooter ?? Boolean(onAddToList ?? listId);
+  const isAddingResolved = isAdding ?? isAddingInternal;
 
   return (
     <View className="relative">
@@ -170,10 +217,11 @@ export const IngredientSelector = ({
             Ingredients
           </Text>
           <Text className="text-sm text-muted-foreground">
-            {selectedIds.size} of {recipe.recipe_ingredients.length} selected
+            {effectiveSelectedIds.size} of {recipe.recipe_ingredients.length}{' '}
+            selected
           </Text>
         </View>
-        <Button variant="secondary" onPress={toggleAll}>
+        <Button variant="secondary" onPress={handleToggleAll}>
           <Text className="text-sm ">
             {allSelected ? 'Deselect all' : 'Select all'}
           </Text>
@@ -194,8 +242,8 @@ export const IngredientSelector = ({
             )}
             key={ingredient.id}
             ingredient={ingredient}
-            isSelected={selectedIds.has(ingredient.id)}
-            onToggle={() => toggleIngredient(ingredient.id)}
+            isSelected={effectiveSelectedIds.has(ingredient.id)}
+            onToggle={() => handleToggleIngredient(ingredient.id)}
           />
         ))}
       </ScrollView>
@@ -207,14 +255,16 @@ export const IngredientSelector = ({
         pointerEvents="none"
         style={styles.footerGradient}
       />
-      <View className="relative mt-4 px-4 pb-4">
-        <Button
-          onPress={handleAdd}
-          disabled={selectedIds.size === 0 || isAdding}
-        >
-          <Text>Add to List</Text>
-        </Button>
-      </View>
+      {shouldShowFooter && (
+        <View className="relative mt-4 px-4 pb-4">
+          <Button
+            onPress={handleAdd}
+            disabled={effectiveSelectedIds.size === 0 || isAddingResolved}
+          >
+            <Text>Add to List</Text>
+          </Button>
+        </View>
+      )}
     </View>
   );
 };

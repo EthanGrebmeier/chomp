@@ -1,10 +1,12 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, TextInput, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { Button } from '../../../components/ui/button';
+import { Text } from '../../../components/ui/text';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
 import { MealPlanItemWithStore } from '../types';
@@ -29,9 +31,11 @@ export type EditItemSheetRef = {
 const EditItemSheetContent = ({
   itemToEdit,
   onClose,
+  onSubmit,
 }: {
   itemToEdit: MealPlanItemWithStore | null;
   onClose: () => void;
+  onSubmit: () => void;
 }) => {
   const {
     itemName,
@@ -57,37 +61,7 @@ const EditItemSheetContent = ({
   } = useMealPlanItem();
 
   const itemInputRef = useRef<TextInput>(null);
-  const { mutate: updateMealPlanItem } = useUpdateMealPlanItem();
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
-
-  const handleUpdateItem = () => {
-    if (!itemToEdit || !isValid()) return;
-
-    updateMealPlanItem(
-      {
-        mealPlanItemId: itemToEdit.id,
-        updates: {
-          name: itemName.trim(),
-          quantity,
-          unit,
-          notes: itemNotes.trim() || undefined,
-          category,
-          storeId,
-          date: selectedDate,
-          mealTag,
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success('Item updated');
-          onClose();
-        },
-        onError: error => {
-          toast.error('Failed to update item');
-        },
-      }
-    );
-  };
 
   const handleRemoveItem = () => {
     if (!itemToEdit) return;
@@ -141,7 +115,7 @@ const EditItemSheetContent = ({
             }}
             showMatchingItems={showMatchingItems}
             setShowMatchingItems={setShowMatchingItems}
-            onSubmit={handleUpdateItem}
+            onSubmit={onSubmit}
           />
         </View>
         <MealItemDropdownMenu itemName={itemName} onRemove={handleRemoveItem} />
@@ -170,12 +144,96 @@ const EditItemSheetContent = ({
           onCategoryChange={setCategory}
           storeId={storeId}
           onStoreIdChange={setStoreId}
-          onSubmit={handleUpdateItem}
+          onSubmit={onSubmit}
           isValid={isValid()}
-          submitLabel="Update Item"
+          showAction={false}
         />
       </View>
     </View>
+  );
+};
+
+const EditItemSheetContainer = ({
+  sheetRef,
+  itemToEdit,
+  onClose,
+  onReset,
+}: {
+  sheetRef: React.RefObject<TrueSheet | null>;
+  itemToEdit: MealPlanItemWithStore | null;
+  onClose: () => void;
+  onReset: () => void;
+}) => {
+  const {
+    itemName,
+    itemNotes,
+    quantity,
+    unit,
+    category,
+    storeId,
+    selectedDate,
+    mealTag,
+    isValid,
+  } = useMealPlanItem();
+  const { mutate: updateMealPlanItem } = useUpdateMealPlanItem();
+
+  const handleUpdateItem = () => {
+    if (!itemToEdit || !isValid()) return;
+
+    updateMealPlanItem(
+      {
+        mealPlanItemId: itemToEdit.id,
+        updates: {
+          name: itemName.trim(),
+          quantity,
+          unit,
+          notes: itemNotes.trim() || undefined,
+          category,
+          storeId,
+          date: selectedDate,
+          mealTag,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success('Item updated');
+          onClose();
+        },
+        onError: () => {
+          toast.error('Failed to update item');
+        },
+      }
+    );
+  };
+
+  return (
+    <BottomSheet
+      name="edit-item-sheet"
+      ref={sheetRef}
+      onStartClose={() => {
+        KeyboardController.dismiss();
+        onReset();
+      }}
+      footer={
+        itemToEdit ? (
+          <View className="px-10 pb-4">
+            <Button onPress={handleUpdateItem} disabled={!isValid()}>
+              <Text>Update Item</Text>
+            </Button>
+          </View>
+        ) : undefined
+      }
+    >
+      <BottomSheet.SheetView className="pb-safe">
+        {itemToEdit && (
+          <EditItemSheetContent
+            itemToEdit={itemToEdit}
+            onClose={onClose}
+            onSubmit={handleUpdateItem}
+          />
+        )}
+      </BottomSheet.SheetView>
+    </BottomSheet>
   );
 };
 
@@ -223,24 +281,16 @@ export const EditItemSheet = ({
   };
 
   return (
-    <BottomSheet
-      name="edit-item-sheet"
-      ref={sheetRef}
-      onStartClose={() => {
-        KeyboardController.dismiss();
-        handleReset();
-      }}
+    <MealPlanItemProvider
+      key={itemToEdit?.id ?? 'meal-plan-item'}
+      initialValues={initialValues}
     >
-      <BottomSheet.SheetView>
-        {initialValues && (
-          <MealPlanItemProvider initialValues={initialValues}>
-            <EditItemSheetContent
-              itemToEdit={itemToEdit}
-              onClose={handleClose}
-            />
-          </MealPlanItemProvider>
-        )}
-      </BottomSheet.SheetView>
-    </BottomSheet>
+      <EditItemSheetContainer
+        sheetRef={sheetRef}
+        itemToEdit={itemToEdit}
+        onClose={handleClose}
+        onReset={handleReset}
+      />
+    </MealPlanItemProvider>
   );
 };

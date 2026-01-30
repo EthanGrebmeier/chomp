@@ -62,8 +62,15 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
         name="edit-list-name-sheet"
         ref={sheetRef}
         onStartClose={handleDismiss}
+        footer={
+          <View className="px-10 pb-4">
+            <Button onPress={handleSave}>
+              <Text>Save</Text>
+            </Button>
+          </View>
+        }
       >
-        <BottomSheet.SheetView>
+        <BottomSheet.SheetView className="pb-safe">
           <BottomSheet.Header
             title="Edit List Name"
             dismissButton={<CloseButton onPress={handleCancel} />}
@@ -81,9 +88,6 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
               returnKeyType="done"
             />
           </View>
-          <Button className="self-end" onPress={handleSave}>
-            <Text>Save</Text>
-          </Button>
         </BottomSheet.SheetView>
       </BottomSheet>
     );
@@ -91,4 +95,3 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
 );
 
 EditListNameSheet.displayName = 'EditListNameSheet';
-

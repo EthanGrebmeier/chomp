@@ -82,56 +82,6 @@ const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
   );
 };
 
-// Component that uses the context for item mode
-const AddItemMode = ({ onSuccess }: { onSuccess: () => void }) => {
-  const {
-    itemName,
-    quantity,
-    unit,
-    category,
-    storeId,
-    selectedDate,
-    mealTag,
-    itemNotes,
-    resetState,
-  } = useMealPlanItem();
-
-  const { mutate: addItemToDate } = useAddItemToDate();
-
-  const handleAddItem = () => {
-    if (!itemName || !selectedDate) return;
-
-    addItemToDate(
-      {
-        name: itemName,
-        quantity,
-        unit,
-        category,
-        storeId,
-        date: selectedDate,
-        mealTag,
-        notes: itemNotes || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success(`${itemName} added to meal plan`);
-          resetState();
-          onSuccess();
-        },
-        onError: () => {
-          toast.error('Failed to add item');
-        },
-      }
-    );
-  };
-
-  return (
-    <View className="flex-1 px-4">
-      <MealPlanItemForm onSubmit={handleAddItem} />
-    </View>
-  );
-};
-
 type AddToMealPlanSheetProps = {
   ref?: React.RefObject<AddToMealPlanSheetRef | null>;
 };
@@ -141,19 +91,31 @@ export type AddToMealPlanSheetRef = {
   dismiss: () => void;
 };
 
-export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
+const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const {
+    itemName,
+    quantity,
+    unit,
+    category,
+    storeId,
+    selectedDate,
+    setSelectedDate,
+    mealTag,
+    itemNotes,
+    resetState: resetMealPlanItemState,
+    isValid,
+  } = useMealPlanItem();
 
   const [mode, setMode] = useState<AddMode>('recipe');
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
-  const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined);
-
   const [recipeDate, setRecipeDate] = useState<string | undefined>(undefined);
   const [recipeMealTag, setRecipeMealTag] = useState<string | undefined>(
     undefined
   );
 
+  const { mutate: addItemToDate, isPending: isAddingItem } = useAddItemToDate();
   const { mutate: addRecipeToDate } = useAddRecipeToDate();
 
   // Expose methods via ref
@@ -161,8 +123,8 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
     ref.current = {
       present: (options?: { defaultDate?: string }) => {
         if (options?.defaultDate) {
-          setDefaultDate(options.defaultDate);
           setRecipeDate(options.defaultDate);
+          setSelectedDate(options.defaultDate);
         }
         sheetRef.current?.present();
       },
@@ -170,12 +132,11 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
     };
   }
 
-  const resetState = () => {
+  const resetSheetState = () => {
     setMode('recipe');
     setSelectedRecipe(null);
     setRecipeDate(undefined);
     setRecipeMealTag(undefined);
-    setDefaultDate(undefined);
   };
 
   const handleSelectRecipe = (recipe: RecipeWithIngredients) => {
@@ -200,7 +161,7 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
       {
         onSuccess: () => {
           toast.success(`${selectedRecipe.name} added to meal plan`);
-          resetState();
+          resetSheetState();
           sheetRef.current?.dismiss();
         },
         onError: () => {
@@ -225,6 +186,33 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
     sheetRef.current?.dismiss();
   };
 
+  const handleAddItem = () => {
+    if (!itemName || !selectedDate) return;
+
+    addItemToDate(
+      {
+        name: itemName,
+        quantity,
+        unit,
+        category,
+        storeId,
+        date: selectedDate,
+        mealTag,
+        notes: itemNotes || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${itemName} added to meal plan`);
+          resetMealPlanItemState();
+          handleItemSuccess();
+        },
+        onError: () => {
+          toast.error('Failed to add item');
+        },
+      }
+    );
+  };
+
   const isRecipeModeValid = selectedRecipe && recipeDate;
 
   return (
@@ -239,10 +227,30 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
             : ['auto']
       }
       scrollable={mode === 'recipe' && !selectedRecipe}
+      viewClassName="pb-safe"
       onStartClose={() => {
         KeyboardController.dismiss();
-        resetState();
+        resetMealPlanItemState();
+        resetSheetState();
       }}
+      footer={
+        mode === 'recipe' && selectedRecipe ? (
+          <View className="px-10 pb-4">
+            <Button onPress={handleAddRecipe} disabled={!isRecipeModeValid}>
+              <Text>Add to Plan</Text>
+            </Button>
+          </View>
+        ) : mode === 'item' ? (
+          <View className="px-10 pb-4">
+            <Button
+              onPress={handleAddItem}
+              disabled={!isValid() || isAddingItem}
+            >
+              <Text>Add Item</Text>
+            </Button>
+          </View>
+        ) : undefined
+      }
     >
       {!selectedRecipe && (
         <ModeToggle mode={mode} onModeChange={handleModeChange} />
@@ -297,16 +305,7 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
                   ))}
                 </ScrollView>
               </View>
-              <MetaBarLayout
-                action={
-                  <Button
-                    onPress={handleAddRecipe}
-                    disabled={!isRecipeModeValid}
-                  >
-                    <Text>Add to Plan</Text>
-                  </Button>
-                }
-              >
+              <MetaBarLayout>
                 <ScrollingMetaBar>
                   <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
                   <MealTimeSheet
@@ -324,10 +323,18 @@ export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
           />
         )
       ) : (
-        <MealPlanItemProvider initialValues={{ selectedDate: defaultDate }}>
-          <AddItemMode onSuccess={handleItemSuccess} />
-        </MealPlanItemProvider>
+        <View className="flex-1 px-4">
+          <MealPlanItemForm onSubmit={handleAddItem} />
+        </View>
       )}
     </BottomSheet>
+  );
+};
+
+export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
+  return (
+    <MealPlanItemProvider initialValues={{ selectedDate: undefined }}>
+      <AddToMealPlanSheetInner ref={ref} />
+    </MealPlanItemProvider>
   );
 };

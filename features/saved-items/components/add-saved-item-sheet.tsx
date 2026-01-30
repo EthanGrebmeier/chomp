@@ -37,18 +37,11 @@ export const useSavedItemSheet = () => {
   return context;
 };
 
-const SavedItemMetaBar = ({ submitLabel }: { submitLabel: string }) => {
-  const { category, setCategory, storeId, setStoreId, onSubmit, isValid } =
-    useItemSheet();
+const SavedItemMetaBar = () => {
+  const { category, setCategory, storeId, setStoreId } = useItemSheet();
 
   return (
-    <MetaBarLayout
-      action={
-        <Button variant="default" onPress={onSubmit} disabled={!isValid}>
-          <Text>{submitLabel}</Text>
-        </Button>
-      }
-    >
+    <MetaBarLayout>
       <View className="flex-row gap-2">
         <CategorySheet category={category} onSelect={setCategory} />
         <StoreSheet storeId={storeId} onSelect={setStoreId} />
@@ -58,7 +51,7 @@ const SavedItemMetaBar = ({ submitLabel }: { submitLabel: string }) => {
 };
 
 const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
-  const { reset, itemInputRef } = useItemSheet();
+  const { reset, itemInputRef, onSubmit, isValid } = useItemSheet();
   const { sheetRef } = useSavedItemSheetInternal();
 
   return (
@@ -70,10 +63,17 @@ const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
       onOpen={() => {
         itemInputRef.current?.focus();
       }}
+      footer={
+        <View className="px-10 pb-4">
+          <Button onPress={onSubmit} disabled={!isValid}>
+            <Text>{submitLabel}</Text>
+          </Button>
+        </View>
+      }
     >
-      <BottomSheet.SheetView className="gap-4">
+      <BottomSheet.SheetView className="pb-safe gap-4">
         <ItemInput placeholder="Item name" />
-        <SavedItemMetaBar submitLabel={submitLabel} />
+        <SavedItemMetaBar />
       </BottomSheet.SheetView>
     </BottomSheet>
   );

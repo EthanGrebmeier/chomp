@@ -101,6 +101,7 @@ export const MealPlanItemForm = ({
         onStoreIdChange={setStoreId}
         onSubmit={onSubmit}
         isValid={isValid()}
+        showAction={false}
       />
     </View>
   );

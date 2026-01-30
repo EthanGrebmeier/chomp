@@ -19,17 +19,24 @@ export const AddItemConflictSheet = ({
   onCancel,
 }: AddItemConflictSheetProps) => {
   return (
-    <BottomSheet name="add-item-conflict-sheet" ref={ref}>
-      <BottomSheet.SheetView>
+    <BottomSheet
+      name="add-item-conflict-sheet"
+      ref={ref}
+      footer={
+        <View className="px-10 pb-4">
+          <Button variant="default" onPress={onIncrement}>
+            <Text>Increment Quantities</Text>
+          </Button>
+        </View>
+      }
+    >
+      <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header title="Item Already Exists" />
         <View className="gap-4">
           <Text className="text-muted-foreground">
             This item already exists in the list. What would you like to do?
           </Text>
           <View className="gap-2">
-            <Button variant="default" onPress={onIncrement}>
-              <Text>Increment Quantities</Text>
-            </Button>
             <Button variant="outline" onPress={onCreateSeparate}>
               <Text>Create Separate Items</Text>
             </Button>

@@ -40,8 +40,18 @@ export const RecipeConflictSheet = forwardRef<
     };
 
     return (
-      <BottomSheet name="recipe-conflict-sheet" ref={bottomSheetRef}>
-        <BottomSheet.SheetView>
+      <BottomSheet
+        name="recipe-conflict-sheet"
+        ref={bottomSheetRef}
+        footer={
+          <View className="px-10 pb-4">
+            <Button onPress={onIncrement} disabled={isPending}>
+              <Text>Increment Quantities</Text>
+            </Button>
+          </View>
+        }
+      >
+        <BottomSheet.SheetView className="pb-safe">
           <BottomSheet.Header title={`"${recipeName}" Already Exists`} />
           <View className="gap-4">
             <Text className="text-muted-foreground">
@@ -49,14 +59,6 @@ export const RecipeConflictSheet = forwardRef<
             </Text>
 
             <View className="gap-2">
-              <Button
-                onPress={onIncrement}
-                disabled={isPending}
-                className="w-full"
-              >
-                <Text>Increment Quantities</Text>
-              </Button>
-
               <Button
                 onPress={onCreateSeparate}
                 disabled={isPending}

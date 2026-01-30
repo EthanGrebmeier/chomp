@@ -468,7 +468,7 @@ export const ImportRecipeSheet = forwardRef<
         viewClassName={isPreview ? 'flex-1' : undefined}
         footer={renderFooter()}
       >
-        <BottomSheet.SheetView className="gap-4">
+        <BottomSheet.SheetView className="pb-safe gap-4">
           {renderContent()}
         </BottomSheet.SheetView>
       </BottomSheet>

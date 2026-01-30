@@ -1,11 +1,12 @@
 import { SheetDetent, TrueSheet } from '@lodev09/react-native-true-sheet';
 import { PlusIcon } from 'lucide-react-native';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { addGroceryListItem } from '../../../features/grocery-list/instant/add-grocery-list-item';
 import { BaseGroceryItem } from '../../../features/grocery-list/types';
+import { addRecipeToList } from '../../../features/recipes/instant/add-recipe-to-list';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
 import { NATIVE_TABS_OFFSET } from '../../../features/shared/consts';
 import { cn } from '../../../lib/utils';
@@ -79,10 +80,20 @@ type AddItemSheetProps = {
 
 const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
   const ref = useRef<TrueSheet>(null);
-  const { reset, itemInputRef } = useItemSheet();
+  const {
+    reset,
+    itemInputRef,
+    onSubmit,
+    isValid,
+    mode: itemSheetMode,
+  } = useItemSheet();
   const [mode, setMode] = useState<AddMode>('item');
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
+  const [selectedIngredientIds, setSelectedIngredientIds] = useState<
+    Set<string>
+  >(new Set());
+  const [isAddingRecipe, setIsAddingRecipe] = useState(false);
 
   const detents = useMemo<SheetDetent[]>(() => {
     if (mode === 'item') {
@@ -124,6 +135,79 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
     ref.current?.dismiss();
   };
 
+  useEffect(() => {
+    if (selectedRecipe) {
+      setSelectedIngredientIds(
+        new Set(
+          selectedRecipe.recipe_ingredients.map(ingredient => ingredient.id)
+        )
+      );
+      return;
+    }
+    setSelectedIngredientIds(new Set());
+  }, [selectedRecipe]);
+
+  const toggleIngredient = (id: string) => {
+    setSelectedIngredientIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleAllIngredients = () => {
+    if (!selectedRecipe) return;
+    setSelectedIngredientIds(prev => {
+      const allSelected =
+        prev.size === selectedRecipe.recipe_ingredients.length;
+      if (allSelected) {
+        return new Set();
+      }
+      return new Set(
+        selectedRecipe.recipe_ingredients.map(ingredient => ingredient.id)
+      );
+    });
+  };
+
+  const handleAddRecipeToList = async () => {
+    if (!selectedRecipe || selectedIngredientIds.size === 0 || isAddingRecipe) {
+      return;
+    }
+
+    setIsAddingRecipe(true);
+    try {
+      const selectedIngredients = selectedRecipe.recipe_ingredients
+        .filter(ingredient => selectedIngredientIds.has(ingredient.id))
+        .map(ingredient => ({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          notes: ingredient.notes ?? null,
+          category: ingredient.category ?? null,
+          storeId: ingredient.store?.id,
+        }));
+
+      await addRecipeToList({
+        recipeId: selectedRecipe.id,
+        listId: groceryListId,
+        ingredients: selectedIngredients,
+      });
+
+      toast.success(
+        `Added ${selectedIngredients.length} item${selectedIngredients.length === 1 ? '' : 's'} from ${selectedRecipe.name}`
+      );
+      handleAddComplete();
+    } catch {
+      toast.error('Failed to add ingredients');
+    } finally {
+      setIsAddingRecipe(false);
+    }
+  };
+
   return (
     <>
       <Button
@@ -148,14 +232,43 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         }}
         onStartClose={handleClose}
         scrollable={mode !== 'item'}
-        viewClassName="flex-1"
+        viewClassName="flex-1 pb-safe"
+        footer={
+          mode === 'item' ? (
+            <View className=" px-10 pb-4">
+              <View>
+                <Button
+                  variant="default"
+                  size="default"
+                  onPress={onSubmit}
+                  disabled={!isValid}
+                >
+                  <Text className="text-primary-foreground">
+                    {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
+                  </Text>
+                </Button>
+              </View>
+            </View>
+          ) : mode === 'recipe' && selectedRecipe ? (
+            <View className="px-10 pb-4">
+              <Button
+                variant="default"
+                size="default"
+                onPress={handleAddRecipeToList}
+                disabled={selectedIngredientIds.size === 0 || isAddingRecipe}
+              >
+                <Text className="text-primary-foreground">Add to List</Text>
+              </Button>
+            </View>
+          ) : undefined
+        }
       >
         {!selectedRecipe && (
           <ModeToggle mode={mode} onModeChange={handleModeChange} />
         )}
         {mode === 'item' ? (
           <>
-            <View className="flex-1 px-4">
+            <View className="pb-safe flex-1 px-4">
               <ItemForm />
               <MetaBar />
             </View>
@@ -163,10 +276,12 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         ) : selectedRecipe ? (
           <IngredientSelector
             recipe={selectedRecipe}
-            listId={groceryListId}
             onBack={handleBackToRecipes}
-            onComplete={handleAddComplete}
             onDismiss={() => ref.current?.dismiss()}
+            selectedIds={selectedIngredientIds}
+            onToggleIngredient={toggleIngredient}
+            onToggleAll={toggleAllIngredients}
+            showFooter={false}
           />
         ) : (
           <RecipeSelector

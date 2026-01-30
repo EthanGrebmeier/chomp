@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { CheckIcon, ScaleIcon } from 'lucide-react-native';
+import { ScaleIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 
@@ -128,21 +128,20 @@ export const UnitSheet = ({
         name="unit-sheet"
         scrollable
         detents={[0.7, 0.9]}
+        viewClassName="pb-safe"
+        footer={
+          <View className="px-10 pb-4">
+            <Button onPress={handleConfirm} disabled={!isValid}>
+              <Text>Confirm</Text>
+            </Button>
+          </View>
+        }
       >
         <BottomSheet.Header
           className="px-4"
           title="Quantity"
           dismissButton={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
-          }
-          button={
-            <Button onPress={handleConfirm} size="icon" disabled={!isValid}>
-              <Icon
-                as={CheckIcon}
-                size={20}
-                className="text-primary-foreground"
-              />
-            </Button>
           }
         />
 

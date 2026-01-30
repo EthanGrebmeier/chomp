@@ -59,8 +59,15 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
       onOpen={() => {
         nameInputRef.current?.focus();
       }}
+      footer={
+        <View className="px-10 pb-4">
+          <Button variant="default" onPress={onSubmit} disabled={!name.trim()}>
+            <Text>{submitLabel}</Text>
+          </Button>
+        </View>
+      }
     >
-      <BottomSheet.SheetView>
+      <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header
           title={submitLabel === 'Update' ? 'Edit Store' : 'Add Store'}
         />
@@ -79,11 +86,6 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
             returnKeyType="done"
             onSubmitEditing={onSubmit}
           />
-        </View>
-        <View className="mt-6">
-          <Button variant="default" onPress={onSubmit} disabled={!name.trim()}>
-            <Text>{submitLabel}</Text>
-          </Button>
         </View>
       </BottomSheet.SheetView>
     </BottomSheet>

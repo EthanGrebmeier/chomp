@@ -1,5 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createContext, useContext, useRef, useState } from 'react';
+import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
@@ -9,6 +10,8 @@ import {
   GroceryListItemWithRecipe,
 } from '../../../features/grocery-list/types';
 import { BottomSheet } from '../../bottom-sheet';
+import { Button } from '../../ui/button';
+import { Text } from '../../ui/text';
 import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
@@ -29,12 +32,28 @@ export const useEditItemSheet = () => {
 };
 
 const EditItemContents = () => {
-  const { reset } = useItemSheet();
+  const { reset, isValid, onSubmit } = useItemSheet();
   const { sheetRef } = useEditItemSheetInternal();
 
   return (
-    <BottomSheet name="edit-item-sheet" ref={sheetRef} onStartClose={reset}>
-      <BottomSheet.SheetView>
+    <BottomSheet
+      footer={
+        <View className="px-10 pb-4">
+          <Button
+            variant="default"
+            size="default"
+            onPress={onSubmit}
+            disabled={!isValid}
+          >
+            <Text className="text-primary-foreground">Update Item</Text>
+          </Button>
+        </View>
+      }
+      name="edit-item-sheet"
+      ref={sheetRef}
+      onStartClose={reset}
+    >
+      <BottomSheet.SheetView className="pb-safe">
         <ItemForm />
         <MetaBar />
       </BottomSheet.SheetView>

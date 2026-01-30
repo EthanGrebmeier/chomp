@@ -7,12 +7,12 @@ import { Pressable, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import {
   CalendarSheet,
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
+import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
@@ -122,8 +122,15 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         onStartClose={() => {
           KeyboardController.dismiss();
         }}
+        footer={
+          <View className="px-10 pb-4">
+            <Button onPress={handleUpdateMealPlanRecipe}>
+              <Text>Update Meal</Text>
+            </Button>
+          </View>
+        }
       >
-        <BottomSheet.SheetView>
+        <BottomSheet.SheetView className="pb-safe">
           <CalendarSheet
             name="edit-meal-calendar-sheet"
             ref={calendarSheetRef}
@@ -150,7 +157,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
               />
             </View>
           ) : (
-            <View>
+            <View className="pb-4">
               <View className="gap-2">
                 {selectedRecipe && (
                   <View className="w-full flex-row items-center justify-between gap-2">
@@ -175,13 +182,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                   </View>
                 )}
 
-                <MetaBarLayout
-                  action={
-                    <Button onPress={handleUpdateMealPlanRecipe}>
-                      <Text>Update Meal</Text>
-                    </Button>
-                  }
-                >
+                <MetaBarLayout>
                   <View className="flex-row items-center gap-2">
                     <Pressable
                       onPress={() => calendarSheetRef.current?.present()}

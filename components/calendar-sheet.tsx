@@ -11,19 +11,15 @@ import {
   startOfWeek,
   subDays,
 } from 'date-fns';
-import { Check } from 'lucide-react-native';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { cn } from '@/lib/utils';
 
-import { useTheme } from '../hooks/use-theme';
-
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './ui/button';
 import { CloseButton } from './ui/close-button';
-import { Icon } from './ui/icon';
 import { Text } from './ui/text';
 
 type CalendarSheetProps = {
@@ -54,7 +50,6 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
     },
     ref
   ) => {
-    const theme = useTheme();
     const bottomSheetRef = useRef<TrueSheet>(null);
 
     useImperativeHandle(ref, () => ({
@@ -298,26 +293,19 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
         onStartClose={onClose}
         ref={bottomSheetRef}
         insetAdjustment="never"
+        footer={
+          <View className="px-10 pb-4">
+            <Button onPress={handleConfirm} disabled={!internalSelectedDate}>
+              <Text>Confirm</Text>
+            </Button>
+          </View>
+        }
       >
-        <BottomSheet.SheetView className="gap-4">
-          {/* Header with close and confirm buttons, centered title */}
+        <BottomSheet.SheetView className="pb-safe gap-4">
           <View className="flex-row items-center justify-between pb-2">
             <CloseButton onPress={handleClose} />
             <Text className="text-2xl font-bold">{headerTitle}</Text>
-            <Button
-              variant="secondary"
-              size="icon"
-              onPress={handleConfirm}
-              disabled={!internalSelectedDate}
-            >
-              <Icon
-                as={Check}
-                size={20}
-                strokeWidth={3}
-                color={theme.primary}
-                className={cn(!internalSelectedDate && 'opacity-50')}
-              />
-            </Button>
+            <View className="w-10" />
           </View>
           <View className="-mx-4 flex-row items-center justify-center ">
             <Text

@@ -25,17 +25,24 @@ export const DeleteListConfirmationSheet = ({
   const confirmText = isOwner ? 'Delete List' : 'Leave List';
 
   return (
-    <BottomSheet name="delete-list-confirmation-sheet" ref={ref}>
-      <BottomSheet.SheetView>
+    <BottomSheet
+      name="delete-list-confirmation-sheet"
+      ref={ref}
+      footer={
+        <View className="px-10 pb-4">
+          <Button variant="destructive" onPress={onConfirm}>
+            <Text>{confirmText}</Text>
+          </Button>
+        </View>
+      }
+    >
+      <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header title={title} />
         <View className="gap-4">
           <Text className="text-center text-muted-foreground">
             {description}
           </Text>
           <View className="gap-2">
-            <Button variant="destructive" onPress={onConfirm}>
-              <Text>{confirmText}</Text>
-            </Button>
             <Button onPress={onCancel} variant="outline">
               <Text>Cancel</Text>
             </Button>

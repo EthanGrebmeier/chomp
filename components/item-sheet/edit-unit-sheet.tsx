@@ -60,8 +60,15 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
         name="edit-unit-sheet"
         ref={sheetRef}
         onStartClose={handleDismiss}
+        footer={
+          <View className="px-10 pb-4">
+            <Button onPress={handleSave} disabled={!canSave}>
+              <Text>Save</Text>
+            </Button>
+          </View>
+        }
       >
-        <BottomSheet.SheetView>
+        <BottomSheet.SheetView className="pb-safe">
           <BottomSheet.Header
             title="Edit Unit"
             dismissButton={<CloseButton onPress={handleCancel} />}
@@ -83,12 +90,6 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
             <Text className="text-sm text-muted-foreground">
               Up to {MAX_UNIT_LENGTH} characters.
             </Text>
-          </View>
-
-          <View className="flex-row gap-3">
-            <Button className="flex-1" onPress={handleSave} disabled={!canSave}>
-              <Text>Save</Text>
-            </Button>
           </View>
         </BottomSheet.SheetView>
       </BottomSheet>

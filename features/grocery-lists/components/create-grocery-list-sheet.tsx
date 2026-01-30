@@ -73,8 +73,15 @@ export const CreateGroceryListSheet = forwardRef<
         KeyboardController.dismiss();
         setNewListName('');
       }}
+      footer={
+        <View className="px-10 pb-4">
+          <Button onPress={handleCreateList} disabled={overLimit}>
+            <Text>Create List</Text>
+          </Button>
+        </View>
+      }
     >
-      <BottomSheet.SheetView>
+      <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header
           title="Create New List"
           dismissButton={<CloseButton onPress={handleCancel} />}
@@ -110,13 +117,6 @@ export const CreateGroceryListSheet = forwardRef<
             returnKeyType="done"
           />
         </View>
-        <Button
-          className="self-end"
-          onPress={handleCreateList}
-          disabled={overLimit}
-        >
-          <Text>Create List</Text>
-        </Button>
       </BottomSheet.SheetView>
     </BottomSheet>
   );

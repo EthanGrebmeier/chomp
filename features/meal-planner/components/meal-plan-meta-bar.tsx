@@ -25,6 +25,7 @@ type MealPlanMetaBarProps = {
   onSubmit: () => void;
   isValid: boolean;
   submitLabel?: string;
+  showAction?: boolean;
 };
 
 export const MealPlanMetaBar = ({
@@ -43,13 +44,16 @@ export const MealPlanMetaBar = ({
   onSubmit,
   isValid,
   submitLabel = 'Add Item',
+  showAction = true,
 }: MealPlanMetaBarProps) => {
   return (
     <MetaBarLayout
       action={
-        <Button variant="default" onPress={onSubmit} disabled={!isValid}>
-          <Text className="text-primary-foreground">{submitLabel}</Text>
-        </Button>
+        showAction ? (
+          <Button variant="default" onPress={onSubmit} disabled={!isValid}>
+            <Text className="text-primary-foreground">{submitLabel}</Text>
+          </Button>
+        ) : undefined
       }
     >
       <ScrollingMetaBar>
