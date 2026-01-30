@@ -1,9 +1,9 @@
 import { useSignInWithApple, useSSO } from '@clerk/clerk-expo';
 import * as AuthSession from 'expo-auth-session';
+import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
-import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 
 import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
@@ -141,21 +141,4 @@ export function useOAuthFlow() {
     isLoadingApple: isLoading === 'oauth_apple',
     isLoading: isLoading !== null,
   };
-}
-
-// Hook to check if Apple authentication is available
-export function useAppleAuthAvailable() {
-  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
-
-  // Check availability on mount
-  useEffect(() => {
-    if (Platform.OS === 'ios') {
-      AppleAuthentication.isAvailableAsync().then(setIsAvailable);
-    } else {
-      // Apple Sign-In via web OAuth is available on all platforms
-      setIsAvailable(true);
-    }
-  }, []);
-
-  return isAvailable;
 }
