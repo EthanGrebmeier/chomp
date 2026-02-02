@@ -49,6 +49,7 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
 
   return (
     <FlatList
+      contentContainerClassName="pb-36"
       data={recipes}
       renderItem={({ item, index }) => (
         <ContextMenuRoot

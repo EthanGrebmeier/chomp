@@ -32,17 +32,13 @@ export function SocialButtons({
     <View className="mt-4 flex-col items-center justify-center gap-2">
       {Platform.OS === 'ios' && (
         <AppleAuthenticationButton
-          buttonType={
-            type === 'sign-in'
-              ? AppleAuthenticationButtonType.SIGN_IN
-              : AppleAuthenticationButtonType.SIGN_UP
-          }
+          buttonType={buttonType}
           buttonStyle={
             isDark
               ? AppleAuthenticationButtonStyle.WHITE
               : AppleAuthenticationButtonStyle.BLACK
           }
-          cornerRadius={10}
+          cornerRadius={99}
           onPress={signInWithApple}
           style={{ height: 40, width: 252 }}
         />
@@ -50,7 +46,7 @@ export function SocialButtons({
 
       <GoogleSigninButton
         size={GoogleSigninButton.Size.Wide}
-        style={{ height: 40, width: 252 }}
+        style={{ height: 40, width: 252, borderRadius: 0 }}
         color={GoogleSigninButton.Color.Dark}
         onPress={signInWithGoogle}
         disabled={isDisabled}
