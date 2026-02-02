@@ -119,7 +119,9 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
     setMode(newMode);
     setSelectedRecipe(null);
     if (newMode === 'item') {
-      itemInputRef.current?.focus();
+      setTimeout(() => {
+        itemInputRef.current?.focus();
+      }, 10);
     }
   };
 
@@ -232,7 +234,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         }}
         onStartClose={handleClose}
         scrollable={mode !== 'item'}
-        viewClassName="flex-1 pb-safe"
+        viewClassName="pb-safe"
         footer={
           mode === 'item' ? (
             <View className=" px-10 pb-4">
@@ -268,7 +270,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         )}
         {mode === 'item' ? (
           <>
-            <View className="lex-1 px-4">
+            <View className="px-4">
               <ItemForm />
               <MetaBar />
             </View>

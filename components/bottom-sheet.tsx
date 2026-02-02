@@ -48,7 +48,7 @@ export const BottomSheet = ({
       ref={ref}
       name={name}
       detents={detents ?? ['auto']}
-      onWillPresent={onOpen}
+      onDidPresent={onOpen}
       onDidDismiss={onStartClose}
       backgroundColor={
         colorscheme.colorScheme === 'dark' ? THEME.dark.card : THEME.light.card

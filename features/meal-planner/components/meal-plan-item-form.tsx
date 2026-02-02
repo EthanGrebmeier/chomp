@@ -64,11 +64,11 @@ export const MealPlanItemForm = ({
 
   const notesClassName =
     notesStyle === 'inline'
-      ? 'min-h-44 flex-1 text-start text-lg font-bold text-foreground'
+      ? 'min-h-44 text-start text-lg font-bold text-foreground'
       : 'min-h-24 rounded-md border border-border bg-card px-3 py-2 text-base text-foreground';
 
   return (
-    <View className="flex-1">
+    <View>
       <ItemInput
         placeholder="Item name"
         value={itemName}

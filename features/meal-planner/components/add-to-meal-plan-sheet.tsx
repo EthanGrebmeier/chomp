@@ -215,6 +215,17 @@ const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
 
   const isRecipeModeValid = selectedRecipe && recipeDate;
 
+  const footerContent =
+    mode === 'recipe' && selectedRecipe ? (
+      <Button onPress={handleAddRecipe} disabled={!isRecipeModeValid}>
+        <Text>Add to Plan</Text>
+      </Button>
+    ) : mode === 'item' ? (
+      <Button onPress={handleAddItem} disabled={!isValid() || isAddingItem}>
+        <Text>Add Item</Text>
+      </Button>
+    ) : null;
+
   return (
     <BottomSheet
       name="add-to-meal-plan-sheet"
@@ -234,22 +245,9 @@ const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
         resetSheetState();
       }}
       footer={
-        mode === 'recipe' && selectedRecipe ? (
-          <View className="px-10 pb-4">
-            <Button onPress={handleAddRecipe} disabled={!isRecipeModeValid}>
-              <Text>Add to Plan</Text>
-            </Button>
-          </View>
-        ) : mode === 'item' ? (
-          <View className="px-10 pb-4">
-            <Button
-              onPress={handleAddItem}
-              disabled={!isValid() || isAddingItem}
-            >
-              <Text>Add Item</Text>
-            </Button>
-          </View>
-        ) : undefined
+        <View className={footerContent ? 'px-10 pb-4' : undefined}>
+          {footerContent}
+        </View>
       }
     >
       {!selectedRecipe && (
@@ -328,7 +326,7 @@ const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
           />
         )
       ) : (
-        <View className="flex-1 px-4">
+        <View className="px-4">
           <MealPlanItemForm onSubmit={handleAddItem} />
         </View>
       )}
