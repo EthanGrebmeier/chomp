@@ -1,7 +1,7 @@
 import { SheetDetent, TrueSheet } from '@lodev09/react-native-true-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PlusIcon } from 'lucide-react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, useColorScheme } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
@@ -128,27 +128,19 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
 
   const handleRecipeSelect = (recipe: RecipeWithIngredients) => {
     setSelectedRecipe(recipe);
+    setSelectedIngredientIds(
+      new Set(recipe.recipe_ingredients.map(ingredient => ingredient.id))
+    );
   };
 
   const handleBackToRecipes = () => {
     setSelectedRecipe(null);
+    setSelectedIngredientIds(new Set());
   };
 
   const handleAddComplete = () => {
     ref.current?.dismiss();
   };
-
-  useEffect(() => {
-    if (selectedRecipe) {
-      setSelectedIngredientIds(
-        new Set(
-          selectedRecipe.recipe_ingredients.map(ingredient => ingredient.id)
-        )
-      );
-      return;
-    }
-    setSelectedIngredientIds(new Set());
-  }, [selectedRecipe]);
 
   const toggleIngredient = (id: string) => {
     setSelectedIngredientIds(prev => {
@@ -239,7 +231,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         footer={
           <>
             {mode === 'item' ? (
-              <View className=" px-10 pb-4">
+              <View className=" z-10 px-10 pb-4">
                 <View>
                   <Button
                     variant="default"
@@ -250,11 +242,12 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
                     <Text className="text-primary-foreground">
                       {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
                     </Text>
+                    e
                   </Button>
                 </View>
               </View>
             ) : mode === 'recipe' && selectedRecipe ? (
-              <View className="px-10 pb-4">
+              <View className="z-10 px-10 pb-4">
                 <Button
                   variant="default"
                   size="default"
@@ -352,10 +345,11 @@ const AddItem = ({ groceryListId }: AddItemProps) => {
 const styles = StyleSheet.create({
   footerGradient: {
     position: 'absolute',
-    bottom: -80,
+    bottom: 0,
     left: 0,
     right: 0,
-    height: 160,
+    height: 80,
+    zIndex: 0,
   },
 });
 
