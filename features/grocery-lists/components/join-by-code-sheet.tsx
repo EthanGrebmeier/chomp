@@ -2,6 +2,7 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { useColorScheme } from 'nativewind';
 import {
   forwardRef,
+  useCallback,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -34,6 +35,7 @@ export const JoinByCodeSheet = forwardRef<
 >(({ onJoined }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
   const otpRef = useRef<OtpInputRef>(null);
+  const lastSubmittedCodeRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { colorScheme } = useColorScheme();
 
@@ -44,9 +46,10 @@ export const JoinByCodeSheet = forwardRef<
 
   const joinGroceryListByCode = useJoinGroceryListByCode();
 
-  const resetCode = () => {
+  const resetCode = useCallback(() => {
     otpRef.current?.clear();
-  };
+    lastSubmittedCodeRef.current = null;
+  }, []);
 
   const handleDismiss = () => {
     KeyboardController.dismiss();
@@ -64,29 +67,47 @@ export const JoinByCodeSheet = forwardRef<
     dismiss: () => sheetRef.current?.dismiss(),
   }));
 
-  const handleJoinByCode = async (joinCode: string) => {
-    if (joinCode.length !== CODE_LENGTH) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await joinGroceryListByCode.mutateAsync(joinCode);
-      if (result.success) {
-        toast.success(`Joined "${result.listName}"`);
-        resetCode();
-        sheetRef.current?.dismiss();
-        onJoined(result.listId);
-      } else {
-        toast.error(result.error);
-        // Clear and refocus on error so user can try again
-        resetCode();
-        otpRef.current?.focus();
+  const handleJoinByCode = useCallback(
+    async (joinCode: string) => {
+      if (isLoading) {
+        return;
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+      setIsLoading(true);
+      try {
+        const result = await joinGroceryListByCode.mutateAsync(joinCode);
+        if (result.success) {
+          toast.success(`Joined "${result.listName}"`);
+          resetCode();
+          sheetRef.current?.dismiss();
+          onJoined(result.listId);
+        } else {
+          toast.error(result.error);
+          // Clear and refocus on error so user can try again
+          resetCode();
+          otpRef.current?.focus();
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoading, joinGroceryListByCode, onJoined, resetCode]
+  );
+
+  const tryJoinByCode = useCallback(
+    (value: string) => {
+      const joinCode = value.trim();
+      if (joinCode.length !== CODE_LENGTH) {
+        return;
+      }
+      if (lastSubmittedCodeRef.current === joinCode) {
+        return;
+      }
+      lastSubmittedCodeRef.current = joinCode;
+      void handleJoinByCode(joinCode);
+    },
+    [handleJoinByCode]
+  );
 
   return (
     <BottomSheet
@@ -117,7 +138,8 @@ export const JoinByCodeSheet = forwardRef<
             <OtpInput
               ref={otpRef}
               numberOfDigits={CODE_LENGTH}
-              onFilled={handleJoinByCode}
+              onTextChange={tryJoinByCode}
+              onFilled={tryJoinByCode}
               autoFocus={false}
               hideStick={false}
               type="alphanumeric"
@@ -125,6 +147,8 @@ export const JoinByCodeSheet = forwardRef<
                 accessibilityLabel: 'Join code input',
                 autoCapitalize: 'none',
                 autoCorrect: false,
+                contextMenuHidden: false,
+                selectTextOnFocus: true,
               }}
               theme={{
                 containerStyle: {
