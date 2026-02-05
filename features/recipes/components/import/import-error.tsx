@@ -10,7 +10,6 @@ import {
 import { useColorScheme } from 'nativewind';
 import { View } from 'react-native';
 
-import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 
@@ -20,13 +19,10 @@ import { getImportErrorMessage } from '../../constants/import-errors';
 
 type ImportErrorProps = {
   error: RecipeParseError;
-  onRetry: () => void;
-  onEditUrl: () => void;
-  onCancel: () => void;
 };
 
 /** Error codes that can be retried without changing the URL */
-const RETRYABLE_ERROR_CODES: ParseRecipeUrlErrorCode[] = [
+export const RETRYABLE_ERROR_CODES: ParseRecipeUrlErrorCode[] = [
   'fetch_timeout',
   'server_error',
   'rate_limited',
@@ -82,20 +78,13 @@ function getErrorHint(code: ParseRecipeUrlErrorCode): string | null {
   }
 }
 
-export function ImportError({
-  error,
-  onRetry,
-  onEditUrl,
-  onCancel,
-}: ImportErrorProps) {
+export function ImportError({ error }: ImportErrorProps) {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
 
   const errorCode = error.code as ParseRecipeUrlErrorCode;
   const errorMessage = getImportErrorMessage(errorCode);
   const errorHint = getErrorHint(errorCode);
-  const isRetryable = RETRYABLE_ERROR_CODES.includes(errorCode);
-
   const IconComponent = getErrorIcon(errorCode);
 
   // For rate limited errors with rate limit info, show countdown
@@ -130,21 +119,7 @@ export function ImportError({
         </View>
       )}
 
-      {/* Action Buttons */}
-      <View className="mt-2 w-full gap-2">
-        {isRetryable ? (
-          <Button onPress={onRetry}>
-            <Text>Try Again</Text>
-          </Button>
-        ) : (
-          <Button onPress={onEditUrl}>
-            <Text>Edit URL</Text>
-          </Button>
-        )}
-        <Button variant="outline" onPress={onCancel}>
-          <Text>Cancel</Text>
-        </Button>
-      </View>
+      {/* Actions are rendered in the sheet footer */}
     </View>
   );
 }

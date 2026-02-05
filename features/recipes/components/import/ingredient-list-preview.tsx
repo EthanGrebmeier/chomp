@@ -21,6 +21,15 @@ export type IngredientListPreviewProps = {
   onToggleSelection: (index: number) => void;
   onToggleAll: () => void;
   onEdit?: (index: number, ingredient: ParsedIngredient) => void;
+  showHeader?: boolean;
+};
+
+export type IngredientListHeaderProps = {
+  selectedCount: number;
+  totalCount: number;
+  allSelected: boolean;
+  onToggleAll: () => void;
+  isEditable: boolean;
 };
 
 /**
@@ -40,12 +49,41 @@ const formatIngredient = (ingredient: ParsedIngredient): string => {
   return parts.join(' ');
 };
 
+export const IngredientListHeader = ({
+  selectedCount,
+  totalCount,
+  allSelected,
+  onToggleAll,
+  isEditable,
+}: IngredientListHeaderProps) => {
+  return (
+    <View className="mb-2 flex-row items-center justify-between">
+      <View>
+        <Text className="text-xl font-semibold text-foreground">
+          Ingredients ({selectedCount}/{totalCount})
+        </Text>
+        <Text className="text-xs text-muted-foreground">
+          {isEditable
+            ? 'Tap checkbox to select, tap text to edit'
+            : 'Tap to select'}
+        </Text>
+      </View>
+      <Button variant="secondary" onPress={onToggleAll}>
+        <Text className="text-sm">
+          {allSelected ? 'Deselect all' : 'Select all'}
+        </Text>
+      </Button>
+    </View>
+  );
+};
+
 export const IngredientListPreview = ({
   ingredients,
   selectedIndices,
   onToggleSelection,
   onToggleAll,
   onEdit,
+  showHeader = true,
 }: IngredientListPreviewProps) => {
   if (ingredients.length === 0) {
     return (
@@ -61,21 +99,15 @@ export const IngredientListPreview = ({
 
   return (
     <View>
-      <View className="mb-2 flex-row items-center justify-between">
-        <View>
-          <Text className="text-xl font-semibold text-foreground">
-            Ingredients ({selectedIndices.size}/{ingredients.length})
-          </Text>
-          <Text className="text-xs text-muted-foreground">
-            {onEdit ? 'Tap checkbox to select, tap text to edit' : 'Tap to select'}
-          </Text>
-        </View>
-        <Button variant="secondary" onPress={onToggleAll}>
-          <Text className="text-sm">
-            {allSelected ? 'Deselect all' : 'Select all'}
-          </Text>
-        </Button>
-      </View>
+      {showHeader ? (
+        <IngredientListHeader
+          selectedCount={selectedIndices.size}
+          totalCount={ingredients.length}
+          allSelected={allSelected}
+          onToggleAll={onToggleAll}
+          isEditable={!!onEdit}
+        />
+      ) : null}
       {ingredients.map((ingredient, index) => {
         const isSelected = selectedIndices.has(index);
         return (
@@ -91,6 +123,7 @@ export const IngredientListPreview = ({
               hapticType="selection"
               accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ingredient: ${ingredient.name}`}
               accessibilityRole="checkbox"
+              pressRetentionOffset={{ top: 0, left: 0, right: 0, bottom: 0 }}
             >
               <View
                 className={cn(
@@ -99,7 +132,11 @@ export const IngredientListPreview = ({
                 )}
               >
                 {isSelected && (
-                  <Icon as={CheckIcon} size={18} className="text-primary-foreground" />
+                  <Icon
+                    as={CheckIcon}
+                    size={18}
+                    className="text-primary-foreground"
+                  />
                 )}
               </View>
             </HapticPressable>
@@ -109,6 +146,7 @@ export const IngredientListPreview = ({
               disabled={!onEdit}
               accessibilityLabel={`Edit ingredient: ${ingredient.name}`}
               accessibilityRole="button"
+              pressRetentionOffset={{ top: 0, left: 0, right: 0, bottom: 0 }}
               style={({ pressed }) => ({
                 opacity: pressed && onEdit ? 0.7 : 1,
               })}

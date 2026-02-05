@@ -83,6 +83,13 @@ export const CreateRecipeSheet = forwardRef<
       name="create-recipe-sheet"
       ref={sheetRef}
       onStartClose={handleClose}
+      footer={
+        <View className="px-10 pb-4">
+          <Button onPress={handleSubmit} disabled={!name.trim()}>
+            <Text>{isEditing ? 'Update Recipe' : 'Create Recipe'}</Text>
+          </Button>
+        </View>
+      }
     >
       <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header
@@ -135,11 +142,6 @@ export const CreateRecipeSheet = forwardRef<
               <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
             </View>
           </MetaBarLayout>
-          <View className="px-10 pb-4">
-            <Button onPress={handleSubmit} disabled={!name.trim()}>
-              <Text>{isEditing ? 'Update Recipe' : 'Create Recipe'}</Text>
-            </Button>
-          </View>
         </View>
       </BottomSheet.SheetView>
     </BottomSheet>

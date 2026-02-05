@@ -1,9 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import {
-  AlertTriangleIcon,
-  ArrowLeftIcon,
-  CheckCircleIcon,
-} from 'lucide-react-native';
+import { AlertTriangleIcon, CheckCircleIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import {
   forwardRef,
@@ -12,7 +8,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
@@ -24,7 +21,7 @@ import { THEME } from '@/lib/theme';
 
 import { BackButton } from '../../../../components/ui/back-button';
 import { RecipeParseError } from '../../api/parse-recipe-url';
-import { ParsedIngredient } from '../../api/types';
+import { ParseRecipeUrlErrorCode, ParsedIngredient } from '../../api/types';
 import { useCreateRecipe } from '../../hooks/useCreateRecipe';
 import { useImportRecipeState } from '../../hooks/useImportRecipeState';
 import { useParseRecipeUrl } from '../../hooks/useParseRecipeUrl';
@@ -35,8 +32,11 @@ import {
   EditParsedIngredientSheet,
   EditParsedIngredientSheetRef,
 } from './edit-parsed-ingredient-sheet';
-import { ImportError } from './import-error';
-import { IngredientListPreview } from './ingredient-list-preview';
+import { ImportError, RETRYABLE_ERROR_CODES } from './import-error';
+import {
+  IngredientListHeader,
+  IngredientListPreview,
+} from './ingredient-list-preview';
 import { ParsedRecipePreview } from './parsed-recipe-preview';
 import { UrlInput, UrlInputRef } from './url-input';
 
@@ -276,11 +276,11 @@ export const ImportRecipeSheet = forwardRef<
           <>
             <BottomSheet.Header
               subsection={
-                <BottomSheet.Subtext className="mb-4">
+                <BottomSheet.Subtext>
                   Paste a recipe URL to import ingredients
                 </BottomSheet.Subtext>
               }
-              className="mb-2"
+              className="mb-0"
               title="Import Recipe"
             />
             <UrlInput
@@ -290,11 +290,6 @@ export const ImportRecipeSheet = forwardRef<
               onSubmit={handleSubmitUrl}
               error={validationError}
             />
-            <View className="mt-4">
-              <Button onPress={handleSubmitUrl} disabled={!url.trim()}>
-                <Text>Import Recipe</Text>
-              </Button>
-            </View>
           </>
         );
 
@@ -316,18 +311,9 @@ export const ImportRecipeSheet = forwardRef<
           <>
             <BottomSheet.Header
               title="Import Failed"
-              dismissButton={
-                <Button variant="ghost" size="icon" onPress={handleGoBack}>
-                  <ArrowLeftIcon size={20} color={theme.foreground} />
-                </Button>
-              }
+              dismissButton={<BackButton onPress={handleGoBack} />}
             />
-            <ImportError
-              error={state.error}
-              onRetry={handleSubmitUrl}
-              onEditUrl={handleRetry}
-              onCancel={() => sheetRef.current?.dismiss()}
-            />
+            <ImportError error={state.error} />
           </>
         );
 
@@ -343,16 +329,13 @@ export const ImportRecipeSheet = forwardRef<
         };
 
         return (
-          <>
+          <View className="min-h-0 gap-4 ">
             <BottomSheet.Header
               title="Review Recipe"
+              className="px-4"
               dismissButton={<BackButton onPress={handleGoBack} />}
             />
-            <ScrollView
-              className="-mx-4 flex-1 px-4"
-              contentContainerClassName="pb-16"
-              showsVerticalScrollIndicator={false}
-            >
+            <View className="gap-4 px-4">
               <ParsedRecipePreview
                 recipeName={state.editedName}
                 onNameChange={handleNameChange}
@@ -361,7 +344,7 @@ export const ImportRecipeSheet = forwardRef<
 
               {/* Empty ingredients warning - only shown when API returned no ingredients */}
               {!originalHadIngredients && (
-                <View className="mt-4 flex-row items-center gap-3 rounded-lg bg-amber-500/10 p-3">
+                <View className="flex-row items-center gap-3 rounded-lg bg-amber-500/10 p-3">
                   <AlertTriangleIcon size={20} color="#f59e0b" />
                   <Text className="flex-1 text-sm text-amber-700 dark:text-amber-400">
                     No ingredients were found on this page. You can still import
@@ -372,7 +355,7 @@ export const ImportRecipeSheet = forwardRef<
 
               {/* Warning when user deselected all ingredients */}
               {hasNoSelectedIngredients && originalHadIngredients && (
-                <View className="mt-4 flex-row items-center gap-3 rounded-lg bg-muted/50 p-3">
+                <View className="flex-row items-center gap-3 rounded-lg bg-muted/50 p-3">
                   <AlertTriangleIcon size={20} color={theme.mutedForeground} />
                   <Text className="flex-1 text-sm text-muted-foreground">
                     No ingredients selected. You can still import the recipe
@@ -382,18 +365,34 @@ export const ImportRecipeSheet = forwardRef<
               )}
 
               {state.ingredients.length > 0 && (
-                <View className="mt-4">
-                  <IngredientListPreview
-                    ingredients={state.ingredients}
-                    selectedIndices={state.selectedIndices}
-                    onToggleSelection={toggleIngredientSelection}
-                    onToggleAll={toggleAllIngredients}
-                    onEdit={handleEditIngredient}
-                  />
-                </View>
+                <IngredientListHeader
+                  selectedCount={state.selectedIndices.size}
+                  totalCount={state.ingredients.length}
+                  allSelected={
+                    state.selectedIndices.size === state.ingredients.length
+                  }
+                  onToggleAll={toggleAllIngredients}
+                  isEditable
+                />
               )}
-            </ScrollView>
-          </>
+            </View>
+            <View className="min-h-0 ">
+              <ScrollView
+                contentContainerClassName="pb-32 px-4"
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                <IngredientListPreview
+                  ingredients={state.ingredients}
+                  selectedIndices={state.selectedIndices}
+                  onToggleSelection={toggleIngredientSelection}
+                  onToggleAll={toggleAllIngredients}
+                  onEdit={handleEditIngredient}
+                  showHeader={false}
+                />
+              </ScrollView>
+            </View>
+          </View>
         );
       }
 
@@ -431,13 +430,45 @@ export const ImportRecipeSheet = forwardRef<
   const isPreview = state.status === 'preview';
 
   const renderFooter = () => {
+    if (state.status === 'idle') {
+      return (
+        <View className="px-10 pb-4">
+          <Button onPress={handleSubmitUrl} disabled={!url.trim()}>
+            <Text>Import Recipe</Text>
+          </Button>
+        </View>
+      );
+    }
+
+    if (state.status === 'error') {
+      const errorCode = state.error.code as ParseRecipeUrlErrorCode;
+      const isRetryable = RETRYABLE_ERROR_CODES.includes(errorCode);
+
+      return (
+        <View className="gap-2 px-10 pb-4">
+          {isRetryable ? (
+            <Button onPress={handleSubmitUrl}>
+              <Text>Try Again</Text>
+            </Button>
+          ) : (
+            <Button onPress={handleRetry}>
+              <Text>Edit URL</Text>
+            </Button>
+          )}
+          <Button variant="outline" onPress={() => sheetRef.current?.dismiss()}>
+            <Text>Cancel</Text>
+          </Button>
+        </View>
+      );
+    }
+
     if (state.status !== 'preview') return undefined;
 
     const isNameTooLong = state.editedName.length > MAX_RECIPE_NAME_LENGTH;
     const selectedCount = state.selectedIndices.size;
 
     return (
-      <View className="px-8 pb-4">
+      <View className="px-10 pb-4">
         <Button
           onPress={handleConfirmImport}
           disabled={isNameTooLong || !state.editedName.trim()}
@@ -448,14 +479,11 @@ export const ImportRecipeSheet = forwardRef<
               : `Import ${selectedCount} Ingredient${selectedCount !== 1 ? 's' : ''}`}
           </Text>
         </Button>
-        {!state.editedName.trim() && (
-          <Text className="mt-2 text-center text-sm text-destructive">
-            Please enter a recipe name
-          </Text>
-        )}
       </View>
     );
   };
+
+  const content = renderContent();
 
   return (
     <>
@@ -463,14 +491,18 @@ export const ImportRecipeSheet = forwardRef<
         name="import-recipe-sheet"
         ref={sheetRef}
         onStartClose={handleClose}
-        scrollable={isPreview}
+        scrollable={false}
         detents={isPreview ? [0.9] : ['auto']}
-        viewClassName={isPreview ? 'flex-1' : undefined}
         footer={renderFooter()}
+        viewClassName={isPreview ? 'flex-1 gap-4 pb-4' : undefined}
       >
-        <BottomSheet.SheetView className="pb-safe gap-4">
-          {renderContent()}
-        </BottomSheet.SheetView>
+        {isPreview ? (
+          content
+        ) : (
+          <BottomSheet.SheetView className="gap-4 pb-24">
+            {content}
+          </BottomSheet.SheetView>
+        )}
       </BottomSheet>
       <EditParsedIngredientSheet
         ref={editSheetRef}

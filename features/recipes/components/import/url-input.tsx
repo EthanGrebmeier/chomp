@@ -64,7 +64,7 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
               )}
             />
             {value.length > 0 && !disabled && (
-              <View className="absolute right-2 top-1/2 -translate-y-1/2">
+              <View className="absolute right-2 top-0 h-12 items-center justify-center">
                 <Button
                   variant="ghost"
                   size="icon"
