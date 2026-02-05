@@ -111,17 +111,16 @@ export const MealTimeSheet = ({
       </HapticPressable>
 
       <BottomSheet ref={sheetRef} name="meal-time-sheet">
-        <BottomSheet.SheetView>
-          <View className="flex-row items-center gap-2 pb-2">
-            <BottomSheet.Header
-              dismissButton={
-                canGoBack && (
-                  <BackButton onPress={() => sheetRef.current?.dismiss()} />
-                )
-              }
-              title="Meal Time"
-            />
-          </View>
+        <BottomSheet.SheetView className="pb-0">
+          <BottomSheet.Header
+            className="mb-0"
+            dismissButton={
+              canGoBack && (
+                <BackButton onPress={() => sheetRef.current?.dismiss()} />
+              )
+            }
+            title="Meal Time"
+          />
           <ScrollView
             className="max-h-96"
             showsVerticalScrollIndicator={false}

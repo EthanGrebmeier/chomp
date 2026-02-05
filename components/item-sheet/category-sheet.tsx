@@ -126,7 +126,7 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
         name="category-sheet"
       >
         <BottomSheet.Header
-          className="px-4"
+          className="mb-0 px-4"
           title="Category"
           dismissButton={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />

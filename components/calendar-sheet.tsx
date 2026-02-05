@@ -12,7 +12,7 @@ import {
   subDays,
 } from 'date-fns';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { BottomSheet } from './bottom-sheet';
 import { Button } from './ui/button';
 import { CloseButton } from './ui/close-button';
+import { HapticPressable } from './ui/haptic-pressable';
 import { Text } from './ui/text';
 
 type CalendarSheetProps = {
@@ -241,15 +242,14 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
                   const isDisabled = !isWithinValidRange || !isCurrentMonth;
 
                   return (
-                    <Pressable
+                    <HapticPressable
                       key={day.toISOString()}
                       onPress={() => handleDatePress(day)}
                       disabled={isDisabled}
                       className={cn(
                         'h-10 w-[14.28%] items-center justify-center',
                         !isCurrentMonth && 'opacity-30',
-                        isDisabled && 'opacity-30',
-                        !isDisabled && 'active:bg-accent/50'
+                        isDisabled && 'opacity-30'
                       )}
                     >
                       <View
@@ -276,7 +276,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
                           {format(day, 'd')}
                         </Text>
                       </View>
-                    </Pressable>
+                    </HapticPressable>
                   );
                 })}
               </View>

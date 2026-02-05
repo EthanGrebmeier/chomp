@@ -281,12 +281,12 @@ const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
             />
             <View className="gap-4">
               <View>
-                <Text className="text-2xl font-bold text-foreground">
+                <Text className="max-w-52 text-2xl font-bold text-foreground">
                   {selectedRecipe.name}
                 </Text>
               </View>
               <View>
-                <Text className="text-base font-semibold text-foreground">
+                <Text className="text-base font-bold text-foreground">
                   Ingredients
                 </Text>
                 <ScrollView showsVerticalScrollIndicator={false}>

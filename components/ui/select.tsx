@@ -186,7 +186,11 @@ function SelectItem({
     >
       <View className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Icon as={Check} className="size-4 shrink-0 text-muted-foreground" />
+          <Icon
+            strokeWidth={3}
+            as={Check}
+            className="size-4 shrink-0 text-muted-foreground"
+          />
         </SelectPrimitive.ItemIndicator>
       </View>
       <SelectPrimitive.ItemText className="select-none text-sm text-foreground group-active:text-accent-foreground" />

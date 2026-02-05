@@ -39,18 +39,23 @@ const IngredientRow = ({
     >
       <View
         className={cn(
-          'size-8 items-center justify-center rounded-full',
+          'size-6 items-center justify-center rounded-full',
           isSelected ? 'bg-primary' : 'border-2 border-muted-foreground'
         )}
       >
         {isSelected && (
-          <Icon as={CheckIcon} size={18} className="text-primary-foreground" />
+          <Icon
+            strokeWidth={3}
+            as={CheckIcon}
+            size={14}
+            className="text-primary-foreground"
+          />
         )}
       </View>
       <View className="flex-1">
         <Text
           className={cn(
-            'text-base font-medium',
+            'text-base font-medium leading-4',
             isSelected ? 'text-foreground' : 'text-muted-foreground'
           )}
         >

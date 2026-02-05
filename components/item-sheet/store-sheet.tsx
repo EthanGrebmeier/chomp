@@ -137,7 +137,7 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
 
       <BottomSheet detents={[0.7]} scrollable ref={sheetRef} name="store-sheet">
         <BottomSheet.Header
-          className="px-4"
+          className="mb-0 px-4"
           dismissButton={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
           }
@@ -148,7 +148,12 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
               size="icon"
               variant="default"
             >
-              <Icon as={PlusIcon} strokeWidth={3} size={24} />
+              <Icon
+                className="text-primary-foreground"
+                as={PlusIcon}
+                strokeWidth={3}
+                size={24}
+              />
             </Button>
           }
         />
@@ -200,16 +205,15 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
         }
       >
         <BottomSheet.SheetView className="pb-safe">
-          <View className="flex-row items-center gap-2 pb-2">
-            <BottomSheet.Header
-              title="New Store"
-              dismissButton={
-                <BackButton
-                  onPress={() => createStoreSheetRef.current?.dismiss()}
-                />
-              }
-            />
-          </View>
+          <BottomSheet.Header
+            className="mb-0"
+            title="New Store"
+            dismissButton={
+              <BackButton
+                onPress={() => createStoreSheetRef.current?.dismiss()}
+              />
+            }
+          />
           <View className="mt-4">
             <Text className="mb-2 text-sm font-medium text-muted-foreground">
               Store Name
