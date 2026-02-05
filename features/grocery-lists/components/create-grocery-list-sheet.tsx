@@ -75,7 +75,7 @@ export const CreateGroceryListSheet = forwardRef<
       }}
       footer={
         <View className="px-10 pb-4">
-          <Button onPress={handleCreateList} disabled={overLimit}>
+          <Button onPress={handleCreateList} disabled={overLimit || !newListName.trim()}>
             <Text>Create List</Text>
           </Button>
         </View>

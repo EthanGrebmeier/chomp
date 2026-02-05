@@ -64,7 +64,7 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
         onStartClose={handleDismiss}
         footer={
           <View className="px-10 pb-4">
-            <Button onPress={handleSave}>
+            <Button onPress={handleSave} disabled={!listName.trim()}>
               <Text>Save</Text>
             </Button>
           </View>

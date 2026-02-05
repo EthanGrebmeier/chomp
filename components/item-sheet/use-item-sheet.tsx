@@ -68,7 +68,7 @@ export const ItemSheetProvider = ({
   onSubmit,
   setFromItemRef,
   disableAutocomplete = false,
-  mode      
+  mode,
 }: ItemSheetProviderProps) => {
   const [selectedItem, setSelectedItem] = useState<BaseGroceryItem | null>(
     null
@@ -189,7 +189,9 @@ export const ItemSheetProvider = ({
         setStoreId,
         reset,
         setFromItem,
-        isValid: !!itemInputValue.length && !!quantity && !!unit,
+        isValid: Boolean(
+          !!itemInputValue.trim().length && !!quantity && !!unit
+        ),
         disableAutocomplete,
         mode,
       }}

@@ -242,7 +242,6 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
                     <Text className="text-primary-foreground">
                       {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
                     </Text>
-                    e
                   </Button>
                 </View>
               </View>
