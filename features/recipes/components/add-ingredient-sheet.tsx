@@ -1,5 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createContext, useContext, useRef, useState } from 'react';
+import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -10,6 +11,8 @@ import {
   ItemSheetProvider,
   useItemSheet,
 } from '../../../components/item-sheet/use-item-sheet';
+import { Button } from '../../../components/ui/button';
+import { Text } from '../../../components/ui/text';
 import { BaseGroceryItem } from '../../grocery-list/types';
 import { addRecipeIngredient } from '../instant/add-recipe-ingredient';
 import { updateRecipeIngredient } from '../instant/update-recipe-ingredient';
@@ -34,20 +37,28 @@ export const useAddIngredientSheet = () => {
 };
 
 const AddIngredientContents = () => {
-  const { reset, itemInputRef } = useItemSheet();
+  const { reset, itemInputRef, onSubmit, isValid, mode } = useItemSheet();
   const { sheetRef } = useAddIngredientSheetInternal();
 
   return (
     <BottomSheet
-      viewClassName="pb-4"
       name="add-ingredient-sheet"
       ref={sheetRef}
       onStartClose={reset}
       onOpen={() => {
         itemInputRef.current?.focus();
       }}
+      footer={
+        <View className="px-10 pb-4">
+          <Button onPress={onSubmit} disabled={!isValid}>
+            <Text>
+              {mode === 'add' ? 'Add Ingredient' : 'Update Ingredient'}
+            </Text>
+          </Button>
+        </View>
+      }
     >
-      <BottomSheet.SheetView>
+      <BottomSheet.SheetView className="pb-6">
         <ItemForm />
         <MetaBar />
       </BottomSheet.SheetView>
@@ -107,6 +118,7 @@ export const AddIngredientProvider = ({
         currentStoreId,
       });
       toast.success(`${item.name} updated`);
+      sheetRef.current?.dismiss();
     } else {
       addRecipeIngredient({
         recipeId,
@@ -143,7 +155,11 @@ export const AddIngredientProvider = ({
   return (
     <AddIngredientContext.Provider value={{ present }}>
       <AddIngredientInternalContext.Provider value={{ sheetRef }}>
-        <ItemSheetProvider mode="add" onSubmit={onSubmit} setFromItemRef={setFromItemRef}>
+        <ItemSheetProvider
+          mode={isEditing ? 'update' : 'add'}
+          onSubmit={onSubmit}
+          setFromItemRef={setFromItemRef}
+        >
           <AddIngredientContents />
           {children}
         </ItemSheetProvider>
