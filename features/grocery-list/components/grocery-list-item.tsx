@@ -139,23 +139,19 @@ export const GroceryListItem = ({
                   ]}
                 />
               </View>
-              <View className="w-12 shrink-0 items-end justify-center">
-                <Text className="text-lg text-muted-foreground">
-                  {formatQuantityUnit(item.quantity, item.unit)}
-                </Text>
-              </View>
+              <Text className="text-lg text-muted-foreground">
+                {formatQuantityUnit(item.quantity, item.unit)}
+              </Text>
             </View>
-            <View className="min-h-6 flex-row items-center gap-2">
+            <View className="min-h-6 flex-row items-center gap-2 pb-1.5">
               {item.category && <CategoryTag category={item.category} />}
               {item.store?.name && <StoreTag name={item.store.name} />}
               {item.recipe && (
-                <View>
-                  <View className="flex-row items-center gap-1">
-                    <Icon as={CookingPotIcon} size={14} />
-                    <Text className="text-sm text-muted-foreground">
-                      {item.recipe.name}
-                    </Text>
-                  </View>
+                <View className="flex-row items-center gap-1">
+                  <Icon as={CookingPotIcon} size={14} />
+                  <Text className="text-sm text-muted-foreground">
+                    {item.recipe.name}
+                  </Text>
                 </View>
               )}
             </View>

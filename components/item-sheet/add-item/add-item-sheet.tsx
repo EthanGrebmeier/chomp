@@ -1,7 +1,9 @@
 import { SheetDetent, TrueSheet } from '@lodev09/react-native-true-sheet';
+import { LinearGradient } from 'expo-linear-gradient';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View, useColorScheme } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
 import { addGroceryListItem } from '../../../features/grocery-list/instant/add-grocery-list-item';
@@ -99,11 +101,10 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
     if (mode === 'item') {
       return ['auto'];
     }
-    if (mode === 'recipe' && selectedRecipe) {
-      return ['auto'];
-    }
-    return [0.5, 1];
-  }, [mode, selectedRecipe]);
+    return [1];
+  }, [mode]);
+
+  const isDarkMode = useColorScheme() === 'dark';
 
   const openSheet = () => {
     ref.current?.present();
@@ -236,60 +237,85 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         scrollable={mode !== 'item'}
         viewClassName="pb-safe"
         footer={
-          mode === 'item' ? (
-            <View className=" px-10 pb-4">
-              <View>
+          <>
+            {mode === 'item' ? (
+              <View className=" px-10 pb-4">
+                <View>
+                  <Button
+                    variant="default"
+                    size="default"
+                    onPress={onSubmit}
+                    disabled={!isValid}
+                  >
+                    <Text className="text-primary-foreground">
+                      {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
+                    </Text>
+                  </Button>
+                </View>
+              </View>
+            ) : mode === 'recipe' && selectedRecipe ? (
+              <View className="px-10 pb-4">
                 <Button
                   variant="default"
                   size="default"
-                  onPress={onSubmit}
-                  disabled={!isValid}
+                  onPress={handleAddRecipeToList}
+                  disabled={selectedIngredientIds.size === 0 || isAddingRecipe}
                 >
-                  <Text className="text-primary-foreground">
-                    {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
-                  </Text>
+                  <Text className="text-primary-foreground">Add to List</Text>
                 </Button>
               </View>
-            </View>
-          ) : mode === 'recipe' && selectedRecipe ? (
-            <View className="px-10 pb-4">
-              <Button
-                variant="default"
-                size="default"
-                onPress={handleAddRecipeToList}
-                disabled={selectedIngredientIds.size === 0 || isAddingRecipe}
-              >
-                <Text className="text-primary-foreground">Add to List</Text>
-              </Button>
-            </View>
-          ) : undefined
+            ) : undefined}
+            <LinearGradient
+              colors={
+                isDarkMode
+                  ? ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0)']
+                  : ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']
+              }
+              start={{ x: 0.5, y: 1 }}
+              end={{ x: 0.5, y: 0 }}
+              pointerEvents="none"
+              style={styles.footerGradient}
+            />
+          </>
         }
       >
         {!selectedRecipe && (
           <ModeToggle mode={mode} onModeChange={handleModeChange} />
         )}
         {mode === 'item' ? (
-          <>
-            <View className="px-4">
-              <ItemForm />
-              <MetaBar />
-            </View>
-          </>
-        ) : selectedRecipe ? (
-          <IngredientSelector
-            recipe={selectedRecipe}
-            onBack={handleBackToRecipes}
-            onDismiss={() => ref.current?.dismiss()}
-            selectedIds={selectedIngredientIds}
-            onToggleIngredient={toggleIngredient}
-            onToggleAll={toggleAllIngredients}
-            showFooter={false}
-          />
+          <View className="px-4">
+            <ItemForm />
+            <MetaBar />
+          </View>
         ) : (
-          <RecipeSelector
-            onSelectRecipe={handleRecipeSelect}
-            onDismiss={() => ref.current?.dismiss()}
-          />
+          <View>
+            {selectedRecipe ? (
+              <Animated.View
+                key="ingredient-selector"
+                entering={FadeIn.duration(300)}
+              >
+                <IngredientSelector
+                  recipe={selectedRecipe}
+                  onBack={handleBackToRecipes}
+                  onDismiss={() => ref.current?.dismiss()}
+                  selectedIds={selectedIngredientIds}
+                  onToggleIngredient={toggleIngredient}
+                  onToggleAll={toggleAllIngredients}
+                  showFooter={false}
+                />
+              </Animated.View>
+            ) : (
+              <Animated.View
+                key="recipe-selector"
+                entering={FadeIn.duration(300)}
+              >
+                <RecipeSelector
+                  onSelectRecipe={handleRecipeSelect}
+                  onDismiss={() => ref.current?.dismiss()}
+                />
+              </Animated.View>
+            )}
+          </View>
         )}
       </BottomSheet>
     </>
@@ -322,5 +348,15 @@ const AddItem = ({ groceryListId }: AddItemProps) => {
     </ItemSheetProvider>
   );
 };
+
+const styles = StyleSheet.create({
+  footerGradient: {
+    position: 'absolute',
+    bottom: -80,
+    left: 0,
+    right: 0,
+    height: 160,
+  },
+});
 
 export default AddItem;
