@@ -10,6 +10,7 @@ import Animated, {
 import { CategoryTag } from '../../../components/category-tag';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { StoreTag } from '../../../components/store-tag';
+import { Checkbox } from '../../../components/ui/checkbox';
 import {
   ContextMenuItem,
   ContextMenuItemTitle,
@@ -93,21 +94,11 @@ export const GroceryListItem = ({
           onDelete={() => removeGroceryListItem({ itemId: item.id })}
           className={className}
         >
-          <HapticPressable
-            hitSlop={10}
-            className={cn(
-              'mr-2 size-6 overflow-hidden rounded-sm border border-border p-0.5'
-            )}
+          <Checkbox
+            checked={internalIsChecked}
             onPress={onCheck}
-            hapticType="selection"
-          >
-            <View
-              className={cn(
-                'h-full w-full rounded-full',
-                internalIsChecked && 'bg-accent-foreground'
-              )}
-            ></View>
-          </HapticPressable>
+            className="mr-2"
+          />
 
           <HapticPressable
             className="flex-1 gap-1"
