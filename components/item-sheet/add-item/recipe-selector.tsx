@@ -42,7 +42,7 @@ export const RecipeSelector = ({
 
   if (isLoading) {
     return (
-      <View style={{ minHeight: 600 }} className="items-center justify-center">
+      <View style={{ minHeight: 500 }} className="items-center justify-center">
         <Text className="text-muted-foreground">Loading recipes...</Text>
       </View>
     );
@@ -69,7 +69,10 @@ export const RecipeSelector = ({
 
   if (!recipes || recipes.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center gap-4">
+      <View
+        style={{ minHeight: 500 }}
+        className="items-center justify-center gap-4"
+      >
         <View className="items-center">
           <Text className="text-lg font-semibold text-foreground">
             No recipes yet
