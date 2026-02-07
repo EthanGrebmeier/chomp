@@ -57,25 +57,26 @@ export const useInitializeDefaultGroceryList = (
           | undefined;
         let existingListCount = 0;
 
-        if (!isGuest) {
-          try {
-            const { data } = await db.queryOnce({
-              $users: {
-                grocery_lists: {},
-              },
-            });
+        try {
+          const { data } = await db.queryOnce({
+            $users: {
+              grocery_lists: {},
+            },
+          });
 
-            currentUser = data?.$users?.[0];
-            existingListCount = currentUser?.grocery_lists?.length ?? 0;
-          } catch {
-            // If the check fails, proceed with creation to avoid missing lists
-          }
+          currentUser = data?.$users?.[0];
+          existingListCount = currentUser?.grocery_lists?.length ?? 0;
+        } catch {
+          // If the check fails, proceed with creation to avoid missing lists
+        }
 
-          if (currentUser?.hasInitializedGroceryList || existingListCount > 0) {
-            initStateRef.current.lastAuthId = authUser.id;
-            initStateRef.current.lastInitKey = initKey ?? null;
-            return;
-          }
+        if (
+          (!isGuest && currentUser?.hasInitializedGroceryList) ||
+          existingListCount > 0
+        ) {
+          initStateRef.current.lastAuthId = authUser.id;
+          initStateRef.current.lastInitKey = initKey ?? null;
+          return;
         }
 
         const listId = id();
@@ -123,31 +124,6 @@ export const useInitializeDefaultGroceryList = (
         await db.transact(transactions);
         initStateRef.current.lastAuthId = authUser.id;
         initStateRef.current.lastInitKey = initKey ?? null;
-
-        if (isGuest) {
-          try {
-            const { data } = await db.queryOnce({
-              $users: {
-                grocery_lists: {},
-              },
-            });
-
-            const guestLists =
-              data?.$users?.[0]?.grocery_lists
-                ?.map(list => list.id)
-                .filter(listIdValue => listIdValue !== listId) ?? [];
-
-            if (guestLists.length > 0) {
-              await db.transact(
-                guestLists.map(existingId =>
-                  db.tx.grocery_lists[existingId].delete()
-                )
-              );
-            }
-          } catch {
-            // If cleanup fails, keep the new list to avoid blocking guests
-          }
-        }
       } finally {
         initStateRef.current.inFlight = false;
       }
