@@ -1,7 +1,8 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { format } from 'date-fns';
 import { router } from 'expo-router';
-import { ShoppingCartIcon, UsersIcon } from 'lucide-react-native';
-import { useMemo, useRef, useState } from 'react';
+import { CheckIcon, ShoppingCartIcon, UsersIcon } from 'lucide-react-native';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
@@ -10,6 +11,7 @@ import { BottomSheet } from '../../../components/bottom-sheet';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { navigation } from '../../../lib/navigation';
@@ -20,9 +22,98 @@ import { useAddMealsToGroceryList, useUserMealPlanData } from '../hooks';
 
 type Step = 'review' | 'select-list';
 
+const formatMealPlanDate = (dateStr: string): string => {
+  try {
+    const [datePart] = dateStr.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const parsedDate = new Date(year, month - 1, day);
+    return format(parsedDate, 'EEE, MMM d');
+  } catch {
+    return '';
+  }
+};
+
+type MealPlanRowProps = {
+  name: string;
+  date: string;
+  mealTag?: string;
+  detail?: string;
+  trailing?: string;
+  isSelected: boolean;
+  onToggle: () => void;
+};
+
+const MealPlanRow = ({
+  name,
+  date,
+  mealTag,
+  detail,
+  trailing,
+  isSelected,
+  onToggle,
+}: MealPlanRowProps) => {
+  const dateLabel = formatMealPlanDate(date);
+
+  const metaParts: string[] = [];
+  if (dateLabel) metaParts.push(dateLabel);
+  if (mealTag && mealTag !== 'None') metaParts.push(mealTag);
+  if (detail) metaParts.push(detail);
+
+  return (
+    <HapticPressable
+      onPress={onToggle}
+      hapticType="selection"
+      className={cn(
+        'mb-2 flex-row items-center gap-3 rounded-xl px-4 py-3',
+        isSelected ? 'bg-muted' : 'bg-muted/50'
+      )}
+    >
+      <View
+        className={cn(
+          'size-6 items-center justify-center rounded-full',
+          isSelected ? 'bg-primary' : 'border-2 border-muted-foreground/40'
+        )}
+      >
+        {isSelected && (
+          <Icon
+            strokeWidth={3}
+            as={CheckIcon}
+            size={14}
+            className="text-primary-foreground"
+          />
+        )}
+      </View>
+      <View className="flex-1">
+        <View className="flex-row items-center justify-between">
+          <Text
+            className={cn(
+              'flex-1 text-lg font-semibold',
+              isSelected ? 'text-foreground' : 'text-muted-foreground'
+            )}
+          >
+            {name}
+          </Text>
+          {trailing && (
+            <Text className="ml-2 text-sm text-muted-foreground">
+              {trailing}
+            </Text>
+          )}
+        </View>
+        {metaParts.length > 0 && (
+          <Text className="text-sm text-muted-foreground">
+            {metaParts.join(' · ')}
+          </Text>
+        )}
+      </View>
+    </HapticPressable>
+  );
+};
+
 export const ListSelectorSheet = () => {
   const sheetRef = useRef<TrueSheet>(null);
   const [step, setStep] = useState<Step>('review');
+  // Track deselected IDs instead of selected — everything is selected by default
+  const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const { data: lists } = useGroceryLists();
   const { recipes, items } = useUserMealPlanData();
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
@@ -56,9 +147,53 @@ export const ListSelectorSheet = () => {
       };
     }, [recipes, items]);
 
+  const isSelected = useCallback(
+    (id: string) => !deselectedIds.has(id),
+    [deselectedIds]
+  );
+
+  const resetSelection = useCallback(() => {
+    setDeselectedIds(new Set());
+  }, []);
+
+  const toggleItem = useCallback((itemId: string) => {
+    setDeselectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  }, []);
+
   const handleAddToList = (listId: string) => {
+    const selectedRecipeIds = unaddedRecipes
+      .filter(r => isSelected(r.id))
+      .map(r => r.id);
+    const skippedRecipeIds = unaddedRecipes
+      .filter(r => !isSelected(r.id))
+      .map(r => r.id);
+    const selectedItemIds = unaddedItems
+      .filter(i => isSelected(i.id))
+      .map(i => i.id);
+    const skippedItemIds = unaddedItems
+      .filter(i => !isSelected(i.id))
+      .map(i => i.id);
+
     addMealsToGroceryList(
-      { listId },
+      {
+        listId,
+        selectedRecipeIds:
+          selectedRecipeIds.length > 0 ? selectedRecipeIds : undefined,
+        skippedRecipeIds:
+          skippedRecipeIds.length > 0 ? skippedRecipeIds : undefined,
+        selectedItemIds:
+          selectedItemIds.length > 0 ? selectedItemIds : undefined,
+        skippedItemIds:
+          skippedItemIds.length > 0 ? skippedItemIds : undefined,
+      },
       {
         onSuccess: result => {
           const totalAdded = result.addedRecipes + result.addedItems;
@@ -94,7 +229,11 @@ export const ListSelectorSheet = () => {
         name="add-meals-to-list-sheet"
         ref={sheetRef}
         detents={['auto']}
-        onStartClose={() => setStep('review')}
+        onOpen={resetSelection}
+        onStartClose={() => {
+          setStep('review');
+          resetSelection();
+        }}
         viewClassName={cn(step === 'review' ? 'pb-safe' : undefined)}
         footer={
           step === 'review' ? (
@@ -121,44 +260,32 @@ export const ListSelectorSheet = () => {
             <ScrollView className="max-h-80 px-4 pb-4">
               {unaddedRecipes.map(mealPlanRecipe => {
                 const recipe = mealPlanRecipe.recipe;
-                const ingredientCount = recipe.recipe_ingredients?.length ?? 0;
+                const ingredientCount =
+                  recipe.recipe_ingredients?.length ?? 0;
                 const servings = mealPlanRecipe.servings || 1;
                 return (
-                  <View
+                  <MealPlanRow
                     key={mealPlanRecipe.id}
-                    className="mb-2 rounded-xl bg-muted px-4 py-3"
-                  >
-                    <View className="flex-row items-center justify-between">
-                      <Text className="flex-1 text-lg font-semibold text-foreground">
-                        {recipe.name}
-                      </Text>
-                      {servings > 1 && (
-                        <Text className="ml-2 text-sm text-muted-foreground">
-                          x{servings}
-                        </Text>
-                      )}
-                    </View>
-                    <Text className="text-sm text-muted-foreground">
-                      {ingredientCount} ingredient
-                      {ingredientCount === 1 ? '' : 's'}
-                    </Text>
-                  </View>
+                    name={recipe.name}
+                    date={mealPlanRecipe.date}
+                    mealTag={mealPlanRecipe.mealTag}
+                    detail={`${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}`}
+                    trailing={servings > 1 ? `x${servings}` : undefined}
+                    isSelected={isSelected(mealPlanRecipe.id)}
+                    onToggle={() => toggleItem(mealPlanRecipe.id)}
+                  />
                 );
               })}
               {unaddedItems.map(item => (
-                <View
+                <MealPlanRow
                   key={item.id}
-                  className="mb-2 rounded-xl bg-muted px-4 py-3"
-                >
-                  <View className="flex-row items-center justify-between">
-                    <Text className="text-lg font-semibold text-foreground">
-                      {item.name}
-                    </Text>
-                    <Text className="text-sm text-muted-foreground">
-                      {formatQuantityUnit(item.quantity, item.unit)}
-                    </Text>
-                  </View>
-                </View>
+                  name={item.name}
+                  date={item.date}
+                  mealTag={item.mealTag}
+                  trailing={formatQuantityUnit(item.quantity, item.unit)}
+                  isSelected={isSelected(item.id)}
+                  onToggle={() => toggleItem(item.id)}
+                />
               ))}
               {unaddedCount === 0 && (
                 <Text className="text-center text-muted-foreground">

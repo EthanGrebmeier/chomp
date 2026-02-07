@@ -47,6 +47,14 @@ export type RemoveRecipeFromMealPlanArgs = {
 
 export type AddMealsToGroceryListArgs = {
   listId: string;
+  /** Recipe IDs to actually add ingredients for. If omitted, all unadded recipes are added. */
+  selectedRecipeIds?: string[];
+  /** Recipe IDs to mark as added without creating grocery items. */
+  skippedRecipeIds?: string[];
+  /** Item IDs to actually add. If omitted, all unadded items are added. */
+  selectedItemIds?: string[];
+  /** Item IDs to mark as added without creating grocery items. */
+  skippedItemIds?: string[];
 };
 
 export type AddItemToDateArgs = {
