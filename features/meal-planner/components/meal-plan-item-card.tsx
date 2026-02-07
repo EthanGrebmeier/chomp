@@ -1,6 +1,7 @@
 import { Alert, View } from 'react-native';
 
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
+import { Checkbox } from '../../../components/ui/checkbox';
 import {
   ContextMenuItem,
   ContextMenuItemTitle,
@@ -14,11 +15,13 @@ import { MealPlanItem } from '../types';
 type MealPlanItemCardProps = {
   mealPlanItem: MealPlanItem;
   onItemPress: (item: MealPlanItem) => void;
+  onIndicatorPress: (mealPlanItem: MealPlanItem) => void;
 };
 
 const MealPlanItemCard = ({
   mealPlanItem,
   onItemPress,
+  onIndicatorPress,
 }: MealPlanItemCardProps) => {
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
 
@@ -45,8 +48,13 @@ const MealPlanItemCard = ({
           key={mealPlanItem.id}
           onPress={() => onItemPress(mealPlanItem)}
         >
-          <View className="w-full rounded-xl bg-muted px-4 py-3">
-            <View className="flex-row items-center justify-between">
+          <View className="w-full flex-row items-center rounded-xl bg-muted px-4 py-3">
+            <Checkbox
+              checked={!!mealPlanItem.addedToList}
+              onPress={() => onIndicatorPress(mealPlanItem)}
+              className="mr-3"
+            />
+            <View className="flex-1 flex-row items-center justify-between">
               <Text className="text-xl font-semibold text-foreground">
                 {mealPlanItem.name}
               </Text>
