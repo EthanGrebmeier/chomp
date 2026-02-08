@@ -1,9 +1,10 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { format } from 'date-fns';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { CheckIcon, ShoppingCartIcon } from 'lucide-react-native';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
@@ -20,6 +21,20 @@ import { GroceryListPicker } from '../../grocery-lists/components/grocery-list-p
 import { useGroceryLists } from '../../grocery-lists/instant/useGroceryLists';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useAddMealsToGroceryList, useUserMealPlanData } from '../hooks';
+import {
+  MealPlanItemWithStore,
+  MealPlanRecipeWithRecipe,
+  MealTag,
+} from '../types';
+
+const mealTimeOrder: MealTag[] = [
+  'Breakfast',
+  'Lunch',
+  'Dinner',
+  'Snack',
+  'Dessert',
+  'None',
+];
 
 type Step = 'review' | 'select-list';
 
@@ -112,6 +127,7 @@ const MealPlanRow = ({
 
 export const ListSelectorSheet = () => {
   const sheetRef = useRef<TrueSheet>(null);
+  const isDarkMode = useColorScheme() === 'dark';
   const [step, setStep] = useState<Step>('review');
   // Track deselected IDs instead of selected — everything is selected by default
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
@@ -120,33 +136,90 @@ export const ListSelectorSheet = () => {
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
     useAddMealsToGroceryList();
 
-  const { unaddedRecipes, unaddedItems, unaddedCount, subtext } =
-    useMemo(() => {
-      const filteredRecipes = recipes.filter(r => !r.addedToList);
-      const filteredItems = items.filter(i => !i.addedToList);
-      const parts: string[] = [];
+  type UnaddedRecipe = {
+    kind: 'recipe';
+    id: string;
+    date: string;
+    mealTag?: string;
+    recipe: MealPlanRecipeWithRecipe;
+  };
 
-      if (filteredRecipes.length > 0) {
-        parts.push(
-          `${filteredRecipes.length} recipe${filteredRecipes.length === 1 ? '' : 's'}`
-        );
-      }
+  type UnaddedItem = {
+    kind: 'item';
+    id: string;
+    date: string;
+    mealTag?: string;
+    item: MealPlanItemWithStore;
+  };
 
-      if (filteredItems.length > 0) {
-        parts.push(
-          `${filteredItems.length} item${filteredItems.length === 1 ? '' : 's'}`
-        );
-      }
+  type UnaddedEntry = UnaddedRecipe | UnaddedItem;
 
-      const summary = parts.length === 0 ? 'no items' : parts.join(' and ');
+  const {
+    sortedEntries,
+    unaddedRecipeIds,
+    unaddedItemIds,
+    unaddedCount,
+    subtext,
+  } = useMemo(() => {
+    const mealTagIndex = (tag?: string): number => {
+      const idx = mealTimeOrder.indexOf((tag ?? 'None') as MealTag);
+      return idx === -1 ? mealTimeOrder.length : idx;
+    };
 
-      return {
-        unaddedRecipes: filteredRecipes,
-        unaddedItems: filteredItems,
-        unaddedCount: filteredRecipes.length + filteredItems.length,
-        subtext: `You have ${summary} to add`,
-      };
-    }, [recipes, items]);
+    const filteredRecipes = recipes.filter(r => !r.addedToList);
+    const filteredItems = items.filter(i => !i.addedToList);
+
+    const entries: UnaddedEntry[] = [
+      ...filteredRecipes.map(
+        (r): UnaddedRecipe => ({
+          kind: 'recipe',
+          id: r.id,
+          date: r.date,
+          mealTag: r.mealTag,
+          recipe: r,
+        })
+      ),
+      ...filteredItems.map(
+        (i): UnaddedItem => ({
+          kind: 'item',
+          id: i.id,
+          date: i.date,
+          mealTag: i.mealTag,
+          item: i,
+        })
+      ),
+    ];
+
+    entries.sort((a, b) => {
+      const dateCompare = a.date.localeCompare(b.date);
+      if (dateCompare !== 0) return dateCompare;
+      return mealTagIndex(a.mealTag) - mealTagIndex(b.mealTag);
+    });
+
+    const parts: string[] = [];
+
+    if (filteredRecipes.length > 0) {
+      parts.push(
+        `${filteredRecipes.length} recipe${filteredRecipes.length === 1 ? '' : 's'}`
+      );
+    }
+
+    if (filteredItems.length > 0) {
+      parts.push(
+        `${filteredItems.length} item${filteredItems.length === 1 ? '' : 's'}`
+      );
+    }
+
+    const summary = parts.length === 0 ? 'no items' : parts.join(' and ');
+
+    return {
+      sortedEntries: entries,
+      unaddedRecipeIds: new Set(filteredRecipes.map(r => r.id)),
+      unaddedItemIds: new Set(filteredItems.map(i => i.id)),
+      unaddedCount: filteredRecipes.length + filteredItems.length,
+      subtext: `You have ${summary} to add`,
+    };
+  }, [recipes, items]);
 
   const isSelected = useCallback(
     (id: string) => !deselectedIds.has(id),
@@ -170,18 +243,14 @@ export const ListSelectorSheet = () => {
   }, []);
 
   const handleAddToList = (listId: string) => {
-    const selectedRecipeIds = unaddedRecipes
-      .filter(r => isSelected(r.id))
-      .map(r => r.id);
-    const skippedRecipeIds = unaddedRecipes
-      .filter(r => !isSelected(r.id))
-      .map(r => r.id);
-    const selectedItemIds = unaddedItems
-      .filter(i => isSelected(i.id))
-      .map(i => i.id);
-    const skippedItemIds = unaddedItems
-      .filter(i => !isSelected(i.id))
-      .map(i => i.id);
+    const selectedRecipeIds = [...unaddedRecipeIds].filter(id =>
+      isSelected(id)
+    );
+    const skippedRecipeIds = [...unaddedRecipeIds].filter(
+      id => !isSelected(id)
+    );
+    const selectedItemIds = [...unaddedItemIds].filter(id => isSelected(id));
+    const skippedItemIds = [...unaddedItemIds].filter(id => !isSelected(id));
 
     addMealsToGroceryList(
       {
@@ -228,25 +297,39 @@ export const ListSelectorSheet = () => {
       <BottomSheet
         name="add-meals-to-list-sheet"
         ref={sheetRef}
-        detents={['auto']}
+        detents={['auto', 0.8]}
+        scrollable={step === 'review'}
         onOpen={resetSelection}
         onStartClose={() => {
           setStep('review');
           resetSelection();
         }}
-        viewClassName={cn(step === 'review' ? 'pb-safe' : undefined)}
+        viewClassName="pb-safe"
         footer={
           step === 'review' ? (
-            <View className="px-10 pb-4">
-              <Button
-                onPress={handleContinue}
-                disabled={isAddingToList || unaddedCount === 0}
-              >
-                <Text>
-                  {isAddingToList ? 'Adding...' : 'Add to Grocery List'}
-                </Text>
-              </Button>
-            </View>
+            <>
+              <View className="z-10 px-10 pb-4">
+                <Button
+                  onPress={handleContinue}
+                  disabled={isAddingToList || unaddedCount === 0}
+                >
+                  <Text>
+                    {isAddingToList ? 'Adding...' : 'Add to Grocery List'}
+                  </Text>
+                </Button>
+              </View>
+              <LinearGradient
+                colors={
+                  isDarkMode
+                    ? ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0)']
+                    : ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']
+                }
+                start={{ x: 0.5, y: 1 }}
+                end={{ x: 0.5, y: 0 }}
+                pointerEvents="none"
+                style={styles.footerGradient}
+              />
+            </>
           ) : undefined
         }
       >
@@ -257,35 +340,44 @@ export const ListSelectorSheet = () => {
               title="Add to Grocery List"
               subsection={<BottomSheet.Subtext>{subtext}</BottomSheet.Subtext>}
             />
-            <ScrollView className="max-h-80 px-4 pb-4">
-              {unaddedRecipes.map(mealPlanRecipe => {
-                const recipe = mealPlanRecipe.recipe;
-                const ingredientCount = recipe.recipe_ingredients?.length ?? 0;
-                const servings = mealPlanRecipe.servings || 1;
+            <ScrollView
+              className="px-4"
+              contentContainerStyle={{ paddingBottom: 80 }}
+            >
+              {sortedEntries.map(entry => {
+                if (entry.kind === 'recipe') {
+                  const { recipe: mealPlanRecipe } = entry;
+                  const recipe = mealPlanRecipe.recipe;
+                  const ingredientCount =
+                    recipe.recipe_ingredients?.length ?? 0;
+                  const servings = mealPlanRecipe.servings || 1;
+                  return (
+                    <MealPlanRow
+                      key={mealPlanRecipe.id}
+                      name={recipe.name}
+                      date={mealPlanRecipe.date}
+                      mealTag={mealPlanRecipe.mealTag}
+                      detail={`${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}`}
+                      trailing={servings > 1 ? `x${servings}` : undefined}
+                      isSelected={isSelected(mealPlanRecipe.id)}
+                      onToggle={() => toggleItem(mealPlanRecipe.id)}
+                    />
+                  );
+                }
+
+                const { item } = entry;
                 return (
                   <MealPlanRow
-                    key={mealPlanRecipe.id}
-                    name={recipe.name}
-                    date={mealPlanRecipe.date}
-                    mealTag={mealPlanRecipe.mealTag}
-                    detail={`${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}`}
-                    trailing={servings > 1 ? `x${servings}` : undefined}
-                    isSelected={isSelected(mealPlanRecipe.id)}
-                    onToggle={() => toggleItem(mealPlanRecipe.id)}
+                    key={item.id}
+                    name={item.name}
+                    date={item.date}
+                    mealTag={item.mealTag}
+                    trailing={formatQuantityUnit(item.quantity, item.unit)}
+                    isSelected={isSelected(item.id)}
+                    onToggle={() => toggleItem(item.id)}
                   />
                 );
               })}
-              {unaddedItems.map(item => (
-                <MealPlanRow
-                  key={item.id}
-                  name={item.name}
-                  date={item.date}
-                  mealTag={item.mealTag}
-                  trailing={formatQuantityUnit(item.quantity, item.unit)}
-                  isSelected={isSelected(item.id)}
-                  onToggle={() => toggleItem(item.id)}
-                />
-              ))}
               {unaddedCount === 0 && (
                 <Text className="text-center text-muted-foreground">
                   No items to add
@@ -328,3 +420,14 @@ export const ListSelectorSheet = () => {
 };
 
 ListSelectorSheet.displayName = 'ListSelectorSheet';
+
+const styles = StyleSheet.create({
+  footerGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    zIndex: 0,
+  },
+});
