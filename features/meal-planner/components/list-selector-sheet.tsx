@@ -131,8 +131,6 @@ export const ListSelectorSheet = () => {
   const [step, setStep] = useState<Step>('review');
   // Track deselected IDs instead of selected — everything is selected by default
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
-  // Ref keeps the latest deselectedIds accessible from stale closures (e.g. TrueSheet footer)
-  const deselectedIdsRef = useRef<Set<string>>(deselectedIds);
   const { data: lists } = useGroceryLists();
   const { recipes, items } = useUserMealPlanData();
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
@@ -229,9 +227,7 @@ export const ListSelectorSheet = () => {
   );
 
   const resetSelection = useCallback(() => {
-    const empty = new Set<string>();
-    setDeselectedIds(empty);
-    deselectedIdsRef.current = empty;
+    setDeselectedIds(new Set());
   }, []);
 
   const toggleItem = useCallback((itemId: string) => {
@@ -242,24 +238,19 @@ export const ListSelectorSheet = () => {
       } else {
         next.add(itemId);
       }
-      deselectedIdsRef.current = next;
       return next;
     });
   }, []);
 
   const handleAddToList = (listId: string) => {
-    // Read from ref to avoid stale closures (e.g. TrueSheet footer)
-    const currentDeselected = deselectedIdsRef.current;
-    const isCurrentlySelected = (id: string) => !currentDeselected.has(id);
-
-    const selectedRecipeIds = [...unaddedRecipeIds].filter(isCurrentlySelected);
+    const selectedRecipeIds = [...unaddedRecipeIds].filter(id =>
+      isSelected(id)
+    );
     const skippedRecipeIds = [...unaddedRecipeIds].filter(
-      id => !isCurrentlySelected(id)
+      id => !isSelected(id)
     );
-    const selectedItemIds = [...unaddedItemIds].filter(isCurrentlySelected);
-    const skippedItemIds = [...unaddedItemIds].filter(
-      id => !isCurrentlySelected(id)
-    );
+    const selectedItemIds = [...unaddedItemIds].filter(id => isSelected(id));
+    const skippedItemIds = [...unaddedItemIds].filter(id => !isSelected(id));
 
     addMealsToGroceryList(
       {
