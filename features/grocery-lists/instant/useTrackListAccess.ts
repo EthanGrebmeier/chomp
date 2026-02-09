@@ -10,11 +10,15 @@ export const useTrackListAccess = () => {
       }
 
       // Find the user's share for this list
-      const { data } = await db.queryOnce({
+      const result = await db.queryOnce({
         grocery_list_shares: {},
       });
 
-      const userShare = data?.grocery_list_shares?.find(
+      if (!result) {
+        return;
+      }
+
+      const userShare = result.data?.grocery_list_shares?.find(
         share => share.user_id === user.id && share.grocery_list_id === listId
       );
 
