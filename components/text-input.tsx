@@ -21,7 +21,7 @@ export const TextInput = forwardRef<RNTextInput, TextInputProps>(
       <RNTextInput
         ref={ref}
         className={cn(
-          'h-11 rounded-full border border-border bg-input px-4 leading-none text-foreground',
+          'h-11 rounded-full bg-input px-4 leading-none text-foreground',
           className
         )}
         {...props}
