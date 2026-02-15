@@ -1,7 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { Share } from 'react-native';
+import { Share, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -17,6 +17,8 @@ import {
 import { db } from '@/lib/instant';
 import { buildRecipeShareURL, navigation } from '@/lib/navigation';
 
+import { Button } from '../../../../components/ui/button';
+import { Text } from '../../../../components/ui/text';
 import {
   RecipeConflictSheet,
   RecipeConflictSheetRef,
@@ -327,6 +329,13 @@ export const RecipeDropdownMenu = ({
         onStartClose={handleIngredientSelectorDismiss}
         scrollable
         viewClassName="flex-1"
+        footer={
+          <View className="px-10 pb-4">
+            <Button onPress={handleAddToList}>
+              <Text>Add to List</Text>
+            </Button>
+          </View>
+        }
       >
         {selectedListIdForIngredients && (
           <IngredientSelector

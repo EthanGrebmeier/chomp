@@ -1,5 +1,9 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { AlertTriangleIcon, CheckCircleIcon } from 'lucide-react-native';
+import {
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  PencilIcon,
+} from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import {
   forwardRef,
@@ -8,8 +12,14 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import {
+  ActivityIndicator,
+  Keyboard,
+  Pressable,
+  TextInput as RNTextInput,
+  ScrollView,
+  View,
+} from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
@@ -37,7 +47,6 @@ import {
   IngredientListHeader,
   IngredientListPreview,
 } from './ingredient-list-preview';
-import { ParsedRecipePreview } from './parsed-recipe-preview';
 import { UrlInput, UrlInputRef } from './url-input';
 
 /** Maximum character length for recipe names */
@@ -59,8 +68,11 @@ export const ImportRecipeSheet = forwardRef<
   const sheetRef = useRef<TrueSheet>(null);
   const urlInputRef = useRef<UrlInputRef>(null);
   const editSheetRef = useRef<EditParsedIngredientSheetRef>(null);
+  const editRecipeNameSheetRef = useRef<TrueSheet>(null);
+  const recipeNameInputRef = useRef<RNTextInput>(null);
   const [url, setUrl] = useState('');
   const [validationError, setValidationError] = useState<string | undefined>();
+  const [draftRecipeName, setDraftRecipeName] = useState('');
 
   // Track if sheet is open to ignore responses after dismissal
   const isSheetOpenRef = useRef(false);
@@ -68,6 +80,8 @@ export const ImportRecipeSheet = forwardRef<
   const isConfirmingRef = useRef(false);
   // Track if edit sheet is open to prevent multiple opens
   const isEditingRef = useRef(false);
+  // Track if recipe name edit sheet is open to prevent multiple opens
+  const isEditingNameRef = useRef(false);
 
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
@@ -98,8 +112,6 @@ export const ImportRecipeSheet = forwardRef<
       isSheetOpenRef.current = true;
       isConfirmingRef.current = false;
       sheetRef.current?.present();
-      // Focus input after a slight delay to ensure sheet is visible
-      setTimeout(() => urlInputRef.current?.focus(), 100);
     },
     dismiss: () => {
       isSheetOpenRef.current = false;
@@ -112,8 +124,11 @@ export const ImportRecipeSheet = forwardRef<
     isSheetOpenRef.current = false;
     isConfirmingRef.current = false;
     isEditingRef.current = false;
+    isEditingNameRef.current = false;
     // Dismiss edit sheet if open
     editSheetRef.current?.dismiss();
+    editRecipeNameSheetRef.current?.dismiss();
+    setDraftRecipeName('');
     reset();
     setUrl('');
     setValidationError(undefined);
@@ -269,6 +284,33 @@ export const ImportRecipeSheet = forwardRef<
     isEditingRef.current = false;
   }, []);
 
+  const handleOpenEditNameSheet = useCallback(() => {
+    if (isEditingNameRef.current) return;
+    if (state.status !== 'preview') return;
+    isEditingNameRef.current = true;
+    setDraftRecipeName(state.editedName);
+    editRecipeNameSheetRef.current?.present();
+  }, [state]);
+
+  const handleCloseEditNameSheet = useCallback(() => {
+    Keyboard.dismiss();
+    isEditingNameRef.current = false;
+    setDraftRecipeName('');
+  }, []);
+
+  const handleEditNameSheetOpen = useCallback(() => {
+    setTimeout(() => {
+      recipeNameInputRef.current?.focus();
+    }, 100);
+  }, []);
+
+  const handleSaveRecipeName = useCallback(() => {
+    const truncatedName = draftRecipeName.slice(0, MAX_RECIPE_NAME_LENGTH);
+    if (!truncatedName.trim()) return;
+    editName(truncatedName);
+    editRecipeNameSheetRef.current?.dismiss();
+  }, [draftRecipeName, editName]);
+
   const renderContent = () => {
     switch (state.status) {
       case 'idle':
@@ -284,6 +326,7 @@ export const ImportRecipeSheet = forwardRef<
               title="Import Recipe"
             />
             <UrlInput
+              className="pb-20"
               ref={urlInputRef}
               value={url}
               onChangeText={setUrl}
@@ -319,28 +362,29 @@ export const ImportRecipeSheet = forwardRef<
 
       case 'preview': {
         const originalHadIngredients = state.data.ingredients.length > 0;
-        const hasNoSelectedIngredients = state.selectedIndices.size === 0;
-
-        // Handle name change with length limit enforcement
-        const handleNameChange = (name: string) => {
-          // Allow typing but truncate to max length
-          const truncatedName = name.slice(0, MAX_RECIPE_NAME_LENGTH);
-          editName(truncatedName);
-        };
 
         return (
-          <View className="min-h-0 gap-4 ">
+          <View className="">
             <BottomSheet.Header
               title="Review Recipe"
-              className="px-4"
+              className="mb-0 px-4"
               dismissButton={<BackButton onPress={handleGoBack} />}
             />
             <View className="gap-4 px-4">
-              <ParsedRecipePreview
-                recipeName={state.editedName}
-                onNameChange={handleNameChange}
-                maxNameLength={MAX_RECIPE_NAME_LENGTH}
-              />
+              <View className="gap-2">
+                <Pressable
+                  onPress={handleOpenEditNameSheet}
+                  className="flex-row items-center justify-between"
+                >
+                  <Text
+                    className="mr-3 flex-1 text-2xl font-bold text-foreground"
+                    numberOfLines={2}
+                  >
+                    {state.editedName || 'Enter recipe name'}
+                  </Text>
+                  <PencilIcon size={16} color={theme.mutedForeground} />
+                </Pressable>
+              </View>
 
               {/* Empty ingredients warning - only shown when API returned no ingredients */}
               {!originalHadIngredients && (
@@ -349,17 +393,6 @@ export const ImportRecipeSheet = forwardRef<
                   <Text className="flex-1 text-sm text-amber-700 dark:text-amber-400">
                     No ingredients were found on this page. You can still import
                     the recipe and add ingredients manually.
-                  </Text>
-                </View>
-              )}
-
-              {/* Warning when user deselected all ingredients */}
-              {hasNoSelectedIngredients && originalHadIngredients && (
-                <View className="flex-row items-center gap-3 rounded-lg bg-muted/50 p-3">
-                  <AlertTriangleIcon size={20} color={theme.mutedForeground} />
-                  <Text className="flex-1 text-sm text-muted-foreground">
-                    No ingredients selected. You can still import the recipe
-                    without ingredients.
                   </Text>
                 </View>
               )}
@@ -376,22 +409,21 @@ export const ImportRecipeSheet = forwardRef<
                 />
               )}
             </View>
-            <View className="min-h-0 ">
-              <ScrollView
-                contentContainerClassName="pb-32 px-4"
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-              >
-                <IngredientListPreview
-                  ingredients={state.ingredients}
-                  selectedIndices={state.selectedIndices}
-                  onToggleSelection={toggleIngredientSelection}
-                  onToggleAll={toggleAllIngredients}
-                  onEdit={handleEditIngredient}
-                  showHeader={false}
-                />
-              </ScrollView>
-            </View>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              className="max-h-[400px] min-h-24 "
+              contentContainerClassName="pb-8"
+            >
+              <IngredientListPreview
+                ingredients={state.ingredients}
+                selectedIndices={state.selectedIndices}
+                onToggleSelection={toggleIngredientSelection}
+                onToggleAll={toggleAllIngredients}
+                onEdit={handleEditIngredient}
+                showHeader={false}
+              />
+            </ScrollView>
           </View>
         );
       }
@@ -468,7 +500,7 @@ export const ImportRecipeSheet = forwardRef<
     const selectedCount = state.selectedIndices.size;
 
     return (
-      <View className="px-10 pb-4">
+      <View className="bg-card px-10 py-4">
         <Button
           onPress={handleConfirmImport}
           disabled={isNameTooLong || !state.editedName.trim()}
@@ -484,6 +516,9 @@ export const ImportRecipeSheet = forwardRef<
   };
 
   const content = renderContent();
+  const isDraftNameTooLong = draftRecipeName.length > MAX_RECIPE_NAME_LENGTH;
+  const showDraftCharCount =
+    draftRecipeName.length >= MAX_RECIPE_NAME_LENGTH - 20;
 
   return (
     <>
@@ -492,14 +527,14 @@ export const ImportRecipeSheet = forwardRef<
         ref={sheetRef}
         onStartClose={handleClose}
         scrollable={false}
-        detents={isPreview ? [0.9] : ['auto']}
+        detents={['auto']}
         footer={renderFooter()}
-        viewClassName={isPreview ? 'flex-1 gap-4 pb-4' : undefined}
+        viewClassName="gap-4"
       >
         {isPreview ? (
           content
         ) : (
-          <BottomSheet.SheetView className="gap-4 pb-24">
+          <BottomSheet.SheetView className="gap-4">
             {content}
           </BottomSheet.SheetView>
         )}
@@ -509,6 +544,64 @@ export const ImportRecipeSheet = forwardRef<
         onSave={handleSaveIngredient}
         onCancel={handleEditCancel}
       />
+      <BottomSheet
+        name="edit-recipe-name-sheet"
+        ref={editRecipeNameSheetRef}
+        onStartClose={handleCloseEditNameSheet}
+        onOpen={handleEditNameSheetOpen}
+        detents={['auto']}
+        footer={
+          <View className="gap-2 px-10 pb-4">
+            <Button
+              onPress={handleSaveRecipeName}
+              disabled={isDraftNameTooLong || !draftRecipeName.trim()}
+            >
+              <Text>Save Name</Text>
+            </Button>
+            <Button
+              variant="outline"
+              onPress={() => editRecipeNameSheetRef.current?.dismiss()}
+            >
+              <Text>Cancel</Text>
+            </Button>
+          </View>
+        }
+      >
+        <BottomSheet.SheetView className="gap-4 pb-24">
+          <BottomSheet.Header title="Edit Recipe Name" />
+          <View className="gap-2">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-medium text-muted-foreground">
+                Recipe Name
+              </Text>
+              {showDraftCharCount && (
+                <Text
+                  className={`text-xs ${
+                    isDraftNameTooLong
+                      ? 'text-destructive'
+                      : draftRecipeName.length >= MAX_RECIPE_NAME_LENGTH - 10
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-muted-foreground'
+                  }`}
+                >
+                  {draftRecipeName.length}/{MAX_RECIPE_NAME_LENGTH}
+                </Text>
+              )}
+            </View>
+            <BottomSheet.TextInput
+              ref={recipeNameInputRef}
+              value={draftRecipeName}
+              onChangeText={setDraftRecipeName}
+              placeholder="Enter recipe name"
+              autoCapitalize="words"
+              selectTextOnFocus
+              maxLength={MAX_RECIPE_NAME_LENGTH}
+              returnKeyType="done"
+              onSubmitEditing={handleSaveRecipeName}
+            />
+          </View>
+        </BottomSheet.SheetView>
+      </BottomSheet>
     </>
   );
 });

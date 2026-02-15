@@ -22,7 +22,7 @@
     "@clerk/clerk-expo": "^2.19.6",
     "@expo/vector-icons": "^15.0.2",
     "@instantdb/react-native": "^0.22.84",
-    "@lodev09/react-native-true-sheet": "^3.8.2",
+    "@lodev09/react-native-true-sheet": "^3.9.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^8.4.4",
     "@react-native-community/netinfo": "^11.4.1",

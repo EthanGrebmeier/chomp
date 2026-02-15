@@ -14,6 +14,7 @@ export type UrlInputProps = {
   onSubmit: () => void;
   error?: string;
   disabled?: boolean;
+  className?: string;
 };
 
 export type UrlInputRef = {
@@ -21,7 +22,7 @@ export type UrlInputRef = {
 };
 
 export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
-  ({ value, onChangeText, onSubmit, error, disabled }, ref) => {
+  ({ value, onChangeText, onSubmit, error, disabled, className }, ref) => {
     const inputRef = useRef<RNTextInput>(null);
     const { colorScheme } = useColorScheme();
     const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
@@ -38,7 +39,7 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
     }, [onChangeText]);
 
     return (
-      <View className="gap-2">
+      <View className={cn('gap-2', className)}>
         <View className="flex-col gap-2">
           <Text className="text-sm font-medium text-muted-foreground">
             Recipe URL

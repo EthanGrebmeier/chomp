@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
-import { CheckIcon, ExternalLinkIcon } from 'lucide-react-native';
+import { ExternalLinkIcon } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { CategoryTag } from '../../../components/category-tag';
 import { addRecipeToList } from '../../../features/recipes/instant/add-recipe-to-list';
 import {
   RecipeIngredient,
@@ -13,8 +14,10 @@ import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
 import { BackButton } from '../../ui/back-button';
 import { Button } from '../../ui/button';
+import { Checkbox } from '../../ui/checkbox';
 import { HapticPressable } from '../../ui/haptic-pressable';
 import { Icon } from '../../ui/icon';
+import { ListItem } from '../../ui/list-item';
 import { Text } from '../../ui/text';
 import { formatQuantityUnit } from '../unit-utils';
 
@@ -32,40 +35,40 @@ const IngredientRow = ({
   onToggle,
 }: IngredientRowProps) => {
   return (
-    <HapticPressable
-      onPress={onToggle}
-      hapticType="selection"
-      className={cn('flex-row items-center gap-3 py-3', className)}
-    >
-      <View
-        className={cn(
-          'size-6 items-center justify-center rounded-full',
-          isSelected ? 'bg-primary' : 'border-2 border-muted-foreground'
-        )}
+    <ListItem className={cn('gap-2 py-2', className)}>
+      <Checkbox checked={isSelected} onPress={onToggle} className="mr-2" />
+      <HapticPressable
+        onPress={onToggle}
+        hapticType="selection"
+        className="flex-1 gap-1"
       >
-        {isSelected && (
-          <Icon
-            strokeWidth={3}
-            as={CheckIcon}
-            size={14}
-            className="text-primary-foreground"
-          />
-        )}
-      </View>
-      <View className="flex-1">
-        <Text
-          className={cn(
-            'text-base font-medium leading-4',
-            isSelected ? 'text-foreground' : 'text-muted-foreground'
-          )}
-        >
-          {ingredient.name}
-        </Text>
-      </View>
-      <Text className="text-sm text-muted-foreground">
-        {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
-      </Text>
-    </HapticPressable>
+        <View className="flex-row items-start justify-between">
+          <View className="min-w-0 flex-1 pr-2">
+            <Text
+              className={cn(
+                'text-xl font-medium leading-none text-foreground',
+                !isSelected && 'text-muted-foreground'
+              )}
+            >
+              {ingredient.name}
+            </Text>
+          </View>
+          <Text className="shrink-0 text-lg leading-5 text-muted-foreground">
+            {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
+          </Text>
+        </View>
+        {ingredient.notes ? (
+          <Text className="text-sm leading-none text-muted-foreground">
+            {ingredient.notes}
+          </Text>
+        ) : null}
+        <View className="flex-row items-center gap-2">
+          {ingredient.category ? (
+            <CategoryTag category={ingredient.category} />
+          ) : null}
+        </View>
+      </HapticPressable>
+    </ListItem>
   );
 };
 
@@ -233,8 +236,8 @@ export const IngredientSelector = ({
       </View>
 
       <ScrollView
-        className="max-h-64 min-h-24"
-        contentContainerClassName="px-4 pb-20"
+        className="max-h-[500px] min-h-24"
+        contentContainerClassName="b-20"
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         nestedScrollEnabled
@@ -243,7 +246,7 @@ export const IngredientSelector = ({
           <IngredientRow
             className={cn(
               index < recipe.recipe_ingredients.length - 1 &&
-                'border-b border-border'
+                'border-b border-dashed border-border'
             )}
             key={ingredient.id}
             ingredient={ingredient}
@@ -252,17 +255,6 @@ export const IngredientSelector = ({
           />
         ))}
       </ScrollView>
-
-      {shouldShowFooter && (
-        <View className="relative mt-4 px-4 pb-4">
-          <Button
-            onPress={handleAdd}
-            disabled={effectiveSelectedIds.size === 0 || isAddingResolved}
-          >
-            <Text>Add to List</Text>
-          </Button>
-        </View>
-      )}
     </View>
   );
 };

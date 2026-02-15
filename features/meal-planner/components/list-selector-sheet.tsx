@@ -10,14 +10,16 @@ import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
-import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
-import { GroceryListPicker } from '../../grocery-lists/components/grocery-list-picker';
+import {
+  SelectGroceryListSheet,
+  SelectGroceryListSheetRef,
+} from '../../grocery-lists/components/select-grocery-list-sheet';
 import { useGroceryLists } from '../../grocery-lists/instant/useGroceryLists';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useAddMealsToGroceryList, useUserMealPlanData } from '../hooks';
@@ -35,8 +37,6 @@ const mealTimeOrder: MealTag[] = [
   'Dessert',
   'None',
 ];
-
-type Step = 'review' | 'select-list';
 
 const formatMealPlanDate = (dateStr: string): string => {
   try {
@@ -127,8 +127,8 @@ const MealPlanRow = ({
 
 export const ListSelectorSheet = () => {
   const sheetRef = useRef<TrueSheet>(null);
+  const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
   const isDarkMode = useColorScheme() === 'dark';
-  const [step, setStep] = useState<Step>('review');
   // Track deselected IDs instead of selected — everything is selected by default
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const { data: lists } = useGroceryLists();
@@ -243,6 +243,8 @@ export const ListSelectorSheet = () => {
   }, []);
 
   const handleAddToList = (listId: string) => {
+    if (isAddingToList) return;
+
     const selectedRecipeIds = [...unaddedRecipeIds].filter(id =>
       isSelected(id)
     );
@@ -287,7 +289,7 @@ export const ListSelectorSheet = () => {
     if (groceryLists.length === 1) {
       handleAddToList(groceryLists[0].id);
     } else {
-      setStep('select-list');
+      selectListSheetRef.current?.present();
     }
   };
 
@@ -297,108 +299,97 @@ export const ListSelectorSheet = () => {
         name="add-meals-to-list-sheet"
         ref={sheetRef}
         detents={['auto', 0.8]}
-        scrollable={step === 'review'}
+        scrollable
         onOpen={resetSelection}
         onStartClose={() => {
-          setStep('review');
           resetSelection();
         }}
         viewClassName="pb-safe"
         footer={
-          step === 'review' ? (
-            <>
-              <View className="z-10 px-10 pb-4">
-                <Button
-                  onPress={handleContinue}
-                  disabled={isAddingToList || unaddedCount === 0}
-                >
-                  <Text>
-                    {isAddingToList ? 'Adding...' : 'Add to Grocery List'}
-                  </Text>
-                </Button>
-              </View>
-              <LinearGradient
-                colors={
-                  isDarkMode
-                    ? ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0)']
-                    : ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']
-                }
-                start={{ x: 0.5, y: 1 }}
-                end={{ x: 0.5, y: 0 }}
-                pointerEvents="none"
-                style={styles.footerGradient}
-              />
-            </>
-          ) : undefined
+          <>
+            <View className="z-10 px-10 pb-4">
+              <Button
+                onPress={handleContinue}
+                disabled={isAddingToList || unaddedCount === 0}
+              >
+                <Text>{isAddingToList ? 'Adding...' : 'Add to Grocery List'}</Text>
+              </Button>
+            </View>
+            <LinearGradient
+              colors={
+                isDarkMode
+                  ? ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0)']
+                  : ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']
+              }
+              start={{ x: 0.5, y: 1 }}
+              end={{ x: 0.5, y: 0 }}
+              pointerEvents="none"
+              style={styles.footerGradient}
+            />
+          </>
         }
       >
-        {step === 'review' ? (
-          <Animated.View key="review" entering={FadeIn.duration(150)}>
-            <BottomSheet.Header
-              className="mb-0 px-4"
-              title="Add to Grocery List"
-              subsection={<BottomSheet.Subtext>{subtext}</BottomSheet.Subtext>}
-            />
-            <ScrollView
-              className="px-4"
-              contentContainerStyle={{ paddingBottom: 80 }}
-            >
-              {sortedEntries.map(entry => {
-                if (entry.kind === 'recipe') {
-                  const { recipe: mealPlanRecipe } = entry;
-                  const recipe = mealPlanRecipe.recipe;
-                  const ingredientCount =
-                    recipe.recipe_ingredients?.length ?? 0;
-                  const servings = mealPlanRecipe.servings || 1;
-                  return (
-                    <MealPlanRow
-                      key={mealPlanRecipe.id}
-                      name={recipe.name}
-                      date={mealPlanRecipe.date}
-                      mealTag={mealPlanRecipe.mealTag}
-                      detail={`${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}`}
-                      trailing={servings > 1 ? `x${servings}` : undefined}
-                      isSelected={isSelected(mealPlanRecipe.id)}
-                      onToggle={() => toggleItem(mealPlanRecipe.id)}
-                    />
-                  );
-                }
-
-                const { item } = entry;
+        <Animated.View key="review" entering={FadeIn.duration(150)}>
+          <BottomSheet.Header
+            className="mb-0 px-4"
+            title="Add to Grocery List"
+            subsection={<BottomSheet.Subtext>{subtext}</BottomSheet.Subtext>}
+          />
+          <ScrollView
+            className="px-4"
+            contentContainerStyle={{ paddingBottom: 80 }}
+          >
+            {sortedEntries.map(entry => {
+              if (entry.kind === 'recipe') {
+                const { recipe: mealPlanRecipe } = entry;
+                const recipe = mealPlanRecipe.recipe;
+                const ingredientCount = recipe.recipe_ingredients?.length ?? 0;
+                const servings = mealPlanRecipe.servings || 1;
                 return (
                   <MealPlanRow
-                    key={item.id}
-                    name={item.name}
-                    date={item.date}
-                    mealTag={item.mealTag}
-                    trailing={formatQuantityUnit(item.quantity, item.unit)}
-                    isSelected={isSelected(item.id)}
-                    onToggle={() => toggleItem(item.id)}
+                    key={mealPlanRecipe.id}
+                    name={recipe.name}
+                    date={mealPlanRecipe.date}
+                    mealTag={mealPlanRecipe.mealTag}
+                    detail={`${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}`}
+                    trailing={servings > 1 ? `x${servings}` : undefined}
+                    isSelected={isSelected(mealPlanRecipe.id)}
+                    onToggle={() => toggleItem(mealPlanRecipe.id)}
                   />
                 );
-              })}
-              {unaddedCount === 0 && (
-                <Text className="text-center text-muted-foreground">
-                  No items to add
-                </Text>
-              )}
-            </ScrollView>
-          </Animated.View>
-        ) : (
-          <View>
-            <BottomSheet.Header
-              className="mb-0 px-4"
-              title="Choose a List"
-              dismissButton={<BackButton onPress={() => setStep('review')} />}
-            />
-            <GroceryListPicker
-              lists={lists?.grocery_lists ?? []}
-              onSelectList={handleAddToList}
-              disabled={isAddingToList}
-            />
-          </View>
-        )}
+              }
+
+              const { item } = entry;
+              return (
+                <MealPlanRow
+                  key={item.id}
+                  name={item.name}
+                  date={item.date}
+                  mealTag={item.mealTag}
+                  trailing={formatQuantityUnit(item.quantity, item.unit)}
+                  isSelected={isSelected(item.id)}
+                  onToggle={() => toggleItem(item.id)}
+                />
+              );
+            })}
+            {unaddedCount === 0 && (
+              <Text className="text-center text-muted-foreground">
+                No items to add
+              </Text>
+            )}
+          </ScrollView>
+        </Animated.View>
       </BottomSheet>
+      <SelectGroceryListSheet
+        name="meal-planner-select-list-sheet"
+        ref={selectListSheetRef}
+        selectedListId={undefined}
+        onSelectList={handleAddToList}
+        title="Choose a List"
+        subtext="Select a list to add your selected meals and items to"
+        showJoinByCode={false}
+        showManageActions={false}
+      />
       <Button
         size="iconLg"
         variant="secondary"

@@ -1,9 +1,9 @@
-import { SheetDetent, TrueSheet } from '@lodev09/react-native-true-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PlusIcon } from 'lucide-react-native';
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { StyleSheet, View, useColorScheme } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
 import { addGroceryListItem } from '../../../features/grocery-list/instant/add-grocery-list-item';
@@ -96,13 +96,6 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
     Set<string>
   >(new Set());
   const [isAddingRecipe, setIsAddingRecipe] = useState(false);
-
-  const detents = useMemo<SheetDetent[]>(() => {
-    if (mode === 'item') {
-      return ['auto'];
-    }
-    return [1];
-  }, [mode]);
 
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -219,14 +212,14 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         />
       </Button>
       <BottomSheet
-        detents={detents}
+        detents={['auto']}
         name="add-item-sheet"
         ref={ref}
         onOpen={() => {
           itemInputRef.current?.focus();
         }}
         onStartClose={handleClose}
-        scrollable={mode !== 'item'}
+        scrollable={false}
         viewClassName="pb-safe"
         footer={
           <>
@@ -272,7 +265,12 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         }
       >
         {!selectedRecipe && (
-          <ModeToggle mode={mode} onModeChange={handleModeChange} />
+          <Animated.View
+            entering={FadeIn.duration(300)}
+            exiting={FadeOut.duration(300)}
+          >
+            <ModeToggle mode={mode} onModeChange={handleModeChange} />
+          </Animated.View>
         )}
         {mode === 'item' ? (
           <View className="px-4">
@@ -285,6 +283,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
               <Animated.View
                 key="ingredient-selector"
                 entering={FadeIn.duration(300)}
+                exiting={FadeOut.duration(300)}
               >
                 <IngredientSelector
                   recipe={selectedRecipe}

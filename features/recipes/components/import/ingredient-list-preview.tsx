@@ -1,5 +1,4 @@
-import { CheckIcon } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { CategoryTag } from '@/components/category-tag';
 import {
@@ -8,8 +7,9 @@ import {
 } from '@/components/item-sheet/unit-utils';
 import { DEFAULT_UNIT_VALUE } from '@/components/item-sheet/units';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
-import { Icon } from '@/components/ui/icon';
+import { ListItem } from '@/components/ui/list-item';
 import { Text } from '@/components/ui/text';
 
 import { cn } from '../../../../lib/utils';
@@ -32,21 +32,19 @@ export type IngredientListHeaderProps = {
   isEditable: boolean;
 };
 
-/**
- * Format an ingredient for display.
- * Examples: "2 cups flour (sifted)", "1 chicken breast", "salt (to taste)"
- */
-const formatIngredient = (ingredient: ParsedIngredient): string => {
-  const parts: string[] = [];
+const getIngredientQuantityDisplay = (
+  ingredient: ParsedIngredient
+): string | null => {
   const normalizedUnit = normalizeUnit(ingredient.unit);
   if (ingredient.quantity != null) {
-    parts.push(formatQuantityUnit(ingredient.quantity, normalizedUnit));
-  } else if (normalizedUnit && normalizedUnit !== DEFAULT_UNIT_VALUE) {
-    parts.push(normalizedUnit);
+    return formatQuantityUnit(ingredient.quantity, normalizedUnit);
   }
 
-  parts.push(ingredient.name);
-  return parts.join(' ');
+  if (normalizedUnit && normalizedUnit !== DEFAULT_UNIT_VALUE) {
+    return normalizedUnit;
+  }
+
+  return null;
 };
 
 export const IngredientListHeader = ({
@@ -57,15 +55,13 @@ export const IngredientListHeader = ({
   isEditable,
 }: IngredientListHeaderProps) => {
   return (
-    <View className="mb-2 flex-row items-center justify-between">
+    <View className="flex-row items-center justify-between">
       <View>
         <Text className="text-xl font-semibold text-foreground">
           Ingredients ({selectedCount}/{totalCount})
         </Text>
         <Text className="text-xs text-muted-foreground">
-          {isEditable
-            ? 'Tap checkbox to select, tap text to edit'
-            : 'Tap to select'}
+          {isEditable && 'Tap an item to edit'}
         </Text>
       </View>
       <Button variant="secondary" onPress={onToggleAll}>
@@ -110,67 +106,58 @@ export const IngredientListPreview = ({
       ) : null}
       {ingredients.map((ingredient, index) => {
         const isSelected = selectedIndices.has(index);
+        const quantityDisplay = getIngredientQuantityDisplay(ingredient);
         return (
-          <View
+          <ListItem
             key={`${ingredient.name}-${index}`}
             className={cn(
-              'flex-row items-center gap-3 border-b border-dashed border-border py-3',
-              index === ingredients.length - 1 && 'border-b-0'
+              'gap-2 py-2',
+              index !== ingredients.length - 1 &&
+                'border-b border-dashed border-border'
             )}
           >
-            <HapticPressable
+            <Checkbox
+              checked={isSelected}
               onPress={() => onToggleSelection(index)}
-              hapticType="selection"
-              accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ingredient: ${ingredient.name}`}
-              accessibilityRole="checkbox"
-              pressRetentionOffset={{ top: 0, left: 0, right: 0, bottom: 0 }}
-            >
-              <View
-                className={cn(
-                  'size-8 items-center justify-center rounded-full',
-                  isSelected ? 'bg-primary' : 'border-2 border-muted-foreground'
-                )}
-              >
-                {isSelected && (
-                  <Icon
-                    as={CheckIcon}
-                    size={18}
-                    className="text-primary-foreground"
-                  />
-                )}
-              </View>
-            </HapticPressable>
-            <Pressable
+              className="mr-2"
+            />
+            <HapticPressable
               className="flex-1 gap-1"
               onPress={() => onEdit?.(index, ingredient)}
               disabled={!onEdit}
               accessibilityLabel={`Edit ingredient: ${ingredient.name}`}
               accessibilityRole="button"
-              pressRetentionOffset={{ top: 0, left: 0, right: 0, bottom: 0 }}
-              style={({ pressed }) => ({
-                opacity: pressed && onEdit ? 0.7 : 1,
-              })}
+              hapticType="light"
             >
-              <Text
-                className={cn(
-                  'text-base leading-[18px]',
-                  isSelected ? 'text-foreground' : 'text-muted-foreground'
-                )}
-              >
-                {formatIngredient(ingredient)}
-              </Text>
-              {ingredient.notes && (
-                <Text className="text-xs leading-3 text-muted-foreground">
+              <View className="flex-row items-start justify-between">
+                <View className="min-w-0 flex-1 pr-2">
+                  <Text
+                    className={cn(
+                      'text-xl font-medium text-foreground',
+                      !isSelected && 'text-muted-foreground'
+                    )}
+                  >
+                    {ingredient.name}
+                  </Text>
+                </View>
+                {quantityDisplay ? (
+                  <Text className="shrink-0 text-lg text-muted-foreground">
+                    {quantityDisplay}
+                  </Text>
+                ) : null}
+              </View>
+              {ingredient.notes ? (
+                <Text className="text-sm text-muted-foreground">
                   {ingredient.notes}
                 </Text>
-              )}
-              {ingredient.category && (
-                <View className="flex-row">
+              ) : null}
+              <View className="min-h-6 flex-row items-center gap-2 pb-1.5">
+                {ingredient.category ? (
                   <CategoryTag category={ingredient.category} />
-                </View>
-              )}
-            </Pressable>
-          </View>
+                ) : null}
+              </View>
+            </HapticPressable>
+          </ListItem>
         );
       })}
     </View>

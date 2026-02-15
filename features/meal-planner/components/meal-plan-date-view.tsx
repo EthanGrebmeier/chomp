@@ -1,16 +1,17 @@
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { CookingPotIcon } from 'lucide-react-native';
 import { useCallback, useRef, useState } from 'react';
 import { Alert, FlatList, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '../../../components/bottom-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
-import { GroceryListPicker } from '../../grocery-lists/components/grocery-list-picker';
+import {
+  SelectGroceryListSheet,
+  SelectGroceryListSheetRef,
+} from '../../grocery-lists/components/select-grocery-list-sheet';
 import { useGroceryLists } from '../../grocery-lists/instant/useGroceryLists';
 import { Recipe } from '../../recipes/types';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
@@ -52,7 +53,7 @@ export const MealPlanDateView = ({
   onMealPress,
   onItemPress,
 }: MealPlanDateViewProps) => {
-  const listSheetRef = useRef<TrueSheet>(null);
+  const listSheetRef = useRef<SelectGroceryListSheetRef>(null);
   const [pendingAddItem, setPendingAddItem] = useState<PendingAddItem | null>(
     null
   );
@@ -64,7 +65,7 @@ export const MealPlanDateView = ({
 
   const handleAddToList = useCallback(
     (listId: string) => {
-      if (!pendingAddItem) return;
+      if (isAddingToList || !pendingAddItem) return;
 
       const args =
         pendingAddItem.type === 'recipe'
@@ -87,7 +88,7 @@ export const MealPlanDateView = ({
         },
       });
     },
-    [pendingAddItem, addMealsToGroceryList]
+    [isAddingToList, pendingAddItem, addMealsToGroceryList]
   );
 
   const handleIndicatorPress = useCallback(
@@ -263,28 +264,21 @@ export const MealPlanDateView = ({
         )}
       />
 
-      <BottomSheet
+      <SelectGroceryListSheet
         name="single-meal-list-selector"
         ref={listSheetRef}
-        detents={['auto']}
+        selectedListId={undefined}
+        onSelectList={handleAddToList}
+        title="Choose a List"
+        subtext={
+          <>
+            Select a list to add <Text className="font-semibold">{pendingAddItem?.name}</Text> to
+          </>
+        }
+        showJoinByCode={false}
+        showManageActions={false}
         onStartClose={() => setPendingAddItem(null)}
-      >
-        <BottomSheet.Header
-          className="mb-0 px-4"
-          title="Choose a List"
-          subsection={
-            <BottomSheet.Subtext>
-              Select a list to add{' '}
-              <Text className="font-semibold">{pendingAddItem?.name}</Text> to
-            </BottomSheet.Subtext>
-          }
-        />
-        <GroceryListPicker
-          lists={lists?.grocery_lists ?? []}
-          onSelectList={handleAddToList}
-          disabled={isAddingToList}
-        />
-      </BottomSheet>
+      />
     </>
   );
 };
