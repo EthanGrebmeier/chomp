@@ -21,7 +21,7 @@ export const CollapsibleSectionHeader = ({
   showCollapse = true,
 }: CollapsibleSectionHeaderProps) => {
   return (
-    <View className="bg-background px-4">
+    <View className="bg-background px-4 pt-1">
       {showCollapse ? (
         <TouchableOpacity
           onPress={onToggle}
