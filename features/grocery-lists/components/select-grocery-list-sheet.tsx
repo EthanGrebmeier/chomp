@@ -179,6 +179,7 @@ export const SelectGroceryListSheet = forwardRef<
                     <Icon
                       as={PlusIcon}
                       size={24}
+                      strokeWidth={3}
                       className="text-primary-foreground"
                     />
                   </Button>

@@ -62,6 +62,7 @@ const buttonVariants = cva(
           'h-11 px-6 sm:h-10',
           Platform.select({ web: 'has-[>svg]:px-4' })
         ),
+        'wide-small': cn('h-10 w-24'),
         icon: 'size-8',
         iconLg: 'size-14',
         circle: 'rounded-full p-2',
@@ -101,6 +102,7 @@ const buttonTextVariants = cva(
         default: '',
         sm: '',
         lg: '',
+        'wide-small': '',
         icon: '',
         iconLg: '',
         circle: '',

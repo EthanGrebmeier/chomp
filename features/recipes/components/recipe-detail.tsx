@@ -113,7 +113,7 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
       </View>
       {isOwner && (
         <View className="absolute bottom-6 right-6 z-20">
-          <Button size="iconLg" onPress={() => present()}>
+          <Button size="wide-small" onPress={() => present()}>
             <Icon
               as={PlusIcon}
               size={28}

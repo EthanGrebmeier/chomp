@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { CheckIcon, ShoppingCartIcon } from 'lucide-react-native';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
+import { ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
@@ -298,7 +298,7 @@ export const ListSelectorSheet = () => {
       <BottomSheet
         name="add-meals-to-list-sheet"
         ref={sheetRef}
-        detents={['auto', 0.8]}
+        detents={[0.8, 'auto']}
         scrollable
         onOpen={resetSelection}
         onStartClose={() => {
@@ -312,7 +312,9 @@ export const ListSelectorSheet = () => {
                 onPress={handleContinue}
                 disabled={isAddingToList || unaddedCount === 0}
               >
-                <Text>{isAddingToList ? 'Adding...' : 'Add to Grocery List'}</Text>
+                <Text>
+                  {isAddingToList ? 'Adding...' : 'Add to Grocery List'}
+                </Text>
               </Button>
             </View>
             <LinearGradient
@@ -393,7 +395,7 @@ export const ListSelectorSheet = () => {
       <Button
         size="iconLg"
         variant="secondary"
-        className="absolute left-6 z-10"
+        className="absolute left-6 z-10 h-10 w-24"
         style={{ bottom: NATIVE_TABS_OFFSET }}
         onPress={() => sheetRef.current?.present()}
         disabled={isAddingToList || unaddedCount === 0}

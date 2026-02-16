@@ -26,9 +26,7 @@ type CreateRecipeButtonProps = {
   onSuccess?: (result: { id: string }) => void;
 };
 
-export const CreateRecipeButton = ({
-  onSuccess,
-}: CreateRecipeButtonProps) => {
+export const CreateRecipeButton = ({ onSuccess }: CreateRecipeButtonProps) => {
   const { mutate: createRecipe } = useCreateRecipe();
   const createSheetRef = useRef<CreateRecipeSheetRef>(null);
   const importSheetRef = useRef<ImportRecipeSheetRef>(null);
@@ -75,7 +73,7 @@ export const CreateRecipeButton = ({
     <>
       <DropdownMenuRoot
         trigger={
-          <Button size="iconLg">
+          <Button size="wide-small">
             <Icon
               strokeWidth={3}
               className="text-primary-foreground"

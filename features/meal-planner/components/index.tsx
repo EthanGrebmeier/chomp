@@ -75,7 +75,9 @@ export const MealPlanner = () => {
   const daysOfPlan = useMemo(() => {
     const dates = [];
     for (let i = -DAYS_RANGE; i <= DAYS_RANGE; i++) {
-      dates.push(i < 0 ? subDays(dateAnchor, Math.abs(i)) : addDays(dateAnchor, i));
+      dates.push(
+        i < 0 ? subDays(dateAnchor, Math.abs(i)) : addDays(dateAnchor, i)
+      );
     }
     return dates;
   }, [dateAnchor]);
@@ -185,7 +187,7 @@ export const MealPlanner = () => {
         ))}
       </PagerView>
       <Button
-        size="iconLg"
+        size="wide-small"
         style={{ bottom: NATIVE_TABS_OFFSET }}
         onPress={handleAddPress}
         className="absolute right-6 z-10"

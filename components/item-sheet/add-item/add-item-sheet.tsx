@@ -199,10 +199,10 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
   return (
     <>
       <Button
-        size="iconLg"
+        size="wide-small"
         style={{ bottom: NATIVE_TABS_OFFSET }}
         onPress={openSheet}
-        className="absolute right-6 z-10"
+        className="absolute right-6 z-10 "
       >
         <Icon
           as={PlusIcon}
