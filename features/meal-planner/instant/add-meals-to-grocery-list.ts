@@ -22,20 +22,26 @@ export const addMealsToGroceryList = async ({
   selectedItemIds,
   skippedItemIds,
 }: AddMealsToGroceryListArgs) => {
-  // Query all user's meal plan recipes and items without where clauses (for offline support)
-  // Permissions will automatically filter to the current user's data
   const result = await db.queryOnce({
-    meal_plan_recipes: {
-      recipe: {
-        recipe_ingredients: {
-          store: {},
+    grocery_lists: {
+      $: {
+        where: {
+          id: listId,
         },
       },
-    },
-    meal_plan_items: {
-      store: {},
+      meal_plan_recipes: {
+        recipe: {
+          recipe_ingredients: {
+            store: {},
+          },
+        },
+      },
+      meal_plan_items: {
+        store: {},
+      },
     },
   });
+  const mealPlanData = result.data.grocery_lists?.[0];
 
   const now = new Date().toISOString();
   const transactions = [];
@@ -43,7 +49,7 @@ export const addMealsToGroceryList = async ({
 
   // Filter for recipes that haven't been added to a list yet
   const allUnaddedRecipes =
-    result.data.meal_plan_recipes?.filter(mpr => !mpr.addedToList) || [];
+    mealPlanData?.meal_plan_recipes?.filter(mpr => !mpr.addedToList) || [];
 
   // Split into selected (add ingredients) and skipped (mark added only)
   const unaddedRecipes = selectedRecipeIds
@@ -123,7 +129,7 @@ export const addMealsToGroceryList = async ({
 
   // Filter for items that haven't been added to a list yet
   const allUnaddedItems =
-    result.data.meal_plan_items?.filter(mpi => !mpi.addedToList) || [];
+    mealPlanData?.meal_plan_items?.filter(mpi => !mpi.addedToList) || [];
 
   // Split into selected (add to list) and skipped (mark added only)
   const unaddedItems = selectedItemIds

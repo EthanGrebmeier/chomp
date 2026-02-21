@@ -38,10 +38,10 @@ const rules = {
     },
   },
   meal_plan_items: {
-    bind: ['isOwner', "auth.id in data.ref('user.id')"],
+    bind: ['isOwner', "auth.id in data.ref('grocery_list.shares.user_id')"],
     allow: {
       view: 'isOwner',
-      create: 'auth.id != null',
+      create: 'isOwner',
       delete: 'isOwner',
       update: 'isOwner',
     },
@@ -79,10 +79,10 @@ const rules = {
     },
   },
   meal_plan_recipes: {
-    bind: ['isOwner', "auth.id in data.ref('user.id')"],
+    bind: ['isOwner', "auth.id in data.ref('grocery_list.shares.user_id')"],
     allow: {
       view: 'isOwner',
-      create: 'auth.id != null',
+      create: 'isOwner',
       delete: 'isOwner',
       update: 'isOwner',
     },

@@ -36,6 +36,17 @@ function InitialLayout() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen
+          name="meal-plan/[listId]"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [0.98],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              height: '100%',
+            },
+          }}
+        />
       </Stack>
       <Toaster
         position="top-center"
@@ -65,7 +76,7 @@ export default function RootLayout() {
         <QueryClientProvider>
           <KeyboardProvider>
             <MigrationProvider>
-              <GestureHandlerRootView>
+              <GestureHandlerRootView style={{ flex: 1 }}>
                 <InitialLayout />
                 <PortalHost />
               </GestureHandlerRootView>

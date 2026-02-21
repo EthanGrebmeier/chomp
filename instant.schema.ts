@@ -150,28 +150,28 @@ const _schema = i.schema({
         label: 'meal_plan_recipes',
       },
     },
-    meal_plan_recipes_users: {
+    meal_plan_recipes_grocery_lists: {
       forward: {
         on: 'meal_plan_recipes',
         has: 'one',
-        label: 'user',
+        label: 'grocery_list',
         onDelete: 'cascade',
       },
       reverse: {
-        on: '$users',
+        on: 'grocery_lists',
         has: 'many',
         label: 'meal_plan_recipes',
       },
     },
-    meal_plan_items_users: {
+    meal_plan_items_grocery_lists: {
       forward: {
         on: 'meal_plan_items',
         has: 'one',
-        label: 'user',
+        label: 'grocery_list',
         onDelete: 'cascade',
       },
       reverse: {
-        on: '$users',
+        on: 'grocery_lists',
         has: 'many',
         label: 'meal_plan_items',
       },

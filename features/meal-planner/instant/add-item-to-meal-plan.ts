@@ -5,6 +5,7 @@ import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { addSavedItemIfNotExists } from '../../saved-items/instant/add-saved-item-if-not-exists';
 
 export type AddItemToDateArgs = {
+  listId: string;
   name: string;
   quantity: number;
   unit: string;
@@ -16,6 +17,7 @@ export type AddItemToDateArgs = {
 };
 
 export const addItemToDate = async ({
+  listId,
   name,
   quantity,
   unit,
@@ -25,11 +27,6 @@ export const addItemToDate = async ({
   date,
   mealTag,
 }: AddItemToDateArgs) => {
-  const user = await db.getAuth();
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
-
   const mealPlanItemId = id();
   const now = new Date().toISOString();
 
@@ -49,7 +46,7 @@ export const addItemToDate = async ({
       })
     ),
     tx.meal_plan_items[mealPlanItemId].link({
-      user: user.id,
+      grocery_list: listId,
     }),
   ];
 

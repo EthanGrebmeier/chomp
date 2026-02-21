@@ -24,6 +24,7 @@ export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
 };
 
 export type AddRecipeToDateArgs = {
+  listId: string;
   recipeId: string;
   date: string;
   mealTag?: MealTag;
@@ -58,6 +59,7 @@ export type AddMealsToGroceryListArgs = {
 };
 
 export type AddItemToDateArgs = {
+  listId: string;
   name: string;
   quantity: number;
   unit: string;

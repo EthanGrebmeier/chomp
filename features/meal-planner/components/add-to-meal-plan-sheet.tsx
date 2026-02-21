@@ -83,6 +83,7 @@ const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
 };
 
 type AddToMealPlanSheetProps = {
+  listId: string;
   ref?: React.RefObject<AddToMealPlanSheetRef | null>;
 };
 
@@ -91,7 +92,7 @@ export type AddToMealPlanSheetRef = {
   dismiss: () => void;
 };
 
-const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
+const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const {
     itemName,
@@ -153,6 +154,7 @@ const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
 
     addRecipeToDate(
       {
+        listId,
         recipeId: selectedRecipe.id,
         date: recipeDate,
         mealTag: recipeMealTag,
@@ -191,6 +193,7 @@ const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
 
     addItemToDate(
       {
+        listId,
         name: itemName,
         quantity,
         unit,
@@ -334,10 +337,10 @@ const AddToMealPlanSheetInner = ({ ref }: AddToMealPlanSheetProps) => {
   );
 };
 
-export const AddToMealPlanSheet = ({ ref }: AddToMealPlanSheetProps) => {
+export const AddToMealPlanSheet = ({ listId, ref }: AddToMealPlanSheetProps) => {
   return (
     <MealPlanItemProvider initialValues={{ selectedDate: undefined }}>
-      <AddToMealPlanSheetInner ref={ref} />
+      <AddToMealPlanSheetInner listId={listId} ref={ref} />
     </MealPlanItemProvider>
   );
 };

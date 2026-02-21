@@ -1,17 +1,18 @@
-import { useUserMealPlanData as useUserMealPlanDataQuery } from '../instant/use-user-meal-plan-data';
+import { useMealPlanData } from '../instant/use-user-meal-plan-data';
 import { MealPlanRecipeWithRecipe } from '../types';
 
-export const useUserMealPlanData = () => {
-  const { data, isLoading, error } = useUserMealPlanDataQuery();
+export const useUserMealPlanData = (listId?: string) => {
+  const { data, isLoading, error } = useMealPlanData(listId);
+  const activeList = data?.grocery_lists?.[0];
 
   // Filter out recipes that don't have recipe data loaded
-  const recipes = (data?.meal_plan_recipes ?? []).filter(
+  const recipes = (activeList?.meal_plan_recipes ?? []).filter(
     recipe => recipe.recipe !== undefined
   ) as MealPlanRecipeWithRecipe[];
 
   return {
     recipes,
-    items: data?.meal_plan_items ?? [],
+    items: activeList?.meal_plan_items ?? [],
     isLoading,
     error,
   };

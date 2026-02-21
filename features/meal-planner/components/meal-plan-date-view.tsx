@@ -1,5 +1,5 @@
 import { CookingPotIcon } from 'lucide-react-native';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import { Alert, FlatList, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
@@ -8,11 +8,6 @@ import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
-import {
-  SelectGroceryListSheet,
-  SelectGroceryListSheetRef,
-} from '../../grocery-lists/components/select-grocery-list-sheet';
-import { useGroceryLists } from '../../grocery-lists/instant/useGroceryLists';
 import { Recipe } from '../../recipes/types';
 import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useAddMealsToGroceryList, useUnmarkMealAdded } from '../hooks';
@@ -21,11 +16,8 @@ import { MealPlanItemWithStore, MealPlanRecipe, MealTag } from '../types';
 import MealPlanItemCard from './meal-plan-item-card';
 import MealPlanMealCard from './meal-plan-meal-card';
 
-type PendingAddItem =
-  | { type: 'recipe'; id: string; name: string }
-  | { type: 'item'; id: string; name: string };
-
 type MealPlanDateViewProps = {
+  listId: string;
   recipes: (MealPlanRecipe & { recipe: Recipe })[];
   items: MealPlanItemWithStore[];
   onMealPress: ({
@@ -48,48 +40,15 @@ const mealTimeOrder: MealTag[] = [
 ];
 
 export const MealPlanDateView = ({
+  listId,
   recipes,
   items,
   onMealPress,
   onItemPress,
 }: MealPlanDateViewProps) => {
-  const listSheetRef = useRef<SelectGroceryListSheetRef>(null);
-  const [pendingAddItem, setPendingAddItem] = useState<PendingAddItem | null>(
-    null
-  );
-
-  const { data: lists } = useGroceryLists();
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
     useAddMealsToGroceryList();
   const { mutate: unmarkMealAdded } = useUnmarkMealAdded();
-
-  const handleAddToList = useCallback(
-    (listId: string) => {
-      if (isAddingToList || !pendingAddItem) return;
-
-      const args =
-        pendingAddItem.type === 'recipe'
-          ? { listId, selectedRecipeIds: [pendingAddItem.id] }
-          : { listId, selectedItemIds: [pendingAddItem.id] };
-
-      addMealsToGroceryList(args, {
-        onSuccess: result => {
-          const totalAdded = result.addedRecipes + result.addedItems;
-          if (totalAdded === 0) {
-            toast.info('Already added to list');
-          } else {
-            toast.success(`Added ${pendingAddItem.name} to list`);
-          }
-          listSheetRef.current?.dismiss();
-          setPendingAddItem(null);
-        },
-        onError: () => {
-          toast.error('Failed to add to list');
-        },
-      });
-    },
-    [isAddingToList, pendingAddItem, addMealsToGroceryList]
-  );
 
   const handleIndicatorPress = useCallback(
     (
@@ -98,6 +57,8 @@ export const MealPlanDateView = ({
       name: string,
       addedToList: boolean
     ) => {
+      if (isAddingToList) return;
+
       if (addedToList) {
         Alert.alert(
           'Already Added',
@@ -111,37 +72,27 @@ export const MealPlanDateView = ({
           ]
         );
       } else {
-        const groceryLists = lists?.grocery_lists ?? [];
-        setPendingAddItem({ type, id, name });
+        const args =
+          type === 'recipe'
+            ? { listId, selectedRecipeIds: [id] }
+            : { listId, selectedItemIds: [id] };
 
-        if (groceryLists.length === 1) {
-          // Auto-select the only list
-          const args =
-            type === 'recipe'
-              ? { listId: groceryLists[0].id, selectedRecipeIds: [id] }
-              : { listId: groceryLists[0].id, selectedItemIds: [id] };
-
-          addMealsToGroceryList(args, {
-            onSuccess: result => {
-              const totalAdded = result.addedRecipes + result.addedItems;
-              if (totalAdded === 0) {
-                toast.info('Already added to list');
-              } else {
-                toast.success(`Added ${name} to list`);
-              }
-              setPendingAddItem(null);
-            },
-            onError: () => {
-              toast.error('Failed to add to list');
-              setPendingAddItem(null);
-            },
-          });
-        } else {
-          listSheetRef.current?.present();
-        }
+        addMealsToGroceryList(args, {
+          onSuccess: result => {
+            const totalAdded = result.addedRecipes + result.addedItems;
+            if (totalAdded === 0) {
+              toast.info('Already added to list');
+            } else {
+              toast.success(`Added ${name} to list`);
+            }
+          },
+          onError: () => {
+            toast.error('Failed to add to list');
+          },
+        });
       }
     },
-    [lists, addMealsToGroceryList, unmarkMealAdded]
+    [addMealsToGroceryList, isAddingToList, listId, unmarkMealAdded]
   );
 
   const handleRecipeIndicatorPress = useCallback(
@@ -221,64 +172,43 @@ export const MealPlanDateView = ({
   }
 
   return (
-    <>
-      <FlatList
-        contentContainerClassName="pb-20"
-        data={mealTimesWithContent}
-        keyExtractor={item => item}
-        renderItem={({ item: mealTime }) => (
-          <View className="mb-4 gap-2 px-4">
-            <Text className="text-lg font-semibold capitalize text-muted-foreground">
-              {mealTime}
-            </Text>
-            <Animated.View
-              entering={FadeIn.duration(140)}
-              exiting={FadeOut.duration(140)}
-            >
-              <View className="gap-2">
-                {groupedRecipes[mealTime]?.map(mealPlanRecipe => {
-                  const recipe = mealPlanRecipe.recipe;
-                  if (!recipe) return null;
+    <FlatList
+      contentContainerClassName="pb-20"
+      data={mealTimesWithContent}
+      keyExtractor={item => item}
+      renderItem={({ item: mealTime }) => (
+        <View className="mb-4 gap-2 px-4">
+          <Text className="text-lg font-semibold capitalize text-muted-foreground">
+            {mealTime}
+          </Text>
+          <Animated.View entering={FadeIn.duration(140)} exiting={FadeOut.duration(140)}>
+            <View className="gap-2">
+              {groupedRecipes[mealTime]?.map(mealPlanRecipe => {
+                const recipe = mealPlanRecipe.recipe;
+                if (!recipe) return null;
 
-                  return (
-                    <MealPlanMealCard
-                      key={mealPlanRecipe.id}
-                      mealPlanRecipe={mealPlanRecipe}
-                      recipe={recipe}
-                      onMealPress={onMealPress}
-                      onIndicatorPress={handleRecipeIndicatorPress}
-                    />
-                  );
-                })}
-                {groupedItems[mealTime]?.map(mealPlanItem => (
-                  <MealPlanItemCard
-                    key={mealPlanItem.id}
-                    mealPlanItem={mealPlanItem}
-                    onItemPress={onItemPress}
-                    onIndicatorPress={handleItemIndicatorPress}
+                return (
+                  <MealPlanMealCard
+                    key={mealPlanRecipe.id}
+                    mealPlanRecipe={mealPlanRecipe}
+                    recipe={recipe}
+                    onMealPress={onMealPress}
+                    onIndicatorPress={handleRecipeIndicatorPress}
                   />
-                ))}
-              </View>
-            </Animated.View>
-          </View>
-        )}
-      />
-
-      <SelectGroceryListSheet
-        name="single-meal-list-selector"
-        ref={listSheetRef}
-        selectedListId={undefined}
-        onSelectList={handleAddToList}
-        title="Choose a List"
-        subtext={
-          <>
-            Select a list to add <Text className="font-semibold">{pendingAddItem?.name}</Text> to
-          </>
-        }
-        showJoinByCode={false}
-        showManageActions={false}
-        onStartClose={() => setPendingAddItem(null)}
-      />
-    </>
+                );
+              })}
+              {groupedItems[mealTime]?.map(mealPlanItem => (
+                <MealPlanItemCard
+                  key={mealPlanItem.id}
+                  mealPlanItem={mealPlanItem}
+                  onItemPress={onItemPress}
+                  onIndicatorPress={handleItemIndicatorPress}
+                />
+              ))}
+            </View>
+          </Animated.View>
+        </View>
+      )}
+    />
   );
 };

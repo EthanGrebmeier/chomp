@@ -4,6 +4,7 @@ import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export type AddRecipeToDateArgs = {
+  listId: string;
   recipeId: string;
   date: string;
   mealTag?: string;
@@ -11,16 +12,12 @@ export type AddRecipeToDateArgs = {
 };
 
 export const addRecipeToDate = async ({
+  listId,
   recipeId,
   date,
   mealTag,
   servings = 1,
 }: AddRecipeToDateArgs) => {
-  const user = await db.getAuth();
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
-
   const mealPlanRecipeId = id();
   const now = new Date().toISOString();
 
@@ -36,7 +33,7 @@ export const addRecipeToDate = async ({
       })
     ),
     tx.meal_plan_recipes[mealPlanRecipeId].link({
-      user: user.id,
+      grocery_list: listId,
       recipe: recipeId,
     }),
   ]);

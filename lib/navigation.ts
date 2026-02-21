@@ -9,7 +9,7 @@
  * import { navigation } from '@/lib/navigation';
  *
  * router.push(navigation.goToList());
- * router.push(navigation.goToMealPlan('plan-456'));
+ * router.push(navigation.goToMealPlan('list-456'));
  * router.push(navigation.goToRecipe('recipe-789'));
  *
  * // Using the navActions (alternative API)
@@ -27,26 +27,19 @@
 import { Href } from 'expo-router';
 
 // Base route types
-export type TabRoute = 'list' | 'plans' | 'recipes';
+export type TabRoute = 'list' | 'recipes';
 
 // Dynamic route parameters
 export interface ListParams {
   listId?: string;
 }
 
-export interface MealPlanParams {
-  mealPlanId: string;
-  autofocus?: boolean;
+export interface ListMealPlanParams {
+  listId: string;
 }
 
 export interface RecipeParams {
   recipeId: string;
-}
-
-// Navigation options
-export interface NavigationOptions {
-  autofocus?: boolean;
-  replace?: boolean;
 }
 
 /**
@@ -54,10 +47,6 @@ export interface NavigationOptions {
  */
 export function buildRecipesUrl(): Href {
   return `/(tabs)/recipes` as const;
-}
-
-export function buildPlansUrl(): Href {
-  return `/plans` as const;
 }
 
 /**
@@ -68,13 +57,12 @@ export function buildListUrl(params?: ListParams): Href {
   return `/(tabs)${query}` as Href;
 }
 
-/**
- * Builds a URL for a meal plan detail page
- */
-export function buildMealPlanUrl(params: MealPlanParams) {
-  const { mealPlanId, autofocus } = params;
-  const query = autofocus ? '?autofocus=true' : '';
-  return `/plans/${mealPlanId}${query}` as const;
+export function buildMealPlanSheetUrl(params: ListMealPlanParams): Href {
+  const { listId } = params;
+  return {
+    pathname: '/meal-plan/[listId]',
+    params: { listId },
+  } as unknown as Href;
 }
 
 /**
@@ -109,12 +97,10 @@ export function buildRecipeShareURL(recipeId: string): string | null {
 export const navigation = {
   // Tab navigation
   goToList: (listId?: string) => buildListUrl(listId ? { listId } : undefined),
-  goToPlans: buildPlansUrl,
   goToRecipes: buildRecipesUrl,
 
-  // Meal plan navigation
-  goToMealPlan: (mealPlanId: string, options?: NavigationOptions) =>
-    buildMealPlanUrl({ mealPlanId, autofocus: options?.autofocus }),
+  // Meal plan sheet navigation
+  goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string) => buildRecipeUrl({ recipeId }),
@@ -128,12 +114,10 @@ export function useNavigation() {
   return {
     // Tab navigation
     goToList: (listId?: string) => navigation.goToList(listId),
-    goToPlans: () => navigation.goToPlans(),
     goToRecipes: () => navigation.goToRecipes(),
 
-    // Meal plan navigation
-    goToMealPlan: (mealPlanId: string, options?: NavigationOptions) =>
-      navigation.goToMealPlan(mealPlanId, options),
+    // Meal plan sheet navigation
+    goToMealPlan: (listId: string) => navigation.goToMealPlan(listId),
 
     // Recipe navigation
     goToRecipe: (recipeId: string) => navigation.goToRecipe(recipeId),
@@ -147,12 +131,10 @@ export function useNavigation() {
 export const navActions = {
   // Tab navigation
   goToList: (listId?: string) => buildListUrl(listId ? { listId } : undefined),
-  goToPlans: () => buildPlansUrl(),
   goToRecipes: () => buildRecipesUrl(),
 
-  // Meal plan navigation
-  goToMealPlan: (mealPlanId: string, options?: NavigationOptions) =>
-    buildMealPlanUrl({ mealPlanId, autofocus: options?.autofocus }),
+  // Meal plan sheet navigation
+  goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string) => buildRecipeUrl({ recipeId }),
@@ -164,13 +146,11 @@ export const navActions = {
 export const ROUTES = {
   TABS: {
     LIST: '/(tabs)',
-    PLANS: '/(tabs)/plans',
     RECIPES: '/(tabs)/recipes',
   },
   LIST: '/(tabs)',
-  PLANS: {
-    INDEX: '/(tabs)/plans',
-    DETAIL: (mealPlanId: string) => `/(tabs)/plans/${mealPlanId}`,
+  MEAL_PLAN: {
+    SHEET: (listId: string) => `/meal-plan/${listId}`,
   },
   RECIPES: {
     INDEX: '/(tabs)/recipes',

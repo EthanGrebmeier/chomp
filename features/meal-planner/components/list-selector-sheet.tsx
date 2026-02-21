@@ -1,7 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
 import { CheckIcon, ShoppingCartIcon } from 'lucide-react-native';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
@@ -14,14 +13,7 @@ import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
-import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
-import {
-  SelectGroceryListSheet,
-  SelectGroceryListSheetRef,
-} from '../../grocery-lists/components/select-grocery-list-sheet';
-import { useGroceryLists } from '../../grocery-lists/instant/useGroceryLists';
-import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useAddMealsToGroceryList, useUserMealPlanData } from '../hooks';
 import {
   MealPlanItemWithStore,
@@ -125,14 +117,17 @@ const MealPlanRow = ({
   );
 };
 
-export const ListSelectorSheet = () => {
+type ListSelectorSheetProps = {
+  listId: string;
+};
+
+export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
-  const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
   const isDarkMode = useColorScheme() === 'dark';
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   // Track deselected IDs instead of selected — everything is selected by default
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
-  const { data: lists } = useGroceryLists();
-  const { recipes, items } = useUserMealPlanData();
+  const { recipes, items } = useUserMealPlanData(listId);
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
     useAddMealsToGroceryList();
 
@@ -242,7 +237,17 @@ export const ListSelectorSheet = () => {
     });
   }, []);
 
-  const handleAddToList = (listId: string) => {
+  const handleSheetOpen = useCallback(() => {
+    resetSelection();
+    setIsSheetOpen(true);
+  }, [resetSelection]);
+
+  const handleSheetClose = useCallback(() => {
+    resetSelection();
+    setIsSheetOpen(false);
+  }, [resetSelection]);
+
+  const handleAddToList = () => {
     if (isAddingToList) return;
 
     const selectedRecipeIds = [...unaddedRecipeIds].filter(id =>
@@ -275,22 +280,12 @@ export const ListSelectorSheet = () => {
             );
           }
           sheetRef.current?.dismiss();
-          router.push(navigation.goToList(listId));
         },
         onError: () => {
           toast.error('Failed to add meals to list');
         },
       }
     );
-  };
-
-  const handleContinue = () => {
-    const groceryLists = lists?.grocery_lists ?? [];
-    if (groceryLists.length === 1) {
-      handleAddToList(groceryLists[0].id);
-    } else {
-      selectListSheetRef.current?.present();
-    }
   };
 
   return (
@@ -300,16 +295,14 @@ export const ListSelectorSheet = () => {
         ref={sheetRef}
         detents={[0.8, 'auto']}
         scrollable
-        onOpen={resetSelection}
-        onStartClose={() => {
-          resetSelection();
-        }}
+        onOpen={handleSheetOpen}
+        onStartClose={handleSheetClose}
         viewClassName="pb-safe"
         footer={
           <>
             <View className="z-10 px-10 pb-4">
               <Button
-                onPress={handleContinue}
+                onPress={handleAddToList}
                 disabled={isAddingToList || unaddedCount === 0}
               >
                 <Text>
@@ -337,66 +330,58 @@ export const ListSelectorSheet = () => {
             title="Add to Grocery List"
             subsection={<BottomSheet.Subtext>{subtext}</BottomSheet.Subtext>}
           />
-          <ScrollView
-            className="px-4"
-            contentContainerStyle={{ paddingBottom: 80 }}
-          >
-            {sortedEntries.map(entry => {
-              if (entry.kind === 'recipe') {
-                const { recipe: mealPlanRecipe } = entry;
-                const recipe = mealPlanRecipe.recipe;
-                const ingredientCount = recipe.recipe_ingredients?.length ?? 0;
-                const servings = mealPlanRecipe.servings || 1;
+          {isSheetOpen ? (
+            <ScrollView
+              className="px-4"
+              contentContainerStyle={{ paddingBottom: 80 }}
+            >
+              {sortedEntries.map(entry => {
+                if (entry.kind === 'recipe') {
+                  const { recipe: mealPlanRecipe } = entry;
+                  const recipe = mealPlanRecipe.recipe;
+                  const ingredientCount =
+                    recipe.recipe_ingredients?.length ?? 0;
+                  const servings = mealPlanRecipe.servings || 1;
+                  return (
+                    <MealPlanRow
+                      key={mealPlanRecipe.id}
+                      name={recipe.name}
+                      date={mealPlanRecipe.date}
+                      mealTag={mealPlanRecipe.mealTag}
+                      detail={`${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}`}
+                      trailing={servings > 1 ? `x${servings}` : undefined}
+                      isSelected={isSelected(mealPlanRecipe.id)}
+                      onToggle={() => toggleItem(mealPlanRecipe.id)}
+                    />
+                  );
+                }
+
+                const { item } = entry;
                 return (
                   <MealPlanRow
-                    key={mealPlanRecipe.id}
-                    name={recipe.name}
-                    date={mealPlanRecipe.date}
-                    mealTag={mealPlanRecipe.mealTag}
-                    detail={`${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}`}
-                    trailing={servings > 1 ? `x${servings}` : undefined}
-                    isSelected={isSelected(mealPlanRecipe.id)}
-                    onToggle={() => toggleItem(mealPlanRecipe.id)}
+                    key={item.id}
+                    name={item.name}
+                    date={item.date}
+                    mealTag={item.mealTag}
+                    trailing={formatQuantityUnit(item.quantity, item.unit)}
+                    isSelected={isSelected(item.id)}
+                    onToggle={() => toggleItem(item.id)}
                   />
                 );
-              }
-
-              const { item } = entry;
-              return (
-                <MealPlanRow
-                  key={item.id}
-                  name={item.name}
-                  date={item.date}
-                  mealTag={item.mealTag}
-                  trailing={formatQuantityUnit(item.quantity, item.unit)}
-                  isSelected={isSelected(item.id)}
-                  onToggle={() => toggleItem(item.id)}
-                />
-              );
-            })}
-            {unaddedCount === 0 && (
-              <Text className="text-center text-muted-foreground">
-                No items to add
-              </Text>
-            )}
-          </ScrollView>
+              })}
+              {unaddedCount === 0 && (
+                <Text className="text-center text-muted-foreground">
+                  No items to add
+                </Text>
+              )}
+            </ScrollView>
+          ) : null}
         </Animated.View>
       </BottomSheet>
-      <SelectGroceryListSheet
-        name="meal-planner-select-list-sheet"
-        ref={selectListSheetRef}
-        selectedListId={undefined}
-        onSelectList={handleAddToList}
-        title="Choose a List"
-        subtext="Select a list to add your selected meals and items to"
-        showJoinByCode={false}
-        showManageActions={false}
-      />
       <Button
         size="iconLg"
         variant="secondary"
-        className="absolute left-6 z-10 h-10 w-24"
-        style={{ bottom: NATIVE_TABS_OFFSET }}
+        className="absolute bottom-12 left-6 z-10 h-10 w-24"
         onPress={() => sheetRef.current?.present()}
         disabled={isAddingToList || unaddedCount === 0}
       >

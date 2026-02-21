@@ -27,11 +27,6 @@ export default function Layout() {
           <Icon sf={{ default: 'receipt', selected: 'receipt.fill' }} />
           <Label> List </Label>
         </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="plans">
-          {/* @ts-ignore This is a real symbol  */}
-          <Icon sf={{ default: 'calendar', selected: 'calendar.fill' }} />
-          <Label> Meal Plan </Label>
-        </NativeTabs.Trigger>
         <NativeTabs.Trigger name="recipes">
           <Icon sf={{ default: 'book', selected: 'book.fill' }} />
           <Label> Recipes </Label>

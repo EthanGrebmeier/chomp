@@ -1,11 +1,17 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { Link } from 'expo-router';
+import { CalendarIcon } from 'lucide-react-native';
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { Keyboard, TextInput as RNTextInput, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
+import { Button } from '../../../components/ui/button';
+import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
+import { navigation } from '../../../lib/navigation';
+import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
@@ -259,7 +265,26 @@ export const GroceryList = ({
         <ShareListSheet ref={shareListSheetRef} />
         <EditListNameSheet ref={editListNameSheetRef} />
       </View>
-      {listId && <AddItemSheet groceryListId={listId} />}
+      {listId && (
+        <>
+          <Link href={navigation.goToMealPlan(listId)} asChild prefetch>
+            <Button
+              size="wide-small"
+              variant="secondary"
+              style={{ bottom: NATIVE_TABS_OFFSET }}
+              className="absolute left-6 z-10"
+            >
+              <Icon
+                as={CalendarIcon}
+                size={20}
+                strokeWidth={3}
+                className="text-secondary-foreground"
+              />
+            </Button>
+          </Link>
+          <AddItemSheet groceryListId={listId} />
+        </>
+      )}
     </>
   );
 };

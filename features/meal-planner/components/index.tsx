@@ -1,14 +1,12 @@
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
 import { PlusIcon } from 'lucide-react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
-import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useUserMealPlanData } from '../hooks';
 import { MealPlanItemWithStore } from '../types';
 
@@ -23,15 +21,19 @@ import { ListSelectorSheet } from './list-selector-sheet';
 import { MealPlanDate } from './meal-plan-date';
 import { MealPlanDateView } from './meal-plan-date-view';
 
-const DAYS_RANGE = 30; // Show 30 days before and after today
+const DAYS_RANGE = 30; //  days before and after today
 
-export const MealPlanner = () => {
+type MealPlannerProps = {
+  listId: string;
+};
+
+export const MealPlanner = ({ listId }: MealPlannerProps) => {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
   const pagerRef = useRef<PagerView>(null);
   const isProgrammaticNavigationRef = useRef(false);
-  const { recipes, items } = useUserMealPlanData();
+  const { recipes, items } = useUserMealPlanData(listId);
 
   const { datesWithMeals, datesAllMealsAdded } = useMemo(() => {
     const mealStatusByDate = new Map<
@@ -118,14 +120,17 @@ export const MealPlanner = () => {
     return items.filter(item => item.date === dateStr);
   };
 
-  const handleDatePress = (date: Date) => {
-    const index = daysOfPlan.findIndex(d => isSameDay(d, date));
-    if (index !== -1) {
-      isProgrammaticNavigationRef.current = true;
-      pagerRef.current?.setPageWithoutAnimation(index);
-      setCurrentPageIndex(index);
-    }
-  };
+  const handleDatePress = useCallback(
+    (date: Date) => {
+      const index = daysOfPlan.findIndex(d => isSameDay(d, date));
+      if (index !== -1) {
+        isProgrammaticNavigationRef.current = true;
+        pagerRef.current?.setPageWithoutAnimation(index);
+        setCurrentPageIndex(index);
+      }
+    },
+    [daysOfPlan]
+  );
 
   const handlePageSelected = (e: { nativeEvent: { position: number } }) => {
     setCurrentPageIndex(e.nativeEvent.position);
@@ -146,16 +151,12 @@ export const MealPlanner = () => {
   };
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(140)}
-      exiting={FadeOut.duration(140)}
-      className="flex-1 "
-    >
+    <View style={{ flex: 1 }}>
       <View className="flex-row items-center justify-between px-4">
         <Heading>Meal Plan</Heading>
       </View>
-      <ListSelectorSheet />
-      <AddToMealPlanSheet ref={addToMealPlanSheet} />
+      <ListSelectorSheet listId={listId} />
+      <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} />
       <EditItemSheet sheetRef={editItemSheet} />
       <MealPlanDate currentDate={currentDate} onTodayPress={handleTodayPress} />
@@ -176,6 +177,7 @@ export const MealPlanner = () => {
         {daysOfPlan.map(date => (
           <View key={date.toISOString()} style={{ flex: 1 }}>
             <MealPlanDateView
+              listId={listId}
               recipes={getRecipesForDate(date)}
               items={getItemsForDate(date)}
               onMealPress={({ mealPlanRecipe, recipe }) =>
@@ -188,9 +190,8 @@ export const MealPlanner = () => {
       </PagerView>
       <Button
         size="wide-small"
-        style={{ bottom: NATIVE_TABS_OFFSET }}
         onPress={handleAddPress}
-        className="absolute right-6 z-10"
+        className="absolute bottom-12 right-6 z-10"
       >
         <Icon
           as={PlusIcon}
@@ -199,6 +200,6 @@ export const MealPlanner = () => {
           className="text-primary-foreground"
         />
       </Button>
-    </Animated.View>
+    </View>
   );
 };
