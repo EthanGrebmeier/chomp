@@ -15,6 +15,7 @@ import { MigrationProvider } from '@/providers/migration-provider';
 import { QueryClientProvider } from '@/providers/query-client-provider';
 
 import '../global.css';
+import { useTheme } from '../hooks/use-theme';
 
 const db = SQLite.openDatabaseSync('db.db');
 
@@ -27,6 +28,8 @@ if (!publishableKey) {
 }
 
 function InitialLayout() {
+  const theme = useTheme();
+
   return (
     <View className="flex-1 bg-background">
       <Stack
@@ -44,6 +47,7 @@ function InitialLayout() {
             sheetInitialDetentIndex: 0,
             contentStyle: {
               height: '100%',
+              backgroundColor: theme.background,
             },
           }}
         />
