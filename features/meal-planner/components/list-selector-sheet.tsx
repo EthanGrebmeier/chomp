@@ -3,8 +3,13 @@ import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckIcon, ShoppingCartIcon } from 'lucide-react-native';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  View,
+  useColorScheme,
+} from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -124,10 +129,9 @@ type ListSelectorSheetProps = {
 export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const isDarkMode = useColorScheme() === 'dark';
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   // Track deselected IDs instead of selected — everything is selected by default
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
-  const { recipes, items } = useUserMealPlanData(listId);
+  const { recipes, items, isLoading } = useUserMealPlanData(listId);
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
     useAddMealsToGroceryList();
 
@@ -237,14 +241,13 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
     });
   }, []);
 
-  const handleSheetOpen = useCallback(() => {
-    resetSelection();
-    setIsSheetOpen(true);
-  }, [resetSelection]);
-
   const handleSheetClose = useCallback(() => {
     resetSelection();
-    setIsSheetOpen(false);
+  }, [resetSelection]);
+
+  const handleOpenSheet = useCallback(() => {
+    resetSelection();
+    sheetRef.current?.present();
   }, [resetSelection]);
 
   const handleAddToList = () => {
@@ -295,7 +298,6 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
         ref={sheetRef}
         detents={[0.8, 'auto']}
         scrollable
-        onOpen={handleSheetOpen}
         onStartClose={handleSheetClose}
         viewClassName="pb-safe"
         footer={
@@ -324,18 +326,29 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
           </>
         }
       >
-        <Animated.View key="review" entering={FadeIn.duration(150)}>
+        <View>
           <BottomSheet.Header
             className="mb-0 px-4"
             title="Add to Grocery List"
-            subsection={<BottomSheet.Subtext>{subtext}</BottomSheet.Subtext>}
+            subsection={
+              <BottomSheet.Subtext>
+                {isLoading ? 'Loading meals...' : subtext}
+              </BottomSheet.Subtext>
+            }
           />
-          {isSheetOpen ? (
-            <ScrollView
-              className="px-4"
-              contentContainerStyle={{ paddingBottom: 80 }}
-            >
-              {sortedEntries.map(entry => {
+          <ScrollView
+            className="px-4"
+            contentContainerStyle={{ paddingBottom: 80 }}
+          >
+            {isLoading ? (
+              <View className="items-center justify-center py-12">
+                <ActivityIndicator size="small" />
+                <Text className="mt-2 text-sm text-muted-foreground">
+                  Loading meals...
+                </Text>
+              </View>
+            ) : (
+              sortedEntries.map(entry => {
                 if (entry.kind === 'recipe') {
                   const { recipe: mealPlanRecipe } = entry;
                   const recipe = mealPlanRecipe.recipe;
@@ -368,21 +381,21 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
                     onToggle={() => toggleItem(item.id)}
                   />
                 );
-              })}
-              {unaddedCount === 0 && (
-                <Text className="text-center text-muted-foreground">
-                  No items to add
-                </Text>
-              )}
-            </ScrollView>
-          ) : null}
-        </Animated.View>
+              })
+            )}
+            {!isLoading && unaddedCount === 0 && (
+              <Text className="text-center text-muted-foreground">
+                No items to add
+              </Text>
+            )}
+          </ScrollView>
+        </View>
       </BottomSheet>
       <Button
         size="iconLg"
         variant="secondary"
         className="absolute bottom-12 left-6 z-10 h-10 w-24"
-        onPress={() => sheetRef.current?.present()}
+        onPress={handleOpenSheet}
         disabled={isAddingToList || unaddedCount === 0}
       >
         <Icon
