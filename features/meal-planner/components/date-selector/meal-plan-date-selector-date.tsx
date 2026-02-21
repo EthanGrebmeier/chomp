@@ -1,5 +1,6 @@
 import { format, isToday } from 'date-fns';
 import { Circle, CircleCheck } from 'lucide-react-native';
+import { useMemo } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -26,6 +27,9 @@ export const MealPlanDateSelectorDate = ({
   width,
 }: MealPlanDateSelectorDateProps) => {
   const isDateToday = isToday(date);
+  const dayLabel = useMemo(() => format(date, 'd'), [date]);
+  const weekdayLabel = useMemo(() => format(date, 'EE'), [date]);
+
   return (
     <HapticPressable
       style={{ width }}
@@ -70,7 +74,7 @@ export const MealPlanDateSelectorDate = ({
             isSelected && 'text-foreground'
           )}
         >
-          {format(date, 'd')}
+          {dayLabel}
         </Text>
         <Text
           className={cn(
@@ -80,7 +84,7 @@ export const MealPlanDateSelectorDate = ({
               : 'text-muted-foreground'
           )}
         >
-          {format(date, 'EE')}
+          {weekdayLabel}
         </Text>
       </View>
       {isDateToday && (

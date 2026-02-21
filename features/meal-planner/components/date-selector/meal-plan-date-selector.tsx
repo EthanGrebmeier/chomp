@@ -1,4 +1,10 @@
-import { addWeeks, endOfWeek, format, isSameDay, startOfWeek } from 'date-fns';
+import {
+  addDays,
+  addWeeks,
+  format,
+  isSameDay,
+  startOfWeek,
+} from 'date-fns';
 import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import PagerView from 'react-native-pager-view';
@@ -17,7 +23,22 @@ type MealPlanDateSelectorProps = {
 // Generate weeks from a range of -30 to +30 weeks
 const WEEK_RANGE = 30;
 
+type WeekDate = {
+  date: Date;
+  dateKey: string;
+};
+
+const buildWeek = (weekStart: Date): WeekDate[] =>
+  Array.from({ length: 7 }, (_, offset) => {
+    const date = addDays(weekStart, offset);
+    return {
+      date,
+      dateKey: format(date, 'yyyy-MM-dd'),
+    };
+  });
+
 const MealPlanDateSelector = ({
+  dates,
   currentDate,
   onDatePress,
   isProgrammaticNavigationRef,
@@ -27,30 +48,41 @@ const MealPlanDateSelector = ({
   const pagerRef = useRef<PagerView>(null);
   const { width } = useWindowDimensions();
 
-  // Generate all weeks to display (30 weeks before and after today)
+  // Prefer the parent-provided date range to keep mount work small.
   const weeks = useMemo(() => {
-    const today = new Date();
-    const allWeeks: Date[][] = [];
+    const allWeeks: WeekDate[][] = [];
 
+    if (dates.length > 0) {
+      const seen = new Set<string>();
+      const sortedDates = [...dates].sort((a, b) => a.getTime() - b.getTime());
+
+      for (const date of sortedDates) {
+        const weekStart = startOfWeek(date, { weekStartsOn: 0 });
+        const weekKey = format(weekStart, 'yyyy-MM-dd');
+        if (seen.has(weekKey)) continue;
+        seen.add(weekKey);
+        allWeeks.push(buildWeek(weekStart));
+      }
+
+      return allWeeks;
+    }
+
+    const today = new Date();
     for (let i = -WEEK_RANGE; i <= WEEK_RANGE; i++) {
       const targetDate = i === 0 ? today : addWeeks(today, i);
-      const weekStart = startOfWeek(targetDate, { weekStartsOn: 0 }); // 0 = Sunday
-      const weekEnd = endOfWeek(targetDate, { weekStartsOn: 0 });
-
-      const weekDates: Date[] = [];
-      const current = new Date(weekStart);
-      while (current <= weekEnd) {
-        weekDates.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-      }
-      allWeeks.push(weekDates);
+      allWeeks.push(buildWeek(startOfWeek(targetDate, { weekStartsOn: 0 })));
     }
 
     return allWeeks;
-  }, []);
+  }, [dates]);
 
-  // Initial week index is the current week (middle of the range)
-  const initialWeekIndex = WEEK_RANGE;
+  const initialWeekIndex = useMemo(() => {
+    const index = weeks.findIndex(week =>
+      week.some(({ date }) => isSameDay(date, currentDate))
+    );
+    if (index !== -1) return index;
+    return dates.length > 0 ? 0 : WEEK_RANGE;
+  }, [currentDate, dates.length, weeks]);
 
   const [currentWeekIndex, setCurrentWeekIndex] = useState(initialWeekIndex);
   const isScrollingRef = useRef(false);
@@ -62,7 +94,7 @@ const MealPlanDateSelector = ({
     if (isScrollingRef.current) return; // Don't auto-scroll while user is scrolling
 
     const targetWeekIndex = weeks.findIndex(week =>
-      week.some(d => isSameDay(d, currentDate))
+      week.some(({ date }) => isSameDay(date, currentDate))
     );
     if (targetWeekIndex !== -1 && targetWeekIndex !== currentWeekIndex) {
       isAutoScrollingRef.current = true;
@@ -76,13 +108,14 @@ const MealPlanDateSelector = ({
     }
   }, [currentDate, currentWeekIndex, weeks, isProgrammaticNavigationRef]);
 
-  // Initialize scroll position to current week
+  // Keep pager position in sync if the source date range changes.
   useEffect(() => {
+    setCurrentWeekIndex(initialWeekIndex);
+    scrollStartWeekIndexRef.current = initialWeekIndex;
     setTimeout(() => {
       pagerRef.current?.setPageWithoutAnimation(initialWeekIndex);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialWeekIndex]);
 
   const handlePageScrollStateChanged = (e: {
     nativeEvent: { pageScrollState: 'idle' | 'dragging' | 'settling' };
@@ -114,7 +147,8 @@ const MealPlanDateSelector = ({
       newIndex !== scrollStartWeekIndexRef.current &&
       weeks[newIndex]
     ) {
-      const firstDayOfWeek = weeks[newIndex][0]; // Sunday is the first day
+      const firstDayOfWeek = weeks[newIndex][0]?.date; // Sunday is the first day
+      if (!firstDayOfWeek) return;
       onDatePress(firstDayOfWeek);
     }
 
@@ -141,13 +175,13 @@ const MealPlanDateSelector = ({
           key={weekIndex}
           className="flex-row items-center justify-between gap-1 px-4"
         >
-          {weekDates.map(date => (
+          {weekDates.map(({ date, dateKey }) => (
             <MealPlanDateSelectorDate
-              key={date.toISOString()}
+              key={dateKey}
               date={date}
               isSelected={isSameDay(date, currentDate)}
-              hasMeals={datesWithMeals.has(format(date, 'yyyy-MM-dd'))}
-              allMealsAdded={datesAllMealsAdded.has(format(date, 'yyyy-MM-dd'))}
+              hasMeals={datesWithMeals.has(dateKey)}
+              allMealsAdded={datesAllMealsAdded.has(dateKey)}
               onPress={onDatePress}
               width={dateWidth}
             />
