@@ -68,19 +68,11 @@ export const GroceryListHeader = ({
           )}
         </Pressable>
         {listId && (
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-4">
             {isDisconnected && (
               <Icon as={WifiOff} size={20} className="text-destructive" />
             )}
-            {onSettingsPress && (
-              <Pressable
-                onPress={onSettingsPress}
-                className="active:opacity-70"
-                hitSlop={8}
-              >
-                <Icon as={SettingsIcon} size={22} className="text-foreground" />
-              </Pressable>
-            )}
+
             <GroceryListDropdownMenu
               items={items}
               ownerId={ownerId}
@@ -90,6 +82,15 @@ export const GroceryListHeader = ({
               onDeleteOrLeave={onDeleteOrLeave}
               onEditNamePress={onEditNamePress}
             />
+            {onSettingsPress && (
+              <Pressable
+                onPress={onSettingsPress}
+                className="active:opacity-70"
+                hitSlop={8}
+              >
+                <Icon as={SettingsIcon} size={22} className="text-foreground" />
+              </Pressable>
+            )}
           </View>
         )}
       </View>
