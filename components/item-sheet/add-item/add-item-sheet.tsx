@@ -10,7 +10,6 @@ import { addGroceryListItem } from '../../../features/grocery-list/instant/add-g
 import { BaseGroceryItem } from '../../../features/grocery-list/types';
 import { addRecipeToList } from '../../../features/recipes/instant/add-recipe-to-list';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
-import { NATIVE_TABS_OFFSET } from '../../../features/shared/consts';
 import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
 import { Button } from '../../ui/button';
@@ -200,9 +199,8 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
     <>
       <Button
         size="wide-small"
-        style={{ bottom: NATIVE_TABS_OFFSET }}
         onPress={openSheet}
-        className="absolute right-6 z-10 "
+        className="bottom-safe absolute right-6 z-10"
       >
         <Icon
           as={PlusIcon}

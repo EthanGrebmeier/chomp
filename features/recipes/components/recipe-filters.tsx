@@ -1,5 +1,5 @@
 import { SearchIcon } from 'lucide-react-native';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
 import { TextInput } from '@/components/text-input';
 import { Icon } from '@/components/ui/icon';
@@ -40,15 +40,10 @@ export const RecipeFilters = ({
           />
         </View>
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="flex-row gap-2 px-4 pb-2 pt-3"
-        className="flex-grow-0"
-      >
+      <View className="flex-row gap-2 px-4 pb-2 pt-3">
         <MealTagFilterSelector mealTag={mealTag} onSelect={onMealTagChange} />
         <RecipeSortBySelector value={sortBy} onChange={onSortByChange} />
-      </ScrollView>
+      </View>
     </View>
   );
 };

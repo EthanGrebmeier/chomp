@@ -9,7 +9,6 @@ import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { Recipe } from '../../recipes/types';
-import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useAddMealsToGroceryList, useUnmarkMealAdded } from '../hooks';
 import { MealPlanItemWithStore, MealPlanRecipe, MealTag } from '../types';
 
@@ -163,7 +162,6 @@ export const MealPlanDateView = ({
           as={CookingPotIcon}
           size={48}
           className="text-muted-foreground"
-          style={{ marginTop: -NATIVE_TABS_OFFSET }}
         />
         <EmptyHeading>No meals planned</EmptyHeading>
         <EmptySubtext>Tap the + button to add a meal</EmptySubtext>

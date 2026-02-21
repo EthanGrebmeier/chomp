@@ -7,7 +7,6 @@ import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { cn } from '../../../lib/utils';
-import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
 
@@ -98,12 +97,7 @@ export const GroceryItemsList = ({
   if (totalItemCount === 0) {
     return (
       <View className="flex-1 items-center justify-center">
-        <View
-          className="w-64"
-          style={{
-            marginTop: -NATIVE_TABS_OFFSET,
-          }}
-        >
+        <View className="w-64">
           <Image
             source={require('../../../assets/images/grocery-basket.png')}
             style={{

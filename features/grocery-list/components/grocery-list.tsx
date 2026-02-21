@@ -1,17 +1,16 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { Link } from 'expo-router';
-import { CalendarIcon } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { BookOpenIcon, CalendarIcon } from 'lucide-react-native';
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
-import { Keyboard, TextInput as RNTextInput, Text, View } from 'react-native';
+import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
-import { Button } from '../../../components/ui/button';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
 import { navigation } from '../../../lib/navigation';
-import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
@@ -98,10 +97,6 @@ export const GroceryList = ({
       );
     });
   }, [items, normalizedQuery]);
-
-  const filteredCount = filteredItems.filter(item =>
-    searchQuery.trim() ? true : !item.isDeleted && !item.isChecked
-  ).length;
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
@@ -190,6 +185,19 @@ export const GroceryList = ({
     }
   };
 
+  const handleOpenSettings = () => {
+    router.push('/settings');
+  };
+
+  const handleOpenRecipes = () => {
+    router.push('/recipes');
+  };
+
+  const handleOpenMealPlan = () => {
+    if (!listId) return;
+    router.push(navigation.goToMealPlan(listId));
+  };
+
   return (
     <>
       <View
@@ -211,6 +219,7 @@ export const GroceryList = ({
           onDeleteOrLeave={handleDeleteOrLeavePress}
           onEditNamePress={handleEditNamePress}
           onTitlePress={onTitlePress}
+          onSettingsPress={handleOpenSettings}
         />
         <EditItemProvider groceryListId={listId ?? ''}>
           <View className="flex-1">
@@ -230,11 +239,6 @@ export const GroceryList = ({
               <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
               <SortBySelector value={sortBy} onChange={handleSortByChange} />
             </ScrollView>
-            <Text className="px-4 pb-2 text-sm text-muted-foreground">
-              {searchQuery.trim()
-                ? `${filteredCount} item${filteredCount !== 1 ? 's' : ''} matching "${searchQuery.trim()}"`
-                : `${filteredCount} item${filteredCount !== 1 ? 's' : ''}`}
-            </Text>
 
             <GroceryItemsList
               items={filteredItems}
@@ -267,21 +271,34 @@ export const GroceryList = ({
       </View>
       {listId && (
         <>
-          <Link href={navigation.goToMealPlan(listId)} asChild prefetch>
-            <Button
-              size="wide-small"
-              variant="secondary"
-              style={{ bottom: NATIVE_TABS_OFFSET }}
-              className="absolute left-6 z-10"
-            >
-              <Icon
-                as={CalendarIcon}
-                size={20}
-                strokeWidth={3}
-                className="text-secondary-foreground"
-              />
-            </Button>
-          </Link>
+          <View className="bottom-safe absolute left-6 z-10">
+            <View className="flex-row items-center gap-2 overflow-hidden ">
+              <HapticPressable
+                onPress={handleOpenMealPlan}
+                className="h-10 flex-row items-center gap-2 rounded-full bg-secondary px-6 active:opacity-80"
+                hapticType="selection"
+              >
+                <Icon
+                  as={CalendarIcon}
+                  size={20}
+                  strokeWidth={3}
+                  className="text-secondary-foreground"
+                />
+              </HapticPressable>
+              <HapticPressable
+                onPress={handleOpenRecipes}
+                className="h-10 flex-row items-center gap-2 rounded-full bg-secondary px-6 active:opacity-80"
+                hapticType="selection"
+              >
+                <Icon
+                  as={BookOpenIcon}
+                  size={20}
+                  strokeWidth={3}
+                  className="text-secondary-foreground"
+                />
+              </HapticPressable>
+            </View>
+          </View>
           <AddItemSheet groceryListId={listId} />
         </>
       )}

@@ -12,7 +12,6 @@ import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { db } from '../../../lib/instant';
 import { cn } from '../../../lib/utils';
-import { NATIVE_TABS_OFFSET } from '../../shared/consts';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
 
 import {
@@ -38,7 +37,7 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
   };
 
   return (
-    <View className="pt-safe flex-1 gap-4">
+    <View className="flex-1 gap-4 pt-8">
       <View className="flex-row items-center justify-between  px-4">
         <BackButton />
         <RecipeDropdownMenu
@@ -82,10 +81,7 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
           <Text className="text-xl font-semibold">Ingredients:</Text>
         </View>
         {recipe.recipe_ingredients.length === 0 ? (
-          <View
-            className=" flex-1 items-center justify-center"
-            style={{ marginTop: -NATIVE_TABS_OFFSET }}
-          >
+          <View className=" flex-1 items-center justify-center">
             <Text className="text-muted-foreground">No ingredients found</Text>
             <Text className="text-muted-foreground">
               Press the + button to add ingredients
