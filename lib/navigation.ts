@@ -46,7 +46,7 @@ export interface RecipeParams {
  * Builds a URL for a specific tab
  */
 export function buildRecipesUrl(): Href {
-  return `/(tabs)/recipes` as const;
+  return `/recipes` as const;
 }
 
 /**
@@ -146,14 +146,14 @@ export const navActions = {
 export const ROUTES = {
   TABS: {
     LIST: '/(tabs)',
-    RECIPES: '/(tabs)/recipes',
+    RECIPES: '/recipes',
   },
   LIST: '/(tabs)',
   MEAL_PLAN: {
     SHEET: (listId: string) => `/meal-plan/${listId}`,
   },
   RECIPES: {
-    INDEX: '/(tabs)/recipes',
-    DETAIL: (recipeId: string) => `/(tabs)/recipes/${recipeId}`,
+    INDEX: '/recipes',
+    DETAIL: (recipeId: string) => `/recipes/${recipeId}`,
   },
 } as const;

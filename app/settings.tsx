@@ -7,7 +7,7 @@ import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 
-import Account from '../../features/settings/components/account';
+import Account from '../features/settings/components/account';
 
 export default function Settings() {
   const handleNavigateToSavedItems = () => {
@@ -19,7 +19,7 @@ export default function Settings() {
   };
 
   return (
-    <View className="pt-safe pb-safe-offset-16 flex-1 bg-background">
+    <View className="pt-safe pb-safe flex-1 bg-background">
       <View className="flex-1 justify-between gap-4 px-4 pt-6 ">
         {/* Settings Menu */}
         <View className="gap-4">

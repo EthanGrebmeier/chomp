@@ -5,6 +5,7 @@ import Animated, {
   FadeOut,
   LayoutAnimationConfig,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/ui/text';
 import { RecipeFilters } from '@/features/recipes/components/recipe-filters';
@@ -20,10 +21,10 @@ import { EmptyHeading } from '../../components/text/empty-heading';
 import { EmptySubtext } from '../../components/text/empty-subtext';
 import { Heading } from '../../components/text/heading';
 import { CreateRecipeButton } from '../../features/recipes/components/create-recipe-button';
-import { NATIVE_TABS_OFFSET } from '../../features/shared/consts';
 
 export default function Recipes() {
   const { data: recipes, isLoading } = useRecipes();
+  const { bottom } = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [mealTag, setMealTag] = useState<string | undefined>();
   const [sortBy, setSortBy] = useState<RecipeSortOption>('recent');
@@ -48,9 +49,10 @@ export default function Recipes() {
     filteredRecipes.length === 0 &&
     (recipes?.length ?? 0) > 0 &&
     hasActiveFilters;
+  const actionBottom = bottom + 16;
 
   return (
-    <View className="pt-safe flex-1 bg-background ">
+    <View className="flex-1 bg-background pt-8 ">
       <View className="px-4">
         <Heading>Recipes</Heading>
       </View>
@@ -72,10 +74,7 @@ export default function Recipes() {
           {mealTag && !searchQuery.trim() && ` in ${mealTag}`}
         </Text>
       </View>
-      <View
-        className="absolute right-6 z-10"
-        style={{ bottom: NATIVE_TABS_OFFSET }}
-      >
+      <View className="absolute right-6 z-10" style={{ bottom: actionBottom }}>
         <CreateRecipeButton />
       </View>
       <View className="flex-1">

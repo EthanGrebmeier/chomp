@@ -35,7 +35,7 @@ const StoresContent = () => {
     <View className="pt-safe flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center gap-3 px-4">
-        <BackButton href="/(tabs)/settings" />
+        <BackButton href="/settings" />
         <Heading>My Stores</Heading>
       </View>
 

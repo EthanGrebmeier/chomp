@@ -51,6 +51,30 @@ function InitialLayout() {
             },
           }}
         />
+        <Stack.Screen
+          name="recipes"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              height: '100%',
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              height: '100%',
+              backgroundColor: theme.background,
+            },
+          }}
+        />
       </Stack>
       <Toaster
         position="top-center"
