@@ -43,7 +43,7 @@ function InitialLayout() {
           name="meal-plan/[listId]"
           options={{
             presentation: 'formSheet',
-            sheetAllowedDetents: [0.98],
+            sheetAllowedDetents: [1],
             sheetInitialDetentIndex: 0,
             contentStyle: {
               height: '100%',
