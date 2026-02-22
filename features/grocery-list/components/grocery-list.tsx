@@ -1,6 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
-import { BookOpenIcon, CalendarIcon } from 'lucide-react-native';
+import { BookOpenIcon, CalendarIcon, SettingsIcon } from 'lucide-react-native';
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -219,7 +219,6 @@ export const GroceryList = ({
           onDeleteOrLeave={handleDeleteOrLeavePress}
           onEditNamePress={handleEditNamePress}
           onTitlePress={onTitlePress}
-          onSettingsPress={handleOpenSettings}
         />
         <EditItemProvider groceryListId={listId ?? ''}>
           <View className="flex-1">
@@ -269,39 +268,53 @@ export const GroceryList = ({
         <ShareListSheet ref={shareListSheetRef} />
         <EditListNameSheet ref={editListNameSheetRef} />
       </View>
-      {listId && (
-        <>
-          <View className="bottom-safe absolute left-6 z-10">
-            <View className="flex-row items-center gap-2 overflow-hidden ">
-              <HapticPressable
-                onPress={handleOpenMealPlan}
-                className="h-10 flex-row items-center gap-2 rounded-full bg-secondary px-6 active:opacity-80"
-                hapticType="selection"
-              >
-                <Icon
-                  as={CalendarIcon}
-                  size={20}
-                  strokeWidth={3}
-                  className="text-secondary-foreground"
-                />
-              </HapticPressable>
-              <HapticPressable
-                onPress={handleOpenRecipes}
-                className="h-10 flex-row items-center gap-2 rounded-full bg-secondary px-6 active:opacity-80"
-                hapticType="selection"
-              >
-                <Icon
-                  as={BookOpenIcon}
-                  size={20}
-                  strokeWidth={3}
-                  className="text-secondary-foreground"
-                />
-              </HapticPressable>
-            </View>
+
+      <>
+        <View className="bottom-safe absolute left-6 z-10">
+          <View className="h-10 flex-row items-center gap-6 overflow-hidden rounded-full  bg-accent px-4">
+            <HapticPressable
+              onPress={handleOpenMealPlan}
+              className="active:opacity-80"
+              hapticType="selection"
+              hitSlop={10}
+            >
+              <Icon
+                as={CalendarIcon}
+                size={24}
+                strokeWidth={2}
+                className="text-accent-foreground"
+              />
+            </HapticPressable>
+            <HapticPressable
+              onPress={handleOpenRecipes}
+              className="gap-2 active:opacity-80"
+              hapticType="selection"
+              hitSlop={10}
+            >
+              <Icon
+                as={BookOpenIcon}
+                size={24}
+                strokeWidth={2}
+                className="mt-0.5 text-accent-foreground"
+              />
+            </HapticPressable>
+            <HapticPressable
+              onPress={handleOpenSettings}
+              className="gap-2 active:opacity-80"
+              hapticType="selection"
+              hitSlop={10}
+            >
+              <Icon
+                as={SettingsIcon}
+                size={24}
+                strokeWidth={2}
+                className="mt-0.5 text-accent-foreground"
+              />
+            </HapticPressable>
           </View>
-          <AddItemSheet groceryListId={listId} />
-        </>
-      )}
+        </View>
+        <AddItemSheet groceryListId={listId ?? ''} />
+      </>
     </>
   );
 };

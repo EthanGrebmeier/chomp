@@ -11,7 +11,7 @@ export default function MealPlanSheetRoute() {
   }
 
   return (
-    <View className="bg-background pt-8" style={{ flex: 1 }}>
+    <View className="bg-background pt-6" style={{ flex: 1 }}>
       <MealPlanner listId={listId} />
     </View>
   );

@@ -32,7 +32,7 @@ const Account = () => {
 
   if (!user?.primaryEmailAddress) {
     return (
-      <View className="gap-4 rounded-xl bg-muted/50 p-4">
+      <View className="gap-4 rounded-xl bg-muted p-4">
         <View>
           <Text className="mb-1 text-lg font-medium">Account</Text>
           <Text className="text-sm text-muted-foreground">
@@ -58,7 +58,7 @@ const Account = () => {
   }
 
   return (
-    <View className="gap-4 rounded-xl bg-muted/50 p-4">
+    <View className="gap-4 rounded-xl bg-muted p-4">
       <View>
         <Text variant="muted" className="mb-1">
           Account

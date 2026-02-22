@@ -2,7 +2,6 @@ import { useNetworkState } from 'expo-network';
 import {
   ChevronDownIcon,
   MoreHorizontal,
-  SettingsIcon,
   UsersIcon,
   WifiOff,
 } from 'lucide-react-native';
@@ -25,7 +24,6 @@ type GroceryListHeaderProps = {
   onDeleteOrLeave: () => void;
   onEditNamePress: () => void;
   onTitlePress?: () => void;
-  onSettingsPress?: () => void;
 };
 
 export const GroceryListHeader = ({
@@ -39,7 +37,6 @@ export const GroceryListHeader = ({
   onDeleteOrLeave,
   onEditNamePress,
   onTitlePress,
-  onSettingsPress,
 }: GroceryListHeaderProps) => {
   const networkState = useNetworkState();
   const isDisconnected =
@@ -82,15 +79,6 @@ export const GroceryListHeader = ({
               onDeleteOrLeave={onDeleteOrLeave}
               onEditNamePress={onEditNamePress}
             />
-            {onSettingsPress && (
-              <Pressable
-                onPress={onSettingsPress}
-                className="active:opacity-70"
-                hitSlop={8}
-              >
-                <Icon as={SettingsIcon} size={22} className="text-foreground" />
-              </Pressable>
-            )}
           </View>
         )}
       </View>

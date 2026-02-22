@@ -52,7 +52,7 @@ export default function Recipes() {
   const actionBottom = bottom + 16;
 
   return (
-    <View className="flex-1 bg-background pt-8 ">
+    <View className="flex-1 bg-background pt-6 ">
       <View className="px-4">
         <Heading>Recipes</Heading>
       </View>
