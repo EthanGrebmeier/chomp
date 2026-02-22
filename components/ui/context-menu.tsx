@@ -1,6 +1,5 @@
 import * as Haptics from 'expo-haptics';
 import { ReactNode } from 'react';
-import { View } from 'react-native';
 import * as ContextMenu from 'zeego/context-menu';
 
 type ContextMenuRootProps = {
@@ -20,9 +19,7 @@ export const ContextMenuRoot = ({
         }
       }}
     >
-      <ContextMenu.Trigger>
-        <View>{trigger}</View>
-      </ContextMenu.Trigger>
+      <ContextMenu.Trigger asChild>{trigger}</ContextMenu.Trigger>
       <ContextMenu.Content>{children}</ContextMenu.Content>
     </ContextMenu.Root>
   );
