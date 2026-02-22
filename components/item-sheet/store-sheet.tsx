@@ -145,7 +145,7 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
           button={
             <Button
               onPress={handleOpenCreateStore}
-              size="wide-small"
+              size="icon"
               variant="default"
             >
               <Icon
