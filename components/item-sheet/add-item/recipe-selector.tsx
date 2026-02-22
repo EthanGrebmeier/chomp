@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
-import { SearchIcon } from 'lucide-react-native';
-import { useMemo, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { FlatList, ListRenderItemInfo, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
@@ -9,13 +8,16 @@ import {
   CreateRecipeSheet,
   CreateRecipeSheetRef,
 } from '../../../features/recipes/components/create-recipe-sheet';
+import { RecipeFilters } from '../../../features/recipes/components/recipe-filters';
 import { useCreateRecipe, useRecipes } from '../../../features/recipes/hooks';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
+import {
+  filterRecipes,
+  RecipeSortOption,
+} from '../../../features/recipes/utils/filter-recipes';
 import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
-import { TextInput } from '../../text-input';
 import { HapticPressable } from '../../ui/haptic-pressable';
-import { Icon } from '../../ui/icon';
 import { Text } from '../../ui/text';
 
 import { CreateRecipeInlineButton } from './create-recipe-inline-button';
@@ -32,13 +34,36 @@ export const RecipeSelector = ({
   const { data: recipes, isLoading } = useRecipes();
   const { mutate: createRecipe } = useCreateRecipe();
   const [searchQuery, setSearchQuery] = useState('');
+  const [mealTag, setMealTag] = useState<string | undefined>();
+  const [sortBy, setSortBy] = useState<RecipeSortOption>('recent');
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
 
   const filteredRecipes = useMemo(() => {
-    return (recipes ?? []).filter(recipe =>
-      recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [recipes, searchQuery]);
+    return filterRecipes(recipes ?? [], {
+      search: searchQuery,
+      mealTag,
+      sortBy,
+    });
+  }, [mealTag, recipes, searchQuery, sortBy]);
+
+  const renderRecipeItem = useCallback(
+    ({ item, index }: ListRenderItemInfo<RecipeWithIngredients>) => (
+      <HapticPressable
+        onPress={() => onSelectRecipe(item)}
+        className={cn(
+          'w-full py-3',
+          index < filteredRecipes.length - 1 && 'border-b border-border'
+        )}
+        hapticType="light"
+      >
+        <Text className="text-lg font-semibold text-foreground">{item.name}</Text>
+        <Text className="text-sm text-muted-foreground">
+          {item.recipe_ingredients.length} ingredients
+        </Text>
+      </HapticPressable>
+    ),
+    [filteredRecipes.length, onSelectRecipe]
+  );
 
   if (isLoading) {
     return (
@@ -94,16 +119,19 @@ export const RecipeSelector = ({
   }
 
   return (
-    <View>
-      <View className="flex-row items-center gap-2 px-4 ">
-        <Icon as={SearchIcon} size={20} className="text-muted-foreground" />
-        <TextInput
-          className="flex-1"
-          placeholder="Search recipes..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoCorrect={false}
-        />
+    <View className="pb-6">
+      <RecipeFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        mealTag={mealTag}
+        onMealTagChange={setMealTag}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+      />
+      <View className="px-4 pb-2">
+        <Text className="text-sm text-muted-foreground">
+          {filteredRecipes.length} recipe{filteredRecipes.length === 1 ? '' : 's'}
+        </Text>
       </View>
       {filteredRecipes.length === 0 ? (
         <Animated.View
@@ -121,30 +149,13 @@ export const RecipeSelector = ({
           )}
         </Animated.View>
       ) : (
-        <ScrollView
-          className="px-4"
-          nestedScrollEnabled
+        <FlatList
+          contentContainerClassName="px-4 pb-24"
+          data={filteredRecipes}
+          keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
-        >
-          {filteredRecipes.map((item, index) => (
-            <HapticPressable
-              key={item.id}
-              onPress={() => onSelectRecipe(item)}
-              className={cn(
-                'w-full py-3',
-                index < filteredRecipes.length - 1 && 'border-b border-border'
-              )}
-              hapticType="light"
-            >
-              <Text className="text-lg font-semibold text-foreground">
-                {item.name}
-              </Text>
-              <Text className="text-sm text-muted-foreground">
-                {item.recipe_ingredients.length} ingredients
-              </Text>
-            </HapticPressable>
-          ))}
-        </ScrollView>
+          renderItem={renderRecipeItem}
+        />
       )}
     </View>
   );

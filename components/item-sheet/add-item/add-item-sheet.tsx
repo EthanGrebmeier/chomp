@@ -97,6 +97,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
   const [isAddingRecipe, setIsAddingRecipe] = useState(false);
 
   const isDarkMode = useColorScheme() === 'dark';
+  const isRecipeSelectionMode = mode === 'recipe' && !selectedRecipe;
 
   const openSheet = () => {
     ref.current?.present();
@@ -210,14 +211,14 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         />
       </Button>
       <BottomSheet
-        detents={['auto']}
+        detents={isRecipeSelectionMode ? [0.7] : ['auto']}
         name="add-item-sheet"
         ref={ref}
         onOpen={() => {
           itemInputRef.current?.focus();
         }}
         onStartClose={handleClose}
-        scrollable={false}
+        scrollable={isRecipeSelectionMode}
         viewClassName="pb-safe"
         footer={
           <>
