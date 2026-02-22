@@ -68,7 +68,7 @@ export const RecipeDropdownMenu = ({
   const { mutate: addAsSeparate, isPending: isAddingSeparate } =
     useAddRecipeAsSeparateItems();
   const { mutate: duplicateRecipe } = useDuplicateRecipe();
-  const { mutate: deleteRecipe } = useDeleteRecipe();
+  const { mutateAsync: deleteRecipe } = useDeleteRecipe();
   const { mutate: updateRecipe } = useUpdateRecipe();
 
   const handleIngredientSelectorComplete = () => {
@@ -161,12 +161,14 @@ export const RecipeDropdownMenu = ({
     }
   };
 
-  const handleDelete = () => {
-    deleteRecipe(recipe.id, {
-      onSuccess: () => {
-        router.replace(navigation.goToRecipes());
-      },
-    });
+  const handleDelete = async () => {
+    try {
+      await deleteRecipe(recipe.id);
+      router.back();
+    } catch (error) {
+      console.error('Failed to delete recipe:', error);
+      toast.error('Failed to delete recipe');
+    }
   };
 
   const handleIncrementQuantities = () => {
