@@ -11,6 +11,13 @@ const Account = () => {
   const { signOut } = useAuth();
   const { user } = useUser();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const handleNavigateToSignUp = () => {
+    router.dismissTo('/(auth)/sign-up-email');
+  };
+
+  const handleNavigateToSignIn = () => {
+    router.dismissTo('/(auth)/sign-in-email');
+  };
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -34,14 +41,14 @@ const Account = () => {
         </View>
         <Button
           variant="default"
-          onPress={() => router.push('/(auth)/sign-up-email')}
+          onPress={handleNavigateToSignUp}
           className="w-full"
         >
           <Text>Create an Account</Text>
         </Button>
         <Button
           variant="secondary"
-          onPress={() => router.push('/(auth)/sign-in-email')}
+          onPress={handleNavigateToSignIn}
           className="w-full"
         >
           <Text>Sign In</Text>
