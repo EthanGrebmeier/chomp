@@ -67,10 +67,9 @@ function InitialLayout() {
           name="settings"
           options={{
             presentation: 'formSheet',
-            sheetAllowedDetents: [1],
+            sheetAllowedDetents: 'fitToContents',
             sheetInitialDetentIndex: 0,
             contentStyle: {
-              height: '100%',
               backgroundColor: theme.background,
             },
           }}

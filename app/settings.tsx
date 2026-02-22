@@ -19,7 +19,7 @@ export default function Settings() {
   };
 
   return (
-    <View className="pb-safe flex-1 bg-background ">
+    <View className="bg-background ">
       <View className="flex-1 justify-between gap-4 px-4 pt-6 ">
         {/* Settings Menu */}
         <View className="gap-4">
