@@ -93,7 +93,10 @@ const BareTextInput = forwardRef<
     <RNTextInput
       {...props}
       ref={ref}
-      className={cn('min-h-8 border-none bg-transparent leading-10', className)}
+      className={cn(
+        'min-h-8 border-none bg-transparent text-xl leading-8 text-foreground',
+        className
+      )}
     />
   );
 });

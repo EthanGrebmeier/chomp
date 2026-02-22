@@ -5,9 +5,12 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { MetaBarLayout } from '../../../components/meta-bar-layout';
+import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { MealTimeSheet } from '../../meal-planner/components/meal-time-sheet';
+
+import { RecipeUrlSheet } from './recipe-url-sheet';
 
 type CreateRecipeSheetProps = {
   onSubmit: (data: {
@@ -51,7 +54,6 @@ export const CreateRecipeSheet = forwardRef<
       setMealTag(defaultValues?.mealTag ?? undefined);
       setDescription(defaultValues?.description ?? '');
       setSourceUrl(defaultValues?.sourceUrl ?? '');
-      nameInputRef.current?.focus();
       sheetRef.current?.present();
     },
     dismiss: () => {
@@ -97,50 +99,36 @@ export const CreateRecipeSheet = forwardRef<
           title={isEditing ? 'Edit Recipe' : 'Create Recipe'}
         />
 
-        <View className="gap-4">
+        <View>
           <View>
-            <Text className="mb-2 text-sm font-medium text-muted-foreground">
-              Recipe Name
-            </Text>
-            <BottomSheet.TextInput
+            <BottomSheet.BareTextInput
               ref={nameInputRef}
               value={name}
               onChangeText={setName}
-              placeholder="Enter recipe name"
+              placeholder="Recipe name"
+              className="text-2xl font-bold "
               autoFocus
               autoCapitalize="words"
             />
           </View>
           <View>
-            <Text className="mb-2 text-sm font-medium text-muted-foreground">
-              Description
-            </Text>
-            <BottomSheet.TextInput
+            <BottomSheet.BareTextInput
               value={description}
               onChangeText={setDescription}
-              placeholder="Add a description (optional)"
+              placeholder="Description"
               multiline
               numberOfLines={5}
-              className="h-24"
-            />
-          </View>
-          <View>
-            <Text className="mb-2 text-sm font-medium text-muted-foreground">
-              Link
-            </Text>
-            <BottomSheet.TextInput
-              value={sourceUrl}
-              onChangeText={setSourceUrl}
-              placeholder="Recipe URL (optional)"
-              keyboardType="url"
-              autoCapitalize="none"
-              autoCorrect={false}
+              className="h-24 text-lg font-medium"
             />
           </View>
           <MetaBarLayout>
-            <View className="flex-row">
+            <ScrollingMetaBar>
               <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
-            </View>
+              <RecipeUrlSheet
+                sourceUrl={sourceUrl}
+                onSelect={url => setSourceUrl(url ?? '')}
+              />
+            </ScrollingMetaBar>
           </MetaBarLayout>
         </View>
       </BottomSheet.SheetView>
