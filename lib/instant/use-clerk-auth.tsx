@@ -8,6 +8,7 @@ import { useInitializeDefaultGroceryList } from '../../features/grocery-lists/in
 import { db } from '.';
 
 let activeAuthControllerId: string | null = null;
+const AUTH_LOADING_TIMEOUT_MS = 4000;
 
 const signInWithClerkToken = async (getToken: () => Promise<string | null>) => {
   const idToken = await getToken();
@@ -34,13 +35,22 @@ export const useInstantSignIn = () => {
   }, [getToken]);
 };
 
-export const InstantAuthHandler = () => {
+type InstantAuthHandlerProps = {
+  showBlockingOverlay?: boolean;
+  onBlockingAuthLoadChange?: (isBlocking: boolean) => void;
+};
+
+export const InstantAuthHandler = ({
+  showBlockingOverlay = true,
+  onBlockingAuthLoadChange,
+}: InstantAuthHandlerProps = {}) => {
   const { isSignedIn } = useAuth();
   const signInToInstant = useInstantSignIn();
   const authTransitionRef = useRef(false);
   const instanceIdRef = useRef(`auth-handler-${Math.random().toString(36).slice(2)}`);
   const [guestInitKey, setGuestInitKey] = useState(0);
   const [isAuthController, setIsAuthController] = useState(false);
+  const [hasAuthLoadingTimedOut, setHasAuthLoadingTimedOut] = useState(false);
 
   const {
     isLoading: isLoadingInstant,
@@ -50,12 +60,32 @@ export const InstantAuthHandler = () => {
 
   const isInstantReady =
     !isLoadingInstant && Boolean(userInstant) && !errorInstant;
+  const isBlockingAuthLoad = isLoadingInstant && !hasAuthLoadingTimedOut;
+
+  useEffect(() => {
+    onBlockingAuthLoadChange?.(isBlockingAuthLoad);
+  }, [isBlockingAuthLoad, onBlockingAuthLoadChange]);
 
   // Initialize default grocery list after Instant auth settles
   useInitializeDefaultGroceryList({
     enabled: isInstantReady && isAuthController,
     initKey: guestInitKey,
   });
+
+  useEffect(() => {
+    if (!isLoadingInstant) {
+      setHasAuthLoadingTimedOut(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setHasAuthLoadingTimedOut(true);
+    }, AUTH_LOADING_TIMEOUT_MS);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [isLoadingInstant]);
 
   useEffect(() => {
     const instanceId = instanceIdRef.current;
@@ -74,7 +104,7 @@ export const InstantAuthHandler = () => {
   useEffect(() => {
     if (
       isSignedIn === undefined ||
-      isLoadingInstant ||
+      isBlockingAuthLoad ||
       authTransitionRef.current ||
       !isAuthController
     ) {
@@ -107,9 +137,9 @@ export const InstantAuthHandler = () => {
     };
 
     void runAuthTransition();
-  }, [isSignedIn, isLoadingInstant, isAuthController, signInToInstant]);
+  }, [isSignedIn, isBlockingAuthLoad, isAuthController, signInToInstant]);
 
-  if (isLoadingInstant) {
+  if (showBlockingOverlay && isBlockingAuthLoad) {
     return (
       <Animated.View
         entering={FadeIn.duration(200)}

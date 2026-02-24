@@ -1,9 +1,11 @@
-import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
+import { ClerkProvider } from '@clerk/clerk-expo';
 import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { PortalHost } from '@rn-primitives/portal';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import * as SQLite from 'expo-sqlite';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
@@ -12,6 +14,7 @@ import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-rean
 import { Toaster } from 'sonner-native';
 
 import { tokenCache } from '@/lib/clerk-token-cache';
+import { InstantAuthHandler } from '@/lib/instant/use-clerk-auth';
 import { MigrationProvider } from '@/providers/migration-provider';
 import { QueryClientProvider } from '@/providers/query-client-provider';
 
@@ -22,8 +25,12 @@ configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
 });
+void SplashScreen.preventAutoHideAsync().catch(() => {
+  // Ignore if splash is already controlled elsewhere.
+});
 
 const db = SQLite.openDatabaseSync('db.db');
+const SPLASH_MAX_BLOCK_MS = 6000;
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -95,6 +102,34 @@ function InitialLayout() {
 }
 
 export default function RootLayout() {
+  const [isAuthBlockingSplash, setIsAuthBlockingSplash] = useState(true);
+  const [hasSplashBlockTimedOut, setHasSplashBlockTimedOut] = useState(false);
+  const hasHiddenSplashRef = useRef(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setHasSplashBlockTimedOut(true);
+    }, SPLASH_MAX_BLOCK_MS);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  useEffect(() => {
+    const shouldKeepSplashVisible =
+      isAuthBlockingSplash && !hasSplashBlockTimedOut;
+
+    if (shouldKeepSplashVisible || hasHiddenSplashRef.current) {
+      return;
+    }
+
+    hasHiddenSplashRef.current = true;
+    void SplashScreen.hideAsync().catch(() => {
+      // Ignore if splash was already hidden.
+    });
+  }, [isAuthBlockingSplash, hasSplashBlockTimedOut]);
+
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useDrizzleStudio(db as unknown as Parameters<typeof useDrizzleStudio>[0]);
@@ -105,18 +140,20 @@ export default function RootLayout() {
       tokenCache={tokenCache}
       publishableKey={publishableKey}
     >
-      <ClerkLoaded>
-        <QueryClientProvider>
-          <KeyboardProvider>
-            <MigrationProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <InitialLayout />
-                <PortalHost />
-              </GestureHandlerRootView>
-            </MigrationProvider>
-          </KeyboardProvider>
-        </QueryClientProvider>
-      </ClerkLoaded>
+      <QueryClientProvider>
+        <KeyboardProvider>
+          <MigrationProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <InstantAuthHandler
+                showBlockingOverlay={false}
+                onBlockingAuthLoadChange={setIsAuthBlockingSplash}
+              />
+              <InitialLayout />
+              <PortalHost />
+            </GestureHandlerRootView>
+          </MigrationProvider>
+        </KeyboardProvider>
+      </QueryClientProvider>
     </ClerkProvider>
   );
 }
