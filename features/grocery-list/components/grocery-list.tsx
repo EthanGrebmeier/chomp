@@ -271,7 +271,7 @@ export const GroceryList = ({
 
       <>
         <View className="bottom-safe absolute left-6 z-10">
-          <View className="h-10 flex-row items-center gap-6 overflow-hidden rounded-full border border-border bg-accent/90 px-4">
+          <View className="h-10 flex-row items-center gap-6 overflow-hidden rounded-full border border-border bg-accent/90 px-4 shadow-sm">
             <HapticPressable
               onPress={handleOpenMealPlan}
               className="active:opacity-80"
