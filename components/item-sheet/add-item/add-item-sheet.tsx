@@ -6,9 +6,16 @@ import { StyleSheet, View, useColorScheme } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
+import {
+  RecipeConflictSheet,
+  RecipeConflictSheetRef,
+} from '../../../features/grocery-list/components/recipe-conflict-sheet';
 import { addGroceryListItem } from '../../../features/grocery-list/instant/add-grocery-list-item';
 import { BaseGroceryItem } from '../../../features/grocery-list/types';
-import { addRecipeToList } from '../../../features/recipes/instant/add-recipe-to-list';
+import {
+  addRecipeToList,
+  RecipeIngredientInput,
+} from '../../../features/recipes/instant/add-recipe-to-list';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
 import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
@@ -95,6 +102,11 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
     Set<string>
   >(new Set());
   const [isAddingRecipe, setIsAddingRecipe] = useState(false);
+  const [isResolvingConflict, setIsResolvingConflict] = useState(false);
+  const [pendingConflictIngredients, setPendingConflictIngredients] = useState<
+    RecipeIngredientInput[] | null
+  >(null);
+  const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
 
   const isDarkMode = useColorScheme() === 'dark';
   const isRecipeSelectionMode = mode === 'recipe' && !selectedRecipe;
@@ -107,6 +119,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
     reset();
     setMode('item');
     setSelectedRecipe(null);
+    setPendingConflictIngredients(null);
   };
 
   const handleModeChange = (newMode: AddMode) => {
@@ -179,20 +192,51 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
           storeId: ingredient.store?.id,
         }));
 
-      await addRecipeToList({
+      const result = await addRecipeToList({
         recipeId: selectedRecipe.id,
         listId: groceryListId,
         ingredients: selectedIngredients,
       });
 
+      if (result.requiresConflictResolution) {
+        setPendingConflictIngredients(selectedIngredients);
+        conflictSheetRef.current?.present();
+        return;
+      }
+
       toast.success(
-        `Added ${selectedIngredients.length} item${selectedIngredients.length === 1 ? '' : 's'} from ${selectedRecipe.name}`
+        `Added ${result.addedItems} item${result.addedItems === 1 ? '' : 's'} from ${selectedRecipe.name}`
       );
       handleAddComplete();
     } catch {
       toast.error('Failed to add ingredients');
     } finally {
       setIsAddingRecipe(false);
+    }
+  };
+
+  const resolveConflict = async (resolution: 'increment' | 'separate') => {
+    if (!selectedRecipe || !pendingConflictIngredients?.length) return;
+
+    setIsResolvingConflict(true);
+    try {
+      const result = await addRecipeToList({
+        recipeId: selectedRecipe.id,
+        listId: groceryListId,
+        ingredients: pendingConflictIngredients,
+        conflictResolution: resolution,
+      });
+
+      toast.success(
+        `Added ${result.addedItems} item${result.addedItems === 1 ? '' : 's'} from ${selectedRecipe.name}`
+      );
+      conflictSheetRef.current?.dismiss();
+      setPendingConflictIngredients(null);
+      handleAddComplete();
+    } catch {
+      toast.error('Failed to resolve ingredient conflicts');
+    } finally {
+      setIsResolvingConflict(false);
     }
   };
 
@@ -243,7 +287,11 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
                   variant="default"
                   size="default"
                   onPress={handleAddRecipeToList}
-                  disabled={selectedIngredientIds.size === 0 || isAddingRecipe}
+                  disabled={
+                    selectedIngredientIds.size === 0 ||
+                    isAddingRecipe ||
+                    isResolvingConflict
+                  }
                 >
                   <Text className="text-primary-foreground">Add to List</Text>
                 </Button>
@@ -308,6 +356,21 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
           </View>
         )}
       </BottomSheet>
+      <RecipeConflictSheet
+        ref={conflictSheetRef}
+        recipeName={selectedRecipe?.name ?? 'Recipe'}
+        onIncrement={() => {
+          void resolveConflict('increment');
+        }}
+        onCreateSeparate={() => {
+          void resolveConflict('separate');
+        }}
+        onCancel={() => {
+          conflictSheetRef.current?.dismiss();
+          setPendingConflictIngredients(null);
+        }}
+        isPending={isResolvingConflict}
+      />
     </>
   );
 };

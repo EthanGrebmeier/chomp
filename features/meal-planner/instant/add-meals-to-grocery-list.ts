@@ -1,7 +1,11 @@
-import { id, tx } from '@instantdb/react-native';
+import { tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import {
+  addIngredientsWithStacking,
+  StackableIngredientInput,
+} from '../../recipes/instant/stack-recipe-ingredients';
 
 export type AddMealsToGroceryListArgs = {
   listId: string;
@@ -44,8 +48,8 @@ export const addMealsToGroceryList = async ({
   const mealPlanData = result.data.grocery_lists?.[0];
 
   const now = new Date().toISOString();
-  const transactions = [];
   const updateTransactions = [];
+  const ingredientsToAdd: StackableIngredientInput[] = [];
 
   // Filter for recipes that haven't been added to a list yet
   const allUnaddedRecipes =
@@ -73,7 +77,7 @@ export const addMealsToGroceryList = async ({
     );
   }
 
-  // Add each selected recipe's ingredients to the grocery list
+  // Collect each selected recipe's ingredients for metadata-aware stacking
   for (const mealPlanRecipe of unaddedRecipes) {
     const recipe = mealPlanRecipe.recipe;
     if (!recipe) continue;
@@ -82,37 +86,15 @@ export const addMealsToGroceryList = async ({
     const servings = mealPlanRecipe.servings || 1;
 
     for (const ingredient of ingredients) {
-      const itemId = id();
-      const adjustedQuantity = ingredient.quantity * servings;
-
-      transactions.push(
-        tx.grocery_items[itemId].update(
-          trimStringFields({
-            name: ingredient.name,
-            quantity: adjustedQuantity,
-            unit: ingredient.unit,
-            notes: ingredient.notes,
-            category: ingredient.category,
-            isChecked: false,
-            isDeleted: false,
-            createdAt: now,
-            updatedAt: now,
-          })
-        ),
-        tx.grocery_items[itemId].link({
-          grocery_list: listId,
-          recipe: recipe.id,
-        })
-      );
-
-      // Link store if ingredient has one
-      if (ingredient.store?.id) {
-        transactions.push(
-          tx.grocery_items[itemId].link({
-            store: ingredient.store.id,
-          })
-        );
-      }
+      ingredientsToAdd.push({
+        name: ingredient.name,
+        quantity: ingredient.quantity * servings,
+        unit: ingredient.unit,
+        notes: ingredient.notes,
+        category: ingredient.category,
+        storeId: ingredient.store?.id,
+        recipeId: recipe.id,
+      });
     }
 
     // Mark the meal plan recipe as added to list
@@ -153,37 +135,16 @@ export const addMealsToGroceryList = async ({
     );
   }
 
-  // Add selected meal plan items to the grocery list
+  // Collect selected meal plan items for metadata-aware stacking
   for (const mealPlanItem of unaddedItems) {
-    const itemId = id();
-
-    transactions.push(
-      tx.grocery_items[itemId].update(
-        trimStringFields({
-          name: mealPlanItem.name,
-          quantity: mealPlanItem.quantity,
-          unit: mealPlanItem.unit,
-          notes: mealPlanItem.notes,
-          category: mealPlanItem.category,
-          isChecked: false,
-          isDeleted: false,
-          createdAt: now,
-          updatedAt: now,
-        })
-      ),
-      tx.grocery_items[itemId].link({
-        grocery_list: listId,
-      })
-    );
-
-    // Link store if item has one
-    if (mealPlanItem.store?.id) {
-      transactions.push(
-        tx.grocery_items[itemId].link({
-          store: mealPlanItem.store.id,
-        })
-      );
-    }
+    ingredientsToAdd.push({
+      name: mealPlanItem.name,
+      quantity: mealPlanItem.quantity,
+      unit: mealPlanItem.unit,
+      notes: mealPlanItem.notes,
+      category: mealPlanItem.category,
+      storeId: mealPlanItem.store?.id,
+    });
 
     // Mark the meal plan item as added to list
     updateTransactions.push(
@@ -197,11 +158,17 @@ export const addMealsToGroceryList = async ({
     );
   }
 
-  // Combine all transactions
-  const allTransactions = [...transactions, ...updateTransactions];
+  if (ingredientsToAdd.length > 0) {
+    await addIngredientsWithStacking({
+      listId,
+      ingredients: ingredientsToAdd,
+      // Meal-plan bulk add is a single action; create separate items on metadata conflicts.
+      conflictResolution: 'separate',
+    });
+  }
 
-  if (allTransactions.length > 0) {
-    await db.transact(allTransactions);
+  if (updateTransactions.length > 0) {
+    await db.transact(updateTransactions);
   }
 
   return {

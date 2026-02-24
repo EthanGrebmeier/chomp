@@ -20,18 +20,12 @@ import { buildRecipeShareURL, navigation } from '@/lib/navigation';
 import { Button } from '../../../../components/ui/button';
 import { Text } from '../../../../components/ui/text';
 import {
-  RecipeConflictSheet,
-  RecipeConflictSheetRef,
-} from '../../../grocery-list/components/recipe-conflict-sheet';
-import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
 } from '../../../grocery-lists/components/select-grocery-list-sheet';
 import { useGroceryLists } from '../../../grocery-lists/instant/useGroceryLists';
-import { useAddRecipeAsSeparateItems } from '../../hooks/useAddRecipeAsSeparateItems';
 import { useDeleteRecipe } from '../../hooks/useDeleteRecipe';
 import { useDuplicateRecipe } from '../../hooks/useDuplicateRecipe';
-import { useIncrementRecipeQuantities } from '../../hooks/useIncrementRecipeQuantities';
 import { useUpdateRecipe } from '../../hooks/useUpdateRecipe';
 import { RecipeWithIngredients } from '../../types';
 import {
@@ -51,11 +45,9 @@ export const RecipeDropdownMenu = ({
   listId,
 }: RecipeDropdownMenuProps) => {
   const { user } = db.useAuth();
-  const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
   const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
   const ingredientSelectorSheetRef = useRef<TrueSheet>(null);
-  const [showConflict, setShowConflict] = useState(false);
   const [selectedListIdForIngredients, setSelectedListIdForIngredients] =
     useState<string | null>(null);
 
@@ -63,10 +55,6 @@ export const RecipeDropdownMenu = ({
 
   // Check if current user owns the recipe
   const isOwner = recipe.user?.id === user?.id;
-  const { mutate: incrementQuantities, isPending: isIncrementing } =
-    useIncrementRecipeQuantities();
-  const { mutate: addAsSeparate, isPending: isAddingSeparate } =
-    useAddRecipeAsSeparateItems();
   const { mutate: duplicateRecipe } = useDuplicateRecipe();
   const { mutateAsync: deleteRecipe } = useDeleteRecipe();
   const { mutate: updateRecipe } = useUpdateRecipe();
@@ -171,58 +159,6 @@ export const RecipeDropdownMenu = ({
     }
   };
 
-  const handleIncrementQuantities = () => {
-    if (!listId) return;
-    incrementQuantities(
-      { recipeId: recipe.id, listId },
-      {
-        onSuccess: () => {
-          conflictSheetRef.current?.dismiss();
-          setShowConflict(false);
-          router.push(navigation.goToList());
-          toast.success(`${recipe.name} quantities incremented`);
-        },
-        onError: error => {
-          console.error('Failed to increment quantities:', error);
-          toast.error('Failed to increment quantities');
-        },
-      }
-    );
-  };
-
-  const handleCreateSeparateItems = () => {
-    if (!listId) return;
-    // Transform ingredients to include storeId from store object
-    const ingredients = recipe.recipe_ingredients.map(ingredient => ({
-      name: ingredient.name,
-      quantity: ingredient.quantity,
-      unit: ingredient.unit,
-      notes: ingredient.notes ?? null,
-      category: ingredient.category ?? null,
-      storeId: ingredient.store?.id,
-    }));
-
-    addAsSeparate(
-      {
-        recipeId: recipe.id,
-        listId,
-        ingredients,
-      },
-      {
-        onSuccess: () => {
-          conflictSheetRef.current?.dismiss();
-          setShowConflict(false);
-          router.push(navigation.goToList());
-          toast.success(`${recipe.name} added as separate items`);
-        },
-        onError: error => {
-          console.error('Failed to add separate items:', error);
-          toast.error('Failed to add separate items');
-        },
-      }
-    );
-  };
-
   const handleEditRecipe = (data: {
     name: string;
     mealTag?: string;
@@ -250,13 +186,6 @@ export const RecipeDropdownMenu = ({
       }
     );
   };
-  const handleCancelConflict = () => {
-    conflictSheetRef.current?.dismiss();
-    setShowConflict(false);
-  };
-
-  const isPending = isIncrementing || isAddingSeparate;
-
   return (
     <>
       <DropdownMenuRoot trigger={trigger}>
@@ -301,14 +230,6 @@ export const RecipeDropdownMenu = ({
           )}
         </DropdownMenuContent>
       </DropdownMenuRoot>
-      <RecipeConflictSheet
-        ref={conflictSheetRef}
-        recipeName={recipe.name}
-        onIncrement={handleIncrementQuantities}
-        onCreateSeparate={handleCreateSeparateItems}
-        onCancel={handleCancelConflict}
-        isPending={isPending}
-      />
       <CreateRecipeSheet
         ref={createRecipeSheetRef}
         onSubmit={handleEditRecipe}

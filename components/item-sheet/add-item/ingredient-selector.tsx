@@ -1,10 +1,14 @@
 import { useRouter } from 'expo-router';
 import { ExternalLinkIcon } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { CategoryTag } from '../../../components/category-tag';
+import {
+  RecipeConflictSheet,
+  RecipeConflictSheetRef,
+} from '../../../features/grocery-list/components/recipe-conflict-sheet';
 import { addRecipeToList } from '../../../features/recipes/instant/add-recipe-to-list';
 import {
   RecipeIngredient,
@@ -86,6 +90,15 @@ type IngredientSelectorProps = {
   isAdding?: boolean;
 };
 
+type SelectedIngredientInput = {
+  name: string;
+  quantity: number;
+  unit: string;
+  notes?: string | null;
+  category?: string | null;
+  storeId?: string;
+};
+
 export const IngredientSelector = ({
   recipe,
   onBack,
@@ -107,6 +120,11 @@ export const IngredientSelector = ({
     new Set(recipe.recipe_ingredients.map(ingredient => ingredient.id))
   );
   const [isAddingInternal, setIsAddingInternal] = useState(false);
+  const [isResolvingConflict, setIsResolvingConflict] = useState(false);
+  const [pendingConflictIngredients, setPendingConflictIngredients] = useState<
+    SelectedIngredientInput[] | null
+  >(null);
+  const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
 
   useEffect(() => {
     if (!isControlled) {
@@ -161,6 +179,43 @@ export const IngredientSelector = ({
     });
   };
 
+  const buildSelectedIngredients = (): SelectedIngredientInput[] =>
+    recipe.recipe_ingredients
+      .filter(ingredient => effectiveSelectedIds.has(ingredient.id))
+      .map(ingredient => ({
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        unit: ingredient.unit,
+        notes: ingredient.notes ?? null,
+        category: ingredient.category ?? null,
+        storeId: ingredient.store?.id,
+      }));
+
+  const resolveConflict = async (resolution: 'increment' | 'separate') => {
+    if (!listId || !pendingConflictIngredients?.length) return;
+
+    setIsResolvingConflict(true);
+    try {
+      const result = await addRecipeToList({
+        recipeId: recipe.id,
+        listId,
+        ingredients: pendingConflictIngredients,
+        conflictResolution: resolution,
+      });
+
+      toast.success(
+        `Added ${result.addedItems} item${result.addedItems === 1 ? '' : 's'} from ${recipe.name}`
+      );
+      conflictSheetRef.current?.dismiss();
+      setPendingConflictIngredients(null);
+      onComplete?.();
+    } catch {
+      toast.error('Failed to resolve ingredient conflicts');
+    } finally {
+      setIsResolvingConflict(false);
+    }
+  };
+
   const handleAdd = async () => {
     if (onAddToList) {
       onAddToList();
@@ -170,25 +225,22 @@ export const IngredientSelector = ({
 
     setIsAddingInternal(true);
     try {
-      const selectedIngredients = recipe.recipe_ingredients
-        .filter(ingredient => effectiveSelectedIds.has(ingredient.id))
-        .map(ingredient => ({
-          name: ingredient.name,
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
-          notes: ingredient.notes ?? null,
-          category: ingredient.category ?? null,
-          storeId: ingredient.store?.id,
-        }));
+      const selectedIngredients = buildSelectedIngredients();
 
-      await addRecipeToList({
+      const result = await addRecipeToList({
         recipeId: recipe.id,
         listId,
         ingredients: selectedIngredients,
       });
 
+      if (result.requiresConflictResolution) {
+        setPendingConflictIngredients(selectedIngredients);
+        conflictSheetRef.current?.present();
+        return;
+      }
+
       toast.success(
-        `Added ${selectedIngredients.length} item${selectedIngredients.length === 1 ? '' : 's'} from ${recipe.name}`
+        `Added ${result.addedItems} item${result.addedItems === 1 ? '' : 's'} from ${recipe.name}`
       );
       onComplete?.();
     } catch {
@@ -199,62 +251,91 @@ export const IngredientSelector = ({
   };
 
   const shouldShowFooter = showFooter ?? Boolean(onAddToList ?? listId);
-  const isAddingResolved = isAdding ?? isAddingInternal;
+  const isAddingResolved = (isAdding ?? isAddingInternal) || isResolvingConflict;
 
   return (
-    <View className="relative">
-      <BottomSheet.Header
-        className="px-4"
-        title={recipe.name}
-        dismissButton={<BackButton onPress={onBack} />}
-        button={
-          <Button variant="secondary" onPress={handleGoToRecipe} size="circle">
-            <Icon
-              as={ExternalLinkIcon}
-              size={20}
-              className="text-secondary-foreground"
-            />
+    <>
+      <View className="relative">
+        <BottomSheet.Header
+          className="px-4"
+          title={recipe.name}
+          dismissButton={<BackButton onPress={onBack} />}
+          button={
+            <Button variant="secondary" onPress={handleGoToRecipe} size="circle">
+              <Icon
+                as={ExternalLinkIcon}
+                size={20}
+                className="text-secondary-foreground"
+              />
+            </Button>
+          }
+        />
+
+        <View className="flex-row items-center justify-between px-4">
+          <View>
+            <Text className="text-lg font-medium text-foreground">
+              Ingredients
+            </Text>
+            <Text className="text-sm text-muted-foreground">
+              {effectiveSelectedIds.size} of {recipe.recipe_ingredients.length}{' '}
+              selected
+            </Text>
+          </View>
+          <Button variant="secondary" onPress={handleToggleAll}>
+            <Text className="text-sm ">
+              {allSelected ? 'Deselect all' : 'Select all'}
+            </Text>
           </Button>
-        }
-      />
-
-      <View className="flex-row items-center justify-between px-4">
-        <View>
-          <Text className="text-lg font-medium text-foreground">
-            Ingredients
-          </Text>
-          <Text className="text-sm text-muted-foreground">
-            {effectiveSelectedIds.size} of {recipe.recipe_ingredients.length}{' '}
-            selected
-          </Text>
         </View>
-        <Button variant="secondary" onPress={handleToggleAll}>
-          <Text className="text-sm ">
-            {allSelected ? 'Deselect all' : 'Select all'}
-          </Text>
-        </Button>
-      </View>
 
-      <ScrollView
-        className="max-h-[500px] min-h-24"
-        contentContainerClassName="b-20"
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        nestedScrollEnabled
-      >
-        {recipe.recipe_ingredients.map((ingredient, index) => (
-          <IngredientRow
-            className={cn(
-              index < recipe.recipe_ingredients.length - 1 &&
-                'border-b border-dashed border-border'
-            )}
-            key={ingredient.id}
-            ingredient={ingredient}
-            isSelected={effectiveSelectedIds.has(ingredient.id)}
-            onToggle={() => handleToggleIngredient(ingredient.id)}
-          />
-        ))}
-      </ScrollView>
-    </View>
+        <ScrollView
+          className="max-h-[500px] min-h-24"
+          contentContainerClassName="b-20"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+        >
+          {recipe.recipe_ingredients.map((ingredient, index) => (
+            <IngredientRow
+              className={cn(
+                index < recipe.recipe_ingredients.length - 1 &&
+                  'border-b border-dashed border-border'
+              )}
+              key={ingredient.id}
+              ingredient={ingredient}
+              isSelected={effectiveSelectedIds.has(ingredient.id)}
+              onToggle={() => handleToggleIngredient(ingredient.id)}
+            />
+          ))}
+        </ScrollView>
+        {shouldShowFooter && (
+          <View className="px-4 pb-4 pt-3">
+            <Button
+              onPress={() => {
+                void handleAdd();
+              }}
+              disabled={effectiveSelectedIds.size === 0 || isAddingResolved}
+            >
+              <Text>{isAddingResolved ? 'Adding...' : 'Add to List'}</Text>
+            </Button>
+          </View>
+        )}
+      </View>
+      <RecipeConflictSheet
+        ref={conflictSheetRef}
+        recipeName={recipe.name}
+        onIncrement={() => {
+          void resolveConflict('increment');
+        }}
+        onCreateSeparate={() => {
+          void resolveConflict('separate');
+        }}
+        onCancel={() => {
+          conflictSheetRef.current?.dismiss();
+          setPendingConflictIngredients(null);
+        }}
+        isPending={isResolvingConflict}
+      />
+    </>
   );
 };

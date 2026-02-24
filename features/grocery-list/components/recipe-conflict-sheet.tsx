@@ -52,10 +52,11 @@ export const RecipeConflictSheet = forwardRef<
         }
       >
         <BottomSheet.SheetView className="pb-safe">
-          <BottomSheet.Header title={`"${recipeName}" Already Exists`} />
+          <BottomSheet.Header title={`"${recipeName}" Has Similar Items`} />
           <View className="gap-4">
             <Text className="text-muted-foreground">
-              This recipe already exists in the list. What would you like to do?
+              Some ingredients already exist with the same name, but different
+              metadata. What would you like to do?
             </Text>
 
             <View className="gap-2">
