@@ -331,11 +331,20 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
             className="mb-0 px-4"
             title="Add to Grocery List"
             subsection={
-              <BottomSheet.Subtext className="px-24">
-                {isLoading
-                  ? 'Loading meals...'
-                  : 'Select the meals you want to add to your grocery list'}
-              </BottomSheet.Subtext>
+              <>
+                <BottomSheet.Subtext className="px-24">
+                  {isLoading
+                    ? 'Loading meals...'
+                    : unaddedCount === 0
+                      ? 'No meals to add.'
+                      : `Select the meals you want to add to your grocery list`}
+                </BottomSheet.Subtext>
+                {unaddedCount === 0 && (
+                  <BottomSheet.Subtext className="px-6">
+                    Add meals to your meal plan to see them here.
+                  </BottomSheet.Subtext>
+                )}
+              </>
             }
           />
 
