@@ -26,12 +26,19 @@ export const useInitializeDefaultGroceryList = (
     lastInitKey: null as number | null,
   });
   const { user, isLoading } = db.useAuth();
+  const defaultListCheckQuery = db.useQuery({
+    $users: {
+      grocery_lists: {},
+    },
+  });
 
   useEffect(() => {
     if (
       !enabled ||
       isLoading ||
       !user ||
+      defaultListCheckQuery.isLoading ||
+      Boolean(defaultListCheckQuery.error) ||
       initStateRef.current.inFlight ||
       (initKey !== undefined && initKey === initStateRef.current.lastInitKey)
     ) {
@@ -52,23 +59,8 @@ export const useInitializeDefaultGroceryList = (
         }
 
         const isGuest = !authUser.email;
-        let currentUser:
-          | { hasInitializedGroceryList?: boolean; grocery_lists?: unknown[] }
-          | undefined;
-        let existingListCount = 0;
-
-        try {
-          const { data } = await db.queryOnce({
-            $users: {
-              grocery_lists: {},
-            },
-          });
-
-          currentUser = data?.$users?.[0];
-          existingListCount = currentUser?.grocery_lists?.length ?? 0;
-        } catch {
-          // If the check fails, proceed with creation to avoid missing lists
-        }
+        const currentUser = defaultListCheckQuery.data?.$users?.[0];
+        const existingListCount = currentUser?.grocery_lists?.length ?? 0;
 
         if (
           (!isGuest && currentUser?.hasInitializedGroceryList) ||
@@ -132,5 +124,13 @@ export const useInitializeDefaultGroceryList = (
     initializeDefaultList().catch(() => {
       initStateRef.current.inFlight = false;
     });
-  }, [enabled, isLoading, user, initKey]);
+  }, [
+    enabled,
+    isLoading,
+    user,
+    initKey,
+    defaultListCheckQuery.isLoading,
+    defaultListCheckQuery.error,
+    defaultListCheckQuery.data,
+  ]);
 };
