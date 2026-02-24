@@ -331,11 +331,14 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
             className="mb-0 px-4"
             title="Add to Grocery List"
             subsection={
-              <BottomSheet.Subtext>
-                {isLoading ? 'Loading meals...' : subtext}
+              <BottomSheet.Subtext className="px-24">
+                {isLoading
+                  ? 'Loading meals...'
+                  : 'Select the meals you want to add to your grocery list'}
               </BottomSheet.Subtext>
             }
           />
+
           <ScrollView
             className="px-4"
             contentContainerStyle={{ paddingBottom: 80 }}
@@ -383,27 +386,32 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
                 );
               })
             )}
-            {!isLoading && unaddedCount === 0 && (
-              <Text className="text-center text-muted-foreground">
-                No items to add
-              </Text>
-            )}
           </ScrollView>
         </View>
       </BottomSheet>
       <Button
         size="iconLg"
         variant="secondary"
-        className="absolute bottom-12 left-6 z-10 h-10 w-24"
+        className={cn(
+          'absolute bottom-12 left-6 z-10 h-10 w-24 transition-opacity',
+          unaddedCount === 0 && 'opacity-50'
+        )}
         onPress={handleOpenSheet}
-        disabled={isAddingToList || unaddedCount === 0}
+        disabled={isAddingToList}
       >
-        <Icon
-          as={ShoppingCartIcon}
-          size={20}
-          strokeWidth={3}
-          className="text-secondary-foreground"
-        />
+        <View className="flex-row items-center gap-2">
+          <Icon
+            as={ShoppingCartIcon}
+            size={20}
+            strokeWidth={3}
+            className="text-secondary-foreground"
+          />
+          {unaddedCount > 0 && (
+            <Text className="text-xl font-bold text-secondary-foreground">
+              {unaddedCount}
+            </Text>
+          )}
+        </View>
       </Button>
     </>
   );
