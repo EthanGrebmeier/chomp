@@ -8,11 +8,12 @@ import {
   LucideIcon,
   SandwichIcon,
 } from 'lucide-react-native';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { BackButton } from '../../../components/ui/back-button';
+import { ConfirmButton } from '../../../components/ui/confirm-button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
@@ -80,15 +81,19 @@ export const MealTimeSheet = ({
   canGoBack = true,
 }: MealTimeSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const [localMealTime, setLocalMealTime] = useState<string | undefined>(
+    mealTime
+  );
 
   const selectedMealTime = mealTimeOptions.find(opt => opt.value === mealTime);
 
   const openSheet = () => {
+    setLocalMealTime(mealTime);
     sheetRef.current?.present();
   };
 
-  const handleSelect = (value?: string) => {
-    onSelect(value);
+  const handleConfirm = () => {
+    onSelect(localMealTime);
     sheetRef.current?.dismiss();
   };
 
@@ -120,6 +125,7 @@ export const MealTimeSheet = ({
               )
             }
             title="Meal Time"
+            button={<ConfirmButton onPress={handleConfirm} />}
           />
           <ScrollView
             className="max-h-96"
@@ -129,8 +135,8 @@ export const MealTimeSheet = ({
             <MealTimeOption
               label="None"
               icon={ClockIcon}
-              isSelected={!mealTime}
-              onPress={() => handleSelect(undefined)}
+              isSelected={!localMealTime}
+              onPress={() => setLocalMealTime(undefined)}
             />
 
             {mealTimeOptions.map(option => (
@@ -138,8 +144,8 @@ export const MealTimeSheet = ({
                 key={option.value}
                 label={option.label}
                 icon={option.icon}
-                isSelected={mealTime === option.value}
-                onPress={() => handleSelect(option.value)}
+                isSelected={localMealTime === option.value}
+                onPress={() => setLocalMealTime(option.value)}
               />
             ))}
           </ScrollView>

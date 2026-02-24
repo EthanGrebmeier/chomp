@@ -1,6 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { LucideIcon, ShoppingBasketIcon, TagIcon } from 'lucide-react-native';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { categoryOptions } from '../../features/shared/category/categories';
@@ -8,6 +8,7 @@ import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
 import { BackButton } from '../ui/back-button';
+import { ConfirmButton } from '../ui/confirm-button';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
@@ -65,6 +66,9 @@ type CategorySheetProps = {
 export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [localCategory, setLocalCategory] = useState<string | undefined>(
+    category
+  );
 
   const selectedCategoryIndex = categoryOptions.findIndex(
     opt => opt.value === category
@@ -72,11 +76,12 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
   const selectedCategory = categoryOptions[selectedCategoryIndex];
 
   const openSheet = () => {
+    setLocalCategory(category);
     sheetRef.current?.present();
   };
 
-  const handleSelect = (value?: string) => {
-    onSelect(value);
+  const handleConfirm = () => {
+    onSelect(localCategory);
     sheetRef.current?.dismiss();
   };
 
@@ -131,6 +136,7 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
           dismissButton={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
           }
+          button={<ConfirmButton onPress={handleConfirm} />}
         />
         <ScrollView
           ref={scrollViewRef}
@@ -145,8 +151,8 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
             label="None"
             icon={TagIcon}
             iconClassName="text-muted-foreground"
-            isSelected={!category}
-            onPress={() => handleSelect(undefined)}
+            isSelected={!localCategory}
+            onPress={() => setLocalCategory(undefined)}
           />
 
           {categoryOptions.map(categoryOption => (
@@ -156,8 +162,8 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
               icon={categoryOption.style.icon}
               iconClassName={categoryOption.style.textClassName}
               iconContainerClassName={categoryOption.style.className}
-              isSelected={category === categoryOption.value}
-              onPress={() => handleSelect(categoryOption.value)}
+              isSelected={localCategory === categoryOption.value}
+              onPress={() => setLocalCategory(categoryOption.value)}
             />
           ))}
         </ScrollView>

@@ -18,8 +18,8 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import { cn } from '@/lib/utils';
 
 import { BottomSheet } from './bottom-sheet';
-import { Button } from './ui/button';
-import { CloseButton } from './ui/close-button';
+import { BackButton } from './ui/back-button';
+import { ConfirmButton } from './ui/confirm-button';
 import { HapticPressable } from './ui/haptic-pressable';
 import { Text } from './ui/text';
 
@@ -293,24 +293,23 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
         onStartClose={onClose}
         ref={bottomSheetRef}
         insetAdjustment="never"
-        footer={
-          <View className="px-10 pb-4">
-            <Button onPress={handleConfirm} disabled={!internalSelectedDate}>
-              <Text>Confirm</Text>
-            </Button>
-          </View>
-        }
       >
         <BottomSheet.SheetView className="pb-safe gap-4">
-          <View className="flex-row items-center justify-between pb-2">
-            <CloseButton onPress={handleClose} />
-            <Text className="text-2xl font-bold">{headerTitle}</Text>
-            <View className="w-10" />
-          </View>
-          <View className="-mx-4 flex-row items-center justify-center ">
+          <BottomSheet.Header
+            className="mb-0"
+            title={headerTitle}
+            dismissButton={<BackButton onPress={handleClose} />}
+            button={
+              <ConfirmButton
+                onPress={handleConfirm}
+                disabled={!internalSelectedDate}
+              />
+            }
+          />
+          <View className="-mx-4 flex-row items-center justify-center">
             <Text
               className={cn(
-                'grow-0 self-center rounded-full bg-primary px-4 py-0.5 text-lg font-semibold text-primary-foreground '
+                'grow-0 self-center rounded-full bg-primary px-4 py-0.5 text-lg font-semibold text-primary-foreground'
               )}
             >
               {internalSelectedDate

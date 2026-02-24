@@ -11,6 +11,7 @@ import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
 import { BackButton } from '../ui/back-button';
 import { Button } from '../ui/button';
+import { ConfirmButton } from '../ui/confirm-button';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
@@ -51,6 +52,9 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const createStoreSheetRef = useRef<TrueSheet>(null);
   const { data: stores, isLoading } = useStores();
+  const [localStoreId, setLocalStoreId] = useState<string | undefined>(
+    storeId
+  );
   const [newStoreName, setNewStoreName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [newlyCreatedStore, setNewlyCreatedStore] = useState<{
@@ -65,11 +69,12 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
       : stores.find(store => store.id === storeId);
 
   const openSheet = () => {
+    setLocalStoreId(storeId);
     sheetRef.current?.present();
   };
 
-  const handleSelect = (id?: string) => {
-    onSelect(id);
+  const handleConfirm = () => {
+    onSelect(localStoreId);
     sheetRef.current?.dismiss();
   };
 
@@ -87,18 +92,14 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
     setIsCreating(true);
     try {
       const { id: newStoreId } = await createStore({ name: trimmedName });
-      // Store the newly created store temporarily for immediate display
       setNewlyCreatedStore({ id: newStoreId, name: trimmedName });
       setNewStoreName('');
-      // Select the new store
-      onSelect(newStoreId);
-      // Clear the temporary store after a short delay (query should update by then)
+      setLocalStoreId(newStoreId);
       setTimeout(() => {
         setNewlyCreatedStore(null);
       }, 1000);
       toast.success(`Store "${trimmedName}" created`);
       createStoreSheetRef.current?.dismiss();
-      sheetRef.current?.dismiss();
     } catch {
       toast.error('Failed to create store');
     } finally {
@@ -142,20 +143,7 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
           }
           title="Store"
-          button={
-            <Button
-              onPress={handleOpenCreateStore}
-              size="icon"
-              variant="default"
-            >
-              <Icon
-                className="text-primary-foreground"
-                as={PlusIcon}
-                strokeWidth={3}
-                size={24}
-              />
-            </Button>
-          }
+          button={<ConfirmButton onPress={handleConfirm} />}
         />
 
         <ScrollView
@@ -163,10 +151,26 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
         >
+          <HapticPressable onPress={handleOpenCreateStore} hapticType="light">
+            <View className="flex-row items-center gap-3 rounded-xl px-2 py-3">
+              <View className="size-8 items-center justify-center rounded-full bg-primary">
+                <Icon
+                  className="text-primary-foreground"
+                  as={PlusIcon}
+                  strokeWidth={3}
+                  size={16}
+                />
+              </View>
+              <Text className="flex-1 text-base font-medium text-primary">
+                Create new store
+              </Text>
+            </View>
+          </HapticPressable>
+
           <StoreOption
             label="None"
-            isSelected={!storeId}
-            onPress={() => handleSelect(undefined)}
+            isSelected={!localStoreId}
+            onPress={() => setLocalStoreId(undefined)}
           />
 
           {isLoading ? (
@@ -180,8 +184,8 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
               <StoreOption
                 key={store.id}
                 label={store.name}
-                isSelected={store.id === storeId}
-                onPress={() => handleSelect(store.id)}
+                isSelected={store.id === localStoreId}
+                onPress={() => setLocalStoreId(store.id)}
               />
             ))
           )}

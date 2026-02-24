@@ -7,7 +7,7 @@ import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
 import { BackButton } from '../ui/back-button';
-import { Button } from '../ui/button';
+import { ConfirmButton } from '../ui/confirm-button';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
@@ -129,19 +129,15 @@ export const UnitSheet = ({
         scrollable
         detents={[0.7, 0.9]}
         viewClassName="pb-safe"
-        footer={
-          <View className="px-10 pb-4">
-            <Button onPress={handleConfirm} disabled={!isValid}>
-              <Text>Confirm</Text>
-            </Button>
-          </View>
-        }
       >
         <BottomSheet.Header
           className="mb-0 px-4"
           title="Quantity"
           dismissButton={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
+          }
+          button={
+            <ConfirmButton onPress={handleConfirm} disabled={!isValid} />
           }
         />
 
