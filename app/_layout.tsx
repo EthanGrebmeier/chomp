@@ -8,6 +8,7 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { Toaster } from 'sonner-native';
 
 import { tokenCache } from '@/lib/clerk-token-cache';
@@ -16,6 +17,11 @@ import { QueryClientProvider } from '@/providers/query-client-provider';
 
 import '../global.css';
 import { useTheme } from '../hooks/use-theme';
+
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false,
+});
 
 const db = SQLite.openDatabaseSync('db.db');
 
