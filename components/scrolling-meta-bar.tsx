@@ -18,7 +18,7 @@ export const ScrollingMetaBar = ({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="min-h-10 "
+        className="min-h-8"
         contentContainerClassName={cn(
           'flex-row items-center gap-2 pl-4 pr-4 overflow-hidden ',
           contentClassName

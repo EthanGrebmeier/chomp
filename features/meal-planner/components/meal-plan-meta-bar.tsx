@@ -59,6 +59,8 @@ export const MealPlanMetaBar = ({
       <ScrollingMetaBar>
         <DatePillSheet date={date} onSelect={onDateChange} />
         <MealTimeSheet mealTime={mealTag} onSelect={onMealTagChange} />
+      </ScrollingMetaBar>
+      <ScrollingMetaBar className="mt-2">
         <UnitSheet
           quantity={quantity}
           unit={unit}

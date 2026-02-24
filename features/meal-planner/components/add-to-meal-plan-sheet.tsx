@@ -10,7 +10,6 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
-import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
@@ -275,7 +274,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
                 >
                   <Icon
                     as={ExternalLinkIcon}
-                    size={20}
+                    size={16}
                     className="text-secondary-foreground"
                     strokeWidth={3}
                   />
@@ -288,6 +287,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
                   {selectedRecipe.name}
                 </Text>
               </View>
+
               <View>
                 <Text className="text-base font-bold text-foreground">
                   Ingredients
@@ -311,15 +311,13 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
                   ))}
                 </ScrollView>
               </View>
-              <MetaBarLayout>
-                <ScrollingMetaBar>
-                  <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
-                  <MealTimeSheet
-                    mealTime={recipeMealTag}
-                    onSelect={setRecipeMealTag}
-                  />
-                </ScrollingMetaBar>
-              </MetaBarLayout>
+              <ScrollingMetaBar>
+                <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
+                <MealTimeSheet
+                  mealTime={recipeMealTag}
+                  onSelect={setRecipeMealTag}
+                />
+              </ScrollingMetaBar>
             </View>
           </Animated.View>
         ) : (
@@ -337,7 +335,10 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   );
 };
 
-export const AddToMealPlanSheet = ({ listId, ref }: AddToMealPlanSheetProps) => {
+export const AddToMealPlanSheet = ({
+  listId,
+  ref,
+}: AddToMealPlanSheetProps) => {
   return (
     <MealPlanItemProvider initialValues={{ selectedDate: undefined }}>
       <AddToMealPlanSheetInner listId={listId} ref={ref} />
