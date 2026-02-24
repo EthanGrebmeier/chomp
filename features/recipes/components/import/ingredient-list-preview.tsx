@@ -64,7 +64,7 @@ export const IngredientListHeader = ({
           {isEditable && 'Tap an item to edit'}
         </Text>
       </View>
-      <Button variant="secondary" onPress={onToggleAll}>
+      <Button variant="outline" onPress={onToggleAll}>
         <Text className="text-sm">
           {allSelected ? 'Deselect all' : 'Select all'}
         </Text>

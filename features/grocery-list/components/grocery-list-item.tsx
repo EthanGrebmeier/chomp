@@ -99,15 +99,15 @@ export const GroceryListItem = ({
           <Checkbox
             checked={internalIsChecked}
             onPress={onCheck}
-            className="mr-2"
+            className="mr-1"
           />
 
           <HapticPressable
-            className="flex-1 gap-1"
+            className="flex-1"
             onPress={onEdit}
             hapticType="light"
           >
-            <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center justify-between ">
               <View className="relative flex-1 pr-2">
                 <Text
                   className={cn(
@@ -132,11 +132,11 @@ export const GroceryListItem = ({
                   ]}
                 />
               </View>
-              <Text className="text-lg text-muted-foreground">
+              <Text className="text-base text-muted-foreground">
                 {formatQuantityUnit(item.quantity, item.unit)}
               </Text>
             </View>
-            <View className="min-h-6 flex-row items-center gap-2 pb-1.5">
+            <View className="min-h-5 flex-row items-center gap-2">
               {item.category && <CategoryTag category={item.category} />}
               {item.store?.name && <StoreTag name={item.store.name} />}
               {item.recipe?.name && <RecipeTag name={item.recipe.name} />}

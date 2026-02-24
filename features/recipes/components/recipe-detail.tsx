@@ -1,13 +1,10 @@
-import {
-  ExternalLinkIcon,
-  MoreHorizontal,
-  PlusIcon,
-} from 'lucide-react-native';
-import { Animated, Linking, Pressable, View } from 'react-native';
+import { MoreHorizontal, PlusIcon } from 'lucide-react-native';
+import { Animated, Linking, View } from 'react-native';
 
 import { Heading } from '../../../components/text/heading';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
+import { ExternalLinkButton } from '../../../components/ui/external-link-button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { db } from '../../../lib/instant';
@@ -66,13 +63,11 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
         </View>
       )}
       {recipe.sourceUrl && (
-        <Pressable
-          className="flex-row items-center gap-1 px-4"
-          onPress={() => Linking.openURL(recipe.sourceUrl!)}
-        >
-          <Icon as={ExternalLinkIcon} size={16} className="text-primary" />
-          <Text className="text-primary">View Recipe</Text>
-        </Pressable>
+        <View className="px-4">
+          <ExternalLinkButton
+            onPress={() => Linking.openURL(recipe.sourceUrl!)}
+          />
+        </View>
       )}
 
       {/* Ingredients */}

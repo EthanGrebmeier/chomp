@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-import { ExternalLinkIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
@@ -19,8 +18,8 @@ import { BottomSheet } from '../../bottom-sheet';
 import { BackButton } from '../../ui/back-button';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
+import { ExternalLinkButton } from '../../ui/external-link-button';
 import { HapticPressable } from '../../ui/haptic-pressable';
-import { Icon } from '../../ui/icon';
 import { ListItem } from '../../ui/list-item';
 import { Text } from '../../ui/text';
 import { formatQuantityUnit } from '../unit-utils';
@@ -251,7 +250,8 @@ export const IngredientSelector = ({
   };
 
   const shouldShowFooter = showFooter ?? Boolean(onAddToList ?? listId);
-  const isAddingResolved = (isAdding ?? isAddingInternal) || isResolvingConflict;
+  const isAddingResolved =
+    (isAdding ?? isAddingInternal) || isResolvingConflict;
 
   return (
     <>
@@ -261,13 +261,7 @@ export const IngredientSelector = ({
           title={recipe.name}
           dismissButton={<BackButton onPress={onBack} />}
           button={
-            <Button variant="secondary" onPress={handleGoToRecipe} size="circle">
-              <Icon
-                as={ExternalLinkIcon}
-                size={20}
-                className="text-secondary-foreground"
-              />
-            </Button>
+            <ExternalLinkButton onPress={handleGoToRecipe} />
           }
         />
 
@@ -281,7 +275,7 @@ export const IngredientSelector = ({
               selected
             </Text>
           </View>
-          <Button variant="secondary" onPress={handleToggleAll}>
+          <Button variant="outline" onPress={handleToggleAll}>
             <Text className="text-sm ">
               {allSelected ? 'Deselect all' : 'Select all'}
             </Text>

@@ -1,6 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
-import { ExternalLinkIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
@@ -13,8 +12,8 @@ import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
+import { ExternalLinkButton } from '../../../components/ui/external-link-button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
-import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { RecipeWithIngredients } from '../../recipes/types';
@@ -267,18 +266,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               title="Add Recipe"
               dismissButton={<BackButton onPress={handleBackToRecipes} />}
               button={
-                <Button
-                  variant="secondary"
-                  onPress={handleGoToRecipe}
-                  size="icon"
-                >
-                  <Icon
-                    as={ExternalLinkIcon}
-                    size={16}
-                    className="text-secondary-foreground"
-                    strokeWidth={3}
-                  />
-                </Button>
+                <ExternalLinkButton onPress={handleGoToRecipe} />
               }
             />
             <View className="gap-4">

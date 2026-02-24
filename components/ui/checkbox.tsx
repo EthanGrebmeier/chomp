@@ -21,7 +21,7 @@ export const Checkbox = ({
     <HapticPressable
       hitSlop={hitSlop}
       className={cn(
-        'size-6 overflow-hidden rounded-full border border-border p-0.5',
+        'size-5 overflow-hidden rounded-md border border-border p-0.5',
         className
       )}
       onPress={onPress}

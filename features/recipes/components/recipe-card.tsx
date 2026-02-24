@@ -20,7 +20,7 @@ export const RecipeCard = ({ recipe, className }: RecipeCardProps) => {
       <View className={className}>
         <View className="w-full flex-row items-center justify-between">
           <Text
-            className="overflow-ellipsis text-2xl font-bold "
+            className="overflow-ellipsis text-xl font-bold "
             numberOfLines={2}
           >
             {recipe.name}

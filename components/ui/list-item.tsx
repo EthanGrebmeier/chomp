@@ -103,7 +103,7 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
           <Animated.View style={listItemAnimatedStyle}>
             <View
               className={cn(
-                'z-10 flex-row items-center gap-2 px-4 py-2',
+                'z-10 flex-row items-center gap-2 px-4 py-1',
                 className
               )}
             >
