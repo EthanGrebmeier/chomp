@@ -1,6 +1,7 @@
+import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { Image } from 'expo-image';
-import { useEffect, useRef, useState } from 'react';
-import { Alert, SectionList, SectionListData, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Alert, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -18,10 +19,6 @@ import { groupItemsBy } from '../util';
 import { CollapsibleSectionHeader } from './collapsible-section-header';
 import { GroceryListItem } from './grocery-list-item';
 
-const AnimatedSectionList = Animated.createAnimatedComponent(
-  SectionList<GroceryListItemWithRecipe>
-);
-
 type GroceryItemsListProps = {
   items: GroceryListItemWithRecipe[];
   totalItemCount: number;
@@ -29,6 +26,20 @@ type GroceryItemsListProps = {
   sortBy: 'name' | 'recent';
   onListInteraction?: () => void;
 };
+
+type GroceryListRow =
+  | {
+      type: 'header';
+      title: string;
+      itemCount?: number;
+      isExpanded: boolean;
+    }
+  | {
+      type: 'item';
+      sectionTitle: string;
+      item: GroceryListItemWithRecipe;
+      isLastInSection: boolean;
+    };
 
 export const GroceryItemsList = ({
   items,
@@ -40,85 +51,135 @@ export const GroceryItemsList = ({
   const { present: presentEditSheet } = useEditItemSheet();
   const { mutate: clearGroceryList } = useClearGroceryList();
 
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set()
-  );
+  const [expandedSectionsByGroup, setExpandedSectionsByGroup] = useState<
+    Record<GroceryItemsListProps['groupBy'], Set<string>>
+  >(() => ({
+    category: new Set(),
+    none: new Set(),
+    recipe: new Set(),
+    store: new Set(),
+  }));
 
-  const prevGroupByRef = useRef(groupBy);
-  useEffect(() => {
-    if (prevGroupByRef.current !== groupBy) {
-      prevGroupByRef.current = groupBy;
-      setExpandedSections(new Set());
-    }
-  }, [groupBy]);
+  const expandedSections = expandedSectionsByGroup[groupBy];
 
-  const toggleSection = (sectionTitle: string) => {
-    setExpandedSections(prev => {
-      const next = new Set(prev);
+  const toggleSection = useCallback((sectionTitle: string) => {
+    setExpandedSectionsByGroup(prev => {
+      const nextByGroup = { ...prev };
+      const next = new Set(nextByGroup[groupBy]);
       if (next.has(sectionTitle)) {
         next.delete(sectionTitle);
       } else {
         next.add(sectionTitle);
       }
-      return next;
+      nextByGroup[groupBy] = next;
+      return nextByGroup;
     });
-  };
+  }, [groupBy]);
 
-  // Separate checked and unchecked items
-  const uncheckedItems = items.filter(item => !item.isChecked);
-  let checkedItems = items.filter(item => item.isChecked);
+  const { uncheckedItems, checkedItems } = useMemo(() => {
+    const nextUncheckedItems = items.filter(item => !item.isChecked);
+    const nextCheckedItems = items.filter(item => item.isChecked);
 
-  // Sort checked items based on selected sorting
-  if (sortBy === 'recent') {
-    checkedItems = checkedItems.sort((a, b) => {
-      const aTime = new Date(a.createdAt).getTime();
-      const bTime = new Date(b.createdAt).getTime();
-      return bTime - aTime;
-    });
-  } else {
-    checkedItems = checkedItems.sort((a, b) => {
+    nextCheckedItems.sort((a, b) => {
+      if (sortBy === 'recent') {
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
+        return bTime - aTime;
+      }
+
       return a.name.localeCompare(b.name, undefined, {
         sensitivity: 'base',
       });
     });
-  }
+
+    return {
+      uncheckedItems: nextUncheckedItems,
+      checkedItems: nextCheckedItems,
+    };
+  }, [items, sortBy]);
 
   // Group unchecked items based on selected grouping
-  const groupedUncheckedItems = groupItemsBy(uncheckedItems, groupBy, sortBy);
-  const sectionItemIds = new Map<string, string[]>();
+  const groupedUncheckedItems = useMemo(
+    () => groupItemsBy(uncheckedItems, groupBy, sortBy),
+    [uncheckedItems, groupBy, sortBy]
+  );
 
-  groupedUncheckedItems.forEach((sectionItems, sectionTitle) => {
-    sectionItemIds.set(
-      sectionTitle,
-      sectionItems.map(item => item.id)
-    );
-  });
-
-  // Convert Map to sections array for SectionList
-  const sections: SectionListData<GroceryListItemWithRecipe>[] = Array.from(
-    groupedUncheckedItems.entries()
-  ).map(([title, data]) => {
-    const isExpanded = groupBy === 'none' || expandedSections.has(title);
-    return {
-      title,
-      data: isExpanded ? data : [],
-    };
-  });
-
-  // Add checked items section at the bottom if there are any checked items
-  if (checkedItems.length > 0) {
-    sectionItemIds.set(
-      'Checked',
-      checkedItems.map(item => item.id)
-    );
-    const isExpanded = expandedSections.has('Checked');
-    sections.push({
-      title: 'Checked',
-      data: isExpanded ? checkedItems : [],
+  const sectionItemIds = useMemo(() => {
+    const map = new Map<string, string[]>();
+    groupedUncheckedItems.forEach((sectionItems, sectionTitle) => {
+      map.set(
+        sectionTitle,
+        sectionItems.map(item => item.id)
+      );
     });
-  }
+    if (checkedItems.length > 0) {
+      map.set(
+        'Checked',
+        checkedItems.map(item => item.id)
+      );
+    }
+    return map;
+  }, [checkedItems, groupedUncheckedItems]);
 
-  const handleClearSection = (sectionTitle: string) => {
+  const sectionItemCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    groupedUncheckedItems.forEach((sectionItems, sectionTitle) => {
+      map.set(sectionTitle, sectionItems.length);
+    });
+    if (checkedItems.length > 0) {
+      map.set('Checked', checkedItems.length);
+    }
+    return map;
+  }, [checkedItems, groupedUncheckedItems]);
+
+  const listRows = useMemo(() => {
+    const rows: GroceryListRow[] = [];
+    const stickyHeaderIndices: number[] = [];
+
+    const appendSection = (
+      sectionTitle: string,
+      data: GroceryListItemWithRecipe[],
+      forceExpanded = false
+    ) => {
+      const showHeader = !(groupBy === 'none' && !sectionTitle);
+      const isExpanded = forceExpanded || expandedSections.has(sectionTitle);
+      const itemCount = sectionItemCounts.get(sectionTitle);
+      const shouldRenderItems = isExpanded || !showHeader;
+
+      if (showHeader) {
+        stickyHeaderIndices.push(rows.length);
+        rows.push({
+          type: 'header',
+          title: sectionTitle,
+          itemCount,
+          isExpanded,
+        });
+      }
+
+      if (!shouldRenderItems) return;
+
+      data.forEach((item, index) => {
+        rows.push({
+          type: 'item',
+          sectionTitle,
+          item,
+          isLastInSection: index === data.length - 1,
+        });
+      });
+    };
+
+    groupedUncheckedItems.forEach((sectionData, sectionTitle) => {
+      appendSection(sectionTitle, sectionData, groupBy === 'none');
+    });
+
+    if (checkedItems.length > 0) {
+      appendSection('Checked', checkedItems);
+    }
+
+    return { rows, stickyHeaderIndices };
+  }, [checkedItems, expandedSections, groupBy, groupedUncheckedItems, sectionItemCounts]);
+
+  const handleClearSection = useCallback((sectionTitle: string) => {
     const itemIds = sectionItemIds.get(sectionTitle) ?? [];
     if (itemIds.length === 0) return;
 
@@ -140,7 +201,42 @@ export const GroceryItemsList = ({
         },
       ]
     );
-  };
+  }, [clearGroceryList, sectionItemIds]);
+
+  const renderSectionHeader = useCallback(
+    (row: Extract<GroceryListRow, { type: 'header' }>) => (
+      <CollapsibleSectionHeader
+        title={row.title}
+        itemCount={row.itemCount}
+        isExpanded={row.isExpanded}
+        onToggle={() => toggleSection(row.title)}
+        onClearPress={() => handleClearSection(row.title)}
+        showCollapse={true}
+      />
+    ),
+    [handleClearSection, toggleSection]
+  );
+
+  const renderRow = useCallback(
+    ({ item }: ListRenderItemInfo<GroceryListRow>) => {
+      if (item.type === 'header') {
+        return renderSectionHeader(item);
+      }
+
+      const showBorder = !item.isLastInSection;
+      return (
+        <GroceryListItem
+          item={item.item}
+          isChecked={Boolean(item.item.isChecked)}
+          className={cn(showBorder && 'border-b border-dashed border-border')}
+          onEdit={() => {
+            presentEditSheet(item.item);
+          }}
+        />
+      );
+    },
+    [presentEditSheet, renderSectionHeader]
+  );
 
   if (totalItemCount === 0) {
     return (
@@ -186,57 +282,20 @@ export const GroceryItemsList = ({
         key={sortBy + groupBy}
         className="flex-1"
       >
-        <AnimatedSectionList
-          className="flex-1"
-          scrollEnabled={true}
+        <FlashList
+          data={listRows.rows}
+          renderItem={renderRow}
+          keyExtractor={item =>
+            item.type === 'header' ? `header-${item.title}` : item.item.id
+          }
+          getItemType={item => item.type}
+          drawDistance={300}
+          stickyHeaderIndices={listRows.stickyHeaderIndices}
           contentContainerClassName="pb-36"
-          showsVerticalScrollIndicator={false}
-          sections={sections}
-          keyExtractor={item => item.id}
           contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
           onScrollBeginDrag={onListInteraction}
           onTouchStart={onListInteraction}
-          renderSectionHeader={({ section }) => {
-            if (groupBy === 'none' && !section.title) return null;
-
-            const isExpanded = expandedSections.has(section.title);
-
-            // Get the item count for this section from the grouped items
-            let itemCount: number | undefined;
-            if (section.title === 'Checked') {
-              itemCount = checkedItems.length;
-            } else {
-              itemCount = groupedUncheckedItems.get(section.title)?.length;
-            }
-
-            return (
-              <CollapsibleSectionHeader
-                title={section.title}
-                itemCount={itemCount}
-                isExpanded={isExpanded}
-                onToggle={() => toggleSection(section.title)}
-                onClearPress={() => handleClearSection(section.title)}
-                showCollapse={true}
-              />
-            );
-          }}
-          renderItem={({ item, index, section }) => {
-            const isLastInSection = index === section.data.length - 1;
-            const showBorder = !isLastInSection;
-
-            return (
-              <GroceryListItem
-                item={item}
-                isChecked={Boolean(item.isChecked)}
-                className={cn(
-                  showBorder && 'border-b border-dashed border-border'
-                )}
-                onEdit={() => {
-                  presentEditSheet(item);
-                }}
-              />
-            );
-          }}
         />
       </Animated.View>
     </LayoutAnimationConfig>

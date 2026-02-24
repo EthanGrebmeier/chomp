@@ -2,7 +2,7 @@
   "expo": {
     "name": "Chomp",
     "slug": "chomp",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "chomp",
@@ -11,9 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.ethangrebmeier.chomp",
-      "associatedDomains": [
-        "applinks:chompgrocery.com"
-      ],
+      "associatedDomains": ["applinks:chompgrocery.com"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
