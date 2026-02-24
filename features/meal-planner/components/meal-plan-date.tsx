@@ -26,7 +26,7 @@ export const MealPlanDate = ({
         entering={FadeIn.duration(140)}
         exiting={FadeOut.duration(140)}
       >
-        <Text className="text-xl font-medium text-foreground">
+        <Text className="text-lg font-medium text-muted-foreground">
           {formattedDate}
         </Text>
       </Animated.View>

@@ -1,13 +1,13 @@
-import { StoreIcon } from 'lucide-react-native';
+import { BookOpenIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { Text } from './ui/text';
 
-type StoreTagProps = {
+type RecipeTagProps = {
   name: string;
 };
 
-export const StoreTag = ({ name }: StoreTagProps) => {
+export const RecipeTag = ({ name }: RecipeTagProps) => {
   if (!name) {
     return null;
   }
@@ -15,7 +15,7 @@ export const StoreTag = ({ name }: StoreTagProps) => {
   return (
     <View className="flex-row items-center gap-1">
       <View>
-        <StoreIcon
+        <BookOpenIcon
           size={12}
           strokeWidth={3}
           className="text-muted-foreground"

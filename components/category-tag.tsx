@@ -1,7 +1,8 @@
-import { categoryOptions } from '../features/shared/category/categories';
-import { cn } from '../lib/utils';
+import { InboxIcon } from 'lucide-react-native';
+import { View } from 'react-native';
 
-import { Pill } from './ui/pill';
+import { categoryOptions } from '../features/shared/category/categories';
+
 import { Text } from './ui/text';
 
 type CategoryTagProps = {
@@ -15,13 +16,17 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
   }
   const { className, textClassName } = categoryOption.style;
   return (
-    <Pill
-      className={cn('border border-border py-0.5', className)}
-      hasValue={true}
-    >
-      <Text className={cn('text-xs font-semibold', textClassName)}>
+    <View className="flex-row items-center gap-1">
+      <View>
+        <InboxIcon
+          size={12}
+          strokeWidth={2}
+          className="text-muted-foreground"
+        />
+      </View>
+      <Text className="text-xs font-semibold text-muted-foreground">
         {categoryOption.label}
       </Text>
-    </Pill>
+    </View>
   );
 };

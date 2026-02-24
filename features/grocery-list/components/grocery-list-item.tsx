@@ -1,4 +1,3 @@
-import { CookingPotIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
 import Animated, {
@@ -9,6 +8,7 @@ import Animated, {
 
 import { CategoryTag } from '../../../components/category-tag';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
+import { RecipeTag } from '../../../components/recipe-tag';
 import { StoreTag } from '../../../components/store-tag';
 import { Checkbox } from '../../../components/ui/checkbox';
 import {
@@ -17,9 +17,9 @@ import {
   ContextMenuRoot,
 } from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
-import { Icon } from '../../../components/ui/icon';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
+import { useTheme } from '../../../hooks/use-theme';
 import { cn } from '../../../lib/utils';
 import { checkListItem } from '../instant/check-list-item';
 import { removeGroceryListItem } from '../instant/remove-grocery-list-item';
@@ -42,6 +42,8 @@ export const GroceryListItem = ({
   const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
+
+  const theme = useTheme();
 
   // Animated value for strikethrough
   const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
@@ -106,7 +108,7 @@ export const GroceryListItem = ({
             hapticType="light"
           >
             <View className="flex-row items-center justify-between">
-              <View className="relative flex-1">
+              <View className="relative flex-1 pr-2">
                 <Text
                   className={cn(
                     'text-xl font-medium text-foreground',
@@ -124,7 +126,7 @@ export const GroceryListItem = ({
                       left: 0,
                       height: 2,
                       backgroundColor: internalIsChecked
-                        ? '#9ca3af'
+                        ? theme.destructive
                         : 'transparent',
                     },
                   ]}
@@ -137,14 +139,7 @@ export const GroceryListItem = ({
             <View className="min-h-6 flex-row items-center gap-2 pb-1.5">
               {item.category && <CategoryTag category={item.category} />}
               {item.store?.name && <StoreTag name={item.store.name} />}
-              {item.recipe && (
-                <View className="flex-row items-center gap-1">
-                  <Icon as={CookingPotIcon} size={14} />
-                  <Text className="text-sm text-muted-foreground">
-                    {item.recipe.name}
-                  </Text>
-                </View>
-              )}
+              {item.recipe?.name && <RecipeTag name={item.recipe.name} />}
             </View>
           </HapticPressable>
         </ListItem>

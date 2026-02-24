@@ -23,7 +23,7 @@ export default function Settings() {
       <View className="flex-1 justify-between gap-4 px-4 pt-6 ">
         {/* Settings Menu */}
         <View className="gap-4">
-          <Heading>Settings</Heading>
+          <Heading className="ml-4">Settings</Heading>
           <View className="mb-8 gap-4 rounded-xl bg-muted/50 p-4">
             <HapticPressable
               onPress={handleNavigateToSavedItems}

@@ -54,7 +54,7 @@ export default function Recipes() {
   return (
     <View className="flex-1 bg-background pt-6 ">
       <View className="px-4">
-        <Heading>Recipes</Heading>
+        <Heading>Recipe Book</Heading>
       </View>
       <View className="mt-2">
         <RecipeFilters
