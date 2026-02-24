@@ -12,8 +12,8 @@ import { RecipeFilters } from '../../../features/recipes/components/recipe-filte
 import { useCreateRecipe, useRecipes } from '../../../features/recipes/hooks';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
 import {
-  filterRecipes,
   RecipeSortOption,
+  filterRecipes,
 } from '../../../features/recipes/utils/filter-recipes';
 import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
@@ -52,11 +52,14 @@ export const RecipeSelector = ({
         onPress={() => onSelectRecipe(item)}
         className={cn(
           'w-full py-3',
-          index < filteredRecipes.length - 1 && 'border-b border-border'
+          index < filteredRecipes.length - 1 &&
+            'border-b border-dashed border-border'
         )}
         hapticType="light"
       >
-        <Text className="text-lg font-semibold text-foreground">{item.name}</Text>
+        <Text className="text-lg font-semibold text-foreground">
+          {item.name}
+        </Text>
         <Text className="text-sm text-muted-foreground">
           {item.recipe_ingredients.length} ingredients
         </Text>
@@ -130,7 +133,8 @@ export const RecipeSelector = ({
       />
       <View className="px-4 pb-2">
         <Text className="text-sm text-muted-foreground">
-          {filteredRecipes.length} recipe{filteredRecipes.length === 1 ? '' : 's'}
+          {filteredRecipes.length} recipe
+          {filteredRecipes.length === 1 ? '' : 's'}
         </Text>
       </View>
       {filteredRecipes.length === 0 ? (
