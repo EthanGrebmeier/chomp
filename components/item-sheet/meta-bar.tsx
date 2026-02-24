@@ -21,13 +21,13 @@ export const MetaBar = () => {
   return (
     <MetaBarLayout>
       <ScrollingMetaBar>
-        <CategorySheet category={category} onSelect={setCategory} />
         <UnitSheet
           quantity={quantity}
           unit={unit}
           onQuantityChange={setQuantity}
           onUnitChange={setUnit}
         />
+        <CategorySheet category={category} onSelect={setCategory} />
         <StoreSheet storeId={storeId} onSelect={setStoreId} />
       </ScrollingMetaBar>
     </MetaBarLayout>

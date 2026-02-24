@@ -109,7 +109,10 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
                 size={16}
               />
             }
-            className={selectedCategory?.style.className}
+            className={cn(
+              selectedCategory?.style.className,
+              !selectedCategory && 'border-dashed'
+            )}
             textClassName={cn(
               'font-semibold',
               selectedCategory?.style.textClassName

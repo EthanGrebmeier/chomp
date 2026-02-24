@@ -52,9 +52,7 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const createStoreSheetRef = useRef<TrueSheet>(null);
   const { data: stores, isLoading } = useStores();
-  const [localStoreId, setLocalStoreId] = useState<string | undefined>(
-    storeId
-  );
+  const [localStoreId, setLocalStoreId] = useState<string | undefined>(storeId);
   const [newStoreName, setNewStoreName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [newlyCreatedStore, setNewlyCreatedStore] = useState<{
@@ -114,6 +112,7 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
       <WithLayoutTransition>
         <HapticPressable onPress={openSheet} hapticType="light">
           <Pill
+            className={cn(!localStoreId && 'border-dashed')}
             icon={
               <Icon
                 className={

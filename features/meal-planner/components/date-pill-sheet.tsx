@@ -9,6 +9,7 @@ import {
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
+import { cn } from '../../../lib/utils';
 
 type DatePillSheetProps = {
   date?: string;
@@ -49,6 +50,7 @@ export const DatePillSheet = ({
     <>
       <HapticPressable onPress={openSheet} hapticType="light">
         <Pill
+          className={cn(!date && 'border-dashed')}
           icon={
             <Icon
               className="text-muted-foreground"

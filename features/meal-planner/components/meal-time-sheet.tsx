@@ -101,6 +101,7 @@ export const MealTimeSheet = ({
     <>
       <HapticPressable onPress={openSheet} hapticType="light">
         <Pill
+          className={cn(!mealTime && 'border-dashed')}
           icon={
             <Icon
               className="text-muted-foreground"
