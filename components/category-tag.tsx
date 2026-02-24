@@ -3,6 +3,7 @@ import { View } from 'react-native';
 
 import { categoryOptions } from '../features/shared/category/categories';
 
+import { Icon } from './ui/icon';
 import { Text } from './ui/text';
 
 type CategoryTagProps = {
@@ -18,7 +19,8 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
   return (
     <View className="flex-row items-center gap-1">
       <View>
-        <InboxIcon
+        <Icon
+          as={InboxIcon}
           size={12}
           strokeWidth={2}
           className="text-muted-foreground"

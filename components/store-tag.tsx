@@ -1,6 +1,7 @@
 import { StoreIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
+import { Icon } from './ui/icon';
 import { Text } from './ui/text';
 
 type StoreTagProps = {
@@ -15,7 +16,8 @@ export const StoreTag = ({ name }: StoreTagProps) => {
   return (
     <View className="flex-row items-center gap-1">
       <View>
-        <StoreIcon
+        <Icon
+          as={StoreIcon}
           size={12}
           strokeWidth={3}
           className="text-muted-foreground"
