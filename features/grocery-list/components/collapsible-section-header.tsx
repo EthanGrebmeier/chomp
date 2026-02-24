@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated';
 
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
+import { cn } from '../../../lib/utils';
 
 type CollapsibleSectionHeaderProps = {
   title: string;
@@ -21,19 +22,25 @@ export const CollapsibleSectionHeader = ({
   showCollapse = true,
 }: CollapsibleSectionHeaderProps) => {
   return (
-    <View className="bg-background px-4 pt-1">
+    <View className={cn('bg-background px-4 pt-1')}>
       {showCollapse ? (
         <TouchableOpacity
           onPress={onToggle}
           className="flex-row items-center justify-between"
         >
-          <Text className="text-lg font-semibold capitalize text-foreground">
-            {title}
-            {itemCount !== undefined && ` (${itemCount})`}
-          </Text>
+          <View>
+            <Text className="text-base font-semibold capitalize text-foreground">
+              {title}
+            </Text>
+            {itemCount !== undefined && (
+              <Text className="text-sm text-muted-foreground">
+                {itemCount} items
+              </Text>
+            )}
+          </View>
           <Animated.View
             style={{
-              transform: [{ rotate: isExpanded ? '0deg' : '180deg' }],
+              transform: [{ rotate: isExpanded ? '180deg' : '0deg' }],
             }}
           >
             <Icon

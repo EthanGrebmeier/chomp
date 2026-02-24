@@ -26,3 +26,7 @@ export function iconWithClassName(icon: LucideIcon | SvgIcon) {
     },
   });
 }
+
+export const pluralizedText = (count: number, text: string) => {
+  return count === 1 ? text : `${text}s`;
+};

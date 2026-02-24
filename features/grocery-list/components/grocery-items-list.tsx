@@ -1,7 +1,11 @@
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SectionList, SectionListData, View } from 'react-native';
-import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LayoutAnimationConfig,
+} from 'react-native-reanimated';
 
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
@@ -34,14 +38,20 @@ export const GroceryItemsList = ({
 }: GroceryItemsListProps) => {
   const { present: presentEditSheet } = useEditItemSheet();
 
-  // Track which sections are collapsed by their title
-  // By default, all sections start expanded except "Checked"
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
-    new Set(['Checked'])
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set()
   );
 
+  const prevGroupByRef = useRef(groupBy);
+  useEffect(() => {
+    if (prevGroupByRef.current !== groupBy) {
+      prevGroupByRef.current = groupBy;
+      setExpandedSections(new Set());
+    }
+  }, [groupBy]);
+
   const toggleSection = (sectionTitle: string) => {
-    setCollapsedSections(prev => {
+    setExpandedSections(prev => {
       const next = new Set(prev);
       if (next.has(sectionTitle)) {
         next.delete(sectionTitle);
@@ -78,19 +88,19 @@ export const GroceryItemsList = ({
   const sections: SectionListData<GroceryListItemWithRecipe>[] = Array.from(
     groupedUncheckedItems.entries()
   ).map(([title, data]) => {
-    const isCollapsed = collapsedSections.has(title);
+    const isExpanded = groupBy === 'none' || expandedSections.has(title);
     return {
       title,
-      data: isCollapsed ? [] : data,
+      data: isExpanded ? data : [],
     };
   });
 
   // Add checked items section at the bottom if there are any checked items
   if (checkedItems.length > 0) {
-    const isCollapsed = collapsedSections.has('Checked');
+    const isExpanded = expandedSections.has('Checked');
     sections.push({
       title: 'Checked',
-      data: isCollapsed ? [] : checkedItems,
+      data: isExpanded ? checkedItems : [],
     });
   }
 
@@ -132,60 +142,64 @@ export const GroceryItemsList = ({
 
   return (
     <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
-      <AnimatedSectionList
+      <Animated.View
+        entering={FadeIn.duration(200)}
+        exiting={FadeOut.duration(200)}
+        key={sortBy + groupBy}
         className="flex-1"
-        scrollEnabled={true}
-        contentContainerClassName="pb-36"
-        showsVerticalScrollIndicator={false}
-        sections={sections}
-        keyExtractor={item => item.id}
-        contentContainerStyle={{ flexGrow: 1 }}
-        onScrollBeginDrag={onListInteraction}
-        onTouchStart={onListInteraction}
-        renderSectionHeader={({ section }) => {
-          if (groupBy === 'none' && !section.title) return null;
+      >
+        <AnimatedSectionList
+          className="flex-1"
+          scrollEnabled={true}
+          contentContainerClassName="pb-36"
+          showsVerticalScrollIndicator={false}
+          sections={sections}
+          keyExtractor={item => item.id}
+          contentContainerStyle={{ flexGrow: 1 }}
+          onScrollBeginDrag={onListInteraction}
+          onTouchStart={onListInteraction}
+          renderSectionHeader={({ section }) => {
+            if (groupBy === 'none' && !section.title) return null;
 
-          const isCollapsed = collapsedSections.has(section.title);
-          const isExpanded = !isCollapsed;
+            const isExpanded = expandedSections.has(section.title);
 
-          // Get the item count for this section from the grouped items
-          let itemCount: number | undefined;
-          if (section.title === 'Checked') {
-            itemCount = checkedItems.length;
-          } else {
-            itemCount = groupedUncheckedItems.get(section.title)?.length;
-          }
+            // Get the item count for this section from the grouped items
+            let itemCount: number | undefined;
+            if (section.title === 'Checked') {
+              itemCount = checkedItems.length;
+            } else {
+              itemCount = groupedUncheckedItems.get(section.title)?.length;
+            }
 
-          return (
-            <CollapsibleSectionHeader
-              title={section.title}
-              itemCount={itemCount}
-              isExpanded={isExpanded}
-              onToggle={() => toggleSection(section.title)}
-              showCollapse={true}
-            />
-          );
-        }}
-        renderItem={({ item, index, section }) => {
-          const isLastInSection = index === section.data.length - 1;
-          const isLastSection =
-            sections.indexOf(section) === sections.length - 1;
-          const showBorder = !isLastInSection || !isLastSection;
+            return (
+              <CollapsibleSectionHeader
+                title={section.title}
+                itemCount={itemCount}
+                isExpanded={isExpanded}
+                onToggle={() => toggleSection(section.title)}
+                showCollapse={true}
+              />
+            );
+          }}
+          renderItem={({ item, index, section }) => {
+            const isLastInSection = index === section.data.length - 1;
+            const showBorder = !isLastInSection;
 
-          return (
-            <GroceryListItem
-              item={item}
-              isChecked={Boolean(item.isChecked)}
-              className={cn(
-                showBorder && 'border-b border-dashed border-border'
-              )}
-              onEdit={() => {
-                presentEditSheet(item);
-              }}
-            />
-          );
-        }}
-      />
+            return (
+              <GroceryListItem
+                item={item}
+                isChecked={Boolean(item.isChecked)}
+                className={cn(
+                  showBorder && 'border-b border-dashed border-border'
+                )}
+                onEdit={() => {
+                  presentEditSheet(item);
+                }}
+              />
+            );
+          }}
+        />
+      </Animated.View>
     </LayoutAnimationConfig>
   );
 };
