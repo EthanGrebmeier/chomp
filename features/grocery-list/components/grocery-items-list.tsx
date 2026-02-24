@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
-import { SectionList, SectionListData, View } from 'react-native';
+import { Alert, SectionList, SectionListData, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -11,6 +11,7 @@ import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { cn } from '../../../lib/utils';
+import { useClearGroceryList } from '../instant/clear-list';
 import { GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
 
@@ -37,6 +38,7 @@ export const GroceryItemsList = ({
   onListInteraction,
 }: GroceryItemsListProps) => {
   const { present: presentEditSheet } = useEditItemSheet();
+  const { mutate: clearGroceryList } = useClearGroceryList();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set()
@@ -83,6 +85,14 @@ export const GroceryItemsList = ({
 
   // Group unchecked items based on selected grouping
   const groupedUncheckedItems = groupItemsBy(uncheckedItems, groupBy, sortBy);
+  const sectionItemIds = new Map<string, string[]>();
+
+  groupedUncheckedItems.forEach((sectionItems, sectionTitle) => {
+    sectionItemIds.set(
+      sectionTitle,
+      sectionItems.map(item => item.id)
+    );
+  });
 
   // Convert Map to sections array for SectionList
   const sections: SectionListData<GroceryListItemWithRecipe>[] = Array.from(
@@ -97,12 +107,40 @@ export const GroceryItemsList = ({
 
   // Add checked items section at the bottom if there are any checked items
   if (checkedItems.length > 0) {
+    sectionItemIds.set(
+      'Checked',
+      checkedItems.map(item => item.id)
+    );
     const isExpanded = expandedSections.has('Checked');
     sections.push({
       title: 'Checked',
       data: isExpanded ? checkedItems : [],
     });
   }
+
+  const handleClearSection = (sectionTitle: string) => {
+    const itemIds = sectionItemIds.get(sectionTitle) ?? [];
+    if (itemIds.length === 0) return;
+
+    const sectionLabel = sectionTitle || 'this section';
+    Alert.alert(
+      'Clear section',
+      `Are you sure you want to clear ${sectionLabel}? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => {
+            clearGroceryList({ itemIds });
+          },
+        },
+      ]
+    );
+  };
 
   if (totalItemCount === 0) {
     return (
@@ -177,6 +215,7 @@ export const GroceryItemsList = ({
                 itemCount={itemCount}
                 isExpanded={isExpanded}
                 onToggle={() => toggleSection(section.title)}
+                onClearPress={() => handleClearSection(section.title)}
                 showCollapse={true}
               />
             );

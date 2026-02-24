@@ -11,6 +11,7 @@ type CollapsibleSectionHeaderProps = {
   itemCount?: number;
   isExpanded: boolean;
   onToggle: () => void;
+  onClearPress?: () => void;
   showCollapse?: boolean;
 };
 
@@ -19,16 +20,14 @@ export const CollapsibleSectionHeader = ({
   itemCount,
   isExpanded,
   onToggle,
+  onClearPress,
   showCollapse = true,
 }: CollapsibleSectionHeaderProps) => {
   return (
     <View className={cn('bg-background px-4 pt-1')}>
       {showCollapse ? (
-        <TouchableOpacity
-          onPress={onToggle}
-          className="flex-row items-center justify-between"
-        >
-          <View>
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity onPress={onToggle} className="flex-1">
             <Text className="text-base font-semibold capitalize text-foreground">
               {title}
             </Text>
@@ -37,19 +36,30 @@ export const CollapsibleSectionHeader = ({
                 {itemCount} items
               </Text>
             )}
+          </TouchableOpacity>
+          <View className="flex-row items-center gap-3">
+            {isExpanded && onClearPress ? (
+              <TouchableOpacity onPress={onClearPress}>
+                <Text className="text-sm font-medium text-destructive">
+                  Clear
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+            <TouchableOpacity onPress={onToggle}>
+              <Animated.View
+                style={{
+                  transform: [{ rotate: isExpanded ? '180deg' : '0deg' }],
+                }}
+              >
+                <Icon
+                  as={ChevronDownIcon}
+                  size={20}
+                  className="text-muted-foreground"
+                />
+              </Animated.View>
+            </TouchableOpacity>
           </View>
-          <Animated.View
-            style={{
-              transform: [{ rotate: isExpanded ? '180deg' : '0deg' }],
-            }}
-          >
-            <Icon
-              as={ChevronDownIcon}
-              size={20}
-              className="text-muted-foreground"
-            />
-          </Animated.View>
-        </TouchableOpacity>
+        </View>
       ) : (
         <Text className="text-lg font-semibold capitalize text-foreground">
           {title}

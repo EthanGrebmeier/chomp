@@ -1,7 +1,7 @@
-import { InboxIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { categoryOptions } from '../features/shared/category/categories';
+import { cn } from '../lib/utils';
 
 import { Icon } from './ui/icon';
 import { Text } from './ui/text';
@@ -20,13 +20,13 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
     <View className="flex-row items-center gap-1">
       <View>
         <Icon
-          as={InboxIcon}
+          as={categoryOption.style.icon}
           size={12}
           strokeWidth={2}
-          className="text-muted-foreground"
+          className={textClassName}
         />
       </View>
-      <Text className="text-xs font-semibold text-muted-foreground">
+      <Text className={cn('text-xs font-semibold', textClassName)}>
         {categoryOption.label}
       </Text>
     </View>
