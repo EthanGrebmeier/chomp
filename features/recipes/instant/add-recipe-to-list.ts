@@ -9,6 +9,7 @@ export type RecipeIngredientInput = {
   unit: string;
   notes?: string | null;
   category?: string | null;
+  storeName?: string | null;
   storeId?: string;
 };
 

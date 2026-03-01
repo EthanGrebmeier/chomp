@@ -92,6 +92,7 @@ export const addMealsToGroceryList = async ({
         unit: ingredient.unit,
         notes: ingredient.notes,
         category: ingredient.category,
+        storeName: ingredient.store?.name,
         storeId: ingredient.store?.id,
         recipeId: recipe.id,
       });
@@ -143,6 +144,7 @@ export const addMealsToGroceryList = async ({
       unit: mealPlanItem.unit,
       notes: mealPlanItem.notes,
       category: mealPlanItem.category,
+      storeName: mealPlanItem.store?.name,
       storeId: mealPlanItem.store?.id,
     });
 

@@ -107,6 +107,7 @@ type SelectedIngredientInput = {
   unit: string;
   notes?: string | null;
   category?: string | null;
+  storeName?: string | null;
   storeId?: string;
 };
 
@@ -207,6 +208,7 @@ export const IngredientSelector = forwardRef<
           unit: ingredient.unit,
           notes: ingredient.notes ?? null,
           category: ingredient.category ?? null,
+          storeName: ingredient.store?.name ?? null,
           storeId: ingredient.store?.id,
         })),
     [effectiveSelectedIds, recipe.recipe_ingredients]

@@ -1,5 +1,11 @@
 import { GroceryListItemWithRecipe } from './types';
 
+const normalizeGroupToken = (value?: string | null): string =>
+  (value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+
 const sortItems = (
   items: GroceryListItemWithRecipe[],
   sortBy: 'name' | 'recent'
@@ -29,6 +35,7 @@ export const groupItemsBy = (
   sortBy: 'name' | 'recent' = 'recent'
 ): Map<string, GroceryListItemWithRecipe[]> => {
   const groups = new Map<string, GroceryListItemWithRecipe[]>();
+  const storeDisplayByKey = new Map<string, string>();
 
   if (groupBy === 'none') {
     // Sort items based on sortBy parameter
@@ -59,11 +66,15 @@ export const groupItemsBy = (
 
   if (groupBy === 'store') {
     items.forEach(item => {
-      const storeName = item.store?.name ?? 'No Store';
-      if (!groups.has(storeName)) {
-        groups.set(storeName, []);
+      const storeName = item.store?.name?.trim() || 'No Store';
+      const storeKey = item.store?.name
+        ? normalizeGroupToken(item.store.name)
+        : 'No Store';
+      if (!groups.has(storeKey)) {
+        groups.set(storeKey, []);
+        storeDisplayByKey.set(storeKey, storeName);
       }
-      groups.get(storeName)!.push(item);
+      groups.get(storeKey)!.push(item);
     });
   }
 
@@ -103,15 +114,25 @@ export const groupItemsBy = (
   } else if (groupBy === 'store') {
     // Sort store groups: put No Store at the bottom, others alphabetically
     sortedGroups = Array.from(groups.entries()).sort(([a], [b]) => {
-      if (a === 'No Store') return 1;
-      if (b === 'No Store') return -1;
-      return a.localeCompare(b);
+      const aLabel = storeDisplayByKey.get(a) ?? a;
+      const bLabel = storeDisplayByKey.get(b) ?? b;
+      if (aLabel === 'No Store') return 1;
+      if (bLabel === 'No Store') return -1;
+      return aLabel.localeCompare(bLabel, undefined, { sensitivity: 'base' });
     });
   } else {
     // For 'none' grouping, no additional sorting needed
     sortedGroups = Array.from(groups.entries());
   }
 
-  const sortedGroupsMap = new Map(sortedGroups);
+  const sortedGroupsMap =
+    groupBy === 'store'
+      ? new Map(
+          sortedGroups.map(([key, groupItems]) => [
+            storeDisplayByKey.get(key) ?? key,
+            groupItems,
+          ])
+        )
+      : new Map(sortedGroups);
   return sortedGroupsMap;
 };

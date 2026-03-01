@@ -11,13 +11,13 @@ describe('stack-recipe-ingredients planning', () => {
       name: '  Green   Onion ',
       unit: ' CUP ',
       category: ' Produce ',
-      storeId: 'store-1',
+      storeName: ' Trader   Joes ',
     });
     const keyB = buildIngredientMatchKey({
       name: 'green onion',
       unit: 'cup',
       category: 'produce',
-      storeId: 'store-1',
+      storeName: 'trader joes',
     });
 
     expect(keyA).toBe(keyB);
@@ -59,6 +59,7 @@ describe('stack-recipe-ingredients planning', () => {
           quantity: 2,
           unit: 'each',
           category: 'Produce',
+          storeName: 'Whole Foods',
           storeId: 'store-1',
         },
       ],
@@ -69,6 +70,7 @@ describe('stack-recipe-ingredients planning', () => {
           quantity: 4,
           unit: 'EACH',
           category: 'produce',
+          storeName: 'whole foods',
           storeId: 'store-1',
         },
       ],
@@ -88,6 +90,7 @@ describe('stack-recipe-ingredients planning', () => {
           quantity: 1,
           unit: 'lb',
           category: 'Meat',
+          storeName: 'Costco',
           storeId: 'store-1',
         },
       ],
@@ -98,6 +101,7 @@ describe('stack-recipe-ingredients planning', () => {
           quantity: 2,
           unit: 'lb',
           category: 'Freezer',
+          storeName: 'costco',
           storeId: 'store-1',
         },
       ],
@@ -107,5 +111,67 @@ describe('stack-recipe-ingredients planning', () => {
     expect(plan.createEntries).toHaveLength(0);
     expect(plan.conflicts).toHaveLength(1);
     expect(plan.conflicts[0]?.ingredientName).toBe('chicken breast');
+  });
+
+  it('stacks when normalized store names match despite different store IDs', () => {
+    const plan = planIngredientStacking({
+      existingItems: [
+        {
+          id: 'existing-1',
+          name: 'Banana',
+          quantity: 3,
+          unit: 'each',
+          category: 'Produce',
+          storeName: 'Trader Joes',
+          storeId: 'store-a',
+        },
+      ],
+      conflictResolution: 'prompt',
+      ingredients: [
+        {
+          name: 'banana',
+          quantity: 2,
+          unit: 'each',
+          category: 'produce',
+          storeName: ' trader   joes ',
+          storeId: 'store-b',
+        },
+      ],
+    });
+
+    expect(plan.conflicts).toHaveLength(0);
+    expect(plan.createEntries).toHaveLength(0);
+    expect(plan.quantityUpdates.get('existing-1')).toBe(2);
+  });
+
+  it('does not stack when store names differ', () => {
+    const plan = planIngredientStacking({
+      existingItems: [
+        {
+          id: 'existing-1',
+          name: 'Banana',
+          quantity: 3,
+          unit: 'each',
+          category: 'Produce',
+          storeName: 'Trader Joes',
+          storeId: 'store-a',
+        },
+      ],
+      conflictResolution: 'prompt',
+      ingredients: [
+        {
+          name: 'banana',
+          quantity: 2,
+          unit: 'each',
+          category: 'produce',
+          storeName: 'Safeway',
+          storeId: 'store-b',
+        },
+      ],
+    });
+
+    expect(plan.quantityUpdates.size).toBe(0);
+    expect(plan.createEntries).toHaveLength(0);
+    expect(plan.conflicts).toHaveLength(1);
   });
 });

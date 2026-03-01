@@ -4,6 +4,7 @@ export type StackableIngredientInput = {
   unit: string;
   notes?: string | null;
   category?: string | null;
+  storeName?: string | null;
   storeId?: string;
   recipeId?: string;
 };
@@ -15,6 +16,7 @@ export type IngredientConflict = {
   quantity: number;
   unit: string;
   category?: string | null;
+  storeName?: string | null;
   storeId?: string;
 };
 
@@ -25,6 +27,7 @@ export type ExistingIngredientForStacking = {
   unit: string;
   category?: string | null;
   updatedAt?: string;
+  storeName?: string | null;
   storeId?: string;
 };
 
@@ -34,6 +37,7 @@ export type AggregatedIngredient = {
   unit: string;
   notes?: string | null;
   category?: string | null;
+  storeName?: string | null;
   storeId?: string;
   recipeIds: Set<string>;
 };
@@ -53,18 +57,21 @@ const normalizeToken = (value?: string | null): string =>
 export const buildIngredientNameKey = (name: string): string =>
   normalizeToken(name);
 
+export const buildStoreNameKey = (storeName?: string | null): string =>
+  normalizeToken(storeName);
+
 export const buildIngredientMatchKey = ({
   name,
   unit,
   category,
-  storeId,
+  storeName,
 }: {
   name: string;
   unit: string;
   category?: string | null;
-  storeId?: string;
+  storeName?: string | null;
 }): string =>
-  `${buildIngredientNameKey(name)}|${normalizeToken(unit)}|${normalizeToken(category)}|${storeId ?? ''}`;
+  `${buildIngredientNameKey(name)}|${normalizeToken(unit)}|${normalizeToken(category)}|${buildStoreNameKey(storeName)}`;
 
 const byMostRecentlyUpdated = (
   left: Pick<ExistingIngredientForStacking, 'updatedAt'>,
@@ -92,7 +99,7 @@ export const planIngredientStacking = ({
       name: item.name,
       unit: item.unit,
       category: item.category,
-      storeId: item.storeId,
+      storeName: item.storeName,
     });
     const current = existingByMatchKey.get(matchKey);
     if (!current || byMostRecentlyUpdated(current, item) > 0) {
@@ -127,6 +134,7 @@ export const planIngredientStacking = ({
       unit: ingredient.unit,
       notes: ingredient.notes,
       category: ingredient.category,
+      storeName: ingredient.storeName,
       storeId: ingredient.storeId,
       recipeIds: ingredient.recipeId ? new Set([ingredient.recipeId]) : new Set(),
     });
@@ -158,6 +166,7 @@ export const planIngredientStacking = ({
         quantity: aggregatedIngredient.quantity,
         unit: aggregatedIngredient.unit,
         category: aggregatedIngredient.category,
+        storeName: aggregatedIngredient.storeName,
         storeId: aggregatedIngredient.storeId,
       });
 

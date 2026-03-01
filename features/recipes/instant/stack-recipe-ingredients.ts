@@ -18,6 +18,7 @@ export type {
 export {
   buildIngredientMatchKey,
   buildIngredientNameKey,
+  buildStoreNameKey,
   planIngredientStacking,
 } from './stack-recipe-ingredients-plan';
 
@@ -30,7 +31,7 @@ type ExistingGroceryItem = {
   notes?: string | null;
   updatedAt?: string;
   grocery_list?: { id: string } | null;
-  store?: { id: string } | null;
+  store?: { id: string; name: string } | null;
   isDeleted?: boolean;
 };
 
@@ -84,6 +85,7 @@ export const addIngredientsWithStacking = async ({
       unit: item.unit,
       category: item.category,
       updatedAt: item.updatedAt,
+      storeName: item.store?.name,
       storeId: item.store?.id,
     })),
     ingredients,
