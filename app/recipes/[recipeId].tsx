@@ -7,8 +7,9 @@ import { RecipeDetailSkeleton } from '@/features/recipes/components/recipe-detai
 import { useRecipe } from '@/features/recipes/hooks/useRecipe';
 
 export default function RecipeDetailPage() {
-  const { recipeId } = useLocalSearchParams<{
+  const { recipeId, listId } = useLocalSearchParams<{
     recipeId: string;
+    listId?: string;
   }>();
 
   const { data: recipe, isLoading } = useRecipe(recipeId);
@@ -45,7 +46,7 @@ export default function RecipeDetailPage() {
           className="flex-1"
         >
           <View className="flex-1 gap-2">
-            <RecipeDetail recipe={recipe} />
+            <RecipeDetail recipe={recipe} listId={listId} />
           </View>
         </Animated.View>
       )}

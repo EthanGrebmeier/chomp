@@ -24,9 +24,13 @@ import {
 
 type CreateRecipeButtonProps = {
   onSuccess?: (result: { id: string }) => void;
+  listId?: string;
 };
 
-export const CreateRecipeButton = ({ onSuccess }: CreateRecipeButtonProps) => {
+export const CreateRecipeButton = ({
+  onSuccess,
+  listId,
+}: CreateRecipeButtonProps) => {
   const { mutate: createRecipe } = useCreateRecipe();
   const createSheetRef = useRef<CreateRecipeSheetRef>(null);
   const importSheetRef = useRef<ImportRecipeSheetRef>(null);
@@ -57,7 +61,7 @@ export const CreateRecipeButton = ({ onSuccess }: CreateRecipeButtonProps) => {
       },
       {
         onSuccess: result => {
-          router.push(navigation.goToRecipe(result.id));
+          router.push(navigation.goToRecipe(result.id, listId));
           onSuccess?.(result);
         },
       }
@@ -65,7 +69,7 @@ export const CreateRecipeButton = ({ onSuccess }: CreateRecipeButtonProps) => {
   };
 
   const handleImportSuccess = (recipeId: string) => {
-    router.push(navigation.goToRecipe(recipeId));
+    router.push(navigation.goToRecipe(recipeId, listId));
     onSuccess?.({ id: recipeId });
   };
 

@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useDeferredValue, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import Animated, {
@@ -23,6 +24,7 @@ import { Heading } from '../../components/text/heading';
 import { CreateRecipeButton } from '../../features/recipes/components/create-recipe-button';
 
 export default function Recipes() {
+  const { listId } = useLocalSearchParams<{ listId?: string }>();
   const { data: recipes, isLoading } = useRecipes();
   const { bottom } = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,7 +77,7 @@ export default function Recipes() {
         </Text>
       </View>
       <View className="absolute right-6 z-10" style={{ bottom: actionBottom }}>
-        <CreateRecipeButton />
+        <CreateRecipeButton listId={listId} />
       </View>
       <View className="flex-1">
         {isLoading ? (
@@ -103,7 +105,7 @@ export default function Recipes() {
                   </EmptySubtext>
                 </View>
               ) : (
-                <RecipeList recipes={filteredRecipes} />
+                <RecipeList recipes={filteredRecipes} listId={listId} />
               )}
             </LayoutAnimationConfig>
           </Animated.View>

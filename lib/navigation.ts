@@ -40,13 +40,19 @@ export interface ListMealPlanParams {
 
 export interface RecipeParams {
   recipeId: string;
+  listId?: string;
+}
+
+export interface RecipesParams {
+  listId?: string;
 }
 
 /**
  * Builds a URL for a specific tab
  */
-export function buildRecipesUrl(): Href {
-  return `/recipes` as const;
+export function buildRecipesUrl(params?: RecipesParams): Href {
+  const query = params?.listId ? `?listId=${params.listId}` : '';
+  return `/recipes${query}` as Href;
 }
 
 /**
@@ -69,8 +75,9 @@ export function buildMealPlanSheetUrl(params: ListMealPlanParams): Href {
  * Builds a URL for a recipe detail page
  */
 export function buildRecipeUrl(params: RecipeParams) {
-  const { recipeId } = params;
-  return `/recipes/${recipeId}` as const;
+  const { recipeId, listId } = params;
+  const query = listId ? `?listId=${listId}` : '';
+  return `/recipes/${recipeId}${query}` as const;
 }
 
 /**
@@ -97,13 +104,15 @@ export function buildRecipeShareURL(recipeId: string): string | null {
 export const navigation = {
   // Tab navigation
   goToList: (listId?: string) => buildListUrl(listId ? { listId } : undefined),
-  goToRecipes: buildRecipesUrl,
+  goToRecipes: (listId?: string) =>
+    buildRecipesUrl(listId ? { listId } : undefined),
 
   // Meal plan sheet navigation
   goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
 
   // Recipe navigation
-  goToRecipe: (recipeId: string) => buildRecipeUrl({ recipeId }),
+  goToRecipe: (recipeId: string, listId?: string) =>
+    buildRecipeUrl({ recipeId, listId }),
 } as const;
 
 /**
@@ -114,13 +123,14 @@ export function useNavigation() {
   return {
     // Tab navigation
     goToList: (listId?: string) => navigation.goToList(listId),
-    goToRecipes: () => navigation.goToRecipes(),
+    goToRecipes: (listId?: string) => navigation.goToRecipes(listId),
 
     // Meal plan sheet navigation
     goToMealPlan: (listId: string) => navigation.goToMealPlan(listId),
 
     // Recipe navigation
-    goToRecipe: (recipeId: string) => navigation.goToRecipe(recipeId),
+    goToRecipe: (recipeId: string, listId?: string) =>
+      navigation.goToRecipe(recipeId, listId),
   };
 }
 
@@ -131,13 +141,15 @@ export function useNavigation() {
 export const navActions = {
   // Tab navigation
   goToList: (listId?: string) => buildListUrl(listId ? { listId } : undefined),
-  goToRecipes: () => buildRecipesUrl(),
+  goToRecipes: (listId?: string) =>
+    buildRecipesUrl(listId ? { listId } : undefined),
 
   // Meal plan sheet navigation
   goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
 
   // Recipe navigation
-  goToRecipe: (recipeId: string) => buildRecipeUrl({ recipeId }),
+  goToRecipe: (recipeId: string, listId?: string) =>
+    buildRecipeUrl({ recipeId, listId }),
 } as const;
 
 /**

@@ -1,11 +1,8 @@
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import { Share, View } from 'react-native';
+import { ReactNode, useRef } from 'react';
+import { Share } from 'react-native';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '@/components/bottom-sheet';
-import { IngredientSelector } from '@/components/item-sheet/add-item/ingredient-selector';
 import {
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -15,15 +12,8 @@ import {
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
 import { db } from '@/lib/instant';
-import { buildRecipeShareURL, navigation } from '@/lib/navigation';
+import { buildRecipeShareURL } from '@/lib/navigation';
 
-import { Button } from '../../../../components/ui/button';
-import { Text } from '../../../../components/ui/text';
-import {
-  SelectGroceryListSheet,
-  SelectGroceryListSheetRef,
-} from '../../../grocery-lists/components/select-grocery-list-sheet';
-import { useGroceryLists } from '../../../grocery-lists/instant/useGroceryLists';
 import { useDeleteRecipe } from '../../hooks/useDeleteRecipe';
 import { useDuplicateRecipe } from '../../hooks/useDuplicateRecipe';
 import { useUpdateRecipe } from '../../hooks/useUpdateRecipe';
@@ -36,87 +26,17 @@ import {
 type RecipeDropdownMenuProps = {
   trigger: ReactNode;
   recipe: RecipeWithIngredients;
-  listId?: string;
 };
 
-export const RecipeDropdownMenu = ({
-  trigger,
-  recipe,
-  listId,
-}: RecipeDropdownMenuProps) => {
+export const RecipeDropdownMenu = ({ trigger, recipe }: RecipeDropdownMenuProps) => {
   const { user } = db.useAuth();
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
-  const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
-  const ingredientSelectorSheetRef = useRef<TrueSheet>(null);
-  const [selectedListIdForIngredients, setSelectedListIdForIngredients] =
-    useState<string | null>(null);
-
-  const { data: groceryLists } = useGroceryLists();
 
   // Check if current user owns the recipe
   const isOwner = recipe.user?.id === user?.id;
   const { mutate: duplicateRecipe } = useDuplicateRecipe();
   const { mutateAsync: deleteRecipe } = useDeleteRecipe();
   const { mutate: updateRecipe } = useUpdateRecipe();
-
-  const handleIngredientSelectorComplete = () => {
-    const listIdToNavigate = selectedListIdForIngredients;
-    ingredientSelectorSheetRef.current?.dismiss();
-    setSelectedListIdForIngredients(null);
-    if (listIdToNavigate) {
-      router.push(navigation.goToList(listIdToNavigate));
-    }
-  };
-
-  const handleIngredientSelectorDismiss = () => {
-    setSelectedListIdForIngredients(null);
-  };
-
-  const handleIngredientSelectorBack = () => {
-    ingredientSelectorSheetRef.current?.dismiss();
-    setSelectedListIdForIngredients(null);
-    // If we came from list selection, show it again
-    if (!listId) {
-      const lists = groceryLists?.grocery_lists ?? [];
-      if (lists.length > 1) {
-        selectListSheetRef.current?.present();
-      }
-    }
-  };
-
-  const showIngredientSelector = (targetListId: string) => {
-    setSelectedListIdForIngredients(targetListId);
-  };
-
-  // Present the sheet when a list ID is selected
-  useEffect(() => {
-    if (selectedListIdForIngredients) {
-      ingredientSelectorSheetRef.current?.present();
-    }
-  }, [selectedListIdForIngredients]);
-
-  const handleAddToList = () => {
-    // If listId prop provided, show ingredient selector directly
-    if (listId) {
-      showIngredientSelector(listId);
-      return;
-    }
-
-    const lists = groceryLists?.grocery_lists ?? [];
-
-    // If only one list, show ingredient selector directly
-    if (lists.length === 1) {
-      showIngredientSelector(lists[0].id);
-      return;
-    }
-
-    // Multiple lists (or none) - show selection sheet first
-    selectListSheetRef.current?.present();
-  };
-
-  const handleListSelected = (selectedListId: string) => {
-    showIngredientSelector(selectedListId);
-  };
 
   const handleDuplicate = () => {
     duplicateRecipe({
@@ -143,9 +63,8 @@ export const RecipeDropdownMenu = ({
       if (result.action === Share.sharedAction) {
         toast.success('Recipe link shared');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to share recipe link');
-      console.error('Error sharing recipe link:', error);
     }
   };
 
@@ -153,8 +72,7 @@ export const RecipeDropdownMenu = ({
     try {
       await deleteRecipe(recipe.id);
       router.back();
-    } catch (error) {
-      console.error('Failed to delete recipe:', error);
+    } catch {
       toast.error('Failed to delete recipe');
     }
   };
@@ -179,8 +97,7 @@ export const RecipeDropdownMenu = ({
         onSuccess: () => {
           toast.success('Recipe updated');
         },
-        onError: error => {
-          console.error('Failed to update recipe:', error);
+        onError: () => {
           toast.error('Failed to update recipe');
         },
       }
@@ -190,13 +107,6 @@ export const RecipeDropdownMenu = ({
     <>
       <DropdownMenuRoot trigger={trigger}>
         <DropdownMenuContent>
-          {isOwner && (
-            <DropdownMenuItem onSelect={handleAddToList} key="add-to-list">
-              <DropdownMenuItemTitle>Add to List</DropdownMenuItemTitle>
-              <DropdownMenuItemIcon ios={{ name: 'cart' }} />
-            </DropdownMenuItem>
-          )}
-
           <DropdownMenuGroup>
             <DropdownMenuItem onSelect={handleShareRecipe} key="share-recipe">
               <DropdownMenuItemTitle>Share Recipe</DropdownMenuItemTitle>
@@ -240,36 +150,6 @@ export const RecipeDropdownMenu = ({
           sourceUrl: recipe.sourceUrl,
         }}
       />
-      <SelectGroceryListSheet
-        ref={selectListSheetRef}
-        selectedListId={undefined}
-        onSelectList={handleListSelected}
-      />
-      <BottomSheet
-        detents={['auto']}
-        name="recipe-ingredient-selector-sheet"
-        ref={ingredientSelectorSheetRef}
-        onStartClose={handleIngredientSelectorDismiss}
-        scrollable
-        viewClassName="flex-1"
-        footer={
-          <View className="px-10 pb-4">
-            <Button onPress={handleAddToList}>
-              <Text>Add to List</Text>
-            </Button>
-          </View>
-        }
-      >
-        {selectedListIdForIngredients && (
-          <IngredientSelector
-            recipe={recipe}
-            listId={selectedListIdForIngredients}
-            onBack={handleIngredientSelectorBack}
-            onComplete={handleIngredientSelectorComplete}
-            onDismiss={() => ingredientSelectorSheetRef.current?.dismiss()}
-          />
-        )}
-      </BottomSheet>
     </>
   );
 };

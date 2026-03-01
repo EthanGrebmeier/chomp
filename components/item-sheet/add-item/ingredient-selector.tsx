@@ -1,5 +1,12 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -87,6 +94,11 @@ type IngredientSelectorProps = {
   onToggleAll?: () => void;
   onAddToList?: () => void;
   isAdding?: boolean;
+  onBusyStateChange?: (isBusy: boolean) => void;
+};
+
+export type IngredientSelectorRef = {
+  submit: () => void;
 };
 
 type SelectedIngredientInput = {
@@ -98,19 +110,26 @@ type SelectedIngredientInput = {
   storeId?: string;
 };
 
-export const IngredientSelector = ({
-  recipe,
-  onBack,
-  onDismiss,
-  selectedIds,
-  onToggleIngredient,
-  onToggleAll,
-  showFooter,
-  listId,
-  onComplete,
-  onAddToList,
-  isAdding,
-}: IngredientSelectorProps) => {
+export const IngredientSelector = forwardRef<
+  IngredientSelectorRef,
+  IngredientSelectorProps
+>(function IngredientSelector(
+  {
+    recipe,
+    onBack,
+    onDismiss,
+    selectedIds,
+    onToggleIngredient,
+    onToggleAll,
+    showFooter,
+    listId,
+    onComplete,
+    onAddToList,
+    isAdding,
+    onBusyStateChange,
+  }: IngredientSelectorProps,
+  ref
+) {
   const router = useRouter();
   const isControlled = Boolean(
     selectedIds && onToggleIngredient && onToggleAll
@@ -178,17 +197,20 @@ export const IngredientSelector = ({
     });
   };
 
-  const buildSelectedIngredients = (): SelectedIngredientInput[] =>
-    recipe.recipe_ingredients
-      .filter(ingredient => effectiveSelectedIds.has(ingredient.id))
-      .map(ingredient => ({
-        name: ingredient.name,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit,
-        notes: ingredient.notes ?? null,
-        category: ingredient.category ?? null,
-        storeId: ingredient.store?.id,
-      }));
+  const buildSelectedIngredients = useCallback(
+    (): SelectedIngredientInput[] =>
+      recipe.recipe_ingredients
+        .filter(ingredient => effectiveSelectedIds.has(ingredient.id))
+        .map(ingredient => ({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          notes: ingredient.notes ?? null,
+          category: ingredient.category ?? null,
+          storeId: ingredient.store?.id,
+        })),
+    [effectiveSelectedIds, recipe.recipe_ingredients]
+  );
 
   const resolveConflict = async (resolution: 'increment' | 'separate') => {
     if (!listId || !pendingConflictIngredients?.length) return;
@@ -215,7 +237,7 @@ export const IngredientSelector = ({
     }
   };
 
-  const handleAdd = async () => {
+  const handleAdd = useCallback(async () => {
     if (onAddToList) {
       onAddToList();
       return;
@@ -247,11 +269,33 @@ export const IngredientSelector = ({
     } finally {
       setIsAddingInternal(false);
     }
-  };
+  }, [
+    buildSelectedIngredients,
+    effectiveSelectedIds.size,
+    listId,
+    onAddToList,
+    onComplete,
+    recipe.id,
+    recipe.name,
+  ]);
 
   const shouldShowFooter = showFooter ?? Boolean(onAddToList ?? listId);
   const isAddingResolved =
     (isAdding ?? isAddingInternal) || isResolvingConflict;
+
+  useEffect(() => {
+    onBusyStateChange?.(isAddingResolved);
+  }, [isAddingResolved, onBusyStateChange]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      submit: () => {
+        void handleAdd();
+      },
+    }),
+    [handleAdd]
+  );
 
   return (
     <>
@@ -260,9 +304,7 @@ export const IngredientSelector = ({
           className="px-4"
           title={recipe.name}
           dismissButton={<BackButton onPress={onBack} />}
-          button={
-            <ExternalLinkButton onPress={handleGoToRecipe} />
-          }
+          button={<ExternalLinkButton onPress={handleGoToRecipe} />}
         />
 
         <View className="flex-row items-center justify-between px-4">
@@ -284,7 +326,7 @@ export const IngredientSelector = ({
 
         <ScrollView
           className="max-h-[500px] min-h-24"
-          contentContainerClassName="b-20"
+          contentContainerClassName="pb-12"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
@@ -332,4 +374,4 @@ export const IngredientSelector = ({
       />
     </>
   );
-};
+});

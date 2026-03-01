@@ -190,7 +190,7 @@ export const GroceryList = ({
   };
 
   const handleOpenRecipes = () => {
-    router.push('/recipes');
+    router.push(navigation.goToRecipes(listId));
   };
 
   const handleOpenMealPlan = () => {

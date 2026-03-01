@@ -1,10 +1,13 @@
-import { MoreHorizontal, PlusIcon } from 'lucide-react-native';
+import {
+  ExternalLinkIcon,
+  MoreHorizontal,
+  PlusIcon,
+} from 'lucide-react-native';
 import { Animated, Linking, View } from 'react-native';
 
 import { Heading } from '../../../components/text/heading';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
-import { ExternalLinkButton } from '../../../components/ui/external-link-button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { db } from '../../../lib/instant';
@@ -16,13 +19,15 @@ import {
   useAddIngredientSheet,
 } from './add-ingredient-sheet';
 import { RecipeDropdownMenu } from './dropdown-menu';
+import { RecipeAddToListButton } from './recipe-add-to-list-button';
 import { RecipeIngredientItem } from './recipe-ingredient-item';
 
 type RecipeDetailContentProps = {
   recipe: RecipeWithIngredients;
+  listId?: string;
 };
 
-const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
+const RecipeDetailContent = ({ recipe, listId }: RecipeDetailContentProps) => {
   const { user } = db.useAuth();
   const { present } = useAddIngredientSheet();
 
@@ -64,9 +69,17 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
       )}
       {recipe.sourceUrl && (
         <View className="px-4">
-          <ExternalLinkButton
+          <Button
+            variant="outline"
             onPress={() => Linking.openURL(recipe.sourceUrl!)}
-          />
+          >
+            <Text>View Recipe Source</Text>
+            <Icon
+              as={ExternalLinkIcon}
+              size={16}
+              className="text-muted-foreground"
+            />
+          </Button>
         </View>
       )}
 
@@ -103,6 +116,9 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
         )}
       </View>
       {isOwner && (
+        <RecipeAddToListButton recipe={recipe} listId={listId} />
+      )}
+      {isOwner && (
         <View className="absolute bottom-6 right-6 z-20">
           <Button size="wide-small" onPress={() => present()}>
             <Icon
@@ -120,12 +136,13 @@ const RecipeDetailContent = ({ recipe }: RecipeDetailContentProps) => {
 
 type RecipeDetailProps = {
   recipe: RecipeWithIngredients;
+  listId?: string;
 };
 
-export const RecipeDetail = ({ recipe }: RecipeDetailProps) => {
+export const RecipeDetail = ({ recipe, listId }: RecipeDetailProps) => {
   return (
     <AddIngredientProvider recipeId={recipe.id}>
-      <RecipeDetailContent recipe={recipe} />
+      <RecipeDetailContent recipe={recipe} listId={listId} />
     </AddIngredientProvider>
   );
 };

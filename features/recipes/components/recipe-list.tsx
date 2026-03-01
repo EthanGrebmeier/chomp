@@ -16,9 +16,10 @@ import { RecipeCard } from './recipe-card';
 
 type RecipeListProps = {
   recipes: RecipeWithIngredients[];
+  listId?: string;
 };
 
-export const RecipeList = ({ recipes }: RecipeListProps) => {
+export const RecipeList = ({ recipes, listId }: RecipeListProps) => {
   const { mutate: deleteRecipe } = useDeleteRecipe();
   const handleDelete = (recipeId: string) => {
     deleteRecipe(recipeId);
@@ -62,7 +63,7 @@ export const RecipeList = ({ recipes }: RecipeListProps) => {
               )}
               onDelete={() => handleDelete(item.id)}
             >
-              <RecipeCard className="w-full" recipe={item} />
+              <RecipeCard className="w-full" recipe={item} listId={listId} />
             </ListItem>
           }
         >
