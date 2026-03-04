@@ -1,10 +1,13 @@
-import { Button } from '@/components/ui/button';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
-import { BottomSheet } from '../../../components/bottom-sheet';
-import { Text } from '../../../components/ui/text';
+
+import { BottomSheet } from '@/components/bottom-sheet';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+
+import { BackButton } from '../../../components/ui/back-button';
 
 export type RecipeConflictSheetRef = {
   present: () => void;
@@ -27,11 +30,11 @@ export const RecipeConflictSheet = forwardRef<
     { recipeName, onIncrement, onCreateSeparate, onCancel, isPending = false },
     ref
   ) => {
-    const bottomSheetRef = useRef<TrueSheet>(null);
+    const sheetRef = useRef<TrueSheet>(null);
 
     useImperativeHandle(ref, () => ({
-      present: () => bottomSheetRef.current?.present(),
-      dismiss: () => bottomSheetRef.current?.dismiss(),
+      present: () => sheetRef.current?.present(),
+      dismiss: () => sheetRef.current?.dismiss(),
     }));
 
     const handleClose = () => {
@@ -42,45 +45,41 @@ export const RecipeConflictSheet = forwardRef<
     return (
       <BottomSheet
         name="recipe-conflict-sheet"
-        ref={bottomSheetRef}
+        ref={sheetRef}
         footer={
-          <View className="px-10 pb-4">
-            <Button onPress={onIncrement} disabled={isPending}>
+          <View className="gap-2 px-10 pb-2">
+            <Button
+              variant="default"
+              onPress={onIncrement}
+              disabled={isPending}
+            >
               <Text>Increment Quantities</Text>
+            </Button>
+            <Button
+              variant="outline"
+              onPress={onCreateSeparate}
+              disabled={isPending}
+            >
+              <Text>Create Separate Items</Text>
             </Button>
           </View>
         }
       >
-        <BottomSheet.SheetView className="pb-safe">
-          <BottomSheet.Header title={`"${recipeName}" Has Similar Items`} />
-          <View className="gap-4">
-            <Text className="text-muted-foreground">
-              Some ingredients already exist with the same name, but different
-              metadata. What would you like to do?
-            </Text>
-
-            <View className="gap-2">
-              <Button
-                onPress={onCreateSeparate}
-                disabled={isPending}
-                variant="outline"
-                className="w-full"
-              >
-                <Text>Create Separate Items</Text>
-              </Button>
-
-              <Button
-                onPress={handleClose}
-                disabled={isPending}
-                variant="ghost"
-                className="w-full"
-              >
-                <Text>Cancel</Text>
-              </Button>
-            </View>
-          </View>
+        <BottomSheet.SheetView className="pb-16">
+          <BottomSheet.Header
+            subsection={
+              <BottomSheet.Subtext className="px-8 text-muted-foreground">
+                Some ingredients already exist with the same name, but different
+                metadata. What would you like to do?
+              </BottomSheet.Subtext>
+            }
+            title={`"${recipeName}" Already Exists`}
+            dismissButton={<BackButton onPress={handleClose} />}
+          />
         </BottomSheet.SheetView>
       </BottomSheet>
     );
   }
 );
+
+RecipeConflictSheet.displayName = 'RecipeConflictSheet';
