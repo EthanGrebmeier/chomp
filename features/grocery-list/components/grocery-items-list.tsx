@@ -62,19 +62,22 @@ export const GroceryItemsList = ({
 
   const expandedSections = expandedSectionsByGroup[groupBy];
 
-  const toggleSection = useCallback((sectionTitle: string) => {
-    setExpandedSectionsByGroup(prev => {
-      const nextByGroup = { ...prev };
-      const next = new Set(nextByGroup[groupBy]);
-      if (next.has(sectionTitle)) {
-        next.delete(sectionTitle);
-      } else {
-        next.add(sectionTitle);
-      }
-      nextByGroup[groupBy] = next;
-      return nextByGroup;
-    });
-  }, [groupBy]);
+  const toggleSection = useCallback(
+    (sectionTitle: string) => {
+      setExpandedSectionsByGroup(prev => {
+        const nextByGroup = { ...prev };
+        const next = new Set(nextByGroup[groupBy]);
+        if (next.has(sectionTitle)) {
+          next.delete(sectionTitle);
+        } else {
+          next.add(sectionTitle);
+        }
+        nextByGroup[groupBy] = next;
+        return nextByGroup;
+      });
+    },
+    [groupBy]
+  );
 
   const { uncheckedItems, checkedItems } = useMemo(() => {
     const nextUncheckedItems = items.filter(item => !item.isChecked);
@@ -177,31 +180,40 @@ export const GroceryItemsList = ({
     }
 
     return { rows, stickyHeaderIndices };
-  }, [checkedItems, expandedSections, groupBy, groupedUncheckedItems, sectionItemCounts]);
+  }, [
+    checkedItems,
+    expandedSections,
+    groupBy,
+    groupedUncheckedItems,
+    sectionItemCounts,
+  ]);
 
-  const handleClearSection = useCallback((sectionTitle: string) => {
-    const itemIds = sectionItemIds.get(sectionTitle) ?? [];
-    if (itemIds.length === 0) return;
+  const handleClearSection = useCallback(
+    (sectionTitle: string) => {
+      const itemIds = sectionItemIds.get(sectionTitle) ?? [];
+      if (itemIds.length === 0) return;
 
-    const sectionLabel = sectionTitle || 'this section';
-    Alert.alert(
-      'Clear section',
-      `Are you sure you want to clear ${sectionLabel}? This action cannot be undone.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: () => {
-            clearGroceryList({ itemIds });
+      const sectionLabel = sectionTitle || 'this section';
+      Alert.alert(
+        'Clear section',
+        `Are you sure you want to clear ${sectionLabel}? This action cannot be undone.`,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
           },
-        },
-      ]
-    );
-  }, [clearGroceryList, sectionItemIds]);
+          {
+            text: 'Clear',
+            style: 'destructive',
+            onPress: () => {
+              clearGroceryList({ itemIds });
+            },
+          },
+        ]
+      );
+    },
+    [clearGroceryList, sectionItemIds]
+  );
 
   const renderSectionHeader = useCallback(
     (row: Extract<GroceryListRow, { type: 'header' }>) => (
@@ -243,7 +255,7 @@ export const GroceryItemsList = ({
       <View className="flex-1 items-center justify-center">
         <View className="w-64">
           <Image
-            source={require('../../../assets/images/grocery-basket.png')}
+            source={require('../../../assets/images/FruitBasket.png')}
             style={{
               width: 'auto',
               height: 180,
