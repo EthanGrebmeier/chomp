@@ -2,17 +2,24 @@ import { id } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { addSavedItemIfNotExists } from '../../saved-items/instant/add-saved-item-if-not-exists';
 import { BaseGroceryItem } from '../types';
+import { upsertLocalSavedItem } from '../../saved-items/local/upsert-local-saved-item';
 
 export const addGroceryListItem = async ({
   listId,
   item,
+  savedItemId,
+  selectedCloudSavedItemStoreId,
+  selectedLocalSavedItemId,
 }: {
   listId: string;
   item: BaseGroceryItem;
+  savedItemId?: string;
+  selectedCloudSavedItemStoreId?: string;
+  selectedLocalSavedItemId?: string;
 }) => {
   const itemId = id();
+  const now = new Date().toISOString();
 
   const transactions = [
     db.tx.grocery_items[itemId].create(
@@ -24,8 +31,8 @@ export const addGroceryListItem = async ({
         notes: item.notes,
         isChecked: false,
         isDeleted: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       })
     ),
     db.tx.grocery_lists[listId].link({
@@ -42,11 +49,58 @@ export const addGroceryListItem = async ({
     );
   }
 
+  if (savedItemId) {
+    transactions.push(
+      db.tx.grocery_items[itemId].link({
+        saved_item: savedItemId,
+      })
+    );
+  }
+
   await db.transact(transactions);
 
-  // Auto-save item to user's saved items if it doesn't exist
-  addSavedItemIfNotExists({
-    name: item.name,
-    category: item.category,
+  if (savedItemId) {
+    await db.transact([
+      db.tx.saved_items[savedItemId].update(
+        trimStringFields({
+          name: item.name,
+          category: item.category ?? null,
+          notes: item.notes ?? null,
+          updatedAt: now,
+        })
+      ),
+    ]);
+
+    const savedItemStoreTransactions = [];
+    if (selectedCloudSavedItemStoreId && !item.storeId) {
+      savedItemStoreTransactions.push(
+        db.tx.saved_items[savedItemId].unlink({
+          store: selectedCloudSavedItemStoreId,
+        })
+      );
+    } else if (item.storeId && item.storeId !== selectedCloudSavedItemStoreId) {
+      if (selectedCloudSavedItemStoreId) {
+        savedItemStoreTransactions.push(
+          db.tx.saved_items[savedItemId].unlink({
+            store: selectedCloudSavedItemStoreId,
+          })
+        );
+      }
+      savedItemStoreTransactions.push(
+        db.tx.saved_items[savedItemId].link({
+          store: item.storeId,
+        })
+      );
+    }
+
+    if (savedItemStoreTransactions.length > 0) {
+      await db.transact(savedItemStoreTransactions);
+    }
+    return;
+  }
+
+  await upsertLocalSavedItem({
+    item,
+    selectedLocalSavedItemId,
   });
 };

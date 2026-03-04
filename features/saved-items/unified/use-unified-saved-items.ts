@@ -44,6 +44,8 @@ export const useUnifiedSavedItems = () => {
       id: item.id,
       name: item.name,
       category: item.category ?? undefined,
+      notes: item.notes ?? undefined,
+      storeId: item.storeId ?? undefined,
       source: 'local' as const,
     }));
 
@@ -51,6 +53,7 @@ export const useUnifiedSavedItems = () => {
       id: item.id,
       name: item.name,
       category: item.category ?? undefined,
+      notes: item.notes ?? undefined,
       storeId: item.store?.id,
       store: item.store ? { id: item.store.id, name: item.store.name } : undefined,
       source: 'cloud' as const,

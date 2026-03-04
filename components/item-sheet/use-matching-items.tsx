@@ -3,12 +3,18 @@ import { useMemo } from 'react';
 import { BaseGroceryItem } from '../../features/grocery-list/types';
 import { useUnifiedSavedItems } from '../../features/saved-items/unified/use-unified-saved-items';
 
+export type MatchingItem = BaseGroceryItem & {
+  source: 'local' | 'cloud';
+  cloudSavedItemId?: string;
+  localSavedItemId?: string;
+};
+
 export const useMatchingItems = (
   value: string
-): { matchingItems: BaseGroceryItem[] } => {
+): { matchingItems: MatchingItem[] } => {
   const { data: savedItems } = useUnifiedSavedItems();
 
-  const matchingItems = useMemo((): BaseGroceryItem[] => {
+  const matchingItems = useMemo((): MatchingItem[] => {
     if (value.length === 0) {
       return [];
     }
@@ -35,12 +41,16 @@ export const useMatchingItems = (
       })
       .slice(0, 7)
       .map(
-        (item): BaseGroceryItem => ({
+        (item): MatchingItem => ({
           name: item.name,
           category: item.category,
           quantity: 1,
           unit: 'each',
+          notes: item.notes,
           storeId: item.storeId,
+          source: item.source,
+          cloudSavedItemId: item.source === 'cloud' ? item.id : undefined,
+          localSavedItemId: item.source === 'local' ? item.id : undefined,
         })
       );
   }, [savedItems, value]);

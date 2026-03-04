@@ -383,14 +383,23 @@ const AddItem = ({ groceryListId }: AddItemProps) => {
   const onSubmit = ({
     item,
     listId,
+    selectedCloudSavedItemId,
+    selectedCloudSavedItemStoreId,
+    selectedLocalSavedItemId,
   }: {
     item: BaseGroceryItem;
     listId?: string;
+    selectedCloudSavedItemId?: string;
+    selectedCloudSavedItemStoreId?: string;
+    selectedLocalSavedItemId?: string;
   }) => {
     if (!listId) return;
     addGroceryListItem({
       listId,
       item,
+      savedItemId: selectedCloudSavedItemId,
+      selectedCloudSavedItemStoreId,
+      selectedLocalSavedItemId,
     });
     toast.success(`${item.name} added`);
   };

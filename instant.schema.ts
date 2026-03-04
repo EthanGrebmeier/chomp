@@ -12,6 +12,7 @@ const _schema = i.schema({
     saved_items: i.entity({
       name: i.string(),
       category: i.string().optional(),
+      notes: i.string().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
@@ -260,6 +261,18 @@ const _schema = i.schema({
       },
       reverse: {
         on: 'stores',
+        has: 'many',
+        label: 'grocery_items',
+      },
+    },
+    grocery_items_saved_items: {
+      forward: {
+        on: 'grocery_items',
+        has: 'one',
+        label: 'saved_item',
+      },
+      reverse: {
+        on: 'saved_items',
         has: 'many',
         label: 'grocery_items',
       },

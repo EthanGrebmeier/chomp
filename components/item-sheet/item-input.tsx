@@ -1,19 +1,18 @@
 import { TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { BaseGroceryItem } from '../../features/grocery-list/types';
 import { cn } from '../../lib/utils';
 import { BottomSheet } from '../bottom-sheet';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Text } from '../ui/text';
 
-import { useMatchingItems } from './use-matching-items';
+import { MatchingItem, useMatchingItems } from './use-matching-items';
 
 type ItemInputProps = {
   placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
-  onSelect: (item: BaseGroceryItem) => void;
+  onSelect: (item: MatchingItem) => void;
   showMatchingItems: boolean;
   setShowMatchingItems: (show: boolean) => void;
   onSubmit: () => void;

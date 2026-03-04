@@ -44,6 +44,7 @@ export const addSavedItemIfNotExists = async (item: BaseSavedItem) => {
       trimStringFields({
         name: item.name,
         category: item.category,
+        notes: item.notes,
         createdAt: now,
         updatedAt: now,
       })

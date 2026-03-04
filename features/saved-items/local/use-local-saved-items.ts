@@ -7,6 +7,8 @@ export type LocalSavedItem = {
   id: string;
   name: string;
   category: string | null;
+  notes: string | null;
+  storeId: string | null;
   createdAt: string;
   updatedAt: string;
 };

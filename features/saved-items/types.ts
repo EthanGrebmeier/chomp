@@ -7,6 +7,7 @@ export type SavedItem = InstaQLEntity<typeof schema, 'saved_items'>;
 export type BaseSavedItem = {
   name: string;
   category?: string;
+  notes?: string;
   storeId?: string;
 };
 
@@ -18,6 +19,7 @@ export type UnifiedSavedItem = {
   id: string;
   name: string;
   category?: string;
+  notes?: string;
   storeId?: string;
   store?: { id: string; name: string };
   source: 'local' | 'cloud';

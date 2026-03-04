@@ -86,9 +86,21 @@ type EditItemProps = {
 
 const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [currentItemName, setCurrentItemName] = useState<string | undefined>(
+    undefined
+  );
   const [currentStoreId, setCurrentStoreId] = useState<string | undefined>(
     undefined
   );
+  const [currentSavedItemId, setCurrentSavedItemId] = useState<
+    string | undefined
+  >(undefined);
+  const [currentSavedItemOwnerId, setCurrentSavedItemOwnerId] = useState<
+    string | undefined
+  >(undefined);
+  const [currentSavedItemStoreId, setCurrentSavedItemStoreId] = useState<
+    string | undefined
+  >(undefined);
   const sheetRef = useRef<TrueSheet>(null);
   const setFromItemRef = useRef<
     ((item: GroceryListItemWithRecipe | BaseGroceryItem) => void) | null
@@ -97,10 +109,16 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   const onSubmit = ({
     item,
     clearedRecipeId,
+    selectedCloudSavedItemId,
+    selectedCloudSavedItemStoreId,
+    selectedLocalSavedItemId,
   }: {
     item: BaseGroceryItem;
     listId?: string;
     clearedRecipeId?: string;
+    selectedCloudSavedItemId?: string;
+    selectedCloudSavedItemStoreId?: string;
+    selectedLocalSavedItemId?: string;
   }) => {
     if (!selectedItemId) return;
 
@@ -115,6 +133,13 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
         storeId: item.storeId,
       },
       currentStoreId,
+      currentSavedItemId,
+      currentSavedItemOwnerId,
+      currentSavedItemStoreId,
+      selectedSavedItemId: selectedCloudSavedItemId,
+      selectedSavedItemStoreId: selectedCloudSavedItemStoreId,
+      selectedLocalSavedItemId,
+      currentItemName,
     });
 
     // Unlink recipe if it was cleared
@@ -132,7 +157,11 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   const present = (item: GroceryListItemWithRecipe) => {
     setFromItemRef.current?.(item);
     setSelectedItemId(item.id);
+    setCurrentItemName(item.name);
     setCurrentStoreId(item.store?.id);
+    setCurrentSavedItemId(item.saved_item?.id);
+    setCurrentSavedItemOwnerId(item.saved_item?.user?.id);
+    setCurrentSavedItemStoreId(item.saved_item?.store?.id);
     sheetRef.current?.present();
   };
 

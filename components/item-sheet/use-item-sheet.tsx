@@ -7,10 +7,12 @@ import {
 } from '../../features/grocery-list/types';
 import { Recipe } from '../../features/recipes/types';
 
+import { MatchingItem } from './use-matching-items';
+
 const itemSheetContext = createContext<{
-  onSelect: (item: BaseGroceryItem) => void;
-  selectedItem: BaseGroceryItem | null;
-  setSelectedItem: (item: BaseGroceryItem | null) => void;
+  onSelect: (item: MatchingItem) => void;
+  selectedItem: MatchingItem | null;
+  setSelectedItem: (item: MatchingItem | null) => void;
   onSubmit: () => void;
   itemInputValue: string;
   itemInputRef: React.RefObject<TextInput | null>;
@@ -55,6 +57,9 @@ type ItemSheetProviderProps = {
     item: BaseGroceryItem;
     listId?: string;
     clearedRecipeId?: string;
+    selectedCloudSavedItemId?: string;
+    selectedCloudSavedItemStoreId?: string;
+    selectedLocalSavedItemId?: string;
   }) => void;
   setFromItemRef?: React.RefObject<
     ((item: GroceryListItemWithRecipe | BaseGroceryItem) => void) | null
@@ -70,7 +75,7 @@ export const ItemSheetProvider = ({
   disableAutocomplete = false,
   mode,
 }: ItemSheetProviderProps) => {
-  const [selectedItem, setSelectedItem] = useState<BaseGroceryItem | null>(
+  const [selectedItem, setSelectedItem] = useState<MatchingItem | null>(
     null
   );
   const [itemInputValue, setItemInputValue] = useState('');
@@ -100,6 +105,7 @@ export const ItemSheetProvider = ({
   };
 
   const setFromItem = (item: GroceryListItemWithRecipe | BaseGroceryItem) => {
+    setSelectedItem(null);
     setItemInputValue(item.name);
     setCategory(item.category);
     setQuantity(item.quantity);
@@ -132,6 +138,17 @@ export const ItemSheetProvider = ({
   const recipeCleared = !!initialRecipeId && !recipe;
 
   const submitItem = () => {
+    const selectedCloudSavedItemId =
+      selectedItem?.source === 'cloud'
+        ? selectedItem.cloudSavedItemId
+        : undefined;
+    const selectedCloudSavedItemStoreId =
+      selectedItem?.source === 'cloud' ? selectedItem.storeId : undefined;
+    const selectedLocalSavedItemId =
+      selectedItem?.source === 'local'
+        ? selectedItem.localSavedItemId
+        : undefined;
+
     onSubmit({
       listId,
       item: {
@@ -143,19 +160,24 @@ export const ItemSheetProvider = ({
         storeId: storeId,
       },
       clearedRecipeId: recipeCleared ? initialRecipeId : undefined,
+      selectedCloudSavedItemId,
+      selectedCloudSavedItemStoreId,
+      selectedLocalSavedItemId,
     });
     reset();
   };
 
-  const onSelect = (item: BaseGroceryItem) => {
+  const onSelect = (item: MatchingItem) => {
     setSelectedItem(item);
     setItemInputValue(item.name);
     setCategory(item.category);
+    setNotesInputValue(item.notes ?? '');
     setStoreId(item.storeId);
     setShowMatchingItems(false);
   };
 
   const onChangeItemText = (text: string) => {
+    setSelectedItem(null);
     setItemInputValue(text);
     setShowMatchingItems(true);
   };

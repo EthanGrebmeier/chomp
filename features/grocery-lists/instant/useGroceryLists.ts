@@ -17,6 +17,10 @@ export const useGroceryLists = () => {
           },
           recipe: {},
           store: {},
+          saved_item: {
+            store: {},
+            user: {},
+          },
         },
       },
     }

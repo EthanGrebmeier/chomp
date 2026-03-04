@@ -132,5 +132,7 @@ export const localSavedItemTable = sqliteTable('local_saved_item', {
   id: text().primaryKey(),
   name: text().notNull(),
   category: text(),
+  notes: text(),
+  storeId: text(),
   ...timestamps,
 });
