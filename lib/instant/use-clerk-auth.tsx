@@ -2,8 +2,10 @@ import { useAuth } from '@clerk/clerk-expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { toast } from 'sonner-native';
 
 import { useInitializeDefaultGroceryList } from '../../features/grocery-lists/instant/useInitializeDefaultGroceryList';
+import { consumeManualSignOutIntent } from '../clerk/signout-intent';
 
 import { db } from '.';
 
@@ -47,6 +49,7 @@ export const InstantAuthHandler = ({
   const { isSignedIn } = useAuth();
   const signInToInstant = useInstantSignIn();
   const authTransitionRef = useRef(false);
+  const previousIsSignedInRef = useRef<boolean | undefined>(isSignedIn);
   const instanceIdRef = useRef(`auth-handler-${Math.random().toString(36).slice(2)}`);
   const [guestInitKey, setGuestInitKey] = useState(0);
   const [isAuthController, setIsAuthController] = useState(false);
@@ -113,6 +116,12 @@ export const InstantAuthHandler = ({
 
     const runAuthTransition = async () => {
       authTransitionRef.current = true;
+      const didTransitionFromSignedIn =
+        previousIsSignedInRef.current === true && isSignedIn === false;
+      const shouldSuppressSignOutToast = didTransitionFromSignedIn
+        ? consumeManualSignOutIntent()
+        : false;
+
       try {
         const existingAuth = await db.getAuth();
         if (isSignedIn) {
@@ -131,8 +140,13 @@ export const InstantAuthHandler = ({
         await db.auth.signOut();
         await db.auth.signInAsGuest();
         setGuestInitKey(prev => prev + 1);
+
+        if (didTransitionFromSignedIn && !shouldSuppressSignOutToast) {
+          toast.info('Your session expired. Please sign in again.');
+        }
       } finally {
         authTransitionRef.current = false;
+        previousIsSignedInRef.current = isSignedIn;
       }
     };
 

@@ -6,6 +6,10 @@ import { toast } from 'sonner-native';
 
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
+import {
+  consumeManualSignOutIntent,
+  markManualSignOutIntent,
+} from '../../../lib/clerk/signout-intent';
 
 const Account = () => {
   const { signOut } = useAuth();
@@ -22,8 +26,10 @@ const Account = () => {
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
+      markManualSignOutIntent();
       await signOut();
     } catch {
+      consumeManualSignOutIntent();
       toast.error('Failed to sign out. Please try again.');
     } finally {
       setIsSigningOut(false);
