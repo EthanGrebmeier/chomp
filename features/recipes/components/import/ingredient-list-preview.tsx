@@ -60,9 +60,6 @@ export const IngredientListHeader = ({
         <Text className="text-xl font-semibold text-foreground">
           Ingredients ({selectedCount}/{totalCount})
         </Text>
-        <Text className="text-xs text-muted-foreground">
-          {isEditable && 'Tap an item to edit'}
-        </Text>
       </View>
       <Button variant="outline" onPress={onToggleAll}>
         <Text className="text-sm">
@@ -107,11 +104,12 @@ export const IngredientListPreview = ({
       {ingredients.map((ingredient, index) => {
         const isSelected = selectedIndices.has(index);
         const quantityDisplay = getIngredientQuantityDisplay(ingredient);
+        const notes = ingredient.notes?.trim();
+
         return (
           <ListItem
             key={`${ingredient.name}-${index}`}
             className={cn(
-              'gap-2 py-2',
               index !== ingredients.length - 1 &&
                 'border-b border-dashed border-border'
             )}
@@ -122,7 +120,7 @@ export const IngredientListPreview = ({
               className="mr-2"
             />
             <HapticPressable
-              className="flex-1 gap-1"
+              className="flex-1"
               onPress={() => onEdit?.(index, ingredient)}
               disabled={!onEdit}
               accessibilityLabel={`Edit ingredient: ${ingredient.name}`}
@@ -146,10 +144,8 @@ export const IngredientListPreview = ({
                   </Text>
                 ) : null}
               </View>
-              {ingredient.notes ? (
-                <Text className="text-sm text-muted-foreground">
-                  {ingredient.notes}
-                </Text>
+              {notes ? (
+                <Text className="text-base text-muted-foreground">{notes}</Text>
               ) : null}
               <View className="min-h-6 flex-row items-center gap-2 pb-1.5">
                 {ingredient.category ? (

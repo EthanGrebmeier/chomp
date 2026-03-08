@@ -39,6 +39,7 @@ export const GroceryListItem = ({
   onEdit,
 }: GroceryListItemProps) => {
   const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
+  const notes = item.notes?.trim();
   const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
@@ -103,7 +104,7 @@ export const GroceryListItem = ({
           />
 
           <HapticPressable
-            className="flex-1"
+            className="flex-1 gap-1"
             onPress={onEdit}
             hapticType="light"
           >
@@ -136,6 +137,16 @@ export const GroceryListItem = ({
                 {formatQuantityUnit(item.quantity, item.unit)}
               </Text>
             </View>
+            {notes ? (
+              <Text
+                className={cn(
+                  'text-base leading-none text-muted-foreground',
+                  internalIsChecked && 'opacity-80'
+                )}
+              >
+                {notes}
+              </Text>
+            ) : null}
             <View className="min-h-5 flex-row items-center gap-2">
               {item.category && <CategoryTag category={item.category} />}
               {item.store?.name && <StoreTag name={item.store.name} />}

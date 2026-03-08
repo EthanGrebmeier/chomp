@@ -92,7 +92,7 @@ export function ImportError({ error }: ImportErrorProps) {
   const showRateLimitInfo = errorCode === 'rate_limited' && rateLimitReset;
 
   return (
-    <View className="items-center py-6">
+    <View className="items-center py-6 pb-20">
       {/* Error Icon */}
       <View className="mb-4 rounded-full bg-destructive/10 p-4">
         <IconComponent size={32} color={theme.destructive} />

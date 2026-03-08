@@ -21,6 +21,8 @@ export const RecipeIngredientItem = ({
   canDelete = true,
 }: RecipeIngredientItemProps) => {
   const { mutate: removeItem } = useRemoveRecipeIngredient();
+  const notes = ingredient.notes?.trim();
+
   return (
     <ListItem
       onDelete={
@@ -39,6 +41,11 @@ export const RecipeIngredientItem = ({
             {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
           </Text>
         </View>
+        {notes ? (
+          <Text className="text-base leading-none text-muted-foreground">
+            {notes}
+          </Text>
+        ) : null}
         <View className="flex-row items-center gap-2">
           {ingredient.category && (
             <CategoryTag category={ingredient.category} />

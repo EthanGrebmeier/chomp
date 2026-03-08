@@ -68,12 +68,13 @@ const RecipeDetailContent = ({ recipe, listId }: RecipeDetailContentProps) => {
         </View>
       )}
       {recipe.sourceUrl && (
-        <View className="px-4">
+        <View className="items-start px-4">
           <Button
-            variant="outline"
+            variant="ghost"
+            className="px-0"
             onPress={() => Linking.openURL(recipe.sourceUrl!)}
           >
-            <Text>View Recipe Source</Text>
+            <Text>Recipe Source</Text>
             <Icon
               as={ExternalLinkIcon}
               size={16}
@@ -115,9 +116,7 @@ const RecipeDetailContent = ({ recipe, listId }: RecipeDetailContentProps) => {
           />
         )}
       </View>
-      {isOwner && (
-        <RecipeAddToListButton recipe={recipe} listId={listId} />
-      )}
+      {isOwner && <RecipeAddToListButton recipe={recipe} listId={listId} />}
       {isOwner && (
         <View className="absolute bottom-6 right-6 z-20">
           <Button size="wide-small" onPress={() => present()}>

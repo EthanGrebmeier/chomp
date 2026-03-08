@@ -7,7 +7,9 @@ import {
 import { useColorScheme } from 'nativewind';
 import {
   forwardRef,
+  ReactElement,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -73,6 +75,8 @@ export const ImportRecipeSheet = forwardRef<
   const [url, setUrl] = useState('');
   const [validationError, setValidationError] = useState<string | undefined>();
   const [draftRecipeName, setDraftRecipeName] = useState('');
+  const [sheetFooter, setSheetFooter] = useState<ReactElement | undefined>();
+  const footerStateKeyRef = useRef('');
 
   // Track if sheet is open to ignore responses after dismissal
   const isSheetOpenRef = useRef(false);
@@ -453,7 +457,7 @@ export const ImportRecipeSheet = forwardRef<
 
   const isPreview = state.status === 'preview';
 
-  const renderFooter = () => {
+  const renderFooter = useCallback(() => {
     if (state.status === 'idle') {
       return (
         <View className="px-10 pb-4">
@@ -505,7 +509,45 @@ export const ImportRecipeSheet = forwardRef<
         </Button>
       </View>
     );
-  };
+  }, [state, url, handleSubmitUrl, handleRetry, handleConfirmImport]);
+
+  const setSheetOptions = useCallback(
+    (options: { footer?: ReactElement }) => {
+      setSheetFooter(options.footer);
+    },
+    []
+  );
+
+  const footerStateKey = (() => {
+    if (state.status === 'idle') {
+      return `idle:${url.trim().length > 0 ? 'enabled' : 'disabled'}`;
+    }
+
+    if (state.status === 'error') {
+      const errorCode = state.error.code as ParseRecipeUrlErrorCode;
+      const isRetryable = RETRYABLE_ERROR_CODES.includes(errorCode);
+      return `error:${errorCode}:${isRetryable ? 'retry' : 'edit'}`;
+    }
+
+    if (state.status === 'preview') {
+      const isNameTooLong = state.editedName.length > MAX_RECIPE_NAME_LENGTH;
+      const hasName = state.editedName.trim().length > 0;
+      return `preview:${state.selectedIndices.size}:${isNameTooLong ? 'long' : 'ok'}:${hasName ? 'named' : 'empty'}`;
+    }
+
+    return `${state.status}:none`;
+  })();
+
+  useEffect(() => {
+    // Keep footer updates in an options-style flow so footer can react to
+    // state transitions without relying on inline sheet props.
+    if (footerStateKeyRef.current === footerStateKey) return;
+    footerStateKeyRef.current = footerStateKey;
+
+    setSheetOptions({
+      footer: renderFooter(),
+    });
+  }, [footerStateKey, renderFooter, setSheetOptions]);
 
   const content = renderContent();
   const isDraftNameTooLong = draftRecipeName.length > MAX_RECIPE_NAME_LENGTH;
@@ -520,7 +562,7 @@ export const ImportRecipeSheet = forwardRef<
         onStartClose={handleClose}
         scrollable={false}
         detents={['auto']}
-        footer={renderFooter()}
+        footer={sheetFooter}
         viewClassName="gap-4"
       >
         {isPreview ? (
