@@ -51,7 +51,7 @@ export const GroceryItemsList = ({
   const { present: presentEditSheet } = useEditItemSheet();
   const { mutate: clearGroceryList } = useClearGroceryList();
 
-  const [expandedSectionsByGroup, setExpandedSectionsByGroup] = useState<
+  const [collapsedSectionsByGroup, setCollapsedSectionsByGroup] = useState<
     Record<GroceryItemsListProps['groupBy'], Set<string>>
   >(() => ({
     category: new Set(),
@@ -60,11 +60,11 @@ export const GroceryItemsList = ({
     store: new Set(),
   }));
 
-  const expandedSections = expandedSectionsByGroup[groupBy];
+  const collapsedSections = collapsedSectionsByGroup[groupBy];
 
   const toggleSection = useCallback(
     (sectionTitle: string) => {
-      setExpandedSectionsByGroup(prev => {
+      setCollapsedSectionsByGroup(prev => {
         const nextByGroup = { ...prev };
         const next = new Set(nextByGroup[groupBy]);
         if (next.has(sectionTitle)) {
@@ -145,7 +145,7 @@ export const GroceryItemsList = ({
       forceExpanded = false
     ) => {
       const showHeader = !(groupBy === 'none' && !sectionTitle);
-      const isExpanded = forceExpanded || expandedSections.has(sectionTitle);
+      const isExpanded = forceExpanded || !collapsedSections.has(sectionTitle);
       const itemCount = sectionItemCounts.get(sectionTitle);
       const shouldRenderItems = isExpanded || !showHeader;
 
@@ -182,7 +182,7 @@ export const GroceryItemsList = ({
     return { rows, stickyHeaderIndices };
   }, [
     checkedItems,
-    expandedSections,
+    collapsedSections,
     groupBy,
     groupedUncheckedItems,
     sectionItemCounts,
