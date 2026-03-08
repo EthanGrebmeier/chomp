@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { Alert, FlatList, View } from 'react-native';
 
 import { EmptyHeading } from '../../../components/text/empty-heading';
@@ -42,8 +43,20 @@ export const RecipeList = ({ recipes, listId }: RecipeListProps) => {
   if (recipes.length === 0) {
     return (
       <View className="flex-1 items-center justify-center px-4">
-        <EmptyHeading>No recipes yet</EmptyHeading>
-        <EmptySubtext>Create your first recipe to get started!</EmptySubtext>
+        <View className="-translate-y-12 items-center">
+          <View className="w-48 ">
+            <Image
+              source={require('../../../assets/images/NoRecipes.png')}
+              style={{
+                width: 'auto',
+                height: 140,
+              }}
+              contentFit="contain"
+            />
+          </View>
+          <EmptyHeading className="mt-4">No recipes yet</EmptyHeading>
+          <EmptySubtext>Create your first recipe to get started!</EmptySubtext>
+        </View>
       </View>
     );
   }
