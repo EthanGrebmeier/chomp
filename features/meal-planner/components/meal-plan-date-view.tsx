@@ -1,4 +1,4 @@
-import { CookingPotIcon } from 'lucide-react-native';
+import { Image } from 'expo-image';
 import { useCallback } from 'react';
 import { Alert, FlatList, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -6,7 +6,6 @@ import { toast } from 'sonner-native';
 
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
-import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { Recipe } from '../../recipes/types';
 import { useAddMealsToGroceryList, useUnmarkMealAdded } from '../hooks';
@@ -156,15 +155,22 @@ export const MealPlanDateView = ({
       <Animated.View
         entering={FadeIn.duration(140)}
         exiting={FadeOut.duration(140)}
-        className="flex-1 items-center justify-center gap-2 px-4"
+        className="flex-1 items-center justify-center px-4"
       >
-        <Icon
-          as={CookingPotIcon}
-          size={48}
-          className="text-muted-foreground"
-        />
-        <EmptyHeading>No meals planned</EmptyHeading>
-        <EmptySubtext>Tap the + button to add a meal</EmptySubtext>
+        <View className="-mt-24">
+          <View className="w-48">
+            <Image
+              source={require('../../../assets/images/NoMeals.png')}
+              style={{
+                width: 'auto',
+                height: 140,
+              }}
+              contentFit="contain"
+            />
+          </View>
+          <EmptyHeading className="mt-4">No meals planned</EmptyHeading>
+          <EmptySubtext>Tap the + button to add a meal</EmptySubtext>
+        </View>
       </Animated.View>
     );
   }
@@ -179,7 +185,10 @@ export const MealPlanDateView = ({
           <Text className="text-lg font-semibold capitalize text-muted-foreground">
             {mealTime}
           </Text>
-          <Animated.View entering={FadeIn.duration(140)} exiting={FadeOut.duration(140)}>
+          <Animated.View
+            entering={FadeIn.duration(140)}
+            exiting={FadeOut.duration(140)}
+          >
             <View className="gap-2">
               {groupedRecipes[mealTime]?.map(mealPlanRecipe => {
                 const recipe = mealPlanRecipe.recipe;

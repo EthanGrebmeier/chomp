@@ -253,23 +253,25 @@ export const GroceryItemsList = ({
   if (totalItemCount === 0) {
     return (
       <View className="flex-1 items-center justify-center">
-        <View className="w-64">
-          <Image
-            source={require('../../../assets/images/FruitBasket.png')}
-            style={{
-              width: 'auto',
-              height: 180,
-            }}
-            contentFit="contain"
-          />
-        </View>
-        <View>
-          <EmptyHeading className="px-4">
-            Your grocery list is empty
-          </EmptyHeading>
-          <EmptySubtext className="px-4">
-            Add some items to get started!
-          </EmptySubtext>
+        <View className="-translate-y-12">
+          <View className="w-64">
+            <Image
+              source={require('../../../assets/images/FruitBasket.png')}
+              style={{
+                width: 'auto',
+                height: 180,
+              }}
+              contentFit="contain"
+            />
+          </View>
+          <View className="mt-4">
+            <EmptyHeading className="px-4">
+              Your grocery list is empty
+            </EmptyHeading>
+            <EmptySubtext className="px-4">
+              Add some items to get started!
+            </EmptySubtext>
+          </View>
         </View>
       </View>
     );
