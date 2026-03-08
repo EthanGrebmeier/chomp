@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -50,10 +51,13 @@ export const InstantAuthHandler = ({
   const signInToInstant = useInstantSignIn();
   const authTransitionRef = useRef(false);
   const previousIsSignedInRef = useRef<boolean | undefined>(isSignedIn);
-  const instanceIdRef = useRef(`auth-handler-${Math.random().toString(36).slice(2)}`);
+  const instanceIdRef = useRef(
+    `auth-handler-${Math.random().toString(36).slice(2)}`
+  );
   const [guestInitKey, setGuestInitKey] = useState(0);
   const [isAuthController, setIsAuthController] = useState(false);
   const [hasAuthLoadingTimedOut, setHasAuthLoadingTimedOut] = useState(false);
+  const router = useRouter();
 
   const {
     isLoading: isLoadingInstant,
@@ -143,6 +147,7 @@ export const InstantAuthHandler = ({
 
         if (didTransitionFromSignedIn && !shouldSuppressSignOutToast) {
           toast.info('Your session expired. Please sign in again.');
+          router.replace('/(auth)/sign-in-email');
         }
       } finally {
         authTransitionRef.current = false;
