@@ -15,6 +15,7 @@ const Account = () => {
   const { signOut } = useAuth();
   const { user } = useUser();
   const [isSigningOut, setIsSigningOut] = useState(false);
+
   const handleNavigateToSignUp = () => {
     router.dismissTo('/(auth)/sign-up-email');
   };
@@ -28,6 +29,7 @@ const Account = () => {
     try {
       markManualSignOutIntent();
       await signOut();
+      router.dismissTo('/(auth)');
     } catch {
       consumeManualSignOutIntent();
       toast.error('Failed to sign out. Please try again.');

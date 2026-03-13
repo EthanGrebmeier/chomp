@@ -1,4 +1,4 @@
-import { useSignUp } from '@clerk/clerk-expo';
+import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -13,13 +13,16 @@ import { toast } from 'sonner-native';
 import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 
 const formatFieldLabel = (field: string) =>
   field.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 
 export default function ContinueSignUp() {
   const { signUp, setActive, isLoaded } = useSignUp();
+  const { signOut } = useAuth();
   const router = useRouter();
+  const signInToInstant = useInstantSignIn();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,7 +34,7 @@ export default function ContinueSignUp() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!signUp?.id) {
-      router.replace('/(auth)/sign-in-email');
+      router.replace('/(auth)');
     }
   }, [isLoaded, router, signUp?.id]);
 
@@ -53,7 +56,17 @@ export default function ContinueSignUp() {
       const result = await signUp.update(formData);
       if (result?.status === 'complete') {
         await setActive({ session: result.createdSessionId });
-        router.replace('/');
+        try {
+          await signInToInstant();
+          router.replace('/(tabs)');
+        } catch {
+          try {
+            await signOut();
+          } catch {
+            // Best effort: keep auth layers aligned when Instant sign-in fails.
+          }
+          toast.error('We could not finish signing you in. Please try again.');
+        }
         return;
       }
 
@@ -107,10 +120,10 @@ export default function ContinueSignUp() {
           {missingFields.length === 0 ? (
             <View className="gap-4">
               <Text variant="muted" className="text-center">
-                No additional details are required. Please return to sign in.
+                No additional details are required. Please return to the welcome screen.
               </Text>
-              <Button onPress={() => router.replace('/(auth)/sign-in-email')}>
-                <Text>Back to Sign In</Text>
+              <Button onPress={() => router.replace('/(auth)')}>
+                <Text>Back to Welcome</Text>
               </Button>
             </View>
           ) : (

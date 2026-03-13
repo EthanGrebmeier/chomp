@@ -147,7 +147,7 @@ export const GroceryListItem = ({
                 {notes}
               </Text>
             ) : null}
-            <View className="min-h-5 flex-row items-center gap-2">
+            <View className="flex-row items-center gap-2 ">
               {item.category && <CategoryTag category={item.category} />}
               {item.store?.name && <StoreTag name={item.store.name} />}
               {item.recipe?.name && <RecipeTag name={item.recipe.name} />}

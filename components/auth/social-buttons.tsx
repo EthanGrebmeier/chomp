@@ -1,4 +1,3 @@
-import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import {
   AppleAuthenticationButton,
   AppleAuthenticationButtonStyle,
@@ -7,6 +6,9 @@ import {
 import { Platform, View, useColorScheme } from 'react-native';
 
 import { useOAuthFlow } from '@/lib/clerk/use-oauth';
+
+import { Button } from '../ui/button';
+import { Text } from '../ui/text';
 
 interface SocialButtonsProps {
   disabled?: boolean;
@@ -44,13 +46,9 @@ export function SocialButtons({
         />
       )}
 
-      <GoogleSigninButton
-        size={GoogleSigninButton.Size.Wide}
-        style={{ height: 40, width: 252, borderRadius: 0 }}
-        color={GoogleSigninButton.Color.Dark}
-        onPress={signInWithGoogle}
-        disabled={isDisabled}
-      />
+      <Button className="h-10 w-[252]" variant="secondary">
+        <Text className="text-sm font-semibold">Sign in with Google</Text>
+      </Button>
     </View>
   );
 }

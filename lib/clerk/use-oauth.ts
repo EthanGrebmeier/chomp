@@ -1,4 +1,4 @@
-import { useSignInWithApple, useSSO } from '@clerk/clerk-expo';
+import { useAuth, useSignInWithApple, useSSO } from '@clerk/clerk-expo';
 import * as AuthSession from 'expo-auth-session';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -26,10 +26,19 @@ const useWarmUpBrowser = () => {
 export function useOAuthFlow() {
   const { startSSOFlow } = useSSO();
   const { startAppleAuthenticationFlow } = useSignInWithApple();
+  const { signOut } = useAuth();
   const router = useRouter();
   const signInToInstant = useInstantSignIn();
 
   const [isLoading, setIsLoading] = useState<OAuthStrategy | null>(null);
+
+  const resetToSignedOutState = useCallback(async () => {
+    try {
+      await signOut();
+    } catch {
+      // Best effort: keep auth layers aligned when Instant sign-in fails.
+    }
+  }, [signOut]);
 
   useWarmUpBrowser();
 
@@ -50,8 +59,13 @@ export function useOAuthFlow() {
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
-        await signInToInstant();
-        router.replace('/');
+        try {
+          await signInToInstant();
+          router.replace('/(tabs)');
+        } catch {
+          await resetToSignedOutState();
+          toast.error('We could not finish signing you in. Please try again.');
+        }
         return;
       }
 
@@ -82,7 +96,7 @@ export function useOAuthFlow() {
     } finally {
       setIsLoading(null);
     }
-  }, [router, signInToInstant, startSSOFlow]);
+  }, [resetToSignedOutState, router, signInToInstant, startSSOFlow]);
 
   const handleAppleSignIn = useCallback(async () => {
     try {
@@ -93,8 +107,13 @@ export function useOAuthFlow() {
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
-        await signInToInstant();
-        router.replace('/');
+        try {
+          await signInToInstant();
+          router.replace('/(tabs)');
+        } catch {
+          await resetToSignedOutState();
+          toast.error('We could not finish signing you in. Please try again.');
+        }
         return;
       }
 
@@ -123,7 +142,12 @@ export function useOAuthFlow() {
     } finally {
       setIsLoading(null);
     }
-  }, [router, signInToInstant, startAppleAuthenticationFlow]);
+  }, [
+    resetToSignedOutState,
+    router,
+    signInToInstant,
+    startAppleAuthenticationFlow,
+  ]);
 
   const signInWithGoogle = useCallback(() => {
     return handleGoogleOAuth();

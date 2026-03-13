@@ -1,4 +1,4 @@
-import { useSignUp } from '@clerk/clerk-expo';
+import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -20,6 +20,7 @@ import { BackButton } from '../../components/ui/back-button';
 
 export default function SignUpEmail() {
   const { signUp, setActive, isLoaded } = useSignUp();
+  const { signOut } = useAuth();
   const router = useRouter();
   const signInToInstant = useInstantSignIn();
 
@@ -31,6 +32,14 @@ export default function SignUpEmail() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [pendingVerification, setPendingVerification] = useState(false);
   const isFormLoading = isSigningUp || isVerifying;
+
+  const resetToSignedOutState = async () => {
+    try {
+      await signOut();
+    } catch {
+      // Best effort: keep auth layers aligned when Instant sign-in fails.
+    }
+  };
 
   const onSignUpPress = async () => {
     if (!isLoaded) {
@@ -62,8 +71,13 @@ export default function SignUpEmail() {
 
       if (signUpAttempt.status === 'complete') {
         await setActive({ session: signUpAttempt.createdSessionId });
-        await signInToInstant();
-        router.replace('/');
+        try {
+          await signInToInstant();
+          router.replace('/(tabs)');
+        } catch {
+          await resetToSignedOutState();
+          toast.error('We could not finish creating your account. Please try again.');
+        }
       } else {
         // Email verification is required
         await signUp.prepareEmailAddressVerification({
@@ -123,8 +137,13 @@ export default function SignUpEmail() {
 
       if (signUpAttempt.status === 'complete') {
         await setActive({ session: signUpAttempt.createdSessionId });
-        await signInToInstant();
-        router.replace('/');
+        try {
+          await signInToInstant();
+          router.replace('/(tabs)');
+        } catch {
+          await resetToSignedOutState();
+          toast.error('We could not finish signing you in. Please try again.');
+        }
       } else {
         toast.error('Verification incomplete. Please try again.');
       }
