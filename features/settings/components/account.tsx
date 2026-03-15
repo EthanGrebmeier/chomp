@@ -16,12 +16,8 @@ const Account = () => {
   const { user } = useUser();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
-  const handleNavigateToSignUp = () => {
-    router.dismissTo('/(auth)/sign-up-email');
-  };
-
   const handleNavigateToSignIn = () => {
-    router.dismissTo('/(auth)/sign-in-email');
+    router.dismissTo('/(auth)/sign-in');
   };
 
   const handleSignOut = async () => {
@@ -33,7 +29,6 @@ const Account = () => {
     } catch {
       consumeManualSignOutIntent();
       toast.error('Failed to sign out. Please try again.');
-    } finally {
       setIsSigningOut(false);
     }
   };
@@ -42,25 +37,21 @@ const Account = () => {
     return (
       <View className="gap-4 rounded-xl bg-muted p-4">
         <View>
-          <Text className="mb-1 text-lg font-medium">Account</Text>
+          <Text className="text-lg font-medium leading-5">Account</Text>
           <Text className="text-sm text-muted-foreground">
             Signed in as a guest
           </Text>
         </View>
-        <Button
-          variant="default"
-          onPress={handleNavigateToSignUp}
-          className="w-full"
-        >
-          <Text>Create an Account</Text>
-        </Button>
-        <Button
-          variant="secondary"
-          onPress={handleNavigateToSignIn}
-          className="w-full"
-        >
-          <Text>Sign In</Text>
-        </Button>
+        <View className="gap-2">
+          <Button
+            variant="secondary"
+            onPress={handleNavigateToSignIn}
+            className="w-full"
+            size="lg"
+          >
+            <Text>Sign In</Text>
+          </Button>
+        </View>
       </View>
     );
   }

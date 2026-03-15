@@ -1,10 +1,8 @@
-import {
-  AppleAuthenticationButton,
-  AppleAuthenticationButtonStyle,
-  AppleAuthenticationButtonType,
-} from 'expo-apple-authentication';
-import { Platform, View, useColorScheme } from 'react-native';
+import { useEffect } from 'react';
+import { ActivityIndicator, Platform } from 'react-native';
 
+import { AppleIcon } from '@/assets/icons/apple';
+import { GoogleIcon } from '@/assets/icons/google';
 import { useOAuthFlow } from '@/lib/clerk/use-oauth';
 
 import { Button } from '../ui/button';
@@ -12,43 +10,68 @@ import { Text } from '../ui/text';
 
 interface SocialButtonsProps {
   disabled?: boolean;
-  type: 'sign-in' | 'sign-up';
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
 export function SocialButtons({
   disabled = false,
-  type = 'sign-in',
+  onLoadingChange,
 }: SocialButtonsProps) {
-  const buttonType =
-    type === 'sign-in'
-      ? AppleAuthenticationButtonType.SIGN_IN
-      : AppleAuthenticationButtonType.SIGN_UP;
-  const isDark = useColorScheme() === 'dark';
   const { signInWithGoogle, signInWithApple, isLoadingGoogle, isLoadingApple } =
     useOAuthFlow();
 
   const isAnyLoading = isLoadingGoogle || isLoadingApple;
   const isDisabled = disabled || isAnyLoading;
 
+  useEffect(() => {
+    onLoadingChange?.(isAnyLoading);
+  }, [isAnyLoading, onLoadingChange]);
+
   return (
-    <View className="mt-4 flex-col items-center justify-center gap-2">
+    <>
       {Platform.OS === 'ios' && (
-        <AppleAuthenticationButton
-          buttonType={buttonType}
-          buttonStyle={
-            isDark
-              ? AppleAuthenticationButtonStyle.WHITE
-              : AppleAuthenticationButtonStyle.BLACK
+        <Button
+          className="w-full"
+          size="xl"
+          variant="secondary"
+          icon={
+            <AppleIcon
+              className="-translate-x-1  text-secondary-foreground"
+              width={24}
+              height={24}
+            />
           }
-          cornerRadius={99}
           onPress={signInWithApple}
-          style={{ height: 40, width: 252 }}
-        />
+          disabled={isDisabled}
+        >
+          {isLoadingApple ? (
+            <ActivityIndicator />
+          ) : (
+            <Text>Sign in with Apple</Text>
+          )}
+        </Button>
       )}
 
-      <Button className="h-10 w-[252]" variant="secondary">
-        <Text className="text-sm font-semibold">Sign in with Google</Text>
+      <Button
+        className="w-full"
+        size="xl"
+        variant="secondary"
+        icon={
+          <GoogleIcon
+            className=" text-secondary-foreground"
+            width={14}
+            height={14}
+          />
+        }
+        onPress={signInWithGoogle}
+        disabled={isDisabled}
+      >
+        {isLoadingGoogle ? (
+          <ActivityIndicator />
+        ) : (
+          <Text>Sign in with Google</Text>
+        )}
       </Button>
-    </View>
+    </>
   );
 }

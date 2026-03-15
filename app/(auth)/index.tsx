@@ -24,7 +24,6 @@ export default function Welcome() {
       router.replace('/(tabs)');
     } catch {
       toast.error('Failed to continue as a guest. Please try again.');
-    } finally {
       setIsContinuingAsGuest(false);
     }
   };
@@ -46,7 +45,7 @@ export default function Welcome() {
         <View className="flex-[2] justify-end gap-4">
           <Button
             size="lg"
-            onPress={() => router.push('/(auth)/sign-in-email')}
+            onPress={() => router.push('/(auth)/sign-in')}
             disabled={isContinuingAsGuest}
           >
             <Text>Sign In</Text>

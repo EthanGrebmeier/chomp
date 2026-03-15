@@ -1,4 +1,4 @@
-import { useAuth, useSignIn } from '@clerk/clerk-expo';
+import { useAuth, useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -7,26 +7,38 @@ import {
   Platform,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
-import { SocialButtons } from '@/components/auth/social-buttons';
-import { TextInput } from '@/components/text-input';
+import { BareTextInput } from '@/components/text-input';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { getEmailLinkRedirectUrl } from '@/lib/clerk/email-link';
 import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 
 export default function SignInEmail() {
-  const { signIn, setActive, isLoaded } = useSignIn();
+  const { signIn, setActive, isLoaded: isSignInLoaded } = useSignIn();
+  const { signUp, isLoaded: isSignUpLoaded } = useSignUp();
   const { signOut } = useAuth();
   const router = useRouter();
   const signInToInstant = useInstantSignIn();
+  const { bottom } = useSafeAreaInsets();
 
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSigningIn, setIsSigningIn] = useState(false);
-  const isBusy = isSigningIn;
+  const [pendingFlow, setPendingFlow] = useState<'sign-in' | 'sign-up' | null>(
+    null
+  );
+  const [isSendingLink, setIsSendingLink] = useState(false);
+  const [isResendingLink, setIsResendingLink] = useState(false);
+  const isLoaded = isSignInLoaded && isSignUpLoaded;
+  const isBusy = isSendingLink || isResendingLink;
+  const emailLinkRedirectUrl = getEmailLinkRedirectUrl();
+
+  const normalizeEmail = () => email.trim().toLowerCase();
 
   const resetToSignedOutState = async () => {
     try {
@@ -36,62 +48,196 @@ export default function SignInEmail() {
     }
   };
 
-  const onSignInPress = async () => {
-    if (!isLoaded) {
+  const completeAuthentication = async (sessionId: string | null) => {
+    if (!setActive) {
       return;
     }
 
-    if (!email || !password) {
-      toast.error('Please enter both email and password');
+    if (!sessionId) {
+      toast.error('We could not finish signing you in. Please try again.');
       return;
     }
 
-    setIsSigningIn(true);
+    await setActive({ session: sessionId });
 
     try {
-      const signInAttempt = await signIn.create({
-        identifier: email,
-        password,
-      });
+      await signInToInstant();
+      router.replace('/(tabs)');
+    } catch {
+      await resetToSignedOutState();
+      toast.error('We could not finish signing you in. Please try again.');
+    }
+  };
 
-      if (signInAttempt.status === 'complete') {
-        await setActive({ session: signInAttempt.createdSessionId });
-        try {
-          await signInToInstant();
-          router.replace('/(tabs)');
-        } catch {
-          await resetToSignedOutState();
-          toast.error('We could not finish signing you in. Please try again.');
-        }
-      } else {
-        // Handle other statuses if needed
-        toast.error('Sign in incomplete. Please try again.');
-      }
+  const sendSignUpEmailLink = async (normalizedEmail: string) => {
+    if (!signUp) {
+      return;
+    }
+
+    // eslint-disable-next-line no-console
+    console.log('[sign-in-email] sending sign-up email link', {
+      emailLinkRedirectUrl,
+      normalizedEmail,
+    });
+
+    const signUpAttempt = await signUp.create({
+      emailAddress: normalizedEmail,
+    });
+
+    if (signUpAttempt.status === 'complete') {
+      await completeAuthentication(signUpAttempt.createdSessionId);
+      return;
+    }
+
+    await signUpAttempt.prepareVerification({
+      strategy: 'email_link',
+      redirectUrl: emailLinkRedirectUrl,
+    });
+
+    setPendingFlow('sign-up');
+  };
+
+  const sendSignInEmailLink = async (normalizedEmail: string) => {
+    if (!signIn) {
+      return;
+    }
+
+    // eslint-disable-next-line no-console
+    console.log('[sign-in-email] sending sign-in email link', {
+      emailLinkRedirectUrl,
+      normalizedEmail,
+    });
+
+    const signInAttempt =
+      signIn.identifier === normalizedEmail
+        ? signIn
+        : await signIn.create({ identifier: normalizedEmail });
+
+    const emailLinkFactor = signInAttempt.supportedFirstFactors?.find(
+      (factor) => factor.strategy === 'email_link'
+    );
+
+    if (!emailLinkFactor || !('emailAddressId' in emailLinkFactor)) {
+      throw new Error('Email link sign-in is not available for this account.');
+    }
+
+    const preparedSignInAttempt = await signInAttempt.prepareFirstFactor({
+      strategy: 'email_link',
+      emailAddressId: emailLinkFactor.emailAddressId,
+      redirectUrl: emailLinkRedirectUrl,
+    });
+
+    if (preparedSignInAttempt.status === 'complete') {
+      await completeAuthentication(preparedSignInAttempt.createdSessionId);
+      return;
+    }
+
+    setPendingFlow('sign-in');
+  };
+
+  const sendEmailLink = async () => {
+    if (!isLoaded || !signIn) {
+      return;
+    }
+
+    const normalizedEmail = normalizeEmail();
+
+    if (!normalizedEmail) {
+      toast.error('Please enter your email');
+      return;
+    }
+
+    try {
+      await sendSignInEmailLink(normalizedEmail);
+      toast.success('Sign-in link sent to your email');
     } catch (err: unknown) {
-      // Handle specific error cases
       if (err && typeof err === 'object' && 'errors' in err) {
         const clerkError = err as {
           errors: { code: string; message: string }[];
         };
-        if (clerkError.errors && clerkError.errors.length > 0) {
-          const error = clerkError.errors[0];
-          if (
-            error.code === 'form_password_incorrect' ||
-            error.code === 'form_identifier_not_found'
-          ) {
-            toast.error('Invalid email or password');
-          } else {
-            toast.error(error.message ?? 'Failed to sign in');
-          }
+        const error = clerkError.errors?.[0];
+
+        if (error?.code === 'form_identifier_not_found') {
+          await sendSignUpEmailLink(normalizedEmail);
+          toast.success('Sign-in link sent to your email');
+        } else if (error?.code === 'invalid_url_scheme') {
+          toast.error(
+            'Email-link redirect is misconfigured. Clerk requires an http or https URL.'
+          );
+        } else if (error?.code === 'form_param_format_invalid') {
+          toast.error('Please enter a valid email address');
+        } else if (error?.code === 'strategy_for_user_invalid') {
+          toast.error(
+            'This account uses a different sign-in method. Try Apple or Google instead.'
+          );
         } else {
-          toast.error('Failed to sign in. Please try again.');
+          toast.error(error?.message ?? 'Failed to send sign-in link');
         }
       } else {
-        toast.error('Failed to sign in. Please try again.');
+        toast.error('Failed to send sign-in link');
       }
-    } finally {
-      setIsSigningIn(false);
     }
+  };
+
+  const onSendLinkPress = async () => {
+    setIsSendingLink(true);
+    try {
+      await sendEmailLink();
+    } catch {
+      toast.error('Failed to send sign-in link');
+    }
+    setIsSendingLink(false);
+  };
+
+  const onResendLink = async () => {
+    if (!isLoaded || !pendingFlow || !signIn || !signUp) {
+      return;
+    }
+
+    const normalizedEmail = normalizeEmail();
+
+    if (!normalizedEmail) {
+      toast.error('Please enter your email');
+      return;
+    }
+
+    setIsResendingLink(true);
+
+    try {
+      if (pendingFlow === 'sign-up') {
+        if (signUp.emailAddress !== normalizedEmail) {
+          await sendSignUpEmailLink(normalizedEmail);
+        } else {
+          // eslint-disable-next-line no-console
+          console.log('[sign-in-email] resending sign-up email link', {
+            emailLinkRedirectUrl,
+            normalizedEmail,
+          });
+          await signUp.prepareVerification({
+            strategy: 'email_link',
+            redirectUrl: emailLinkRedirectUrl,
+          });
+          setPendingFlow('sign-up');
+        }
+      } else {
+        await sendSignInEmailLink(normalizedEmail);
+      }
+
+      toast.success('Sign-in link resent');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'errors' in err) {
+        const clerkError = err as {
+          errors: { code: string; message: string }[];
+        };
+        toast.error(
+          clerkError.errors?.[0]?.message ?? 'Failed to resend sign-in link'
+        );
+      } else {
+        toast.error('Failed to resend sign-in link');
+      }
+    }
+
+    setIsResendingLink(false);
   };
 
   if (!isLoaded) {
@@ -106,72 +252,96 @@ export default function SignInEmail() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="top-safe absolute left-4">
+      <View className="px-4 pt-2">
         <BackButton />
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
         className="flex-1"
       >
-        <View className="flex-1 justify-center px-6">
-          <View className="mb-8 gap-2">
-            <Text variant="h1">Sign In</Text>
-            <Text variant="muted" className="text-center">
-              Continue with your account to sync across devices.
-            </Text>
-          </View>
+        <View
+          className="flex-1 justify-between px-4 pt-8"
+          style={{ paddingBottom: bottom + 16 }}
+        >
+          {!pendingFlow ? (
+            <>
+              <View className="w-full gap-6">
+                <View className="w-full items-start justify-start gap-2">
+                  <Text variant="h1">Sign In with Email</Text>
+                  <View>
+                    <Text variant="muted">
+                      Enter your email and we&apos;ll send you a sign-in link
+                    </Text>
+                  </View>
+                </View>
 
-          <View className="gap-4">
-            <TextInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-              textContentType="emailAddress"
-              editable={!isBusy}
-            />
+                <View className="gap-4">
+                  <BareTextInput
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    autoFocus
+                    keyboardType="email-address"
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    editable={!isBusy}
+                    className="text-xl"
+                  />
+                </View>
+              </View>
 
-            <TextInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="password"
-              textContentType="password"
-              editable={!isBusy}
-            />
+              <View className="w-full items-center">
+                <Button
+                  className="w-full"
+                  onPress={onSendLinkPress}
+                  disabled={isBusy}
+                  size="lg"
+                >
+                  {isSendingLink ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text>Send Sign-In Link</Text>
+                  )}
+                </Button>
+              </View>
+            </>
+          ) : (
+            <>
+              <View className="w-full items-start justify-start gap-2">
+                <Text variant="h1">Check Your Email</Text>
+                <View>
+                  <Text variant="muted">
+                    We sent a sign-in link to {normalizeEmail()}.
+                  </Text>
+                  <Text variant="muted">
+                    Open it on this device to continue.
+                  </Text>
+                </View>
+              </View>
 
-            <Button
-              onPress={onSignInPress}
-              disabled={isBusy}
-              size="lg"
-              className="mt-4"
-            >
-              {isSigningIn ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text>Sign In</Text>
-              )}
-            </Button>
+              <View className="items-center gap-4">
+                <Button onPress={onResendLink} disabled={isBusy} size="xl">
+                  {isResendingLink ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text>Resend Sign-In Link</Text>
+                  )}
+                </Button>
 
-            <SocialButtons disabled={isBusy} type="sign-in" />
-            <View className="mt-6 flex-row items-center justify-center">
-              <Text variant="muted" className="text-sm">
-                Don&apos;t have an account?{' '}
-              </Text>
-              <Button
-                variant="ghost"
-                size="sm"
-                onPress={() => router.push('/(auth)/sign-up-email')}
-                disabled={isBusy}
-              >
-                <Text className="text-sm font-semibold">Sign Up</Text>
-              </Button>
-            </View>
-          </View>
+                <Button
+                  variant="secondary"
+                  size="xl"
+                  className="w-full"
+                  onPress={() => setPendingFlow(null)}
+                  disabled={isBusy}
+                >
+                  <Text>Use a Different Email</Text>
+                </Button>
+              </View>
+            </>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

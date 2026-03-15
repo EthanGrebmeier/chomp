@@ -8,6 +8,7 @@ import { ComponentProps, ReactElement, forwardRef } from 'react';
 import { TextInput as RNTextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BareTextInput } from '@/components/text-input';
 import { cn } from '@/lib/utils';
 
 import { THEME } from '../lib/theme';
@@ -85,23 +86,6 @@ const TextInput = forwardRef<
   );
 });
 TextInput.displayName = 'TextInput';
-const BareTextInput = forwardRef<
-  React.ComponentRef<typeof RNTextInput>,
-  BottomSheetTextInputProps
->(({ className, ...props }, ref) => {
-  return (
-    <RNTextInput
-      {...props}
-      ref={ref}
-      className={cn(
-        'min-h-8 border-none bg-transparent text-xl leading-8 text-foreground',
-        className
-      )}
-    />
-  );
-});
-BareTextInput.displayName = 'BareTextInput';
-
 type HeaderProps = {
   title: string;
   subsection?: React.ReactNode;

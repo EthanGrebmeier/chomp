@@ -1,5 +1,10 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import { GestureResponderEvent, Platform } from 'react-native';
+import {
+  GestureResponderEvent,
+  Platform,
+  View,
+  type PressableStateCallbackType,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -15,7 +20,7 @@ const AnimatedHapticPressable =
 
 const buttonVariants = cva(
   cn(
-    'group shrink-0 flex-row items-center justify-center gap-2 rounded-full shadow-none transition-opacity',
+    'group relative shrink-0 items-center justify-center rounded-full shadow-none transition-opacity',
     Platform.select({
       web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
     })
@@ -59,8 +64,12 @@ const buttonVariants = cva(
           Platform.select({ web: 'has-[>svg]:px-2.5' })
         ),
         lg: cn(
-          'h-11 px-6 sm:h-10',
+          'h-10 px-6 sm:h-10',
           Platform.select({ web: 'has-[>svg]:px-4' })
+        ),
+        xl: cn(
+          'h-12 px-8 sm:h-12',
+          Platform.select({ web: 'has-[>svg]:px-6' })
         ),
         'wide-small': cn('h-10 w-24'),
         icon: 'size-8',
@@ -77,7 +86,7 @@ const buttonVariants = cva(
 
 const buttonTextVariants = cva(
   cn(
-    'text-foreground text-xl font-bold',
+    'text-foreground text-base font-medium',
     Platform.select({ web: 'pointer-events-none transition-colors' })
   ),
   {
@@ -102,6 +111,7 @@ const buttonTextVariants = cva(
         default: '',
         sm: '',
         lg: '',
+        xl: '',
         'wide-small': '',
         icon: '',
         iconLg: '',
@@ -115,8 +125,59 @@ const buttonTextVariants = cva(
   }
 );
 
+type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>['size']>;
+type ButtonIconPosition = 'left' | 'right';
+
+const floatingIconOffsets: Record<
+  ButtonSize,
+  Record<ButtonIconPosition, string>
+> = {
+  default: {
+    left: 'left-3',
+    right: 'right-3',
+  },
+  sm: {
+    left: 'left-2.5',
+    right: 'right-2.5',
+  },
+  lg: {
+    left: 'left-3.5',
+    right: 'right-3.5',
+  },
+  xl: {
+    left: 'left-4',
+    right: 'right-4',
+  },
+  'wide-small': {
+    left: 'left-3',
+    right: 'right-3',
+  },
+  icon: {
+    left: 'left-2',
+    right: 'right-2',
+  },
+  iconLg: {
+    left: 'left-4',
+    right: 'right-4',
+  },
+  circle: {
+    left: 'left-2',
+    right: 'right-2',
+  },
+};
+
 type ButtonProps = React.ComponentProps<typeof HapticPressable> &
   VariantProps<typeof buttonVariants> & {
+    /**
+     * Optional icon anchored to the left or right edge
+     * while keeping the main button content centered.
+     */
+    icon?: React.ReactNode;
+    /**
+     * Which side to anchor the icon to.
+     * @default 'left'
+     */
+    iconPosition?: ButtonIconPosition;
     /**
      * Whether to trigger haptic feedback on press
      * @default true
@@ -139,6 +200,9 @@ function Button({
   className,
   variant,
   size,
+  children,
+  icon,
+  iconPosition = 'left',
   haptic = true,
   hapticType = 'light',
   onPressIn,
@@ -147,6 +211,8 @@ function Button({
   ...props
 }: ButtonProps) {
   const scale = useSharedValue(1);
+  const resolvedSize = size ?? 'default';
+  const hasFloatingIcon = Boolean(icon);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -168,6 +234,26 @@ function Button({
     onPressOut?.(event);
   };
 
+  const renderButtonContents = (content: React.ReactNode) => (
+    <>
+      {hasFloatingIcon ? (
+        <View
+          pointerEvents="none"
+          className={cn(
+            'absolute inset-y-0 justify-center',
+            floatingIconOffsets[resolvedSize][iconPosition]
+          )}
+        >
+          {icon}
+        </View>
+      ) : null}
+
+      <View className="flex-row items-center justify-center gap-2">
+        {content}
+      </View>
+    </>
+  );
+
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
       <AnimatedHapticPressable
@@ -183,7 +269,12 @@ function Button({
         onPressOut={handlePressOut}
         style={[animatedStyle, style]}
         {...props}
-      />
+      >
+        {typeof children === 'function'
+          ? (state: PressableStateCallbackType) =>
+              renderButtonContents(children(state))
+          : renderButtonContents(children)}
+      </AnimatedHapticPressable>
     </TextClassContext.Provider>
   );
 }

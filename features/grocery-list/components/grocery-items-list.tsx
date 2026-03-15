@@ -54,10 +54,10 @@ export const GroceryItemsList = ({
   const [collapsedSectionsByGroup, setCollapsedSectionsByGroup] = useState<
     Record<GroceryItemsListProps['groupBy'], Set<string>>
   >(() => ({
-    category: new Set(),
-    none: new Set(),
-    recipe: new Set(),
-    store: new Set(),
+    category: new Set(['Checked']),
+    none: new Set(['Checked']),
+    recipe: new Set(['Checked']),
+    store: new Set(['Checked']),
   }));
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
