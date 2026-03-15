@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 // Ensure web browser auth sessions are properly closed
 WebBrowser.maybeCompleteAuthSession();
@@ -56,11 +57,15 @@ export function useOAuthFlow() {
           strategy: 'oauth_google',
           redirectUrl,
         });
+      const shouldCreateDefaultList = signUp?.status === 'complete';
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
         try {
           await signInToInstant();
+          if (shouldCreateDefaultList) {
+            await initializeDefaultGroceryList();
+          }
           router.replace('/(tabs)');
         } catch {
           await resetToSignedOutState();
@@ -81,6 +86,7 @@ export function useOAuthFlow() {
 
       toast.error('Sign in incomplete. Please try again.');
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('OAuth error:', err);
       // Don't show error for user cancellation
       if (
@@ -104,11 +110,15 @@ export function useOAuthFlow() {
 
       const { createdSessionId, setActive, signIn, signUp } =
         await startAppleAuthenticationFlow();
+      const shouldCreateDefaultList = signUp?.status === 'complete';
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
         try {
           await signInToInstant();
+          if (shouldCreateDefaultList) {
+            await initializeDefaultGroceryList();
+          }
           router.replace('/(tabs)');
         } catch {
           await resetToSignedOutState();
@@ -137,6 +147,7 @@ export function useOAuthFlow() {
       ) {
         return;
       }
+      // eslint-disable-next-line no-console
       console.error('Apple sign in error:', err);
       toast.error('Apple sign in failed. Please try again.');
     } finally {

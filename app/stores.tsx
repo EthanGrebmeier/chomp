@@ -32,7 +32,7 @@ const StoresContent = () => {
   }, [stores, searchQuery]);
 
   return (
-    <View className="pt-safe flex-1 bg-background">
+    <View className="flex-1 bg-background pt-6">
       {/* Header */}
       <View className="flex-row items-center gap-3 px-4">
         <BackButton href="/settings" />

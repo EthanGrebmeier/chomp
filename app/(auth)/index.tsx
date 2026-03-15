@@ -8,6 +8,7 @@ import { toast } from 'sonner-native';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useContinueAsGuest } from '@/lib/instant/use-continue-as-guest';
+import { navigation } from '@/lib/navigation';
 
 const appIcon = require('../../assets/images/icon.png');
 
@@ -20,8 +21,8 @@ export default function Welcome() {
     setIsContinuingAsGuest(true);
 
     try {
-      await continueAsGuest();
-      router.replace('/(tabs)');
+      const listId = await continueAsGuest();
+      router.replace(navigation.goToList(listId ?? undefined));
     } catch {
       toast.error('Failed to continue as a guest. Please try again.');
       setIsContinuingAsGuest(false);
@@ -42,9 +43,10 @@ export default function Welcome() {
           </Text>
         </View>
 
-        <View className="flex-[2] justify-end gap-4">
+        <View className="flex-[2] justify-end gap-2">
           <Button
-            size="lg"
+            size="xl"
+            className="w-full"
             onPress={() => router.push('/(auth)/sign-in')}
             disabled={isContinuingAsGuest}
           >
@@ -53,7 +55,7 @@ export default function Welcome() {
 
           <Button
             variant="secondary"
-            size="lg"
+            size="xl"
             onPress={handleContinueAsGuest}
             disabled={isContinuingAsGuest}
           >

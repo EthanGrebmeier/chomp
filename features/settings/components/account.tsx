@@ -71,6 +71,7 @@ const Account = () => {
         onPress={handleSignOut}
         disabled={isSigningOut}
         className="w-full"
+        size="lg"
       >
         {isSigningOut ? (
           <ActivityIndicator color="white" />

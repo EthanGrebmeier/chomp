@@ -13,6 +13,7 @@ import { toast } from 'sonner-native';
 import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 
 const formatFieldLabel = (field: string) =>
@@ -58,6 +59,7 @@ export default function ContinueSignUp() {
         await setActive({ session: result.createdSessionId });
         try {
           await signInToInstant();
+          await initializeDefaultGroceryList();
           router.replace('/(tabs)');
         } catch {
           try {

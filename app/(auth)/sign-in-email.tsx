@@ -1,12 +1,13 @@
 import { useAuth, useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   View,
 } from 'react-native';
+import { OtpInput, OtpInputRef } from 'react-native-otp-entry';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -17,28 +18,160 @@ import { BareTextInput } from '@/components/text-input';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
+import { useTheme } from '@/hooks/use-theme';
 import { getEmailLinkRedirectUrl } from '@/lib/clerk/email-link';
 import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
+
+type PendingFlow = 'sign-in' | 'sign-up';
+type EmailDeliveryStrategy = 'email_code' | 'email_link';
+type ClerkError = {
+  errors?: {
+    code?: string;
+    longMessage?: string;
+    message?: string;
+    meta?: unknown;
+  }[];
+  status?: number;
+};
+
+const getClerkError = (error: unknown) => {
+  if (!error || typeof error !== 'object' || !('errors' in error)) {
+    return null;
+  }
+
+  return (error as ClerkError).errors?.[0] ?? null;
+};
+
+const getErrorMessage = (error: unknown) => {
+  const clerkError = getClerkError(error);
+  if (clerkError?.longMessage) {
+    return clerkError.longMessage;
+  }
+
+  if (clerkError?.message) {
+    return clerkError.message;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return null;
+};
+
+const maskEmail = (value: string) => {
+  const normalizedValue = value.trim().toLowerCase();
+  const [localPart, domainPart] = normalizedValue.split('@');
+
+  if (!localPart || !domainPart) {
+    return normalizedValue;
+  }
+
+  const visibleLocalPart = localPart.slice(0, 2);
+  return `${visibleLocalPart}***@${domainPart}`;
+};
+
+const getClerkErrorPayload = (error: unknown) => {
+  const clerkError = getClerkError(error);
+
+  return {
+    message: getErrorMessage(error),
+    code: clerkError?.code,
+    longMessage: clerkError?.longMessage,
+    meta: clerkError?.meta,
+    status:
+      error && typeof error === 'object' && 'status' in error
+        ? (error as ClerkError).status
+        : undefined,
+  };
+};
+
+const logEmailAuth = (message: string, payload?: unknown) => {
+  if (payload === undefined) {
+    // eslint-disable-next-line no-console
+    console.log(`[sign-in-email] ${message}`);
+    return;
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`[sign-in-email] ${message}`, payload);
+};
+
+const warnEmailAuth = (message: string, payload?: unknown) => {
+  if (payload === undefined) {
+    // eslint-disable-next-line no-console
+    console.warn(`[sign-in-email] ${message}`);
+    return;
+  }
+
+  // eslint-disable-next-line no-console
+  console.warn(`[sign-in-email] ${message}`, payload);
+};
+
+const errorEmailAuth = (message: string, payload?: unknown) => {
+  if (payload === undefined) {
+    // eslint-disable-next-line no-console
+    console.error(`[sign-in-email] ${message}`);
+    return;
+  }
+
+  // eslint-disable-next-line no-console
+  console.error(`[sign-in-email] ${message}`, payload);
+};
+
+const isEmailCodeUnavailableError = (error: unknown) => {
+  const clerkError = getClerkError(error);
+  const details = [
+    clerkError?.code,
+    clerkError?.message,
+    clerkError?.longMessage,
+    error instanceof Error ? error.message : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return (
+    details.includes('email_code') ||
+    details.includes('email code') ||
+    details.includes('first factor') ||
+    details.includes('strategy')
+  );
+};
+
+const getEmailDeliverySuccessMessage = (strategy: EmailDeliveryStrategy) =>
+  strategy === 'email_code'
+    ? 'Verification code sent to your email'
+    : 'Verification link sent to your email';
 
 export default function SignInEmail() {
   const { signIn, setActive, isLoaded: isSignInLoaded } = useSignIn();
   const { signUp, isLoaded: isSignUpLoaded } = useSignUp();
   const { signOut } = useAuth();
-  const router = useRouter();
+  const { replace } = useRouter();
   const signInToInstant = useInstantSignIn();
   const { bottom } = useSafeAreaInsets();
+  const theme = useTheme();
+  const otpRef = useRef<OtpInputRef>(null);
 
   const [email, setEmail] = useState('');
-  const [pendingFlow, setPendingFlow] = useState<'sign-in' | 'sign-up' | null>(
-    null
-  );
-  const [isSendingLink, setIsSendingLink] = useState(false);
-  const [isResendingLink, setIsResendingLink] = useState(false);
+  const [code, setCode] = useState('');
+  const [pendingFlow, setPendingFlow] = useState<PendingFlow | null>(null);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [isResendingCode, setIsResendingCode] = useState(false);
   const isLoaded = isSignInLoaded && isSignUpLoaded;
-  const isBusy = isSendingLink || isResendingLink;
-  const emailLinkRedirectUrl = getEmailLinkRedirectUrl();
+  const isBusy = isSendingCode || isVerifyingCode || isResendingCode;
+  const signInEmailLinkRedirectUrl = getEmailLinkRedirectUrl('sign-in');
+  const signUpEmailLinkRedirectUrl = getEmailLinkRedirectUrl('sign-up');
 
   const normalizeEmail = () => email.trim().toLowerCase();
+  const normalizeCode = () => code.replace(/\D/g, '').trim();
+  const clearCodeInput = useCallback(() => {
+    setCode('');
+    otpRef.current?.clear();
+  }, []);
 
   const resetToSignedOutState = async () => {
     try {
@@ -48,94 +181,230 @@ export default function SignInEmail() {
     }
   };
 
-  const completeAuthentication = async (sessionId: string | null) => {
+  const completeAuthentication = async (
+    sessionId: string | null,
+    options: { shouldCreateDefaultList?: boolean } = {}
+  ) => {
+    const { shouldCreateDefaultList = false } = options;
+
     if (!setActive) {
+      errorEmailAuth(
+        'setActive was unavailable while completing authentication'
+      );
       return;
     }
 
     if (!sessionId) {
+      errorEmailAuth('missing session id while completing authentication');
       toast.error('We could not finish signing you in. Please try again.');
       return;
     }
 
+    logEmailAuth('activating Clerk session', {
+      hasSessionId: Boolean(sessionId),
+    });
     await setActive({ session: sessionId });
 
     try {
       await signInToInstant();
-      router.replace('/(tabs)');
-    } catch {
+      if (shouldCreateDefaultList) {
+        await initializeDefaultGroceryList();
+      }
+      replace('/(tabs)');
+    } catch (error) {
+      errorEmailAuth('Instant sign-in failed after Clerk auth completed', {
+        error: getClerkErrorPayload(error),
+      });
       await resetToSignedOutState();
       toast.error('We could not finish signing you in. Please try again.');
     }
   };
 
-  const sendSignUpEmailLink = async (normalizedEmail: string) => {
+  const sendSignUpEmailCode = async (
+    normalizedEmail: string
+  ): Promise<EmailDeliveryStrategy> => {
     if (!signUp) {
-      return;
+      throw new Error('Sign-up is not ready yet.');
     }
 
-    // eslint-disable-next-line no-console
-    console.log('[sign-in-email] sending sign-up email link', {
-      emailLinkRedirectUrl,
-      normalizedEmail,
+    logEmailAuth('starting sign-up email delivery', {
+      email: maskEmail(normalizedEmail),
     });
 
     const signUpAttempt = await signUp.create({
       emailAddress: normalizedEmail,
     });
 
-    if (signUpAttempt.status === 'complete') {
-      await completeAuthentication(signUpAttempt.createdSessionId);
-      return;
-    }
-
-    await signUpAttempt.prepareVerification({
-      strategy: 'email_link',
-      redirectUrl: emailLinkRedirectUrl,
+    logEmailAuth('created sign-up attempt', {
+      email: maskEmail(normalizedEmail),
+      status: signUpAttempt.status,
     });
 
-    setPendingFlow('sign-up');
+    if (signUpAttempt.status === 'complete') {
+      await completeAuthentication(signUpAttempt.createdSessionId, {
+        shouldCreateDefaultList: true,
+      });
+      return 'email_code';
+    }
+
+    try {
+      await signUpAttempt.prepareEmailAddressVerification({
+        strategy: 'email_code',
+      });
+
+      logEmailAuth('sent sign-up email code', {
+        email: maskEmail(normalizedEmail),
+      });
+
+      setPendingFlow('sign-up');
+      clearCodeInput();
+      return 'email_code';
+    } catch (error) {
+      if (!isEmailCodeUnavailableError(error)) {
+        throw error;
+      }
+
+      warnEmailAuth(
+        'email code unavailable for sign-up, falling back to email link',
+        {
+          email: maskEmail(normalizedEmail),
+          error: getClerkErrorPayload(error),
+          redirectUrl: signUpEmailLinkRedirectUrl,
+        }
+      );
+
+      await signUpAttempt.prepareEmailAddressVerification({
+        strategy: 'email_link',
+        redirectUrl: signUpEmailLinkRedirectUrl,
+      });
+
+      logEmailAuth('sent sign-up email link fallback', {
+        email: maskEmail(normalizedEmail),
+      });
+
+      setPendingFlow(null);
+      clearCodeInput();
+      return 'email_link';
+    }
   };
 
-  const sendSignInEmailLink = async (normalizedEmail: string) => {
+  const sendSignInEmailCode = async (
+    normalizedEmail: string
+  ): Promise<EmailDeliveryStrategy> => {
     if (!signIn) {
-      return;
+      throw new Error('Sign-in is not ready yet.');
     }
-
-    // eslint-disable-next-line no-console
-    console.log('[sign-in-email] sending sign-in email link', {
-      emailLinkRedirectUrl,
-      normalizedEmail,
-    });
 
     const signInAttempt =
       signIn.identifier === normalizedEmail
         ? signIn
         : await signIn.create({ identifier: normalizedEmail });
 
-    const emailLinkFactor = signInAttempt.supportedFirstFactors?.find(
-      (factor) => factor.strategy === 'email_link'
-    );
+    const supportedStrategies =
+      signInAttempt.supportedFirstFactors?.map(factor => factor.strategy) ?? [];
 
-    if (!emailLinkFactor || !('emailAddressId' in emailLinkFactor)) {
-      throw new Error('Email link sign-in is not available for this account.');
-    }
-
-    const preparedSignInAttempt = await signInAttempt.prepareFirstFactor({
-      strategy: 'email_link',
-      emailAddressId: emailLinkFactor.emailAddressId,
-      redirectUrl: emailLinkRedirectUrl,
+    logEmailAuth('loaded sign-in attempt factors', {
+      email: maskEmail(normalizedEmail),
+      identifier: signInAttempt.identifier,
+      supportedStrategies,
     });
 
-    if (preparedSignInAttempt.status === 'complete') {
-      await completeAuthentication(preparedSignInAttempt.createdSessionId);
-      return;
+    const emailCodeFactor = signInAttempt.supportedFirstFactors?.find(
+      factor => factor.strategy === 'email_code'
+    );
+    const emailLinkFactor = signInAttempt.supportedFirstFactors?.find(
+      factor => factor.strategy === 'email_link'
+    );
+
+    if (
+      !emailCodeFactor &&
+      emailLinkFactor &&
+      'emailAddressId' in emailLinkFactor
+    ) {
+      warnEmailAuth(
+        'email code unsupported for sign-in, falling back to email link',
+        {
+          email: maskEmail(normalizedEmail),
+          supportedStrategies,
+          redirectUrl: signInEmailLinkRedirectUrl,
+        }
+      );
+
+      const preparedSignInAttempt = await signInAttempt.prepareFirstFactor({
+        strategy: 'email_link',
+        emailAddressId: emailLinkFactor.emailAddressId,
+        redirectUrl: signInEmailLinkRedirectUrl,
+      });
+
+      if (preparedSignInAttempt.status === 'complete') {
+        await completeAuthentication(preparedSignInAttempt.createdSessionId);
+      }
+
+      setPendingFlow(null);
+      clearCodeInput();
+      return 'email_link';
     }
 
-    setPendingFlow('sign-in');
+    if (!emailCodeFactor || !('emailAddressId' in emailCodeFactor)) {
+      throw new Error('Email sign-in is not available for this account.');
+    }
+
+    try {
+      const preparedSignInAttempt = await signInAttempt.prepareFirstFactor({
+        strategy: 'email_code',
+        emailAddressId: emailCodeFactor.emailAddressId,
+      });
+
+      logEmailAuth('prepared sign-in first factor', {
+        email: maskEmail(normalizedEmail),
+        status: preparedSignInAttempt.status,
+        strategy: 'email_code',
+      });
+
+      if (preparedSignInAttempt.status === 'complete') {
+        await completeAuthentication(preparedSignInAttempt.createdSessionId);
+        return 'email_code';
+      }
+
+      setPendingFlow('sign-in');
+      clearCodeInput();
+      return 'email_code';
+    } catch (error) {
+      if (
+        !emailLinkFactor ||
+        !('emailAddressId' in emailLinkFactor) ||
+        !isEmailCodeUnavailableError(error)
+      ) {
+        throw error;
+      }
+
+      warnEmailAuth(
+        'failed to prepare email code for sign-in, falling back to email link',
+        {
+          email: maskEmail(normalizedEmail),
+          error: getClerkErrorPayload(error),
+          supportedStrategies,
+          redirectUrl: signInEmailLinkRedirectUrl,
+        }
+      );
+
+      const preparedSignInAttempt = await signInAttempt.prepareFirstFactor({
+        strategy: 'email_link',
+        emailAddressId: emailLinkFactor.emailAddressId,
+        redirectUrl: signInEmailLinkRedirectUrl,
+      });
+
+      if (preparedSignInAttempt.status === 'complete') {
+        await completeAuthentication(preparedSignInAttempt.createdSessionId);
+      }
+
+      setPendingFlow(null);
+      clearCodeInput();
+      return 'email_link';
+    }
   };
 
-  const sendEmailLink = async () => {
+  const sendEmailCode = async () => {
     if (!isLoaded || !signIn) {
       return;
     }
@@ -147,49 +416,142 @@ export default function SignInEmail() {
       return;
     }
 
-    try {
-      await sendSignInEmailLink(normalizedEmail);
-      toast.success('Sign-in link sent to your email');
-    } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'errors' in err) {
-        const clerkError = err as {
-          errors: { code: string; message: string }[];
-        };
-        const error = clerkError.errors?.[0];
+    logEmailAuth('user requested email authentication', {
+      email: maskEmail(normalizedEmail),
+      isLoaded,
+      isSignInLoaded,
+      isSignUpLoaded,
+    });
 
-        if (error?.code === 'form_identifier_not_found') {
-          await sendSignUpEmailLink(normalizedEmail);
-          toast.success('Sign-in link sent to your email');
-        } else if (error?.code === 'invalid_url_scheme') {
+    try {
+      const strategy = await sendSignInEmailCode(normalizedEmail);
+      toast.success(getEmailDeliverySuccessMessage(strategy));
+    } catch (err: unknown) {
+      const clerkError = getClerkError(err);
+      const errorMessage = getErrorMessage(err);
+
+      if (clerkError?.code === 'form_identifier_not_found') {
+        warnEmailAuth('email not found during sign-in, starting sign-up flow', {
+          email: maskEmail(normalizedEmail),
+        });
+
+        try {
+          const strategy = await sendSignUpEmailCode(normalizedEmail);
+          toast.success(getEmailDeliverySuccessMessage(strategy));
+        } catch (signUpError) {
+          errorEmailAuth('sign-up email delivery failed', {
+            email: maskEmail(normalizedEmail),
+            error: getClerkErrorPayload(signUpError),
+          });
           toast.error(
-            'Email-link redirect is misconfigured. Clerk requires an http or https URL.'
+            getErrorMessage(signUpError) ?? 'Failed to send verification code'
           );
-        } else if (error?.code === 'form_param_format_invalid') {
-          toast.error('Please enter a valid email address');
-        } else if (error?.code === 'strategy_for_user_invalid') {
-          toast.error(
-            'This account uses a different sign-in method. Try Apple or Google instead.'
-          );
-        } else {
-          toast.error(error?.message ?? 'Failed to send sign-in link');
         }
+      } else if (clerkError?.code === 'form_param_format_invalid') {
+        toast.error('Please enter a valid email address');
+      } else if (clerkError?.code === 'strategy_for_user_invalid') {
+        toast.error(
+          'This account uses a different sign-in method. Try Apple or Google instead.'
+        );
       } else {
-        toast.error('Failed to send sign-in link');
+        errorEmailAuth('email delivery failed', {
+          email: maskEmail(normalizedEmail),
+          error: getClerkErrorPayload(err),
+        });
+        toast.error(errorMessage ?? 'Failed to send verification code');
       }
     }
   };
 
-  const onSendLinkPress = async () => {
-    setIsSendingLink(true);
-    try {
-      await sendEmailLink();
-    } catch {
-      toast.error('Failed to send sign-in link');
+  const verifyEmailCode = async () => {
+    if (!isLoaded || !pendingFlow || !signIn || !signUp) {
+      return;
     }
-    setIsSendingLink(false);
+
+    const normalizedCode = normalizeCode();
+
+    if (!normalizedCode) {
+      toast.error('Please enter the verification code');
+      return;
+    }
+
+    logEmailAuth('verifying email code', {
+      pendingFlow,
+      codeLength: normalizedCode.length,
+      email: maskEmail(normalizeEmail()),
+    });
+
+    try {
+      if (pendingFlow === 'sign-up') {
+        const signUpAttempt = await signUp.attemptEmailAddressVerification({
+          code: normalizedCode,
+        });
+
+        logEmailAuth('received sign-up code verification result', {
+          status: signUpAttempt.status,
+        });
+
+        if (signUpAttempt.status === 'complete') {
+          await completeAuthentication(signUpAttempt.createdSessionId, {
+            shouldCreateDefaultList: true,
+          });
+          return;
+        }
+      } else {
+        const signInAttempt = await signIn.attemptFirstFactor({
+          strategy: 'email_code',
+          code: normalizedCode,
+        });
+
+        logEmailAuth('received sign-in code verification result', {
+          status: signInAttempt.status,
+        });
+
+        if (signInAttempt.status === 'complete') {
+          await completeAuthentication(signInAttempt.createdSessionId);
+          return;
+        }
+      }
+
+      toast.error(
+        'We could not finish signing you in. Please request a new code.'
+      );
+    } catch (err: unknown) {
+      errorEmailAuth('email code verification failed', {
+        pendingFlow,
+        email: maskEmail(normalizeEmail()),
+        error: getClerkErrorPayload(err),
+      });
+      toast.error(getErrorMessage(err) ?? 'Failed to verify code');
+    }
   };
 
-  const onResendLink = async () => {
+  const onSendCodePress = async () => {
+    setIsSendingCode(true);
+    try {
+      await sendEmailCode();
+    } catch {
+      toast.error('Failed to send verification code');
+      setIsSendingCode(false);
+      return;
+    }
+
+    setIsSendingCode(false);
+  };
+
+  const onVerifyCodePress = async () => {
+    setIsVerifyingCode(true);
+    try {
+      await verifyEmailCode();
+    } catch {
+      setIsVerifyingCode(false);
+      return;
+    }
+
+    setIsVerifyingCode(false);
+  };
+
+  const onResendCode = async () => {
     if (!isLoaded || !pendingFlow || !signIn || !signUp) {
       return;
     }
@@ -201,43 +563,36 @@ export default function SignInEmail() {
       return;
     }
 
-    setIsResendingLink(true);
+    setIsResendingCode(true);
 
     try {
       if (pendingFlow === 'sign-up') {
         if (signUp.emailAddress !== normalizedEmail) {
-          await sendSignUpEmailLink(normalizedEmail);
+          await sendSignUpEmailCode(normalizedEmail);
         } else {
-          // eslint-disable-next-line no-console
-          console.log('[sign-in-email] resending sign-up email link', {
-            emailLinkRedirectUrl,
-            normalizedEmail,
-          });
-          await signUp.prepareVerification({
-            strategy: 'email_link',
-            redirectUrl: emailLinkRedirectUrl,
+          await signUp.prepareEmailAddressVerification({
+            strategy: 'email_code',
           });
           setPendingFlow('sign-up');
         }
       } else {
-        await sendSignInEmailLink(normalizedEmail);
+        await sendSignInEmailCode(normalizedEmail);
       }
 
-      toast.success('Sign-in link resent');
+      clearCodeInput();
+      toast.success('Verification code resent');
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'errors' in err) {
-        const clerkError = err as {
-          errors: { code: string; message: string }[];
-        };
-        toast.error(
-          clerkError.errors?.[0]?.message ?? 'Failed to resend sign-in link'
-        );
-      } else {
-        toast.error('Failed to resend sign-in link');
-      }
+      errorEmailAuth('resending email code failed', {
+        pendingFlow,
+        email: maskEmail(normalizedEmail),
+        error: getClerkErrorPayload(err),
+      });
+      toast.error(getErrorMessage(err) ?? 'Failed to resend verification code');
+      setIsResendingCode(false);
+      return;
     }
 
-    setIsResendingLink(false);
+    setIsResendingCode(false);
   };
 
   if (!isLoaded) {
@@ -271,7 +626,8 @@ export default function SignInEmail() {
                   <Text variant="h1">Sign In with Email</Text>
                   <View>
                     <Text variant="muted">
-                      Enter your email and we&apos;ll send you a sign-in link
+                      Enter your email and we&apos;ll send you a verification
+                      code
                     </Text>
                   </View>
                 </View>
@@ -282,7 +638,6 @@ export default function SignInEmail() {
                     value={email}
                     onChangeText={setEmail}
                     autoCapitalize="none"
-                    autoFocus
                     keyboardType="email-address"
                     autoComplete="email"
                     textContentType="emailAddress"
@@ -295,49 +650,111 @@ export default function SignInEmail() {
               <View className="w-full items-center">
                 <Button
                   className="w-full"
-                  onPress={onSendLinkPress}
+                  onPress={onSendCodePress}
                   disabled={isBusy}
                   size="lg"
                 >
-                  {isSendingLink ? (
+                  {isSendingCode ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <Text>Send Sign-In Link</Text>
+                    <Text>Send Code</Text>
                   )}
                 </Button>
               </View>
             </>
           ) : (
             <>
-              <View className="w-full items-start justify-start gap-2">
-                <Text variant="h1">Check Your Email</Text>
-                <View>
-                  <Text variant="muted">
-                    We sent a sign-in link to {normalizeEmail()}.
-                  </Text>
-                  <Text variant="muted">
-                    Open it on this device to continue.
-                  </Text>
+              <View className="w-full gap-6">
+                <View className="w-full items-start justify-start gap-2">
+                  <Text variant="h1">Enter Code</Text>
+                  <View>
+                    <Text variant="muted">
+                      We sent a verification code to {normalizeEmail()}.
+                    </Text>
+                    <Text variant="muted">
+                      Enter the 6-digit code to continue.
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="gap-4">
+                  <View className="items-center">
+                    <OtpInput
+                      ref={otpRef}
+                      numberOfDigits={6}
+                      onTextChange={setCode}
+                      onFilled={setCode}
+                      blurOnFilled
+                      disabled={isBusy}
+                      type="numeric"
+                      textInputProps={{
+                        accessibilityLabel: 'Email verification code input',
+                        autoCorrect: false,
+                        autoComplete: 'one-time-code',
+                        contextMenuHidden: false,
+                        keyboardType: 'number-pad',
+                        selectTextOnFocus: true,
+                        textContentType: 'oneTimeCode',
+                      }}
+                      theme={{
+                        containerStyle: {
+                          width: 'auto',
+                          gap: 8,
+                        },
+                        pinCodeContainerStyle: {
+                          width: 44,
+                          height: 56,
+                          borderRadius: 16,
+                          borderWidth: 1,
+                          borderColor: theme.input,
+                          backgroundColor: theme.input,
+                        },
+                        pinCodeTextStyle: {
+                          fontSize: 24,
+                          fontWeight: '600',
+                          color: theme.foreground,
+                        },
+                        focusedPinCodeContainerStyle: {
+                          borderColor: theme.primary,
+                        },
+                        filledPinCodeContainerStyle: {
+                          borderColor: theme.primary,
+                        },
+                        focusStickStyle: {
+                          backgroundColor: theme.primary,
+                        },
+                      }}
+                    />
+                  </View>
                 </View>
               </View>
 
-              <View className="items-center gap-4">
-                <Button onPress={onResendLink} disabled={isBusy} size="xl">
-                  {isResendingLink ? (
+              <View className="items-center gap-2">
+                <Button
+                  onPress={onVerifyCodePress}
+                  disabled={isBusy}
+                  size="xl"
+                  className="w-full"
+                >
+                  {isVerifyingCode ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <Text>Resend Sign-In Link</Text>
+                    <Text>Verify Code</Text>
                   )}
                 </Button>
 
                 <Button
-                  variant="secondary"
-                  size="xl"
-                  className="w-full"
-                  onPress={() => setPendingFlow(null)}
+                  onPress={onResendCode}
                   disabled={isBusy}
+                  size="xl"
+                  variant="outline"
+                  className="w-full"
                 >
-                  <Text>Use a Different Email</Text>
+                  {isResendingCode ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text>Resend Code</Text>
+                  )}
                 </Button>
               </View>
             </>

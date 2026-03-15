@@ -6,7 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import {
+  EMAIL_LINK_FLOW_PARAM,
   EMAIL_LINK_COMPLETE_ROUTE,
   EMAIL_LINK_CONTINUE_ROUTE,
 } from '@/lib/clerk/email-link';
@@ -74,6 +76,13 @@ const logVerification = (message: string, payload?: unknown) => {
 const getParamValue = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value;
 
+const getEmailLinkFlow = (
+  params: Record<string, string | string[] | undefined>
+) => {
+  const flow = getParamValue(params[EMAIL_LINK_FLOW_PARAM]);
+  return flow === 'sign-up' || flow === 'sign-in' ? flow : null;
+};
+
 const getFailureStateFromParams = (
   params: Record<string, string | string[] | undefined>
 ): Exclude<VerificationState, 'verifying' | 'finishing'> | null => {
@@ -121,6 +130,7 @@ export default function VerifyEmailLink() {
 
   const isLoaded = isSignInLoaded && isSignUpLoaded;
   const failureStateFromParams = getFailureStateFromParams(params);
+  const emailLinkFlow = getEmailLinkFlow(params);
 
   useEffect(() => {
     logVerification('screen mounted with params', params);
@@ -201,6 +211,9 @@ export default function VerifyEmailLink() {
 
             try {
               await signInToInstant();
+              if (emailLinkFlow === 'sign-up') {
+                await initializeDefaultGroceryList();
+              }
               logVerification('Instant sign-in completed successfully');
             } catch {
               // eslint-disable-next-line no-console
@@ -272,6 +285,7 @@ export default function VerifyEmailLink() {
     isLoaded,
     params,
     router,
+    emailLinkFlow,
     signInToInstant,
     signOut,
   ]);

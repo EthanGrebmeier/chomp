@@ -51,7 +51,7 @@ export default function SignIn() {
               }
               onPress={() => router.push('/(auth)/sign-in-email')}
             >
-              <Text>Sign in with Email</Text>
+              <Text>Sign in with Email Code</Text>
             </Button>
           </View>
         </View>

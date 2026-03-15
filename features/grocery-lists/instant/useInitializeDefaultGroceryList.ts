@@ -1,136 +1,108 @@
 import { id } from '@instantdb/react-native';
-import { useEffect, useRef } from 'react';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { generateJoinCode } from '../utils/generate-join-code';
 
 const DEFAULT_LIST_NAME = 'Shopping List';
+const DEFAULT_LIST_VISIBILITY_RETRY_COUNT = 30;
+const DEFAULT_LIST_VISIBILITY_RETRY_DELAY_MS = 200;
 
-type InitializeDefaultListOptions = {
-  enabled?: boolean;
-  initKey?: number;
+const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+const waitForDefaultGroceryList = async (listId: string) => {
+  for (
+    let attempt = 0;
+    attempt < DEFAULT_LIST_VISIBILITY_RETRY_COUNT;
+    attempt += 1
+  ) {
+    const { data } = await db.queryOnce({
+      $users: {
+        grocery_lists: {},
+      },
+    });
+
+    const hasList = data?.$users?.[0]?.grocery_lists?.some(
+      (groceryList) => groceryList.id === listId
+    );
+
+    if (hasList) {
+      return;
+    }
+
+    await sleep(DEFAULT_LIST_VISIBILITY_RETRY_DELAY_MS);
+  }
+
+  throw new Error('Default grocery list did not become available in time');
 };
 
-/**
- * Hook that creates a default grocery list for new users.
- * Safe to call multiple times - initialization only happens once per auth id.
- */
-export const useInitializeDefaultGroceryList = (
-  options: InitializeDefaultListOptions = {}
-) => {
-  const { enabled = true, initKey } = options;
-  const initStateRef = useRef({
-    inFlight: false,
-    lastAuthId: null as string | null,
-    lastInitKey: null as number | null,
-  });
-  const { user, isLoading } = db.useAuth();
-  const defaultListCheckQuery = db.useQuery({
+export const initializeDefaultGroceryList = async () => {
+  const authUser = await db.getAuth();
+  if (!authUser?.id) {
+    return null;
+  }
+
+  const { data } = await db.queryOnce({
     $users: {
       grocery_lists: {},
     },
   });
 
-  useEffect(() => {
-    if (
-      !enabled ||
-      isLoading ||
-      !user ||
-      defaultListCheckQuery.isLoading ||
-      Boolean(defaultListCheckQuery.error) ||
-      initStateRef.current.inFlight ||
-      (initKey !== undefined && initKey === initStateRef.current.lastInitKey)
-    ) {
-      return;
-    }
+  const isGuest = !authUser.email;
+  const currentUser = data?.$users?.[0];
+  const existingListCount = currentUser?.grocery_lists?.length ?? 0;
 
-    const initializeDefaultList = async () => {
-      initStateRef.current.inFlight = true;
+  if (
+    (!isGuest && currentUser?.hasInitializedGroceryList) ||
+    existingListCount > 0
+  ) {
+    return currentUser?.grocery_lists?.[0]?.id ?? null;
+  }
 
-      try {
-        const authUser = await db.getAuth();
-        if (!authUser?.id) {
-          return;
-        }
+  const listId = id();
+  const shareId = id();
+  const joinCode = generateJoinCode();
+  const now = new Date().toISOString();
 
-        if (initStateRef.current.lastAuthId === authUser.id) {
-          return;
-        }
+  const transactions: Parameters<typeof db.transact>[0] = [
+    db.tx.grocery_lists[listId]
+      .create(
+        trimStringFields({
+          name: DEFAULT_LIST_NAME,
+          joinCode,
+          ownerId: authUser.id,
+          createdAt: now,
+          updatedAt: now,
+        })
+      )
+      .link({
+        owner: authUser.id,
+      }),
+    db.tx.grocery_list_shares[shareId]
+      .create(
+        trimStringFields({
+          grocery_list_id: listId,
+          user_id: authUser.id,
+          lastAccessedAt: now,
+        })
+      )
+      .link({
+        grocery_list: listId,
+      }),
+  ];
 
-        const isGuest = !authUser.email;
-        const currentUser = defaultListCheckQuery.data?.$users?.[0];
-        const existingListCount = currentUser?.grocery_lists?.length ?? 0;
+  if (!isGuest) {
+    transactions.push(
+      db.tx.$users[authUser.id].update(
+        trimStringFields({
+          hasInitializedGroceryList: true,
+        })
+      )
+    );
+  }
 
-        if (
-          (!isGuest && currentUser?.hasInitializedGroceryList) ||
-          existingListCount > 0
-        ) {
-          initStateRef.current.lastAuthId = authUser.id;
-          initStateRef.current.lastInitKey = initKey ?? null;
-          return;
-        }
-
-        const listId = id();
-        const shareId = id();
-        const joinCode = generateJoinCode();
-        const now = new Date().toISOString();
-
-        const transactions: Parameters<typeof db.transact>[0] = [
-          db.tx.grocery_lists[listId]
-            .create(
-              trimStringFields({
-                name: DEFAULT_LIST_NAME,
-                joinCode,
-                ownerId: authUser.id,
-                createdAt: now,
-                updatedAt: now,
-              })
-            )
-            .link({
-              owner: authUser.id,
-            }),
-          db.tx.grocery_list_shares[shareId]
-            .create(
-              trimStringFields({
-                grocery_list_id: listId,
-                user_id: authUser.id,
-                lastAccessedAt: now,
-              })
-            )
-            .link({
-              grocery_list: listId,
-            }),
-        ];
-
-        if (!isGuest) {
-          transactions.push(
-            db.tx.$users[authUser.id].update(
-              trimStringFields({
-                hasInitializedGroceryList: true,
-              })
-            )
-          );
-        }
-
-        await db.transact(transactions);
-        initStateRef.current.lastAuthId = authUser.id;
-        initStateRef.current.lastInitKey = initKey ?? null;
-      } finally {
-        initStateRef.current.inFlight = false;
-      }
-    };
-
-    initializeDefaultList().catch(() => {
-      initStateRef.current.inFlight = false;
-    });
-  }, [
-    enabled,
-    isLoading,
-    user,
-    initKey,
-    defaultListCheckQuery.isLoading,
-    defaultListCheckQuery.error,
-    defaultListCheckQuery.data,
-  ]);
+  await db.transact(transactions);
+  await waitForDefaultGroceryList(listId);
+  return listId;
 };
