@@ -57,7 +57,7 @@ const Account = () => {
   }
 
   return (
-    <View className="gap-4 rounded-xl bg-muted p-4">
+    <View className="gap-4 p-4">
       <View>
         <Text variant="muted" className="mb-1">
           Account
