@@ -35,7 +35,7 @@ const Account = () => {
 
   if (!user?.primaryEmailAddress) {
     return (
-      <View className="gap-4 rounded-xl bg-muted p-4">
+      <View className="gap-4 p-4">
         <View>
           <Text className="text-lg font-medium leading-5">Account</Text>
           <Text className="text-sm text-muted-foreground">
@@ -49,7 +49,7 @@ const Account = () => {
             className="w-full"
             size="lg"
           >
-            <Text>Sign In</Text>
+            <Text>Create Account</Text>
           </Button>
         </View>
       </View>

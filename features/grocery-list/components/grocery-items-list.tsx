@@ -2,11 +2,6 @@ import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  LayoutAnimationConfig,
-} from 'react-native-reanimated';
 
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
@@ -30,12 +25,14 @@ type GroceryItemsListProps = {
 type GroceryListRow =
   | {
       type: 'header';
+      sectionKey: string;
       title: string;
       itemCount?: number;
       isExpanded: boolean;
     }
   | {
       type: 'item';
+      sectionKey: string;
       sectionTitle: string;
       item: GroceryListItemWithRecipe;
       isLastInSection: boolean;
@@ -54,23 +51,23 @@ export const GroceryItemsList = ({
   const [collapsedSectionsByGroup, setCollapsedSectionsByGroup] = useState<
     Record<GroceryItemsListProps['groupBy'], Set<string>>
   >(() => ({
-    category: new Set(['Checked']),
-    none: new Set(['Checked']),
-    recipe: new Set(['Checked']),
-    store: new Set(['Checked']),
+    category: new Set(['checked']),
+    none: new Set(['checked']),
+    recipe: new Set(['checked']),
+    store: new Set(['checked']),
   }));
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
 
   const toggleSection = useCallback(
-    (sectionTitle: string) => {
+    (sectionKey: string) => {
       setCollapsedSectionsByGroup(prev => {
         const nextByGroup = { ...prev };
         const next = new Set(nextByGroup[groupBy]);
-        if (next.has(sectionTitle)) {
-          next.delete(sectionTitle);
+        if (next.has(sectionKey)) {
+          next.delete(sectionKey);
         } else {
-          next.add(sectionTitle);
+          next.add(sectionKey);
         }
         nextByGroup[groupBy] = next;
         return nextByGroup;
@@ -110,14 +107,15 @@ export const GroceryItemsList = ({
   const sectionItemIds = useMemo(() => {
     const map = new Map<string, string[]>();
     groupedUncheckedItems.forEach((sectionItems, sectionTitle) => {
+      const sectionKey = `group:${sectionTitle}`;
       map.set(
-        sectionTitle,
+        sectionKey,
         sectionItems.map(item => item.id)
       );
     });
     if (checkedItems.length > 0) {
       map.set(
-        'Checked',
+        'checked',
         checkedItems.map(item => item.id)
       );
     }
@@ -127,10 +125,11 @@ export const GroceryItemsList = ({
   const sectionItemCounts = useMemo(() => {
     const map = new Map<string, number>();
     groupedUncheckedItems.forEach((sectionItems, sectionTitle) => {
-      map.set(sectionTitle, sectionItems.length);
+      const sectionKey = `group:${sectionTitle}`;
+      map.set(sectionKey, sectionItems.length);
     });
     if (checkedItems.length > 0) {
-      map.set('Checked', checkedItems.length);
+      map.set('checked', checkedItems.length);
     }
     return map;
   }, [checkedItems, groupedUncheckedItems]);
@@ -140,19 +139,23 @@ export const GroceryItemsList = ({
     const stickyHeaderIndices: number[] = [];
 
     const appendSection = (
+      sectionKey: string,
       sectionTitle: string,
       data: GroceryListItemWithRecipe[],
       forceExpanded = false
     ) => {
       const showHeader = !(groupBy === 'none' && !sectionTitle);
-      const isExpanded = forceExpanded || !collapsedSections.has(sectionTitle);
-      const itemCount = sectionItemCounts.get(sectionTitle);
+      const isExpanded = forceExpanded || !collapsedSections.has(sectionKey);
+      const itemCount = sectionItemCounts.get(sectionKey);
       const shouldRenderItems = isExpanded || !showHeader;
 
       if (showHeader) {
-        stickyHeaderIndices.push(rows.length);
+        if (shouldRenderItems) {
+          stickyHeaderIndices.push(rows.length);
+        }
         rows.push({
           type: 'header',
+          sectionKey,
           title: sectionTitle,
           itemCount,
           isExpanded,
@@ -164,6 +167,7 @@ export const GroceryItemsList = ({
       data.forEach((item, index) => {
         rows.push({
           type: 'item',
+          sectionKey,
           sectionTitle,
           item,
           isLastInSection: index === data.length - 1,
@@ -172,11 +176,16 @@ export const GroceryItemsList = ({
     };
 
     groupedUncheckedItems.forEach((sectionData, sectionTitle) => {
-      appendSection(sectionTitle, sectionData, groupBy === 'none');
+      appendSection(
+        `group:${sectionTitle}`,
+        sectionTitle,
+        sectionData,
+        groupBy === 'none'
+      );
     });
 
     if (checkedItems.length > 0) {
-      appendSection('Checked', checkedItems);
+      appendSection('checked', 'Checked', checkedItems);
     }
 
     return { rows, stickyHeaderIndices };
@@ -189,8 +198,8 @@ export const GroceryItemsList = ({
   ]);
 
   const handleClearSection = useCallback(
-    (sectionTitle: string) => {
-      const itemIds = sectionItemIds.get(sectionTitle) ?? [];
+    (sectionKey: string, sectionTitle: string) => {
+      const itemIds = sectionItemIds.get(sectionKey) ?? [];
       if (itemIds.length === 0) return;
 
       const sectionLabel = sectionTitle || 'this section';
@@ -221,8 +230,8 @@ export const GroceryItemsList = ({
         title={row.title}
         itemCount={row.itemCount}
         isExpanded={row.isExpanded}
-        onToggle={() => toggleSection(row.title)}
-        onClearPress={() => handleClearSection(row.title)}
+        onToggle={() => toggleSection(row.sectionKey)}
+        onClearPress={() => handleClearSection(row.sectionKey, row.title)}
         showCollapse={true}
       />
     ),
@@ -289,29 +298,22 @@ export const GroceryItemsList = ({
   }
 
   return (
-    <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
-      <Animated.View
-        entering={FadeIn.duration(200)}
-        exiting={FadeOut.duration(200)}
-        key={sortBy + groupBy}
-        className="flex-1"
-      >
-        <FlashList
-          data={listRows.rows}
-          renderItem={renderRow}
-          keyExtractor={item =>
-            item.type === 'header' ? `header-${item.title}` : item.item.id
-          }
-          getItemType={item => item.type}
-          drawDistance={300}
-          stickyHeaderIndices={listRows.stickyHeaderIndices}
-          contentContainerClassName="pb-36"
-          contentContainerStyle={{ flexGrow: 1 }}
-          showsVerticalScrollIndicator={false}
-          onScrollBeginDrag={onListInteraction}
-          onTouchStart={onListInteraction}
-        />
-      </Animated.View>
-    </LayoutAnimationConfig>
+    <FlashList
+      data={listRows.rows}
+      renderItem={renderRow}
+      keyExtractor={item =>
+        item.type === 'header'
+          ? `header-${item.sectionKey}`
+          : `item-${item.sectionKey}-${item.item.id}`
+      }
+      getItemType={item => item.type}
+      drawDistance={300}
+      stickyHeaderIndices={listRows.stickyHeaderIndices}
+      contentContainerClassName="pb-36"
+      contentContainerStyle={{ flexGrow: 1 }}
+      showsVerticalScrollIndicator={false}
+      onScrollBeginDrag={onListInteraction}
+      onTouchStart={onListInteraction}
+    />
   );
 };

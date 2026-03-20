@@ -24,7 +24,7 @@ export default function Settings() {
         {/* Settings Menu */}
         <View className="gap-4">
           <Heading className="ml-4">Settings</Heading>
-          <View className="mb-8 gap-4 rounded-xl bg-muted/50 p-4">
+          <View className="mb-8 gap-4 p-4">
             <HapticPressable
               onPress={handleNavigateToSavedItems}
               className="flex-row items-center justify-between border-b border-border pb-4 active:opacity-70"
