@@ -32,6 +32,8 @@ const itemSheetContext = createContext<{
   setRecipe: (recipe?: Recipe | null) => void;
   storeId?: string;
   setStoreId: (storeId?: string) => void;
+  storeName?: string;
+  setStoreName: (storeName?: string) => void;
   reset: () => void;
   setFromItem: (item: GroceryListItemWithRecipe | BaseGroceryItem) => void;
   isValid: boolean;
@@ -88,6 +90,7 @@ export const ItemSheetProvider = ({
     undefined
   );
   const [storeId, setStoreId] = useState<string | undefined>(undefined);
+  const [storeName, setStoreName] = useState<string | undefined>(undefined);
   const itemInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
 
@@ -101,6 +104,7 @@ export const ItemSheetProvider = ({
     setRecipe(undefined);
     setInitialRecipeId(undefined);
     setStoreId(undefined);
+    setStoreName(undefined);
     setShowMatchingItems(false);
   };
 
@@ -116,12 +120,17 @@ export const ItemSheetProvider = ({
       setRecipe(item.recipe);
       setInitialRecipeId(item.recipe?.id);
     }
-    // Handle store - check both store object and storeId
-    if ('store' in item && item.store) {
-      setStoreId(item.store.id);
-    } else if ('storeId' in item) {
-      setStoreId(item.storeId);
-    }
+    // Always derive store state from the incoming item so edit sheets don't
+    // keep stale store selection between items.
+    const derivedStoreId =
+      ('store' in item ? item.store?.id : undefined) ??
+      ('storeId' in item ? item.storeId : undefined) ??
+      ('saved_item' in item ? item.saved_item?.store?.id : undefined);
+    const derivedStoreName =
+      ('store' in item ? item.store?.name : undefined) ??
+      ('saved_item' in item ? item.saved_item?.store?.name : undefined);
+    setStoreId(derivedStoreId);
+    setStoreName(derivedStoreName);
     setShowMatchingItems(false);
   };
 
@@ -173,6 +182,7 @@ export const ItemSheetProvider = ({
     setCategory(item.category);
     setNotesInputValue(item.notes ?? '');
     setStoreId(item.storeId);
+    setStoreName(undefined);
     setShowMatchingItems(false);
   };
 
@@ -209,6 +219,8 @@ export const ItemSheetProvider = ({
         setRecipe,
         storeId,
         setStoreId,
+        storeName,
+        setStoreName,
         reset,
         setFromItem,
         isValid: Boolean(

@@ -45,10 +45,11 @@ const StoreOption = ({ label, isSelected, onPress }: StoreOptionProps) => (
 
 type StoreSheetProps = {
   storeId?: string;
-  onSelect: (storeId?: string) => void;
+  storeName?: string;
+  onSelect: (storeId?: string, storeName?: string) => void;
 };
 
-export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
+export const StoreSheet = ({ storeId, storeName, onSelect }: StoreSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const createStoreSheetRef = useRef<TrueSheet>(null);
   const { data: stores, isLoading } = useStores();
@@ -65,6 +66,10 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
     newlyCreatedStore?.id === storeId
       ? newlyCreatedStore
       : stores.find(store => store.id === storeId);
+  const selectedStoreName = selectedStore?.name ?? (storeId ? storeName : undefined);
+  const hasSelectedStore = Boolean(selectedStoreName);
+  const hasMissingSelectedStore =
+    Boolean(localStoreId) && !stores.some(store => store.id === localStoreId);
 
   const openSheet = () => {
     setLocalStoreId(storeId);
@@ -72,7 +77,11 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
   };
 
   const handleConfirm = () => {
-    onSelect(localStoreId);
+    const nextStoreName =
+      localStoreId === undefined
+        ? undefined
+        : stores.find(store => store.id === localStoreId)?.name ?? selectedStoreName;
+    onSelect(localStoreId, nextStoreName);
     sheetRef.current?.dismiss();
   };
 
@@ -116,7 +125,7 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
             icon={
               <Icon
                 className={
-                  selectedStore ? 'text-foreground' : 'text-muted-foreground'
+                    hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
                 }
                 as={StoreIcon}
                 size={16}
@@ -124,13 +133,13 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
             }
             textClassName={cn(
               'font-semibold',
-              selectedStore ? 'text-foreground' : 'text-muted-foreground'
+                hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
             )}
-            closeIconClassName={selectedStore ? 'text-foreground' : undefined}
-            hasValue={!!selectedStore}
-            onClear={() => onSelect(undefined)}
+              closeIconClassName={hasSelectedStore ? 'text-foreground' : undefined}
+              hasValue={hasSelectedStore}
+              onClear={() => onSelect(undefined, undefined)}
           >
-            {selectedStore ? selectedStore.name : 'Store'}
+              {selectedStoreName ?? 'Store'}
           </Pill>
         </HapticPressable>
       </WithLayoutTransition>
@@ -171,6 +180,14 @@ export const StoreSheet = ({ storeId, onSelect }: StoreSheetProps) => {
             isSelected={!localStoreId}
             onPress={() => setLocalStoreId(undefined)}
           />
+
+          {hasMissingSelectedStore && (
+            <StoreOption
+              label={selectedStoreName ?? 'Current store'}
+              isSelected={true}
+              onPress={() => setLocalStoreId(storeId)}
+            />
+          )}
 
           {isLoading ? (
             <View className="py-4">

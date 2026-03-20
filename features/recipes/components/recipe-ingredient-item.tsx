@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { CategoryTag } from '../../../components/category-tag';
@@ -22,6 +23,13 @@ export const RecipeIngredientItem = ({
 }: RecipeIngredientItemProps) => {
   const { mutate: removeItem } = useRemoveRecipeIngredient();
   const notes = ingredient.notes?.trim();
+  const pressStartXRef = useRef<number | null>(null);
+  const shouldSuppressPressRef = useRef(false);
+
+  const handlePress = () => {
+    if (shouldSuppressPressRef.current) return;
+    onEdit?.(ingredient);
+  };
 
   return (
     <ListItem
@@ -32,7 +40,27 @@ export const RecipeIngredientItem = ({
       }
       className={className}
     >
-      <Pressable className="flex-1 gap-1" onPress={() => onEdit?.(ingredient)}>
+      <Pressable
+        className="flex-1 gap-1"
+        onPress={handlePress}
+        onPressIn={event => {
+          pressStartXRef.current = event.nativeEvent.pageX;
+          shouldSuppressPressRef.current = false;
+        }}
+        onTouchMove={event => {
+          const pressStartX = pressStartXRef.current;
+          if (pressStartX === null) return;
+          const horizontalMovement = Math.abs(
+            event.nativeEvent.pageX - pressStartX
+          );
+          if (horizontalMovement > 8) {
+            shouldSuppressPressRef.current = true;
+          }
+        }}
+        onPressOut={() => {
+          pressStartXRef.current = null;
+        }}
+      >
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-medium text-foreground">
             {ingredient.name}

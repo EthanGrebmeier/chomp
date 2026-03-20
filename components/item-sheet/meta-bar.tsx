@@ -16,6 +16,8 @@ export const MetaBar = () => {
     setUnit,
     storeId,
     setStoreId,
+    storeName,
+    setStoreName,
   } = useItemSheet();
 
   return (
@@ -28,7 +30,14 @@ export const MetaBar = () => {
           onUnitChange={setUnit}
         />
         <CategorySheet category={category} onSelect={setCategory} />
-        <StoreSheet storeId={storeId} onSelect={setStoreId} />
+        <StoreSheet
+          storeId={storeId}
+          storeName={storeName}
+          onSelect={(nextStoreId, nextStoreName) => {
+            setStoreId(nextStoreId);
+            setStoreName(nextStoreName);
+          }}
+        />
       </ScrollingMetaBar>
     </MetaBarLayout>
   );
