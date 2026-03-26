@@ -1,4 +1,5 @@
 import { Redirect, Slot } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useInstantAuthState } from '@/lib/instant/use-clerk-auth';
@@ -18,9 +19,27 @@ function TabsContent() {
 }
 
 export default function Layout() {
-  const { hasAppAccess, isReconciled } = useInstantAuthState();
+  const {
+    hasAppAccess,
+    hasInstantEmailSession,
+    isReconciled,
+    isSignedInWithClerk,
+    shouldBlockAuthUi,
+  } = useInstantAuthState();
 
-  if (isReconciled && !hasAppAccess) {
+  if (shouldBlockAuthUi || !isReconciled) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (isSignedInWithClerk && !hasInstantEmailSession) {
+    return <Redirect href="/(auth)" />;
+  }
+
+  if (!hasAppAccess) {
     return <Redirect href="/(auth)" />;
   }
 
