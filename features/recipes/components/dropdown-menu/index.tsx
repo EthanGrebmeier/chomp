@@ -28,14 +28,17 @@ type RecipeDropdownMenuProps = {
   recipe: RecipeWithIngredients;
 };
 
-export const RecipeDropdownMenu = ({ trigger, recipe }: RecipeDropdownMenuProps) => {
+export const RecipeDropdownMenu = ({
+  trigger,
+  recipe,
+}: RecipeDropdownMenuProps) => {
   const { user } = db.useAuth();
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
 
   // Check if current user owns the recipe
   const isOwner = recipe.user?.id === user?.id;
   const { mutate: duplicateRecipe } = useDuplicateRecipe();
-  const { mutateAsync: deleteRecipe } = useDeleteRecipe();
+  const { mutate: deleteRecipe } = useDeleteRecipe();
   const { mutate: updateRecipe } = useUpdateRecipe();
 
   const handleDuplicate = () => {
@@ -68,13 +71,15 @@ export const RecipeDropdownMenu = ({ trigger, recipe }: RecipeDropdownMenuProps)
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      await deleteRecipe(recipe.id);
-      router.back();
-    } catch {
-      toast.error('Failed to delete recipe');
-    }
+  const handleDelete = () => {
+    // Navigate away immediately so we do not briefly render the deleted recipe state.
+    toast.success('Recipe deleted');
+    router.back();
+    deleteRecipe(recipe.id, {
+      onError: () => {
+        toast.error('Failed to delete recipe');
+      },
+    });
   };
 
   const handleEditRecipe = (data: {
