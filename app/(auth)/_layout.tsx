@@ -6,7 +6,6 @@ export default function AuthLayout() {
   const {
     hasInstantEmailSession,
     hasInstantGuestSession,
-    isSignedInWithClerk,
     isGuestContinuationPending,
     isReconciled,
   } = useInstantAuthState();
@@ -20,7 +19,6 @@ export default function AuthLayout() {
   if (
     isReconciled &&
     hasInstantGuestSession &&
-    !isSignedInWithClerk &&
     isAuthEntryRoute &&
     !isGuestContinuationPending
   ) {

@@ -107,7 +107,6 @@ const buildInstantAuthStateSnapshot = ({
     instantAuth !== undefined && isSignedIn !== undefined && !isResolvingAuthState;
   const hasInstantEmailSession = Boolean(instantAuth?.email);
   const hasInstantGuestSession = Boolean(instantAuth && !instantAuth.email);
-  const hasEffectiveGuestSession = !isSignedIn && hasInstantGuestSession;
   const shouldBlockAuthUi =
     isSignedIn === undefined || isBlockingAuthLoad || isResolvingAuthState;
 
@@ -123,7 +122,7 @@ const buildInstantAuthStateSnapshot = ({
   return {
     status: hasInstantEmailSession
       ? 'signed-in'
-      : hasEffectiveGuestSession
+      : hasInstantGuestSession
         ? 'guest'
         : 'signed-out',
     isReconciled,
@@ -131,7 +130,7 @@ const buildInstantAuthStateSnapshot = ({
     isSignedInWithClerk: Boolean(isSignedIn),
     hasInstantGuestSession,
     hasInstantEmailSession,
-    hasAppAccess: hasInstantEmailSession || hasEffectiveGuestSession,
+    hasAppAccess: hasInstantEmailSession || hasInstantGuestSession,
     didExpireSignedInSession,
     isGuestContinuationPending,
   };
