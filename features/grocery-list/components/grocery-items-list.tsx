@@ -304,7 +304,7 @@ export const GroceryItemsList = ({
       keyExtractor={item =>
         item.type === 'header'
           ? `header-${item.sectionKey}`
-          : `item-${item.sectionKey}-${item.item.id}`
+          : `item-${item.sectionKey}-${item.item.id}-${item.item.isChecked ? 'checked' : 'unchecked'}`
       }
       getItemType={item => item.type}
       drawDistance={300}

@@ -40,9 +40,7 @@ export const GroceryListItem = ({
 }: GroceryListItemProps) => {
   const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
   const notes = item.notes?.trim();
-  const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const theme = useTheme();
 
@@ -50,10 +48,23 @@ export const GroceryListItem = ({
   const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
 
   useEffect(() => {
+    setInternalIsChecked(isChecked);
+  }, [isChecked, item.id]);
+
+  useEffect(() => {
     strikethroughWidth.value = withTiming(internalIsChecked ? 1 : 0, {
       duration: 300,
     });
   }, [internalIsChecked]);
+
+  useEffect(
+    () => () => {
+      if (checkItemTimeoutRef.current) {
+        clearTimeout(checkItemTimeoutRef.current);
+      }
+    },
+    []
+  );
 
   const strikethroughStyle = useAnimatedStyle(() => {
     return {
@@ -65,6 +76,7 @@ export const GroceryListItem = ({
     if (checkItemTimeoutRef.current) {
       clearTimeout(checkItemTimeoutRef.current);
     }
+
     if (internalIsChecked) {
       checkListItem({ itemId: item.id, isChecked: false });
     } else {
@@ -72,6 +84,7 @@ export const GroceryListItem = ({
         checkListItem({ itemId: item.id, isChecked: true });
       }, 1000);
     }
+
     setInternalIsChecked(!internalIsChecked);
   };
 
