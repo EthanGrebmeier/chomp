@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -32,9 +33,27 @@ export const ItemInput = ({
   disableAutocomplete = false,
 }: ItemInputProps) => {
   const { matchingItems } = useMatchingItems(value);
+  const isApplyingSuggestionRef = useRef(false);
 
   const shouldShowAutocomplete =
     !disableAutocomplete && showMatchingItems && matchingItems.length > 0;
+
+  const handleChangeText = (text: string) => {
+    if (isApplyingSuggestionRef.current) {
+      return;
+    }
+    onChangeText(text);
+  };
+
+  const handleSuggestionPress = (item: MatchingItem) => {
+    isApplyingSuggestionRef.current = true;
+    onChangeText(item.name);
+    onSelect(item);
+    setShowMatchingItems(false);
+    setTimeout(() => {
+      isApplyingSuggestionRef.current = false;
+    }, 0);
+  };
 
   return (
     <View className="w-full">
@@ -43,7 +62,7 @@ export const ItemInput = ({
         className="text-2xl font-bold text-foreground"
         placeholder={placeholder}
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={handleChangeText}
         onBlur={() => setShowMatchingItems(false)}
         autoCorrect={false}
         autoCapitalize="words"
@@ -61,7 +80,7 @@ export const ItemInput = ({
                 className={cn(
                   'flex-row items-center justify-between self-start rounded-xl border border-border bg-[#F3F4F6] px-2 py-0.5 dark:bg-[#1E2023]'
                 )}
-                onPress={() => onSelect(item)}
+                onPress={() => handleSuggestionPress(item)}
               >
                 <Text
                   allowFontScaling={false}
