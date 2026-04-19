@@ -256,6 +256,7 @@
         {
           "id": "P3-T3",
           "title": "Return-key blurs name input instead of submitting",
+          "status": "done",
           "summary": "Change the Edit sheet's name input so pressing return on the soft keyboard blurs the input (dismisses the keyboard) rather than submitting the form. The Add Item sheet keeps its existing behavior.",
           "acceptanceCriteria": [
             "In the Edit sheet, tapping return on the name input blurs the field and hides the keyboard.",

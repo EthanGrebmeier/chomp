@@ -14,7 +14,15 @@ export const ItemForm = () => {
     onSelect,
     onSubmit,
     disableAutocomplete,
+    mode,
   } = useItemSheet();
+
+  // In the Edit sheet (live updates, no footer button) the return key on the
+  // name input should dismiss the keyboard rather than fire a submit. The
+  // debounced text write in useLiveItemSync already persists the value. The
+  // Add sheet keeps its existing submit-on-return behavior.
+  const handleSubmitEditing =
+    mode === 'update' ? () => itemInputRef.current?.blur() : onSubmit;
 
   return (
     <>
@@ -25,7 +33,7 @@ export const ItemForm = () => {
         onSelect={onSelect}
         showMatchingItems={showMatchingItems}
         setShowMatchingItems={setShowMatchingItems}
-        onSubmit={onSubmit}
+        onSubmit={handleSubmitEditing}
         inputRef={itemInputRef}
         disableAutocomplete={disableAutocomplete}
       />
