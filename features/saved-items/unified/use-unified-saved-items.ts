@@ -29,6 +29,7 @@ export const useUnifiedSavedItems = () => {
               },
             },
             store: {},
+            user: {},
           },
         }
       : null
@@ -57,6 +58,7 @@ export const useUnifiedSavedItems = () => {
       storeId: item.store?.id,
       store: item.store ? { id: item.store.id, name: item.store.name } : undefined,
       source: 'cloud' as const,
+      ownerId: item.user?.id,
     }));
 
     // Combine both arrays

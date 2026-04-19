@@ -163,6 +163,7 @@
         {
           "id": "P2-T1",
           "title": "Surface ownerId through useUnifiedSavedItems into MatchingItem",
+          "status": "done",
           "summary": "Expose the underlying saved_item owner's user id from useUnifiedSavedItems (cloud rows) and pass it through to MatchingItem as an optional ownerId. Local-only matches do not carry an ownerId.",
           "acceptanceCriteria": [
             "UnifiedSavedItem carries ownerId when source is cloud.",

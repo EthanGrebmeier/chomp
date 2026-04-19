@@ -7,6 +7,11 @@ export type MatchingItem = BaseGroceryItem & {
   source: 'local' | 'cloud';
   cloudSavedItemId?: string;
   localSavedItemId?: string;
+  /**
+   * Owner user id of the underlying saved_item. Populated for cloud matches
+   * only; local matches do not carry an ownerId.
+   */
+  ownerId?: string;
 };
 
 export const useMatchingItems = (
@@ -51,6 +56,7 @@ export const useMatchingItems = (
           source: item.source,
           cloudSavedItemId: item.source === 'cloud' ? item.id : undefined,
           localSavedItemId: item.source === 'local' ? item.id : undefined,
+          ownerId: item.source === 'cloud' ? item.ownerId : undefined,
         })
       );
   }, [savedItems, value]);

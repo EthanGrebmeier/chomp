@@ -23,5 +23,10 @@ export type UnifiedSavedItem = {
   storeId?: string;
   store?: { id: string; name: string };
   source: 'local' | 'cloud';
+  /**
+   * Owner user id of the underlying saved_item. Only present for cloud rows;
+   * local-only entries are inherently per-device and have no owner id.
+   */
+  ownerId?: string;
 };
 
