@@ -1,8 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { LinearGradient } from 'expo-linear-gradient';
 import { PlusIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { StyleSheet, View, useColorScheme } from 'react-native';
+import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
@@ -13,8 +12,8 @@ import {
 import { addGroceryListItem } from '../../../features/grocery-list/instant/add-grocery-list-item';
 import { BaseGroceryItem } from '../../../features/grocery-list/types';
 import {
-  addRecipeToList,
   RecipeIngredientInput,
+  addRecipeToList,
 } from '../../../features/recipes/instant/add-recipe-to-list';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
 import { cn } from '../../../lib/utils';
@@ -108,7 +107,6 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
   >(null);
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
 
-  const isDarkMode = useColorScheme() === 'dark';
   const isRecipeSelectionMode = mode === 'recipe' && !selectedRecipe;
 
   const openSheet = () => {
@@ -255,7 +253,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         />
       </Button>
       <BottomSheet
-        detents={isRecipeSelectionMode ? [0.7] : ['auto']}
+        detents={[1]}
         name="add-item-sheet"
         ref={ref}
         onOpen={() => {
@@ -263,52 +261,37 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         }}
         onStartClose={handleClose}
         scrollable={isRecipeSelectionMode}
-        viewClassName="pb-safe"
         footer={
-          <>
-            {mode === 'item' ? (
-              <View className=" z-10 px-10 pb-4">
-                <View>
-                  <Button
-                    variant="default"
-                    size="default"
-                    onPress={onSubmit}
-                    disabled={!isValid}
-                  >
-                    <Text className="text-primary-foreground">
-                      {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
-                    </Text>
-                  </Button>
-                </View>
-              </View>
-            ) : mode === 'recipe' && selectedRecipe ? (
-              <View className="z-10 px-10 pb-4">
-                <Button
-                  variant="default"
-                  size="default"
-                  onPress={handleAddRecipeToList}
-                  disabled={
-                    selectedIngredientIds.size === 0 ||
-                    isAddingRecipe ||
-                    isResolvingConflict
-                  }
-                >
-                  <Text className="text-primary-foreground">Add to List</Text>
-                </Button>
-              </View>
-            ) : undefined}
-            <LinearGradient
-              colors={
-                isDarkMode
-                  ? ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0)']
-                  : ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']
-              }
-              start={{ x: 0.5, y: 1 }}
-              end={{ x: 0.5, y: 0 }}
-              pointerEvents="none"
-              style={styles.footerGradient}
-            />
-          </>
+          mode === 'item' ? (
+            <View className="gap-2 px-4 pb-4">
+              <MetaBar />
+              <Button
+                variant="default"
+                size="lg"
+                onPress={onSubmit}
+                disabled={!isValid}
+              >
+                <Text className="text-primary-foreground">
+                  {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
+                </Text>
+              </Button>
+            </View>
+          ) : mode === 'recipe' && selectedRecipe ? (
+            <View className="pb-safe-offset-4 px-4">
+              <Button
+                variant="default"
+                size="default"
+                onPress={handleAddRecipeToList}
+                disabled={
+                  selectedIngredientIds.size === 0 ||
+                  isAddingRecipe ||
+                  isResolvingConflict
+                }
+              >
+                <Text className="text-primary-foreground">Add to List</Text>
+              </Button>
+            </View>
+          ) : undefined
         }
       >
         {!selectedRecipe && (
@@ -322,7 +305,6 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         {mode === 'item' ? (
           <View className="px-4">
             <ItemForm />
-            <MetaBar />
           </View>
         ) : (
           <View>
@@ -410,16 +392,5 @@ const AddItem = ({ groceryListId }: AddItemProps) => {
     </ItemSheetProvider>
   );
 };
-
-const styles = StyleSheet.create({
-  footerGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 80,
-    zIndex: 0,
-  },
-});
 
 export default AddItem;
