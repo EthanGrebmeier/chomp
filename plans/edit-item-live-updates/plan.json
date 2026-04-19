@@ -402,6 +402,7 @@
         {
           "id": "P6-T1",
           "title": "Gate unit commit on quantity validity in UnitSheet",
+          "status": "done",
           "summary": "Tighten UnitSheet's handleConfirm so unit is not committed when the entered quantity is invalid. The existing disabled-confirm-button state is preserved as a belt-and-suspenders guard.",
           "acceptanceCriteria": [
             "When the confirm button is pressed with a valid quantity, both quantity and unit are committed.",

@@ -94,10 +94,9 @@ export const UnitSheet = ({
   };
 
   const handleConfirm = () => {
+    if (!isValid) return;
     const parsed = parseInt(localQuantity, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      onQuantityChange(parsed);
-    }
+    onQuantityChange(parsed);
     onUnitChange(normalizedLocalUnit);
     sheetRef.current?.dismiss();
   };
