@@ -1,0 +1,224 @@
+{
+  "planName": "Recipe Ingredient Sheet — Live Updates (Edit Mode)",
+  "sourcePrd": "plans/edit-ingredient-live-updates/prd.md",
+  "lastUpdated": "2026-04-19",
+  "architecturalDecisions": [
+    {
+      "id": "AD-1",
+      "title": "Edit-mode only scope",
+      "decision": "Live updates apply only to the edit mode of AddIngredientProvider (present with an existing ingredient). Add mode retains its explicit 'Add Ingredient' footer button, success toast, and sheet-stays-open continuous-entry UX."
+    },
+    {
+      "id": "AD-2",
+      "title": "New code under edit-ingredient subfolder",
+      "decision": "All new modules (diff helper, live-sync hook, null-rendering live-sync consumer) live under features/recipes/components/edit-ingredient/."
+    },
+    {
+      "id": "AD-3",
+      "title": "Reuse existing writer",
+      "decision": "Live writes invoke the existing updateRecipeIngredient function directly. No updateRecipeIngredientOnly split is introduced because recipe_ingredients do not link to saved_items."
+    },
+    {
+      "id": "AD-4",
+      "title": "Single live-write pathway",
+      "decision": "There is no deferred close-time cross-entity sync. The only close-time work is flushing the pending text debounce."
+    },
+    {
+      "id": "AD-5",
+      "title": "Debounce contract",
+      "decision": "Text fields (name, notes) use a 300ms trailing debounce via useDebounceCallback from usehooks-ts. Non-text fields (category, quantity, unit, storeId) fire immediate live writes. The debounce is flushed on sheet close and cancelled on autocomplete pick."
+    },
+    {
+      "id": "AD-6",
+      "title": "Live-write validity gate",
+      "decision": "Live writes are gated by the full isValid rule from useItemSheet: non-empty trimmed name AND truthy quantity AND truthy unit. When the form is ever not-valid, live writes are skipped until it is valid again."
+    },
+    {
+      "id": "AD-7",
+      "title": "Sheet lifecycle mapping",
+      "decision": "In edit mode, onStartClose flushes pending debounce and then calls reset(). onDismiss resets form state (if not already reset) and clears the snapshot ref. Add mode's lifecycle is unchanged."
+    },
+    {
+      "id": "AD-8",
+      "title": "Autocomplete pick semantics",
+      "decision": "A pick cancels pending debounce, immediately updateRecipeIngredient with the picked fields (preserving form quantity), and rebases the snapshot to the picked values. No saved_items relink is performed."
+    },
+    {
+      "id": "AD-9",
+      "title": "Unified provider with isEditing branch",
+      "decision": "AddIngredientProvider stays unified. Edit-specific wiring (live-sync child, footer hiding, onSubmit no-op, onPickMatch, onStartClose flush, onDismiss cleanup) is conditionally applied based on isEditing. No separate EditIngredientProvider is introduced."
+    },
+    {
+      "id": "AD-10",
+      "title": "Error handling",
+      "decision": "Live writes rely on Instant's optimistic UI and offline queue. No new catch-and-toast error surface is introduced."
+    }
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "title": "Live updates for edit mode (no autocomplete pick)",
+      "userStories": [
+        "Story 1: save changes as I make them",
+        "Story 2: dismiss and persist",
+        "Story 3: quantity pill applies on confirm",
+        "Story 4: category and store pills apply immediately",
+        "Story 5: name field trailing-debounced commit",
+        "Story 6: pending debounce flushed on dismiss",
+        "Story 7: skip writes when form is invalid",
+        "Story 8: notes save automatically as I type",
+        "Story 9: 'Update Ingredient' button removed in edit mode",
+        "Story 10: 'Ingredient updated' toast removed in edit mode",
+        "Story 13: writes rely on Instant optimistic/offline queue",
+        "Story 14: return key still blurs name input (no change)",
+        "Story 15: Add Ingredient flow unchanged",
+        "Story 16: live-update logic encapsulated in a dedicated hook"
+      ],
+      "tickets": [
+        {
+          "id": "P1-T1",
+          "title": "Diff helper for ingredient snapshot",
+          "summary": "Add a pure diff helper for recipe ingredients under the new edit-ingredient subfolder that returns the subset of fields that changed between a captured snapshot and current form values, using trim-normalized comparison for string fields and numeric equality for quantity.",
+          "acceptanceCriteria": [
+            "Exports an IngredientSnapshot type containing name, optional category, optional notes, quantity, unit, and optional storeId",
+            "Exports diffIngredientSnapshot({ snapshot, current }) returning Partial<IngredientSnapshot> with only the fields that differ",
+            "String field comparison trims both sides; empty string and undefined are treated as equal for optional fields",
+            "Quantity is compared as numeric equality",
+            "No React, hook, or Instant imports in the module"
+          ],
+          "dependencies": [],
+          "testPlan": [
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": [
+            "Unit tests for the helper (PRD defers tests; grocery's diffItemSnapshot tests are the model if added later)"
+          ]
+        },
+        {
+          "id": "P1-T2",
+          "title": "useLiveIngredientSync hook",
+          "summary": "Add the live-sync hook under the new edit-ingredient subfolder. It reads form state from useItemSheet, owns a snapshot ref and current-store-id baseline, debounces text-field writes at 300ms trailing, fires immediate writes for category/quantity/unit/storeId, gates all writes on isValid, commits via updateRecipeIngredient, and exposes an imperative handle via a MutableRefObject prop.",
+          "acceptanceCriteria": [
+            "Accepts { selectedIngredientId, currentStoreId, handleRef } props",
+            "Reads itemInputValue, notesInputValue, category, quantity, unit, storeId, and isValid from useItemSheet",
+            "Owns a snapshot ref and a current-store-id ref; a stable stateRef mirrors latest props and form state so callbacks do not close over stale values",
+            "Uses useDebounceCallback (usehooks-ts) with 300ms delay, trailing edge",
+            "One effect reacts to [itemInputValue, notesInputValue, debouncedCommit] by calling debouncedCommit()",
+            "A second effect reacts to [category, quantity, unit, storeId] by calling the commit function immediately",
+            "commit is a no-op when there is no snapshot, no selectedIngredientId, or isValid is false",
+            "commit diffs snapshot vs current and returns when the diff is empty",
+            "commit invokes updateRecipeIngredient with the full current payload and currentStoreId from the hook's ref baseline",
+            "After a successful write, snapshot is updated to current and currentStoreIdRef is updated when storeId was in the diff",
+            "handleRef exposes { captureSnapshot(ingredient), flush(), clearSnapshot() } where captureSnapshot seeds snapshot and currentStoreIdRef, flush calls debouncedCommit.flush(), and clearSnapshot nulls snapshot and calls debouncedCommit.cancel()",
+            "handleRef also exposes an onPickMatch stub that is safe to call but is a no-op in this ticket (wired fully in P2)"
+          ],
+          "dependencies": ["P1-T1"],
+          "testPlan": [
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": [
+            "Autocomplete pick behavior (P2)",
+            "Unit tests for the hook"
+          ]
+        },
+        {
+          "id": "P1-T3",
+          "title": "EditIngredientLiveSync null-renderer",
+          "summary": "Add a thin null-rendering consumer under the edit-ingredient subfolder that runs useLiveIngredientSync inside ItemSheetProvider and publishes its imperative handle via the liveSyncRef it receives as a prop.",
+          "acceptanceCriteria": [
+            "Accepts { selectedIngredientId, currentStoreId, liveSyncRef } props",
+            "Renders null",
+            "Calls useLiveIngredientSync with handleRef={liveSyncRef}",
+            "Exports the LiveIngredientSyncHandle type for consumers"
+          ],
+          "dependencies": ["P1-T2"],
+          "testPlan": [
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": []
+        },
+        {
+          "id": "P1-T4",
+          "title": "Wire live-sync into AddIngredientProvider and remove edit-mode footer affordances",
+          "summary": "Integrate EditIngredientLiveSync into AddIngredientProvider so edit-mode persistence is live. The footer 'Update Ingredient' button and success toast are removed from the edit branch; add mode is untouched. Sheet close hooks flush the debounce and clear the snapshot.",
+          "acceptanceCriteria": [
+            "Provider owns a liveSyncRef: MutableRefObject<LiveIngredientSyncHandle | null>",
+            "When isEditing is true, <EditIngredientLiveSync /> is rendered inside ItemSheetProvider with selectedIngredientId, currentStoreId, and liveSyncRef",
+            "Footer 'Update Ingredient' button is not rendered when isEditing is true; 'Add Ingredient' button is preserved when isEditing is false",
+            "ItemSheetProvider.onSubmit is a no-op in edit mode; the success toast and manual sheetRef.current?.dismiss() for the edit branch are removed",
+            "Add mode onSubmit keeps its existing behavior (addRecipeIngredient + toast + reset)",
+            "present(ingredient) calls liveSyncRef.current?.captureSnapshot(ingredient) after setFromItemRef.current?.(...) and before sheetRef.current?.present()",
+            "BottomSheet onStartClose in edit mode calls liveSyncRef.current?.flush() before calling reset()",
+            "BottomSheet onDismiss is added and, in edit mode, calls reset() and liveSyncRef.current?.clearSnapshot()",
+            "Add-mode onStartClose/onDismiss behavior is equivalent to today (reset + clear editing state)",
+            "No regression in clearing editingIngredient or currentStoreId on close",
+            "Editing an ingredient, changing name/notes, dismissing the sheet, and reopening shows the changes persisted",
+            "Editing an ingredient, changing category/quantity/unit/store, and dismissing shows the changes persisted without any footer button tap",
+            "No success toast is shown in the edit flow"
+          ],
+          "dependencies": ["P1-T3"],
+          "testPlan": [
+            "pnpm tsc --noEmit",
+            "Manual: open a recipe I own, tap an ingredient, edit name, notes, quantity, unit, category, and store; swipe-dismiss; reopen to confirm all changes persisted",
+            "Manual: open an ingredient, clear the name to empty, pause past the debounce, and confirm no write fires (name is unchanged on reopen); restore the name and confirm normal persistence resumes",
+            "Manual: confirm 'Add Ingredient' flow still works end-to-end: footer button present, toast appears, sheet stays open, form resets"
+          ],
+          "outOfScope": [
+            "Autocomplete pick rebase (P2)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Autocomplete pick rebase in edit mode",
+      "userStories": [
+        "Story 11: pick commits immediately so subsequent edits diff against picked values",
+        "Story 12: pick takes precedence over pending debounce"
+      ],
+      "tickets": [
+        {
+          "id": "P2-T1",
+          "title": "Implement onPickMatch in useLiveIngredientSync",
+          "summary": "Replace the P1 onPickMatch stub with the real implementation: cancel any pending debounce, commit picked fields via updateRecipeIngredient (preserving form quantity), and rebase the snapshot ref (and currentStoreIdRef where applicable) to the picked values.",
+          "acceptanceCriteria": [
+            "handleRef.onPickMatch(match) calls debouncedCommit.cancel() before any write",
+            "Commits updateRecipeIngredient with the picked fields (name, category, notes, storeId, and unit if present on the match) while preserving the current form quantity",
+            "Passes the current ingredient's currentStoreIdRef so the store link reconciles correctly when the pick's storeId differs from the current baseline",
+            "Rebases snapshot to the post-pick values so subsequent diffs measure user edits after the pick",
+            "Updates currentStoreIdRef to the picked storeId when present",
+            "Guarded by the same isValid/selectedIngredientId/snapshot preconditions as commit",
+            "Does not attempt any saved_items relink"
+          ],
+          "dependencies": ["P1-T4"],
+          "testPlan": [
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": []
+        },
+        {
+          "id": "P2-T2",
+          "title": "Wire onPickMatch prop in edit mode",
+          "summary": "Pass onPickMatch to ItemSheetProvider only when the sheet is in edit mode, routing calls through the liveSyncRef imperative handle so autocomplete picks are handled by the hook.",
+          "acceptanceCriteria": [
+            "ItemSheetProvider receives onPickMatch={(match) => liveSyncRef.current?.onPickMatch(match)} when isEditing is true",
+            "ItemSheetProvider does not receive onPickMatch in add mode (add flow remains untouched)",
+            "While editing: typing a few characters to surface autocomplete, then picking a match, commits the picked fields immediately without waiting for debounce",
+            "While editing: picking a match while a text debounce is pending does not produce a stale keystroke write after the pick",
+            "After a pick, further edits diff against the picked values (verifiable by changing one picked field and observing only that field gets written)"
+          ],
+          "dependencies": ["P2-T1"],
+          "testPlan": [
+            "pnpm tsc --noEmit",
+            "Manual: edit an existing ingredient, type a partial name to surface autocomplete, and pick a suggestion — verify fields update and reopen shows the picked values",
+            "Manual: begin a rapid keystroke sequence that leaves debounce pending, pick a match — confirm the post-pick ingredient reflects the pick, not the stale keystrokes"
+          ],
+          "outOfScope": [
+            "Adding saved_items linking to recipe_ingredients",
+            "Changing autocomplete matching or sort logic"
+          ]
+        }
+      ]
+    }
+  ]
+}
