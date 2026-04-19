@@ -106,6 +106,7 @@
         {
           "id": "P1-T3",
           "title": "Extract syncSavedItemFromGroceryItem writer",
+          "status": "done",
           "summary": "Pull the saved_items row update, saved_items↔stores reconcile, and local-saved-item upsert out of updateGroceryListItem. The owner gate lives inside this function so callers don't duplicate it.",
           "acceptanceCriteria": [
             "Exports syncSavedItemFromGroceryItem with typed inputs covering nextSavedItemId, currentSavedItemOwnerId, selectedLocalSavedItemId, item (partial), a savedItemStoreId baseline, and currentItemName.",
