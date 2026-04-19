@@ -59,11 +59,6 @@ function InitialLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(auth)/sign-in" />
-        <Stack.Screen name="(auth)/sign-in-email" />
-        <Stack.Screen name="(auth)/sign-up" />
-        <Stack.Screen name="(auth)/sign-up-email" />
-        <Stack.Screen name="(auth)/sign-up-email-code" />
         <Stack.Screen
           name="meal-plan/[listId]"
           options={{
