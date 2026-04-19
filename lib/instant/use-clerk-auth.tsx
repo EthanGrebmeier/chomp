@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/clerk-expo';
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
 import {
   useCallback,
   useEffect,
@@ -9,10 +9,13 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { ActivityIndicator } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
-import { consumeManualSignOutIntent } from '../clerk/signout-intent';
+import {
+  consumeManualSignOutIntent,
+  markManualSignOutIntent,
+} from '../clerk/signout-intent';
 
 import {
   getIsGuestContinuationPending,
@@ -25,9 +28,14 @@ let activeAuthControllerId: string | null = null;
 const AUTH_LOADING_TIMEOUT_MS = 4000;
 const AUTH_RESTORE_RETRY_COUNT = 10;
 const AUTH_RESTORE_RETRY_DELAY_MS = 250;
-const AUTH_ENTRY_ROUTE = '/(auth)';
+const AUTH_WELCOME_ROUTE = '/(auth)';
+const AUTH_EXPIRED_ROUTE = '/(auth)/sign-in';
 type InstantAuthSession = Awaited<ReturnType<typeof db.getAuth>>;
-export type InstantAuthStatus = 'loading' | 'signed-in' | 'guest' | 'signed-out';
+export type InstantAuthStatus =
+  | 'loading'
+  | 'signed-in'
+  | 'guest'
+  | 'signed-out';
 export type InstantAuthState = {
   status: InstantAuthStatus;
   isReconciled: boolean;
@@ -63,8 +71,7 @@ const INITIAL_INSTANT_AUTH_STATE: InstantAuthState = {
 };
 let instantAuthStateSnapshot = INITIAL_INSTANT_AUTH_STATE;
 
-const sleep = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const waitForInstantAuthRestore = async () => {
   for (let attempt = 0; attempt < AUTH_RESTORE_RETRY_COUNT; attempt += 1) {
@@ -104,11 +111,17 @@ const buildInstantAuthStateSnapshot = ({
   isGuestContinuationPending,
 }: InstantAuthSnapshotArgs): InstantAuthState => {
   const isReconciled =
-    instantAuth !== undefined && isSignedIn !== undefined && !isResolvingAuthState;
+    instantAuth !== undefined &&
+    isSignedIn !== undefined &&
+    !isResolvingAuthState;
   const hasInstantEmailSession = Boolean(instantAuth?.email);
   const hasInstantGuestSession = Boolean(instantAuth && !instantAuth.email);
   const shouldBlockAuthUi =
-    isSignedIn === undefined || isBlockingAuthLoad || isResolvingAuthState;
+    isSignedIn === undefined ||
+    isBlockingAuthLoad ||
+    isResolvingAuthState ||
+    instantAuth === undefined ||
+    didExpireSignedInSession;
 
   if (!isReconciled) {
     return {
@@ -151,6 +164,8 @@ const signInWithClerkToken = async (getToken: () => Promise<string | null>) => {
 
 export const useInstantSignIn = () => {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
 
   return useCallback(async () => {
     const existingAuth = await db.getAuth();
@@ -159,14 +174,14 @@ export const useInstantSignIn = () => {
       await db.auth.signOut();
     }
 
-    await signInWithClerkToken(getToken);
+    await signInWithClerkToken(getTokenRef.current);
 
     const restoredAuth = await waitForInstantAuthRestore();
 
     if (!restoredAuth?.email) {
       throw new Error('Instant auth session did not become available in time');
     }
-  }, [getToken]);
+  }, []);
 };
 
 export const useInstantAuthState = () =>
@@ -185,28 +200,32 @@ export const InstantAuthHandler = ({
   showBlockingOverlay = true,
   onBlockingAuthLoadChange,
 }: InstantAuthHandlerProps = {}) => {
-  const { isSignedIn, signOut } = useAuth();
+  const { isSignedIn, signOut, getToken } = useAuth();
   const signInToInstant = useInstantSignIn();
   const authTransitionRef = useRef(false);
   const previousIsSignedInRef = useRef<boolean | undefined>(isSignedIn);
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
   const instanceIdRef = useRef(
     `auth-handler-${Math.random().toString(36).slice(2)}`
   );
   const [isAuthController, setIsAuthController] = useState(false);
   const [hasAuthLoadingTimedOut, setHasAuthLoadingTimedOut] = useState(false);
   const [isResolvingAuthState, setIsResolvingAuthState] = useState(true);
-  const [didExpireSignedInSession, setDidExpireSignedInSession] = useState(false);
+  const [didExpireSignedInSession, setDidExpireSignedInSession] =
+    useState(false);
   const [resolvedInstantAuth, setResolvedInstantAuth] = useState<
     InstantAuthSession | undefined
   >(undefined);
   const router = useRouter();
+  const segments = useSegments();
   const isGuestContinuationPending = useSyncExternalStore(
     subscribeToGuestContinuationState,
     getIsGuestContinuationPending,
     getIsGuestContinuationPending
   );
 
-  const { isLoading: isLoadingInstant } = db.useAuth();
+  const { isLoading: isLoadingInstant, user: liveInstantUser } = db.useAuth();
 
   const isBlockingAuthLoad = isLoadingInstant && !hasAuthLoadingTimedOut;
   const instantAuthState = useMemo(
@@ -289,15 +308,32 @@ export const InstantAuthHandler = ({
       authTransitionRef.current = true;
       const didTransitionFromSignedIn =
         previousIsSignedInRef.current === true && isSignedIn === false;
-      const shouldSuppressSignOutToast = didTransitionFromSignedIn
-        ? consumeManualSignOutIntent()
-        : false;
       try {
         const existingAuth = await db.getAuth();
 
         if (isSignedIn) {
           if (existingAuth?.email) {
-            nextResolvedInstantAuth = existingAuth;
+            let clerkToken: string | null = null;
+            let didClerkTokenRefreshFail = false;
+
+            try {
+              clerkToken = await getTokenRef.current();
+            } catch {
+              didClerkTokenRefreshFail = true;
+            }
+
+            if (!didClerkTokenRefreshFail && clerkToken) {
+              nextResolvedInstantAuth = existingAuth;
+              return;
+            }
+
+            // Clerk reports signed-in but the token is missing/invalid — the
+            // server session has expired. Suppress the follow-up transition
+            // toast so we only surface a single "expired" message.
+            markManualSignOutIntent();
+            await Promise.allSettled([db.auth.signOut(), signOut()]);
+            nextResolvedInstantAuth = null;
+            shouldMarkSessionExpired = true;
             return;
           }
 
@@ -312,7 +348,9 @@ export const InstantAuthHandler = ({
             await Promise.allSettled([db.auth.signOut(), signOut()]);
 
             if (!isCancelled) {
-              toast.error('Could not restore your session. Please sign in again.');
+              toast.error(
+                'Could not restore your session. Please sign in again.'
+              );
             }
           }
 
@@ -327,10 +365,15 @@ export const InstantAuthHandler = ({
         }
 
         if (stableAuth?.email) {
+          // Clerk is signed-out but Instant still has a cached email session.
+          // This is an expired signed-in session regardless of whether we
+          // observed the Clerk transition this mount (cold boots after an
+          // expiry see undefined -> false, not true -> false).
+          const shouldSuppressSignOutToast = consumeManualSignOutIntent();
           await db.auth.signOut();
           nextResolvedInstantAuth = null;
 
-          if (didTransitionFromSignedIn && !shouldSuppressSignOutToast) {
+          if (!shouldSuppressSignOutToast) {
             shouldMarkSessionExpired = true;
           }
 
@@ -339,8 +382,12 @@ export const InstantAuthHandler = ({
 
         nextResolvedInstantAuth = stableAuth;
 
-        if (!stableAuth && didTransitionFromSignedIn && !shouldSuppressSignOutToast) {
-          shouldMarkSessionExpired = true;
+        if (!stableAuth && didTransitionFromSignedIn) {
+          const shouldSuppressSignOutToast = consumeManualSignOutIntent();
+
+          if (!shouldSuppressSignOutToast) {
+            shouldMarkSessionExpired = true;
+          }
         }
       } finally {
         authTransitionRef.current = false;
@@ -372,26 +419,97 @@ export const InstantAuthHandler = ({
   ]);
 
   useEffect(() => {
-    if (!didExpireSignedInSession || !isAuthController) {
+    if (!isAuthController) {
       return;
     }
 
-    toast.info('Your session expired. Please sign in again.');
-    router.replace(AUTH_ENTRY_ROUTE);
-    setDidExpireSignedInSession(false);
-  }, [didExpireSignedInSession, isAuthController, router]);
+    if (!instantAuthState.isReconciled || instantAuthState.hasAppAccess) {
+      return;
+    }
+
+    // Guest continuation (and other in-flight sign-ins) briefly land Instant
+    // with a live session before `resolvedInstantAuth` catches up. Don't bounce
+    // the user out while the resolver is still behind the live auth.
+    if (isGuestContinuationPending || liveInstantUser) {
+      return;
+    }
+
+    // `(auth)/_layout.tsx` owns the reverse direction (auth -> tabs), so once
+    // the user is already inside the auth group we leave routing to it.
+    const isOnAuthRoute = segments[0] === '(auth)';
+
+    if (didExpireSignedInSession) {
+      toast.info('Your session expired. Please sign in again.');
+      setDidExpireSignedInSession(false);
+
+      if (!isOnAuthRoute) {
+        router.replace(AUTH_EXPIRED_ROUTE);
+      }
+
+      return;
+    }
+
+    if (!isOnAuthRoute) {
+      router.replace(AUTH_WELCOME_ROUTE);
+    }
+  }, [
+    didExpireSignedInSession,
+    instantAuthState.hasAppAccess,
+    instantAuthState.isReconciled,
+    isAuthController,
+    isGuestContinuationPending,
+    liveInstantUser,
+    router,
+    segments,
+  ]);
 
   if (showBlockingOverlay && instantAuthState.shouldBlockAuthUi) {
     return (
       <Animated.View
-        entering={FadeIn.duration(200)}
         exiting={FadeOut.duration(200)}
-        className="absolute inset-0 z-20 items-center justify-center bg-background"
+        pointerEvents="auto"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9999,
+          elevation: 9999,
+        }}
+        className="items-center justify-center bg-background"
       >
-        <ActivityIndicator color="white" />
+        <ActivityIndicator />
       </Animated.View>
     );
   }
 
   return null;
+};
+
+export const InstantAuthBlockingOverlay = () => {
+  const { shouldBlockAuthUi } = useInstantAuthState();
+
+  if (!shouldBlockAuthUi) {
+    return null;
+  }
+
+  return (
+    <Animated.View
+      exiting={FadeOut.duration(400)}
+      pointerEvents="auto"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+        elevation: 9999,
+      }}
+      className="items-center justify-center bg-background"
+    >
+      <ActivityIndicator />
+    </Animated.View>
+  );
 };

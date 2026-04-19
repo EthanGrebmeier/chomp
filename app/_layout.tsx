@@ -10,11 +10,17 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+import {
+  ReanimatedLogLevel,
+  configureReanimatedLogger,
+} from 'react-native-reanimated';
 import { Toaster } from 'sonner-native';
 
 import { tokenCache } from '@/lib/clerk-token-cache';
-import { InstantAuthHandler } from '@/lib/instant/use-clerk-auth';
+import {
+  InstantAuthBlockingOverlay,
+  InstantAuthHandler,
+} from '@/lib/instant/use-clerk-auth';
 import { MigrationProvider } from '@/providers/migration-provider';
 import { QueryClientProvider } from '@/providers/query-client-provider';
 
@@ -53,6 +59,11 @@ function InitialLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(auth)/sign-in" />
+        <Stack.Screen name="(auth)/sign-in-email" />
+        <Stack.Screen name="(auth)/sign-up" />
+        <Stack.Screen name="(auth)/sign-up-email" />
+        <Stack.Screen name="(auth)/sign-up-email-code" />
         <Stack.Screen
           name="meal-plan/[listId]"
           options={{
@@ -150,6 +161,7 @@ export default function RootLayout() {
                 onBlockingAuthLoadChange={setIsAuthBlockingSplash}
               />
               <InitialLayout />
+              <InstantAuthBlockingOverlay />
               <PortalHost />
             </GestureHandlerRootView>
           </MigrationProvider>
