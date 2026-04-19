@@ -96,8 +96,7 @@
             "P1-T1"
           ],
           "testPlan": [
-            "Vitest tests stubbing db.transact and linkStoreToItem to assert the transactions made for: simple field update, store linked/unlinked/switched, relink on cloud pick, unlink on local pick, and no-op relink when ids match.",
-            "pnpm test",
+            "No unit tests: db.transact is the only observable effect and stubbing it would couple tests to call shape/order (implementation detail). Behavior is validated via the P1-T4 wrapper smoke test and end-to-end flows in later phases.",
             "pnpm tsc"
           ],
           "outOfScope": [
@@ -119,8 +118,7 @@
             "P1-T1"
           ],
           "testPlan": [
-            "Vitest tests stubbing db.transact, db.getAuth, and upsertLocalSavedItem to assert behavior across: no-op input, local path, owner path, non-owner skip, store link/unlink/switch.",
-            "pnpm test",
+            "No unit tests: db.transact and upsertLocalSavedItem are the only observable effects and stubbing them would couple tests to call shape/order (implementation detail). Behavior is validated via the P1-T4 wrapper smoke test and end-to-end flows in later phases.",
             "pnpm tsc"
           ],
           "outOfScope": [
