@@ -158,7 +158,7 @@ export const SelectGroceryListSheet = forwardRef<
     return (
       <>
         <BottomSheet
-          detents={[0.7]}
+          detents={[1]}
           name={name}
           ref={sheetRef}
           scrollable
