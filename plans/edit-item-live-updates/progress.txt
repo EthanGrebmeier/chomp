@@ -1,0 +1,1 @@
+2026-04-19 P1-T1: Added pure diffItemSnapshot helper in components/item-sheet/ with 15 colocated vitest cases covering equal state, single-field diffs, trim-equivalence, undefined/empty-string equivalence for optional fields, and multi-field diffs.
