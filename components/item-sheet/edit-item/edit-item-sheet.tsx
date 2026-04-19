@@ -1,6 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
 
+import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
 import {
   BaseGroceryItem,
   GroceryListItemWithRecipe,
@@ -16,6 +17,13 @@ import { UseLiveItemSyncHandle, useLiveItemSync } from './use-live-item-sync';
 type EditItemContextType = {
   present: (item: GroceryListItemWithRecipe) => void;
   dismiss: () => void;
+  /**
+   * Immediately unlink the recipe association from the currently-presented
+   * grocery item. RecipeTag calls this from its X-button so the detach
+   * lands as soon as the user taps it, rather than waiting for sheet close
+   * like the pre-live-updates submit path did.
+   */
+  clearRecipe: (recipeId: string) => void;
 };
 
 const EditItemContext = createContext<EditItemContextType | null>(null);
@@ -164,8 +172,22 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
     sheetRef.current?.dismiss();
   };
 
+  // Fire the unlink the moment the user clears the recipe tag rather than
+  // deferring it to sheet close. The old submit path used to collect a
+  // `clearedRecipeId` and flush it alongside the grocery-item write; that
+  // path is gone (P3-T2), so we commit directly here. No-op when no item
+  // is currently presented (defensive — RecipeTag only renders when there
+  // is one).
+  const clearRecipe = useCallback(
+    (recipeId: string) => {
+      if (!selectedItemId) return;
+      unlinkRecipeFromItem({ itemId: selectedItemId, recipeId });
+    },
+    [selectedItemId]
+  );
+
   return (
-    <EditItemContext.Provider value={{ present, dismiss }}>
+    <EditItemContext.Provider value={{ present, dismiss, clearRecipe }}>
       <EditItemInternalContext.Provider value={{ sheetRef, liveSyncRef }}>
         <ItemSheetProvider
           mode="update"

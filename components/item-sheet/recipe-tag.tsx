@@ -11,7 +11,7 @@ import { useItemSheet } from './use-item-sheet';
 
 export const RecipeTag = () => {
   const { recipe, setRecipe } = useItemSheet();
-  const { dismiss } = useEditItemSheet();
+  const { dismiss, clearRecipe } = useEditItemSheet();
 
   if (!recipe) {
     return null;
@@ -20,6 +20,14 @@ export const RecipeTag = () => {
   const handleGoToRecipe = () => {
     router.push(navigation.goToRecipe(recipe.id));
     dismiss();
+  };
+
+  // Fire the cloud unlink immediately alongside the local form-state clear
+  // so the grocery item's recipe association detaches right away instead of
+  // waiting for sheet dismissal (P5-T3).
+  const handleClearRecipe = () => {
+    clearRecipe(recipe.id);
+    setRecipe(null);
   };
 
   return (
@@ -32,7 +40,7 @@ export const RecipeTag = () => {
         {recipe.name}
       </Text>
       <HapticPressable
-        onPress={() => setRecipe(null)}
+        onPress={handleClearRecipe}
         hitSlop={8}
         hapticType="light"
         className="ml-0.5"

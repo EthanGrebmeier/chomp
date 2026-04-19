@@ -372,6 +372,7 @@
         {
           "id": "P5-T3",
           "title": "Recipe clear fires immediate unlink",
+          "status": "done",
           "summary": "When the user clears the recipe tag in the Edit sheet, fire unlinkRecipeFromItem immediately rather than deferring it to the sheet's submit path.",
           "acceptanceCriteria": [
             "Clearing the recipe tag in the Edit sheet triggers unlinkRecipeFromItem on the spot.",
