@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -34,6 +34,17 @@ export const ItemInput = ({
 }: ItemInputProps) => {
   const { matchingItems } = useMatchingItems(value);
   const isApplyingSuggestionRef = useRef(false);
+  const hideSuggestionsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  useEffect(() => {
+    return () => {
+      if (hideSuggestionsTimeoutRef.current) {
+        clearTimeout(hideSuggestionsTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const shouldShowAutocomplete =
     !disableAutocomplete && showMatchingItems && matchingItems.length > 0;
@@ -47,12 +58,33 @@ export const ItemInput = ({
 
   const handleSuggestionPress = (item: MatchingItem) => {
     isApplyingSuggestionRef.current = true;
+    if (hideSuggestionsTimeoutRef.current) {
+      clearTimeout(hideSuggestionsTimeoutRef.current);
+      hideSuggestionsTimeoutRef.current = null;
+    }
     onChangeText(item.name);
     onSelect(item);
     setShowMatchingItems(false);
     setTimeout(() => {
       isApplyingSuggestionRef.current = false;
     }, 0);
+  };
+
+  const handleSuggestionPressIn = () => {
+    isApplyingSuggestionRef.current = true;
+    if (hideSuggestionsTimeoutRef.current) {
+      clearTimeout(hideSuggestionsTimeoutRef.current);
+      hideSuggestionsTimeoutRef.current = null;
+    }
+  };
+
+  const handleInputBlur = () => {
+    hideSuggestionsTimeoutRef.current = setTimeout(() => {
+      if (isApplyingSuggestionRef.current) {
+        return;
+      }
+      setShowMatchingItems(false);
+    }, 75);
   };
 
   return (
@@ -63,7 +95,7 @@ export const ItemInput = ({
         placeholder={placeholder}
         value={value}
         onChangeText={handleChangeText}
-        onBlur={() => setShowMatchingItems(false)}
+        onBlur={handleInputBlur}
         autoCorrect={false}
         autoCapitalize="words"
         onSubmitEditing={onSubmit}
@@ -80,6 +112,7 @@ export const ItemInput = ({
                 className={cn(
                   'flex-row items-center justify-between self-start rounded-xl border border-border bg-[#F3F4F6] px-2 py-0.5 dark:bg-[#1E2023]'
                 )}
+                onPressIn={handleSuggestionPressIn}
                 onPress={() => handleSuggestionPress(item)}
               >
                 <Text

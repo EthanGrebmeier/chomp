@@ -193,10 +193,12 @@ export const ItemSheetProvider = ({
     setStoreId(item.storeId);
     setStoreName(undefined);
     setShowMatchingItems(false);
-    // Notify observers (e.g. useLiveItemSync in the Edit flow) after the
-    // form state has been populated so downstream snapshot/rebase logic
-    // reads the picked values — not the pre-pick ones.
-    onPickMatch?.(item);
+    // Notify observers (e.g. useLiveItemSync in the Edit flow) on the next
+    // macrotask so React can commit the state updates above first. This keeps
+    // downstream snapshot/rebase logic aligned with the picked form values.
+    setTimeout(() => {
+      onPickMatch?.(item);
+    }, 0);
   };
 
   const onChangeItemText = (text: string) => {
