@@ -17,6 +17,7 @@ import {
   ItemSheetProvider,
   useItemSheet,
 } from '../../../components/item-sheet/use-item-sheet';
+import { MatchingItem } from '../../../components/item-sheet/use-matching-items';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { BaseGroceryItem } from '../../grocery-list/types';
@@ -154,6 +155,14 @@ export const AddIngredientProvider = ({
     toast.success(`${item.name} added`);
   };
 
+  // In edit mode, route autocomplete picks through the live-sync hook so it
+  // can cancel any pending text-field debounce, commit the picked fields
+  // immediately, and rebase its diff snapshot to the picked target. Add
+  // mode leaves onPickMatch unset so its submit-on-button flow is unchanged.
+  const onPickMatch = useCallback((match: MatchingItem) => {
+    liveSyncRef.current?.onPickMatch(match);
+  }, []);
+
   const present = (ingredient?: RecipeIngredient) => {
     if (ingredient) {
       setEditingIngredient(ingredient);
@@ -187,6 +196,7 @@ export const AddIngredientProvider = ({
           mode={isEditing ? 'update' : 'add'}
           onSubmit={onSubmit}
           setFromItemRef={setFromItemRef}
+          onPickMatch={isEditing ? onPickMatch : undefined}
         >
           {isEditing ? (
             <EditIngredientLiveSync

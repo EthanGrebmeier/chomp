@@ -204,6 +204,7 @@
         {
           "id": "P2-T2",
           "title": "Wire onPickMatch prop in edit mode",
+          "status": "done",
           "summary": "Pass onPickMatch to ItemSheetProvider only when the sheet is in edit mode, routing calls through the liveSyncRef imperative handle so autocomplete picks are handled by the hook.",
           "acceptanceCriteria": [
             "ItemSheetProvider receives onPickMatch={(match) => liveSyncRef.current?.onPickMatch(match)} when isEditing is true",
