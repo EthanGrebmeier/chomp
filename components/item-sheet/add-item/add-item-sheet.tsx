@@ -107,8 +107,6 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
   >(null);
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
 
-  const isRecipeSelectionMode = mode === 'recipe' && !selectedRecipe;
-
   const openSheet = () => {
     ref.current?.present();
   };
@@ -256,11 +254,12 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         detents={[1]}
         name="add-item-sheet"
         ref={ref}
+        viewClassName={mode === 'recipe' ? 'flex-1' : undefined}
         onOpen={() => {
           itemInputRef.current?.focus();
         }}
         onDismiss={handleClose}
-        scrollable={isRecipeSelectionMode}
+        scrollable={mode === 'recipe'}
         footer={
           mode === 'item' ? (
             <View className="gap-2 px-4 pb-4">
@@ -277,10 +276,10 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
               </Button>
             </View>
           ) : mode === 'recipe' && selectedRecipe ? (
-            <View className="pb-safe-offset-4 px-4">
+            <View className="pb-safe px-4">
               <Button
                 variant="default"
-                size="default"
+                size="lg"
                 onPress={handleAddRecipeToList}
                 disabled={
                   selectedIngredientIds.size === 0 ||
@@ -294,49 +293,53 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
           ) : undefined
         }
       >
-        {!selectedRecipe && (
-          <Animated.View
-            entering={FadeIn.duration(300)}
-            exiting={FadeOut.duration(300)}
-          >
-            <ModeToggle mode={mode} onModeChange={handleModeChange} />
-          </Animated.View>
-        )}
-        {mode === 'item' ? (
-          <View className="px-4">
-            <ItemForm />
-          </View>
-        ) : (
-          <View>
-            {selectedRecipe ? (
-              <Animated.View
-                key="ingredient-selector"
-                entering={FadeIn.duration(300)}
-                exiting={FadeOut.duration(300)}
-              >
-                <IngredientSelector
-                  recipe={selectedRecipe}
-                  onBack={handleBackToRecipes}
-                  onDismiss={() => ref.current?.dismiss()}
-                  selectedIds={selectedIngredientIds}
-                  onToggleIngredient={toggleIngredient}
-                  onToggleAll={toggleAllIngredients}
-                  showFooter={false}
-                />
-              </Animated.View>
-            ) : (
-              <Animated.View
-                key="recipe-selector"
-                entering={FadeIn.duration(300)}
-              >
-                <RecipeSelector
-                  onSelectRecipe={handleRecipeSelect}
-                  onDismiss={() => ref.current?.dismiss()}
-                />
-              </Animated.View>
-            )}
-          </View>
-        )}
+        <View className={mode === 'recipe' ? 'flex-1' : undefined}>
+          {!selectedRecipe && (
+            <Animated.View
+              entering={FadeIn.duration(300)}
+              exiting={FadeOut.duration(300)}
+            >
+              <ModeToggle mode={mode} onModeChange={handleModeChange} />
+            </Animated.View>
+          )}
+          {mode === 'item' ? (
+            <View className="px-4">
+              <ItemForm />
+            </View>
+          ) : (
+            <View className="flex-1">
+              {selectedRecipe ? (
+                <Animated.View
+                  key="ingredient-selector"
+                  className="flex-1"
+                  entering={FadeIn.duration(300)}
+                  exiting={FadeOut.duration(300)}
+                >
+                  <IngredientSelector
+                    recipe={selectedRecipe}
+                    onBack={handleBackToRecipes}
+                    onDismiss={() => ref.current?.dismiss()}
+                    selectedIds={selectedIngredientIds}
+                    onToggleIngredient={toggleIngredient}
+                    onToggleAll={toggleAllIngredients}
+                    showFooter={false}
+                  />
+                </Animated.View>
+              ) : (
+                <Animated.View
+                  key="recipe-selector"
+                  className="flex-1"
+                  entering={FadeIn.duration(300)}
+                >
+                  <RecipeSelector
+                    onSelectRecipe={handleRecipeSelect}
+                    onDismiss={() => ref.current?.dismiss()}
+                  />
+                </Animated.View>
+              )}
+            </View>
+          )}
+        </View>
       </BottomSheet>
       <RecipeConflictSheet
         ref={conflictSheetRef}

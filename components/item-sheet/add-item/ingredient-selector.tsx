@@ -301,7 +301,7 @@ export const IngredientSelector = forwardRef<
 
   return (
     <>
-      <View className="relative">
+      <View className="relative flex-1">
         <BottomSheet.Header
           className="px-4"
           title={recipe.name}
@@ -327,7 +327,7 @@ export const IngredientSelector = forwardRef<
         </View>
 
         <ScrollView
-          className="max-h-[500px] min-h-24"
+          className="min-h-24 flex-1"
           contentContainerClassName="pb-12"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
