@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { createContext, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -15,6 +15,8 @@ import { Text } from '../../ui/text';
 import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
+
+import { UseLiveItemSyncHandle, useLiveItemSync } from './use-live-item-sync';
 
 type EditItemContextType = {
   present: (item: GroceryListItemWithRecipe) => void;
@@ -33,7 +35,12 @@ export const useEditItemSheet = () => {
 
 const EditItemContents = () => {
   const { reset, isValid, onSubmit } = useItemSheet();
-  const { sheetRef } = useEditItemSheetInternal();
+  const { sheetRef, liveSyncRef } = useEditItemSheetInternal();
+
+  const onStartClose = useCallback(() => {
+    reset();
+    liveSyncRef.current?.clearSnapshot();
+  }, [reset, liveSyncRef]);
 
   return (
     <BottomSheet
@@ -51,7 +58,7 @@ const EditItemContents = () => {
       }
       name="edit-item-sheet"
       ref={sheetRef}
-      onStartClose={reset}
+      onStartClose={onStartClose}
     >
       <BottomSheet.SheetView className="pb-safe">
         <ItemForm />
@@ -61,9 +68,29 @@ const EditItemContents = () => {
   );
 };
 
-// Internal context for sharing the sheet ref
+type EditItemLiveSyncProps = {
+  selectedItemId: string | null;
+  currentStoreId: string | undefined;
+  currentSavedItemId: string | undefined;
+  currentSavedItemOwnerId: string | undefined;
+  currentSavedItemStoreId: string | undefined;
+  currentItemName: string | undefined;
+};
+
+// Thin component whose only job is to live inside the ItemSheetProvider
+// subtree so useLiveItemSync can read the shared form state. It publishes
+// its imperative handle through liveSyncRef on the internal context.
+const EditItemLiveSync = (props: EditItemLiveSyncProps) => {
+  const { liveSyncRef } = useEditItemSheetInternal();
+  useLiveItemSync({ ...props, handleRef: liveSyncRef });
+  return null;
+};
+
+// Internal context for sharing the sheet ref and live-sync handle with
+// descendants that sit inside ItemSheetProvider.
 type EditItemInternalContextType = {
   sheetRef: React.RefObject<TrueSheet | null>;
+  liveSyncRef: React.RefObject<UseLiveItemSyncHandle | null>;
 };
 
 const EditItemInternalContext =
@@ -102,6 +129,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
     string | undefined
   >(undefined);
   const sheetRef = useRef<TrueSheet>(null);
+  const liveSyncRef = useRef<UseLiveItemSyncHandle | null>(null);
   const setFromItemRef = useRef<
     ((item: GroceryListItemWithRecipe | BaseGroceryItem) => void) | null
   >(null);
@@ -162,6 +190,10 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
     setCurrentSavedItemId(item.saved_item?.id);
     setCurrentSavedItemOwnerId(item.saved_item?.user?.id);
     setCurrentSavedItemStoreId(item.saved_item?.store?.id);
+    // Capture a diff baseline before presenting so the first render inside
+    // the sheet doesn't fire a spurious live write when setFromItem pushes
+    // the item's values into the shared form state.
+    liveSyncRef.current?.captureSnapshot(item);
     sheetRef.current?.present();
   };
 
@@ -171,13 +203,21 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
 
   return (
     <EditItemContext.Provider value={{ present, dismiss }}>
-      <EditItemInternalContext.Provider value={{ sheetRef }}>
+      <EditItemInternalContext.Provider value={{ sheetRef, liveSyncRef }}>
         <ItemSheetProvider
           mode="update"
           listId={groceryListId}
           onSubmit={onSubmit}
           setFromItemRef={setFromItemRef}
         >
+          <EditItemLiveSync
+            selectedItemId={selectedItemId}
+            currentStoreId={currentStoreId}
+            currentSavedItemId={currentSavedItemId}
+            currentSavedItemOwnerId={currentSavedItemOwnerId}
+            currentSavedItemStoreId={currentSavedItemStoreId}
+            currentItemName={currentItemName}
+          />
           <EditItemContents />
           {children}
         </ItemSheetProvider>

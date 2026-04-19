@@ -204,6 +204,7 @@
         {
           "id": "P3-T1",
           "title": "Introduce useLiveItemSync hook with snapshot and live writes",
+          "status": "done",
           "summary": "Add a hook composed into EditItemProvider that captures an initial snapshot on present(), performs immediate writes via updateGroceryItemOnly for non-text fields, debounces text-field writes at 300ms trailing using useDebounceCallback from usehooks-ts, skips writes when the name is empty, and exposes a flush method used on sheet close. Close-time saved-item sync in this phase still uses the existing updateGroceryListItem wrapper called once with final state; the diff-optimized sync arrives in P4.",
           "acceptanceCriteria": [
             "Hook is colocated under components/item-sheet/edit-item and named useLiveItemSync.",
