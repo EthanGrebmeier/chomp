@@ -9,11 +9,19 @@ export type ItemSnapshot = {
 
 export type ItemSnapshotDiff = Partial<ItemSnapshot>;
 
-// Optional string fields treat "" and undefined as equivalent so an
-// intermediate "cleared to empty" state doesn't register as a diff against a
-// snapshot that had the field unset.
-const normalizeOptionalString = (value: string | undefined | null): string =>
+// Treats "" / whitespace / undefined as equivalent so an intermediate
+// "cleared to empty" state doesn't register as a diff against a snapshot
+// that had the field unset.
+const normalizeString = (value: string | undefined | null): string =>
   (value ?? '').trim();
+
+const STRING_FIELDS = [
+  'name',
+  'category',
+  'notes',
+  'unit',
+  'storeId',
+] as const satisfies readonly (keyof ItemSnapshot)[];
 
 /**
  * Returns a partial object containing only the fields that differ between the
@@ -30,39 +38,13 @@ export const diffItemSnapshot = ({
 }): ItemSnapshotDiff => {
   const diff: ItemSnapshotDiff = {};
 
-  if (
-    normalizeOptionalString(snapshot.name) !==
-    normalizeOptionalString(current.name)
-  ) {
-    diff.name = current.name;
-  }
-
-  if (
-    normalizeOptionalString(snapshot.category) !==
-    normalizeOptionalString(current.category)
-  ) {
-    diff.category = current.category;
-  }
-
-  if (
-    normalizeOptionalString(snapshot.notes) !==
-    normalizeOptionalString(current.notes)
-  ) {
-    diff.notes = current.notes;
-  }
-
-  if (
-    normalizeOptionalString(snapshot.unit) !==
-    normalizeOptionalString(current.unit)
-  ) {
-    diff.unit = current.unit;
-  }
-
-  if (
-    normalizeOptionalString(snapshot.storeId) !==
-    normalizeOptionalString(current.storeId)
-  ) {
-    diff.storeId = current.storeId;
+  for (const field of STRING_FIELDS) {
+    const snapshotValue = snapshot[field] as string | undefined;
+    const currentValue = current[field] as string | undefined;
+    if (normalizeString(snapshotValue) !== normalizeString(currentValue)) {
+      // Preserve the raw current value (not trimmed); writers trim at persist time.
+      diff[field] = currentValue;
+    }
   }
 
   if (snapshot.quantity !== current.quantity) {
