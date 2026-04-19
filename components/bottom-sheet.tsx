@@ -20,7 +20,18 @@ type BottomSheetProps = {
   ref: React.RefObject<TrueSheet | null>;
   name?: string;
   onOpen?: () => void;
+  /**
+   * Fires when the sheet has started closing (swipe, tap-outside, or
+   * programmatic dismiss) but before its dismiss animation has finished.
+   * Use this when you need to run logic against the still-current form
+   * state, e.g. flushing a pending live-write debounce.
+   */
   onStartClose?: () => void;
+  /**
+   * Fires after the sheet has fully dismissed. Use this for post-close
+   * cleanup such as resetting form state or clearing refs.
+   */
+  onDismiss?: () => void;
   viewClassName?: string;
   detents?: SheetDetent[];
   footer?: ReactElement;
@@ -33,6 +44,7 @@ export const BottomSheet = ({
   ref,
   name,
   onStartClose,
+  onDismiss,
   onOpen,
   viewClassName,
   footer,
@@ -50,7 +62,8 @@ export const BottomSheet = ({
       name={name}
       detents={detents ?? ['auto']}
       onDidPresent={onOpen}
-      onDidDismiss={onStartClose}
+      onWillDismiss={onStartClose}
+      onDidDismiss={onDismiss}
       backgroundColor={
         colorscheme.colorScheme === 'dark' ? THEME.dark.card : THEME.light.card
       }

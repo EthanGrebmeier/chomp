@@ -259,7 +259,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         onOpen={() => {
           itemInputRef.current?.focus();
         }}
-        onStartClose={handleClose}
+        onDismiss={handleClose}
         scrollable={isRecipeSelectionMode}
         footer={
           mode === 'item' ? (

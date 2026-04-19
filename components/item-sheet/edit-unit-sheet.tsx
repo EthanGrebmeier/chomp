@@ -59,7 +59,7 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
       <BottomSheet
         name="edit-unit-sheet"
         ref={sheetRef}
-        onStartClose={handleDismiss}
+        onDismiss={handleDismiss}
         footer={
           <View className="px-10 pb-4">
             <Button onPress={handleSave} disabled={!canSave}>

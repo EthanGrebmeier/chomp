@@ -290,7 +290,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
       <BottomSheet
         name={name}
         onOpen={() => KeyboardController.dismiss()}
-        onStartClose={onClose}
+        onDismiss={onClose}
         ref={bottomSheetRef}
         insetAdjustment="never"
       >

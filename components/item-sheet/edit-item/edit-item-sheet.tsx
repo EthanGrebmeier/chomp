@@ -1,17 +1,11 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
-import { View } from 'react-native';
-import { toast } from 'sonner-native';
 
-import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
-import { updateGroceryListItem } from '../../../features/grocery-list/instant/update-grocery-list-item';
 import {
   BaseGroceryItem,
   GroceryListItemWithRecipe,
 } from '../../../features/grocery-list/types';
 import { BottomSheet } from '../../bottom-sheet';
-import { Button } from '../../ui/button';
-import { Text } from '../../ui/text';
 import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
@@ -34,31 +28,30 @@ export const useEditItemSheet = () => {
 };
 
 const EditItemContents = () => {
-  const { reset, isValid, onSubmit } = useItemSheet();
+  const { reset } = useItemSheet();
   const { sheetRef, liveSyncRef } = useEditItemSheetInternal();
 
+  // Fires while the sheet is starting to close (swipe, tap-outside,
+  // programmatic dismiss). Still-current form state is readable here, so
+  // flushing the pending debounce and running the close-time saved-item
+  // sync must happen now — before onDismiss wipes the state.
   const onStartClose = useCallback(() => {
+    liveSyncRef.current?.flushAndSyncOnClose();
+  }, [liveSyncRef]);
+
+  // Fires after the sheet has fully dismissed. Safe to drop form state and
+  // the diff baseline here because no further edits can arrive.
+  const onDismiss = useCallback(() => {
     reset();
     liveSyncRef.current?.clearSnapshot();
   }, [reset, liveSyncRef]);
 
   return (
     <BottomSheet
-      footer={
-        <View className="px-10 pb-4">
-          <Button
-            variant="default"
-            size="default"
-            onPress={onSubmit}
-            disabled={!isValid}
-          >
-            <Text className="text-primary-foreground">Update Item</Text>
-          </Button>
-        </View>
-      }
       name="edit-item-sheet"
       ref={sheetRef}
       onStartClose={onStartClose}
+      onDismiss={onDismiss}
     >
       <BottomSheet.SheetView className="pb-safe">
         <ItemForm />
@@ -134,53 +127,14 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
     ((item: GroceryListItemWithRecipe | BaseGroceryItem) => void) | null
   >(null);
 
-  const onSubmit = ({
-    item,
-    clearedRecipeId,
-    selectedCloudSavedItemId,
-    selectedCloudSavedItemStoreId,
-    selectedLocalSavedItemId,
-  }: {
-    item: BaseGroceryItem;
-    listId?: string;
-    clearedRecipeId?: string;
-    selectedCloudSavedItemId?: string;
-    selectedCloudSavedItemStoreId?: string;
-    selectedLocalSavedItemId?: string;
-  }) => {
-    if (!selectedItemId) return;
-
-    updateGroceryListItem({
-      itemId: selectedItemId,
-      item: {
-        name: item.name,
-        category: item.category,
-        quantity: item.quantity,
-        unit: item.unit,
-        notes: item.notes,
-        storeId: item.storeId,
-      },
-      currentStoreId,
-      currentSavedItemId,
-      currentSavedItemOwnerId,
-      currentSavedItemStoreId,
-      selectedSavedItemId: selectedCloudSavedItemId,
-      selectedSavedItemStoreId: selectedCloudSavedItemStoreId,
-      selectedLocalSavedItemId,
-      currentItemName,
-    });
-
-    // Unlink recipe if it was cleared
-    if (clearedRecipeId) {
-      unlinkRecipeFromItem({
-        itemId: selectedItemId,
-        recipeId: clearedRecipeId,
-      });
-    }
-
-    toast.success(`${item.name} updated`);
-    sheetRef.current?.dismiss();
-  };
+  // The Update Item button and its submit path were removed when the Edit
+  // sheet moved to live updates (PRD "Edit Item Sheet — Live Updates",
+  // P3-T2). All grocery-item writes now flow through useLiveItemSync;
+  // saved-item sync happens in flushAndSyncOnClose via onStartClose. This
+  // no-op satisfies ItemSheetProvider's onSubmit contract (shared with the
+  // Add flow) without duplicating writes. Return-key in the name input
+  // still routes here until P3-T3 swaps it for a blur.
+  const onSubmit = () => {};
 
   const present = (item: GroceryListItemWithRecipe) => {
     setFromItemRef.current?.(item);

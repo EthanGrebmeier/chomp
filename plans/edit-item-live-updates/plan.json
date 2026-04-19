@@ -233,6 +233,7 @@
         {
           "id": "P3-T2",
           "title": "Remove Update Item button, success toast, and wire sheet lifecycle",
+          "status": "done",
           "summary": "Delete the footer button and its container from the Edit Item sheet. Remove the success toast on update. Wire onStartClose to the hook's flushAndSyncOnClose and onDismiss to the existing reset plus snapshot clear.",
           "acceptanceCriteria": [
             "Edit sheet no longer renders the Update Item button.",
