@@ -286,6 +286,7 @@
         {
           "id": "P4-T1",
           "title": "Replace close-time wrapper call with diff-driven saved-item sync",
+          "status": "done",
           "summary": "In useLiveItemSync, compute the diff between the (possibly rebased) snapshot and current state using diffItemSnapshot. On sheet close, after flushing pending debounce, invoke syncSavedItemFromGroceryItem with only the diffed fields. Skip the call entirely when the diff is empty. The owner gate continues to live inside the writer.",
           "acceptanceCriteria": [
             "flushAndSyncOnClose no longer calls updateGroceryListItem; it calls updateGroceryItemOnly (for any pending flush) and syncSavedItemFromGroceryItem (for the diff), in that order.",

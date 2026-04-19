@@ -1,11 +1,21 @@
 import { RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useDebounceCallback } from 'usehooks-ts';
 
+import { syncSavedItemFromGroceryItem } from '../../../features/grocery-list/instant/sync-saved-item-from-grocery-item';
 import { updateGroceryItemOnly } from '../../../features/grocery-list/instant/update-grocery-item-only';
-import { updateGroceryListItem } from '../../../features/grocery-list/instant/update-grocery-list-item';
 import { GroceryListItemWithRecipe } from '../../../features/grocery-list/types';
 import { ItemSnapshot, diffItemSnapshot } from '../diff-item-snapshot';
 import { useItemSheet } from '../use-item-sheet';
+
+// Fields on the grocery item that fan out into the linked saved_item surface.
+// A diff against any of these triggers the close-time saved-item sync; a diff
+// limited to quantity/unit alone does not.
+const SAVED_ITEM_RELEVANT_FIELDS = [
+  'name',
+  'category',
+  'notes',
+  'storeId',
+] as const;
 
 const DEBOUNCE_MS = 300;
 
@@ -36,10 +46,9 @@ export type UseLiveItemSyncHandle = {
    */
   clearSnapshot: () => void;
   /**
-   * Flush any pending text-field debounce synchronously, then run the
-   * close-time saved-item sync. P3 still routes the close-time sync through
-   * the existing updateGroceryListItem wrapper; P4 replaces this with a
-   * diff-driven syncSavedItemFromGroceryItem call.
+   * Flush any pending text-field debounce synchronously, then — if any
+   * saved-item-relevant field (name, category, notes, storeId) has diverged
+   * from the snapshot — run the close-time saved-item sync.
    */
   flushAndSyncOnClose: () => void;
 };
@@ -192,33 +201,43 @@ export const useLiveItemSync = ({
       return;
     }
 
-    // Run any pending text-field write now so the close-time sync sees the
-    // final payload.
+    // Run any pending text-field write now. This may fire updateGroceryItemOnly
+    // via commitGroceryItemLive before the saved-item sync below, matching the
+    // AC-required "updateGroceryItemOnly then syncSavedItemFromGroceryItem" order.
     debouncedCommit.flush();
+
+    const snapshot = snapshotRef.current;
+    if (!snapshot) return;
 
     const current = buildCurrent();
     // Don't commit an empty name: keeps behavior consistent with the live
     // path and with Story 7 ("empty name does not write").
     if (!current.name.trim()) return;
 
-    // P3 scope: still route the close-time sync through the existing
-    // wrapper so the Add flow and any other edge cases keep their current
-    // one-call semantics. P4-T1 replaces this with a diff-driven
-    // syncSavedItemFromGroceryItem invocation.
-    updateGroceryListItem({
-      itemId: state.selectedItemId,
+    const diff = diffItemSnapshot({ snapshot, current });
+    // Skip the saved-item sync entirely when either nothing changed or only
+    // non-saved-item fields changed (e.g. quantity). This keeps the cloud
+    // saved_items row untouched for edits the sync has no business propagating.
+    const hasSavedItemRelevantDiff = SAVED_ITEM_RELEVANT_FIELDS.some(
+      (field) => field in diff
+    );
+    if (!hasSavedItemRelevantDiff) return;
+
+    // Pass the current saved-item-relevant field values. For the cloud path,
+    // only the diffed values deviate from what's already stored, so re-writing
+    // un-diffed fields is a no-op at the row level. For the local path,
+    // upsertLocalSavedItem needs the full field set to avoid nulling columns
+    // that weren't part of the diff.
+    syncSavedItemFromGroceryItem({
       item: {
         name: current.name,
         category: current.category,
         notes: current.notes,
-        quantity: current.quantity,
-        unit: current.unit,
         storeId: current.storeId,
       },
-      currentStoreId: state.currentStoreId,
-      currentSavedItemId: state.currentSavedItemId,
+      nextSavedItemId: state.currentSavedItemId,
       currentSavedItemOwnerId: state.currentSavedItemOwnerId,
-      currentSavedItemStoreId: state.currentSavedItemStoreId,
+      savedItemStoreId: state.currentSavedItemStoreId,
       currentItemName: state.currentItemName,
     });
   }, [buildCurrent, debouncedCommit]);
