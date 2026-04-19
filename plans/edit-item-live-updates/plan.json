@@ -83,6 +83,7 @@
         {
           "id": "P1-T2",
           "title": "Extract updateGroceryItemOnly writer",
+          "status": "done",
           "summary": "Pull the grocery_items row update, grocery_items↔stores link reconcile, and grocery_items↔saved_items relink out of updateGroceryListItem into a standalone writer. It does NOT touch saved_items rows, saved_items↔stores, or local-saved-item upsert.",
           "acceptanceCriteria": [
             "Exports updateGroceryItemOnly with typed inputs covering item fields, currentStoreId, and the relink trio (currentSavedItemId, selectedSavedItemId, selectedLocalSavedItemId).",
