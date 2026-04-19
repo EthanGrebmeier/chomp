@@ -1,0 +1,415 @@
+{
+  "planName": "Edit Item Sheet — Live Updates",
+  "sourcePrd": "plans/edit-item-live-updates/prd.md",
+  "lastUpdated": "2026-04-19",
+  "architecturalDecisions": [
+    {
+      "id": "AD-1",
+      "title": "Two-pathway persistence",
+      "decision": "Grocery item writes (grocery_items row + grocery_items↔stores + grocery_items↔saved_items relink) are live; saved item writes (saved_items row + saved_items↔stores + local-saved-item upsert) are performed on sheet close."
+    },
+    {
+      "id": "AD-2",
+      "title": "Snapshot-based dirty tracking",
+      "decision": "A snapshot of the item state is captured on present() and rebased on autocomplete pick. Close-time work is driven by diffing current state against the snapshot. String fields are compared after trimming."
+    },
+    {
+      "id": "AD-3",
+      "title": "Instant writer function split",
+      "decision": "Extract updateGroceryItemOnly (grocery_items + grocery_items↔stores + grocery_items↔saved_items relink) and syncSavedItemFromGroceryItem (saved_items + saved_items↔stores + local upsert, owner-gated). The existing updateGroceryListItem becomes a thin wrapper composing both so the Add Item flow is unaffected."
+    },
+    {
+      "id": "AD-4",
+      "title": "Live sync hook location",
+      "decision": "A new useLiveItemSync hook is composed into EditItemProvider. The shared useItemSheet hook stays unchanged."
+    },
+    {
+      "id": "AD-5",
+      "title": "Debounce contract",
+      "decision": "Text fields (name, notes) use a 300ms trailing debounce via useDebounceCallback from usehooks-ts. Non-text fields (category, quantity, unit, storeId) fire immediately. The debounce is flushed synchronously on sheet close and cancelled on autocomplete pick."
+    },
+    {
+      "id": "AD-6",
+      "title": "Sheet close event mapping",
+      "decision": "onStartClose flushes pending debounce and performs close-time saved-item sync. onDismiss resets form state and clears the snapshot ref."
+    },
+    {
+      "id": "AD-7",
+      "title": "Ownership is carried on autocomplete matches",
+      "decision": "MatchingItem gains an optional ownerId sourced from useUnifiedSavedItems. This allows the close-time saved-item sync to apply the owner gate without a follow-up query after autocomplete pick."
+    },
+    {
+      "id": "AD-8",
+      "title": "Error handling",
+      "decision": "Live writes rely on Instant's optimistic UI and offline queue. No new catch-and-toast error surface is introduced."
+    },
+    {
+      "id": "AD-9",
+      "title": "Scope fence",
+      "decision": "Only the Edit Item sheet moves to live updates. The Add Item sheet continues to use the existing submit-on-confirm flow."
+    }
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "title": "Instant writer split + diff helper (foundation)",
+      "userStories": [
+        "Story 20: encapsulated live-update hook (prep)",
+        "Story 21: split writer responsibilities",
+        "Story 22: pure diff helper with trim-normalized comparison"
+      ],
+      "tickets": [
+        {
+          "id": "P1-T1",
+          "title": "Add pure diffItemSnapshot helper",
+          "summary": "Introduce a pure function that takes a snapshot and a current-state object and returns only the fields that differ. String fields compare after trimming. No React, no Instant.",
+          "acceptanceCriteria": [
+            "Exports a function that accepts { snapshot, current } and returns a partial object limited to changed fields.",
+            "Covers name, category, notes, quantity, unit, storeId at minimum.",
+            "String diffs are computed on trimmed values (e.g. 'foo' vs 'foo ' is not a diff).",
+            "Returns an empty object when snapshot and current are equivalent.",
+            "Handles undefined-vs-empty-string consistently for optional string fields."
+          ],
+          "dependencies": [],
+          "testPlan": [
+            "Vitest unit tests under components/item-sheet (colocated with existing __tests__) covering equal state, single-field diffs across each field, trim-equivalence, undefined/null vs empty string, and multi-field diffs.",
+            "pnpm test"
+          ],
+          "outOfScope": [
+            "Wiring the helper into the hook or the close path (later phase)."
+          ]
+        },
+        {
+          "id": "P1-T2",
+          "title": "Extract updateGroceryItemOnly writer",
+          "summary": "Pull the grocery_items row update, grocery_items↔stores link reconcile, and grocery_items↔saved_items relink out of updateGroceryListItem into a standalone writer. It does NOT touch saved_items rows, saved_items↔stores, or local-saved-item upsert.",
+          "acceptanceCriteria": [
+            "Exports updateGroceryItemOnly with typed inputs covering item fields, currentStoreId, and the relink trio (currentSavedItemId, selectedSavedItemId, selectedLocalSavedItemId).",
+            "Performs grocery_items.update with trim-normalized fields.",
+            "Delegates store link/unlink to linkStoreToItem with unchanged semantics.",
+            "Performs relink transactions only when selectedSavedItemId differs from currentSavedItemId, and unlinks currentSavedItemId when selectedLocalSavedItemId is provided.",
+            "No saved_items writes and no upsertLocalSavedItem calls."
+          ],
+          "dependencies": [
+            "P1-T1"
+          ],
+          "testPlan": [
+            "Vitest tests stubbing db.transact and linkStoreToItem to assert the transactions made for: simple field update, store linked/unlinked/switched, relink on cloud pick, unlink on local pick, and no-op relink when ids match.",
+            "pnpm test",
+            "pnpm tsc"
+          ],
+          "outOfScope": [
+            "Call-site migration (Add flow still goes through the wrapper)."
+          ]
+        },
+        {
+          "id": "P1-T3",
+          "title": "Extract syncSavedItemFromGroceryItem writer",
+          "summary": "Pull the saved_items row update, saved_items↔stores reconcile, and local-saved-item upsert out of updateGroceryListItem. The owner gate lives inside this function so callers don't duplicate it.",
+          "acceptanceCriteria": [
+            "Exports syncSavedItemFromGroceryItem with typed inputs covering nextSavedItemId, currentSavedItemOwnerId, selectedLocalSavedItemId, item (partial), a savedItemStoreId baseline, and currentItemName.",
+            "Is a no-op when there is nothing to write (empty item + no store change + no local selection + no cloud target).",
+            "When no cloud saved item is linked (or selectedLocalSavedItemId is set), calls upsertLocalSavedItem with the provided fields.",
+            "Skips saved_items.update when the current user does not own the target saved item.",
+            "When owned, writes saved_items.update with trim-normalized fields and reconciles saved_items↔stores against savedItemStoreId baseline."
+          ],
+          "dependencies": [
+            "P1-T1"
+          ],
+          "testPlan": [
+            "Vitest tests stubbing db.transact, db.getAuth, and upsertLocalSavedItem to assert behavior across: no-op input, local path, owner path, non-owner skip, store link/unlink/switch.",
+            "pnpm test",
+            "pnpm tsc"
+          ],
+          "outOfScope": [
+            "Diff computation (handled by P1-T1 and wired in later phases)."
+          ]
+        },
+        {
+          "id": "P1-T4",
+          "title": "Recompose updateGroceryListItem as a wrapper",
+          "summary": "Turn updateGroceryListItem into a thin function that calls updateGroceryItemOnly then syncSavedItemFromGroceryItem so the Add Item flow and any other existing callers are unchanged.",
+          "acceptanceCriteria": [
+            "updateGroceryListItem produces the same externally observable sequence of Instant writes as before for representative inputs.",
+            "All existing call sites continue to import updateGroceryListItem without modification.",
+            "No duplication of logic between the wrapper and the two extracted writers."
+          ],
+          "dependencies": [
+            "P1-T2",
+            "P1-T3"
+          ],
+          "testPlan": [
+            "Manual smoke: Add Item sheet and Edit Item sheet (with the current button flow) still create and update items as before on iOS simulator.",
+            "pnpm test",
+            "pnpm lint",
+            "pnpm tsc"
+          ],
+          "outOfScope": [
+            "Edit Item sheet behavior change (deferred to P3+)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "MatchingItem.ownerId (data surface)",
+      "userStories": [
+        "Story 14: owner-gated saved-item sync (prereq data)",
+        "Story 15: non-owners do not overwrite shared saved_item (prereq data)"
+      ],
+      "tickets": [
+        {
+          "id": "P2-T1",
+          "title": "Surface ownerId through useUnifiedSavedItems into MatchingItem",
+          "summary": "Expose the underlying saved_item owner's user id from useUnifiedSavedItems (cloud rows) and pass it through to MatchingItem as an optional ownerId. Local-only matches do not carry an ownerId.",
+          "acceptanceCriteria": [
+            "UnifiedSavedItem carries ownerId when source is cloud.",
+            "MatchingItem type includes ownerId?: string.",
+            "useMatchingItems populates ownerId only for cloud matches.",
+            "No runtime behavior change yet (consumers ignore the new field)."
+          ],
+          "dependencies": [],
+          "testPlan": [
+            "pnpm tsc to confirm types propagate.",
+            "Manual smoke: autocomplete suggestions still render identically in the Add and Edit sheets."
+          ],
+          "outOfScope": [
+            "Consumer logic that uses ownerId (P5)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Remove Update Item button + live writes + flush-on-close",
+      "userStories": [
+        "Story 1: changes save as I make them",
+        "Story 2: swipe-to-dismiss persists edits",
+        "Story 3: quantity pill applies on confirm",
+        "Story 4: category/store pills apply on confirm or clear",
+        "Story 5: debounced text edits commit after I stop typing",
+        "Story 6: pending typed edits flush on dismiss",
+        "Story 7: empty name does not write",
+        "Story 8: notes save as I type",
+        "Story 9: Update Item button removed",
+        "Story 10: success toast removed",
+        "Story 16: rely on Instant's optimistic pipeline for errors",
+        "Story 17: return key dismisses keyboard, not the sheet",
+        "Story 19: Add Item sheet behavior unchanged"
+      ],
+      "tickets": [
+        {
+          "id": "P3-T1",
+          "title": "Introduce useLiveItemSync hook with snapshot and live writes",
+          "summary": "Add a hook composed into EditItemProvider that captures an initial snapshot on present(), performs immediate writes via updateGroceryItemOnly for non-text fields, debounces text-field writes at 300ms trailing using useDebounceCallback from usehooks-ts, skips writes when the name is empty, and exposes a flush method used on sheet close. Close-time saved-item sync in this phase still uses the existing updateGroceryListItem wrapper called once with final state; the diff-optimized sync arrives in P4.",
+          "acceptanceCriteria": [
+            "Hook is colocated under components/item-sheet/edit-item and named useLiveItemSync.",
+            "Snapshot is captured when the Edit sheet is presented with an item; cleared on dismiss.",
+            "Name and notes writes are debounced with a 300ms trailing delay; category, quantity, unit, and storeId writes are immediate.",
+            "Empty-name state skips the live write entirely.",
+            "Exposes a flushAndSyncOnClose function callable from onStartClose that flushes pending debounce synchronously and then commits final state.",
+            "No new error handling beyond existing Instant optimistic behavior."
+          ],
+          "dependencies": [
+            "P1-T2",
+            "P1-T4"
+          ],
+          "testPlan": [
+            "Manual: open Edit sheet, change quantity pill — list reflects change immediately; change name, wait 500ms — change is persisted; change name rapidly and close the sheet mid-typing — final value is persisted.",
+            "Manual: clear name to empty, close — nothing is persisted to the name field.",
+            "pnpm lint",
+            "pnpm tsc"
+          ],
+          "outOfScope": [
+            "Autocomplete pick / rebase (P5)",
+            "Recipe clear handling (P5)",
+            "Diff-based close-time saved-item sync (P4)"
+          ]
+        },
+        {
+          "id": "P3-T2",
+          "title": "Remove Update Item button, success toast, and wire sheet lifecycle",
+          "summary": "Delete the footer button and its container from the Edit Item sheet. Remove the success toast on update. Wire onStartClose to the hook's flushAndSyncOnClose and onDismiss to the existing reset plus snapshot clear.",
+          "acceptanceCriteria": [
+            "Edit sheet no longer renders the Update Item button.",
+            "No sonner toast fires from the Edit flow.",
+            "onStartClose on the BottomSheet calls flushAndSyncOnClose.",
+            "onDismiss calls reset (from useItemSheet) and the hook's snapshot clear.",
+            "Add Item sheet is unchanged (still uses its existing button, onSubmit, and toast)."
+          ],
+          "dependencies": [
+            "P3-T1"
+          ],
+          "testPlan": [
+            "Manual: verify Edit sheet has no footer button, no toast on edit, and swipe-to-dismiss persists changes.",
+            "Manual: verify Add Item sheet still shows button and toast.",
+            "pnpm lint",
+            "pnpm tsc"
+          ],
+          "outOfScope": []
+        },
+        {
+          "id": "P3-T3",
+          "title": "Return-key blurs name input instead of submitting",
+          "summary": "Change the Edit sheet's name input so pressing return on the soft keyboard blurs the input (dismisses the keyboard) rather than submitting the form. The Add Item sheet keeps its existing behavior.",
+          "acceptanceCriteria": [
+            "In the Edit sheet, tapping return on the name input blurs the field and hides the keyboard.",
+            "No write is triggered as a direct consequence of the return key (debounce effect still applies).",
+            "Add Item sheet's return-key behavior is unchanged."
+          ],
+          "dependencies": [
+            "P3-T1"
+          ],
+          "testPlan": [
+            "Manual: type into name input, press return — keyboard dismisses, sheet stays open, list reflects the debounced value shortly after.",
+            "Manual: repeat in Add Item sheet — behavior unchanged.",
+            "pnpm lint"
+          ],
+          "outOfScope": []
+        }
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Close-time saved-item sync via diff",
+      "userStories": [
+        "Story 14: owner-gated saved-item sync at close",
+        "Story 15: non-owners do not overwrite shared saved_item"
+      ],
+      "tickets": [
+        {
+          "id": "P4-T1",
+          "title": "Replace close-time wrapper call with diff-driven saved-item sync",
+          "summary": "In useLiveItemSync, compute the diff between the (possibly rebased) snapshot and current state using diffItemSnapshot. On sheet close, after flushing pending debounce, invoke syncSavedItemFromGroceryItem with only the diffed fields. Skip the call entirely when the diff is empty. The owner gate continues to live inside the writer.",
+          "acceptanceCriteria": [
+            "flushAndSyncOnClose no longer calls updateGroceryListItem; it calls updateGroceryItemOnly (for any pending flush) and syncSavedItemFromGroceryItem (for the diff), in that order.",
+            "When the diff is empty, syncSavedItemFromGroceryItem is not invoked.",
+            "When the linked saved_item is not owned by the current user, saved_items row writes are skipped (validated inside the writer).",
+            "When no cloud saved_item is linked and there is a diff, upsertLocalSavedItem runs via the writer as before.",
+            "Editing only non-saved-item fields (e.g. quantity) produces no saved_items writes on close."
+          ],
+          "dependencies": [
+            "P1-T1",
+            "P1-T3",
+            "P3-T1"
+          ],
+          "testPlan": [
+            "Manual: change only quantity, close — confirm saved_items row is untouched (inspect Instant dashboard or query).",
+            "Manual: as owner, change category + notes, close — saved_items row and store link reflect changes.",
+            "Manual: on an item linked to a saved_item owned by another user, change name, close — grocery item name updates, saved_item name is not touched.",
+            "pnpm test",
+            "pnpm lint",
+            "pnpm tsc"
+          ],
+          "outOfScope": [
+            "Snapshot rebase behavior on autocomplete pick (P5)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Autocomplete pick + recipe clear live handling",
+      "userStories": [
+        "Story 11: autocomplete pick commits immediately",
+        "Story 12: autocomplete pick cancels pending debounce",
+        "Story 13: recipe tag clear unlinks immediately"
+      ],
+      "tickets": [
+        {
+          "id": "P5-T1",
+          "title": "Add onPickCloudMatch handler to useLiveItemSync with snapshot rebase",
+          "summary": "Expose an onPickCloudMatch(item, ownerId) method from useLiveItemSync that cancels the pending text-field debounce, performs an immediate updateGroceryItemOnly call that updates grocery fields and relinks grocery_items↔saved_items as needed, and rebases the snapshot to the picked saved_item's values (name, category, notes, storeId, savedItemId, ownerId, savedItemStoreId).",
+          "acceptanceCriteria": [
+            "Method cancels any in-flight debounce before firing its write.",
+            "Immediate write includes relink transactions consistent with updateGroceryItemOnly semantics (cloud vs local pick).",
+            "Snapshot is updated in place so that subsequent diffItemSnapshot calls compare against the picked saved_item's values.",
+            "No saved_items writes are performed as a direct consequence of the pick itself."
+          ],
+          "dependencies": [
+            "P2-T1",
+            "P3-T1",
+            "P4-T1"
+          ],
+          "testPlan": [
+            "Manual: start typing 'Mi', see suggestions, tap 'Milk' — grocery item becomes Milk with the match's category/notes/store; close with no further edits — no saved_items write occurs.",
+            "Manual: type 'X' then immediately tap a suggestion — suggestion wins, no stale 'X' write is persisted.",
+            "Manual: after a pick, edit the name to 'Whole Milk', close as owner — saved_items.name updates to 'Whole Milk'.",
+            "pnpm lint",
+            "pnpm tsc"
+          ],
+          "outOfScope": []
+        },
+        {
+          "id": "P5-T2",
+          "title": "Wire item-form autocomplete selection to the new handler",
+          "summary": "Route the autocomplete suggestion tap from ItemInput / item-form through useItemSheet into useLiveItemSync's onPickCloudMatch in the Edit flow. Add Item flow keeps its existing onSelect wiring.",
+          "acceptanceCriteria": [
+            "In the Edit sheet, suggestion taps invoke onPickCloudMatch with the MatchingItem and its ownerId.",
+            "In the Add sheet, suggestion taps continue to use the existing onSelect path unchanged.",
+            "Form state (category, notes, storeId) is populated from the match so the UI still reflects the chosen values immediately."
+          ],
+          "dependencies": [
+            "P5-T1"
+          ],
+          "testPlan": [
+            "Manual: Edit sheet suggestion tap — item is persisted with match values.",
+            "Manual: Add sheet suggestion tap — flow unchanged, commit still happens on Add button.",
+            "pnpm lint",
+            "pnpm tsc"
+          ],
+          "outOfScope": []
+        },
+        {
+          "id": "P5-T3",
+          "title": "Recipe clear fires immediate unlink",
+          "summary": "When the user clears the recipe tag in the Edit sheet, fire unlinkRecipeFromItem immediately rather than deferring it to the sheet's submit path.",
+          "acceptanceCriteria": [
+            "Clearing the recipe tag in the Edit sheet triggers unlinkRecipeFromItem on the spot.",
+            "The grocery item's recipe association is removed without waiting for sheet dismissal.",
+            "Add Item sheet behavior is unchanged (recipe clear there still flows through the existing submit path)."
+          ],
+          "dependencies": [
+            "P3-T1"
+          ],
+          "testPlan": [
+            "Manual: open Edit sheet on an item with a recipe tag, tap the X on the recipe tag, observe it detaches immediately (even before closing the sheet).",
+            "Manual: swipe the sheet shut without other edits — confirm no duplicate unlink is attempted.",
+            "pnpm lint",
+            "pnpm tsc"
+          ],
+          "outOfScope": []
+        }
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "UnitSheet quantity-invalid fix",
+      "userStories": [
+        "Story 18: quantity and unit confirm together or not at all"
+      ],
+      "tickets": [
+        {
+          "id": "P6-T1",
+          "title": "Gate unit commit on quantity validity in UnitSheet",
+          "summary": "Tighten UnitSheet's handleConfirm so unit is not committed when the entered quantity is invalid. The existing disabled-confirm-button state is preserved as a belt-and-suspenders guard.",
+          "acceptanceCriteria": [
+            "When the confirm button is pressed with a valid quantity, both quantity and unit are committed.",
+            "When quantity is invalid (empty, non-numeric, or ≤ 0), neither quantity nor unit is committed.",
+            "The confirm button remains disabled in the invalid state (unchanged)."
+          ],
+          "dependencies": [],
+          "testPlan": [
+            "Manual: open UnitSheet, clear quantity, attempt confirm — button is disabled, no commit.",
+            "Manual: enter a valid quantity, change unit, confirm — both values update.",
+            "pnpm lint",
+            "pnpm tsc"
+          ],
+          "outOfScope": [
+            "Rewriting validation elsewhere in the item sheet."
+          ]
+        }
+      ]
+    }
+  ]
+}
