@@ -314,6 +314,7 @@ export const GroceryItemsList = ({
       showsVerticalScrollIndicator={false}
       onScrollBeginDrag={onListInteraction}
       onTouchStart={onListInteraction}
+      maintainVisibleContentPosition={{ disabled: true }}
     />
   );
 };
