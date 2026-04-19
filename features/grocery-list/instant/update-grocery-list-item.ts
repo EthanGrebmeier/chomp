@@ -1,10 +1,15 @@
 import { db } from '../../../lib/instant';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { GroceryListItem } from '../types';
-import { upsertLocalSavedItem } from '../../saved-items/local/upsert-local-saved-item';
 
-import { linkStoreToItem } from './link-store-to-item';
+import { syncSavedItemFromGroceryItem } from './sync-saved-item-from-grocery-item';
+import { updateGroceryItemOnly } from './update-grocery-item-only';
 
+/**
+ * Thin wrapper that composes the two extracted writers. Preserves the
+ * legacy one-call ergonomics for the Add Item flow and other callers that
+ * still expect a single entry point for "update grocery item + sync saved
+ * item" in one go.
+ */
 export const updateGroceryListItem = async ({
   itemId,
   item,
@@ -28,131 +33,42 @@ export const updateGroceryListItem = async ({
   selectedLocalSavedItemId?: string;
   currentItemName?: string;
 }) => {
-  const { storeId, ...updateData } = item;
-  const now = new Date().toISOString();
-  const user = await db.getAuth();
-
-  await db.transact([
-    db.tx.grocery_items[itemId].update(
-      trimStringFields({
-        ...updateData,
-        category: item.category ?? null,
-      })
-    ),
-  ]);
-
-  // Handle grocery item store linking/unlinking separately.
-  if (storeId !== undefined || currentStoreId) {
-    await linkStoreToItem({
-      itemId,
-      storeId,
-      currentStoreId,
-    });
-  }
-
-  // Preserve existing link unless user explicitly selected a new cloud suggestion.
-  const shouldRelink =
-    selectedSavedItemId !== undefined && selectedSavedItemId !== currentSavedItemId;
-  const shouldUnlinkCloudForLocalSelection =
-    !!selectedLocalSavedItemId && !!currentSavedItemId;
-
-  if (shouldRelink) {
-    const linkTransactions = [];
-    if (currentSavedItemId) {
-      linkTransactions.push(
-        db.tx.grocery_items[itemId].unlink({
-          saved_item: currentSavedItemId,
-        })
-      );
-    }
-    linkTransactions.push(
-      db.tx.grocery_items[itemId].link({
-        saved_item: selectedSavedItemId,
-      })
-    );
-    await db.transact(linkTransactions);
-  }
-
-  if (shouldUnlinkCloudForLocalSelection && currentSavedItemId) {
-    await db.transact([
-      db.tx.grocery_items[itemId].unlink({
-        saved_item: currentSavedItemId,
-      }),
-    ]);
-  }
+  await updateGroceryItemOnly({
+    itemId,
+    item,
+    currentStoreId,
+    currentSavedItemId,
+    selectedSavedItemId,
+    selectedLocalSavedItemId,
+  });
 
   const nextSavedItemId = selectedLocalSavedItemId
     ? undefined
     : selectedSavedItemId ?? currentSavedItemId;
-  if (!nextSavedItemId) {
-    const nextName = item.name ?? currentItemName;
-    if (!nextName) {
-      return;
+
+  // Preserve the legacy "assume owner on pick" shortcut: when the caller
+  // supplies a freshly selected cloud saved item, the old writer treated the
+  // current user as its owner without a follow-up query. P5 will surface the
+  // real ownerId alongside autocomplete matches; until then, fall back to the
+  // current user's id when they picked the match themselves.
+  let ownerIdForSync = currentSavedItemOwnerId;
+  if (selectedSavedItemId && nextSavedItemId === selectedSavedItemId) {
+    const user = await db.getAuth();
+    if (user) {
+      ownerIdForSync = user.id;
     }
-
-    await upsertLocalSavedItem({
-      item: {
-        name: nextName,
-        category: item.category,
-        notes: item.notes,
-        storeId: item.storeId,
-      },
-      selectedLocalSavedItemId,
-      matchName: currentItemName,
-    });
-    return;
   }
 
-  if (!user) {
-    return;
-  }
-
-  // Only sync saved item fields if the current editor owns the target saved item.
-  const ownsNextSavedItem = selectedSavedItemId
-    ? true
-    : currentSavedItemOwnerId === user.id;
-  if (!ownsNextSavedItem) {
-    return;
-  }
-
-  await db.transact([
-    db.tx.saved_items[nextSavedItemId].update(
-      trimStringFields({
-        name: item.name,
-        category: item.category ?? null,
-        notes: item.notes ?? null,
-        updatedAt: now,
-      })
-    ),
-  ]);
-
-  const baselineSavedItemStoreId = selectedSavedItemId
+  const savedItemStoreId = selectedSavedItemId
     ? selectedSavedItemStoreId
     : currentSavedItemStoreId;
 
-  const savedItemStoreTransactions = [];
-  if (storeId === undefined && baselineSavedItemStoreId) {
-    savedItemStoreTransactions.push(
-      db.tx.saved_items[nextSavedItemId].unlink({
-        store: baselineSavedItemStoreId,
-      })
-    );
-  } else if (storeId && storeId !== baselineSavedItemStoreId) {
-    if (baselineSavedItemStoreId) {
-      savedItemStoreTransactions.push(
-        db.tx.saved_items[nextSavedItemId].unlink({
-          store: baselineSavedItemStoreId,
-        })
-      );
-    }
-    savedItemStoreTransactions.push(
-      db.tx.saved_items[nextSavedItemId].link({
-        store: storeId,
-      })
-    );
-  }
-
-  if (savedItemStoreTransactions.length > 0) {
-    await db.transact(savedItemStoreTransactions);
-  }
+  await syncSavedItemFromGroceryItem({
+    item,
+    nextSavedItemId,
+    currentSavedItemOwnerId: ownerIdForSync,
+    selectedLocalSavedItemId,
+    savedItemStoreId,
+    currentItemName,
+  });
 };

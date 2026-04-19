@@ -129,6 +129,7 @@
         {
           "id": "P1-T4",
           "title": "Recompose updateGroceryListItem as a wrapper",
+          "status": "done",
           "summary": "Turn updateGroceryListItem into a thin function that calls updateGroceryItemOnly then syncSavedItemFromGroceryItem so the Add Item flow and any other existing callers are unchanged.",
           "acceptanceCriteria": [
             "updateGroceryListItem produces the same externally observable sequence of Instant writes as before for representative inputs.",
