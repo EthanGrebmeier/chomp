@@ -84,13 +84,15 @@ const AddIngredientContents = () => {
         isEditing ? undefined : (
           <View className="px-10 pb-4">
             <Button onPress={onSubmit} disabled={!isValid}>
-              <Text>{mode === 'add' ? 'Add Ingredient' : 'Update Ingredient'}</Text>
+              <Text>
+                {mode === 'add' ? 'Add Ingredient' : 'Update Ingredient'}
+              </Text>
             </Button>
           </View>
         )
       }
     >
-      <BottomSheet.SheetView className="pb-6">
+      <BottomSheet.SheetView>
         <ItemForm />
         <MetaBar />
       </BottomSheet.SheetView>
