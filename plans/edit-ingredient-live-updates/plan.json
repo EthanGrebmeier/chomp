@@ -78,6 +78,7 @@
         {
           "id": "P1-T1",
           "title": "Diff helper for ingredient snapshot",
+          "status": "done",
           "summary": "Add a pure diff helper for recipe ingredients under the new edit-ingredient subfolder that returns the subset of fields that changed between a captured snapshot and current form values, using trim-normalized comparison for string fields and numeric equality for quantity.",
           "acceptanceCriteria": [
             "Exports an IngredientSnapshot type containing name, optional category, optional notes, quantity, unit, and optional storeId",
