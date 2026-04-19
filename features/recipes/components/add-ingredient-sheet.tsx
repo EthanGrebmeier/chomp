@@ -1,5 +1,11 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { createContext, useContext, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -15,8 +21,12 @@ import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { BaseGroceryItem } from '../../grocery-list/types';
 import { addRecipeIngredient } from '../instant/add-recipe-ingredient';
-import { updateRecipeIngredient } from '../instant/update-recipe-ingredient';
 import { RecipeIngredient } from '../types';
+
+import {
+  EditIngredientLiveSync,
+  LiveIngredientSyncHandle,
+} from './edit-ingredient/edit-ingredient-live-sync';
 
 type AddIngredientContextType = {
   present: (ingredient?: RecipeIngredient) => void;
@@ -38,24 +48,45 @@ export const useAddIngredientSheet = () => {
 
 const AddIngredientContents = () => {
   const { reset, itemInputRef, onSubmit, isValid, mode } = useItemSheet();
-  const { sheetRef } = useAddIngredientSheetInternal();
+  const { sheetRef, liveSyncRef, isEditing } = useAddIngredientSheetInternal();
+
+  // In edit mode, flush the pending debounce so the last few keystrokes
+  // land before dismissal completes. Add mode has no live-sync; it just
+  // resets like it did before.
+  const onStartClose = useCallback(() => {
+    if (isEditing) {
+      liveSyncRef.current?.flush();
+    }
+    reset();
+  }, [isEditing, liveSyncRef, reset]);
+
+  // onDismiss fires after the sheet is fully closed. In edit mode we also
+  // drop the diff snapshot so the next present() starts from a clean
+  // baseline. Add mode doesn't need anything here — reset already ran in
+  // onStartClose, and there's no snapshot to clear.
+  const onDismiss = useCallback(() => {
+    if (!isEditing) return;
+    reset();
+    liveSyncRef.current?.clearSnapshot();
+  }, [isEditing, liveSyncRef, reset]);
 
   return (
     <BottomSheet
       name="add-ingredient-sheet"
       ref={sheetRef}
-      onStartClose={reset}
+      onStartClose={onStartClose}
+      onDismiss={onDismiss}
       onOpen={() => {
         itemInputRef.current?.focus();
       }}
       footer={
-        <View className="px-10 pb-4">
-          <Button onPress={onSubmit} disabled={!isValid}>
-            <Text>
-              {mode === 'add' ? 'Add Ingredient' : 'Update Ingredient'}
-            </Text>
-          </Button>
-        </View>
+        isEditing ? undefined : (
+          <View className="px-10 pb-4">
+            <Button onPress={onSubmit} disabled={!isValid}>
+              <Text>{mode === 'add' ? 'Add Ingredient' : 'Update Ingredient'}</Text>
+            </Button>
+          </View>
+        )
       }
     >
       <BottomSheet.SheetView className="pb-6">
@@ -66,9 +97,10 @@ const AddIngredientContents = () => {
   );
 };
 
-// Internal context for sharing the sheet ref
 type AddIngredientInternalContextType = {
   sheetRef: React.RefObject<TrueSheet | null>;
+  liveSyncRef: React.RefObject<LiveIngredientSyncHandle | null>;
+  isEditing: boolean;
 };
 
 const AddIngredientInternalContext =
@@ -99,38 +131,27 @@ export const AddIngredientProvider = ({
     undefined
   );
   const sheetRef = useRef<TrueSheet>(null);
+  const liveSyncRef = useRef<LiveIngredientSyncHandle | null>(null);
   const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
 
   const isEditing = !!editingIngredient;
 
+  // In edit mode the Update Ingredient button is gone; all persistence
+  // flows through useLiveIngredientSync, so onSubmit has nothing to do.
+  // Add mode still runs its single-shot addRecipeIngredient path with the
+  // success toast and sheet-stays-open continuous-entry behavior.
   const onSubmit = ({ item }: { item: BaseGroceryItem }) => {
-    if (isEditing && editingIngredient) {
-      updateRecipeIngredient({
-        ingredientId: editingIngredient.id,
-        updates: {
-          name: item.name,
-          quantity: item.quantity,
-          unit: item.unit,
-          category: item.category,
-          notes: item.notes,
-          storeId: item.storeId,
-        },
-        currentStoreId,
-      });
-      toast.success(`${item.name} updated`);
-      sheetRef.current?.dismiss();
-    } else {
-      addRecipeIngredient({
-        recipeId,
-        name: item.name,
-        quantity: item.quantity,
-        unit: item.unit,
-        category: item.category ?? null,
-        notes: item.notes,
-        storeId: item.storeId,
-      });
-      toast.success(`${item.name} added`);
-    }
+    if (isEditing) return;
+    addRecipeIngredient({
+      recipeId,
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      category: item.category ?? null,
+      notes: item.notes,
+      storeId: item.storeId,
+    });
+    toast.success(`${item.name} added`);
   };
 
   const present = (ingredient?: RecipeIngredient) => {
@@ -145,6 +166,11 @@ export const AddIngredientProvider = ({
         notes: ingredient.notes ?? undefined,
         storeId: ingredient.store?.id,
       });
+      // Seed the diff baseline before the sheet presents so the first
+      // render inside ItemSheetProvider can't fire a spurious live write
+      // from setFromItem pushing the ingredient's values into shared form
+      // state.
+      liveSyncRef.current?.captureSnapshot(ingredient);
     } else {
       setEditingIngredient(null);
       setCurrentStoreId(undefined);
@@ -154,12 +180,21 @@ export const AddIngredientProvider = ({
 
   return (
     <AddIngredientContext.Provider value={{ present }}>
-      <AddIngredientInternalContext.Provider value={{ sheetRef }}>
+      <AddIngredientInternalContext.Provider
+        value={{ sheetRef, liveSyncRef, isEditing }}
+      >
         <ItemSheetProvider
           mode={isEditing ? 'update' : 'add'}
           onSubmit={onSubmit}
           setFromItemRef={setFromItemRef}
         >
+          {isEditing ? (
+            <EditIngredientLiveSync
+              selectedIngredientId={editingIngredient?.id ?? null}
+              currentStoreId={currentStoreId}
+              liveSyncRef={liveSyncRef}
+            />
+          ) : null}
           <AddIngredientContents />
           {children}
         </ItemSheetProvider>

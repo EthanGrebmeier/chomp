@@ -143,6 +143,7 @@
         {
           "id": "P1-T4",
           "title": "Wire live-sync into AddIngredientProvider and remove edit-mode footer affordances",
+          "status": "done",
           "summary": "Integrate EditIngredientLiveSync into AddIngredientProvider so edit-mode persistence is live. The footer 'Update Ingredient' button and success toast are removed from the edit branch; add mode is untouched. Sheet close hooks flush the debounce and clear the snapshot.",
           "acceptanceCriteria": [
             "Provider owns a liveSyncRef: MutableRefObject<LiveIngredientSyncHandle | null>",
