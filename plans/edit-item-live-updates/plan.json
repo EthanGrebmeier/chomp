@@ -326,6 +326,7 @@
         {
           "id": "P5-T1",
           "title": "Add onPickCloudMatch handler to useLiveItemSync with snapshot rebase",
+          "status": "done",
           "summary": "Expose an onPickCloudMatch(item, ownerId) method from useLiveItemSync that cancels the pending text-field debounce, performs an immediate updateGroceryItemOnly call that updates grocery fields and relinks grocery_items↔saved_items as needed, and rebases the snapshot to the picked saved_item's values (name, category, notes, storeId, savedItemId, ownerId, savedItemStoreId).",
           "acceptanceCriteria": [
             "Method cancels any in-flight debounce before firing its write.",

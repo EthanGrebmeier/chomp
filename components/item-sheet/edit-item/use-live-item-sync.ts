@@ -6,6 +6,7 @@ import { updateGroceryItemOnly } from '../../../features/grocery-list/instant/up
 import { GroceryListItemWithRecipe } from '../../../features/grocery-list/types';
 import { ItemSnapshot, diffItemSnapshot } from '../diff-item-snapshot';
 import { useItemSheet } from '../use-item-sheet';
+import { MatchingItem } from '../use-matching-items';
 
 // Fields on the grocery item that fan out into the linked saved_item surface.
 // A diff against any of these triggers the close-time saved-item sync; a diff
@@ -51,6 +52,27 @@ export type UseLiveItemSyncHandle = {
    * from the snapshot — run the close-time saved-item sync.
    */
   flushAndSyncOnClose: () => void;
+  /**
+   * Handle an autocomplete suggestion tap. Cancels any pending text-field
+   * debounce, fires an immediate grocery-item write that relinks
+   * grocery_items↔saved_items and grocery_items↔stores to the picked target
+   * (cloud or local), and rebases the snapshot + saved-item context so
+   * subsequent diffs compare against the picked values. No saved_items row
+   * writes happen here; those are deferred to flushAndSyncOnClose.
+   */
+  onPickCloudMatch: (match: MatchingItem, ownerId?: string) => void;
+};
+
+// Tracks external link state that a pick mutates (grocery_items↔stores and
+// grocery_items↔saved_items) plus the picked saved_item's ownership and
+// store baseline. When non-null it takes precedence over the props-derived
+// state carried on stateRef so later writes reconcile against the actual
+// post-pick link state rather than the initial-present baseline.
+type PostPickContext = {
+  linkedStoreId: string | undefined;
+  linkedSavedItemId: string | undefined;
+  linkedSavedItemOwnerId: string | undefined;
+  linkedSavedItemStoreId: string | undefined;
 };
 
 /**
@@ -62,6 +84,8 @@ export type UseLiveItemSyncHandle = {
  *     unit / storeId changes.
  *   - Debounces name / notes changes at a 300ms trailing edge.
  *   - Skips writes entirely while the current name is empty.
+ *   - Exposes onPickCloudMatch so autocomplete selections cancel the
+ *     debounce, commit immediately (with relink), and rebase the baseline.
  *   - Exposes flushAndSyncOnClose so the sheet can flush the pending
  *     debounce and commit the close-time saved-item sync on dismissal.
  *
@@ -81,6 +105,7 @@ export const useLiveItemSync = ({
     useItemSheet();
 
   const snapshotRef = useRef<ItemSnapshot | null>(null);
+  const postPickContextRef = useRef<PostPickContext | null>(null);
 
   // Mirror the latest props/state into a ref so the stable callbacks below
   // (captured once and held by useDebounceCallback / the imperative handle)
@@ -126,6 +151,23 @@ export const useLiveItemSync = ({
     };
   }, []);
 
+  // Resolve external link state: after a pick, postPickContextRef shadows the
+  // initial-present props so the writer reconciles against the actual linked
+  // store / saved_item rather than the pre-pick values.
+  const resolveLinkedStoreId = useCallback((): string | undefined => {
+    if (postPickContextRef.current) {
+      return postPickContextRef.current.linkedStoreId;
+    }
+    return stateRef.current.currentStoreId;
+  }, []);
+
+  const resolveLinkedSavedItemId = useCallback((): string | undefined => {
+    if (postPickContextRef.current) {
+      return postPickContextRef.current.linkedSavedItemId;
+    }
+    return stateRef.current.currentSavedItemId;
+  }, []);
+
   const commitGroceryItemLive = useCallback(() => {
     const snapshot = snapshotRef.current;
     if (!snapshot) return;
@@ -152,10 +194,10 @@ export const useLiveItemSync = ({
         unit: current.unit,
         storeId: current.storeId,
       },
-      currentStoreId: state.currentStoreId,
-      currentSavedItemId: state.currentSavedItemId,
+      currentStoreId: resolveLinkedStoreId(),
+      currentSavedItemId: resolveLinkedSavedItemId(),
     });
-  }, [buildCurrent]);
+  }, [buildCurrent, resolveLinkedStoreId, resolveLinkedSavedItemId]);
 
   const debouncedCommit = useDebounceCallback(
     commitGroceryItemLive,
@@ -187,10 +229,14 @@ export const useLiveItemSync = ({
       // form state the provider pushes in alongside this call.
       storeId: item.store?.id ?? item.saved_item?.store?.id,
     };
+    // Fresh present: drop any lingering pick context so resolvers fall back
+    // to the initial-present props until a pick happens in this session.
+    postPickContextRef.current = null;
   }, []);
 
   const clearSnapshot = useCallback(() => {
     snapshotRef.current = null;
+    postPickContextRef.current = null;
     debouncedCommit.cancel();
   }, [debouncedCommit]);
 
@@ -223,6 +269,19 @@ export const useLiveItemSync = ({
     );
     if (!hasSavedItemRelevantDiff) return;
 
+    // After a pick, the writer must target the picked saved_item (owner and
+    // store baseline included) rather than the pre-pick linked item.
+    const postPick = postPickContextRef.current;
+    const nextSavedItemId = postPick
+      ? postPick.linkedSavedItemId
+      : state.currentSavedItemId;
+    const savedItemOwnerId = postPick
+      ? postPick.linkedSavedItemOwnerId
+      : state.currentSavedItemOwnerId;
+    const savedItemStoreId = postPick
+      ? postPick.linkedSavedItemStoreId
+      : state.currentSavedItemStoreId;
+
     // Pass the current saved-item-relevant field values. For the cloud path,
     // only the diffed values deviate from what's already stored, so re-writing
     // un-diffed fields is a no-op at the row level. For the local path,
@@ -235,20 +294,83 @@ export const useLiveItemSync = ({
         notes: current.notes,
         storeId: current.storeId,
       },
-      nextSavedItemId: state.currentSavedItemId,
-      currentSavedItemOwnerId: state.currentSavedItemOwnerId,
-      savedItemStoreId: state.currentSavedItemStoreId,
+      nextSavedItemId,
+      currentSavedItemOwnerId: savedItemOwnerId,
+      savedItemStoreId,
       currentItemName: state.currentItemName,
     });
   }, [buildCurrent, debouncedCommit]);
+
+  const onPickCloudMatch = useCallback(
+    (match: MatchingItem, ownerId?: string) => {
+      const state = stateRef.current;
+      if (!state.selectedItemId) return;
+
+      // Cancel any in-flight text debounce so a stale pre-pick keystroke
+      // (e.g. "Mi") can't land after the authoritative pick write.
+      debouncedCommit.cancel();
+
+      const isCloud = match.source === 'cloud';
+      const selectedSavedItemId = isCloud ? match.cloudSavedItemId : undefined;
+      const selectedLocalSavedItemId = !isCloud
+        ? match.localSavedItemId
+        : undefined;
+
+      // Quantity and unit aren't surfaced by autocomplete matches; preserve
+      // whatever the user already has in the form so the pick doesn't
+      // clobber an in-progress quantity/unit edit.
+      const preservedQuantity = state.quantity;
+      const preservedUnit = state.unit;
+
+      updateGroceryItemOnly({
+        itemId: state.selectedItemId,
+        item: {
+          name: match.name,
+          category: match.category,
+          notes: match.notes,
+          quantity: preservedQuantity,
+          unit: preservedUnit,
+          storeId: match.storeId,
+        },
+        currentStoreId: resolveLinkedStoreId(),
+        currentSavedItemId: resolveLinkedSavedItemId(),
+        selectedSavedItemId,
+        selectedLocalSavedItemId,
+      });
+
+      // Rebase the diff baseline to the picked target so post-pick edits
+      // diff against the committed state, not the initial-present state.
+      snapshotRef.current = {
+        name: match.name,
+        category: match.category,
+        notes: match.notes,
+        quantity: preservedQuantity,
+        unit: preservedUnit,
+        storeId: match.storeId,
+      };
+      // Carry the picked saved_item's ownership and store baseline forward
+      // so the close-time sync's owner gate and saved_items↔stores reconcile
+      // operate against the picked target.
+      postPickContextRef.current = {
+        linkedStoreId: match.storeId,
+        linkedSavedItemId: selectedSavedItemId,
+        linkedSavedItemOwnerId: isCloud
+          ? (ownerId ?? match.ownerId)
+          : undefined,
+        linkedSavedItemStoreId: match.storeId,
+      };
+    },
+    [debouncedCommit, resolveLinkedStoreId, resolveLinkedSavedItemId]
+  );
 
   const handle = useMemo<UseLiveItemSyncHandle>(
     () => ({
       captureSnapshot,
       clearSnapshot,
       flushAndSyncOnClose,
+      onPickCloudMatch,
     }),
-    [captureSnapshot, clearSnapshot, flushAndSyncOnClose]
+    [captureSnapshot, clearSnapshot, flushAndSyncOnClose, onPickCloudMatch]
   );
 
   // Keep the caller's ref pointed at the latest handle so EditItemProvider
