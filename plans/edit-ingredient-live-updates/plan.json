@@ -184,6 +184,7 @@
         {
           "id": "P2-T1",
           "title": "Implement onPickMatch in useLiveIngredientSync",
+          "status": "done",
           "summary": "Replace the P1 onPickMatch stub with the real implementation: cancel any pending debounce, commit picked fields via updateRecipeIngredient (preserving form quantity), and rebase the snapshot ref (and currentStoreIdRef where applicable) to the picked values.",
           "acceptanceCriteria": [
             "handleRef.onPickMatch(match) calls debouncedCommit.cancel() before any write",

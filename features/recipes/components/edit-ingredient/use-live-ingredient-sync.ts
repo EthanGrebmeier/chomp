@@ -44,9 +44,11 @@ export type LiveIngredientSyncHandle = {
    */
   clearSnapshot: () => void;
   /**
-   * Autocomplete pick handler. No-op in this ticket; wired up in P2 so picks
-   * cancel the pending debounce, commit immediately, and rebase the diff
-   * snapshot to the picked target.
+   * Autocomplete pick handler. Cancels any pending text-field debounce,
+   * fires an immediate updateRecipeIngredient with the picked fields
+   * (preserving the form's current quantity), and rebases the snapshot (and
+   * currentStoreIdRef) to the picked target so subsequent edits diff
+   * against the post-pick state.
    */
   onPickMatch: (match: MatchingItem) => void;
 };
@@ -209,8 +211,59 @@ export const useLiveIngredientSync = ({
     debouncedCommit.cancel();
   }, [debouncedCommit]);
 
-  // Stub in P1; real autocomplete-pick behavior lands in P2-T1.
-  const onPickMatch = useCallback((_match: MatchingItem) => {}, []);
+  const onPickMatch = useCallback(
+    (match: MatchingItem) => {
+      const snapshot = snapshotRef.current;
+      if (!snapshot) return;
+      const state = stateRef.current;
+      if (!state.selectedIngredientId) return;
+      if (!state.isValid) return;
+
+      // Cancel any in-flight text debounce so a stale pre-pick keystroke
+      // can't land after the authoritative pick write.
+      debouncedCommit.cancel();
+
+      // Quantity isn't carried on autocomplete matches; preserve whatever
+      // the user already has in the form so the pick doesn't clobber an
+      // in-progress quantity edit. Unit is taken from the match when
+      // present (matches today always carry one) and otherwise falls back
+      // to the form's current unit.
+      const preservedQuantity = state.quantity;
+      const nextUnit = match.unit ?? state.unit;
+
+      const nextFields = {
+        name: match.name,
+        category: match.category,
+        notes: match.notes,
+        quantity: preservedQuantity,
+        unit: nextUnit,
+        storeId: match.storeId,
+      };
+
+      void updateRecipeIngredient({
+        ingredientId: state.selectedIngredientId,
+        updates: nextFields,
+        currentStoreId: currentStoreIdRef.current,
+      });
+
+      // Rebase the diff baseline to the picked target so post-pick edits
+      // diff against the committed state, not the initial-present state.
+      snapshotRef.current = {
+        name: nextFields.name,
+        category: nextFields.category,
+        notes: nextFields.notes,
+        quantity: nextFields.quantity,
+        unit: nextFields.unit,
+        storeId: nextFields.storeId,
+      };
+      // Roll the store baseline forward to the picked storeId so the next
+      // write's link reconcile targets the real post-pick linked store.
+      if (match.storeId !== undefined) {
+        currentStoreIdRef.current = match.storeId;
+      }
+    },
+    [debouncedCommit]
+  );
 
   const handle = useMemo<LiveIngredientSyncHandle>(
     () => ({
