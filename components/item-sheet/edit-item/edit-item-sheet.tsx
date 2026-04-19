@@ -9,6 +9,7 @@ import { BottomSheet } from '../../bottom-sheet';
 import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
+import { MatchingItem } from '../use-matching-items';
 
 import { UseLiveItemSyncHandle, useLiveItemSync } from './use-live-item-sync';
 
@@ -136,6 +137,14 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   // still routes here until P3-T3 swaps it for a blur.
   const onSubmit = () => {};
 
+  // Autocomplete pick in the Edit flow: after ItemSheetProvider.onSelect
+  // populates the shared form state, route the pick into useLiveItemSync
+  // so it can cancel the pending text-field debounce, fire the immediate
+  // grocery-item write (with relink), and rebase the diff snapshot.
+  const onPickMatch = useCallback((match: MatchingItem) => {
+    liveSyncRef.current?.onPickCloudMatch(match, match.ownerId);
+  }, []);
+
   const present = (item: GroceryListItemWithRecipe) => {
     setFromItemRef.current?.(item);
     setSelectedItemId(item.id);
@@ -163,6 +172,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
           listId={groceryListId}
           onSubmit={onSubmit}
           setFromItemRef={setFromItemRef}
+          onPickMatch={onPickMatch}
         >
           <EditItemLiveSync
             selectedItemId={selectedItemId}

@@ -67,6 +67,14 @@ type ItemSheetProviderProps = {
     ((item: GroceryListItemWithRecipe | BaseGroceryItem) => void) | null
   >;
   disableAutocomplete?: boolean;
+  /**
+   * Optional observer fired after the shared form state has been populated
+   * from an autocomplete pick. The Edit flow wires this to
+   * useLiveItemSync.onPickCloudMatch so picks cancel the text-field
+   * debounce, commit immediately, and rebase the diff snapshot. The Add
+   * flow leaves this unset so its submit-on-button path is unchanged.
+   */
+  onPickMatch?: (match: MatchingItem) => void;
 };
 
 export const ItemSheetProvider = ({
@@ -76,6 +84,7 @@ export const ItemSheetProvider = ({
   setFromItemRef,
   disableAutocomplete = false,
   mode,
+  onPickMatch,
 }: ItemSheetProviderProps) => {
   const [selectedItem, setSelectedItem] = useState<MatchingItem | null>(
     null
@@ -184,6 +193,10 @@ export const ItemSheetProvider = ({
     setStoreId(item.storeId);
     setStoreName(undefined);
     setShowMatchingItems(false);
+    // Notify observers (e.g. useLiveItemSync in the Edit flow) after the
+    // form state has been populated so downstream snapshot/rebase logic
+    // reads the picked values — not the pre-pick ones.
+    onPickMatch?.(item);
   };
 
   const onChangeItemText = (text: string) => {

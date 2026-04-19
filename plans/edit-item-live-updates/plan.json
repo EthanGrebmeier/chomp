@@ -351,6 +351,7 @@
         {
           "id": "P5-T2",
           "title": "Wire item-form autocomplete selection to the new handler",
+          "status": "done",
           "summary": "Route the autocomplete suggestion tap from ItemInput / item-form through useItemSheet into useLiveItemSync's onPickCloudMatch in the Edit flow. Add Item flow keeps its existing onSelect wiring.",
           "acceptanceCriteria": [
             "In the Edit sheet, suggestion taps invoke onPickCloudMatch with the MatchingItem and its ownerId.",
