@@ -10,10 +10,15 @@ import {
   consumeManualSignOutIntent,
   markManualSignOutIntent,
 } from '../../../lib/clerk/signout-intent';
+import { db } from '../../../lib/instant';
+import { useInstantAuthState } from '../../../lib/instant/use-clerk-auth';
 
 const Account = () => {
   const { signOut } = useAuth();
   const { user } = useUser();
+  const { user: instantUser } = db.useAuth();
+  const { status, isReconciled, hasInstantEmailSession } =
+    useInstantAuthState();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleNavigateToSignIn = () => {
@@ -33,7 +38,45 @@ const Account = () => {
     }
   };
 
-  if (!user?.primaryEmailAddress) {
+  if (!isReconciled) {
+    return (
+      <View className="gap-4 p-4">
+        <Text className="text-lg font-medium leading-5">Account</Text>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (hasInstantEmailSession) {
+    const email =
+      user?.primaryEmailAddress?.emailAddress ?? instantUser?.email ?? '';
+
+    return (
+      <View className="gap-4 p-4">
+        <View>
+          <Text variant="muted" className="mb-1">
+            Account
+          </Text>
+          <Text className="font-medium">{email}</Text>
+        </View>
+        <Button
+          variant="destructive"
+          onPress={handleSignOut}
+          disabled={isSigningOut}
+          className="w-full"
+          size="lg"
+        >
+          {isSigningOut ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text>Sign Out</Text>
+          )}
+        </Button>
+      </View>
+    );
+  }
+
+  if (status === 'guest') {
     return (
       <View className="gap-4 p-4">
         <View>
@@ -56,31 +99,7 @@ const Account = () => {
     );
   }
 
-  return (
-    <View className="gap-4 p-4">
-      <View>
-        <Text variant="muted" className="mb-1">
-          Account
-        </Text>
-        <Text className="font-medium">
-          {user.primaryEmailAddress.emailAddress}
-        </Text>
-      </View>
-      <Button
-        variant="destructive"
-        onPress={handleSignOut}
-        disabled={isSigningOut}
-        className="w-full"
-        size="lg"
-      >
-        {isSigningOut ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text>Sign Out</Text>
-        )}
-      </Button>
-    </View>
-  );
+  return null;
 };
 
 export default Account;
