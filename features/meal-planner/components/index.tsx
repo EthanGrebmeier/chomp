@@ -158,7 +158,7 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
       <ListSelectorSheet listId={listId} />
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} />
-      <EditItemSheet sheetRef={editItemSheet} />
+      <EditItemSheet ref={editItemSheet} />
       <MealPlanDate currentDate={currentDate} onTodayPress={handleTodayPress} />
       <MealPlanDateSelector
         dates={daysOfPlan}

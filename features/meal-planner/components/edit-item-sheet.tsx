@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Alert, TextInput, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
@@ -19,10 +19,6 @@ import {
   useMealPlanItem,
 } from './meal-plan-item-context';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
-
-type EditItemSheetProps = {
-  sheetRef?: React.RefObject<EditItemSheetRef | null>;
-};
 
 export type EditItemSheetRef = {
   open: (item: MealPlanItemWithStore) => void;
@@ -238,39 +234,42 @@ const EditItemSheetContainer = ({
   );
 };
 
-export const EditItemSheet = ({
-  sheetRef: externalRef,
-}: EditItemSheetProps) => {
+export const EditItemSheet = forwardRef<EditItemSheetRef>((_, ref) => {
   const [itemToEdit, setItemToEdit] = useState<MealPlanItemWithStore | null>(
     null
   );
   const [initialValues, setInitialValues] = useState<
     MealPlanItemInitialValues | undefined
   >(undefined);
+  const [shouldPresent, setShouldPresent] = useState(false);
 
   const sheetRef = useRef<TrueSheet>(null);
 
-  // Set up the ref interface
+  useImperativeHandle(ref, () => ({
+    open: (item: MealPlanItemWithStore) => {
+      setItemToEdit(item);
+      setInitialValues({
+        itemName: item.name,
+        itemNotes: item.notes ?? '',
+        quantity: item.quantity,
+        unit: item.unit,
+        category: item.category ?? undefined,
+        storeId: item.store?.id ?? undefined,
+        selectedDate: item.date,
+        mealTag: item.mealTag ?? undefined,
+      });
+      setShouldPresent(true);
+    },
+  }));
+
+  // Present the sheet after state has committed and the provider has remounted
+  // with the correct initial values (mirroring EditMealSheet's forwardRef pattern).
   useEffect(() => {
-    if (externalRef) {
-      externalRef.current = {
-        open: (item: MealPlanItemWithStore) => {
-          setItemToEdit(item);
-          setInitialValues({
-            itemName: item.name,
-            itemNotes: item.notes ?? '',
-            quantity: item.quantity,
-            unit: item.unit,
-            category: item.category ?? undefined,
-            storeId: item.store?.id ?? undefined,
-            selectedDate: item.date,
-            mealTag: item.mealTag ?? undefined,
-          });
-          sheetRef.current?.present();
-        },
-      };
+    if (shouldPresent) {
+      sheetRef.current?.present();
+      setShouldPresent(false);
     }
-  }, [externalRef]);
+  }, [shouldPresent]);
 
   const handleClose = () => {
     sheetRef.current?.dismiss();
@@ -294,4 +293,6 @@ export const EditItemSheet = ({
       />
     </MealPlanItemProvider>
   );
-};
+});
+
+EditItemSheet.displayName = 'EditItemSheet';
