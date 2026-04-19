@@ -126,6 +126,7 @@
         {
           "id": "P1-T3",
           "title": "EditIngredientLiveSync null-renderer",
+          "status": "done",
           "summary": "Add a thin null-rendering consumer under the edit-ingredient subfolder that runs useLiveIngredientSync inside ItemSheetProvider and publishes its imperative handle via the liveSyncRef it receives as a prop.",
           "acceptanceCriteria": [
             "Accepts { selectedIngredientId, currentStoreId, liveSyncRef } props",
