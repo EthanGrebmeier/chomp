@@ -1,6 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { CheckIcon, ShoppingCartIcon } from 'lucide-react-native';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -283,6 +284,7 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
             );
           }
           sheetRef.current?.dismiss();
+          router.back();
         },
         onError: () => {
           toast.error('Failed to add meals to list');

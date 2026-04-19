@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useCallback } from 'react';
 import { Alert, FlatList, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -158,16 +157,6 @@ export const MealPlanDateView = ({
         className="flex-1 items-center justify-center px-4"
       >
         <View className="-mt-24">
-          <View className="w-48">
-            <Image
-              source={require('../../../assets/images/NoMeals.png')}
-              style={{
-                width: 'auto',
-                height: 140,
-              }}
-              contentFit="contain"
-            />
-          </View>
           <EmptyHeading className="mt-4">No meals planned</EmptyHeading>
           <EmptySubtext>Tap the + button to add a meal</EmptySubtext>
         </View>
