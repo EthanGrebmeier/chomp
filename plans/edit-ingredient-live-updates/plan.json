@@ -98,6 +98,7 @@
         {
           "id": "P1-T2",
           "title": "useLiveIngredientSync hook",
+          "status": "done",
           "summary": "Add the live-sync hook under the new edit-ingredient subfolder. It reads form state from useItemSheet, owns a snapshot ref and current-store-id baseline, debounces text-field writes at 300ms trailing, fires immediate writes for category/quantity/unit/storeId, gates all writes on isValid, commits via updateRecipeIngredient, and exposes an imperative handle via a MutableRefObject prop.",
           "acceptanceCriteria": [
             "Accepts { selectedIngredientId, currentStoreId, handleRef } props",
