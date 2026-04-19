@@ -1,5 +1,11 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from 'react';
 
 import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
 import {
@@ -62,7 +68,7 @@ const EditItemContents = () => {
       onStartClose={onStartClose}
       onDismiss={onDismiss}
     >
-      <BottomSheet.SheetView className="pb-safe">
+      <BottomSheet.SheetView>
         <ItemForm />
         <MetaBar />
       </BottomSheet.SheetView>
