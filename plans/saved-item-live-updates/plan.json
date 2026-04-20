@@ -1,0 +1,121 @@
+{
+  "planName": "Saved Item Sheet — Live Updates (Edit Mode)",
+  "sourcePrd": "plans/saved-item-live-updates/prd.md",
+  "lastUpdated": "2026-04-19",
+  "architecturalDecisions": [
+    {
+      "id": "AD-1",
+      "title": "Edit-only scope",
+      "decision": "Live updates apply only when editing an existing saved item. Add mode remains submit-on-button."
+    },
+    {
+      "id": "AD-2",
+      "title": "No edit footer affordance",
+      "decision": "Edit mode removes the Update button and footer spacing entirely. Add mode keeps existing footer."
+    },
+    {
+      "id": "AD-3",
+      "title": "Unified writer reuse",
+      "decision": "Live writes call updateSavedItem (unified local/cloud behavior) rather than introducing a new writer split."
+    },
+    {
+      "id": "AD-4",
+      "title": "Local promotion continuity",
+      "decision": "When a local item is promoted to cloud on first write, in-session edit target state is updated to the promoted cloud record for subsequent writes."
+    },
+    {
+      "id": "AD-5",
+      "title": "Debounce contract",
+      "decision": "Name is debounced with 300ms trailing delay; category and store are immediate."
+    },
+    {
+      "id": "AD-6",
+      "title": "Close lifecycle split",
+      "decision": "onStartClose flushes pending debounce; onDismiss performs reset and snapshot cleanup."
+    },
+    {
+      "id": "AD-7",
+      "title": "Validity guard",
+      "decision": "Live writes skip while name is empty after trim."
+    },
+    {
+      "id": "AD-8",
+      "title": "Keyboard semantics",
+      "decision": "Edit mode uses ItemSheetProvider mode='update' so return key blurs and does not submit."
+    },
+    {
+      "id": "AD-9",
+      "title": "Error handling",
+      "decision": "No new error UI is introduced; behavior relies on existing optimistic/offline pipeline."
+    }
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "title": "Saved-item edit live updates",
+      "userStories": [
+        "Story 1: edit changes persist live",
+        "Story 2: dismiss flushes pending text edits",
+        "Story 3: category/store update immediately",
+        "Story 4: empty name does not write",
+        "Story 5: remove edit success toast",
+        "Story 6: return key blurs in edit mode",
+        "Story 7: add mode remains unchanged",
+        "Story 8: local item promotion continues seamlessly in-session"
+      ],
+      "tickets": [
+        {
+          "id": "P1-T1",
+          "title": "Add edit live-sync hook for saved items",
+          "status": "pending",
+          "summary": "Create a saved-item-specific live-sync hook that captures baseline on present, performs debounced name writes and immediate category/store writes via updateSavedItem, flushes on close, and clears on dismiss.",
+          "acceptanceCriteria": [
+            "Hook reads current form state from useItemSheet and tracks latest values through refs",
+            "Debounced trailing name write uses 300ms useDebounceCallback",
+            "Immediate writes trigger on category/store changes",
+            "Writes are skipped when trimmed name is empty",
+            "Hook exposes imperative handle: captureSnapshot, flushAndSyncOnClose, clearSnapshot",
+            "Hook supports local->cloud promotion by updating active editing target state when updateSavedItem returns promoted id"
+          ],
+          "dependencies": [],
+          "testPlan": [
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": [
+            "Add mode wiring"
+          ]
+        },
+        {
+          "id": "P1-T2",
+          "title": "Wire live-sync into saved-item sheet edit path",
+          "status": "pending",
+          "summary": "Integrate live-sync hook into SavedItemSheetProvider and SavedItemSheetContents, split add/edit mode behavior, and remove edit-mode footer affordances.",
+          "acceptanceCriteria": [
+            "ItemSheetProvider mode is update in edit mode and add in add mode",
+            "Edit onSubmit becomes no-op; add onSubmit remains existing path",
+            "BottomSheet onStartClose calls liveSyncRef.flushAndSyncOnClose in edit mode",
+            "BottomSheet onDismiss calls reset and liveSyncRef.clearSnapshot in edit mode",
+            "Footer button and footer spacing are omitted in edit mode",
+            "Add mode footer/button/toast behavior remains unchanged",
+            "Edit mode success toast is removed"
+          ],
+          "dependencies": [
+            "P1-T1"
+          ],
+          "testPlan": [
+            "pnpm lint",
+            "pnpm tsc --noEmit",
+            "Manual: edit cloud item name/category/store and verify live persistence without pressing update",
+            "Manual: edit local item and verify promotion then continued edits persist in same open session",
+            "Manual: swipe close during pending name debounce and verify final text persists",
+            "Manual: verify edit mode has no footer button or extra footer space",
+            "Manual: verify add mode remains unchanged"
+          ],
+          "outOfScope": [
+            "Autocomplete work"
+          ]
+        }
+      ]
+    }
+  ]
+}
