@@ -20,6 +20,7 @@ import {
 import { MatchingItem } from '../../../components/item-sheet/use-matching-items';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
+import { cn } from '../../../lib/utils';
 import { BaseGroceryItem } from '../../grocery-list/types';
 import { addRecipeIngredient } from '../instant/add-recipe-ingredient';
 import { RecipeIngredient } from '../types';
@@ -92,7 +93,7 @@ const AddIngredientContents = () => {
         )
       }
     >
-      <BottomSheet.SheetView>
+      <BottomSheet.SheetView className={cn(isEditing ? undefined : 'pb-safe')}>
         <ItemForm />
         <MetaBar />
       </BottomSheet.SheetView>
