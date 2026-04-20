@@ -1,1 +1,3 @@
 2026-04-19 Plan initialized: created PRD and single-phase implementation plan for saved-item edit live updates. No code implementation started (waiting for user sign-off).
+2026-04-19 [P1-T1]: Added a saved-item edit live-sync hook with 300ms debounced name writes, immediate category/store writes, close-flush snapshot controls, empty-name write guard, and local->cloud promotion target roll-forward support.
+2026-04-19 [P1-T2]: Wired saved-item edit mode to live-sync lifecycle hooks, removed edit footer/update submit path, switched edit mode keyboard submit to blur, and preserved add-mode submit/toast behavior.

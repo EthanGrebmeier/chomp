@@ -67,7 +67,7 @@
         {
           "id": "P1-T1",
           "title": "Add edit live-sync hook for saved items",
-          "status": "pending",
+          "status": "done",
           "summary": "Create a saved-item-specific live-sync hook that captures baseline on present, performs debounced name writes and immediate category/store writes via updateSavedItem, flushes on close, and clears on dismiss.",
           "acceptanceCriteria": [
             "Hook reads current form state from useItemSheet and tracks latest values through refs",
@@ -88,7 +88,7 @@
         {
           "id": "P1-T2",
           "title": "Wire live-sync into saved-item sheet edit path",
-          "status": "pending",
+          "status": "done",
           "summary": "Integrate live-sync hook into SavedItemSheetProvider and SavedItemSheetContents, split add/edit mode behavior, and remove edit-mode footer affordances.",
           "acceptanceCriteria": [
             "ItemSheetProvider mode is update in edit mode and add in add mode",

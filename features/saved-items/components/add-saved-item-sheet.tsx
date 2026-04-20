@@ -1,5 +1,11 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { createContext, useContext, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -17,7 +23,11 @@ import { Text } from '../../../components/ui/text';
 import { BaseGroceryItem } from '../../grocery-list/types';
 import { addSavedItem } from '../instant/add-saved-item';
 import { UnifiedSavedItem } from '../types';
-import { updateSavedItem } from '../unified/update-saved-item';
+
+import {
+  LiveSavedItemSyncHandle,
+  useLiveSavedItemSync,
+} from './edit-saved-item/use-live-saved-item-sync';
 
 type SavedItemSheetContextType = {
   present: (item?: UnifiedSavedItem) => void;
@@ -50,9 +60,10 @@ const SavedItemMetaBar = () => {
   );
 };
 
-const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
+const SavedItemSheetContents = ({ isEditing }: { isEditing: boolean }) => {
   const {
     reset,
+    mode,
     itemInputRef,
     itemInputValue,
     showMatchingItems,
@@ -63,23 +74,45 @@ const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
     isValid,
     disableAutocomplete,
   } = useItemSheet();
-  const { sheetRef } = useSavedItemSheetInternal();
+  const { sheetRef, liveSyncRef } = useSavedItemSheetInternal();
+
+  const handleSubmitEditing =
+    mode === 'update' ? () => itemInputRef.current?.blur() : onSubmit;
+
+  // Keep add-mode semantics unchanged (reset on close start), but in edit mode
+  // flush pending debounced writes before state resets.
+  const onStartClose = useCallback(() => {
+    if (isEditing) {
+      liveSyncRef.current?.flushAndSyncOnClose();
+      return;
+    }
+    reset();
+  }, [isEditing, liveSyncRef, reset]);
+
+  const onDismiss = useCallback(() => {
+    if (!isEditing) return;
+    reset();
+    liveSyncRef.current?.clearSnapshot();
+  }, [isEditing, liveSyncRef, reset]);
 
   return (
     <BottomSheet
-      viewClassName="pb-4"
+      viewClassName={isEditing ? undefined : 'pb-4'}
       name="saved-item-sheet"
       ref={sheetRef}
-      onStartClose={reset}
+      onStartClose={onStartClose}
+      onDismiss={isEditing ? onDismiss : undefined}
       onOpen={() => {
         itemInputRef.current?.focus();
       }}
       footer={
+        isEditing ? undefined : (
         <View className="px-10 pb-4">
           <Button onPress={onSubmit} disabled={!isValid}>
-            <Text>{submitLabel}</Text>
+            <Text>Add</Text>
           </Button>
         </View>
+        )
       }
     >
       <BottomSheet.SheetView className="pb-safe gap-4">
@@ -90,7 +123,7 @@ const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
           onSelect={onSelect}
           showMatchingItems={showMatchingItems}
           setShowMatchingItems={setShowMatchingItems}
-          onSubmit={onSubmit}
+          onSubmit={handleSubmitEditing}
           inputRef={itemInputRef}
           disableAutocomplete={disableAutocomplete}
         />
@@ -103,6 +136,7 @@ const SavedItemSheetContents = ({ submitLabel }: { submitLabel: string }) => {
 // Internal context for sharing the sheet ref
 type SavedItemSheetInternalContextType = {
   sheetRef: React.RefObject<TrueSheet | null>;
+  liveSyncRef: React.RefObject<LiveSavedItemSyncHandle | null>;
 };
 
 const SavedItemSheetInternalContext =
@@ -122,29 +156,36 @@ type SavedItemSheetProviderProps = {
   children: React.ReactNode;
 };
 
+const SavedItemLiveSync = ({
+  editingItem,
+  onPromoteToCloud,
+}: {
+  editingItem: UnifiedSavedItem | null;
+  onPromoteToCloud: (item: UnifiedSavedItem) => void;
+}) => {
+  const { liveSyncRef } = useSavedItemSheetInternal();
+
+  useLiveSavedItemSync({
+    editingItem,
+    onPromoteToCloud,
+    handleRef: liveSyncRef,
+  });
+
+  return null;
+};
+
 export const SavedItemSheetProvider = ({
   children,
 }: SavedItemSheetProviderProps) => {
   const [editingItem, setEditingItem] = useState<UnifiedSavedItem | null>(null);
   const sheetRef = useRef<TrueSheet>(null);
+  const liveSyncRef = useRef<LiveSavedItemSyncHandle | null>(null);
   const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
 
   const isEditing = !!editingItem;
 
   const onSubmit = ({ item }: { item: BaseGroceryItem }) => {
-    if (isEditing && editingItem) {
-      updateSavedItem({
-        item: editingItem,
-        updates: {
-          name: item.name,
-          category: item.category,
-          storeId: item.storeId,
-        },
-        currentStoreId: editingItem.storeId,
-      });
-      toast.success(`${item.name} updated`);
-      sheetRef.current?.dismiss();
-    } else {
+    if (!isEditing) {
       addSavedItem({
         name: item.name,
         category: item.category,
@@ -164,6 +205,7 @@ export const SavedItemSheetProvider = ({
         category: item.category ?? undefined,
         storeId: item.storeId,
       });
+      liveSyncRef.current?.captureSnapshot(item);
     } else {
       setEditingItem(null);
     }
@@ -172,14 +214,18 @@ export const SavedItemSheetProvider = ({
 
   return (
     <SavedItemSheetContext.Provider value={{ present }}>
-      <SavedItemSheetInternalContext.Provider value={{ sheetRef }}>
+      <SavedItemSheetInternalContext.Provider value={{ sheetRef, liveSyncRef }}>
         <ItemSheetProvider
-          mode="add"
+          mode={isEditing ? 'update' : 'add'}
           onSubmit={onSubmit}
           setFromItemRef={setFromItemRef}
           disableAutocomplete
         >
-          <SavedItemSheetContents submitLabel={isEditing ? 'Update' : 'Add'} />
+          <SavedItemLiveSync
+            editingItem={editingItem}
+            onPromoteToCloud={setEditingItem}
+          />
+          <SavedItemSheetContents isEditing={isEditing} />
           {children}
         </ItemSheetProvider>
       </SavedItemSheetInternalContext.Provider>
