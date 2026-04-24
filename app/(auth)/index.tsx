@@ -1,16 +1,15 @@
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
+import { WelcomeGraphic } from '@/components/branding/welcome-graphic';
 import { Button } from '@/components/ui/button';
-import { Text } from '@/components/ui/text';
 import { useContinueAsGuest } from '@/lib/instant/use-continue-as-guest';
 import { navigation } from '@/lib/navigation';
 
-const appIcon = require('../../assets/images/icon.png');
+import { Text } from '../../components/ui/text';
 
 export default function Welcome() {
   const router = useRouter();
@@ -30,31 +29,32 @@ export default function Welcome() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-1 px-6 pb-8 pt-4">
-        <View className="flex-[4] items-center justify-center ">
-          <Image
-            source={appIcon}
-            style={{ width: '100%', height: '100%' }}
-            contentFit="contain"
-          />
-          <Text className="text-center text-2xl font-bold">
-            Welcome to Chomp!
+    <SafeAreaView className="h-full bg-background">
+      <View className="mt-12 flex-1 justify-between  px-6">
+        <View className="items-center justify-start ">
+          <Text className="font-averia-serif-libre text-center uppercase text-primary">
+            Welcome to
+          </Text>
+          <Text className="font-jaro-regular text-center text-[120px] uppercase leading-none text-primary">
+            Chomp
           </Text>
         </View>
+        <View className="w-full flex-1 translate-x-[-12px] translate-y-[-18px] items-center justify-center">
+          <WelcomeGraphic />
+        </View>
 
-        <View className="flex-[2] justify-end gap-2">
+        <View className=" justify-end gap-2">
           <Button
             size="xl"
             className="w-full"
             onPress={() => router.push('/(auth)/sign-in')}
             disabled={isContinuingAsGuest}
           >
-            <Text>Sign In</Text>
+            <Text className="font-bold uppercase ">Sign In</Text>
           </Button>
 
           <Button
-            variant="secondary"
+            variant="ghost"
             size="xl"
             onPress={handleContinueAsGuest}
             disabled={isContinuingAsGuest}
@@ -62,7 +62,9 @@ export default function Welcome() {
             {isContinuingAsGuest ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text>Continue as Guest</Text>
+              <Text className="font-semibold uppercase">
+                Continue as A Guest
+              </Text>
             )}
           </Button>
         </View>

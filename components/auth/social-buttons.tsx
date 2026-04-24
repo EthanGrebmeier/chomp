@@ -33,7 +33,6 @@ export function SocialButtons({
         <Button
           className="w-full"
           size="xl"
-          variant="secondary"
           icon={
             <AppleIcon
               className="-translate-x-1  text-secondary-foreground"
@@ -55,7 +54,6 @@ export function SocialButtons({
       <Button
         className="w-full"
         size="xl"
-        variant="secondary"
         icon={
           <GoogleIcon
             className=" text-secondary-foreground"

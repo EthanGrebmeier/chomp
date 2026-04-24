@@ -1,7 +1,10 @@
 import { ClerkProvider } from '@clerk/clerk-expo';
 import { resourceCache } from '@clerk/clerk-expo/resource-cache';
+import { AveriaSerifLibre_400Regular } from '@expo-google-fonts/averia-serif-libre';
+import { Jaro_400Regular } from '@expo-google-fonts/jaro';
 import { PortalHost } from '@rn-primitives/portal';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SQLite from 'expo-sqlite';
@@ -109,6 +112,10 @@ function InitialLayout() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontLoadError] = useFonts({
+    'averia-serif-libre': AveriaSerifLibre_400Regular,
+    'jaro-regular': Jaro_400Regular,
+  });
   const [isAuthBlockingSplash, setIsAuthBlockingSplash] = useState(true);
   const [hasSplashBlockTimedOut, setHasSplashBlockTimedOut] = useState(false);
   const hasHiddenSplashRef = useRef(false);
@@ -124,8 +131,9 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
+    const areFontsReady = fontsLoaded || Boolean(fontLoadError);
     const shouldKeepSplashVisible =
-      isAuthBlockingSplash && !hasSplashBlockTimedOut;
+      (isAuthBlockingSplash && !hasSplashBlockTimedOut) || !areFontsReady;
 
     if (shouldKeepSplashVisible || hasHiddenSplashRef.current) {
       return;
@@ -135,7 +143,7 @@ export default function RootLayout() {
     void SplashScreen.hideAsync().catch(() => {
       // Ignore if splash was already hidden.
     });
-  }, [isAuthBlockingSplash, hasSplashBlockTimedOut]);
+  }, [fontLoadError, fontsLoaded, isAuthBlockingSplash, hasSplashBlockTimedOut]);
 
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line react-hooks/rules-of-hooks

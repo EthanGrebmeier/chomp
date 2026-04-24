@@ -100,6 +100,10 @@ module.exports = {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
+      fontFamily: {
+        'jaro-regular': ['jaro-regular'],
+        'averia-serif-libre': ['averia-serif-libre'],
+      },
     },
   },
   future: {

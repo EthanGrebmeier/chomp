@@ -21,39 +21,34 @@ export default function SignIn() {
         <BackButton />
       </View>
 
-      <View className="flex-1 px-4">
-        <View className="w-full flex-1 gap-10">
-          <View className="w-full items-start justify-start gap-3 ">
-            <Text variant="h1">Sign In</Text>
+      <View className="w-full flex-1 items-center justify-center gap-20 px-4">
+        <View className="w-full items-center justify-center">
+          <Text variant="h1" className="uppercase text-primary">
+            Sign In
+          </Text>
+          <Text className="font-averia-serif-libre text-xl">
+            Choose how you want to continue
+          </Text>
+        </View>
 
-            <View>
-              <Text variant="muted">Choose how you want to continue.</Text>
-              <Text variant="muted">
-                We&apos;ll create your account if you&apos;re new here.
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-1 items-center justify-end gap-2 pb-12">
-            <SocialButtons onLoadingChange={setIsSocialLoading} />
-            <Button
-              variant="secondary"
-              size="xl"
-              className="w-full"
-              disabled={isSocialLoading}
-              icon={
-                <Icon
-                  className="text-secondary-foreground"
-                  as={MailIcon}
-                  strokeWidth={2.75}
-                  size={16}
-                />
-              }
-              onPress={() => router.push('/(auth)/sign-in-email')}
-            >
-              <Text>Sign in with Email Code</Text>
-            </Button>
-          </View>
+        <View className="w-full items-center justify-end gap-4 pb-12">
+          <SocialButtons onLoadingChange={setIsSocialLoading} />
+          <Button
+            size="xl"
+            className="w-full"
+            disabled={isSocialLoading}
+            icon={
+              <Icon
+                className="text-secondary-foreground"
+                as={MailIcon}
+                strokeWidth={2.75}
+                size={16}
+              />
+            }
+            onPress={() => router.push('/(auth)/sign-in-email')}
+          >
+            <Text>Sign in with Email Code</Text>
+          </Button>
         </View>
       </View>
     </SafeAreaView>

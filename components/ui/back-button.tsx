@@ -26,15 +26,15 @@ export function BackButton({ onPress, className, href }: BackButtonProps) {
   return (
     <Button
       size="icon"
-      variant="outline"
+      variant="ghost"
       onPress={handlePress}
       hapticType="light"
     >
       <Icon
-        className="text-muted-foreground"
+        className="text-primary"
         as={ChevronLeftIcon}
         strokeWidth={3.5}
-        size={20}
+        size={24}
       />
     </Button>
   );
