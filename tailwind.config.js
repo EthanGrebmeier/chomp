@@ -41,28 +41,40 @@ module.exports = {
             foreground: '#c71ad3',
           },
           blue: {
-            background: '#007aff20',
-            foreground: '#007aff',
+            background: '#3344E0',
+            foreground: '#1a1a1a',
           },
           green: {
-            background: '#088e5420',
-            foreground: '#00b389',
+            background: '#0ACE48',
+            foreground: '#1a1a1a',
           },
           orange: {
-            background: '#d97a0820',
-            foreground: '#d97a08',
+            background: '#e0ae18',
+            foreground: '#1a1a1a',
           },
           yellow: {
-            background: '#d9a50820',
-            foreground: '#d9a508',
+            background: '#F7BD0C',
+            foreground: '#1a1a1a',
           },
           red: {
-            background: '#d9080820',
-            foreground: '#d90808',
+            background: '#e00909',
+            foreground: '#1a1a1a',
+          },
+          gray: {
+            background: '#dadadf',
+            foreground: '#1a1a1a',
+          },
+          magenta: {
+            background: '#BF00EA',
+            foreground: '#1a1a1a',
           },
           pink: {
-            background: '#d908d920',
-            foreground: '#d908d9',
+            background: '#FF2CBC',
+            foreground: '#1a1a1a',
+          },
+          white: {
+            background: '#ffffff',
+            foreground: '#1a1a1a',
           },
           brown: {
             background: '#c4956a20',
@@ -103,6 +115,8 @@ module.exports = {
       fontFamily: {
         'jaro-regular': ['jaro-regular'],
         'averia-serif-libre': ['averia-serif-libre'],
+        'alpino-regular': ['alpino-regular'],
+        'alpino-medium': ['alpino-medium'],
       },
     },
   },

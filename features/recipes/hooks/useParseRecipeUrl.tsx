@@ -31,7 +31,7 @@ function getMockParseRecipeResponse(url: string): ParseRecipeUrlResponse {
         quantity: 12,
         unit: 'oz',
         notes: null,
-        category: 'pantry',
+        category: 'other',
       },
       {
         name: 'Heavy cream',
@@ -66,21 +66,21 @@ function getMockParseRecipeResponse(url: string): ParseRecipeUrlResponse {
         quantity: 2,
         unit: 'tbsp',
         notes: null,
-        category: 'pantry',
+        category: 'other',
       },
       {
         name: 'Kosher salt',
         quantity: 1,
         unit: 'tsp',
         notes: 'or to taste',
-        category: 'pantry',
+        category: 'other',
       },
       {
         name: 'Black pepper',
         quantity: 0.5,
         unit: 'tsp',
         notes: 'freshly cracked',
-        category: 'pantry',
+        category: 'other',
       },
     ],
   };

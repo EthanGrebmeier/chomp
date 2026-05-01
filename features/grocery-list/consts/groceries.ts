@@ -26,18 +26,19 @@ function createGroceryList<const T extends readonly StoredGroceryItem[]>(
   return items as T;
 }
 
-export const categories: Record<Category, Category> = {
+export const categories: Record<Category, Category> & { pantry: Category } = {
   produce: 'produce',
   deli: 'deli',
   dairy: 'dairy',
   bakery: 'bakery',
   frozen: 'frozen',
-  pantry: 'pantry',
   beverages: 'beverages',
   snacks: 'snacks',
   'health-beauty': 'health-beauty',
   household: 'household',
   other: 'other',
+  // Keep a legacy pantry alias to avoid touching the large static seed list.
+  pantry: 'other',
 } as const;
 
 export const groceries = createGroceryList([

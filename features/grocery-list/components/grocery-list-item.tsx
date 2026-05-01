@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -40,9 +40,15 @@ export const GroceryListItem = ({
 }: GroceryListItemProps) => {
   const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
   const notes = item.notes?.trim();
-  const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   const theme = useTheme();
+  const compactTextStyle = Platform.select({
+    android: { includeFontPadding: false },
+    default: undefined,
+  });
 
   // Animated value for strikethrough
   const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
@@ -55,7 +61,7 @@ export const GroceryListItem = ({
     strikethroughWidth.value = withTiming(internalIsChecked ? 1 : 0, {
       duration: 300,
     });
-  }, [internalIsChecked]);
+  }, [internalIsChecked, strikethroughWidth]);
 
   useEffect(
     () => () => {
@@ -117,51 +123,62 @@ export const GroceryListItem = ({
           />
 
           <HapticPressable
-            className="flex-1 gap-1"
+            className="flex-1 gap-1 py-1"
             onPress={onEdit}
             hapticType="light"
           >
             <View className="flex-row items-center justify-between ">
-              <View className="relative flex-1 pr-2">
-                <Text
-                  className={cn(
-                    'text-xl font-medium text-foreground',
-                    internalIsChecked && 'text-muted-foreground'
-                  )}
-                >
-                  {item.name}
-                </Text>
-                <Animated.View
-                  style={[
-                    strikethroughStyle,
-                    {
-                      position: 'absolute',
-                      top: '50%',
-                      left: 0,
-                      height: 2,
-                      backgroundColor: internalIsChecked
-                        ? theme.destructive
-                        : 'transparent',
-                    },
-                  ]}
-                />
+              <View className="relative flex-1 flex-row gap-2 pr-2">
+                <View className="flex-row items-center gap-2">
+                  <Text
+                    className={cn(
+                      'text-xl leading-[22px] tracking-tight text-foreground',
+                      internalIsChecked && 'text-muted-foreground'
+                    )}
+                    style={compactTextStyle}
+                  >
+                    {item.name}
+                    {'  '}
+                    <Text
+                      className="pl-2 text-base leading-[22px] text-muted-foreground"
+                      style={compactTextStyle}
+                    >
+                      {formatQuantityUnit(item.quantity, item.unit)}
+                    </Text>
+                  </Text>
+
+                  <Animated.View
+                    style={[
+                      strikethroughStyle,
+                      {
+                        position: 'absolute',
+                        top: '50%',
+                        left: 0,
+                        height: 2,
+                        backgroundColor: internalIsChecked
+                          ? theme.destructive
+                          : 'transparent',
+                      },
+                    ]}
+                  />
+                </View>
               </View>
-              <Text className="text-base text-muted-foreground">
-                {formatQuantityUnit(item.quantity, item.unit)}
-              </Text>
+              <View className="flex-row items-center gap-2">
+                {item.category && <CategoryTag category={item.category} />}
+              </View>
             </View>
             {notes ? (
               <Text
                 className={cn(
-                  'text-base leading-none text-muted-foreground',
+                  'text-base leading-[18px] text-muted-foreground',
                   internalIsChecked && 'opacity-80'
                 )}
+                style={compactTextStyle}
               >
                 {notes}
               </Text>
             ) : null}
-            <View className="flex-row items-center gap-2 ">
-              {item.category && <CategoryTag category={item.category} />}
+            <View className="flex-row items-center gap-2">
               {item.store?.name && <StoreTag name={item.store.name} />}
               {item.recipe?.name && <RecipeTag name={item.recipe.name} />}
             </View>

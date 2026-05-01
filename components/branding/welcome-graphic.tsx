@@ -11,7 +11,7 @@ type WelcomeGraphicProps = {
 
 const GRAPHIC_COLOR_BY_VARIANT: Record<WelcomeGraphicVariant, string> = {
   light: '#3344E0',
-  dark: '#EFE0B7',
+  dark: '#3344E0',
 };
 
 export function WelcomeGraphic({

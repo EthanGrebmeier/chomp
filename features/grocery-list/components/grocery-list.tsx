@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import { BookOpenIcon, CalendarIcon, SettingsIcon } from 'lucide-react-native';
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
@@ -26,10 +25,7 @@ import {
 } from './edit-list-name-sheet';
 import { GroceryItemsList } from './grocery-items-list';
 import { GroceryListHeader } from './grocery-list-header';
-import { GroupBySelector } from './group-by-selector';
-import { SearchBar } from './search-bar';
 import { ShareListSheet, ShareListSheetRef } from './share-list-sheet';
-import { SortBySelector } from './sort-by-selector';
 
 type GroceryListProps = {
   listId?: string;
@@ -40,7 +36,7 @@ type GroceryListProps = {
   items: GroceryListItemWithRecipe[];
   groupBy: 'category' | 'none' | 'recipe' | 'store';
   sortBy: 'name' | 'recent';
-  onTitlePress?: () => void;
+  onViewListsPress?: () => void;
   onDeleteOrLeave: () => void;
 };
 
@@ -53,7 +49,7 @@ export const GroceryList = ({
   items,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
-  onTitlePress,
+  onViewListsPress,
   onDeleteOrLeave,
 }: GroceryListProps) => {
   const shareListSheetRef = useRef<ShareListSheetRef>(null);
@@ -73,7 +69,7 @@ export const GroceryList = ({
     'category' | 'none' | 'recipe' | 'store'
   >(initialGroupBy);
   const [sortBy, setSortBy] = useState<'name' | 'recent'>(initialSortBy);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery] = useState('');
 
   const deferredQuery = useDeferredValue(searchQuery.trim());
   const normalizedQuery = deferredQuery.toLowerCase();
@@ -201,7 +197,7 @@ export const GroceryList = ({
   return (
     <>
       <View
-        className="flex-1 gap-2"
+        className="flex-1"
         onStartShouldSetResponderCapture={() => {
           dismissSearch();
           return false;
@@ -218,27 +214,14 @@ export const GroceryList = ({
           onSharePress={handleSharePress}
           onDeleteOrLeave={handleDeleteOrLeavePress}
           onEditNamePress={handleEditNamePress}
-          onTitlePress={onTitlePress}
+          onViewListsPress={onViewListsPress}
+          groupBy={groupBy}
+          sortBy={sortBy}
+          onGroupByChange={handleGroupByChange}
+          onSortByChange={handleSortByChange}
         />
         <EditItemProvider groceryListId={listId ?? ''}>
           <View className="flex-1">
-            <SearchBar
-              ref={searchInputRef}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerClassName="flex-row gap-2 px-4 pb-2 pt-3"
-              className="flex-grow-0"
-              onScrollBeginDrag={dismissSearch}
-              onTouchStart={dismissSearch}
-            >
-              <GroupBySelector value={groupBy} onChange={handleGroupByChange} />
-              <SortBySelector value={sortBy} onChange={handleSortByChange} />
-            </ScrollView>
-
             <GroceryItemsList
               items={filteredItems}
               totalItemCount={items.length}

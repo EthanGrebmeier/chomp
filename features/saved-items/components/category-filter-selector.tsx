@@ -31,21 +31,18 @@ export const CategoryFilterSelector = ({
             <Icon
               as={selectedCategory ? selectedCategory.style.icon : TagIcon}
               className={
-                selectedCategory
-                  ? selectedCategory.style.textClassName
-                  : 'text-muted-foreground'
+                selectedCategory ? 'text-black' : 'text-muted-foreground'
               }
               size={16}
             />
           }
           className={cn(
-            'border border-border',
-            selectedCategory ? selectedCategory.style.className : 'bg-none'
+            selectedCategory
+              ? cn('border-transparent', selectedCategory.style.className)
+              : 'border border-border bg-none'
           )}
           textClassName={cn(
-            selectedCategory
-              ? selectedCategory.style.textClassName
-              : 'text-muted-foreground'
+            selectedCategory ? 'text-black' : 'text-muted-foreground'
           )}
         >
           {selectedCategory ? selectedCategory.label : 'All Categories'}

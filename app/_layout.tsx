@@ -115,6 +115,8 @@ export default function RootLayout() {
   const [fontsLoaded, fontLoadError] = useFonts({
     'averia-serif-libre': AveriaSerifLibre_400Regular,
     'jaro-regular': Jaro_400Regular,
+    'alpino-regular': require('../assets/fonts/alpino/Alpino-Regular.otf'),
+    'alpino-medium': require('../assets/fonts/alpino/Alpino-Medium.otf'),
   });
   const [isAuthBlockingSplash, setIsAuthBlockingSplash] = useState(true);
   const [hasSplashBlockTimedOut, setHasSplashBlockTimedOut] = useState(false);

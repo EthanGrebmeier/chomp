@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { categoryOptions } from '../features/shared/category/categories';
 import { cn } from '../lib/utils';
 
-import { Icon } from './ui/icon';
 import { Text } from './ui/text';
 
 type CategoryTagProps = {
@@ -17,16 +16,18 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
   }
   const { className, textClassName } = categoryOption.style;
   return (
-    <View className="flex-row items-center gap-1">
-      <View>
-        <Icon
-          as={categoryOption.style.icon}
-          size={12}
-          strokeWidth={2}
-          className={textClassName}
-        />
-      </View>
-      <Text className={cn('text-xs font-semibold', textClassName)}>
+    <View
+      className={cn(
+        'items-center justify-center rounded-full border border-solid border-black px-2 py-0.5',
+        className
+      )}
+    >
+      <Text
+        className={cn(
+          'text-sm font-medium leading-[1.1] tracking-[-0.5]',
+          textClassName
+        )}
+      >
         {categoryOption.label}
       </Text>
     </View>

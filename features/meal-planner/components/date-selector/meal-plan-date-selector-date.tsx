@@ -1,5 +1,5 @@
 import { format, isToday } from 'date-fns';
-import { Circle, CircleCheck } from 'lucide-react-native';
+import { CheckIcon, Circle } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -48,16 +48,14 @@ export const MealPlanDateSelectorDate = ({
       )}
       <View className="absolute top-2 z-10 flex-row items-center gap-1">
         {hasMeals ? (
-          <Icon
-            as={CircleCheck}
-            strokeWidth={3}
-            size={14}
-            className={cn(
-              allMealsAdded
-                ? 'text-accent-orange-foreground'
-                : 'text-muted-foreground'
-            )}
-          />
+          <View className="size-4 items-center justify-center rounded-full bg-primary">
+            <Icon
+              as={CheckIcon}
+              strokeWidth={3}
+              size={10}
+              className={cn('text-primary-foreground')}
+            />
+          </View>
         ) : (
           <Icon
             as={Circle}
@@ -79,16 +77,14 @@ export const MealPlanDateSelectorDate = ({
         <Text
           className={cn(
             'text-sm font-semibold ',
-            isSelected
-              ? 'text-accent-orange-foreground'
-              : 'text-muted-foreground'
+            isSelected ? 'text-foreground' : 'text-muted-foreground'
           )}
         >
           {weekdayLabel}
         </Text>
       </View>
       {isDateToday && (
-        <View className="absolute bottom-2 size-1.5 rounded-full bg-accent-orange-foreground"></View>
+        <View className="absolute bottom-2 size-1.5 rounded-full bg-primary"></View>
       )}
     </HapticPressable>
   );

@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { LucideIcon, ShoppingBasketIcon, TagIcon } from 'lucide-react-native';
+import { LucideIcon, TagIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -10,7 +10,6 @@ import { BottomSheet } from '../bottom-sheet';
 import { BackButton } from '../ui/back-button';
 import { ConfirmButton } from '../ui/confirm-button';
 import { HapticPressable } from '../ui/haptic-pressable';
-import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
 import { Text } from '../ui/text';
 
@@ -43,9 +42,7 @@ const CategoryOption = ({
           'size-10 items-center justify-center rounded-full',
           iconContainerClassName ?? 'bg-muted'
         )}
-      >
-        <Icon as={icon} size={20} className={iconClassName} />
-      </View>
+      ></View>
       <Text
         className={cn(
           'flex-1 text-base font-medium',
@@ -99,25 +96,22 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
       <WithLayoutTransition>
         <HapticPressable onPress={openSheet} hapticType="light">
           <Pill
-            icon={
-              <Icon
-                className={
-                  selectedCategory?.style.textClassName ??
-                  'text-muted-foreground'
-                }
-                as={selectedCategory?.style.icon ?? ShoppingBasketIcon}
-                size={16}
-              />
-            }
             className={cn(
+              selectedCategory && 'border-transparent',
               selectedCategory?.style.className,
               !selectedCategory && 'border-dashed'
             )}
             textClassName={cn(
-              'font-semibold',
-              selectedCategory?.style.textClassName
+              'font-medium',
+              selectedCategory
+                ? selectedCategory.style.textClassName
+                : undefined
             )}
-            closeIconClassName={selectedCategory?.style.textClassName}
+            closeIconClassName={
+              selectedCategory
+                ? selectedCategory.style.textClassName
+                : 'text-muted-foreground'
+            }
             hasValue={!!selectedCategory}
             onClear={() => onSelect(undefined)}
           >

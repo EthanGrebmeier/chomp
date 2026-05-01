@@ -1,4 +1,4 @@
-import { StoreIcon } from 'lucide-react-native';
+import { MapPinIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { Icon } from './ui/icon';
@@ -14,16 +14,14 @@ export const StoreTag = ({ name }: StoreTagProps) => {
   }
 
   return (
-    <View className="flex-row items-center gap-1">
-      <View>
-        <Icon
-          as={StoreIcon}
-          size={12}
-          strokeWidth={3}
-          className="text-muted-foreground"
-        />
-      </View>
-      <Text className="text-xs font-semibold text-muted-foreground">
+    <View className="flex-row items-center gap-0.5 ">
+      <Icon
+        as={MapPinIcon}
+        size={10}
+        strokeWidth={2.5}
+        className="text-muted-foreground"
+      />
+      <Text className="text-sm leading-[1.1] tracking-[-0.5] text-muted-foreground">
         {name}
       </Text>
     </View>

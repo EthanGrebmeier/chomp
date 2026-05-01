@@ -1,17 +1,14 @@
 import { useNetworkState } from 'expo-network';
-import {
-  ChevronDownIcon,
-  MoreHorizontal,
-  UsersIcon,
-  WifiOff,
-} from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { MoreHorizontal, WifiOff } from 'lucide-react-native';
+import { View } from 'react-native';
 
-import { Heading } from '../../../components/text/heading';
+import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
+import { Text } from '../../../components/ui/text';
 import { GroceryListItemWithRecipe } from '../types';
 
 import { GroceryListDropdownMenu } from './dropdown-menu';
+import { ListFilterDropdownMenu } from './list-filter-dropdown-menu';
 
 type GroceryListHeaderProps = {
   items: GroceryListItemWithRecipe[];
@@ -23,7 +20,11 @@ type GroceryListHeaderProps = {
   onSharePress: () => void;
   onDeleteOrLeave: () => void;
   onEditNamePress: () => void;
-  onTitlePress?: () => void;
+  onViewListsPress?: () => void;
+  groupBy: 'category' | 'none' | 'recipe' | 'store';
+  sortBy: 'name' | 'recent';
+  onGroupByChange: (value: 'category' | 'none' | 'recipe' | 'store') => void;
+  onSortByChange: (value: 'name' | 'recent') => void;
 };
 
 export const GroceryListHeader = ({
@@ -36,7 +37,11 @@ export const GroceryListHeader = ({
   onSharePress,
   onDeleteOrLeave,
   onEditNamePress,
-  onTitlePress,
+  onViewListsPress,
+  groupBy,
+  sortBy,
+  onGroupByChange,
+  onSortByChange,
 }: GroceryListHeaderProps) => {
   const networkState = useNetworkState();
   const isDisconnected =
@@ -44,31 +49,29 @@ export const GroceryListHeader = ({
     networkState.isInternetReachable === false;
 
   return (
-    <View className="px-4">
+    <View className="gap-2 px-4">
       <View className="flex-row items-center justify-between">
-        <Pressable
-          onPress={onTitlePress}
-          disabled={!onTitlePress}
-          className="flex-row items-center gap-1 active:opacity-70"
+        <Button
+          onPress={onViewListsPress}
+          disabled={!onViewListsPress}
+          variant="ghost"
+          className="px-0 active:bg-transparent dark:active:bg-transparent"
         >
-          <Heading>{listName ?? 'Grocery List'}</Heading>
-          {isShared && (
-            <Icon as={UsersIcon} size={20} className="text-muted-foreground" />
-          )}
-          {onTitlePress && (
-            <Icon
-              as={ChevronDownIcon}
-              size={24}
-              className="text-muted-foreground"
-              strokeWidth={2.5}
-            />
-          )}
-        </Pressable>
+          <Text className="text-3xl font-bold">
+            {listName ?? 'Grocery List'}
+          </Text>
+        </Button>
         {listId && (
           <View className="flex-row items-center gap-4">
             {isDisconnected && (
               <Icon as={WifiOff} size={20} className="text-destructive" />
             )}
+            <ListFilterDropdownMenu
+              groupBy={groupBy}
+              sortBy={sortBy}
+              onGroupByChange={onGroupByChange}
+              onSortByChange={onSortByChange}
+            />
 
             <GroceryListDropdownMenu
               items={items}

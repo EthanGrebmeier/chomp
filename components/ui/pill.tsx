@@ -31,7 +31,7 @@ export const Pill = ({
     <View>
       <View
         className={cn(
-          'flex-row items-center gap-2 rounded-full border border-border bg-input px-3 py-1',
+          'flex-row items-center gap-2 rounded-full border border-border bg-white/10 px-3 py-1',
           hasValue && onClear && 'pr-8',
           className
         )}
@@ -40,7 +40,7 @@ export const Pill = ({
         <Text
           className={cn(
             'text-base font-medium leading-[18px]',
-            'text-muted-foreground',
+            !hasValue && 'text-muted-foreground',
             textClassName
           )}
         >

@@ -9,8 +9,8 @@ describe('transformParsedRecipe', () => {
     recipeName: 'Test Recipe',
     servings: '4 servings',
     ingredients: [
-      { name: 'flour', quantity: 2, unit: 'cups', notes: 'sifted', category: 'pantry' },
-      { name: 'sugar', quantity: 1, unit: 'cup', notes: null, category: 'pantry' },
+      { name: 'flour', quantity: 2, unit: 'cups', notes: 'sifted', category: 'other' },
+      { name: 'sugar', quantity: 1, unit: 'cup', notes: null, category: 'other' },
     ],
   };
 
@@ -29,8 +29,8 @@ describe('transformParsedRecipe', () => {
         servings: '4 servings',
       },
       ingredients: [
-        { name: 'flour', quantity: 2, unit: 'cups', notes: 'sifted', category: 'pantry' },
-        { name: 'sugar', quantity: 1, unit: 'cup', notes: undefined, category: 'pantry' },
+        { name: 'flour', quantity: 2, unit: 'cups', notes: 'sifted', category: 'other' },
+        { name: 'sugar', quantity: 1, unit: 'cup', notes: undefined, category: 'other' },
       ],
     });
   });
@@ -64,7 +64,7 @@ describe('transformParsedRecipe', () => {
 
   it('defaults null quantity to 1', () => {
     const ingredientsWithNullQuantity: ParsedIngredient[] = [
-      { name: 'salt', quantity: null, unit: 'pinch', notes: null, category: 'pantry' },
+      { name: 'salt', quantity: null, unit: 'pinch', notes: null, category: 'other' },
     ];
 
     const result = transformParsedRecipe(

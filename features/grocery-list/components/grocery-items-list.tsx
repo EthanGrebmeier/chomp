@@ -2,6 +2,12 @@ import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeOutDown,
+  FadeOutUp,
+  LinearTransition,
+} from 'react-native-reanimated';
 
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
@@ -56,10 +62,17 @@ export const GroceryItemsList = ({
     recipe: new Set(['checked']),
     store: new Set(['checked']),
   }));
+  const [sectionPendingInstantHide, setSectionPendingInstantHide] = useState<
+    string | null
+  >(null);
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
+  const itemLayoutTransition = useMemo(
+    () => LinearTransition.duration(220),
+    []
+  );
 
-  const toggleSection = useCallback(
+  const toggleCollapsedState = useCallback(
     (sectionKey: string) => {
       setCollapsedSectionsByGroup(prev => {
         const nextByGroup = { ...prev };
@@ -74,6 +87,30 @@ export const GroceryItemsList = ({
       });
     },
     [groupBy]
+  );
+
+  const toggleSection = useCallback(
+    (sectionKey: string) => {
+      const isExpanding = collapsedSections.has(sectionKey);
+
+      if (isExpanding) {
+        setSectionPendingInstantHide(null);
+        toggleCollapsedState(sectionKey);
+        return;
+      }
+
+      // Give rows one render pass with no exit animation before removing them.
+      setSectionPendingInstantHide(sectionKey);
+      requestAnimationFrame(() => {
+        toggleCollapsedState(sectionKey);
+        requestAnimationFrame(() => {
+          setSectionPendingInstantHide(current =>
+            current === sectionKey ? null : current
+          );
+        });
+      });
+    },
+    [collapsedSections, toggleCollapsedState]
   );
 
   const { uncheckedItems, checkedItems } = useMemo(() => {
@@ -245,18 +282,39 @@ export const GroceryItemsList = ({
       }
 
       const showBorder = !item.isLastInSection;
+      const isInCollapsingSection =
+        sectionPendingInstantHide === item.sectionKey;
       return (
-        <GroceryListItem
-          item={item.item}
-          isChecked={Boolean(item.item.isChecked)}
-          className={cn(showBorder && 'border-b border-dashed border-border')}
-          onEdit={() => {
-            presentEditSheet(item.item);
-          }}
-        />
+        <Animated.View
+          entering={FadeIn.duration(180)}
+          layout={itemLayoutTransition}
+          exiting={
+            isInCollapsingSection
+              ? undefined
+              : item.item.isChecked
+                ? FadeOutUp.duration(220)
+                : FadeOutDown.duration(170).withInitialValues({
+                    transform: [{ translateY: 6 }],
+                  })
+          }
+        >
+          <GroceryListItem
+            item={item.item}
+            isChecked={Boolean(item.item.isChecked)}
+            className={cn(showBorder && 'border-b border-border')}
+            onEdit={() => {
+              presentEditSheet(item.item);
+            }}
+          />
+        </Animated.View>
       );
     },
-    [presentEditSheet, renderSectionHeader]
+    [
+      itemLayoutTransition,
+      presentEditSheet,
+      renderSectionHeader,
+      sectionPendingInstantHide,
+    ]
   );
 
   if (totalItemCount === 0) {

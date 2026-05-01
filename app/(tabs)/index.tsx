@@ -125,7 +125,7 @@ export default function List() {
               items={activeListItems}
               groupBy={settings.groupBy}
               sortBy={settings.sortBy}
-              onTitlePress={() => selectListSheetRef.current?.present()}
+              onViewListsPress={() => selectListSheetRef.current?.present()}
               onDeleteOrLeave={handleDeleteOrLeave}
             />
           </Animated.View>
