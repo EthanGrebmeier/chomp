@@ -115,7 +115,7 @@ const Header = ({
   className,
 }: HeaderProps) => {
   return (
-    <View className="mb-6">
+    <View>
       <View className={cn('mb-6 flex-row items-center', className)}>
         {(dismissButton ?? button) && (
           <View className="w-12 items-start">{dismissButton}</View>

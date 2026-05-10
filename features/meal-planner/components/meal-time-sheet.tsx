@@ -116,7 +116,7 @@ export const MealTimeSheet = ({
 
       <BottomSheet detents={['auto']} ref={sheetRef} name="meal-time-sheet">
         <BottomSheet.Header
-          className="mb-0 px-4"
+          className="px-4"
           dismissButton={
             canGoBack && (
               <BackButton onPress={() => sheetRef.current?.dismiss()} />

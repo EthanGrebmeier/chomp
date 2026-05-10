@@ -230,7 +230,7 @@ export const SelectGroceryListSheet = forwardRef<
                 <Pressable
                   onPress={() => handleSelectList(list.id)}
                   className={cn(
-                    'flex-row items-center justify-between rounded-xl px-4 py-3',
+                    'flex-row items-center justify-center rounded-xl px-4 py-3',
                     isSelected && 'bg-muted'
                   )}
                 >
@@ -252,11 +252,13 @@ export const SelectGroceryListSheet = forwardRef<
                     )}
                   </View>
                   {isSelected && (
-                    <Icon
-                      as={CheckIcon}
-                      size={20}
-                      className="text-foreground"
-                    />
+                    <View className="absolute right-4">
+                      <Icon
+                        as={CheckIcon}
+                        size={20}
+                        className="text-foreground"
+                      />
+                    </View>
                   )}
                 </Pressable>
               );

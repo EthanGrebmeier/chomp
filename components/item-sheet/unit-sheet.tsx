@@ -130,7 +130,7 @@ export const UnitSheet = ({
         viewClassName="pb-safe"
       >
         <BottomSheet.Header
-          className="mb-0 px-4"
+          className="px-4"
           title="Quantity"
           dismissButton={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />

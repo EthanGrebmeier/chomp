@@ -72,6 +72,7 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
           <BottomSheet.Header
             title="Edit Unit"
             dismissButton={<CloseButton onPress={handleCancel} />}
+            className="mb-0"
           />
 
           <View className="my-4 gap-2">
