@@ -8,18 +8,21 @@ import {
   ContextMenuRoot,
 } from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
+import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { MealPlanItem } from '../types';
 
 type MealPlanItemCardProps = {
   mealPlanItem: MealPlanItem;
+  isLast: boolean;
   onItemPress: (item: MealPlanItem) => void;
   onIndicatorPress: (mealPlanItem: MealPlanItem) => void;
 };
 
 const MealPlanItemCard = ({
   mealPlanItem,
+  isLast,
   onItemPress,
   onIndicatorPress,
 }: MealPlanItemCardProps) => {
@@ -44,26 +47,30 @@ const MealPlanItemCard = ({
   return (
     <ContextMenuRoot
       trigger={
-        <HapticPressable
-          key={mealPlanItem.id}
-          onPress={() => onItemPress(mealPlanItem)}
+        <ListItem
+          className={!isLast ? 'border-b border-dashed border-border' : undefined}
         >
-          <View className="w-full flex-row items-center rounded-xl bg-muted px-4 py-3">
-            <Checkbox
-              checked={!!mealPlanItem.addedToList}
-              onPress={() => onIndicatorPress(mealPlanItem)}
-              className="mr-3"
-            />
-            <View className="flex-1 flex-row items-center justify-between">
-              <Text className="text-xl font-semibold text-foreground">
-                {mealPlanItem.name}
-              </Text>
-              <Text className="text-sm text-muted-foreground">
-                {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
-              </Text>
+          <HapticPressable
+            key={mealPlanItem.id}
+            onPress={() => onItemPress(mealPlanItem)}
+            className="flex-1"
+          >
+            <View className="w-full flex-row items-center gap-3 py-1">
+              <Checkbox
+                checked={!!mealPlanItem.addedToList}
+                onPress={() => onIndicatorPress(mealPlanItem)}
+              />
+              <View className="flex-1 flex-row items-center justify-between gap-3">
+                <Text className="flex-1 text-xl font-medium text-foreground">
+                  {mealPlanItem.name}
+                </Text>
+                <Text className="text-sm text-muted-foreground">
+                  {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
+                </Text>
+              </View>
             </View>
-          </View>
-        </HapticPressable>
+          </HapticPressable>
+        </ListItem>
       }
     >
       <ContextMenuItem key="delete-item" destructive onSelect={handleDelete}>

@@ -170,33 +170,38 @@ export const MealPlanDateView = ({
       data={mealTimesWithContent}
       keyExtractor={item => item}
       renderItem={({ item: mealTime }) => (
-        <View className="mb-4 gap-2 px-4">
-          <Text className="text-lg font-semibold capitalize text-muted-foreground">
+        <View className="mb-5">
+          <Text className="px-4 text-lg font-semibold capitalize text-muted-foreground">
             {mealTime}
           </Text>
           <Animated.View
             entering={FadeIn.duration(140)}
             exiting={FadeOut.duration(140)}
           >
-            <View className="gap-2">
-              {groupedRecipes[mealTime]?.map(mealPlanRecipe => {
+            <View>
+              {groupedRecipes[mealTime]?.map((mealPlanRecipe, index) => {
                 const recipe = mealPlanRecipe.recipe;
                 if (!recipe) return null;
+                const recipesCount = groupedRecipes[mealTime]?.length ?? 0;
+                const itemsCount = groupedItems[mealTime]?.length ?? 0;
+                const isLast = index === recipesCount - 1 && itemsCount === 0;
 
                 return (
                   <MealPlanMealCard
                     key={mealPlanRecipe.id}
                     mealPlanRecipe={mealPlanRecipe}
                     recipe={recipe}
+                    isLast={isLast}
                     onMealPress={onMealPress}
                     onIndicatorPress={handleRecipeIndicatorPress}
                   />
                 );
               })}
-              {groupedItems[mealTime]?.map(mealPlanItem => (
+              {groupedItems[mealTime]?.map((mealPlanItem, index) => (
                 <MealPlanItemCard
                   key={mealPlanItem.id}
                   mealPlanItem={mealPlanItem}
+                  isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
                   onItemPress={onItemPress}
                   onIndicatorPress={handleItemIndicatorPress}
                 />

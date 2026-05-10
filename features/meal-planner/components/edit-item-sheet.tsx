@@ -6,8 +6,6 @@ import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { ItemInput } from '../../../components/item-sheet/item-input';
-import { Button } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
 import { MealPlanItemWithStore } from '../types';
@@ -27,33 +25,18 @@ export type EditItemSheetRef = {
 const EditItemSheetContent = ({
   itemToEdit,
   onClose,
-  onSubmit,
 }: {
   itemToEdit: MealPlanItemWithStore | null;
   onClose: () => void;
-  onSubmit: () => void;
 }) => {
   const {
     itemName,
     setItemName,
     itemNotes,
     setItemNotes,
-    quantity,
-    setQuantity,
-    unit,
-    setUnit,
-    category,
-    setCategory,
-    storeId,
-    setStoreId,
-    selectedDate,
-    setSelectedDate,
-    mealTag,
-    setMealTag,
     showMatchingItems,
     setShowMatchingItems,
     populateFromItem,
-    isValid,
   } = useMealPlanItem();
 
   const itemInputRef = useRef<TextInput>(null);
@@ -111,7 +94,7 @@ const EditItemSheetContent = ({
             }}
             showMatchingItems={showMatchingItems}
             setShowMatchingItems={setShowMatchingItems}
-            onSubmit={onSubmit}
+            onSubmit={() => {}}
             inputRef={itemInputRef}
           />
         </View>
@@ -126,24 +109,6 @@ const EditItemSheetContent = ({
           onChangeText={setItemNotes}
           multiline
           textAlignVertical="top"
-        />
-
-        <MealPlanMetaBar
-          date={selectedDate}
-          onDateChange={setSelectedDate}
-          mealTag={mealTag}
-          onMealTagChange={setMealTag}
-          quantity={quantity}
-          onQuantityChange={setQuantity}
-          unit={unit}
-          onUnitChange={setUnit}
-          category={category}
-          onCategoryChange={setCategory}
-          storeId={storeId}
-          onStoreIdChange={setStoreId}
-          onSubmit={onSubmit}
-          isValid={isValid()}
-          showAction={false}
         />
       </View>
     </View>
@@ -165,36 +130,70 @@ const EditItemSheetContainer = ({
     itemName,
     itemNotes,
     quantity,
+    setQuantity,
     unit,
+    setUnit,
     category,
+    setCategory,
     storeId,
+    setStoreId,
     selectedDate,
+    setSelectedDate,
     mealTag,
+    setMealTag,
     isValid,
   } = useMealPlanItem();
   const { mutate: updateMealPlanItem } = useUpdateMealPlanItem();
+  const lastSyncedSnapshotRef = useRef<string | null>(null);
+  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleUpdateItem = () => {
+  const getSnapshot = (updates: {
+    name?: string;
+    quantity?: number;
+    unit?: string;
+    notes?: string;
+    category?: string;
+    storeId?: string;
+    date?: string;
+    mealTag?: string;
+  }) =>
+    JSON.stringify({
+      name: updates.name ?? null,
+      quantity: updates.quantity ?? null,
+      unit: updates.unit ?? null,
+      notes: updates.notes ?? null,
+      category: updates.category ?? null,
+      storeId: updates.storeId ?? null,
+      date: updates.date ?? null,
+      mealTag: updates.mealTag ?? null,
+    });
+
+  const getCurrentUpdates = () => ({
+    name: itemName.trim(),
+    quantity,
+    unit,
+    notes: itemNotes.trim() || undefined,
+    category,
+    storeId,
+    date: selectedDate,
+    mealTag,
+  });
+
+  const persistChanges = () => {
     if (!itemToEdit || !isValid()) return;
+
+    const updates = getCurrentUpdates();
+    const snapshot = getSnapshot(updates);
+    if (snapshot === lastSyncedSnapshotRef.current) return;
 
     updateMealPlanItem(
       {
         mealPlanItemId: itemToEdit.id,
-        updates: {
-          name: itemName.trim(),
-          quantity,
-          unit,
-          notes: itemNotes.trim() || undefined,
-          category,
-          storeId,
-          date: selectedDate,
-          mealTag,
-        },
+        updates,
       },
       {
         onSuccess: () => {
-          toast.success('Item updated');
-          onClose();
+          lastSyncedSnapshotRef.current = snapshot;
         },
         onError: () => {
           toast.error('Failed to update item');
@@ -203,20 +202,91 @@ const EditItemSheetContainer = ({
     );
   };
 
+  const scheduleAutoSave = () => {
+    if (!itemToEdit || !isValid()) return;
+
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+
+    updateTimeoutRef.current = setTimeout(() => {
+      persistChanges();
+    }, 350);
+  };
+
+  const flushAutoSave = () => {
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+      updateTimeoutRef.current = null;
+    }
+
+    persistChanges();
+  };
+
+  useEffect(() => {
+    if (!itemToEdit) return;
+    lastSyncedSnapshotRef.current = getSnapshot({
+      name: itemToEdit.name.trim(),
+      quantity: itemToEdit.quantity,
+      unit: itemToEdit.unit,
+      notes: itemToEdit.notes?.trim() || undefined,
+      category: itemToEdit.category ?? undefined,
+      storeId: itemToEdit.store?.id ?? undefined,
+      date: itemToEdit.date,
+      mealTag: itemToEdit.mealTag ?? undefined,
+    });
+  }, [itemToEdit]);
+
+  useEffect(() => {
+    if (!itemToEdit || !isValid()) return;
+    scheduleAutoSave();
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, [
+    category,
+    isValid,
+    itemName,
+    itemNotes,
+    itemToEdit,
+    mealTag,
+    quantity,
+    selectedDate,
+    storeId,
+    unit,
+  ]);
+
   return (
     <BottomSheet
       name="edit-item-sheet"
       ref={sheetRef}
       onStartClose={() => {
         KeyboardController.dismiss();
+        flushAutoSave();
         onReset();
       }}
       footer={
         itemToEdit ? (
-          <View className="px-10 pb-4">
-            <Button onPress={handleUpdateItem} disabled={!isValid()}>
-              <Text>Update Item</Text>
-            </Button>
+          <View className="px-4 pb-safe">
+            <MealPlanMetaBar
+              date={selectedDate}
+              onDateChange={setSelectedDate}
+              mealTag={mealTag}
+              onMealTagChange={setMealTag}
+              quantity={quantity}
+              onQuantityChange={setQuantity}
+              unit={unit}
+              onUnitChange={setUnit}
+              category={category}
+              onCategoryChange={setCategory}
+              storeId={storeId}
+              onStoreIdChange={setStoreId}
+              onSubmit={() => {}}
+              isValid={isValid()}
+              showAction={false}
+            />
           </View>
         ) : undefined
       }
@@ -226,7 +296,6 @@ const EditItemSheetContainer = ({
           <EditItemSheetContent
             itemToEdit={itemToEdit}
             onClose={onClose}
-            onSubmit={handleUpdateItem}
           />
         )}
       </BottomSheet.SheetView>

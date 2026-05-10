@@ -1,5 +1,6 @@
 import { Alert, View } from 'react-native';
 
+import { ListItem } from '../../../components/ui/list-item';
 import { Checkbox } from '../../../components/ui/checkbox';
 import {
   ContextMenuItem,
@@ -15,6 +16,7 @@ import { MealPlanRecipe } from '../types';
 type MealPlanMealCardProps = {
   mealPlanRecipe: MealPlanRecipe;
   recipe: Recipe;
+  isLast: boolean;
   onMealPress: ({
     mealPlanRecipe,
     recipe,
@@ -28,6 +30,7 @@ type MealPlanMealCardProps = {
 const MealPlanMealCard = ({
   mealPlanRecipe,
   recipe,
+  isLast,
   onMealPress,
   onIndicatorPress,
 }: MealPlanMealCardProps) => {
@@ -58,28 +61,32 @@ const MealPlanMealCard = ({
   return (
     <ContextMenuRoot
       trigger={
-        <HapticPressable
-          key={mealPlanRecipe.id}
-          onPress={() =>
-            onMealPress({
-              mealPlanRecipe,
-              recipe,
-            })
-          }
+        <ListItem
+          className={!isLast ? 'border-b border-dashed border-border' : undefined}
         >
-          <View className="w-full flex-row items-center rounded-xl bg-muted px-4 py-3">
-            <Checkbox
-              checked={!!mealPlanRecipe.addedToList}
-              onPress={() => onIndicatorPress(mealPlanRecipe)}
-              className="mr-3"
-            />
-            <RecipeCardContent
-              name={recipe.name}
-              ingredientCount={ingredientCount}
-              className="flex-1"
-            />
-          </View>
-        </HapticPressable>
+          <HapticPressable
+            key={mealPlanRecipe.id}
+            onPress={() =>
+              onMealPress({
+                mealPlanRecipe,
+                recipe,
+              })
+            }
+            className="flex-1"
+          >
+            <View className="w-full flex-row items-center gap-3 py-1">
+              <Checkbox
+                checked={!!mealPlanRecipe.addedToList}
+                onPress={() => onIndicatorPress(mealPlanRecipe)}
+              />
+              <RecipeCardContent
+                name={recipe.name}
+                ingredientCount={ingredientCount}
+                className="flex-1"
+              />
+            </View>
+          </HapticPressable>
+        </ListItem>
       }
     >
       <ContextMenuItem key="delete-meal" destructive onSelect={handleDelete}>
