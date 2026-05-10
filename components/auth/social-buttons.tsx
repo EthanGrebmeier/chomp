@@ -32,6 +32,7 @@ export function SocialButtons({
       {Platform.OS === 'ios' && (
         <Button
           className="w-full"
+          variant="secondary"
           size="xl"
           icon={
             <AppleIcon
@@ -53,6 +54,7 @@ export function SocialButtons({
 
       <Button
         className="w-full"
+        variant="secondary"
         size="xl"
         icon={
           <GoogleIcon

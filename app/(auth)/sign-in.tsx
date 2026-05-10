@@ -31,6 +31,7 @@ export default function SignIn() {
           <SocialButtons onLoadingChange={setIsSocialLoading} />
           <Button
             size="xl"
+            variant="secondary"
             className="w-full"
             disabled={isSocialLoading}
             icon={

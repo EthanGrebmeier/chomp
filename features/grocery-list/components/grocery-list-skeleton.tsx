@@ -1,48 +1,66 @@
 import { View } from 'react-native';
 
-import { SkeletonText } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/ui/skeleton';
 
 import { GroceryItemSkeleton } from './grocery-item-skeleton';
 
 export const GroceryListSkeleton = () => {
   return (
-    <View className="flex-1 gap-2">
+    <View className="flex-1">
       {/* Header */}
       <View className="gap-2 px-4">
         <View className="flex-row items-center justify-between">
-          {/* Title */}
-          <SkeletonText width="md" height="lg" />
-          {/* Menu icon placeholder */}
-          <View className="h-6 w-6" />
+          <Skeleton className="h-9 w-44 rounded-md" />
+          <View className="flex-row items-center gap-4">
+            <SkeletonCircle size={24} />
+            <SkeletonCircle size={24} />
+          </View>
         </View>
-        {/* Subtitle */}
-        <SkeletonText width="sm" height="xs" />
       </View>
 
-      {/* Search bar */}
-      <View className="mt-3 px-4">
-        <View className="h-11 rounded-full bg-muted" />
-      </View>
-
-      {/* Filter pills */}
-      <View className="flex-row gap-2 px-4 pb-2 pt-3">
-        <View className="h-8 w-24 rounded-full bg-muted" />
-        <View className="h-8 w-24 rounded-full bg-muted" />
-      </View>
-
-      {/* Section header */}
-      <View className="px-4 py-2">
-        <SkeletonText width="sm" height="md" />
+      {/* First section header */}
+      <View className="mt-1 bg-background px-4 pt-1">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 gap-1">
+            <SkeletonText width="sm" height="md" />
+            <SkeletonText width="sm" height="xs" />
+          </View>
+          <View className="flex-row items-center gap-3">
+            <Skeleton className="h-4 w-10 rounded-md" />
+            <SkeletonCircle size={20} />
+          </View>
+        </View>
       </View>
 
       {/* List items */}
       <View>
+        <GroceryItemSkeleton showBorder showNotes />
         <GroceryItemSkeleton showBorder />
-        <GroceryItemSkeleton showBorder />
-        <GroceryItemSkeleton showBorder />
-        <GroceryItemSkeleton showBorder />
+        <GroceryItemSkeleton showBorder showTags={false} />
+      </View>
+
+      {/* Checked section */}
+      <View className="bg-background px-4 pt-1">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 gap-1">
+            <SkeletonText width="sm" height="md" />
+            <SkeletonText width="sm" height="xs" />
+          </View>
+          <SkeletonCircle size={20} />
+        </View>
+      </View>
+
+      <View>
         <GroceryItemSkeleton showBorder />
         <GroceryItemSkeleton showBorder={false} />
+      </View>
+
+      {/* Bottom actions */}
+      <View className="bottom-safe pointer-events-none absolute left-6 z-10">
+        <Skeleton className="h-10 w-40 rounded-full" />
+      </View>
+      <View className="bottom-safe pointer-events-none absolute right-6 z-10">
+        <SkeletonCircle size={52} />
       </View>
     </View>
   );

@@ -70,7 +70,7 @@ export default function Welcome() {
             onPress={() => router.push('/(auth)/sign-in')}
             disabled={isContinuingAsGuest}
           >
-            <Text className="font-bold uppercase ">Sign In</Text>
+            <Text>Sign In</Text>
           </Button>
 
           <Button
@@ -82,9 +82,7 @@ export default function Welcome() {
             {isContinuingAsGuest ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="font-semibold uppercase">
-                Continue as A Guest
-              </Text>
+              <Text>Continue as a Guest</Text>
             )}
           </Button>
         </View>

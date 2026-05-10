@@ -61,7 +61,7 @@ export const GroceryListHeader = ({
           variant="ghost"
           className="px-0 active:bg-transparent dark:active:bg-transparent"
         >
-          <Text className="text-3xl font-bold">
+          <Text className="text-2xl font-bold tracking-tight">
             {listName ?? 'Grocery List'}
           </Text>
         </Button>
