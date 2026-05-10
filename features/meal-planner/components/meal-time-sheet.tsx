@@ -9,8 +9,9 @@ import {
   SandwichIcon,
 } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
+import { WithLayoutTransition } from '../../../components/animated/with-layout-transition';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { BackButton } from '../../../components/ui/back-button';
 import { ConfirmButton } from '../../../components/ui/confirm-button';
@@ -36,30 +37,25 @@ const mealTimeOptions: MealTimeOptionType[] = [
 
 type MealTimeOptionProps = {
   label: string;
-  icon: LucideIcon;
   isSelected: boolean;
   onPress: () => void;
 };
 
 const MealTimeOption = ({
   label,
-  icon,
   isSelected,
   onPress,
 }: MealTimeOptionProps) => (
   <HapticPressable onPress={onPress} hapticType="selection">
     <View
       className={cn(
-        'flex-row items-center gap-3 rounded-xl px-2 py-3',
+        'w-full flex-row items-center justify-center gap-3 rounded-xl px-2 py-3',
         isSelected && 'bg-muted'
       )}
     >
-      <View className="size-10 items-center justify-center rounded-full bg-muted">
-        <Icon as={icon} size={20} className="text-foreground" />
-      </View>
       <Text
         className={cn(
-          'flex-1 text-base font-medium',
+          'text-base font-medium',
           isSelected ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
@@ -99,58 +95,52 @@ export const MealTimeSheet = ({
 
   return (
     <>
-      <HapticPressable onPress={openSheet} hapticType="light">
-        <Pill
-          className={cn(!mealTime && 'border-dashed')}
-          icon={
-            <Icon
-              className="text-muted-foreground"
-              as={selectedMealTime?.icon ?? ClockIcon}
-              size={16}
-            />
-          }
-          hasValue={!!selectedMealTime}
-          onClear={() => onSelect(undefined)}
-        >
-          {selectedMealTime ? selectedMealTime.label : 'Meal Time'}
-        </Pill>
-      </HapticPressable>
-
-      <BottomSheet ref={sheetRef} name="meal-time-sheet">
-        <BottomSheet.SheetView className="pb-0">
-          <BottomSheet.Header
-            className="mb-0"
-            dismissButton={
-              canGoBack && (
-                <BackButton onPress={() => sheetRef.current?.dismiss()} />
-              )
-            }
-            title="Meal Time"
-            button={<ConfirmButton onPress={handleConfirm} />}
-          />
-          <ScrollView
-            className="max-h-96"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
-          >
-            <MealTimeOption
-              label="None"
-              icon={ClockIcon}
-              isSelected={!localMealTime}
-              onPress={() => setLocalMealTime(undefined)}
-            />
-
-            {mealTimeOptions.map(option => (
-              <MealTimeOption
-                key={option.value}
-                label={option.label}
-                icon={option.icon}
-                isSelected={localMealTime === option.value}
-                onPress={() => setLocalMealTime(option.value)}
+      <WithLayoutTransition>
+        <HapticPressable onPress={openSheet} hapticType="light">
+          <Pill
+            className={cn(!mealTime && 'border-dashed')}
+            icon={
+              <Icon
+                className="text-muted-foreground"
+                as={selectedMealTime?.icon ?? ClockIcon}
+                size={16}
               />
-            ))}
-          </ScrollView>
-        </BottomSheet.SheetView>
+            }
+            hasValue={!!selectedMealTime}
+            onClear={() => onSelect(undefined)}
+          >
+            {selectedMealTime ? selectedMealTime.label : 'Meal Time'}
+          </Pill>
+        </HapticPressable>
+      </WithLayoutTransition>
+
+      <BottomSheet detents={['auto']} ref={sheetRef} name="meal-time-sheet">
+        <BottomSheet.Header
+          className="mb-0 px-4"
+          dismissButton={
+            canGoBack && (
+              <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            )
+          }
+          title="Meal Time"
+          button={<ConfirmButton onPress={handleConfirm} />}
+        />
+        <View className="px-2">
+          <MealTimeOption
+            label="None"
+            isSelected={!localMealTime}
+            onPress={() => setLocalMealTime(undefined)}
+          />
+
+          {mealTimeOptions.map(option => (
+            <MealTimeOption
+              key={option.value}
+              label={option.label}
+              isSelected={localMealTime === option.value}
+              onPress={() => setLocalMealTime(option.value)}
+            />
+          ))}
+        </View>
       </BottomSheet>
     </>
   );

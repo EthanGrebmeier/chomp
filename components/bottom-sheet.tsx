@@ -90,7 +90,7 @@ const TextInput = forwardRef<
   return (
     <RNTextInput
       className={cn(
-        'h-12 rounded-md bg-input px-3 leading-4 text-foreground shadow-sm shadow-black/5',
+        'h-12 rounded-md bg-muted px-3 leading-4 text-foreground shadow-sm shadow-black/5',
         className
       )}
       {...props}

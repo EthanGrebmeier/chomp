@@ -27,13 +27,13 @@ const UnitOption = ({ label, isSelected, onPress }: UnitOptionProps) => (
   <HapticPressable onPress={onPress} hapticType="selection">
     <View
       className={cn(
-        'flex-row items-center gap-3 rounded-xl px-2 py-3',
+        'w-full flex-row items-center justify-center gap-3 rounded-xl px-2 py-3',
         isSelected && 'bg-muted'
       )}
     >
       <Text
         className={cn(
-          'flex-1 text-base font-medium',
+          'text-base font-medium',
           isSelected ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
@@ -165,25 +165,23 @@ export const UnitSheet = ({
             Unit
           </Text>
           <ScrollView
-            className="max-h-80 px-4"
+            className="max-h-80 px-2"
             nestedScrollEnabled
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 24, paddingTop: 8 }}
           >
-            <View className="gap-2">
-              {UNIT_OPTIONS.map(option => (
-                <UnitOption
-                  key={option.value}
-                  label={option.label}
-                  isSelected={
-                    option.value === CUSTOM_UNIT_VALUE
-                      ? !isCatalogUnit
-                      : normalizedLocalUnit === option.value
-                  }
-                  onPress={() => handleUnitSelect(option.value)}
-                />
-              ))}
-            </View>
+            {UNIT_OPTIONS.map(option => (
+              <UnitOption
+                key={option.value}
+                label={option.label}
+                isSelected={
+                  option.value === CUSTOM_UNIT_VALUE
+                    ? !isCatalogUnit
+                    : normalizedLocalUnit === option.value
+                }
+                onPress={() => handleUnitSelect(option.value)}
+              />
+            ))}
           </ScrollView>
         </View>
       </BottomSheet>

@@ -7,13 +7,8 @@ type CloseButtonProps = Omit<ButtonProps, 'size' | 'variant' | 'children'>;
 
 export const CloseButton = (props: CloseButtonProps) => {
   return (
-    <Button size="icon" variant="secondary" {...props}>
-      <Icon
-        as={X}
-        size={20}
-        strokeWidth={3.5}
-        className="text-secondary-foreground"
-      />
+    <Button size="icon" variant="ghost" {...props}>
+      <Icon as={X} size={20} strokeWidth={3} className="text-foreground" />
     </Button>
   );
 };
