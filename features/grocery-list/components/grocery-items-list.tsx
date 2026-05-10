@@ -1,6 +1,6 @@
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { Image } from 'expo-image';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -25,6 +25,10 @@ type GroceryItemsListProps = {
   totalItemCount: number;
   groupBy: 'category' | 'none' | 'recipe' | 'store';
   sortBy: 'name' | 'recent';
+  groupingBulkAction?: {
+    type: 'collapse' | 'expand';
+    id: number;
+  } | null;
   onListInteraction?: () => void;
 };
 
@@ -49,6 +53,7 @@ export const GroceryItemsList = ({
   totalItemCount,
   groupBy,
   sortBy,
+  groupingBulkAction,
   onListInteraction,
 }: GroceryItemsListProps) => {
   const { present: presentEditSheet } = useEditItemSheet();
@@ -65,6 +70,7 @@ export const GroceryItemsList = ({
   const [sectionPendingInstantHide, setSectionPendingInstantHide] = useState<
     string | null
   >(null);
+  const lastAppliedBulkActionId = useRef<number | null>(null);
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
   const itemLayoutTransition = useMemo(
@@ -170,6 +176,36 @@ export const GroceryItemsList = ({
     }
     return map;
   }, [checkedItems, groupedUncheckedItems]);
+
+  const groupingSectionKeys = useMemo(() => {
+    const keys = Array.from(groupedUncheckedItems.keys()).map(
+      sectionTitle => `group:${sectionTitle}`
+    );
+    if (checkedItems.length > 0) {
+      keys.push('checked');
+    }
+    return keys;
+  }, [checkedItems.length, groupedUncheckedItems]);
+
+  useEffect(() => {
+    if (!groupingBulkAction || groupBy === 'none') {
+      return;
+    }
+    if (lastAppliedBulkActionId.current === groupingBulkAction.id) {
+      return;
+    }
+    lastAppliedBulkActionId.current = groupingBulkAction.id;
+
+    setSectionPendingInstantHide(null);
+    setCollapsedSectionsByGroup(previous => {
+      const nextByGroup = { ...previous };
+      nextByGroup[groupBy] =
+        groupingBulkAction.type === 'expand'
+          ? new Set()
+          : new Set(groupingSectionKeys);
+      return nextByGroup;
+    });
+  }, [groupBy, groupingBulkAction, groupingSectionKeys]);
 
   const listRows = useMemo(() => {
     const rows: GroceryListRow[] = [];

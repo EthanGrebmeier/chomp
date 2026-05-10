@@ -3,6 +3,8 @@ import { ListFilter } from 'lucide-react-native';
 import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuItemTitle,
   DropdownMenuRoot,
   DropdownMenuSub,
@@ -18,15 +20,21 @@ type SortByValue = 'name' | 'recent';
 type ListFilterDropdownMenuProps = {
   groupBy: GroupByValue;
   sortBy: SortByValue;
+  hasEnabledGroupings: boolean;
   onGroupByChange: (value: GroupByValue) => void;
   onSortByChange: (value: SortByValue) => void;
+  onOpenAllGroupings: () => void;
+  onCollapseAllGroupings: () => void;
 };
 
 export const ListFilterDropdownMenu = ({
   groupBy,
   sortBy,
+  hasEnabledGroupings,
   onGroupByChange,
   onSortByChange,
+  onOpenAllGroupings,
+  onCollapseAllGroupings,
 }: ListFilterDropdownMenuProps) => {
   return (
     <DropdownMenuRoot>
@@ -34,6 +42,7 @@ export const ListFilterDropdownMenu = ({
         <Icon as={ListFilter} size={24} />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
+
         <DropdownMenuSub>
           <DropdownMenuSubTrigger key="group-by-submenu">
             <DropdownMenuItemTitle>Group By</DropdownMenuItemTitle>
@@ -91,6 +100,22 @@ export const ListFilterDropdownMenu = ({
             </DropdownMenuCheckboxItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+        <DropdownMenuGroup>
+        <DropdownMenuItem
+          key="open-all-groupings"
+          disabled={!hasEnabledGroupings}
+          onSelect={onOpenAllGroupings}
+        >
+          <DropdownMenuItemTitle>Open all groupings</DropdownMenuItemTitle>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          key="collapse-all-groupings"
+          disabled={!hasEnabledGroupings}
+          onSelect={onCollapseAllGroupings}
+        >
+          <DropdownMenuItemTitle>Collapse all groupings</DropdownMenuItemTitle>
+        </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenuRoot>
   );

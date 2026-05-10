@@ -25,6 +25,8 @@ type GroceryListHeaderProps = {
   sortBy: 'name' | 'recent';
   onGroupByChange: (value: 'category' | 'none' | 'recipe' | 'store') => void;
   onSortByChange: (value: 'name' | 'recent') => void;
+  onOpenAllGroupings: () => void;
+  onCollapseAllGroupings: () => void;
 };
 
 export const GroceryListHeader = ({
@@ -42,6 +44,8 @@ export const GroceryListHeader = ({
   sortBy,
   onGroupByChange,
   onSortByChange,
+  onOpenAllGroupings,
+  onCollapseAllGroupings,
 }: GroceryListHeaderProps) => {
   const networkState = useNetworkState();
   const isDisconnected =
@@ -69,8 +73,11 @@ export const GroceryListHeader = ({
             <ListFilterDropdownMenu
               groupBy={groupBy}
               sortBy={sortBy}
+              hasEnabledGroupings={groupBy !== 'none'}
               onGroupByChange={onGroupByChange}
               onSortByChange={onSortByChange}
+              onOpenAllGroupings={onOpenAllGroupings}
+              onCollapseAllGroupings={onCollapseAllGroupings}
             />
 
             <GroceryListDropdownMenu

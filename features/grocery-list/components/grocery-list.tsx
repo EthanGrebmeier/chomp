@@ -40,6 +40,11 @@ type GroceryListProps = {
   onDeleteOrLeave: () => void;
 };
 
+type GroupingBulkAction = {
+  type: 'collapse' | 'expand';
+  id: number;
+};
+
 export const GroceryList = ({
   listId,
   listName,
@@ -69,6 +74,8 @@ export const GroceryList = ({
     'category' | 'none' | 'recipe' | 'store'
   >(initialGroupBy);
   const [sortBy, setSortBy] = useState<'name' | 'recent'>(initialSortBy);
+  const [groupingBulkAction, setGroupingBulkAction] =
+    useState<GroupingBulkAction | null>(null);
   const [searchQuery] = useState('');
 
   const deferredQuery = useDeferredValue(searchQuery.trim());
@@ -114,6 +121,20 @@ export const GroceryList = ({
   const handleSortByChange = (newSortBy: 'name' | 'recent') => {
     setSortBy(newSortBy);
     updateSettings({ sortBy: newSortBy });
+  };
+
+  const handleOpenAllGroupings = () => {
+    setGroupingBulkAction(previous => ({
+      type: 'expand',
+      id: (previous?.id ?? 0) + 1,
+    }));
+  };
+
+  const handleCollapseAllGroupings = () => {
+    setGroupingBulkAction(previous => ({
+      type: 'collapse',
+      id: (previous?.id ?? 0) + 1,
+    }));
   };
 
   const handleIncrementExistingItem = () => {
@@ -219,6 +240,8 @@ export const GroceryList = ({
           sortBy={sortBy}
           onGroupByChange={handleGroupByChange}
           onSortByChange={handleSortByChange}
+          onOpenAllGroupings={handleOpenAllGroupings}
+          onCollapseAllGroupings={handleCollapseAllGroupings}
         />
         <EditItemProvider groceryListId={listId ?? ''}>
           <View className="flex-1">
@@ -227,6 +250,7 @@ export const GroceryList = ({
               totalItemCount={items.length}
               groupBy={groupBy}
               sortBy={sortBy}
+              groupingBulkAction={groupingBulkAction}
               onListInteraction={dismissSearch}
             />
           </View>
