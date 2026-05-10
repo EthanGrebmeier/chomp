@@ -17,19 +17,19 @@ const textVariants = cva(
       variant: {
         default: 'tracking-wide',
         h1: cn(
-          'text-center text-8xl font-jaro-regular',
+          'text-6xl font-bold',
           Platform.select({ web: 'scroll-m-20 text-balance' })
         ),
         h2: cn(
-          'text-3xl font-averia-serif-libre',
+          'text-3xl font-bold',
           Platform.select({ web: 'scroll-m-20 first:mt-0' })
         ),
         h3: cn(
-          'text-2xl font-semibold tracking-tight font-averia-serif-libre',
+          'text-2xl font-semibold tracking-tight',
           Platform.select({ web: 'scroll-m-20' })
         ),
         h4: cn(
-          'text-xl font-semibold tracking-tight font-averia-serif-libre',
+          'text-xl font-semibold tracking-tight',
           Platform.select({ web: 'scroll-m-20' })
         ),
         p: 'mt-3 leading-7 sm:mt-6',

@@ -31,7 +31,7 @@ export function BackButton({ onPress, className, href }: BackButtonProps) {
       hapticType="light"
     >
       <Icon
-        className="text-primary"
+        className="text-foreground"
         as={ChevronLeftIcon}
         strokeWidth={3.5}
         size={24}

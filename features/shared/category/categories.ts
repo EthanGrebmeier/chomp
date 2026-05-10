@@ -19,6 +19,7 @@ export const categoryOptions = [
       icon: CarrotIcon,
       className: 'bg-accent-green-background',
       textClassName: 'text-accent-green-foreground',
+      tagTextClassName: 'text-accent-green-background',
     },
   },
   {
@@ -28,6 +29,7 @@ export const categoryOptions = [
       icon: HamIcon,
       className: 'bg-accent-red-background',
       textClassName: 'text-accent-red-foreground',
+      tagTextClassName: 'text-accent-red-background',
     },
   },
   {
@@ -37,6 +39,7 @@ export const categoryOptions = [
       icon: MilkIcon,
       className: 'bg-accent-gray-background',
       textClassName: 'text-accent-gray-foreground',
+      tagTextClassName: 'text-accent-gray-background',
     },
   },
   {
@@ -46,6 +49,7 @@ export const categoryOptions = [
       icon: CroissantIcon,
       className: 'bg-accent-orange-background',
       textClassName: 'text-accent-orange-foreground',
+      tagTextClassName: 'text-accent-orange-background',
     },
   },
   {
@@ -55,6 +59,7 @@ export const categoryOptions = [
       icon: SnowflakeIcon,
       className: 'bg-accent-blue-background',
       textClassName: 'text-white',
+      tagTextClassName: 'text-accent-blue-background',
     },
   },
   {
@@ -64,6 +69,7 @@ export const categoryOptions = [
       icon: CupSodaIcon,
       className: 'bg-accent-magenta-background',
       textClassName: 'text-accent-magenta-foreground',
+      tagTextClassName: 'text-accent-magenta-background',
     },
   },
   {
@@ -73,6 +79,7 @@ export const categoryOptions = [
       icon: PopcornIcon,
       className: 'bg-accent-yellow-background',
       textClassName: 'text-accent-yellow-foreground',
+      tagTextClassName: 'text-accent-yellow-background',
     },
   },
   {
@@ -82,6 +89,7 @@ export const categoryOptions = [
       icon: HeartPlusIcon,
       className: 'bg-accent-red-background',
       textClassName: 'text-accent-red-foreground',
+      tagTextClassName: 'text-accent-red-background',
     },
   },
   {
@@ -91,6 +99,7 @@ export const categoryOptions = [
       icon: HomeIcon,
       className: 'bg-accent-pink-background',
       textClassName: 'text-accent-pink-foreground',
+      tagTextClassName: 'text-accent-pink-background',
     },
   },
   {
@@ -100,6 +109,7 @@ export const categoryOptions = [
       icon: CircleQuestionMarkIcon,
       className: 'bg-accent-white-background',
       textClassName: 'text-accent-white-foreground',
+      tagTextClassName: 'text-accent-white-background',
     },
   },
 ] as const;

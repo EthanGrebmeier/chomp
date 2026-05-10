@@ -7,7 +7,7 @@ import {
   ContextMenuRoot,
 } from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
-import { Text } from '../../../components/ui/text';
+import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { Recipe } from '../../recipes/types';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { MealPlanRecipe } from '../types';
@@ -32,6 +32,12 @@ const MealPlanMealCard = ({
   onIndicatorPress,
 }: MealPlanMealCardProps) => {
   const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
+  const recipeWithIngredients = recipe as unknown as {
+    recipe_ingredients?: unknown[];
+  };
+  const ingredientCount = Array.isArray(recipeWithIngredients.recipe_ingredients)
+    ? recipeWithIngredients.recipe_ingredients.length
+    : undefined;
 
   const handleDelete = () => {
     Alert.alert(
@@ -67,9 +73,11 @@ const MealPlanMealCard = ({
               onPress={() => onIndicatorPress(mealPlanRecipe)}
               className="mr-3"
             />
-            <Text className="flex-1 text-xl font-semibold text-foreground">
-              {recipe.name}
-            </Text>
+            <RecipeCardContent
+              name={recipe.name}
+              ingredientCount={ingredientCount}
+              className="flex-1"
+            />
           </View>
         </HapticPressable>
       }

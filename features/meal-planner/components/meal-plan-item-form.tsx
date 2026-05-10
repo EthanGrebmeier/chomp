@@ -13,6 +13,7 @@ type MealPlanItemFormProps = {
   autoFocus?: boolean;
   notesPlaceholder?: string;
   notesStyle?: 'inline' | 'bordered';
+  showMetaBar?: boolean;
 };
 
 export const MealPlanItemForm = ({
@@ -20,6 +21,7 @@ export const MealPlanItemForm = ({
   autoFocus = false,
   notesPlaceholder = 'Notes',
   notesStyle = 'inline',
+  showMetaBar = true,
 }: MealPlanItemFormProps) => {
   const itemInputRef = useRef<TextInput>(null);
   const {
@@ -87,23 +89,25 @@ export const MealPlanItemForm = ({
         style={{ textAlignVertical: 'top' }}
         className={notesClassName}
       />
-      <MealPlanMetaBar
-        date={selectedDate}
-        onDateChange={setSelectedDate}
-        mealTag={mealTag}
-        onMealTagChange={setMealTag}
-        quantity={quantity}
-        onQuantityChange={setQuantity}
-        unit={unit}
-        onUnitChange={setUnit}
-        category={category}
-        onCategoryChange={setCategory}
-        storeId={storeId}
-        onStoreIdChange={setStoreId}
-        onSubmit={onSubmit}
-        isValid={isValid()}
-        showAction={false}
-      />
+      {showMetaBar ? (
+        <MealPlanMetaBar
+          date={selectedDate}
+          onDateChange={setSelectedDate}
+          mealTag={mealTag}
+          onMealTagChange={setMealTag}
+          quantity={quantity}
+          onQuantityChange={setQuantity}
+          unit={unit}
+          onUnitChange={setUnit}
+          category={category}
+          onCategoryChange={setCategory}
+          storeId={storeId}
+          onStoreIdChange={setStoreId}
+          onSubmit={onSubmit}
+          isValid={isValid()}
+          showAction={false}
+        />
+      ) : null}
     </View>
   );
 };

@@ -8,6 +8,7 @@ import {
   CreateRecipeSheet,
   CreateRecipeSheetRef,
 } from '../../../features/recipes/components/create-recipe-sheet';
+import { RecipeCardContent } from '../../../features/recipes/components/recipe-card';
 import { RecipeFilters } from '../../../features/recipes/components/recipe-filters';
 import { useCreateRecipe, useRecipes } from '../../../features/recipes/hooks';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
@@ -51,18 +52,17 @@ export const RecipeSelector = ({
       <HapticPressable
         onPress={() => onSelectRecipe(item)}
         className={cn(
-          'w-full py-3',
+          'w-full px-4 py-1',
           index < filteredRecipes.length - 1 &&
             'border-b border-dashed border-border'
         )}
         hapticType="light"
       >
-        <Text className="text-lg font-semibold text-foreground">
-          {item.name}
-        </Text>
-        <Text className="text-sm text-muted-foreground">
-          {item.recipe_ingredients.length} ingredients
-        </Text>
+        <RecipeCardContent
+          name={item.name}
+          ingredientCount={item.recipe_ingredients.length}
+          className="w-full"
+        />
       </HapticPressable>
     ),
     [filteredRecipes.length, onSelectRecipe]
@@ -71,7 +71,7 @@ export const RecipeSelector = ({
   if (isLoading) {
     return (
       <View style={{ minHeight: 500 }} className="items-center justify-center">
-        <Text className="text-muted-foreground">Loading recipes...</Text>
+        <Text className="text-muted-foreground">Loading recipes…</Text>
       </View>
     );
   }
@@ -154,7 +154,6 @@ export const RecipeSelector = ({
         </Animated.View>
       ) : (
         <FlatList
-          contentContainerClassName="px-4 pb-24"
           data={filteredRecipes}
           keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}

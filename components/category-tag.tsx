@@ -14,18 +14,11 @@ export const CategoryTag = ({ category }: CategoryTagProps) => {
   if (!categoryOption) {
     return null;
   }
-  const { className, textClassName } = categoryOption.style;
   return (
-    <View
-      className={cn(
-        'items-center justify-center rounded-full border border-solid border-black px-2 py-0.5',
-        className
-      )}
-    >
+    <View>
       <Text
         className={cn(
-          'text-sm font-medium leading-[1.1] tracking-[-0.5]',
-          textClassName
+          'text-xs font-medium leading-[1.1] tracking-[-0.2] text-muted-foreground'
         )}
       >
         {categoryOption.label}

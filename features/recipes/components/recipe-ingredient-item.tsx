@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 
 import { CategoryTag } from '../../../components/category-tag';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
@@ -23,6 +23,10 @@ export const RecipeIngredientItem = ({
 }: RecipeIngredientItemProps) => {
   const { mutate: removeItem } = useRemoveRecipeIngredient();
   const notes = ingredient.notes?.trim();
+  const compactTextStyle = Platform.select({
+    android: { includeFontPadding: false },
+    default: undefined,
+  });
   const pressStartXRef = useRef<number | null>(null);
   const shouldSuppressPressRef = useRef(false);
 
@@ -41,7 +45,7 @@ export const RecipeIngredientItem = ({
       className={className}
     >
       <Pressable
-        className="flex-1 gap-1"
+        className="flex-1 gap-1 py-1"
         onPress={handlePress}
         onPressIn={event => {
           pressStartXRef.current = event.nativeEvent.pageX;
@@ -62,23 +66,31 @@ export const RecipeIngredientItem = ({
         }}
       >
         <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-medium text-foreground">
-            {ingredient.name}
-          </Text>
-          <Text className="text-lg text-muted-foreground">
-            {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
-          </Text>
+          <View className="flex-1 flex-row pr-2">
+            <Text
+              className="text-xl leading-[22px] tracking-tight text-foreground"
+              style={compactTextStyle}
+            >
+              {ingredient.name}
+              {'  '}
+              <Text
+                className="text-base leading-[22px] text-muted-foreground"
+                style={compactTextStyle}
+              >
+                {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
+              </Text>
+            </Text>
+          </View>
+          {ingredient.category && <CategoryTag category={ingredient.category} />}
         </View>
         {notes ? (
-          <Text className="text-base leading-none text-muted-foreground">
+          <Text
+            className="text-base leading-[18px] text-muted-foreground"
+            style={compactTextStyle}
+          >
             {notes}
           </Text>
         ) : null}
-        <View className="flex-row items-center gap-2">
-          {ingredient.category && (
-            <CategoryTag category={ingredient.category} />
-          )}
-        </View>
       </Pressable>
     </ListItem>
   );

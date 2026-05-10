@@ -33,19 +33,13 @@ const CategoryOption = ({
   <HapticPressable onPress={onPress} hapticType="selection">
     <View
       className={cn(
-        'w-full flex-row items-center gap-3 rounded-xl px-2 py-3',
+        'w-full flex-row items-center justify-center gap-3 rounded-xl px-2 py-3',
         isSelected && 'bg-muted'
       )}
     >
-      <View
-        className={cn(
-          'size-10 items-center justify-center rounded-full',
-          iconContainerClassName ?? 'bg-muted'
-        )}
-      ></View>
       <Text
         className={cn(
-          'flex-1 text-base font-medium',
+          'text-base font-medium',
           isSelected ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
@@ -96,24 +90,8 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
       <WithLayoutTransition>
         <HapticPressable onPress={openSheet} hapticType="light">
           <Pill
-            className={cn(
-              selectedCategory && 'border-transparent',
-              selectedCategory?.style.className,
-              !selectedCategory && 'border-dashed'
-            )}
-            textClassName={cn(
-              'font-medium',
-              selectedCategory
-                ? selectedCategory.style.textClassName
-                : undefined
-            )}
-            closeIconClassName={
-              selectedCategory
-                ? selectedCategory.style.textClassName
-                : 'text-muted-foreground'
-            }
+            className={cn(!selectedCategory && 'border-dashed')}
             hasValue={!!selectedCategory}
-            onClear={() => onSelect(undefined)}
           >
             {selectedCategory ? selectedCategory.label : 'Category'}
           </Pill>
@@ -135,15 +113,7 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
           }
           button={<ConfirmButton onPress={handleConfirm} />}
         />
-        <ScrollView
-          ref={scrollViewRef}
-          className="px-2"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingBottom: 20,
-            paddingTop: 8,
-          }}
-        >
+        <View className="px-2">
           <CategoryOption
             label="None"
             icon={TagIcon}
@@ -163,7 +133,7 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
               onPress={() => setLocalCategory(categoryOption.value)}
             />
           ))}
-        </ScrollView>
+        </View>
       </BottomSheet>
     </>
   );

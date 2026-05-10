@@ -19,6 +19,7 @@ import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
 import { navigation } from '../../../lib/navigation';
+import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
@@ -161,11 +162,10 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
               <View className="gap-2">
                 {selectedRecipe && (
                   <View className="w-full flex-row items-center justify-between gap-2">
-                    <View className="flex-row items-center gap-2">
-                      <Text className="text-2xl font-semibold text-foreground">
-                        {selectedRecipe.name}
-                      </Text>
-                    </View>
+                    <RecipeCardContent
+                      name={selectedRecipe.name}
+                      className="flex-1"
+                    />
                     <MealSheetRecipeDropdown
                       recipeId={selectedRecipe.id}
                       recipeName={selectedRecipe.name}

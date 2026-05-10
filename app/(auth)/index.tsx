@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
@@ -10,11 +10,14 @@ import { useContinueAsGuest } from '@/lib/instant/use-continue-as-guest';
 import { navigation } from '@/lib/navigation';
 
 import { Text } from '../../components/ui/text';
+import { cn } from '../../lib/utils';
 
 export default function Welcome() {
   const router = useRouter();
   const continueAsGuest = useContinueAsGuest();
   const [isContinuingAsGuest, setIsContinuingAsGuest] = useState(false);
+
+  const colorScheme = useColorScheme();
 
   const handleContinueAsGuest = async () => {
     setIsContinuingAsGuest(true);
@@ -29,13 +32,30 @@ export default function Welcome() {
   };
 
   return (
-    <SafeAreaView className="h-full bg-background">
+    <SafeAreaView
+      className={cn(
+        'h-full bg-background',
+        colorScheme === 'dark' ? 'bg-[#2020B1]' : 'bg-background'
+      )}
+    >
       <View className="mt-12 flex-1 justify-between  px-6">
-        <View className="items-center justify-start ">
-          <Text className="font-averia-serif-libre text-center uppercase text-primary">
+        <View className="items-center justify-start gap-2">
+          <Text
+            className={cn(
+              ' text-center font-medium uppercase',
+              colorScheme === 'dark'
+                ? 'text-primary-foreground'
+                : 'text-primary'
+            )}
+          >
             Welcome to
           </Text>
-          <Text className="font-jaro-regular text-center text-[120px] uppercase leading-none text-primary">
+          <Text
+            className={cn(
+              'text-center text-[88px] font-bold uppercase leading-none ',
+              colorScheme === 'dark' ? 'text-foreground' : 'text-primary'
+            )}
+          >
             Chomp
           </Text>
         </View>

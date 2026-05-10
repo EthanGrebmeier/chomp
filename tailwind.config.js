@@ -58,7 +58,7 @@ module.exports = {
           },
           red: {
             background: '#e00909',
-            foreground: '#1a1a1a',
+            foreground: '#EFE0B7',
           },
           gray: {
             background: '#dadadf',

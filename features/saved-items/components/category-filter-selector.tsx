@@ -1,5 +1,3 @@
-import { TagIcon } from 'lucide-react-native';
-
 import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -7,7 +5,6 @@ import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
 } from '../../../components/native-dropdown';
-import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { cn } from '../../../lib/utils';
 import { categoryOptions } from '../../shared/category/categories';
@@ -22,24 +19,12 @@ export const CategoryFilterSelector = ({
   onSelect,
 }: CategoryFilterSelectorProps) => {
   const selectedCategory = categoryOptions.find(opt => opt.value === category);
-
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger>
         <Pill
-          icon={
-            <Icon
-              as={selectedCategory ? selectedCategory.style.icon : TagIcon}
-              className={
-                selectedCategory ? 'text-black' : 'text-muted-foreground'
-              }
-              size={16}
-            />
-          }
           className={cn(
-            selectedCategory
-              ? cn('border-transparent', selectedCategory.style.className)
-              : 'border border-border bg-none'
+            selectedCategory ? 'border border-border' : cn('border-transparent')
           )}
           textClassName={cn(
             selectedCategory ? 'text-black' : 'text-muted-foreground'

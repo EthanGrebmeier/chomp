@@ -301,7 +301,7 @@ export const GroceryItemsList = ({
           <GroceryListItem
             item={item.item}
             isChecked={Boolean(item.item.isChecked)}
-            className={cn(showBorder && 'border-b border-border')}
+            className={cn(showBorder && 'border-b border-dashed border-border')}
             onEdit={() => {
               presentEditSheet(item.item);
             }}

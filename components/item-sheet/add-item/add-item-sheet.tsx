@@ -262,7 +262,7 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
         scrollable={mode === 'recipe'}
         footer={
           mode === 'item' ? (
-            <View className="gap-2 px-4 pb-4">
+            <View className="pb-safe gap-4 px-4">
               <MetaBar />
               <Button
                 variant="default"

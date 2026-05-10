@@ -1,13 +1,20 @@
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
-import { PlusIcon } from 'lucide-react-native';
+import { MoreHorizontalIcon, PlusIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { Alert, AppState, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+} from '../../../components/ui/dropdown-menu';
 import { Icon } from '../../../components/ui/icon';
-import { useUserMealPlanData } from '../hooks';
+import { useClearMealPlan, useUserMealPlanData } from '../hooks';
 import { MealPlanItemWithStore } from '../types';
 
 import {
@@ -34,6 +41,8 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
   const pagerRef = useRef<PagerView>(null);
   const isProgrammaticNavigationRef = useRef(false);
   const { recipes, items } = useUserMealPlanData(listId);
+  const { mutate: clearMealPlan } = useClearMealPlan();
+  const hasMealPlanEntries = recipes.length > 0 || items.length > 0;
 
   const { datesWithMeals, datesAllMealsAdded } = useMemo(() => {
     const mealStatusByDate = new Map<
@@ -150,10 +159,50 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
     handleDatePress(today);
   };
 
+  const handleClearMealPlan = () => {
+    if (!hasMealPlanEntries) return;
+
+    Alert.alert(
+      'Clear Meal Plan',
+      'Are you sure you want to remove all meals and items from your meal plan?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () =>
+            clearMealPlan({
+              mealPlanRecipeIds: recipes.map(recipe => recipe.id),
+              mealPlanItemIds: items.map(item => item.id),
+            }),
+        },
+      ]
+    );
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <View className="flex-row items-center justify-between px-4">
         <Heading>Meal Plan</Heading>
+        <DropdownMenuRoot
+          trigger={
+            <Button variant="ghost" size="icon" className="h-10 w-10">
+              <Icon as={MoreHorizontalIcon} size={20} />
+            </Button>
+          }
+        >
+          <DropdownMenuContent>
+            <DropdownMenuItem
+              key="clear-meal-plan"
+              destructive
+              onSelect={handleClearMealPlan}
+              disabled={!hasMealPlanEntries}
+            >
+              <DropdownMenuItemTitle>Clear Meal Plan</DropdownMenuItemTitle>
+              <DropdownMenuItemIcon ios={{ name: 'xmark.circle' }} />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenuRoot>
       </View>
       <ListSelectorSheet listId={listId} />
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />

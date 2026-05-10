@@ -40,18 +40,26 @@ const RecipeDetailContent = ({ recipe, listId }: RecipeDetailContentProps) => {
 
   return (
     <View className="flex-1 gap-4 pt-8">
-      <View className="flex-row items-center justify-between  px-4">
-        <BackButton />
-        <RecipeDropdownMenu
-          trigger={<Icon as={MoreHorizontal} size={24} />}
-          recipe={recipe}
-        />
+      <View className="relative min-h-10 px-4">
+        <View className="absolute left-4 top-0 z-10">
+          <BackButton />
+        </View>
+        <Heading className="px-14 text-center">{recipe.name}</Heading>
+        <View className="absolute right-4 top-0">
+          <RecipeDropdownMenu
+            trigger={
+              <View className="z-10 size-8 items-center justify-center rounded-full bg-background">
+                <Icon as={MoreHorizontal} size={24} />
+              </View>
+            }
+            recipe={recipe}
+          />
+        </View>
       </View>
       {/* Header */}
       <View className="w-full gap-2 px-4">
         <View className="flex-row gap-4">
           <View>
-            <Heading>{recipe.name}</Heading>
             {recipe.mealTag && (
               <Text className="text-lg text-muted-foreground">
                 {recipe.mealTag}

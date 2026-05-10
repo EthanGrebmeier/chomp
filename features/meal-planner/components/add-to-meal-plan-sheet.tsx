@@ -16,6 +16,7 @@ import { ExternalLinkButton } from '../../../components/ui/external-link-button'
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
+import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
 import { useAddRecipeToDate } from '../hooks/useAddRecipeToMealPlan';
@@ -26,6 +27,7 @@ import {
   useMealPlanItem,
 } from './meal-plan-item-context';
 import { MealPlanItemForm } from './meal-plan-item-form';
+import { MealPlanMetaBar } from './meal-plan-meta-bar';
 import { MealTimeSheet } from './meal-time-sheet';
 
 type AddMode = 'item' | 'recipe';
@@ -99,8 +101,13 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     category,
     storeId,
     selectedDate,
+    setQuantity,
+    setUnit,
+    setCategory,
+    setStoreId,
     setSelectedDate,
     mealTag,
+    setMealTag,
     itemNotes,
     resetState: resetMealPlanItemState,
     isValid,
@@ -218,26 +225,45 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
 
   const footerContent =
     mode === 'recipe' && selectedRecipe ? (
-      <Button onPress={handleAddRecipe} disabled={!isRecipeModeValid}>
-        <Text>Add to Plan</Text>
-      </Button>
+      <View className="pb-safe gap-4 px-4">
+        <ScrollingMetaBar>
+          <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
+          <MealTimeSheet mealTime={recipeMealTag} onSelect={setRecipeMealTag} />
+        </ScrollingMetaBar>
+        <Button onPress={handleAddRecipe} disabled={!isRecipeModeValid}>
+          <Text>Add to Plan</Text>
+        </Button>
+      </View>
     ) : mode === 'item' ? (
-      <Button onPress={handleAddItem} disabled={!isValid() || isAddingItem}>
-        <Text>Add Item</Text>
-      </Button>
+      <View className="pb-safe gap-4 px-4">
+        <MealPlanMetaBar
+          date={selectedDate}
+          onDateChange={setSelectedDate}
+          mealTag={mealTag}
+          onMealTagChange={setMealTag}
+          quantity={quantity}
+          onQuantityChange={setQuantity}
+          unit={unit}
+          onUnitChange={setUnit}
+          category={category}
+          onCategoryChange={setCategory}
+          storeId={storeId}
+          onStoreIdChange={setStoreId}
+          onSubmit={handleAddItem}
+          isValid={isValid()}
+          showAction={false}
+        />
+        <Button onPress={handleAddItem} disabled={!isValid() || isAddingItem}>
+          <Text>Add Item</Text>
+        </Button>
+      </View>
     ) : null;
 
   return (
     <BottomSheet
       name="add-to-meal-plan-sheet"
       ref={sheetRef}
-      detents={
-        mode === 'item'
-          ? ['auto']
-          : mode === 'recipe' && !selectedRecipe
-            ? [0.7]
-            : ['auto']
-      }
+      detents={[1]}
       scrollable={mode === 'recipe' && !selectedRecipe}
       viewClassName="pb-safe"
       onStartClose={() => {
@@ -245,11 +271,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         resetMealPlanItemState();
         resetSheetState();
       }}
-      footer={
-        <View className={footerContent ? 'px-10 pb-4' : undefined}>
-          {footerContent}
-        </View>
-      }
+      footer={footerContent ?? undefined}
     >
       {!selectedRecipe && (
         <ModeToggle mode={mode} onModeChange={handleModeChange} />
@@ -270,11 +292,11 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               }
             />
             <View className="gap-4">
-              <View>
-                <Text className="max-w-52 text-2xl font-bold text-foreground">
-                  {selectedRecipe.name}
-                </Text>
-              </View>
+              <RecipeCardContent
+                name={selectedRecipe.name}
+                ingredientCount={selectedRecipe.recipe_ingredients.length}
+                className="w-full"
+              />
 
               <View>
                 <Text className="text-base font-bold text-foreground">
@@ -299,13 +321,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
                   ))}
                 </ScrollView>
               </View>
-              <ScrollingMetaBar>
-                <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
-                <MealTimeSheet
-                  mealTime={recipeMealTag}
-                  onSelect={setRecipeMealTag}
-                />
-              </ScrollingMetaBar>
             </View>
           </Animated.View>
         ) : (
@@ -316,7 +331,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         )
       ) : (
         <View className="px-4">
-          <MealPlanItemForm onSubmit={handleAddItem} />
+          <MealPlanItemForm onSubmit={handleAddItem} showMetaBar={false} />
         </View>
       )}
     </BottomSheet>

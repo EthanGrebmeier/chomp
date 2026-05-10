@@ -27,13 +27,13 @@ const StoreOption = ({ label, isSelected, onPress }: StoreOptionProps) => (
   <HapticPressable onPress={onPress} hapticType="selection">
     <View
       className={cn(
-        'flex-row items-center gap-3 rounded-xl px-2 py-3',
+        'flex-row items-center justify-center gap-3 rounded-xl px-2 py-3',
         isSelected && 'bg-muted'
       )}
     >
       <Text
         className={cn(
-          'flex-1 text-base font-medium',
+          'text-base font-medium',
           isSelected ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
@@ -49,7 +49,11 @@ type StoreSheetProps = {
   onSelect: (storeId?: string, storeName?: string) => void;
 };
 
-export const StoreSheet = ({ storeId, storeName, onSelect }: StoreSheetProps) => {
+export const StoreSheet = ({
+  storeId,
+  storeName,
+  onSelect,
+}: StoreSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const createStoreSheetRef = useRef<TrueSheet>(null);
   const { data: stores, isLoading } = useStores();
@@ -66,7 +70,8 @@ export const StoreSheet = ({ storeId, storeName, onSelect }: StoreSheetProps) =>
     newlyCreatedStore?.id === storeId
       ? newlyCreatedStore
       : stores.find(store => store.id === storeId);
-  const selectedStoreName = selectedStore?.name ?? (storeId ? storeName : undefined);
+  const selectedStoreName =
+    selectedStore?.name ?? (storeId ? storeName : undefined);
   const hasSelectedStore = Boolean(selectedStoreName);
   const hasMissingSelectedStore =
     Boolean(localStoreId) && !stores.some(store => store.id === localStoreId);
@@ -80,7 +85,8 @@ export const StoreSheet = ({ storeId, storeName, onSelect }: StoreSheetProps) =>
     const nextStoreName =
       localStoreId === undefined
         ? undefined
-        : stores.find(store => store.id === localStoreId)?.name ?? selectedStoreName;
+        : (stores.find(store => store.id === localStoreId)?.name ??
+          selectedStoreName);
     onSelect(localStoreId, nextStoreName);
     sheetRef.current?.dismiss();
   };
@@ -125,7 +131,7 @@ export const StoreSheet = ({ storeId, storeName, onSelect }: StoreSheetProps) =>
             icon={
               <Icon
                 className={
-                    hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
+                  hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
                 }
                 as={StoreIcon}
                 size={16}
@@ -133,13 +139,15 @@ export const StoreSheet = ({ storeId, storeName, onSelect }: StoreSheetProps) =>
             }
             textClassName={cn(
               'font-semibold',
-                hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
+              hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
             )}
-              closeIconClassName={hasSelectedStore ? 'text-foreground' : undefined}
-              hasValue={hasSelectedStore}
-              onClear={() => onSelect(undefined, undefined)}
+            closeIconClassName={
+              hasSelectedStore ? 'text-foreground' : undefined
+            }
+            hasValue={hasSelectedStore}
+            onClear={() => onSelect(undefined, undefined)}
           >
-              {selectedStoreName ?? 'Store'}
+            {selectedStoreName ?? 'Store'}
           </Pill>
         </HapticPressable>
       </WithLayoutTransition>
@@ -160,16 +168,16 @@ export const StoreSheet = ({ storeId, storeName, onSelect }: StoreSheetProps) =>
           contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
         >
           <HapticPressable onPress={handleOpenCreateStore} hapticType="light">
-            <View className="flex-row items-center gap-3 rounded-xl px-2 py-3">
-              <View className="size-8 items-center justify-center rounded-full bg-primary">
+            <View className="flex-row items-center justify-center gap-3 rounded-xl px-2 py-3">
+              <View className="size-4  items-center justify-center rounded-full bg-primary">
                 <Icon
                   className="text-primary-foreground"
                   as={PlusIcon}
                   strokeWidth={3}
-                  size={16}
+                  size={12}
                 />
               </View>
-              <Text className="flex-1 text-base font-medium text-primary">
+              <Text className=" text-base font-bold tracking-[-0.2] text-primary">
                 Create new store
               </Text>
             </View>

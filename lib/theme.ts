@@ -2,7 +2,7 @@ import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
 
 export const THEME = {
   light: {
-    background: 'hsl(44 64% 83%)',
+    background: 'hsl(14 33% 88%)',
     foreground: 'hsl(0 0% 0%)',
     card: 'hsl(0 0% 100%)',
     cardForeground: 'hsl(0 0% 3.9%)',
@@ -17,7 +17,7 @@ export const THEME = {
     accent: 'hsl(13 5% 90%)',
     accentForeground: 'hsl(200 20% 25%)',
     destructive: 'hsl(0 84.2% 60.2%)',
-    border: 'hsl(176 23% 65.8%)',
+    border: 'hsl(20 40% 80%)',
     input: 'hsl(0 10% 92.8%)',
     ring: 'hsl(0 0% 63%)',
     radius: '0.625rem',
@@ -28,14 +28,14 @@ export const THEME = {
     chart5: 'hsl(27 87% 67%)',
   },
   dark: {
-    background: 'hsl(213 5% 15%)',
+    background: 'hsl(257 6% 8%)',
     foreground: 'hsl(0 0% 98%)',
     card: 'hsl(0 0% 3.9%)',
     cardForeground: 'hsl(0 0% 98%)',
     popover: 'hsl(0 0% 3.9%)',
     popoverForeground: 'hsl(0 0% 98%)',
-    primary: 'hsl(234 73% 54%)',
-    primaryForeground: 'hsl(234 100% 93%)',
+    primary: 'hsl(214 91% 45%)',
+    primaryForeground: 'hsl(100 100% 100%)',
     secondary: 'hsl(0 0% 96%)',
     secondaryForeground: 'hsl(0 0% 0%)',
     muted: 'hsl(235 5% 18%)',

@@ -135,20 +135,18 @@ export const UnitSheet = ({
           dismissButton={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
           }
-          button={
-            <ConfirmButton onPress={handleConfirm} disabled={!isValid} />
-          }
+          button={<ConfirmButton onPress={handleConfirm} disabled={!isValid} />}
         />
 
         <View>
           <View className="px-4">
-            <View className="mb-4 flex-row items-center justify-between gap-3 rounded-xl border border-border bg-muted px-4 py-3 ">
+            <View className="mb-4 flex-row items-center justify-between gap-3 rounded-xl bg-muted px-4 py-3 ">
               <TextInput
                 ref={quantityInputRef}
                 value={localQuantity}
                 onChangeText={handleQuantityChange}
                 keyboardType="number-pad"
-                className="flex-1 text-2xl font-bold text-foreground"
+                className="flex-1 text-2xl font-bold leading-7 text-foreground"
                 placeholder="1"
                 placeholderTextColor="#9ca3af"
                 selectTextOnFocus

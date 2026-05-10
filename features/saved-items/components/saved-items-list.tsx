@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Alert, FlatList, View } from 'react-native';
+import { Alert, FlatList, Platform, View } from 'react-native';
 
 import { CategoryTag } from '../../../components/category-tag';
 import { StoreTag } from '../../../components/store-tag';
@@ -31,6 +31,12 @@ const SavedItemRow = ({
   onDelete,
   onPress,
 }: SavedItemRowProps) => {
+  const notes = item.notes?.trim();
+  const compactTextStyle = Platform.select({
+    android: { includeFontPadding: false },
+    default: undefined,
+  });
+
   const handleConfirmDelete = () => {
     Alert.alert(
       'Delete Saved Item',
@@ -52,14 +58,30 @@ const SavedItemRow = ({
           <HapticPressable
             onPress={onPress}
             hapticType="light"
-            className="flex-1 flex-col gap-1 py-1"
+            className="flex-1 gap-1 py-1"
           >
-            <Text className="text-base font-medium text-foreground">
-              {item.name}
-            </Text>
-            <View className="flex-row gap-1">
-              {item.store && <StoreTag name={item.store.name} />}
+            <View className="flex-row items-center justify-between gap-2">
+              <View className="flex-1 flex-row pr-2">
+                <Text
+                  className="text-xl leading-[22px] tracking-tight text-foreground"
+                  style={compactTextStyle}
+                  numberOfLines={1}
+                >
+                  {item.name}
+                </Text>
+              </View>
               {item.category && <CategoryTag category={item.category} />}
+            </View>
+            {notes ? (
+              <Text
+                className="text-base leading-[18px] text-muted-foreground"
+                style={compactTextStyle}
+              >
+                {notes}
+              </Text>
+            ) : null}
+            <View className="flex-row items-center gap-2">
+              {item.store && <StoreTag name={item.store.name} />}
             </View>
           </HapticPressable>
         </ListItem>

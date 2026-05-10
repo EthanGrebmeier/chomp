@@ -21,14 +21,10 @@ export default function SignIn() {
         <BackButton />
       </View>
 
-      <View className="w-full flex-1 items-center justify-center gap-20 px-4">
-        <View className="w-full items-center justify-center">
-          <Text variant="h1" className="uppercase text-primary">
-            Sign In
-          </Text>
-          <Text className="font-averia-serif-libre text-xl">
-            Choose how you want to continue
-          </Text>
+      <View className="w-full flex-1 items-center justify-between gap-20 px-4">
+        <View className="w-full">
+          <Text variant="h1">Sign In</Text>
+          <Text className="text-lg">Choose how you want to continue</Text>
         </View>
 
         <View className="w-full items-center justify-end gap-4 pb-12">
