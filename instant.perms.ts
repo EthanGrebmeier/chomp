@@ -87,6 +87,15 @@ const rules = {
       update: 'isOwner',
     },
   },
+  meal_plan_recipe_ingredient_snapshots: {
+    bind: ['isOwner', "auth.id in data.ref('meal_plan_recipe.grocery_list.shares.user_id')"],
+    allow: {
+      view: 'isOwner',
+      create: 'isOwner',
+      delete: 'isOwner',
+      update: 'isOwner',
+    },
+  },
   saved_items: {
     bind: ['isOwner', "auth.id in data.ref('user.id')"],
     allow: {

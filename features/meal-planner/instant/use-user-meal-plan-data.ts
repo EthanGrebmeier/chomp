@@ -14,6 +14,7 @@ export const useMealPlanData = (listId?: string) => {
             store: {},
           },
         },
+        ingredient_snapshots: {},
       },
       meal_plan_items: {
         store: {},

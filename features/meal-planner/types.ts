@@ -7,6 +7,10 @@ import { MealPlanIngredientSnapshotCreateInput } from './meal-plan-recipe-ingred
 
 export type MealPlanRecipe = InstaQLEntity<typeof schema, 'meal_plan_recipes'>;
 export type MealPlanItem = InstaQLEntity<typeof schema, 'meal_plan_items'>;
+export type MealPlanRecipeIngredientSnapshot = InstaQLEntity<
+  typeof schema,
+  'meal_plan_recipe_ingredient_snapshots'
+>;
 
 export type MealPlanItemWithStore = MealPlanItem & {
   store?: Store;
@@ -22,6 +26,7 @@ export type MealTag =
 
 export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
   recipe: RecipeWithIngredients;
+  ingredient_snapshots?: MealPlanRecipeIngredientSnapshot[];
 };
 
 export type AddRecipeToDateArgs = {

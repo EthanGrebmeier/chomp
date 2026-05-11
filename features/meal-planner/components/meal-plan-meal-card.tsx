@@ -11,20 +11,20 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { Recipe } from '../../recipes/types';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
-import { MealPlanRecipe } from '../types';
+import { MealPlanRecipeWithRecipe } from '../types';
 
 type MealPlanMealCardProps = {
-  mealPlanRecipe: MealPlanRecipe;
+  mealPlanRecipe: MealPlanRecipeWithRecipe;
   recipe: Recipe;
   isLast: boolean;
   onMealPress: ({
     mealPlanRecipe,
     recipe,
   }: {
-    mealPlanRecipe: MealPlanRecipe;
+    mealPlanRecipe: MealPlanRecipeWithRecipe;
     recipe: Recipe;
   }) => void;
-  onIndicatorPress: (mealPlanRecipe: MealPlanRecipe) => void;
+  onIndicatorPress: (mealPlanRecipe: MealPlanRecipeWithRecipe) => void;
 };
 
 const MealPlanMealCard = ({
@@ -38,9 +38,16 @@ const MealPlanMealCard = ({
   const recipeWithIngredients = recipe as unknown as {
     recipe_ingredients?: unknown[];
   };
-  const ingredientCount = Array.isArray(recipeWithIngredients.recipe_ingredients)
-    ? recipeWithIngredients.recipe_ingredients.length
-    : undefined;
+  const selectedIngredientCount = mealPlanRecipe.ingredient_snapshots?.filter(
+    snapshot => snapshot.isSelected
+  ).length;
+  const ingredientCount =
+    typeof selectedIngredientCount === 'number' &&
+    (mealPlanRecipe.ingredient_snapshots?.length ?? 0) > 0
+      ? selectedIngredientCount
+      : Array.isArray(recipeWithIngredients.recipe_ingredients)
+        ? recipeWithIngredients.recipe_ingredients.length
+        : undefined;
 
   const handleDelete = () => {
     Alert.alert(

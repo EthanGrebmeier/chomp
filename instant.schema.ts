@@ -59,6 +59,16 @@ const _schema = i.schema({
       notes: i.string().optional(),
       category: i.string().optional(),
     }),
+    meal_plan_recipe_ingredient_snapshots: i.entity({
+      sourceRecipeIngredientId: i.string().indexed(),
+      name: i.string(),
+      quantity: i.number(),
+      unit: i.string(),
+      notes: i.string().optional(),
+      category: i.string().optional(),
+      isSelected: i.boolean(),
+      isQuantityOverridden: i.boolean(),
+    }),
     meal_plan_recipes: i.entity({
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string(),
@@ -162,6 +172,31 @@ const _schema = i.schema({
         on: 'grocery_lists',
         has: 'many',
         label: 'meal_plan_recipes',
+      },
+    },
+    meal_plan_recipe_ingredient_snapshots_meal_plan_recipes: {
+      forward: {
+        on: 'meal_plan_recipe_ingredient_snapshots',
+        has: 'one',
+        label: 'meal_plan_recipe',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: 'meal_plan_recipes',
+        has: 'many',
+        label: 'ingredient_snapshots',
+      },
+    },
+    meal_plan_recipe_ingredient_snapshots_stores: {
+      forward: {
+        on: 'meal_plan_recipe_ingredient_snapshots',
+        has: 'one',
+        label: 'store',
+      },
+      reverse: {
+        on: 'stores',
+        has: 'many',
+        label: 'meal_plan_recipe_ingredient_snapshots',
       },
     },
     meal_plan_items_grocery_lists: {
