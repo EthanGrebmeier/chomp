@@ -182,6 +182,7 @@
       "tickets": [
         {
           "id": "P3-T1",
+          "status": "done",
           "title": "Add per-meal ingredient review entrypoints in bulk selector",
           "summary": "Enhance the meal-plan bulk add sheet so recipe rows provide an explicit review/edit action that opens the shared meal-plan ingredient editor before submission.",
           "acceptanceCriteria": [
