@@ -206,6 +206,7 @@
         },
         {
           "id": "P3-T2",
+          "status": "done",
           "title": "Wire bulk add-to-list to shared snapshot projection",
           "summary": "Refactor meal-plan bulk add logic to project grocery add inputs from MealPlanToListProjection, including lazy backfill and reconciliation, while preserving existing added/unadded state transitions and stacking integration.",
           "acceptanceCriteria": [

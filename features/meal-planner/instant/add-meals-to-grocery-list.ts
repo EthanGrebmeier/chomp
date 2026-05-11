@@ -6,6 +6,8 @@ import {
   addIngredientsWithStacking,
   StackableIngredientInput,
 } from '../../recipes/instant/stack-recipe-ingredients';
+import { MealPlanIngredientSnapshotStore } from './meal-plan-ingredient-snapshot-store';
+import { projectMealPlanRecipeToListInputs } from './meal-plan-to-list-projection';
 
 export type AddMealsToGroceryListArgs = {
   listId: string;
@@ -48,7 +50,7 @@ export const addMealsToGroceryList = async ({
   const mealPlanData = result.data.grocery_lists?.[0];
 
   const now = new Date().toISOString();
-  const updateTransactions = [];
+  const updateTransactions: Parameters<typeof db.transact>[0] = [];
   const ingredientsToAdd: StackableIngredientInput[] = [];
 
   // Filter for recipes that haven't been added to a list yet
@@ -82,21 +84,26 @@ export const addMealsToGroceryList = async ({
     const recipe = mealPlanRecipe.recipe;
     if (!recipe) continue;
 
-    const ingredients = recipe.recipe_ingredients || [];
-    const servings = mealPlanRecipe.servings || 1;
+    const sourceIngredients = recipe.recipe_ingredients || [];
+    const snapshotRows = await MealPlanIngredientSnapshotStore.ensureBackfilledSnapshot(
+      mealPlanRecipe.id
+    );
+    const reconciledRows = await MealPlanIngredientSnapshotStore.reconcileSnapshot(
+      mealPlanRecipe.id
+    );
+    const projectionRows =
+      reconciledRows.length > 0 || snapshotRows.length === 0
+        ? reconciledRows
+        : snapshotRows;
 
-    for (const ingredient of ingredients) {
-      ingredientsToAdd.push({
-        name: ingredient.name,
-        quantity: ingredient.quantity * servings,
-        unit: ingredient.unit,
-        notes: ingredient.notes,
-        category: ingredient.category,
-        storeName: ingredient.store?.name,
-        storeId: ingredient.store?.id,
+    ingredientsToAdd.push(
+      ...projectMealPlanRecipeToListInputs({
         recipeId: recipe.id,
-      });
-    }
+        servings: mealPlanRecipe.servings || 1,
+        sourceIngredients,
+        snapshotRows: projectionRows,
+      })
+    );
 
     // Mark the meal plan recipe as added to list
     updateTransactions.push(
