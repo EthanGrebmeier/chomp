@@ -1,0 +1,345 @@
+{
+  "planName": "Meal Plan Recipe Ingredient Selection",
+  "sourcePrd": "plans/meal-plan-ingredient-selection/prd.md",
+  "lastUpdated": "2026-05-10",
+  "architecturalDecisions": [
+    {
+      "id": "AD-1",
+      "title": "Meal-level ingredient snapshot child model",
+      "decision": "Each meal_plan_recipes entry owns a one-to-many child snapshot collection containing concrete ingredient rows and selection state, preserving meal-specific intent independently from recipe_ingredients."
+    },
+    {
+      "id": "AD-2",
+      "title": "Snapshot identity and reconciliation",
+      "decision": "Snapshot rows are keyed to source recipe ingredient ids for deterministic reconciliation; new source ingredients auto-append as selected and deleted source ingredients are removed from snapshots."
+    },
+    {
+      "id": "AD-3",
+      "title": "Shared selector and editor contracts",
+      "decision": "IngredientSelector remains a shared component with explicit mode configuration, while meal-plan ingredient editing state lives in a dedicated MealPlanRecipeIngredientEditor module used by add, edit, bulk review, and quick review surfaces."
+    },
+    {
+      "id": "AD-4",
+      "title": "Single projection pathway",
+      "decision": "All meal-plan recipe add-to-list actions (bulk and single-meal quick add) call a shared MealPlanToListProjection module that emits grocery stacking inputs from meal snapshots instead of direct recipe_ingredients reads."
+    },
+    {
+      "id": "AD-5",
+      "title": "Override quantity semantics",
+      "decision": "Snapshot rows track whether quantity is explicitly overridden; overridden quantities remain absolute across servings changes while non-overridden rows continue recipe-based scaling."
+    },
+    {
+      "id": "AD-6",
+      "title": "Legacy compatibility via lazy backfill",
+      "decision": "Existing meal_plan_recipes records without snapshots are initialized lazily when first entering add-to-list behavior, avoiding an eager migration script."
+    },
+    {
+      "id": "AD-7",
+      "title": "Ownership and permissions alignment",
+      "decision": "Snapshot entities follow the same grocery-list membership ownership model as meal_plan_recipes so create/update/delete operations are authorized for list members and denied for non-members."
+    },
+    {
+      "id": "AD-8",
+      "title": "Stacking behavior continuity",
+      "decision": "Meal-plan add-to-list continues using existing metadata-aware stacking behavior, with conflict handling and payload fields preserved while inputs are sourced from snapshot projection."
+    }
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "title": "Snapshot foundation and lazy backfill",
+      "userStories": [
+        "Story 7: ingredient choices saved per meal-plan entry",
+        "Story 12: add-to-list uses meal snapshot instead of live recipe ingredients",
+        "Story 15: recipe ingredient identity tracked by recipe ingredient id",
+        "Story 20: older meal entries backfill automatically on first add-to-list",
+        "Story 21: snapshot persistence isolated behind a focused module contract",
+        "Story 22: projection contract isolated in a pure module"
+      ],
+      "tickets": [
+        {
+          "id": "P1-T1",
+          "title": "Add snapshot schema, links, and permission rules",
+          "summary": "Introduce a new InstantDB child entity for meal-plan recipe ingredient snapshots, including links to meal-plan recipes and optional store references, plus permission rules aligned with current meal_plan_recipes ownership semantics.",
+          "acceptanceCriteria": [
+            "Schema defines a meal-plan ingredient snapshot entity with fields required to persist full ingredient row values, selection state, source recipe ingredient id, and override metadata",
+            "Schema defines a one-to-many link between meal_plan_recipes and snapshot rows with cascade semantics that prevent orphan rows",
+            "Schema keeps store linkage optional so existing ingredient-store behavior can be preserved",
+            "Permissions allow members with access to the parent meal_plan_recipes row to view/create/update/delete snapshot rows and deny unrelated users",
+            "Schema and permissions compile without type errors"
+          ],
+          "dependencies": [],
+          "testPlan": [
+            "pnpm lint",
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": [
+            "UI integration",
+            "Projection wiring"
+          ]
+        },
+        {
+          "id": "P1-T2",
+          "title": "Implement snapshot store and lazy backfill contract",
+          "summary": "Create MealPlanIngredientSnapshotStore to initialize snapshots from recipe ingredients, reconcile by source ingredient id, and lazily backfill legacy meal entries when snapshot data is missing at add-to-list time.",
+          "acceptanceCriteria": [
+            "Store exposes stable operations to initialize, read, update row selection, update row overrides, and reconcile a meal snapshot",
+            "Backfill path creates snapshot rows for legacy meal_plan_recipes entries with no snapshot data only when needed by add-to-list flows",
+            "Reconciliation appends newly added source ingredients as selected rows while removing rows whose source ingredient no longer exists",
+            "Row order is preserved in recipe ingredient order after initialization and reconciliation",
+            "Store logic is reusable from both bulk and single-meal add-to-list pathways"
+          ],
+          "dependencies": [
+            "P1-T1"
+          ],
+          "testPlan": [
+            "pnpm lint",
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": [
+            "Secondary ingredient edit sheet UI"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Add-to-meal ingredient selection and edit-meal persistence",
+      "userStories": [
+        "Story 1: choose ingredients while adding a recipe to meal plan",
+        "Story 2: all ingredients selected by default",
+        "Story 3: deselect ingredient rows",
+        "Story 4: edit selected ingredient in a second sheet",
+        "Story 5: edit name, quantity, unit, notes, category, and store overrides",
+        "Story 6: ingredient rows shown in original recipe order",
+        "Story 8: reopen Edit Meal and revise ingredient choices",
+        "Story 13: overridden quantities stay fixed across servings changes",
+        "Story 14: non-overridden ingredients continue servings behavior",
+        "Story 18: post-add edits affect future re-adds"
+      ],
+      "tickets": [
+        {
+          "id": "P2-T1",
+          "title": "Extend selector/editor state for meal-plan mode",
+          "summary": "Evolve IngredientSelector and a dedicated MealPlanRecipeIngredientEditor state module so add-meal and edit-meal flows can display ordered ingredient checklists with default selection and persistent per-row editing state.",
+          "acceptanceCriteria": [
+            "Selector supports a meal-plan mode with explicit props for selection state, row editing entrypoints, and persistence callbacks",
+            "When adding a recipe to a meal plan, all source ingredients start selected and render in source order",
+            "Toggling row selection updates meal snapshot state without affecting base recipe_ingredients",
+            "Editor state model can hydrate from existing snapshots and from fresh initialization",
+            "Selector behavior for existing add-item/add-to-list recipe flow remains functional"
+          ],
+          "dependencies": [
+            "P1-T2"
+          ],
+          "testPlan": [
+            "pnpm lint",
+            "pnpm tsc --noEmit",
+            "Manual: add a recipe to meal plan, deselect two rows, save, reopen edit meal and confirm the same rows remain deselected"
+          ],
+          "outOfScope": [
+            "Bulk add-to-list review UI"
+          ]
+        },
+        {
+          "id": "P2-T2",
+          "title": "Build secondary ingredient override sheet and save semantics",
+          "summary": "Add a secondary meal-plan ingredient edit sheet that updates snapshot row values for name, quantity, unit, notes, category, and store while preserving override semantics for servings behavior.",
+          "acceptanceCriteria": [
+            "Each ingredient row in meal-plan mode exposes an edit action that opens a secondary sheet",
+            "Secondary sheet can edit name, quantity, unit, notes, category, and store for a snapshot row",
+            "Saving marks quantity override state so future servings changes do not rescale overridden quantities",
+            "Non-overridden rows continue scaling behavior based on servings changes",
+            "Edits persist per meal_plan_recipes entry and survive closing/reopening the meal edit experience"
+          ],
+          "dependencies": [
+            "P2-T1"
+          ],
+          "testPlan": [
+            "pnpm lint",
+            "pnpm tsc --noEmit",
+            "Manual: edit one row quantity and one row notes, change meal servings, verify overridden quantity stays fixed and non-overridden rows rescale"
+          ],
+          "outOfScope": [
+            "Quick-add review modal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Projection-driven bulk add-to-list with per-meal review",
+      "userStories": [
+        "Story 9: bulk add flow exposes per-meal ingredient review/edit",
+        "Story 11: quick/bulk review supports full per-ingredient editing capability",
+        "Story 12: add-to-list uses snapshot projection",
+        "Story 19: meal-plan add-to-list stacks by normal matching rules"
+      ],
+      "tickets": [
+        {
+          "id": "P3-T1",
+          "title": "Add per-meal ingredient review entrypoints in bulk selector",
+          "summary": "Enhance the meal-plan bulk add sheet so recipe rows provide an explicit review/edit action that opens the shared meal-plan ingredient editor before submission.",
+          "acceptanceCriteria": [
+            "Bulk add sheet recipe rows include a clear review/edit affordance in addition to selection toggles",
+            "Review/edit surface opens with the meal's persisted snapshot state and supports selection plus per-row overrides",
+            "Changes made in review/edit are saved back to the snapshot store before bulk submission",
+            "Skipping a meal in the bulk list still marks it as added without creating grocery items, matching existing behavior",
+            "Item-only meal_plan_items behavior remains unchanged"
+          ],
+          "dependencies": [
+            "P2-T2"
+          ],
+          "testPlan": [
+            "pnpm lint",
+            "pnpm tsc --noEmit",
+            "Manual: open bulk add sheet, edit one meal ingredient selection, submit, and confirm resulting grocery items reflect the edit"
+          ],
+          "outOfScope": [
+            "Single-meal quick add modal"
+          ]
+        },
+        {
+          "id": "P3-T2",
+          "title": "Wire bulk add-to-list to shared snapshot projection",
+          "summary": "Refactor meal-plan bulk add logic to project grocery add inputs from MealPlanToListProjection, including lazy backfill and reconciliation, while preserving existing added/unadded state transitions and stacking integration.",
+          "acceptanceCriteria": [
+            "Bulk add pipeline reads snapshot rows (not recipe_ingredients directly) to produce stackable grocery inputs",
+            "Bulk add invokes lazy backfill and reconciliation before projection when snapshot state is missing or stale",
+            "Selected and skipped recipe handling remains externally unchanged in API and UI behavior",
+            "Produced add payload still routes through existing metadata-aware stacking module",
+            "addedToList and addedToListAt fields update consistently for selected and skipped entries"
+          ],
+          "dependencies": [
+            "P3-T1"
+          ],
+          "testPlan": [
+            "pnpm lint",
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": [
+            "Indicator quick-add experience"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Single-meal quick add review parity",
+      "userStories": [
+        "Story 10: single-meal quick add opens review first",
+        "Story 11: quick review has full per-ingredient editing capability",
+        "Story 12: quick add uses snapshot projection",
+        "Story 18: post-add edits affect future re-add attempts"
+      ],
+      "tickets": [
+        {
+          "id": "P4-T1",
+          "title": "Add single-meal quick review modal flow",
+          "summary": "Introduce a quick-review surface for single-meal add actions from meal-plan cards/checkmarks so users can confirm and edit ingredient snapshots before adding a specific meal to the grocery list.",
+          "acceptanceCriteria": [
+            "Triggering add for an unadded meal-plan recipe opens a quick review modal instead of immediate submission",
+            "Quick review uses the same selection and per-ingredient override capabilities as bulk review",
+            "User can confirm add or cancel without mutating addedToList state when cancelled",
+            "After confirm, only that meal entry is marked added and projected into grocery add inputs",
+            "Already-added meals still support mark-as-unadded flow"
+          ],
+          "dependencies": [
+            "P3-T2"
+          ],
+          "testPlan": [
+            "pnpm lint",
+            "pnpm tsc --noEmit",
+            "Manual: tap meal check indicator, adjust one ingredient in review, confirm, and verify toast plus grocery list output"
+          ],
+          "outOfScope": [
+            "Bulk add sheet redesign"
+          ]
+        },
+        {
+          "id": "P4-T2",
+          "title": "Unify quick and bulk add through one projection contract",
+          "summary": "Ensure both quick and bulk meal add flows call the same projection and snapshot-store contracts so behavior is deterministic across entrypoints and future edits apply consistently.",
+          "acceptanceCriteria": [
+            "Quick add and bulk add call the same MealPlanToListProjection API",
+            "Projection output shape is shared between quick and bulk callsites",
+            "Both callsites run reconciliation/backfill through shared snapshot-store utilities",
+            "Conflict handling and stacking path remain consistent across both entrypoints",
+            "No duplicate projection logic remains in callsites"
+          ],
+          "dependencies": [
+            "P4-T1"
+          ],
+          "testPlan": [
+            "pnpm lint",
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": [
+            "New user settings for quick-add behavior"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Reconciliation and projection contract tests",
+      "userStories": [
+        "Story 12: add-to-list honors saved meal snapshot",
+        "Story 13: overridden quantities remain fixed when servings change",
+        "Story 14: non-overridden ingredients still scale",
+        "Story 16: newly added recipe ingredients auto-include",
+        "Story 17: deleted recipe ingredients are removed from snapshot",
+        "Story 19: stacking payload behavior remains predictable",
+        "Story 22: projection behavior is encapsulated and testable"
+      ],
+      "tickets": [
+        {
+          "id": "P5-T1",
+          "title": "Add pure projection contract test suite",
+          "summary": "Create focused tests for MealPlanToListProjection as a pure module, covering selection filtering, override precedence, servings behavior, reconciliation outcomes, and downstream stacking payload correctness.",
+          "acceptanceCriteria": [
+            "Tests verify unselected snapshot rows are excluded from output",
+            "Tests verify snapshot override values win over source recipe values",
+            "Tests verify overridden quantity remains absolute while non-overridden quantity scales with servings",
+            "Tests verify reconciliation adds new source ingredients and removes deleted source ingredients deterministically by source id",
+            "Tests verify output payload fields align with existing stacking module requirements"
+          ],
+          "dependencies": [
+            "P4-T2"
+          ],
+          "testPlan": [
+            "pnpm vitest features/meal-planner --run",
+            "pnpm lint",
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": [
+            "End-to-end UI automation"
+          ]
+        },
+        {
+          "id": "P5-T2",
+          "title": "Manual integration validation checklist",
+          "summary": "Run an integration pass across add-meal, edit-meal, bulk add, and quick add paths to verify real-world behavior aligns with PRD requirements for persistence, reconciliation, and re-add semantics.",
+          "acceptanceCriteria": [
+            "Legacy meal entry with no snapshot can be added to list and backfills automatically",
+            "Editing a meal snapshot after add affects future re-add behavior after unmarking added state",
+            "Bulk and quick add produce equivalent ingredient outcomes for the same meal snapshot",
+            "Recipe ingredient addition/removal is reflected in existing meal snapshot behavior on next projection",
+            "No regressions in meal_plan_items add-to-list behavior"
+          ],
+          "dependencies": [
+            "P5-T1"
+          ],
+          "testPlan": [
+            "Manual: execute checklist for add, edit, quick add, bulk add, unmark-and-readd, and recipe evolution scenarios",
+            "pnpm lint",
+            "pnpm tsc --noEmit"
+          ],
+          "outOfScope": [
+            "Standalone meal_plan_items feature expansion"
+          ]
+        }
+      ]
+    }
+  ]
+}
