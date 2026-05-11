@@ -4,3 +4,4 @@
 2026-05-10 [P2-T2]: Added a secondary meal-plan ingredient override sheet and wired add/edit meal flows to save snapshot row name/quantity/unit/notes/category/store updates with quantity-override semantics.
 2026-05-10 [P3-T1]: Added bulk add recipe review entrypoints with a dedicated ingredient review sheet that hydrates/reconciles snapshots and persists per-row selection and override edits before submission.
 2026-05-10 [P3-T2]: Wired bulk add-to-list through a shared meal snapshot projection module so add inputs come from reconciled/backfilled snapshot rows while preserving selected/skipped state transitions and stacking flow.
+2026-05-10 [P4-T1]: Added a single-meal quick-review sheet for recipe checkmark adds with full ingredient selection and override editing, requiring confirm/cancel before marking the meal added.

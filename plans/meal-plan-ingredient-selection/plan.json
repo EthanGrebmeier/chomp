@@ -241,6 +241,7 @@
       "tickets": [
         {
           "id": "P4-T1",
+          "status": "done",
           "title": "Add single-meal quick review modal flow",
           "summary": "Introduce a quick-review surface for single-meal add actions from meal-plan cards/checkmarks so users can confirm and edit ingredient snapshots before adding a specific meal to the grocery list.",
           "acceptanceCriteria": [
