@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { CategoryTag } from '../../../components/category-tag';
@@ -44,39 +44,54 @@ const IngredientRow = ({
   isSelected,
   onToggle,
 }: IngredientRowProps) => {
+  const compactTextStyle = Platform.select({
+    android: { includeFontPadding: false },
+    default: undefined,
+  });
+
   return (
-    <ListItem className={cn('gap-2 py-2', className)}>
-      <Checkbox checked={isSelected} onPress={onToggle} className="mr-2" />
+    <ListItem className={cn('py-1', className)}>
+      <Checkbox checked={isSelected} onPress={onToggle} className="mr-1" />
       <HapticPressable
         onPress={onToggle}
         hapticType="selection"
-        className="flex-1 gap-1"
+        className="flex-1 gap-1 py-1"
       >
-        <View className="flex-row items-start justify-between">
-          <View className="min-w-0 flex-1 pr-2">
+        <View className="flex-row items-center justify-between">
+          <View className="relative flex-1 flex-row gap-2 pr-2">
             <Text
               className={cn(
-                'text-xl font-medium leading-none text-foreground',
+                'text-xl leading-[22px] tracking-tight text-foreground',
                 !isSelected && 'text-muted-foreground'
               )}
+              style={compactTextStyle}
             >
               {ingredient.name}
+              {'  '}
+              <Text
+                className={cn(
+                  'text-base leading-[22px] text-muted-foreground',
+                  !isSelected && 'opacity-80'
+                )}
+                style={compactTextStyle}
+              >
+                {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
+              </Text>
             </Text>
           </View>
-          <Text className="shrink-0 text-lg leading-5 text-muted-foreground">
-            {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
-          </Text>
+          {ingredient.category ? <CategoryTag category={ingredient.category} /> : null}
         </View>
         {ingredient.notes ? (
-          <Text className="text-sm leading-none text-muted-foreground">
+          <Text
+            className={cn(
+              'text-base leading-[18px] text-muted-foreground',
+              !isSelected && 'opacity-80'
+            )}
+            style={compactTextStyle}
+          >
             {ingredient.notes}
           </Text>
         ) : null}
-        <View className="flex-row items-center gap-2">
-          {ingredient.category ? (
-            <CategoryTag category={ingredient.category} />
-          ) : null}
-        </View>
       </HapticPressable>
     </ListItem>
   );

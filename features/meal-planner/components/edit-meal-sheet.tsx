@@ -274,6 +274,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
               <RecipeSelector
                 onSelectRecipe={handleRecipeChange}
                 onDismiss={() => changeRecipeSheetRef.current?.dismiss()}
+                fillHeight
               />
             </View>
           </View>

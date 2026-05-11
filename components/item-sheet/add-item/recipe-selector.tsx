@@ -26,11 +26,13 @@ import { CreateRecipeInlineButton } from './create-recipe-inline-button';
 type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
   onDismiss?: () => void;
+  fillHeight?: boolean;
 };
 
 export const RecipeSelector = ({
   onSelectRecipe,
   onDismiss,
+  fillHeight = false,
 }: RecipeSelectorProps) => {
   const { data: recipes, isLoading } = useRecipes();
   const { mutate: createRecipe } = useCreateRecipe();
@@ -122,7 +124,7 @@ export const RecipeSelector = ({
   }
 
   return (
-    <View className="flex-1 pb-6">
+    <View className={cn(fillHeight ? 'flex-1 pb-6' : 'pb-6')}>
       <RecipeFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -154,7 +156,7 @@ export const RecipeSelector = ({
         </Animated.View>
       ) : (
         <FlatList
-          className="flex-1"
+          className={cn(fillHeight && 'flex-1')}
           data={filteredRecipes}
           keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
