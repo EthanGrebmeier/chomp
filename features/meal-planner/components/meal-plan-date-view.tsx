@@ -22,6 +22,7 @@ import {
   toggleAllMealPlanIngredientSelection,
   toggleMealPlanIngredientSelection,
 } from '../meal-plan-recipe-ingredient-editor';
+import { getReconciledMealPlanSnapshotRows } from '../instant/get-reconciled-meal-plan-snapshot-rows';
 import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
 import {
   MealPlanItemWithStore,
@@ -93,17 +94,13 @@ export const MealPlanDateView = ({
       if (!quickReviewMealPlanRecipe || !quickReviewRecipe) {
         return [];
       }
-      const snapshotRows =
-        await MealPlanIngredientSnapshotStore.ensureBackfilledSnapshot(
-          quickReviewMealPlanRecipe.id
-        );
-      const reconciledRows = await MealPlanIngredientSnapshotStore.reconcileSnapshot(
+      const snapshotRows = await getReconciledMealPlanSnapshotRows(
         quickReviewMealPlanRecipe.id
       );
 
       return hydrateMealPlanIngredientEditorFromSnapshot({
         sourceIngredients: quickReviewRecipe.recipe_ingredients ?? [],
-        snapshotRows: reconciledRows.length > 0 ? reconciledRows : snapshotRows,
+        snapshotRows,
       });
     },
   });

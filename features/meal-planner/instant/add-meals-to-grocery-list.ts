@@ -6,7 +6,7 @@ import {
   addIngredientsWithStacking,
   StackableIngredientInput,
 } from '../../recipes/instant/stack-recipe-ingredients';
-import { MealPlanIngredientSnapshotStore } from './meal-plan-ingredient-snapshot-store';
+import { getReconciledMealPlanSnapshotRows } from './get-reconciled-meal-plan-snapshot-rows';
 import { projectMealPlanRecipeToListInputs } from './meal-plan-to-list-projection';
 
 export type AddMealsToGroceryListArgs = {
@@ -85,16 +85,9 @@ export const addMealsToGroceryList = async ({
     if (!recipe) continue;
 
     const sourceIngredients = recipe.recipe_ingredients || [];
-    const snapshotRows = await MealPlanIngredientSnapshotStore.ensureBackfilledSnapshot(
+    const projectionRows = await getReconciledMealPlanSnapshotRows(
       mealPlanRecipe.id
     );
-    const reconciledRows = await MealPlanIngredientSnapshotStore.reconcileSnapshot(
-      mealPlanRecipe.id
-    );
-    const projectionRows =
-      reconciledRows.length > 0 || snapshotRows.length === 0
-        ? reconciledRows
-        : snapshotRows;
 
     ingredientsToAdd.push(
       ...projectMealPlanRecipeToListInputs({

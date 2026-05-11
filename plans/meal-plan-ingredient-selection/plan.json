@@ -265,6 +265,7 @@
         },
         {
           "id": "P4-T2",
+          "status": "done",
           "title": "Unify quick and bulk add through one projection contract",
           "summary": "Ensure both quick and bulk meal add flows call the same projection and snapshot-store contracts so behavior is deterministic across entrypoints and future edits apply consistently.",
           "acceptanceCriteria": [
