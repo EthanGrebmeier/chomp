@@ -1,9 +1,11 @@
 import { useRouter } from 'expo-router';
+import { PencilLineIcon } from 'lucide-react-native';
 import {
   forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -27,6 +29,7 @@ import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
 import { ExternalLinkButton } from '../../ui/external-link-button';
 import { HapticPressable } from '../../ui/haptic-pressable';
+import { Icon } from '../../ui/icon';
 import { ListItem } from '../../ui/list-item';
 import { Text } from '../../ui/text';
 import { formatQuantityUnit } from '../unit-utils';
@@ -36,6 +39,7 @@ type IngredientRowProps = {
   ingredient: RecipeIngredient;
   isSelected: boolean;
   onToggle: () => void;
+  onEdit?: () => void;
 };
 
 const IngredientRow = ({
@@ -43,6 +47,7 @@ const IngredientRow = ({
   ingredient,
   isSelected,
   onToggle,
+  onEdit,
 }: IngredientRowProps) => {
   const compactTextStyle = Platform.select({
     android: { includeFontPadding: false },
@@ -93,8 +98,21 @@ const IngredientRow = ({
           </Text>
         ) : null}
       </HapticPressable>
+      {onEdit ? (
+        <HapticPressable
+          onPress={onEdit}
+          hapticType="selection"
+          className="rounded-md p-2"
+        >
+          <Icon as={PencilLineIcon} size={16} className="text-muted-foreground" />
+        </HapticPressable>
+      ) : null}
     </ListItem>
   );
+};
+
+type MealPlanSelectableIngredient = RecipeIngredient & {
+  sourceRecipeIngredientId?: string;
 };
 
 type IngredientSelectorProps = {
@@ -110,6 +128,12 @@ type IngredientSelectorProps = {
   onAddToList?: () => void;
   isAdding?: boolean;
   onBusyStateChange?: (isBusy: boolean) => void;
+  mode?: 'add-to-list' | 'meal-plan';
+  mealPlanIngredients?: MealPlanSelectableIngredient[];
+  onPersistSelection?: (selectedIds: Set<string>) => void;
+  onEditIngredient?: (id: string) => void;
+  showHeader?: boolean;
+  headerTitle?: string;
 };
 
 export type IngredientSelectorRef = {
@@ -143,15 +167,37 @@ export const IngredientSelector = forwardRef<
     onAddToList,
     isAdding,
     onBusyStateChange,
+    mode = 'add-to-list',
+    mealPlanIngredients,
+    onPersistSelection,
+    onEditIngredient,
+    showHeader = true,
+    headerTitle,
   }: IngredientSelectorProps,
   ref
 ) {
   const router = useRouter();
+  const ingredients = useMemo<MealPlanSelectableIngredient[]>(
+    () =>
+      mealPlanIngredients ??
+      recipe.recipe_ingredients.map(ingredient => ({
+        ...ingredient,
+        sourceRecipeIngredientId: ingredient.id,
+      })),
+    [mealPlanIngredients, recipe.recipe_ingredients]
+  );
+  const ingredientIds = useMemo(
+    () =>
+      ingredients.map(
+        ingredient => ingredient.sourceRecipeIngredientId ?? ingredient.id
+      ),
+    [ingredients]
+  );
   const isControlled = Boolean(
     selectedIds && onToggleIngredient && onToggleAll
   );
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(
-    new Set(recipe.recipe_ingredients.map(ingredient => ingredient.id))
+    new Set(ingredientIds)
   );
   const [isAddingInternal, setIsAddingInternal] = useState(false);
   const [isResolvingConflict, setIsResolvingConflict] = useState(false);
@@ -163,17 +209,16 @@ export const IngredientSelector = forwardRef<
   useEffect(() => {
     if (!isControlled) {
       setInternalSelectedIds(
-        new Set(recipe.recipe_ingredients.map(ingredient => ingredient.id))
+        new Set(ingredientIds)
       );
     }
-  }, [isControlled, recipe.recipe_ingredients]);
+  }, [ingredientIds, isControlled]);
 
   const effectiveSelectedIds = isControlled
     ? (selectedIds as Set<string>)
     : internalSelectedIds;
 
-  const allSelected =
-    effectiveSelectedIds.size === recipe.recipe_ingredients.length;
+  const allSelected = effectiveSelectedIds.size === ingredients.length;
 
   const handleGoToRecipe = () => {
     onDismiss();
@@ -182,7 +227,14 @@ export const IngredientSelector = forwardRef<
 
   const handleToggleIngredient = (id: string) => {
     if (isControlled) {
+      const nextSelected = new Set(effectiveSelectedIds);
+      if (nextSelected.has(id)) {
+        nextSelected.delete(id);
+      } else {
+        nextSelected.add(id);
+      }
       onToggleIngredient?.(id);
+      onPersistSelection?.(nextSelected);
       return;
     }
     setInternalSelectedIds(prev => {
@@ -192,31 +244,40 @@ export const IngredientSelector = forwardRef<
       } else {
         next.add(id);
       }
+      onPersistSelection?.(next);
       return next;
     });
   };
 
   const handleToggleAll = () => {
     if (isControlled) {
+      const shouldSelectAll = effectiveSelectedIds.size !== ingredients.length;
+      const nextSelected = shouldSelectAll ? new Set(ingredientIds) : new Set<string>();
       onToggleAll?.();
+      onPersistSelection?.(nextSelected);
       return;
     }
     setInternalSelectedIds(prev => {
-      const allSelectedInternal =
-        prev.size === recipe.recipe_ingredients.length;
+      const allSelectedInternal = prev.size === ingredients.length;
       if (allSelectedInternal) {
-        return new Set();
+        const cleared = new Set<string>();
+        onPersistSelection?.(cleared);
+        return cleared;
       }
-      return new Set(
-        recipe.recipe_ingredients.map(ingredient => ingredient.id)
-      );
+      const allIds = new Set(ingredientIds);
+      onPersistSelection?.(allIds);
+      return allIds;
     });
   };
 
   const buildSelectedIngredients = useCallback(
     (): SelectedIngredientInput[] =>
-      recipe.recipe_ingredients
-        .filter(ingredient => effectiveSelectedIds.has(ingredient.id))
+      ingredients
+        .filter(ingredient =>
+          effectiveSelectedIds.has(
+            ingredient.sourceRecipeIngredientId ?? ingredient.id
+          )
+        )
         .map(ingredient => ({
           name: ingredient.name,
           quantity: ingredient.quantity,
@@ -226,7 +287,7 @@ export const IngredientSelector = forwardRef<
           storeName: ingredient.store?.name ?? null,
           storeId: ingredient.store?.id,
         })),
-    [effectiveSelectedIds, recipe.recipe_ingredients]
+    [effectiveSelectedIds, ingredients]
   );
 
   const resolveConflict = async (resolution: 'increment' | 'separate') => {
@@ -317,21 +378,31 @@ export const IngredientSelector = forwardRef<
   return (
     <>
       <View className="relative flex-1">
-        <BottomSheet.Header
-          className="px-4"
-          title={recipe.name}
-          dismissButton={<BackButton onPress={onBack} />}
-          button={<ExternalLinkButton onPress={handleGoToRecipe} />}
-        />
+        {showHeader ? (
+          <BottomSheet.Header
+            className="px-4"
+            title={headerTitle ?? recipe.name}
+            dismissButton={<BackButton onPress={onBack} />}
+            button={
+              mode === 'add-to-list' ? (
+                <ExternalLinkButton onPress={handleGoToRecipe} />
+              ) : undefined
+            }
+          />
+        ) : null}
 
-        <View className="flex-row items-center justify-between px-4">
+        <View
+          className={cn(
+            'flex-row items-center justify-between px-4',
+            !showHeader && 'pt-4'
+          )}
+        >
           <View>
             <Text className="text-lg font-medium text-foreground">
               Ingredients
             </Text>
             <Text className="text-sm text-muted-foreground">
-              {effectiveSelectedIds.size} of {recipe.recipe_ingredients.length}{' '}
-              selected
+              {effectiveSelectedIds.size} of {ingredients.length} selected
             </Text>
           </View>
           <Button variant="outline" onPress={handleToggleAll}>
@@ -348,18 +419,24 @@ export const IngredientSelector = forwardRef<
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
         >
-          {recipe.recipe_ingredients.map((ingredient, index) => (
-            <IngredientRow
-              className={cn(
-                index < recipe.recipe_ingredients.length - 1 &&
-                  'border-b border-dashed border-border'
-              )}
-              key={ingredient.id}
-              ingredient={ingredient}
-              isSelected={effectiveSelectedIds.has(ingredient.id)}
-              onToggle={() => handleToggleIngredient(ingredient.id)}
-            />
-          ))}
+          {ingredients.map((ingredient, index) => {
+            const ingredientId = ingredient.sourceRecipeIngredientId ?? ingredient.id;
+            return (
+              <IngredientRow
+                className={cn(
+                  index < ingredients.length - 1 &&
+                    'border-b border-dashed border-border'
+                )}
+                key={ingredient.id}
+                ingredient={ingredient}
+                isSelected={effectiveSelectedIds.has(ingredientId)}
+                onToggle={() => handleToggleIngredient(ingredientId)}
+                onEdit={
+                  onEditIngredient ? () => onEditIngredient(ingredientId) : undefined
+                }
+              />
+            );
+          })}
         </ScrollView>
         {shouldShowFooter && (
           <View className="px-4 pb-4 pt-3">

@@ -3,6 +3,7 @@ import { InstaQLEntity } from '@instantdb/react-native';
 import schema from '../../instant.schema';
 import { RecipeWithIngredients } from '../recipes/types';
 import { Store } from '../stores/types';
+import { MealPlanIngredientSnapshotCreateInput } from './meal-plan-recipe-ingredient-editor';
 
 export type MealPlanRecipe = InstaQLEntity<typeof schema, 'meal_plan_recipes'>;
 export type MealPlanItem = InstaQLEntity<typeof schema, 'meal_plan_items'>;
@@ -29,6 +30,7 @@ export type AddRecipeToDateArgs = {
   date: string;
   mealTag?: MealTag;
   servings?: number;
+  ingredientSnapshots?: MealPlanIngredientSnapshotCreateInput[];
 };
 
 export type UpdateMealPlanRecipeArgs = {

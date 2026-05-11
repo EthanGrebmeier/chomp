@@ -20,6 +20,7 @@ import {
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
+import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
@@ -28,6 +29,14 @@ import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
+import {
+  MealPlanIngredientEditorRow,
+  getSelectedSourceIngredientIds,
+  hydrateMealPlanIngredientEditorFromSnapshot,
+  toggleAllMealPlanIngredientSelection,
+  toggleMealPlanIngredientSelection,
+} from '../meal-plan-recipe-ingredient-editor';
+import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
 import { MealPlanRecipe } from '../types';
 
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
@@ -52,6 +61,12 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       undefined
     );
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+    const [ingredientRows, setIngredientRows] = useState<
+      MealPlanIngredientEditorRow[]
+    >([]);
+    const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
+    const [isPersistingIngredientSelection, setIsPersistingIngredientSelection] =
+      useState(false);
     const [mealPlanRecipeToEdit, setMealPlanRecipeToEdit] =
       useState<MealPlanRecipe | null>(null);
 
@@ -131,6 +146,9 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 
     const resetState = () => {
       setSelectedRecipe(null);
+      setIngredientRows([]);
+      setIsLoadingIngredients(false);
+      setIsPersistingIngredientSelection(false);
       setSelectedDate(undefined);
       setMealTag(undefined);
       setMealPlanRecipeToEdit(null);
@@ -183,6 +201,119 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       if (!mealPlanRecipeToEdit || !selectedRecipe) return;
       scheduleAutoSave();
     }, [mealPlanRecipeToEdit, scheduleAutoSave, selectedRecipe]);
+
+    const selectedRecipeWithIngredients =
+      selectedRecipe &&
+      'recipe_ingredients' in selectedRecipe &&
+      Array.isArray(selectedRecipe.recipe_ingredients)
+        ? (selectedRecipe as RecipeWithIngredients)
+        : null;
+
+    const selectedIngredientIds = getSelectedSourceIngredientIds(ingredientRows);
+
+    useEffect(() => {
+      if (!mealPlanRecipeToEdit || !selectedRecipeWithIngredients) {
+        setIngredientRows([]);
+        return;
+      }
+
+      let isCancelled = false;
+
+      const loadRows = async () => {
+        setIsLoadingIngredients(true);
+        try {
+          const snapshotRows =
+            await MealPlanIngredientSnapshotStore.reconcileSnapshot(
+              mealPlanRecipeToEdit.id
+            );
+          if (isCancelled) return;
+
+          setIngredientRows(
+            hydrateMealPlanIngredientEditorFromSnapshot({
+              sourceIngredients: selectedRecipeWithIngredients.recipe_ingredients,
+              snapshotRows,
+            })
+          );
+        } catch {
+          if (!isCancelled) {
+            toast.error('Failed to load meal ingredient selections');
+          }
+        } finally {
+          if (!isCancelled) {
+            setIsLoadingIngredients(false);
+          }
+        }
+      };
+
+      void loadRows();
+
+      return () => {
+        isCancelled = true;
+      };
+    }, [mealPlanRecipeToEdit, selectedRecipeWithIngredients]);
+
+    const handleToggleIngredientSelection = async (
+      sourceRecipeIngredientId: string
+    ) => {
+      const currentRow = ingredientRows.find(
+        row => row.sourceRecipeIngredientId === sourceRecipeIngredientId
+      );
+      if (!currentRow) return;
+
+      const nextIsSelected = !currentRow.isSelected;
+      setIngredientRows(prev =>
+        toggleMealPlanIngredientSelection(prev, sourceRecipeIngredientId)
+      );
+
+      if (!currentRow.snapshotRowId) return;
+
+      setIsPersistingIngredientSelection(true);
+      try {
+        await MealPlanIngredientSnapshotStore.updateRowSelection({
+          snapshotRowId: currentRow.snapshotRowId,
+          isSelected: nextIsSelected,
+        });
+      } catch {
+        setIngredientRows(prev =>
+          prev.map(row =>
+            row.sourceRecipeIngredientId === sourceRecipeIngredientId
+              ? { ...row, isSelected: currentRow.isSelected }
+              : row
+          )
+        );
+        toast.error('Failed to save ingredient selection');
+      } finally {
+        setIsPersistingIngredientSelection(false);
+      }
+    };
+
+    const handleToggleAllIngredientSelections = async () => {
+      if (ingredientRows.length === 0) return;
+
+      const previousRows = ingredientRows;
+      const nextRows = toggleAllMealPlanIngredientSelection(previousRows);
+      const nextIsSelected = nextRows[0]?.isSelected ?? true;
+
+      setIngredientRows(nextRows);
+      setIsPersistingIngredientSelection(true);
+      try {
+        await Promise.all(
+          previousRows
+            .filter(row => row.snapshotRowId)
+            .map(row =>
+              MealPlanIngredientSnapshotStore.updateRowSelection({
+                snapshotRowId: row.snapshotRowId as string,
+                isSelected: nextIsSelected,
+              })
+            )
+        );
+      } catch {
+        setIngredientRows(previousRows);
+        toast.error('Failed to save ingredient selections');
+      } finally {
+        setIsPersistingIngredientSelection(false);
+      }
+    };
 
     const footerContent = mealPlanRecipeToEdit ? (
       <View className="px-4 pb-safe">
@@ -255,6 +386,39 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                   </View>
                 )}
               </View>
+              {selectedRecipeWithIngredients ? (
+                <View className="mt-4">
+                  <IngredientSelector
+                    recipe={selectedRecipeWithIngredients}
+                    mode="meal-plan"
+                    showHeader={false}
+                    showFooter={false}
+                    onBack={() => {}}
+                    onDismiss={() => sheetRef.current?.dismiss()}
+                    selectedIds={selectedIngredientIds}
+                    onToggleIngredient={id => {
+                      void handleToggleIngredientSelection(id);
+                    }}
+                    onToggleAll={() => {
+                      void handleToggleAllIngredientSelections();
+                    }}
+                    onEditIngredient={() => {
+                      toast.info(
+                        'Ingredient detail editing is coming in the next step'
+                      );
+                    }}
+                  />
+                </View>
+              ) : null}
+              {isLoadingIngredients || isPersistingIngredientSelection ? (
+                <View className="px-4">
+                  <Pill hasValue>
+                    {isLoadingIngredients
+                      ? 'Loading ingredient selections...'
+                      : 'Saving ingredient selections...'}
+                  </Pill>
+                </View>
+              ) : null}
             </View>
           </BottomSheet.SheetView>
         </BottomSheet>

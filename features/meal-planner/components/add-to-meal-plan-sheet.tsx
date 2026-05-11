@@ -1,25 +1,29 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { router } from 'expo-router';
-import { useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
-import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
-import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
-import { ExternalLinkButton } from '../../../components/ui/external-link-button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
 import { useAddRecipeToDate } from '../hooks/useAddRecipeToMealPlan';
+import {
+  MealPlanIngredientEditorRow,
+  getSelectedSourceIngredientIds,
+  initializeMealPlanIngredientEditor,
+  toSnapshotCreateInputs,
+  toggleAllMealPlanIngredientSelection,
+  toggleMealPlanIngredientSelection,
+} from '../meal-plan-recipe-ingredient-editor';
 
 import { DatePillSheet } from './date-pill-sheet';
 import {
@@ -116,6 +120,9 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const [mode, setMode] = useState<AddMode>('recipe');
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
+  const [ingredientRows, setIngredientRows] = useState<
+    MealPlanIngredientEditorRow[]
+  >([]);
   const [recipeDate, setRecipeDate] = useState<string | undefined>(undefined);
   const [recipeMealTag, setRecipeMealTag] = useState<string | undefined>(
     undefined
@@ -141,6 +148,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const resetSheetState = () => {
     setMode('recipe');
     setSelectedRecipe(null);
+    setIngredientRows([]);
     setRecipeDate(undefined);
     setRecipeMealTag(undefined);
   };
@@ -148,14 +156,16 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const handleSelectRecipe = (recipe: RecipeWithIngredients) => {
     setSelectedRecipe(recipe);
     setRecipeMealTag(recipe.mealTag ?? undefined);
+    setIngredientRows(initializeMealPlanIngredientEditor(recipe.recipe_ingredients));
   };
 
   const handleBackToRecipes = () => {
     setSelectedRecipe(null);
+    setIngredientRows([]);
   };
 
   const handleAddRecipe = () => {
-    if (!selectedRecipe || !recipeDate) return;
+    if (!selectedRecipe || !recipeDate || selectedIngredientIds.size === 0) return;
 
     addRecipeToDate(
       {
@@ -164,6 +174,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         date: recipeDate,
         mealTag: recipeMealTag,
         servings: 1,
+        ingredientSnapshots: toSnapshotCreateInputs(ingredientRows),
       },
       {
         onSuccess: () => {
@@ -176,12 +187,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         },
       }
     );
-  };
-
-  const handleGoToRecipe = () => {
-    if (!selectedRecipe) return;
-    sheetRef.current?.dismiss();
-    router.push(`/recipes/${selectedRecipe.id}`);
   };
 
   const handleModeChange = (newMode: AddMode) => {
@@ -222,15 +227,32 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   };
 
   const isRecipeModeValid = selectedRecipe && recipeDate;
+  const selectedIngredientIds = useMemo(
+    () => getSelectedSourceIngredientIds(ingredientRows),
+    [ingredientRows]
+  );
 
-  const footerContent =
+  const handleToggleIngredient = (sourceRecipeIngredientId: string) => {
+    setIngredientRows(prev =>
+      toggleMealPlanIngredientSelection(prev, sourceRecipeIngredientId)
+    );
+  };
+
+  const handleToggleAllIngredients = () => {
+    setIngredientRows(prev => toggleAllMealPlanIngredientSelection(prev));
+  };
+
+  const isRecipeAddDisabled =
+    !isRecipeModeValid || selectedIngredientIds.size === 0;
+
+  const footer =
     mode === 'recipe' && selectedRecipe ? (
       <View className="pb-safe gap-4 px-4">
         <ScrollingMetaBar>
           <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
           <MealTimeSheet mealTime={recipeMealTag} onSelect={setRecipeMealTag} />
         </ScrollingMetaBar>
-        <Button onPress={handleAddRecipe} disabled={!isRecipeModeValid}>
+        <Button onPress={handleAddRecipe} disabled={isRecipeAddDisabled}>
           <Text>Add to Plan</Text>
         </Button>
       </View>
@@ -271,7 +293,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         resetMealPlanItemState();
         resetSheetState();
       }}
-      footer={footerContent ?? undefined}
+      footer={footer ?? undefined}
     >
       {!selectedRecipe && (
         <ModeToggle mode={mode} onModeChange={handleModeChange} />
@@ -282,46 +304,21 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           <Animated.View
             entering={FadeIn.duration(150)}
             exiting={FadeOut.duration(150)}
-            className="px-4"
+            className="flex-1"
           >
-            <BottomSheet.Header
-              title="Add Recipe"
-              dismissButton={<BackButton onPress={handleBackToRecipes} />}
-              button={
-                <ExternalLinkButton onPress={handleGoToRecipe} />
-              }
+            <IngredientSelector
+              recipe={selectedRecipe}
+              mode="meal-plan"
+              onBack={handleBackToRecipes}
+              onDismiss={() => sheetRef.current?.dismiss()}
+              onToggleIngredient={handleToggleIngredient}
+              onToggleAll={handleToggleAllIngredients}
+              selectedIds={selectedIngredientIds}
+              onEditIngredient={() => {
+                toast.info('Ingredient detail editing is coming in the next step');
+              }}
+              headerTitle="Add Recipe"
             />
-            <View className="gap-4">
-              <RecipeCardContent
-                name={selectedRecipe.name}
-                ingredientCount={selectedRecipe.recipe_ingredients.length}
-                className="w-full"
-              />
-
-              <View>
-                <Text className="text-base font-bold text-foreground">
-                  Ingredients
-                </Text>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {selectedRecipe.recipe_ingredients.map(ingredient => (
-                    <View
-                      key={ingredient.id}
-                      className="flex-row items-center justify-between"
-                    >
-                      <Text className="text-base font-medium text-foreground">
-                        {ingredient.name}
-                      </Text>
-                      <Text className="text-sm text-muted-foreground">
-                        {formatQuantityUnit(
-                          ingredient.quantity,
-                          ingredient.unit
-                        )}
-                      </Text>
-                    </View>
-                  ))}
-                </ScrollView>
-              </View>
-            </View>
           </Animated.View>
         ) : (
           <RecipeSelector

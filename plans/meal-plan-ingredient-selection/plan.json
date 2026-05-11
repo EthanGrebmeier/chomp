@@ -59,6 +59,7 @@
       "tickets": [
         {
           "id": "P1-T1",
+          "status": "done",
           "title": "Add snapshot schema, links, and permission rules",
           "summary": "Introduce a new InstantDB child entity for meal-plan recipe ingredient snapshots, including links to meal-plan recipes and optional store references, plus permission rules aligned with current meal_plan_recipes ownership semantics.",
           "acceptanceCriteria": [
@@ -80,6 +81,7 @@
         },
         {
           "id": "P1-T2",
+          "status": "done",
           "title": "Implement snapshot store and lazy backfill contract",
           "summary": "Create MealPlanIngredientSnapshotStore to initialize snapshots from recipe ingredients, reconcile by source ingredient id, and lazily backfill legacy meal entries when snapshot data is missing at add-to-list time.",
           "acceptanceCriteria": [
@@ -120,6 +122,7 @@
       "tickets": [
         {
           "id": "P2-T1",
+          "status": "done",
           "title": "Extend selector/editor state for meal-plan mode",
           "summary": "Evolve IngredientSelector and a dedicated MealPlanRecipeIngredientEditor state module so add-meal and edit-meal flows can display ordered ingredient checklists with default selection and persistent per-row editing state.",
           "acceptanceCriteria": [
