@@ -327,6 +327,7 @@
         },
         {
           "id": "P5-T2",
+          "status": "done",
           "title": "Manual integration validation checklist",
           "summary": "Run an integration pass across add-meal, edit-meal, bulk add, and quick add paths to verify real-world behavior aligns with PRD requirements for persistence, reconciliation, and re-add semantics.",
           "acceptanceCriteria": [
