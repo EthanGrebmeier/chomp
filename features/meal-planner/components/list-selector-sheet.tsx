@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { CheckIcon, ShoppingCartIcon } from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -15,34 +15,20 @@ import {
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
-import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { useAddMealsToGroceryList, useUserMealPlanData } from '../hooks';
 import {
-  applyMealPlanIngredientOverride,
-  getSelectedSourceIngredientIds,
-  hydrateMealPlanIngredientEditorFromSnapshot,
-  MealPlanIngredientEditorRow,
-  toggleAllMealPlanIngredientSelection,
-  toggleMealPlanIngredientSelection,
-} from '../meal-plan-recipe-ingredient-editor';
-import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
-import {
   MealPlanItemWithStore,
+  MealPlanRecipe,
   MealPlanRecipeWithRecipe,
   MealTag,
 } from '../types';
-import {
-  MealPlanIngredientOverrideSheet,
-  MealPlanIngredientOverrideSheetRef,
-} from './meal-plan-ingredient-override-sheet';
 
 const mealTimeOrder: MealTag[] = [
   'Breakfast',
@@ -241,30 +227,23 @@ const MealPlanRecipeRow = ({
 
 type ListSelectorSheetProps = {
   listId: string;
+  onEditMeal: ({
+    mealPlanRecipe,
+    recipe,
+  }: {
+    mealPlanRecipe: MealPlanRecipe;
+    recipe: MealPlanRecipeWithRecipe['recipe'];
+  }) => void;
 };
 
-export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
+export const ListSelectorSheet = ({ listId, onEditMeal }: ListSelectorSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
-  const reviewSheetRef = useRef<TrueSheet>(null);
-  const ingredientOverrideSheetRef =
-    useRef<MealPlanIngredientOverrideSheetRef>(null);
   const isDarkMode = useColorScheme() === 'dark';
   // Track deselected IDs instead of selected — everything is selected by default
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const { recipes, items, isLoading } = useUserMealPlanData(listId);
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
     useAddMealsToGroceryList();
-  const [reviewMealPlanRecipe, setReviewMealPlanRecipe] =
-    useState<MealPlanRecipeWithRecipe | null>(null);
-  const [reviewIngredientRows, setReviewIngredientRows] = useState<
-    MealPlanIngredientEditorRow[]
-  >([]);
-  const [isLoadingReviewIngredients, setIsLoadingReviewIngredients] =
-    useState(false);
-  const [isPersistingReviewSelection, setIsPersistingReviewSelection] =
-    useState(false);
-  const [isPersistingReviewOverride, setIsPersistingReviewOverride] =
-    useState(false);
 
   type UnaddedRecipe = {
     kind: 'recipe';
@@ -401,23 +380,23 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
     resetSelection();
   }, [resetSelection]);
 
-  const closeReviewSheet = useCallback(() => {
-    reviewSheetRef.current?.dismiss();
-  }, []);
-
-  const handleReviewDismiss = useCallback(() => {
-    setReviewMealPlanRecipe(null);
-    setReviewIngredientRows([]);
-    setIsLoadingReviewIngredients(false);
-    setIsPersistingReviewSelection(false);
-    setIsPersistingReviewOverride(false);
-    ingredientOverrideSheetRef.current?.dismiss();
-  }, []);
-
   const handleOpenSheet = useCallback(() => {
     resetSelection();
     sheetRef.current?.present();
   }, [resetSelection]);
+
+  const handleReview = useCallback(
+    (mealPlanRecipe: MealPlanRecipeWithRecipe) => {
+      sheetRef.current?.dismiss();
+      setTimeout(() => {
+        onEditMeal({
+          mealPlanRecipe,
+          recipe: mealPlanRecipe.recipe,
+        });
+      }, 150);
+    },
+    [onEditMeal]
+  );
 
   const handleAddToList = () => {
     if (isAddingToList) return;
@@ -460,138 +439,6 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
       }
     );
   };
-
-  const selectedReviewIngredientIds = useMemo(
-    () => getSelectedSourceIngredientIds(reviewIngredientRows),
-    [reviewIngredientRows]
-  );
-
-  const handleOpenReview = useCallback((mealPlanRecipe: MealPlanRecipeWithRecipe) => {
-    setReviewMealPlanRecipe(mealPlanRecipe);
-    reviewSheetRef.current?.present();
-  }, []);
-
-  const handleToggleReviewIngredientSelection = useCallback(
-    async (sourceRecipeIngredientId: string) => {
-      const currentRow = reviewIngredientRows.find(
-        row => row.sourceRecipeIngredientId === sourceRecipeIngredientId
-      );
-      if (!currentRow) return;
-
-      const nextIsSelected = !currentRow.isSelected;
-      setReviewIngredientRows(prev =>
-        toggleMealPlanIngredientSelection(prev, sourceRecipeIngredientId)
-      );
-
-      if (!currentRow.snapshotRowId) return;
-
-      setIsPersistingReviewSelection(true);
-      try {
-        await MealPlanIngredientSnapshotStore.updateRowSelection({
-          snapshotRowId: currentRow.snapshotRowId,
-          isSelected: nextIsSelected,
-        });
-      } catch {
-        setReviewIngredientRows(prev =>
-          prev.map(row =>
-            row.sourceRecipeIngredientId === sourceRecipeIngredientId
-              ? { ...row, isSelected: currentRow.isSelected }
-              : row
-          )
-        );
-        toast.error('Failed to save ingredient selection');
-      } finally {
-        setIsPersistingReviewSelection(false);
-      }
-    },
-    [reviewIngredientRows]
-  );
-
-  const handleToggleAllReviewIngredientSelections = useCallback(async () => {
-    if (reviewIngredientRows.length === 0) return;
-
-    const previousRows = reviewIngredientRows;
-    const nextRows = toggleAllMealPlanIngredientSelection(previousRows);
-    const nextIsSelected = nextRows[0]?.isSelected ?? true;
-
-    setReviewIngredientRows(nextRows);
-    setIsPersistingReviewSelection(true);
-    try {
-      await Promise.all(
-        previousRows
-          .filter(row => row.snapshotRowId)
-          .map(row =>
-            MealPlanIngredientSnapshotStore.updateRowSelection({
-              snapshotRowId: row.snapshotRowId as string,
-              isSelected: nextIsSelected,
-            })
-          )
-      );
-    } catch {
-      setReviewIngredientRows(previousRows);
-      toast.error('Failed to save ingredient selections');
-    } finally {
-      setIsPersistingReviewSelection(false);
-    }
-  }, [reviewIngredientRows]);
-
-  const handleEditReviewIngredient = useCallback(
-    (sourceRecipeIngredientId: string) => {
-      const row = reviewIngredientRows.find(
-        ingredientRow =>
-          ingredientRow.sourceRecipeIngredientId === sourceRecipeIngredientId
-      );
-      if (!row) return;
-      ingredientOverrideSheetRef.current?.present(row);
-    },
-    [reviewIngredientRows]
-  );
-
-  const reviewRecipeWithIngredients = reviewMealPlanRecipe?.recipe ?? null;
-
-  useEffect(() => {
-    if (!reviewMealPlanRecipe || !reviewRecipeWithIngredients) {
-      setReviewIngredientRows([]);
-      return;
-    }
-
-    let isCancelled = false;
-
-    const loadRows = async () => {
-      setIsLoadingReviewIngredients(true);
-      try {
-        const snapshotRows =
-          await MealPlanIngredientSnapshotStore.ensureBackfilledSnapshot(
-            reviewMealPlanRecipe.id
-          );
-        const reconciledRows = await MealPlanIngredientSnapshotStore.reconcileSnapshot(
-          reviewMealPlanRecipe.id
-        );
-        if (isCancelled) return;
-
-        setReviewIngredientRows(
-          hydrateMealPlanIngredientEditorFromSnapshot({
-            sourceIngredients: reviewRecipeWithIngredients.recipe_ingredients ?? [],
-            snapshotRows: reconciledRows.length > 0 ? reconciledRows : snapshotRows,
-          })
-        );
-      } catch {
-        if (!isCancelled) {
-          toast.error('Failed to load meal ingredient selections');
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingReviewIngredients(false);
-        }
-      }
-    };
-
-    void loadRows();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [reviewMealPlanRecipe, reviewRecipeWithIngredients]);
 
   return (
     <>
@@ -683,7 +530,7 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
                           trailing={servings > 1 ? `x${servings}` : undefined}
                           isSelected={isSelected(mealPlanRecipe.id)}
                           onToggle={() => toggleItem(mealPlanRecipe.id)}
-                          onReview={() => handleOpenReview(mealPlanRecipe)}
+                          onReview={() => handleReview(mealPlanRecipe)}
                         />
                       );
                     }
@@ -706,95 +553,6 @@ export const ListSelectorSheet = ({ listId }: ListSelectorSheetProps) => {
           </ScrollView>
         </View>
       </BottomSheet>
-      <BottomSheet
-        name="meal-plan-bulk-review-sheet"
-        ref={reviewSheetRef}
-        detents={[0.9]}
-        scrollable
-        onDismiss={handleReviewDismiss}
-      >
-        <BottomSheet.SheetView className="pb-safe">
-          <BottomSheet.Header
-            title={reviewMealPlanRecipe?.recipe.name ?? 'Review ingredients'}
-            subsection={
-              <BottomSheet.Subtext>
-                Update ingredient selections before adding this meal.
-              </BottomSheet.Subtext>
-            }
-          />
-          {reviewRecipeWithIngredients ? (
-            <View className="pb-20">
-              <IngredientSelector
-                recipe={reviewRecipeWithIngredients}
-                mode="meal-plan"
-                showHeader={false}
-                showFooter={false}
-                onBack={closeReviewSheet}
-                onDismiss={closeReviewSheet}
-                selectedIds={selectedReviewIngredientIds}
-                onToggleIngredient={id => {
-                  void handleToggleReviewIngredientSelection(id);
-                }}
-                onToggleAll={() => {
-                  void handleToggleAllReviewIngredientSelections();
-                }}
-                onEditIngredient={handleEditReviewIngredient}
-              />
-            </View>
-          ) : null}
-          {isLoadingReviewIngredients ||
-          isPersistingReviewSelection ||
-          isPersistingReviewOverride ? (
-            <View className="px-4 pb-4">
-              <Pill hasValue>
-                {isLoadingReviewIngredients
-                  ? 'Loading ingredient selections...'
-                  : isPersistingReviewOverride
-                    ? 'Saving ingredient override...'
-                    : 'Saving ingredient selections...'}
-              </Pill>
-            </View>
-          ) : null}
-        </BottomSheet.SheetView>
-      </BottomSheet>
-      <MealPlanIngredientOverrideSheet
-        ref={ingredientOverrideSheetRef}
-        onSave={async ({ sourceRecipeIngredientId, updates }) => {
-          const currentRow = reviewIngredientRows.find(
-            row => row.sourceRecipeIngredientId === sourceRecipeIngredientId
-          );
-          if (!currentRow?.snapshotRowId) {
-            throw new Error('Snapshot row not found');
-          }
-
-          setReviewIngredientRows(prev =>
-            prev.map(row =>
-              row.sourceRecipeIngredientId === sourceRecipeIngredientId
-                ? applyMealPlanIngredientOverride({ row, updates })
-                : row
-            )
-          );
-
-          setIsPersistingReviewOverride(true);
-          try {
-            await MealPlanIngredientSnapshotStore.updateRowOverrides({
-              snapshotRowId: currentRow.snapshotRowId,
-              updates,
-            });
-          } catch (error) {
-            setReviewIngredientRows(prev =>
-              prev.map(row =>
-                row.sourceRecipeIngredientId === sourceRecipeIngredientId
-                  ? currentRow
-                  : row
-              )
-            );
-            throw error;
-          } finally {
-            setIsPersistingReviewOverride(false);
-          }
-        }}
-      />
       <Button
         size="iconLg"
         variant="secondary"

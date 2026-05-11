@@ -100,7 +100,7 @@ const TextInput = forwardRef<
 });
 TextInput.displayName = 'TextInput';
 type HeaderProps = {
-  title: string;
+  title: React.ReactNode;
   subsection?: React.ReactNode;
   dismissButton?: React.ReactNode;
   button?: React.ReactNode;
@@ -121,13 +121,17 @@ const Header = ({
           <View className="w-12 items-start">{dismissButton}</View>
         )}
         <View className="mx-2 flex-1">
-          <Text
-            className="text-center text-2xl font-bold leading-tight"
-            numberOfLines={2}
-            ellipsizeMode="tail"
-          >
-            {title}
-          </Text>
+          {typeof title === 'string' ? (
+            <Text
+              className="text-center text-2xl font-bold leading-tight"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {title}
+            </Text>
+          ) : (
+            title
+          )}
         </View>
         {(dismissButton ?? button) && (
           <View className="w-12 items-end">{button}</View>

@@ -204,7 +204,12 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
           </DropdownMenuContent>
         </DropdownMenuRoot>
       </View>
-      <ListSelectorSheet listId={listId} />
+      <ListSelectorSheet
+        listId={listId}
+        onEditMeal={({ mealPlanRecipe, recipe }) =>
+          editMealSheet.current?.open({ mealPlanRecipe, recipe })
+        }
+      />
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} />
       <EditItemSheet ref={editItemSheet} />

@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { PencilLineIcon } from 'lucide-react-native';
 import {
   forwardRef,
+  ReactNode,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -133,7 +134,7 @@ type IngredientSelectorProps = {
   onPersistSelection?: (selectedIds: Set<string>) => void;
   onEditIngredient?: (id: string) => void;
   showHeader?: boolean;
-  headerTitle?: string;
+  headerTitle?: ReactNode;
 };
 
 export type IngredientSelectorRef = {
@@ -414,7 +415,7 @@ export const IngredientSelector = forwardRef<
 
         <ScrollView
           className="min-h-24 flex-1"
-          contentContainerClassName="pb-12"
+          contentContainerClassName={shouldShowFooter ? 'pb-12' : undefined}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled

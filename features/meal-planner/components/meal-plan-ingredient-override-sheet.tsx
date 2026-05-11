@@ -1,5 +1,11 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { Keyboard } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -70,7 +76,8 @@ const EditMealIngredientSheetContents = ({
       onStartClose={handleClose}
       onOpen={handleOpen}
       footer={
-        <BottomSheet.SheetView className="px-4 pb-safe pt-3">
+        <BottomSheet.SheetView className="pb-safe gap-4 px-4 pt-3">
+          <MetaBar />
           <Button onPress={onSubmit} disabled={!isValid}>
             <Text>Save ingredient</Text>
           </Button>
@@ -79,11 +86,12 @@ const EditMealIngredientSheetContents = ({
     >
       <BottomSheet.SheetView>
         <BottomSheet.Header
-          title={editingRow?.name ? `Edit ${editingRow.name}` : 'Edit Ingredient'}
+          title={
+            editingRow?.name ? `Edit ${editingRow.name}` : 'Edit Ingredient'
+          }
           className="mb-4"
         />
         <ItemForm />
-        <MetaBar />
       </BottomSheet.SheetView>
     </BottomSheet>
   );
@@ -95,9 +103,8 @@ export const MealPlanIngredientOverrideSheet = forwardRef<
 >(({ onSave }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
   const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
-  const [editingRow, setEditingRow] = useState<MealPlanIngredientEditorRow | null>(
-    null
-  );
+  const [editingRow, setEditingRow] =
+    useState<MealPlanIngredientEditorRow | null>(null);
 
   useImperativeHandle(ref, () => ({
     present: (row: MealPlanIngredientEditorRow) => {
@@ -129,7 +136,7 @@ export const MealPlanIngredientOverrideSheet = forwardRef<
             name: item.name.trim(),
             quantity: item.quantity,
             unit: item.unit,
-            notes: item.notes?.trim() || null,
+            notes: item.notes?.trim() ?? null,
             category: item.category ?? null,
             storeId: item.storeId,
             isQuantityOverridden:

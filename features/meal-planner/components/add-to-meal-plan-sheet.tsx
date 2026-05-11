@@ -37,6 +37,7 @@ import {
   MealPlanIngredientOverrideSheet,
   MealPlanIngredientOverrideSheetRef,
 } from './meal-plan-ingredient-override-sheet';
+import { MealPlanRecipeTitle } from './meal-plan-recipe-title';
 import { MealTimeSheet } from './meal-time-sheet';
 
 type AddMode = 'item' | 'recipe';
@@ -238,6 +239,33 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     () => getSelectedSourceIngredientIds(ingredientRows),
     [ingredientRows]
   );
+  const mealPlanIngredients = useMemo(() => {
+    if (!selectedRecipe) return [];
+
+    const ingredientRowsBySourceId = new Map(
+      ingredientRows.map(row => [row.sourceRecipeIngredientId, row])
+    );
+
+    return selectedRecipe.recipe_ingredients.map(ingredient => {
+      const row = ingredientRowsBySourceId.get(ingredient.id);
+      if (!row) {
+        return {
+          ...ingredient,
+          sourceRecipeIngredientId: ingredient.id,
+        };
+      }
+
+      return {
+        ...ingredient,
+        sourceRecipeIngredientId: row.sourceRecipeIngredientId,
+        name: row.name,
+        quantity: row.quantity,
+        unit: row.unit,
+        notes: row.notes ?? undefined,
+        category: row.category ?? undefined,
+      };
+    });
+  }, [ingredientRows, selectedRecipe]);
 
   const handleToggleIngredient = (sourceRecipeIngredientId: string) => {
     setIngredientRows(prev =>
@@ -302,8 +330,8 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       name="add-to-meal-plan-sheet"
       ref={sheetRef}
       detents={[1]}
-      scrollable={mode === 'recipe' && !selectedRecipe}
-      viewClassName="pb-safe"
+      scrollable={mode === 'recipe'}
+      viewClassName="flex-1 pb-safe"
       onStartClose={() => {
         KeyboardController.dismiss();
         resetMealPlanItemState();
@@ -315,36 +343,44 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         <ModeToggle mode={mode} onModeChange={handleModeChange} />
       )}
 
-      {mode === 'recipe' ? (
-        selectedRecipe ? (
-          <Animated.View
-            entering={FadeIn.duration(150)}
-            exiting={FadeOut.duration(150)}
-            className="flex-1"
-          >
-            <IngredientSelector
-              recipe={selectedRecipe}
-              mode="meal-plan"
-              onBack={handleBackToRecipes}
+      <View className={mode === 'recipe' ? 'min-h-0 flex-1' : undefined}>
+        {mode === 'recipe' ? (
+          selectedRecipe ? (
+            <Animated.View
+              entering={FadeIn.duration(150)}
+              exiting={FadeOut.duration(150)}
+              className="min-h-0 flex-1"
+            >
+              <IngredientSelector
+                recipe={selectedRecipe}
+                mode="meal-plan"
+                mealPlanIngredients={mealPlanIngredients}
+                onBack={handleBackToRecipes}
+                onDismiss={() => sheetRef.current?.dismiss()}
+                onToggleIngredient={handleToggleIngredient}
+                onToggleAll={handleToggleAllIngredients}
+                selectedIds={selectedIngredientIds}
+                onEditIngredient={handleEditIngredient}
+                headerTitle={
+                  <MealPlanRecipeTitle
+                    name={selectedRecipe.name}
+                    className="text-center"
+                  />
+                }
+              />
+            </Animated.View>
+          ) : (
+            <RecipeSelector
+              onSelectRecipe={handleSelectRecipe}
               onDismiss={() => sheetRef.current?.dismiss()}
-              onToggleIngredient={handleToggleIngredient}
-              onToggleAll={handleToggleAllIngredients}
-              selectedIds={selectedIngredientIds}
-              onEditIngredient={handleEditIngredient}
-              headerTitle="Add Recipe"
             />
-          </Animated.View>
+          )
         ) : (
-          <RecipeSelector
-            onSelectRecipe={handleSelectRecipe}
-            onDismiss={() => sheetRef.current?.dismiss()}
-          />
-        )
-      ) : (
-        <View className="px-4">
-          <MealPlanItemForm onSubmit={handleAddItem} showMetaBar={false} />
-        </View>
-      )}
+          <View className="px-4">
+            <MealPlanItemForm onSubmit={handleAddItem} showMetaBar={false} />
+          </View>
+        )}
+      </View>
       <MealPlanIngredientOverrideSheet
         ref={ingredientOverrideSheetRef}
         onSave={async ({ sourceRecipeIngredientId, updates }) => {

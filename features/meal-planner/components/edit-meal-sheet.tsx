@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -19,32 +20,32 @@ import {
   CalendarSheet,
   CalendarSheetRef,
 } from '../../../components/calendar-sheet';
-import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
+import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
 import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { navigation } from '../../../lib/navigation';
-import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
+import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
 import {
-  applyMealPlanIngredientOverride,
   MealPlanIngredientEditorRow,
+  applyMealPlanIngredientOverride,
   getSelectedSourceIngredientIds,
   hydrateMealPlanIngredientEditorFromSnapshot,
   toggleAllMealPlanIngredientSelection,
   toggleMealPlanIngredientSelection,
 } from '../meal-plan-recipe-ingredient-editor';
-import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
 import { MealPlanRecipe } from '../types';
 
-import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 import {
   MealPlanIngredientOverrideSheet,
   MealPlanIngredientOverrideSheetRef,
 } from './meal-plan-ingredient-override-sheet';
+import { MealPlanRecipeTitle } from './meal-plan-recipe-title';
+import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 import { MealTimeSheet } from './meal-time-sheet';
 
 type EditMealSheetProps = {};
@@ -69,11 +70,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const [ingredientRows, setIngredientRows] = useState<
       MealPlanIngredientEditorRow[]
     >([]);
-    const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
-    const [isPersistingIngredientSelection, setIsPersistingIngredientSelection] =
-      useState(false);
-    const [isPersistingIngredientOverride, setIsPersistingIngredientOverride] =
-      useState(false);
+    const [, setIsPersistingIngredientOverride] = useState(false);
     const [mealPlanRecipeToEdit, setMealPlanRecipeToEdit] =
       useState<MealPlanRecipe | null>(null);
 
@@ -156,9 +153,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const resetState = () => {
       setSelectedRecipe(null);
       setIngredientRows([]);
-      setIsLoadingIngredients(false);
-      setIsPersistingIngredientSelection(false);
-      setIsPersistingIngredientOverride(false);
       setSelectedDate(undefined);
       setMealTag(undefined);
       setMealPlanRecipeToEdit(null);
@@ -219,7 +213,37 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         ? (selectedRecipe as RecipeWithIngredients)
         : null;
 
-    const selectedIngredientIds = getSelectedSourceIngredientIds(ingredientRows);
+    const selectedIngredientIds =
+      getSelectedSourceIngredientIds(ingredientRows);
+    const mealPlanIngredients = useMemo(() => {
+      if (!selectedRecipeWithIngredients) return [];
+
+      const ingredientRowsBySourceId = new Map(
+        ingredientRows.map(row => [row.sourceRecipeIngredientId, row])
+      );
+
+      return selectedRecipeWithIngredients.recipe_ingredients.map(
+        ingredient => {
+          const row = ingredientRowsBySourceId.get(ingredient.id);
+          if (!row) {
+            return {
+              ...ingredient,
+              sourceRecipeIngredientId: ingredient.id,
+            };
+          }
+
+          return {
+            ...ingredient,
+            sourceRecipeIngredientId: row.sourceRecipeIngredientId,
+            name: row.name,
+            quantity: row.quantity,
+            unit: row.unit,
+            notes: row.notes ?? undefined,
+            category: row.category ?? undefined,
+          };
+        }
+      );
+    }, [ingredientRows, selectedRecipeWithIngredients]);
 
     useEffect(() => {
       if (!mealPlanRecipeToEdit || !selectedRecipeWithIngredients) {
@@ -230,7 +254,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       let isCancelled = false;
 
       const loadRows = async () => {
-        setIsLoadingIngredients(true);
         try {
           const snapshotRows =
             await MealPlanIngredientSnapshotStore.reconcileSnapshot(
@@ -240,17 +263,14 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 
           setIngredientRows(
             hydrateMealPlanIngredientEditorFromSnapshot({
-              sourceIngredients: selectedRecipeWithIngredients.recipe_ingredients,
+              sourceIngredients:
+                selectedRecipeWithIngredients.recipe_ingredients,
               snapshotRows,
             })
           );
         } catch {
           if (!isCancelled) {
             toast.error('Failed to load meal ingredient selections');
-          }
-        } finally {
-          if (!isCancelled) {
-            setIsLoadingIngredients(false);
           }
         }
       };
@@ -277,7 +297,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 
       if (!currentRow.snapshotRowId) return;
 
-      setIsPersistingIngredientSelection(true);
       try {
         await MealPlanIngredientSnapshotStore.updateRowSelection({
           snapshotRowId: currentRow.snapshotRowId,
@@ -293,7 +312,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         );
         toast.error('Failed to save ingredient selection');
       } finally {
-        setIsPersistingIngredientSelection(false);
       }
     };
 
@@ -305,7 +323,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       const nextIsSelected = nextRows[0]?.isSelected ?? true;
 
       setIngredientRows(nextRows);
-      setIsPersistingIngredientSelection(true);
       try {
         await Promise.all(
           previousRows
@@ -320,13 +337,11 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       } catch {
         setIngredientRows(previousRows);
         toast.error('Failed to save ingredient selections');
-      } finally {
-        setIsPersistingIngredientSelection(false);
       }
     };
 
     const footerContent = mealPlanRecipeToEdit ? (
-      <View className="px-4 pb-safe">
+      <View className="pb-safe px-4">
         <MetaBarLayout>
           <View className="flex-row items-center gap-2">
             <Pressable onPress={() => calendarSheetRef.current?.present()}>
@@ -335,7 +350,9 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                 icon={<Icon as={CalendarIcon} size={16} />}
               >
                 {selectedDate
-                  ? startOfDay(parseISO(selectedDate + 'T00:00:00')).toLocaleDateString()
+                  ? startOfDay(
+                      parseISO(selectedDate + 'T00:00:00')
+                    ).toLocaleDateString()
                   : 'Select Date'}
               </Pill>
             </Pressable>
@@ -359,6 +376,9 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         <BottomSheet
           name="edit-meal-sheet"
           ref={sheetRef}
+          detents={[1]}
+          viewClassName="flex-1"
+          scrollable
           onStartClose={() => {
             KeyboardController.dismiss();
             flushAutoSave();
@@ -366,7 +386,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           onDismiss={resetState}
           footer={footerContent}
         >
-          <BottomSheet.SheetView className="pb-safe">
+          <BottomSheet.SheetView className="pb-safe flex-1">
             <CalendarSheet
               name="edit-meal-calendar-sheet"
               ref={calendarSheetRef}
@@ -380,14 +400,17 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                 setSelectedDate(format(date, 'yyyy-MM-dd'));
               }}
             />
-            <View className="pb-28">
-              <View className="gap-2">
-                {selectedRecipe && (
-                  <View className="w-full flex-row items-center justify-between gap-2">
-                    <RecipeCardContent
+            <View className="min-h-0 flex-1 pb-28">
+              {selectedRecipe && (
+                <BottomSheet.Header
+                  title={
+                    <MealPlanRecipeTitle
                       name={selectedRecipe.name}
-                      className="flex-1"
+                      className="text-center"
                     />
+                  }
+                  className="mb-2"
+                  button={
                     <MealSheetRecipeDropdown
                       recipeId={selectedRecipe.id}
                       recipeName={selectedRecipe.name}
@@ -402,14 +425,15 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                         changeRecipeSheetRef.current?.present();
                       }}
                     />
-                  </View>
-                )}
-              </View>
+                  }
+                />
+              )}
               {selectedRecipeWithIngredients ? (
-                <View className="mt-4">
+                <View className="-mx-4 min-h-0 flex-1">
                   <IngredientSelector
                     recipe={selectedRecipeWithIngredients}
                     mode="meal-plan"
+                    mealPlanIngredients={mealPlanIngredients}
                     showHeader={false}
                     showFooter={false}
                     onBack={() => {}}
@@ -423,19 +447,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                     }}
                     onEditIngredient={handleEditIngredient}
                   />
-                </View>
-              ) : null}
-              {isLoadingIngredients ||
-              isPersistingIngredientSelection ||
-              isPersistingIngredientOverride ? (
-                <View className="px-4">
-                  <Pill hasValue>
-                    {isLoadingIngredients
-                      ? 'Loading ingredient selections...'
-                      : isPersistingIngredientOverride
-                        ? 'Saving ingredient override...'
-                        : 'Saving ingredient selections...'}
-                  </Pill>
                 </View>
               ) : null}
             </View>
@@ -491,7 +502,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
             KeyboardController.dismiss();
           }}
         >
-          <View className="flex-1 pb-safe">
+          <View className="pb-safe flex-1">
             <View className="flex-1 gap-2">
               <RecipeSelector
                 onSelectRecipe={handleRecipeChange}

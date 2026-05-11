@@ -337,10 +337,8 @@ export const MealPlanDateView = ({
   );
 
   const handleRecipeIndicatorPress = useCallback(
-    (mealPlanRecipe: MealPlanRecipe) => {
-      // Find the recipe name from the recipes prop
-      const match = recipes.find(r => r.id === mealPlanRecipe.id);
-      const name = match?.recipe?.name ?? 'Recipe';
+    (mealPlanRecipe: MealPlanRecipeWithRecipe) => {
+      const name = mealPlanRecipe.recipe.name;
       handleIndicatorPress(
         'recipe',
         mealPlanRecipe.id,
@@ -491,7 +489,7 @@ export const MealPlanDateView = ({
             }
           />
           {quickReviewRecipe ? (
-            <View className="pb-20">
+            <View className="-mx-4 pb-20">
               <IngredientSelector
                 recipe={quickReviewRecipe}
                 mode="meal-plan"
