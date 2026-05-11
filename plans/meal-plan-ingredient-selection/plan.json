@@ -303,6 +303,7 @@
       "tickets": [
         {
           "id": "P5-T1",
+          "status": "done",
           "title": "Add pure projection contract test suite",
           "summary": "Create focused tests for MealPlanToListProjection as a pure module, covering selection filtering, override precedence, servings behavior, reconciliation outcomes, and downstream stacking payload correctness.",
           "acceptanceCriteria": [

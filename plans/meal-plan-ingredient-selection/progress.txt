@@ -6,3 +6,4 @@
 2026-05-10 [P3-T2]: Wired bulk add-to-list through a shared meal snapshot projection module so add inputs come from reconciled/backfilled snapshot rows while preserving selected/skipped state transitions and stacking flow.
 2026-05-10 [P4-T1]: Added a single-meal quick-review sheet for recipe checkmark adds with full ingredient selection and override editing, requiring confirm/cancel before marking the meal added.
 2026-05-10 [P4-T2]: Extracted a shared reconciled snapshot helper and wired bulk add + quick review entrypoints to the same backfill/reconciliation contract before projection/hydration.
+2026-05-10 [P5-T1]: Added a focused Vitest suite for MealPlanToListProjection covering selection filtering, override precedence, servings behavior, source-id reconciliation outcomes, and stacking payload shape.
