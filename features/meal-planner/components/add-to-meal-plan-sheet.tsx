@@ -17,6 +17,7 @@ import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
 import { useAddRecipeToDate } from '../hooks/useAddRecipeToMealPlan';
 import {
+  applyMealPlanIngredientOverride,
   MealPlanIngredientEditorRow,
   getSelectedSourceIngredientIds,
   initializeMealPlanIngredientEditor,
@@ -32,6 +33,10 @@ import {
 } from './meal-plan-item-context';
 import { MealPlanItemForm } from './meal-plan-item-form';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
+import {
+  MealPlanIngredientOverrideSheet,
+  MealPlanIngredientOverrideSheetRef,
+} from './meal-plan-ingredient-override-sheet';
 import { MealTimeSheet } from './meal-time-sheet';
 
 type AddMode = 'item' | 'recipe';
@@ -127,6 +132,8 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const [recipeMealTag, setRecipeMealTag] = useState<string | undefined>(
     undefined
   );
+  const ingredientOverrideSheetRef =
+    useRef<MealPlanIngredientOverrideSheetRef>(null);
 
   const { mutate: addItemToDate, isPending: isAddingItem } = useAddItemToDate();
   const { mutate: addRecipeToDate } = useAddRecipeToDate();
@@ -242,6 +249,15 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     setIngredientRows(prev => toggleAllMealPlanIngredientSelection(prev));
   };
 
+  const handleEditIngredient = (sourceRecipeIngredientId: string) => {
+    const row = ingredientRows.find(
+      ingredientRow =>
+        ingredientRow.sourceRecipeIngredientId === sourceRecipeIngredientId
+    );
+    if (!row) return;
+    ingredientOverrideSheetRef.current?.present(row);
+  };
+
   const isRecipeAddDisabled =
     !isRecipeModeValid || selectedIngredientIds.size === 0;
 
@@ -314,9 +330,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               onToggleIngredient={handleToggleIngredient}
               onToggleAll={handleToggleAllIngredients}
               selectedIds={selectedIngredientIds}
-              onEditIngredient={() => {
-                toast.info('Ingredient detail editing is coming in the next step');
-              }}
+              onEditIngredient={handleEditIngredient}
               headerTitle="Add Recipe"
             />
           </Animated.View>
@@ -331,6 +345,18 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           <MealPlanItemForm onSubmit={handleAddItem} showMetaBar={false} />
         </View>
       )}
+      <MealPlanIngredientOverrideSheet
+        ref={ingredientOverrideSheetRef}
+        onSave={async ({ sourceRecipeIngredientId, updates }) => {
+          setIngredientRows(prev =>
+            prev.map(row =>
+              row.sourceRecipeIngredientId === sourceRecipeIngredientId
+                ? applyMealPlanIngredientOverride({ row, updates })
+                : row
+            )
+          );
+        }}
+      />
     </BottomSheet>
   );
 };

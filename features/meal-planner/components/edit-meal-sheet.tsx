@@ -30,6 +30,7 @@ import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import {
+  applyMealPlanIngredientOverride,
   MealPlanIngredientEditorRow,
   getSelectedSourceIngredientIds,
   hydrateMealPlanIngredientEditorFromSnapshot,
@@ -40,6 +41,10 @@ import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient
 import { MealPlanRecipe } from '../types';
 
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
+import {
+  MealPlanIngredientOverrideSheet,
+  MealPlanIngredientOverrideSheetRef,
+} from './meal-plan-ingredient-override-sheet';
 import { MealTimeSheet } from './meal-time-sheet';
 
 type EditMealSheetProps = {};
@@ -67,12 +72,16 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
     const [isPersistingIngredientSelection, setIsPersistingIngredientSelection] =
       useState(false);
+    const [isPersistingIngredientOverride, setIsPersistingIngredientOverride] =
+      useState(false);
     const [mealPlanRecipeToEdit, setMealPlanRecipeToEdit] =
       useState<MealPlanRecipe | null>(null);
 
     const sheetRef = useRef<TrueSheet>(null);
     const changeRecipeSheetRef = useRef<TrueSheet>(null);
     const calendarSheetRef = useRef<CalendarSheetRef>(null);
+    const ingredientOverrideSheetRef =
+      useRef<MealPlanIngredientOverrideSheetRef>(null);
     const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
     const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
     const lastSyncedSnapshotRef = useRef<string | null>(null);
@@ -149,6 +158,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       setIngredientRows([]);
       setIsLoadingIngredients(false);
       setIsPersistingIngredientSelection(false);
+      setIsPersistingIngredientOverride(false);
       setSelectedDate(undefined);
       setMealTag(undefined);
       setMealPlanRecipeToEdit(null);
@@ -335,6 +345,15 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       </View>
     ) : undefined;
 
+    const handleEditIngredient = (sourceRecipeIngredientId: string) => {
+      const row = ingredientRows.find(
+        ingredientRow =>
+          ingredientRow.sourceRecipeIngredientId === sourceRecipeIngredientId
+      );
+      if (!row) return;
+      ingredientOverrideSheetRef.current?.present(row);
+    };
+
     return (
       <>
         <BottomSheet
@@ -402,26 +421,65 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                     onToggleAll={() => {
                       void handleToggleAllIngredientSelections();
                     }}
-                    onEditIngredient={() => {
-                      toast.info(
-                        'Ingredient detail editing is coming in the next step'
-                      );
-                    }}
+                    onEditIngredient={handleEditIngredient}
                   />
                 </View>
               ) : null}
-              {isLoadingIngredients || isPersistingIngredientSelection ? (
+              {isLoadingIngredients ||
+              isPersistingIngredientSelection ||
+              isPersistingIngredientOverride ? (
                 <View className="px-4">
                   <Pill hasValue>
                     {isLoadingIngredients
                       ? 'Loading ingredient selections...'
-                      : 'Saving ingredient selections...'}
+                      : isPersistingIngredientOverride
+                        ? 'Saving ingredient override...'
+                        : 'Saving ingredient selections...'}
                   </Pill>
                 </View>
               ) : null}
             </View>
           </BottomSheet.SheetView>
         </BottomSheet>
+
+        <MealPlanIngredientOverrideSheet
+          ref={ingredientOverrideSheetRef}
+          onSave={async ({ sourceRecipeIngredientId, updates }) => {
+            const currentRow = ingredientRows.find(
+              row => row.sourceRecipeIngredientId === sourceRecipeIngredientId
+            );
+            if (!currentRow?.snapshotRowId) {
+              throw new Error('Snapshot row not found');
+            }
+
+            setIngredientRows(prev =>
+              prev.map(row =>
+                row.sourceRecipeIngredientId === sourceRecipeIngredientId
+                  ? applyMealPlanIngredientOverride({ row, updates })
+                  : row
+              )
+            );
+
+            setIsPersistingIngredientOverride(true);
+            try {
+              await MealPlanIngredientSnapshotStore.updateRowOverrides({
+                snapshotRowId: currentRow.snapshotRowId,
+                updates,
+              });
+            } catch (error) {
+              setIngredientRows(prev =>
+                prev.map(row =>
+                  row.sourceRecipeIngredientId === sourceRecipeIngredientId
+                    ? currentRow
+                    : row
+                )
+              );
+              throw error;
+            } finally {
+              setIsPersistingIngredientOverride(false);
+            }
+          }}
+        />
 
         <BottomSheet
           name="edit-meal-change-recipe-sheet"

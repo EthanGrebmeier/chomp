@@ -1,3 +1,4 @@
 2026-05-10 [P1-T1]: Added meal-plan recipe ingredient snapshot schema entity, links, and ownership-aligned InstantDB permissions.
 2026-05-10 [P1-T2]: Added MealPlanIngredientSnapshotStore with initialize/read/update/reconcile/backfill APIs and wired add-to-list flows to backfill + reconcile snapshots on demand.
 2026-05-10 [P2-T1]: Added meal-plan ingredient editor state, wired selector-based ingredient toggling into add/edit meal flows, and persisted per-row snapshot selection state.
+2026-05-10 [P2-T2]: Added a secondary meal-plan ingredient override sheet and wired add/edit meal flows to save snapshot row name/quantity/unit/notes/category/store updates with quantity-override semantics.

@@ -146,6 +146,7 @@
         },
         {
           "id": "P2-T2",
+          "status": "done",
           "title": "Build secondary ingredient override sheet and save semantics",
           "summary": "Add a secondary meal-plan ingredient edit sheet that updates snapshot row values for name, quantity, unit, notes, category, and store while preserving override semantics for servings behavior.",
           "acceptanceCriteria": [

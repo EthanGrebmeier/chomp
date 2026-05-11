@@ -148,3 +148,28 @@ export const toSnapshotCreateInputs = (
     isQuantityOverridden: row.isQuantityOverridden,
     storeId: row.storeId,
   }));
+
+export const applyMealPlanIngredientOverride = ({
+  row,
+  updates,
+}: {
+  row: MealPlanIngredientEditorRow;
+  updates: {
+    name: string;
+    quantity: number;
+    unit: string;
+    notes?: string | null;
+    category?: string | null;
+    storeId?: string;
+    isQuantityOverridden: boolean;
+  };
+}): MealPlanIngredientEditorRow => ({
+  ...row,
+  name: updates.name,
+  quantity: updates.quantity,
+  unit: updates.unit,
+  notes: updates.notes ?? null,
+  category: updates.category ?? null,
+  storeId: updates.storeId,
+  isQuantityOverridden: updates.isQuantityOverridden,
+});
