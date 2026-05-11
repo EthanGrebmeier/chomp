@@ -1,0 +1,351 @@
+{
+  "planName": "Grocery List Bulk Selection Mode",
+  "sourcePrd": "plans/grocery-list-bulk-selection/prd.md",
+  "lastUpdated": "2026-05-10",
+  "architecturalDecisions": [
+    {
+      "id": "AD-1",
+      "title": "Bulk mode stays inside grocery list route",
+      "decision": "Bulk Selection Mode is an in-page state within the existing grocery list experience and does not introduce a new route."
+    },
+    {
+      "id": "AD-2",
+      "title": "Unchecked-only selectable scope",
+      "decision": "Selectable entities are existing unchecked grocery items; checked items are hidden while mode is active."
+    },
+    {
+      "id": "AD-3",
+      "title": "Soft-delete remains canonical delete behavior",
+      "decision": "Bulk delete and move source removal use existing soft-delete semantics on grocery items rather than hard deletes."
+    },
+    {
+      "id": "AD-4",
+      "title": "Existing picker surfaces are reused",
+      "decision": "Bulk store, category, and move actions reuse the existing store/category/list selection sheets to preserve interaction consistency."
+    },
+    {
+      "id": "AD-5",
+      "title": "Permission boundaries unchanged",
+      "decision": "All bulk writes continue through existing InstantDB permission boundaries used by grocery list members and owners."
+    },
+    {
+      "id": "AD-6",
+      "title": "Deterministic move conflict semantics",
+      "decision": "Bulk move applies deterministic destination merge/increment rules and then removes source items for true transfer semantics."
+    }
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "title": "Bulk Mode Foundation",
+      "userStories": [
+        "Enter bulk mode from list menu and exit intentionally",
+        "Restrict selection to unchecked items and hide checked rows",
+        "Use row tap and checkbox as selection controls",
+        "Disable edit interactions while in bulk mode",
+        "Expose Select All and Clear All utilities",
+        "Clear selection state on exit"
+      ],
+      "tickets": [
+        {
+          "id": "P1-T1",
+          "title": "Add bulk mode controller with explicit state transitions",
+          "summary": "Introduce a dedicated bulk-selection controller that manages mode status, selected item ids, unchecked-only selection scope, and reset-on-exit behavior so UI layers consume a stable contract.",
+          "acceptanceCriteria": [
+            "Controller supports enter mode, exit mode, toggle item, select all visible unchecked items, and clear all.",
+            "Selecting a checked item is prevented by controller rules even if attempted by UI.",
+            "Exiting mode always clears the selected-item set."
+          ],
+          "dependencies": [],
+          "testPlan": [
+            "Add unit tests covering enter/exit, unchecked-only scope, toggle semantics, select-all, and clear-all.",
+            "Run `pnpm test -- --run`.",
+            "Run `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Bulk action execution logic"
+          ]
+        },
+        {
+          "id": "P1-T2",
+          "title": "Wire grocery list UI into bulk mode foundation",
+          "summary": "Integrate bulk mode state into grocery list header and rows so menu entry, close action, row/checkbox toggles, edit suppression, checked-row hiding, and section clear suppression all follow mode rules.",
+          "acceptanceCriteria": [
+            "Overflow menu shows an enter-bulk action when mode is inactive.",
+            "Header shows close plus Select All/Clear All controls while mode is active.",
+            "Checked rows are not rendered during bulk mode.",
+            "Row press and checkbox both toggle selection in bulk mode.",
+            "Item edit entry points and section-level clear controls are unavailable in bulk mode."
+          ],
+          "dependencies": [
+            "P1-T1"
+          ],
+          "testPlan": [
+            "Add integration tests for entering/exiting mode and selection interactions.",
+            "Manual check: verify checked rows disappear and editing does not open while mode is active.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Bottom toolbar animation polish",
+            "Bulk write operations"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Toolbar Transition and Mode Presentation",
+      "userStories": [
+        "Cross-fade standard bottom controls to bulk toolbar",
+        "Use clear iconography and action ordering",
+        "Disable toolbar actions with zero selection"
+      ],
+      "tickets": [
+        {
+          "id": "P2-T1",
+          "title": "Implement bottom control cross-fade for mode transitions",
+          "summary": "Add animation state that fades default nav/add controls out and bulk toolbar in at the same bottom alignment zone to provide a clear mode-change affordance.",
+          "acceptanceCriteria": [
+            "Bulk mode activation visually transitions from standard controls to bulk toolbar in approximately 200ms.",
+            "Exiting bulk mode restores standard controls with the reverse transition.",
+            "Layout does not jump during transition on common device sizes."
+          ],
+          "dependencies": [
+            "P1-T2"
+          ],
+          "testPlan": [
+            "Manual check on iOS and Android simulators for transition smoothness and alignment.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Action handler implementations for toolbar buttons"
+          ]
+        },
+        {
+          "id": "P2-T2",
+          "title": "Render disabled-aware bulk toolbar shell",
+          "summary": "Add the bulk toolbar action shell in final order with required icons and disabled state behavior tied to selection count to establish the interaction surface before write flows are attached.",
+          "acceptanceCriteria": [
+            "Toolbar action order is Set Store, Set Category, Move, Delete.",
+            "Toolbar actions use designated icons and destructive affordance on delete.",
+            "All actions are disabled when no items are selected and enabled otherwise."
+          ],
+          "dependencies": [
+            "P2-T1"
+          ],
+          "testPlan": [
+            "Add UI test assertions for button order and zero-selection disabled state.",
+            "Manual check: destructive action appears as the right-most action.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Delete confirmation flow",
+            "Store/category/list picker wiring"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Bulk Delete Vertical Slice",
+      "userStories": [
+        "Require confirmation before deleting selected items",
+        "Apply existing soft-delete behavior",
+        "Exit mode and show success confirmation after action",
+        "Respect shared-list permissions"
+      ],
+      "tickets": [
+        {
+          "id": "P3-T1",
+          "title": "Implement bulk delete orchestrator path",
+          "summary": "Build the delete action flow that prompts confirmation with selected-count context, executes soft-delete updates for selected grocery items, then resets mode state and shows a generic success toast.",
+          "acceptanceCriteria": [
+            "Delete action opens a confirmation prompt showing selected item count.",
+            "Confirming delete marks all selected items deleted using existing soft-delete semantics.",
+            "Successful delete exits bulk mode, clears selection, and shows a generic success toast.",
+            "Canceling delete performs no writes and keeps current mode state."
+          ],
+          "dependencies": [
+            "P2-T2"
+          ],
+          "testPlan": [
+            "Add unit tests for delete orchestrator success and cancel paths.",
+            "Manual check: collaboration scenario still enforces permission boundaries.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Undo or action history"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Bulk Store and Category Vertical Slice",
+      "userStories": [
+        "Reuse existing store/category sheets for bulk updates",
+        "Allow None to clear store/category",
+        "Best-effort saved-item sync does not block grocery-item updates",
+        "Exit mode and show success confirmation after action",
+        "Respect shared-list permissions"
+      ],
+      "tickets": [
+        {
+          "id": "P4-T1",
+          "title": "Attach store and category sheets to bulk action shell",
+          "summary": "Wire bulk Set Store and Set Category actions to existing picker sheets, including None semantics, selected-count aware submission, and disabled behavior inherited from selection state.",
+          "acceptanceCriteria": [
+            "Set Store action opens existing store picker surface and returns selected store or None.",
+            "Set Category action opens existing category picker surface and returns selected category or None.",
+            "Submitting either action targets currently selected items only."
+          ],
+          "dependencies": [
+            "P2-T2"
+          ],
+          "testPlan": [
+            "Add integration tests ensuring both actions open reused sheets and receive values.",
+            "Manual check: selecting None clears values intent for all selected items.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Custom new picker UX"
+          ]
+        },
+        {
+          "id": "P4-T2",
+          "title": "Implement bulk store/category write adapter with best-effort sync",
+          "summary": "Implement a bulk write adapter that updates grocery items for selected records and performs linked saved-item synchronization on a best-effort basis so partial sync failures do not fail the primary bulk operation.",
+          "acceptanceCriteria": [
+            "Store/category values are updated across all selected grocery items in one bulk action flow.",
+            "Choosing None clears the respective field on selected grocery items.",
+            "Saved-item sync attempts occur where linkage permits, and skipped/failed syncs do not fail grocery-item updates.",
+            "Successful action exits bulk mode, clears selection, and shows a generic success toast."
+          ],
+          "dependencies": [
+            "P4-T1"
+          ],
+          "testPlan": [
+            "Add unit tests for best-effort sync behavior including partial failure scenarios.",
+            "Manual check with mixed linked/unlinked items to confirm grocery updates still succeed.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Detailed per-item sync result UI"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Bulk Move Vertical Slice",
+      "userStories": [
+        "Reuse existing list-selection sheet for move destination",
+        "Show current list as disabled option",
+        "Apply true move semantics (remove source after destination write)",
+        "Merge/increment destination conflicts deterministically",
+        "Preserve checked-state semantics and permission safety",
+        "Exit mode and show success confirmation after action"
+      ],
+      "tickets": [
+        {
+          "id": "P5-T1",
+          "title": "Wire move action to list picker with current-list guard",
+          "summary": "Connect the bulk Move action to the existing grocery-list selector flow with clear current-list orientation, preventing same-list destination submission while still showing the current list in the destination context.",
+          "acceptanceCriteria": [
+            "Move action opens reused list-selection sheet.",
+            "Current list is visible but not selectable as destination.",
+            "Move confirmation is blocked until a valid destination list is selected."
+          ],
+          "dependencies": [
+            "P2-T2"
+          ],
+          "testPlan": [
+            "Add integration tests for destination picker behavior and same-list disable rule.",
+            "Manual check: current list remains visible in picker context.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Custom move destination UI"
+          ]
+        },
+        {
+          "id": "P5-T2",
+          "title": "Implement move planner and executor semantics",
+          "summary": "Implement move planning and execution that creates or merges destination items per deterministic stacking rules, then removes source items to enforce true transfer behavior with permission-safe writes.",
+          "acceptanceCriteria": [
+            "When selected source items conflict with destination items, quantities are merged/incremented using deterministic rules.",
+            "When no conflict exists, destination receives new item records with expected field values.",
+            "Source selected items are removed only after successful destination application.",
+            "Successful action exits bulk mode, clears selection, and shows a generic success toast."
+          ],
+          "dependencies": [
+            "P5-T1"
+          ],
+          "testPlan": [
+            "Add unit tests for move planning outputs: merge, create, and source removal steps.",
+            "Manual check with mixed conflict/non-conflict selections across two lists.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Per-item conflict-resolution prompts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Validation and Regression Safety",
+      "userStories": [
+        "Validate all critical user-visible behaviors",
+        "Verify collaboration and mixed linkage edge cases",
+        "Reduce risk of regressions in normal non-bulk list usage"
+      ],
+      "tickets": [
+        {
+          "id": "P6-T1",
+          "title": "Add end-to-end behavior coverage for bulk mode lifecycle",
+          "summary": "Add integration-focused behavior tests that exercise mode entry/exit, selection utilities, disabled states, confirmation gates, and post-success lifecycle resets across delete, store/category, and move paths.",
+          "acceptanceCriteria": [
+            "Automated tests cover mode entry from menu and exit via close control.",
+            "Automated tests cover checked-row hiding and action disabled state with zero selection.",
+            "Automated tests confirm success paths exit mode and clear selection for each bulk action type."
+          ],
+          "dependencies": [
+            "P3-T1",
+            "P4-T2",
+            "P5-T2"
+          ],
+          "testPlan": [
+            "Run targeted integration test suite for grocery list bulk mode.",
+            "Run `pnpm test -- --run`.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit`."
+          ],
+          "outOfScope": [
+            "Visual snapshot baselines for all animation frames"
+          ]
+        },
+        {
+          "id": "P6-T2",
+          "title": "Execute manual QA matrix for permissions and saved-item linkage",
+          "summary": "Run a manual validation matrix focused on shared-list permissions, mixed saved-item linkage, and repeated action switching to ensure production confidence before rollout.",
+          "acceptanceCriteria": [
+            "Manual checklist validates owner/member permission behavior for all bulk actions.",
+            "Manual checklist validates best-effort sync behavior for mixed linked and unlinked items.",
+            "Manual checklist validates no regression in standard non-bulk grocery list editing."
+          ],
+          "dependencies": [
+            "P6-T1"
+          ],
+          "testPlan": [
+            "Document and execute manual scenarios derived from PRD testing decisions.",
+            "Capture pass/fail notes for permission and linkage edge cases.",
+            "Run `pnpm lint` and `pnpm tsc --noEmit` before final merge readiness."
+          ],
+          "outOfScope": [
+            "Feature-flag rollout strategy"
+          ]
+        }
+      ]
+    }
+  ]
+}
