@@ -11,7 +11,7 @@ type CheckboxProps = {
   className?: string;
 };
 
-const keyframe = new Keyframe({
+const checkedKeyframe = new Keyframe({
   0: {
     opacity: 0,
     transform: [{ scale: 0 }],
@@ -19,6 +19,18 @@ const keyframe = new Keyframe({
   100: {
     opacity: 1,
     transform: [{ scale: 1 }],
+    easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+  },
+});
+
+const uncheckedKeyframe = new Keyframe({
+  0: {
+    opacity: 1,
+    transform: [{ scale: 1 }],
+  },
+  100: {
+    opacity: 0,
+    transform: [{ scale: 0 }],
     easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
   },
 });
@@ -41,8 +53,9 @@ export const Checkbox = ({
     >
       {checked && (
         <Animated.View
-          entering={keyframe.duration(100)}
-          className={cn('h-full w-full rounded-full bg-accent-foreground')}
+          entering={checkedKeyframe.duration(100)}
+          exiting={uncheckedKeyframe.duration(150)}
+          className={cn('h-full w-full rounded-sm bg-accent-foreground')}
         />
       )}
     </HapticPressable>
