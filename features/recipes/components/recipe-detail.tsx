@@ -95,7 +95,7 @@ const RecipeDetailContent = ({ recipe, listId }: RecipeDetailContentProps) => {
       {/* Ingredients */}
       <View className="flex-1 ">
         <View className="flex-row items-center justify-between px-4">
-          <Text className="text-xl font-semibold">Ingredients:</Text>
+          <Text className="text-muted-foreground">Ingredients:</Text>
         </View>
         {recipe.recipe_ingredients.length === 0 ? (
           <View className=" flex-1 items-center justify-center">

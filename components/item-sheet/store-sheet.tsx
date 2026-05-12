@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ScrollView, TextInput, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { createStore } from '../../features/stores/instant/create-store';
@@ -253,6 +253,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
         <BottomSheet
           ref={createStoreSheetRef}
           name="create-store-sheet"
+          detents={[0.3]}
           footer={
             <View className="px-10 pb-4">
               <Button
@@ -279,12 +280,11 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
               <Text className="mb-2 text-sm font-medium text-muted-foreground">
                 Store Name
               </Text>
-              <TextInput
+              <BottomSheet.TextInput
                 value={newStoreName}
                 onChangeText={setNewStoreName}
-                placeholder="Enter store name..."
+                placeholder="My Store"
                 placeholderTextColor="#9ca3af"
-                className="rounded-xl border border-border bg-input px-4 py-3 text-base text-foreground"
                 autoCapitalize="words"
                 returnKeyType="done"
                 onSubmitEditing={handleCreateStore}

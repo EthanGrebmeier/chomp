@@ -65,7 +65,9 @@ export const BottomSheet = ({
       onWillDismiss={onStartClose}
       onDidDismiss={onDismiss}
       backgroundColor={
-        colorscheme.colorScheme === 'dark' ? THEME.dark.card : THEME.light.card
+        colorscheme.colorScheme === 'dark'
+          ? THEME.dark.background
+          : THEME.light.background
       }
       grabber
       dimmedDetentIndex={0}
@@ -74,7 +76,7 @@ export const BottomSheet = ({
       insetAdjustment={insetAdjustment}
       scrollable={scrollable}
     >
-      <View className={cn(viewClassName)} style={{ paddingTop: bottom }}>
+      <View className={cn(viewClassName)} style={{ paddingTop: 24 }}>
         {children}
       </View>
     </TrueSheet>
@@ -169,7 +171,7 @@ const SheetView = ({
   children: React.ReactNode;
   className?: string;
 }) => {
-  return <View className={cn('px-4', className)}>{children}</View>;
+  return <View className={cn('px-6', className)}>{children}</View>;
 };
 
 BottomSheet.Header = Header;
