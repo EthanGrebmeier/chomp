@@ -220,7 +220,7 @@
         },
         {
           "id": "P4-T2",
-          "status": "todo",
+          "status": "done",
           "title": "Implement bulk store/category write adapter with best-effort sync",
           "summary": "Implement a bulk write adapter that updates grocery items for selected records and performs linked saved-item synchronization on a best-effort basis so partial sync failures do not fail the primary bulk operation.",
           "acceptanceCriteria": [

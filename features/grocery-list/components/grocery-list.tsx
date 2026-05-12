@@ -31,6 +31,8 @@ import { navigation } from '../../../lib/navigation';
 import {
   buildBulkCategorySelectionPayload,
   buildBulkStoreSelectionPayload,
+  runBulkCategoryUpdate,
+  runBulkStoreUpdate,
 } from '../bulk-selection/store-category-orchestrator';
 import {
   clearBulkSelection,
@@ -460,7 +462,7 @@ export const GroceryList = ({
     }
   };
 
-  const handleBulkStoreSheetSelect = (
+  const handleBulkStoreSheetSelect = async (
     nextStoreId?: string,
     nextStoreName?: string
   ) => {
@@ -474,9 +476,22 @@ export const GroceryList = ({
     }
 
     setBulkStoreSelectionDraft(payload);
+    const selectedItems = filteredItems.filter(item =>
+      payload.selectedItemIds.includes(item.id)
+    );
+    try {
+      await runBulkStoreUpdate({
+        selectedItemIds: payload.selectedItemIds,
+        selectedItems,
+        storeId: payload.storeId,
+      });
+      setBulkSelectionState(currentState => exitBulkSelectionMode(currentState));
+    } catch {
+      toast.error('Failed to update store for selected items');
+    }
   };
 
-  const handleBulkCategorySheetSelect = (nextCategory?: string) => {
+  const handleBulkCategorySheetSelect = async (nextCategory?: string) => {
     const payload = buildBulkCategorySelectionPayload({
       selectedItemIds: bulkSelectionState.selectedItemIds,
       category: nextCategory,
@@ -486,6 +501,19 @@ export const GroceryList = ({
     }
 
     setBulkCategorySelectionDraft(payload);
+    const selectedItems = filteredItems.filter(item =>
+      payload.selectedItemIds.includes(item.id)
+    );
+    try {
+      await runBulkCategoryUpdate({
+        selectedItemIds: payload.selectedItemIds,
+        selectedItems,
+        category: payload.category,
+      });
+      setBulkSelectionState(currentState => exitBulkSelectionMode(currentState));
+    } catch {
+      toast.error('Failed to update category for selected items');
+    }
   };
 
   return (

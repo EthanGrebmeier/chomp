@@ -5,3 +5,4 @@
 2026-05-12 [P2-T2]: Replaced the placeholder bulk toolbar shell with ordered Set Store/Set Category/Move/Delete actions using required icons, delete-destructive styling, and selection-count driven disabled state.
 2026-05-12 [P3-T1]: Implemented bulk delete orchestration with selected-count confirmation, selected-item soft-delete writes, success lifecycle reset, and unit coverage for confirm/cancel paths.
 2026-05-12 [P4-T1]: Wired bulk Set Store/Set Category actions to the existing picker sheets via imperative sheet handles, captured None/value submissions against currently selected items, and added payload-builder tests for selected-item targeting.
+2026-05-12 [P4-T2]: Added bulk store/category write adapters that update selected grocery items, perform linked saved-item synchronization on a best-effort basis, wire both bulk sheet confirms to execute writes, and cover partial sync failure behavior in orchestrator tests.
