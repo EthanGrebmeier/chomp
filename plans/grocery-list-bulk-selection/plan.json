@@ -1,7 +1,7 @@
 {
   "planName": "Grocery List Bulk Selection Mode",
   "sourcePrd": "plans/grocery-list-bulk-selection/prd.md",
-  "lastUpdated": "2026-05-10",
+  "lastUpdated": "2026-05-12",
   "architecturalDecisions": [
     {
       "id": "AD-1",
@@ -74,7 +74,7 @@
           "summary": "Integrate bulk mode state into grocery list header and rows so menu entry, close action, row/checkbox toggles, edit suppression, checked-row hiding, and section clear suppression all follow mode rules.",
           "acceptanceCriteria": [
             "Overflow menu shows an enter-bulk action when mode is inactive.",
-            "Header shows close plus Select All/Clear All controls while mode is active.",
+            "Header replaces list-name/change-list affordance with Select All/Clear All while mode is active, and keeps the exit control in the top-right.",
             "Checked rows are not rendered during bulk mode.",
             "Row press and checkbox both toggle selection in bulk mode.",
             "Item edit entry points and section-level clear controls are unavailable in bulk mode."
