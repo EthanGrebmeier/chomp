@@ -49,6 +49,7 @@
       "tickets": [
         {
           "id": "P1-T1",
+          "status": "done",
           "title": "Add bulk mode controller with explicit state transitions",
           "summary": "Introduce a dedicated bulk-selection controller that manages mode status, selected item ids, unchecked-only selection scope, and reset-on-exit behavior so UI layers consume a stable contract.",
           "acceptanceCriteria": [
@@ -68,6 +69,7 @@
         },
         {
           "id": "P1-T2",
+          "status": "todo",
           "title": "Wire grocery list UI into bulk mode foundation",
           "summary": "Integrate bulk mode state into grocery list header and rows so menu entry, close action, row/checkbox toggles, edit suppression, checked-row hiding, and section clear suppression all follow mode rules.",
           "acceptanceCriteria": [
@@ -103,6 +105,7 @@
       "tickets": [
         {
           "id": "P2-T1",
+          "status": "todo",
           "title": "Implement bottom control cross-fade for mode transitions",
           "summary": "Add animation state that fades default nav/add controls out and bulk toolbar in at the same bottom alignment zone to provide a clear mode-change affordance.",
           "acceptanceCriteria": [
@@ -123,6 +126,7 @@
         },
         {
           "id": "P2-T2",
+          "status": "todo",
           "title": "Render disabled-aware bulk toolbar shell",
           "summary": "Add the bulk toolbar action shell in final order with required icons and disabled state behavior tied to selection count to establish the interaction surface before write flows are attached.",
           "acceptanceCriteria": [
@@ -157,6 +161,7 @@
       "tickets": [
         {
           "id": "P3-T1",
+          "status": "todo",
           "title": "Implement bulk delete orchestrator path",
           "summary": "Build the delete action flow that prompts confirmation with selected-count context, executes soft-delete updates for selected grocery items, then resets mode state and shows a generic success toast.",
           "acceptanceCriteria": [
@@ -192,6 +197,7 @@
       "tickets": [
         {
           "id": "P4-T1",
+          "status": "todo",
           "title": "Attach store and category sheets to bulk action shell",
           "summary": "Wire bulk Set Store and Set Category actions to existing picker sheets, including None semantics, selected-count aware submission, and disabled behavior inherited from selection state.",
           "acceptanceCriteria": [
@@ -213,6 +219,7 @@
         },
         {
           "id": "P4-T2",
+          "status": "todo",
           "title": "Implement bulk store/category write adapter with best-effort sync",
           "summary": "Implement a bulk write adapter that updates grocery items for selected records and performs linked saved-item synchronization on a best-effort basis so partial sync failures do not fail the primary bulk operation.",
           "acceptanceCriteria": [
@@ -249,6 +256,7 @@
       "tickets": [
         {
           "id": "P5-T1",
+          "status": "todo",
           "title": "Wire move action to list picker with current-list guard",
           "summary": "Connect the bulk Move action to the existing grocery-list selector flow with clear current-list orientation, preventing same-list destination submission while still showing the current list in the destination context.",
           "acceptanceCriteria": [
@@ -270,6 +278,7 @@
         },
         {
           "id": "P5-T2",
+          "status": "todo",
           "title": "Implement move planner and executor semantics",
           "summary": "Implement move planning and execution that creates or merges destination items per deterministic stacking rules, then removes source items to enforce true transfer behavior with permission-safe writes.",
           "acceptanceCriteria": [
@@ -303,6 +312,7 @@
       "tickets": [
         {
           "id": "P6-T1",
+          "status": "todo",
           "title": "Add end-to-end behavior coverage for bulk mode lifecycle",
           "summary": "Add integration-focused behavior tests that exercise mode entry/exit, selection utilities, disabled states, confirmation gates, and post-success lifecycle resets across delete, store/category, and move paths.",
           "acceptanceCriteria": [
@@ -326,6 +336,7 @@
         },
         {
           "id": "P6-T2",
+          "status": "todo",
           "title": "Execute manual QA matrix for permissions and saved-item linkage",
           "summary": "Run a manual validation matrix focused on shared-list permissions, mixed saved-item linkage, and repeated action switching to ensure production confidence before rollout.",
           "acceptanceCriteria": [
