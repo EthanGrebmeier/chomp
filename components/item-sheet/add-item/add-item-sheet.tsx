@@ -1,8 +1,14 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { PlusIcon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
 import {
@@ -90,6 +96,7 @@ const AddItemSheet = ({
   groceryListId,
   isTriggerVisible = true,
 }: AddItemSheetProps) => {
+  const triggerOpacity = useSharedValue(isTriggerVisible ? 1 : 0);
   const ref = useRef<TrueSheet>(null);
   const {
     reset,
@@ -110,6 +117,16 @@ const AddItemSheet = ({
     RecipeIngredientInput[] | null
   >(null);
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
+
+  useEffect(() => {
+    triggerOpacity.value = withTiming(isTriggerVisible ? 1 : 0, {
+      duration: 200,
+    });
+  }, [isTriggerVisible, triggerOpacity]);
+
+  const triggerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: triggerOpacity.value,
+  }));
 
   const openSheet = () => {
     ref.current?.present();
@@ -242,22 +259,20 @@ const AddItemSheet = ({
 
   return (
     <>
-      {isTriggerVisible && (
-        <Animated.View
-          className="bottom-safe absolute right-6 z-10"
-          entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(200)}
-        >
-          <Button size="wide-small" onPress={openSheet}>
-            <Icon
-              as={PlusIcon}
-              size={28}
-              strokeWidth={3}
-              className="text-primary-foreground"
-            />
-          </Button>
-        </Animated.View>
-      )}
+      <Animated.View
+        className="bottom-safe absolute right-6 z-10"
+        style={triggerAnimatedStyle}
+        pointerEvents={isTriggerVisible ? 'auto' : 'none'}
+      >
+        <Button size="wide-small" onPress={openSheet}>
+          <Icon
+            as={PlusIcon}
+            size={28}
+            strokeWidth={3}
+            className="text-primary-foreground"
+          />
+        </Button>
+      </Animated.View>
       <BottomSheet
         detents={[1]}
         name="add-item-sheet"
