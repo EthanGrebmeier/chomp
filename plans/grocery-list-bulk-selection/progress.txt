@@ -2,3 +2,4 @@
 2026-05-12 [P1-T2]: Wired grocery list header/menu/rows into bulk mode with enter/exit controls, unchecked-only rendering, edit suppression, section-clear suppression, and mode interaction flow tests.
 2026-05-12 [P1-T2]: Refined bulk-mode header layout so Select All/Clear All replace list-name/change-list on the left while close (X) stays pinned top-right.
 2026-05-12 [P2-T1]: Added a 200ms cross-fade between standard bottom controls and a centered bulk-mode toolbar shell, including animated add-button visibility and stable bottom alignment.
+2026-05-12 [P2-T2]: Replaced the placeholder bulk toolbar shell with ordered Set Store/Set Category/Move/Delete actions using required icons, delete-destructive styling, and selection-count driven disabled state.

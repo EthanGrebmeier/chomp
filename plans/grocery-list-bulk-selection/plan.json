@@ -126,7 +126,7 @@
         },
         {
           "id": "P2-T2",
-          "status": "todo",
+          "status": "done",
           "title": "Render disabled-aware bulk toolbar shell",
           "summary": "Add the bulk toolbar action shell in final order with required icons and disabled state behavior tied to selection count to establish the interaction surface before write flows are attached.",
           "acceptanceCriteria": [
