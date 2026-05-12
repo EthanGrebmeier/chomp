@@ -1,6 +1,13 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { LucideIcon, TagIcon } from 'lucide-react-native';
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import {
+  useCallback,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { categoryOptions } from '../../features/shared/category/categories';
@@ -50,10 +57,11 @@ const CategoryOption = ({
 );
 
 type CategorySheetProps = {
-  category?: string;
+  category?: string | null;
   onSelect: (category?: string) => void;
   hideTrigger?: boolean;
   sheetName?: string;
+  openRequestId?: number;
 };
 
 export type CategorySheetRef = {
@@ -62,22 +70,38 @@ export type CategorySheetRef = {
 };
 
 export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
-  ({ category, onSelect, hideTrigger = false, sheetName = 'category-sheet' }, ref) => {
+  (
+    {
+      category,
+      onSelect,
+      hideTrigger = false,
+      sheetName = 'category-sheet',
+      openRequestId,
+    },
+    ref
+  ) => {
   const sheetRef = useRef<TrueSheet>(null);
   const scrollViewRef = useRef<ScrollView>(null);
-  const [localCategory, setLocalCategory] = useState<string | undefined>(
+  const [localCategory, setLocalCategory] = useState<string | undefined | null>(
     category
   );
 
   const selectedCategoryIndex = categoryOptions.findIndex(
-    opt => opt.value === category
+    opt => opt.value === (category ?? undefined)
   );
   const selectedCategory = categoryOptions[selectedCategoryIndex];
 
-  const openSheet = () => {
+  const openSheet = useCallback(() => {
     setLocalCategory(category);
     sheetRef.current?.present();
-  };
+  }, [category]);
+
+  useEffect(() => {
+    if (openRequestId === undefined) {
+      return;
+    }
+    openSheet();
+  }, [openRequestId, openSheet]);
 
   useImperativeHandle(ref, () => ({
     present: openSheet,
@@ -85,6 +109,9 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
   }));
 
   const handleConfirm = () => {
+    if (localCategory === null) {
+      return;
+    }
     onSelect(localCategory);
     sheetRef.current?.dismiss();
   };
@@ -126,14 +153,19 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
           dismissButton={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
           }
-          button={<ConfirmButton onPress={handleConfirm} />}
+          button={
+            <ConfirmButton
+              onPress={handleConfirm}
+              disabled={localCategory === null}
+            />
+          }
         />
         <View className="px-2">
           <CategoryOption
             label="None"
             icon={TagIcon}
             iconClassName="text-muted-foreground"
-            isSelected={!localCategory}
+            isSelected={localCategory === undefined}
             onPress={() => setLocalCategory(undefined)}
           />
 

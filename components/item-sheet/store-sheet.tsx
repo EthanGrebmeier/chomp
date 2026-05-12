@@ -1,6 +1,13 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { PlusIcon, StoreIcon } from 'lucide-react-native';
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import {
+  useCallback,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -44,11 +51,12 @@ const StoreOption = ({ label, isSelected, onPress }: StoreOptionProps) => (
 );
 
 type StoreSheetProps = {
-  storeId?: string;
+  storeId?: string | null;
   storeName?: string;
   onSelect: (storeId?: string, storeName?: string) => void;
   hideTrigger?: boolean;
   sheetName?: string;
+  openRequestId?: number;
 };
 
 export type StoreSheetRef = {
@@ -64,13 +72,16 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       onSelect,
       hideTrigger = false,
       sheetName = 'store-sheet',
+      openRequestId,
     },
     ref
   ) => {
   const sheetRef = useRef<TrueSheet>(null);
   const createStoreSheetRef = useRef<TrueSheet>(null);
   const { data: stores, isLoading } = useStores();
-  const [localStoreId, setLocalStoreId] = useState<string | undefined>(storeId);
+  const [localStoreId, setLocalStoreId] = useState<string | undefined | null>(
+    storeId
+  );
   const [newStoreName, setNewStoreName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [newlyCreatedStore, setNewlyCreatedStore] = useState<{
@@ -80,19 +91,26 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
 
   // Find selected store - check newly created first, then query results
   const selectedStore =
-    newlyCreatedStore?.id === storeId
+    newlyCreatedStore?.id === (storeId ?? undefined)
       ? newlyCreatedStore
-      : stores.find(store => store.id === storeId);
+      : stores.find(store => store.id === (storeId ?? undefined));
   const selectedStoreName =
     selectedStore?.name ?? (storeId ? storeName : undefined);
   const hasSelectedStore = Boolean(selectedStoreName);
   const hasMissingSelectedStore =
     Boolean(localStoreId) && !stores.some(store => store.id === localStoreId);
 
-  const openSheet = () => {
+  const openSheet = useCallback(() => {
     setLocalStoreId(storeId);
     sheetRef.current?.present();
-  };
+  }, [storeId]);
+
+  useEffect(() => {
+    if (openRequestId === undefined) {
+      return;
+    }
+    openSheet();
+  }, [openRequestId, openSheet]);
 
   useImperativeHandle(ref, () => ({
     present: openSheet,
@@ -100,6 +118,9 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
   }));
 
   const handleConfirm = () => {
+    if (localStoreId === null) {
+      return;
+    }
     const nextStoreName =
       localStoreId === undefined
         ? undefined
@@ -179,7 +200,12 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
           }
           title="Store"
-          button={<ConfirmButton onPress={handleConfirm} />}
+          button={
+            <ConfirmButton
+              onPress={handleConfirm}
+              disabled={localStoreId === null}
+            />
+          }
         />
 
         <ScrollView
@@ -205,7 +231,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
 
           <StoreOption
             label="None"
-            isSelected={!localStoreId}
+            isSelected={localStoreId === undefined}
             onPress={() => setLocalStoreId(undefined)}
           />
 

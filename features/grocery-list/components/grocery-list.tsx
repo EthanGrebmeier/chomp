@@ -205,13 +205,19 @@ export const GroceryList = ({
   const searchInputRef = useRef<RNTextInput>(null);
   const [bulkStoreSelectionDraft, setBulkStoreSelectionDraft] = useState<{
     selectedItemIds: string[];
-    storeId?: string;
+    storeId?: string | null;
     storeName?: string;
   } | null>(null);
   const [bulkCategorySelectionDraft, setBulkCategorySelectionDraft] = useState<{
     selectedItemIds: string[];
-    category?: string;
+    category?: string | null;
   } | null>(null);
+  const [bulkStoreOpenRequestId, setBulkStoreOpenRequestId] = useState<
+    number | undefined
+  >(undefined);
+  const [bulkCategoryOpenRequestId, setBulkCategoryOpenRequestId] = useState<
+    number | undefined
+  >(undefined);
 
   const dismissSearch = () => {
     searchInputRef.current?.blur();
@@ -385,12 +391,50 @@ export const GroceryList = ({
 
   const handleBulkToolbarActionPress = async (actionId: BulkToolbarActionId) => {
     if (actionId === 'set-store') {
+      const selectedItems = filteredItems.filter(item =>
+        bulkSelectionState.selectedItemIds.has(item.id)
+      );
+      const selectedStoreIds = new Set(
+        selectedItems.map(item => item.store?.id ?? undefined)
+      );
+      const resolvedStoreId =
+        selectedStoreIds.size === 1 ? [...selectedStoreIds][0] : null;
+      const sharedStoreId =
+        resolvedStoreId === undefined ? null : resolvedStoreId;
+      const sharedStoreName =
+        sharedStoreId === null
+          ? undefined
+          : selectedItems.find(item => item.store?.id === sharedStoreId)?.store
+              ?.name;
+
+      setBulkStoreSelectionDraft({
+        selectedItemIds: selectedItems.map(item => item.id),
+        storeId: sharedStoreId,
+        storeName: sharedStoreName,
+      });
       bulkStoreSheetRef.current?.present();
+      setBulkStoreOpenRequestId(previous => (previous ?? 0) + 1);
       return;
     }
 
     if (actionId === 'set-category') {
+      const selectedItems = filteredItems.filter(item =>
+        bulkSelectionState.selectedItemIds.has(item.id)
+      );
+      const selectedCategories = new Set(
+        selectedItems.map(item => item.category ?? undefined)
+      );
+      const resolvedCategory =
+        selectedCategories.size === 1 ? [...selectedCategories][0] : null;
+      const sharedCategory =
+        resolvedCategory === undefined ? null : resolvedCategory;
+
+      setBulkCategorySelectionDraft({
+        selectedItemIds: selectedItems.map(item => item.id),
+        category: sharedCategory,
+      });
       bulkCategorySheetRef.current?.present();
+      setBulkCategoryOpenRequestId(previous => (previous ?? 0) + 1);
       return;
     }
 
@@ -518,6 +562,7 @@ export const GroceryList = ({
           onSelect={handleBulkCategorySheetSelect}
           hideTrigger
           sheetName="bulk-category-sheet"
+          openRequestId={bulkCategoryOpenRequestId}
         />
         <StoreSheet
           ref={bulkStoreSheetRef}
@@ -526,6 +571,7 @@ export const GroceryList = ({
           onSelect={handleBulkStoreSheetSelect}
           hideTrigger
           sheetName="bulk-store-sheet"
+          openRequestId={bulkStoreOpenRequestId}
         />
       </View>
 
