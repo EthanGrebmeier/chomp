@@ -1,3 +1,4 @@
+import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import {
@@ -28,13 +29,11 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
 import { navigation } from '../../../lib/navigation';
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import {
-  buildBulkCategorySelectionPayload,
-  buildBulkStoreSelectionPayload,
-  runBulkCategoryUpdate,
-  runBulkStoreUpdate,
-} from '../bulk-selection/store-category-orchestrator';
-import { buildBulkMoveSelectionPayload } from '../bulk-selection/move-orchestrator';
+  SelectGroceryListSheet,
+  SelectGroceryListSheetRef,
+} from '../../grocery-lists/components/select-grocery-list-sheet';
 import {
   clearBulkSelection,
   createBulkSelectionState,
@@ -47,16 +46,23 @@ import {
   getBulkDeleteConfirmationCopy,
   runBulkDelete,
 } from '../bulk-selection/delete-orchestrator';
+import {
+  BulkMoveItemForPlanning,
+  buildBulkMoveSelectionPayload,
+  runBulkMove,
+} from '../bulk-selection/move-orchestrator';
+import {
+  buildBulkCategorySelectionPayload,
+  buildBulkStoreSelectionPayload,
+  runBulkCategoryUpdate,
+  runBulkStoreUpdate,
+} from '../bulk-selection/store-category-orchestrator';
 import { BulkToolbarActionId } from '../bulk-selection/toolbar';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
-import {
-  SelectGroceryListSheet,
-  SelectGroceryListSheetRef,
-} from '../../grocery-lists/components/select-grocery-list-sheet';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { BulkSelectionToolbar } from './bulk-selection-toolbar';
@@ -527,7 +533,7 @@ export const GroceryList = ({
     }
   };
 
-  const handleBulkMoveListSelect = (destinationListId: string) => {
+  const handleBulkMoveListSelect = async (destinationListId: string) => {
     const moveSelectionPayload = buildBulkMoveSelectionPayload({
       selectedItemIds: bulkSelectionState.selectedItemIds,
       sourceListId: listId,
@@ -536,6 +542,126 @@ export const GroceryList = ({
 
     if (!moveSelectionPayload) {
       return;
+    }
+
+    const selectedItems = filteredItems.filter(item =>
+      moveSelectionPayload.selectedItemIds.includes(item.id)
+    );
+    const fetchDestinationItems = async (
+      destinationListIdToUse: string
+    ): Promise<BulkMoveItemForPlanning[]> => {
+      const result = await db.queryOnce({
+        grocery_items: {
+          grocery_list: {},
+          store: {},
+          $: {
+            where: {
+              isDeleted: false,
+            },
+          },
+        },
+      });
+
+      return result.data.grocery_items.filter(
+        item => item.grocery_list?.id === destinationListIdToUse
+      );
+    };
+
+    try {
+      await runBulkMove({
+        moveSelectionPayload,
+        selectedItems,
+        fetchDestinationItems,
+        applyDestinationPlan: async (
+          plan,
+          destinationListIdToUse,
+          destinationItems
+        ) => {
+          const transactions = [];
+          const now = new Date().toISOString();
+          const destinationItemsMap = new Map(
+            destinationItems.map(item => [item.id, item])
+          );
+
+          for (const [
+            destinationItemId,
+            quantityToAdd,
+          ] of plan.quantityUpdates.entries()) {
+            const destinationItem = destinationItemsMap.get(destinationItemId);
+            if (!destinationItem) {
+              continue;
+            }
+
+            transactions.push(
+              tx.grocery_items[destinationItemId].update(
+                trimStringFields({
+                  quantity: destinationItem.quantity + quantityToAdd,
+                  updatedAt: now,
+                })
+              )
+            );
+          }
+
+          for (const createEntry of plan.createEntries) {
+            const nextItemId = id();
+            transactions.push(
+              tx.grocery_items[nextItemId].update(
+                trimStringFields({
+                  name: createEntry.name,
+                  quantity: createEntry.quantity,
+                  unit: createEntry.unit,
+                  notes: createEntry.notes,
+                  category: createEntry.category,
+                  isChecked: createEntry.isChecked,
+                  isDeleted: false,
+                  createdAt: now,
+                  updatedAt: now,
+                })
+              ),
+              tx.grocery_items[nextItemId].link({
+                grocery_list: destinationListIdToUse,
+              })
+            );
+
+            if (createEntry.storeId) {
+              transactions.push(
+                tx.grocery_items[nextItemId].link({
+                  store: createEntry.storeId,
+                })
+              );
+            }
+          }
+
+          if (transactions.length > 0) {
+            await db.transact(transactions);
+          }
+        },
+        removeSourceItems: async itemIds => {
+          if (itemIds.length === 0) {
+            return;
+          }
+
+          const now = new Date().toISOString();
+          const transactions = itemIds.map(itemId =>
+            tx.grocery_items[itemId].update(
+              trimStringFields({
+                isDeleted: true,
+                deletedAt: now,
+                updatedAt: now,
+              })
+            )
+          );
+
+          await db.transact(transactions);
+        },
+        onMoveSuccess: () => {
+          setBulkSelectionState(currentState =>
+            exitBulkSelectionMode(currentState)
+          );
+        },
+      });
+    } catch {
+      toast.error('Failed to move selected items');
     }
   };
 

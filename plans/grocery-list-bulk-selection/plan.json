@@ -279,7 +279,7 @@
         },
         {
           "id": "P5-T2",
-          "status": "todo",
+          "status": "done",
           "title": "Implement move planner and executor semantics",
           "summary": "Implement move planning and execution that creates or merges destination items per deterministic stacking rules, then removes source items to enforce true transfer behavior with permission-safe writes.",
           "acceptanceCriteria": [
