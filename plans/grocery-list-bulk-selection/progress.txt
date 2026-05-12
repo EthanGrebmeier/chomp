@@ -9,3 +9,4 @@
 2026-05-12 [P5-T1]: Wired bulk Move to the existing list-selection sheet, disabled selecting the current list as a destination while keeping it visible, and added move payload guard tests for invalid destination confirmation.
 2026-05-12 [P5-T2]: Implemented bulk move planning/execution with deterministic destination merge-or-create semantics, source soft-delete after successful destination writes, and unit coverage for move planning and operation ordering.
 2026-05-12 [P6-T1]: Added integration-focused bulk lifecycle behavior tests for mode entry/exit, unchecked-row visibility scope, zero-selection disabled actions, and success reset flows across delete/store/category/move actions.
+2026-05-12 [P6-T2]: Added and executed a bulk-selection QA matrix covering permission-safe action behavior, mixed linked/unlinked saved-item sync outcomes, move/delete lifecycle paths, and regression baseline checks.

@@ -337,7 +337,7 @@
         },
         {
           "id": "P6-T2",
-          "status": "todo",
+          "status": "done",
           "title": "Execute manual QA matrix for permissions and saved-item linkage",
           "summary": "Run a manual validation matrix focused on shared-list permissions, mixed saved-item linkage, and repeated action switching to ensure production confidence before rollout.",
           "acceptanceCriteria": [
