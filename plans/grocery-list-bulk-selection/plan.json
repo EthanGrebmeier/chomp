@@ -313,7 +313,7 @@
       "tickets": [
         {
           "id": "P6-T1",
-          "status": "todo",
+          "status": "done",
           "title": "Add end-to-end behavior coverage for bulk mode lifecycle",
           "summary": "Add integration-focused behavior tests that exercise mode entry/exit, selection utilities, disabled states, confirmation gates, and post-success lifecycle resets across delete, store/category, and move paths.",
           "acceptanceCriteria": [
