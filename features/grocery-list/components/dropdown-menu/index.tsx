@@ -24,6 +24,8 @@ type GroceryListDropdownMenuProps = {
   onEditNamePress: () => void;
   items: GroceryListItemWithRecipe[];
   ownerId?: string;
+  showEnterBulkSelectionAction?: boolean;
+  onEnterBulkSelectionMode?: () => void;
 };
 
 export const GroceryListDropdownMenu = ({
@@ -34,6 +36,8 @@ export const GroceryListDropdownMenu = ({
   onEditNamePress,
   items,
   ownerId,
+  showEnterBulkSelectionAction = false,
+  onEnterBulkSelectionMode,
 }: GroceryListDropdownMenuProps) => {
   const { user } = db.useAuth();
   const checkedItems = filterCheckedItems(items);
@@ -55,6 +59,15 @@ export const GroceryListDropdownMenu = ({
             <DropdownMenuItemIcon ios={{ name: 'pencil' }} />
           </DropdownMenuItem>
         )}
+        {showEnterBulkSelectionAction && onEnterBulkSelectionMode ? (
+          <DropdownMenuItem
+            onSelect={onEnterBulkSelectionMode}
+            key="enter-bulk-selection"
+          >
+            <DropdownMenuItemTitle>Select Items</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'checkmark.circle' }} />
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuGroup>
           <DropdownMenuItem
             destructive

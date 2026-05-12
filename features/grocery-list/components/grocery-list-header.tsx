@@ -1,5 +1,5 @@
 import { useNetworkState } from 'expo-network';
-import { MoreHorizontal, WifiOff } from 'lucide-react-native';
+import { MoreHorizontal, WifiOff, X } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { Button } from '../../../components/ui/button';
@@ -27,6 +27,12 @@ type GroceryListHeaderProps = {
   onSortByChange: (value: 'name' | 'recent') => void;
   onOpenAllGroupings: () => void;
   onCollapseAllGroupings: () => void;
+  isBulkSelectionModeActive: boolean;
+  selectedBulkItemCount: number;
+  onEnterBulkSelectionMode: () => void;
+  onExitBulkSelectionMode: () => void;
+  onSelectAllBulkItems: () => void;
+  onClearBulkSelection: () => void;
 };
 
 export const GroceryListHeader = ({
@@ -46,6 +52,12 @@ export const GroceryListHeader = ({
   onSortByChange,
   onOpenAllGroupings,
   onCollapseAllGroupings,
+  isBulkSelectionModeActive,
+  selectedBulkItemCount,
+  onEnterBulkSelectionMode,
+  onExitBulkSelectionMode,
+  onSelectAllBulkItems,
+  onClearBulkSelection,
 }: GroceryListHeaderProps) => {
   const networkState = useNetworkState();
   const isDisconnected =
@@ -67,28 +79,63 @@ export const GroceryListHeader = ({
         </Button>
         {listId && (
           <View className="flex-row items-center gap-4">
-            {isDisconnected && (
+            {isDisconnected ? (
               <Icon as={WifiOff} size={20} className="text-destructive" />
-            )}
-            <ListFilterDropdownMenu
-              groupBy={groupBy}
-              sortBy={sortBy}
-              hasEnabledGroupings={groupBy !== 'none'}
-              onGroupByChange={onGroupByChange}
-              onSortByChange={onSortByChange}
-              onOpenAllGroupings={onOpenAllGroupings}
-              onCollapseAllGroupings={onCollapseAllGroupings}
-            />
+            ) : null}
+            {isBulkSelectionModeActive ? (
+              <View className="flex-row items-center gap-2">
+                <Button
+                  variant="ghost"
+                  className="h-8 px-2"
+                  onPress={onSelectAllBulkItems}
+                >
+                  <Text className="text-sm font-medium text-foreground">
+                    Select All
+                  </Text>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-8 px-2"
+                  onPress={onClearBulkSelection}
+                  disabled={selectedBulkItemCount === 0}
+                >
+                  <Text className="text-sm font-medium text-foreground">
+                    Clear All
+                  </Text>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-8 px-1.5"
+                  onPress={onExitBulkSelectionMode}
+                >
+                  <Icon as={X} size={20} className="text-foreground" />
+                </Button>
+              </View>
+            ) : (
+              <>
+                <ListFilterDropdownMenu
+                  groupBy={groupBy}
+                  sortBy={sortBy}
+                  hasEnabledGroupings={groupBy !== 'none'}
+                  onGroupByChange={onGroupByChange}
+                  onSortByChange={onSortByChange}
+                  onOpenAllGroupings={onOpenAllGroupings}
+                  onCollapseAllGroupings={onCollapseAllGroupings}
+                />
 
-            <GroceryListDropdownMenu
-              items={items}
-              ownerId={ownerId}
-              trigger={<Icon as={MoreHorizontal} size={24} />}
-              onClearListPress={onClearListPress}
-              onSharePress={onSharePress}
-              onDeleteOrLeave={onDeleteOrLeave}
-              onEditNamePress={onEditNamePress}
-            />
+                <GroceryListDropdownMenu
+                  items={items}
+                  ownerId={ownerId}
+                  trigger={<Icon as={MoreHorizontal} size={24} />}
+                  onClearListPress={onClearListPress}
+                  onSharePress={onSharePress}
+                  onDeleteOrLeave={onDeleteOrLeave}
+                  onEditNamePress={onEditNamePress}
+                  showEnterBulkSelectionAction={true}
+                  onEnterBulkSelectionMode={onEnterBulkSelectionMode}
+                />
+              </>
+            )}
           </View>
         )}
       </View>

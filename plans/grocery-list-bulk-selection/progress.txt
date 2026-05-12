@@ -1,1 +1,2 @@
 2026-05-12 [P1-T1]: Added a dedicated bulk-selection controller with explicit mode transitions, unchecked-only selection guards, select-all/clear-all behavior, and unit tests for its contract.
+2026-05-12 [P1-T2]: Wired grocery list header/menu/rows into bulk mode with enter/exit controls, unchecked-only rendering, edit suppression, section-clear suppression, and mode interaction flow tests.

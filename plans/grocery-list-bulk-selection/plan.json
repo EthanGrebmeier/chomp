@@ -69,7 +69,7 @@
         },
         {
           "id": "P1-T2",
-          "status": "todo",
+          "status": "done",
           "title": "Wire grocery list UI into bulk mode foundation",
           "summary": "Integrate bulk mode state into grocery list header and rows so menu entry, close action, row/checkbox toggles, edit suppression, checked-row hiding, and section clear suppression all follow mode rules.",
           "acceptanceCriteria": [

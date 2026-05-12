@@ -30,6 +30,9 @@ type GroceryListItemProps = {
   isChecked: boolean;
   className?: string;
   onEdit?: () => void;
+  isBulkSelectionModeActive?: boolean;
+  isBulkSelected?: boolean;
+  onToggleBulkSelection?: () => void;
 };
 
 export const GroceryListItem = ({
@@ -37,6 +40,9 @@ export const GroceryListItem = ({
   isChecked,
   className,
   onEdit,
+  isBulkSelectionModeActive = false,
+  isBulkSelected = false,
+  onToggleBulkSelection,
 }: GroceryListItemProps) => {
   const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
   const notes = item.notes?.trim();
@@ -79,6 +85,11 @@ export const GroceryListItem = ({
   });
 
   const onCheck = () => {
+    if (isBulkSelectionModeActive) {
+      onToggleBulkSelection?.();
+      return;
+    }
+
     if (checkItemTimeoutRef.current) {
       clearTimeout(checkItemTimeoutRef.current);
     }
@@ -109,90 +120,107 @@ export const GroceryListItem = ({
     );
   };
 
-  return (
-    <ContextMenuRoot
-      trigger={
-        <ListItem
-          onDelete={() => removeGroceryListItem({ itemId: item.id })}
-          className={className}
-        >
-          <Checkbox
-            checked={internalIsChecked}
-            onPress={onCheck}
-            className="mr-1"
-          />
+  const handleRowPress = () => {
+    if (isBulkSelectionModeActive) {
+      onToggleBulkSelection?.();
+      return;
+    }
 
-          <HapticPressable
-            className="flex-1 gap-1 py-1"
-            onPress={onEdit}
-            hapticType="light"
-          >
-            <View className="flex-row items-center justify-between ">
-              <View className="relative flex-1 flex-row gap-2 pr-2">
-                <View className="flex-row items-center gap-2">
-                  <Text
-                    className={cn(
-                      'text-xl leading-[22px] tracking-tight text-foreground',
-                      internalIsChecked && 'text-muted-foreground'
-                    )}
-                    style={compactTextStyle}
-                  >
-                    {item.name}
-                    {'  '}
-                    <Text
-                      className="pl-2 text-base leading-[22px] text-muted-foreground"
-                      style={compactTextStyle}
-                    >
-                      {formatQuantityUnit(item.quantity, item.unit)}
-                    </Text>
-                  </Text>
+    onEdit?.();
+  };
 
-                  <Animated.View
-                    style={[
-                      strikethroughStyle,
-                      {
-                        position: 'absolute',
-                        top: '50%',
-                        left: 0,
-                        height: 2,
-                        backgroundColor: internalIsChecked
-                          ? theme.destructive
-                          : 'transparent',
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
-              <View className="flex-row items-center gap-2">
-                {item.category && <CategoryTag category={item.category} />}
-              </View>
-            </View>
-            {notes ? (
+  const checkboxChecked = isBulkSelectionModeActive
+    ? isBulkSelected
+    : internalIsChecked;
+
+  const itemContent = (
+    <ListItem
+      onDelete={
+        isBulkSelectionModeActive
+          ? undefined
+          : () => removeGroceryListItem({ itemId: item.id })
+      }
+      className={className}
+    >
+      <Checkbox checked={checkboxChecked} onPress={onCheck} className="mr-1" />
+
+      <HapticPressable
+        className="flex-1 gap-1 py-1"
+        onPress={handleRowPress}
+        hapticType="light"
+      >
+        <View className="flex-row items-center justify-between ">
+          <View className="relative flex-1 flex-row gap-2 pr-2">
+            <View className="flex-row items-center gap-2">
               <Text
                 className={cn(
-                  'text-base leading-[18px] text-muted-foreground',
-                  internalIsChecked && 'opacity-80'
+                  'text-xl leading-[22px] tracking-tight text-foreground',
+                  internalIsChecked && 'text-muted-foreground'
                 )}
                 style={compactTextStyle}
               >
-                {notes}
+                {item.name}
+                {'  '}
+                <Text
+                  className="pl-2 text-base leading-[22px] text-muted-foreground"
+                  style={compactTextStyle}
+                >
+                  {formatQuantityUnit(item.quantity, item.unit)}
+                </Text>
               </Text>
-            ) : null}
-            <View className="flex-row items-center gap-2">
-              {item.store?.name && <StoreTag name={item.store.name} />}
-              {item.recipe?.name && <RecipeTag name={item.recipe.name} />}
+
+              <Animated.View
+                style={[
+                  strikethroughStyle,
+                  {
+                    position: 'absolute',
+                    top: '50%',
+                    left: 0,
+                    height: 2,
+                    backgroundColor: internalIsChecked
+                      ? theme.destructive
+                      : 'transparent',
+                  },
+                ]}
+              />
             </View>
-          </HapticPressable>
-        </ListItem>
-      }
-    >
-      <ContextMenuItem
-        key="delete-grocery-item"
-        destructive
-        onSelect={handleDelete}
-      >
-        <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
-      </ContextMenuItem>
-    </ContextMenuRoot>
+          </View>
+          <View className="flex-row items-center gap-2">
+            {item.category && <CategoryTag category={item.category} />}
+          </View>
+        </View>
+        {notes ? (
+          <Text
+            className={cn(
+              'text-base leading-[18px] text-muted-foreground',
+              internalIsChecked && 'opacity-80'
+            )}
+            style={compactTextStyle}
+          >
+            {notes}
+          </Text>
+        ) : null}
+        <View className="flex-row items-center gap-2">
+          {item.store?.name && <StoreTag name={item.store.name} />}
+          {item.recipe?.name && <RecipeTag name={item.recipe.name} />}
+        </View>
+      </HapticPressable>
+    </ListItem>
+  );
+
+  return (
+    isBulkSelectionModeActive ? (
+      itemContent
+    ) : (
+      <ContextMenuRoot trigger={itemContent}>
+        <ContextMenuItem
+          key="delete-grocery-item"
+          destructive
+          onSelect={handleDelete}
+        >
+          <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
+        </ContextMenuItem>
+      </ContextMenuRoot>
+    )
   );
 };

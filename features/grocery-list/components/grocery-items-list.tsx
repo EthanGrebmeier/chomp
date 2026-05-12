@@ -30,6 +30,9 @@ type GroceryItemsListProps = {
     id: number;
   } | null;
   onListInteraction?: () => void;
+  isBulkSelectionModeActive?: boolean;
+  selectedBulkItemIds?: Set<string>;
+  onToggleBulkSelectionItem?: (itemId: string) => void;
 };
 
 type GroceryListRow =
@@ -55,6 +58,9 @@ export const GroceryItemsList = ({
   sortBy,
   groupingBulkAction,
   onListInteraction,
+  isBulkSelectionModeActive = false,
+  selectedBulkItemIds = new Set<string>(),
+  onToggleBulkSelectionItem,
 }: GroceryItemsListProps) => {
   const { present: presentEditSheet } = useEditItemSheet();
   const { mutate: clearGroceryList } = useClearGroceryList();
@@ -156,14 +162,14 @@ export const GroceryItemsList = ({
         sectionItems.map(item => item.id)
       );
     });
-    if (checkedItems.length > 0) {
+    if (!isBulkSelectionModeActive && checkedItems.length > 0) {
       map.set(
         'checked',
         checkedItems.map(item => item.id)
       );
     }
     return map;
-  }, [checkedItems, groupedUncheckedItems]);
+  }, [checkedItems, groupedUncheckedItems, isBulkSelectionModeActive]);
 
   const sectionItemCounts = useMemo(() => {
     const map = new Map<string, number>();
@@ -171,21 +177,21 @@ export const GroceryItemsList = ({
       const sectionKey = `group:${sectionTitle}`;
       map.set(sectionKey, sectionItems.length);
     });
-    if (checkedItems.length > 0) {
+    if (!isBulkSelectionModeActive && checkedItems.length > 0) {
       map.set('checked', checkedItems.length);
     }
     return map;
-  }, [checkedItems, groupedUncheckedItems]);
+  }, [checkedItems, groupedUncheckedItems, isBulkSelectionModeActive]);
 
   const groupingSectionKeys = useMemo(() => {
     const keys = Array.from(groupedUncheckedItems.keys()).map(
       sectionTitle => `group:${sectionTitle}`
     );
-    if (checkedItems.length > 0) {
+    if (!isBulkSelectionModeActive && checkedItems.length > 0) {
       keys.push('checked');
     }
     return keys;
-  }, [checkedItems.length, groupedUncheckedItems]);
+  }, [checkedItems.length, groupedUncheckedItems, isBulkSelectionModeActive]);
 
   useEffect(() => {
     if (!groupingBulkAction || groupBy === 'none') {
@@ -257,7 +263,7 @@ export const GroceryItemsList = ({
       );
     });
 
-    if (checkedItems.length > 0) {
+    if (!isBulkSelectionModeActive && checkedItems.length > 0) {
       appendSection('checked', 'Checked', checkedItems);
     }
 
@@ -267,6 +273,7 @@ export const GroceryItemsList = ({
     collapsedSections,
     groupBy,
     groupedUncheckedItems,
+    isBulkSelectionModeActive,
     sectionItemCounts,
   ]);
 
@@ -304,11 +311,15 @@ export const GroceryItemsList = ({
         itemCount={row.itemCount}
         isExpanded={row.isExpanded}
         onToggle={() => toggleSection(row.sectionKey)}
-        onClearPress={() => handleClearSection(row.sectionKey, row.title)}
+        onClearPress={
+          isBulkSelectionModeActive
+            ? undefined
+            : () => handleClearSection(row.sectionKey, row.title)
+        }
         showCollapse={true}
       />
     ),
-    [handleClearSection, toggleSection]
+    [handleClearSection, isBulkSelectionModeActive, toggleSection]
   );
 
   const renderRow = useCallback(
@@ -341,14 +352,20 @@ export const GroceryItemsList = ({
             onEdit={() => {
               presentEditSheet(item.item);
             }}
+            isBulkSelectionModeActive={isBulkSelectionModeActive}
+            isBulkSelected={selectedBulkItemIds.has(item.item.id)}
+            onToggleBulkSelection={() => onToggleBulkSelectionItem?.(item.item.id)}
           />
         </Animated.View>
       );
     },
     [
       itemLayoutTransition,
+      isBulkSelectionModeActive,
+      onToggleBulkSelectionItem,
       presentEditSheet,
       renderSectionHeader,
+      selectedBulkItemIds,
       sectionPendingInstantHide,
     ]
   );

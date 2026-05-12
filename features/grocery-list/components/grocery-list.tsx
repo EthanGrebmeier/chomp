@@ -1,7 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { BookOpenIcon, CalendarIcon, SettingsIcon } from 'lucide-react-native';
-import { useDeferredValue, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
@@ -11,6 +11,14 @@ import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
 import { navigation } from '../../../lib/navigation';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
+import {
+  clearBulkSelection,
+  createBulkSelectionState,
+  enterBulkSelectionMode,
+  exitBulkSelectionMode,
+  selectAllVisibleUncheckedItems,
+  toggleBulkSelectionItem,
+} from '../bulk-selection/controller';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
@@ -77,6 +85,9 @@ export const GroceryList = ({
   const [groupingBulkAction, setGroupingBulkAction] =
     useState<GroupingBulkAction | null>(null);
   const [searchQuery] = useState('');
+  const [bulkSelectionState, setBulkSelectionState] = useState(() =>
+    createBulkSelectionState()
+  );
 
   const deferredQuery = useDeferredValue(searchQuery.trim());
   const normalizedQuery = deferredQuery.toLowerCase();
@@ -100,6 +111,40 @@ export const GroceryList = ({
       );
     });
   }, [items, normalizedQuery]);
+
+  useEffect(() => {
+    if (!bulkSelectionState.isActive) {
+      return;
+    }
+
+    const activeUncheckedIds = new Set(
+      filteredItems.filter(item => !item.isChecked).map(item => item.id)
+    );
+    const nextSelectedIds = new Set(
+      [...bulkSelectionState.selectedItemIds].filter(id =>
+        activeUncheckedIds.has(id)
+      )
+    );
+
+    const selectionUnchanged =
+      nextSelectedIds.size === bulkSelectionState.selectedItemIds.size &&
+      [...nextSelectedIds].every(id =>
+        bulkSelectionState.selectedItemIds.has(id)
+      );
+
+    if (selectionUnchanged) {
+      return;
+    }
+
+    setBulkSelectionState(currentState => ({
+      ...currentState,
+      selectedItemIds: nextSelectedIds,
+    }));
+  }, [
+    bulkSelectionState.isActive,
+    bulkSelectionState.selectedItemIds,
+    filteredItems,
+  ]);
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
@@ -215,6 +260,48 @@ export const GroceryList = ({
     router.push(navigation.goToMealPlan(listId));
   };
 
+  const handleEnterBulkSelectionMode = () => {
+    setBulkSelectionState(currentState =>
+      enterBulkSelectionMode(currentState)
+    );
+  };
+
+  const handleExitBulkSelectionMode = () => {
+    setBulkSelectionState(currentState =>
+      exitBulkSelectionMode(currentState)
+    );
+  };
+
+  const handleSelectAllBulkItems = () => {
+    setBulkSelectionState(currentState =>
+      selectAllVisibleUncheckedItems(
+        currentState,
+        filteredItems.map(item => ({
+          id: item.id,
+          isChecked: Boolean(item.isChecked),
+        }))
+      )
+    );
+  };
+
+  const handleClearBulkSelection = () => {
+    setBulkSelectionState(currentState => clearBulkSelection(currentState));
+  };
+
+  const handleToggleBulkSelectionItem = (itemId: string) => {
+    const item = filteredItems.find(candidate => candidate.id === itemId);
+    if (!item) {
+      return;
+    }
+
+    setBulkSelectionState(currentState =>
+      toggleBulkSelectionItem(currentState, {
+        id: item.id,
+        isChecked: Boolean(item.isChecked),
+      })
+    );
+  };
+
   return (
     <>
       <View
@@ -242,6 +329,12 @@ export const GroceryList = ({
           onSortByChange={handleSortByChange}
           onOpenAllGroupings={handleOpenAllGroupings}
           onCollapseAllGroupings={handleCollapseAllGroupings}
+          isBulkSelectionModeActive={bulkSelectionState.isActive}
+          selectedBulkItemCount={bulkSelectionState.selectedItemIds.size}
+          onEnterBulkSelectionMode={handleEnterBulkSelectionMode}
+          onExitBulkSelectionMode={handleExitBulkSelectionMode}
+          onSelectAllBulkItems={handleSelectAllBulkItems}
+          onClearBulkSelection={handleClearBulkSelection}
         />
         <EditItemProvider groceryListId={listId ?? ''}>
           <View className="flex-1">
@@ -252,6 +345,9 @@ export const GroceryList = ({
               sortBy={sortBy}
               groupingBulkAction={groupingBulkAction}
               onListInteraction={dismissSearch}
+              isBulkSelectionModeActive={bulkSelectionState.isActive}
+              selectedBulkItemIds={bulkSelectionState.selectedItemIds}
+              onToggleBulkSelectionItem={handleToggleBulkSelectionItem}
             />
           </View>
         </EditItemProvider>
