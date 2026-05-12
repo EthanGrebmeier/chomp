@@ -17,8 +17,8 @@ import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
 import { useAddRecipeToDate } from '../hooks/useAddRecipeToMealPlan';
 import {
-  applyMealPlanIngredientOverride,
   MealPlanIngredientEditorRow,
+  applyMealPlanIngredientOverride,
   getSelectedSourceIngredientIds,
   initializeMealPlanIngredientEditor,
   toSnapshotCreateInputs,
@@ -28,15 +28,15 @@ import {
 
 import { DatePillSheet } from './date-pill-sheet';
 import {
+  MealPlanIngredientOverrideSheet,
+  MealPlanIngredientOverrideSheetRef,
+} from './meal-plan-ingredient-override-sheet';
+import {
   MealPlanItemProvider,
   useMealPlanItem,
 } from './meal-plan-item-context';
 import { MealPlanItemForm } from './meal-plan-item-form';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
-import {
-  MealPlanIngredientOverrideSheet,
-  MealPlanIngredientOverrideSheetRef,
-} from './meal-plan-ingredient-override-sheet';
 import { MealPlanRecipeTitle } from './meal-plan-recipe-title';
 import { MealTimeSheet } from './meal-time-sheet';
 
@@ -164,7 +164,9 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const handleSelectRecipe = (recipe: RecipeWithIngredients) => {
     setSelectedRecipe(recipe);
     setRecipeMealTag(recipe.mealTag ?? undefined);
-    setIngredientRows(initializeMealPlanIngredientEditor(recipe.recipe_ingredients));
+    setIngredientRows(
+      initializeMealPlanIngredientEditor(recipe.recipe_ingredients)
+    );
   };
 
   const handleBackToRecipes = () => {
@@ -173,7 +175,8 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   };
 
   const handleAddRecipe = () => {
-    if (!selectedRecipe || !recipeDate || selectedIngredientIds.size === 0) return;
+    if (!selectedRecipe || !recipeDate || selectedIngredientIds.size === 0)
+      return;
 
     addRecipeToDate(
       {
@@ -296,7 +299,11 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
           <MealTimeSheet mealTime={recipeMealTag} onSelect={setRecipeMealTag} />
         </ScrollingMetaBar>
-        <Button onPress={handleAddRecipe} disabled={isRecipeAddDisabled}>
+        <Button
+          size="lg"
+          onPress={handleAddRecipe}
+          disabled={isRecipeAddDisabled}
+        >
           <Text>Add to Plan</Text>
         </Button>
       </View>
@@ -331,7 +338,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       ref={sheetRef}
       detents={[1]}
       scrollable={mode === 'recipe'}
-      viewClassName="flex-1 pb-safe"
+      viewClassName={mode === 'recipe' ? 'flex-1 pb-safe' : 'pb-safe'}
       onStartClose={() => {
         KeyboardController.dismiss();
         resetMealPlanItemState();
