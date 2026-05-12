@@ -1,6 +1,12 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { CheckIcon, LinkIcon, PlusIcon, UsersIcon } from 'lucide-react-native';
-import { ReactNode, forwardRef, useImperativeHandle, useRef } from 'react';
+import {
+  ReactNode,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -49,6 +55,7 @@ type SelectGroceryListSheetProps = {
   subtext?: ReactNode;
   showJoinByCode?: boolean;
   showManageActions?: boolean;
+  disabledListIds?: string[];
   onStartClose?: () => void;
 };
 
@@ -65,6 +72,7 @@ export const SelectGroceryListSheet = forwardRef<
       subtext,
       showJoinByCode = true,
       showManageActions = true,
+      disabledListIds = [],
       onStartClose,
     },
     ref
@@ -79,6 +87,10 @@ export const SelectGroceryListSheet = forwardRef<
     const canDeleteList = useCanDeleteGroceryList();
     const leaveGroceryList = useLeaveGroceryList();
     const trackListAccess = useTrackListAccess();
+    const disabledListIdSet = useMemo(
+      () => new Set(disabledListIds),
+      [disabledListIds]
+    );
 
     useImperativeHandle(ref, () => ({
       present: () => sheetRef.current?.present(),
@@ -86,6 +98,9 @@ export const SelectGroceryListSheet = forwardRef<
     }));
 
     const handleSelectList = (listId: string) => {
+      if (disabledListIdSet.has(listId)) {
+        return;
+      }
       trackListAccess(listId);
       onSelectList(listId);
       sheetRef.current?.dismiss();
@@ -223,15 +238,19 @@ export const SelectGroceryListSheet = forwardRef<
           >
             {lists?.grocery_lists.map(list => {
               const isSelected = list.id === selectedListId;
+              const isDisabled = disabledListIdSet.has(list.id);
               const isOwner = user?.id === list.ownerId;
               const isShared = (list.shares?.length ?? 0) > 1;
 
               const row = (
                 <Pressable
                   onPress={() => handleSelectList(list.id)}
+                  disabled={isDisabled}
+                  accessibilityState={{ disabled: isDisabled, selected: isSelected }}
                   className={cn(
                     'flex-row items-center justify-center rounded-xl px-4 py-3',
-                    isSelected && 'bg-muted'
+                    isSelected && 'bg-muted',
+                    isDisabled && 'opacity-50'
                   )}
                 >
                   <View className="flex-row items-center gap-2">

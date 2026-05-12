@@ -257,7 +257,7 @@
       "tickets": [
         {
           "id": "P5-T1",
-          "status": "todo",
+          "status": "done",
           "title": "Wire move action to list picker with current-list guard",
           "summary": "Connect the bulk Move action to the existing grocery-list selector flow with clear current-list orientation, preventing same-list destination submission while still showing the current list in the destination context.",
           "acceptanceCriteria": [

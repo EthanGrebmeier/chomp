@@ -34,6 +34,7 @@ import {
   runBulkCategoryUpdate,
   runBulkStoreUpdate,
 } from '../bulk-selection/store-category-orchestrator';
+import { buildBulkMoveSelectionPayload } from '../bulk-selection/move-orchestrator';
 import {
   clearBulkSelection,
   createBulkSelectionState,
@@ -52,6 +53,10 @@ import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
+import {
+  SelectGroceryListSheet,
+  SelectGroceryListSheetRef,
+} from '../../grocery-lists/components/select-grocery-list-sheet';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { BulkSelectionToolbar } from './bulk-selection-toolbar';
@@ -204,6 +209,7 @@ export const GroceryList = ({
   const deleteListConfirmationSheetRef = useRef<TrueSheet | null>(null);
   const bulkStoreSheetRef = useRef<StoreSheetRef>(null);
   const bulkCategorySheetRef = useRef<CategorySheetRef>(null);
+  const bulkMoveListSheetRef = useRef<SelectGroceryListSheetRef>(null);
   const searchInputRef = useRef<RNTextInput>(null);
   const [bulkStoreSelectionDraft, setBulkStoreSelectionDraft] = useState<{
     selectedItemIds: string[];
@@ -440,6 +446,11 @@ export const GroceryList = ({
       return;
     }
 
+    if (actionId === 'move') {
+      bulkMoveListSheetRef.current?.present();
+      return;
+    }
+
     if (actionId !== 'delete') {
       return;
     }
@@ -513,6 +524,18 @@ export const GroceryList = ({
       setBulkSelectionState(currentState => exitBulkSelectionMode(currentState));
     } catch {
       toast.error('Failed to update category for selected items');
+    }
+  };
+
+  const handleBulkMoveListSelect = (destinationListId: string) => {
+    const moveSelectionPayload = buildBulkMoveSelectionPayload({
+      selectedItemIds: bulkSelectionState.selectedItemIds,
+      sourceListId: listId,
+      destinationListId,
+    });
+
+    if (!moveSelectionPayload) {
+      return;
     }
   };
 
@@ -600,6 +623,17 @@ export const GroceryList = ({
           hideTrigger
           sheetName="bulk-store-sheet"
           openRequestId={bulkStoreOpenRequestId}
+        />
+        <SelectGroceryListSheet
+          ref={bulkMoveListSheetRef}
+          selectedListId={listId}
+          onSelectList={handleBulkMoveListSelect}
+          title="Move to List"
+          subtext={`Select a destination for ${bulkSelectionState.selectedItemIds.size} item${bulkSelectionState.selectedItemIds.size === 1 ? '' : 's'}.`}
+          showJoinByCode={false}
+          showManageActions={false}
+          disabledListIds={listId ? [listId] : []}
+          name="bulk-move-list-sheet"
         />
       </View>
 
