@@ -2,12 +2,6 @@ import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
-import Animated, {
-  FadeIn,
-  FadeOutDown,
-  FadeOutUp,
-  LinearTransition,
-} from 'react-native-reanimated';
 
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
@@ -73,16 +67,9 @@ export const GroceryItemsList = ({
     recipe: new Set(['checked']),
     store: new Set(['checked']),
   }));
-  const [sectionPendingInstantHide, setSectionPendingInstantHide] = useState<
-    string | null
-  >(null);
   const lastAppliedBulkActionId = useRef<number | null>(null);
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
-  const itemLayoutTransition = useMemo(
-    () => LinearTransition.duration(220),
-    []
-  );
 
   const toggleCollapsedState = useCallback(
     (sectionKey: string) => {
@@ -106,21 +93,9 @@ export const GroceryItemsList = ({
       const isExpanding = collapsedSections.has(sectionKey);
 
       if (isExpanding) {
-        setSectionPendingInstantHide(null);
         toggleCollapsedState(sectionKey);
         return;
       }
-
-      // Give rows one render pass with no exit animation before removing them.
-      setSectionPendingInstantHide(sectionKey);
-      requestAnimationFrame(() => {
-        toggleCollapsedState(sectionKey);
-        requestAnimationFrame(() => {
-          setSectionPendingInstantHide(current =>
-            current === sectionKey ? null : current
-          );
-        });
-      });
     },
     [collapsedSections, toggleCollapsedState]
   );
@@ -202,7 +177,6 @@ export const GroceryItemsList = ({
     }
     lastAppliedBulkActionId.current = groupingBulkAction.id;
 
-    setSectionPendingInstantHide(null);
     setCollapsedSectionsByGroup(previous => {
       const nextByGroup = { ...previous };
       nextByGroup[groupBy] =
@@ -329,44 +303,28 @@ export const GroceryItemsList = ({
       }
 
       const showBorder = !item.isLastInSection;
-      const isInCollapsingSection =
-        sectionPendingInstantHide === item.sectionKey;
       return (
-        <Animated.View
-          entering={FadeIn.duration(180)}
-          layout={itemLayoutTransition}
-          exiting={
-            isInCollapsingSection
-              ? undefined
-              : item.item.isChecked
-                ? FadeOutUp.duration(220)
-                : FadeOutDown.duration(170).withInitialValues({
-                    transform: [{ translateY: 6 }],
-                  })
+        <GroceryListItem
+          item={item.item}
+          isChecked={Boolean(item.item.isChecked)}
+          className={cn(showBorder && 'border-b border-dashed border-border')}
+          onEdit={() => {
+            presentEditSheet(item.item);
+          }}
+          isBulkSelectionModeActive={isBulkSelectionModeActive}
+          isBulkSelected={selectedBulkItemIds.has(item.item.id)}
+          onToggleBulkSelection={() =>
+            onToggleBulkSelectionItem?.(item.item.id)
           }
-        >
-          <GroceryListItem
-            item={item.item}
-            isChecked={Boolean(item.item.isChecked)}
-            className={cn(showBorder && 'border-b border-dashed border-border')}
-            onEdit={() => {
-              presentEditSheet(item.item);
-            }}
-            isBulkSelectionModeActive={isBulkSelectionModeActive}
-            isBulkSelected={selectedBulkItemIds.has(item.item.id)}
-            onToggleBulkSelection={() => onToggleBulkSelectionItem?.(item.item.id)}
-          />
-        </Animated.View>
+        />
       );
     },
     [
-      itemLayoutTransition,
       isBulkSelectionModeActive,
       onToggleBulkSelectionItem,
       presentEditSheet,
       renderSectionHeader,
       selectedBulkItemIds,
-      sectionPendingInstantHide,
     ]
   );
 
