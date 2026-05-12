@@ -140,7 +140,7 @@ export const UnitSheet = ({
 
         <View>
           <View className="px-4">
-            <View className="mb-4 flex-row items-center justify-between gap-3 rounded-xl bg-muted px-4 py-3 ">
+            <View className="flex-row items-center justify-between gap-3 rounded-xl bg-muted px-4 py-3 ">
               <TextInput
                 ref={quantityInputRef}
                 value={localQuantity}
@@ -161,9 +161,6 @@ export const UnitSheet = ({
             </View>
           </View>
 
-          <Text className="mb-2 px-4 text-sm font-medium text-muted-foreground">
-            Unit
-          </Text>
           <ScrollView
             className="max-h-80 px-2"
             nestedScrollEnabled
