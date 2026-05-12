@@ -129,10 +129,15 @@ export const GroceryListHeader = ({
               >
                 <Button
                   variant="ghost"
-                  className="h-8 px-1.5"
+                  className="h-8 px-0"
                   onPress={onExitBulkSelectionMode}
                 >
-                  <Icon as={X} size={20} className="text-foreground" />
+                  <Icon
+                    as={X}
+                    strokeWidth={3}
+                    size={20}
+                    className="text-foreground"
+                  />
                 </Button>
               </Animated.View>
             ) : (
