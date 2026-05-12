@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { CookingPotIcon, XIcon } from 'lucide-react-native';
+import { XIcon } from 'lucide-react-native';
 
 import { navigation } from '../../lib/navigation';
 import { HapticPressable } from '../ui/haptic-pressable';
@@ -35,8 +35,7 @@ export const RecipeTag = () => {
       onPress={handleGoToRecipe}
       className="mt-2 flex-row items-center gap-2"
     >
-      <Icon as={CookingPotIcon} size={16} className="text-muted-foreground" />
-      <Text className="text-base font-semibold text-muted-foreground">
+      <Text className="text-sm font-semibold italic text-muted-foreground">
         {recipe.name}
       </Text>
       <HapticPressable
