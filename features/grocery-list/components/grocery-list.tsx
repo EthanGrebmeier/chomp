@@ -376,11 +376,10 @@ export const GroceryList = ({
           setBulkSelectionState(currentState =>
             exitBulkSelectionMode(currentState)
           );
-          toast.success('Bulk action complete');
         },
       });
     } catch {
-      toast.error('Failed to complete bulk action');
+      toast.error('Failed to delete selected items');
     }
   };
 

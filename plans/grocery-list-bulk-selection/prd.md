@@ -17,7 +17,7 @@ Introduce a dedicated **Bulk Selection Mode** for the grocery list, entered from
 
 When mode is active, normal bottom controls (nav cluster and add button) fade out and the bulk toolbar fades in at the same alignment zone. Checked items are hidden, per-section clear controls are hidden, editing is disabled, and the header exposes exit (`X`) plus selection utilities (`Select All` / `Clear All`).
 
-Bulk actions exit mode on success and show simple generic success toasts.
+Bulk actions exit mode on success without showing a success toast.
 
 ## User Stories
 
@@ -46,7 +46,7 @@ Bulk actions exit mode on success and show simple generic success toasts.
 23. As a shopper, I want moved item checked-state semantics preserved, so that transfer logic stays predictable.
 24. As a shopper, I want mode selection cleared when I exit mode, so that stale selections do not cause accidental actions later.
 25. As a shopper, I want successful bulk actions to exit mode automatically, so that I return to normal browsing immediately.
-26. As a shopper, I want a simple success toast after bulk actions, so that I get confirmation without noisy detail.
+26. As a shopper, I want bulk actions to complete quietly on success, so that feedback noise stays low while I continue shopping.
 27. As a shared-list collaborator, I want bulk actions to respect list permissions, so that operations remain safe in collaborative contexts.
 28. As a user with linked saved items, I want store/category bulk updates to sync saved items when possible, so that template data stays aligned with my edits.
 29. As a user with mixed linkage states, I want saved-item sync to be best-effort, so that bulk item updates still succeed even if some linked syncs are skipped.
@@ -99,7 +99,8 @@ Bulk actions exit mode on success and show simple generic success toasts.
 - Post-action behavior:
   - Exit bulk mode on success.
   - Clear selection state.
-  - Show concise generic success toast (no sync-detail breakdown).
+  - Do not show success toasts.
+  - If an action fails, show an action-specific error toast (for example, delete failures should explicitly mention delete).
 - Preserve permission boundaries for all writes in shared-list scenarios.
 - Introduce deep modules with stable interfaces for maintainability:
   - Bulk selection state controller (mode, selection, select-all/clear-all).

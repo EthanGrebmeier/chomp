@@ -164,11 +164,11 @@
           "id": "P3-T1",
           "status": "done",
           "title": "Implement bulk delete orchestrator path",
-          "summary": "Build the delete action flow that prompts confirmation with selected-count context, executes soft-delete updates for selected grocery items, then resets mode state and shows a generic success toast.",
+          "summary": "Build the delete action flow that prompts confirmation with selected-count context, executes soft-delete updates for selected grocery items, and then resets mode state without showing a success toast.",
           "acceptanceCriteria": [
             "Delete action opens a confirmation prompt showing selected item count.",
             "Confirming delete marks all selected items deleted using existing soft-delete semantics.",
-            "Successful delete exits bulk mode, clears selection, and shows a generic success toast.",
+            "Successful delete exits bulk mode and clears selection without showing a success toast.",
             "Canceling delete performs no writes and keeps current mode state."
           ],
           "dependencies": [
@@ -227,7 +227,7 @@
             "Store/category values are updated across all selected grocery items in one bulk action flow.",
             "Choosing None clears the respective field on selected grocery items.",
             "Saved-item sync attempts occur where linkage permits, and skipped/failed syncs do not fail grocery-item updates.",
-            "Successful action exits bulk mode, clears selection, and shows a generic success toast."
+            "Successful action exits bulk mode and clears selection without showing a success toast."
           ],
           "dependencies": [
             "P4-T1"
@@ -286,7 +286,7 @@
             "When selected source items conflict with destination items, quantities are merged/incremented using deterministic rules.",
             "When no conflict exists, destination receives new item records with expected field values.",
             "Source selected items are removed only after successful destination application.",
-            "Successful action exits bulk mode, clears selection, and shows a generic success toast."
+            "Successful action exits bulk mode and clears selection without showing a success toast."
           ],
           "dependencies": [
             "P5-T1"
