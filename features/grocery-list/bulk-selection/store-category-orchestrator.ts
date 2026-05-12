@@ -1,5 +1,7 @@
+import { db } from '@/lib/instant';
+
+import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { syncSavedItemFromGroceryItem } from '../instant/sync-saved-item-from-grocery-item';
-import { updateGroceryItemOnly } from '../instant/update-grocery-item-only';
 
 export type BulkStoreSelectionPayload = {
   selectedItemIds: string[];
@@ -56,6 +58,56 @@ const createSelectedItemsMap = (
   return new Map(selectedItems.map(item => [item.id, item]));
 };
 
+const resolveSelectedItemsForWrite = ({
+  selectedItemIds,
+  selectedItemsMap,
+}: {
+  selectedItemIds: string[];
+  selectedItemsMap: Map<string, BulkStoreCategorySelectedItem>;
+}) => {
+  let skippedItemCount = 0;
+  const matchedItems: BulkStoreCategorySelectedItem[] = [];
+
+  for (const itemId of selectedItemIds) {
+    const item = selectedItemsMap.get(itemId);
+    if (!item) {
+      skippedItemCount += 1;
+      continue;
+    }
+    matchedItems.push(item);
+  }
+
+  return {
+    matchedItems,
+    skippedItemCount,
+  };
+};
+
+const runBestEffortSavedItemSyncForItems = async ({
+  items,
+  patch,
+}: {
+  items: BulkStoreCategorySelectedItem[];
+  patch: {
+    storeId?: string;
+    category?: string;
+  };
+}) => {
+  const syncResults = await Promise.all(
+    items.map(item =>
+      runBestEffortSavedItemSync({
+        item,
+        patch,
+      })
+    )
+  );
+
+  return syncResults.reduce(
+    (failedCount, succeeded) => (succeeded ? failedCount : failedCount + 1),
+    0
+  );
+};
+
 const runBestEffortSavedItemSync = async ({
   item,
   patch,
@@ -92,36 +144,52 @@ export const runBulkStoreUpdate = async ({
 }: RunBulkStoreUpdateArgs): Promise<BulkStoreCategoryWriteResult> => {
   const selectedItemsMap = createSelectedItemsMap(selectedItems);
   const patch = { storeId };
-  let updatedItemCount = 0;
-  let skippedItemCount = 0;
-  let failedSavedItemSyncCount = 0;
+  const { matchedItems, skippedItemCount } = resolveSelectedItemsForWrite({
+    selectedItemIds,
+    selectedItemsMap,
+  });
+  const transactions = [];
 
-  for (const itemId of selectedItemIds) {
-    const item = selectedItemsMap.get(itemId);
-    if (!item) {
-      skippedItemCount += 1;
+  for (const item of matchedItems) {
+    const currentStoreId = item.store?.id;
+    if (!storeId && currentStoreId) {
+      transactions.push(
+        db.tx.grocery_items[item.id].unlink({
+          store: currentStoreId,
+        })
+      );
       continue;
     }
 
-    await updateGroceryItemOnly({
-      itemId: item.id,
-      item: patch,
-      currentStoreId: item.store?.id,
-      currentSavedItemId: item.saved_item?.id,
-    });
-    updatedItemCount += 1;
-
-    const savedItemSyncSucceeded = await runBestEffortSavedItemSync({
-      item,
-      patch,
-    });
-    if (!savedItemSyncSucceeded) {
-      failedSavedItemSyncCount += 1;
+    if (storeId !== currentStoreId) {
+      if (currentStoreId) {
+        transactions.push(
+          db.tx.grocery_items[item.id].unlink({
+            store: currentStoreId,
+          })
+        );
+      }
+      if (storeId) {
+        transactions.push(
+          db.tx.grocery_items[item.id].link({
+            store: storeId,
+          })
+        );
+      }
     }
   }
 
+  if (transactions.length > 0) {
+    await db.transact(transactions);
+  }
+
+  const failedSavedItemSyncCount = await runBestEffortSavedItemSyncForItems({
+    items: matchedItems,
+    patch,
+  });
+
   return {
-    updatedItemCount,
+    updatedItemCount: matchedItems.length,
     skippedItemCount,
     failedSavedItemSyncCount,
   };
@@ -134,36 +202,29 @@ export const runBulkCategoryUpdate = async ({
 }: RunBulkCategoryUpdateArgs): Promise<BulkStoreCategoryWriteResult> => {
   const selectedItemsMap = createSelectedItemsMap(selectedItems);
   const patch = { category };
-  let updatedItemCount = 0;
-  let skippedItemCount = 0;
-  let failedSavedItemSyncCount = 0;
+  const { matchedItems, skippedItemCount } = resolveSelectedItemsForWrite({
+    selectedItemIds,
+    selectedItemsMap,
+  });
+  const transactions = matchedItems.map(item =>
+    db.tx.grocery_items[item.id].update(
+      trimStringFields({
+        category: category ?? null,
+      })
+    )
+  );
 
-  for (const itemId of selectedItemIds) {
-    const item = selectedItemsMap.get(itemId);
-    if (!item) {
-      skippedItemCount += 1;
-      continue;
-    }
-
-    await updateGroceryItemOnly({
-      itemId: item.id,
-      item: patch,
-      currentStoreId: item.store?.id,
-      currentSavedItemId: item.saved_item?.id,
-    });
-    updatedItemCount += 1;
-
-    const savedItemSyncSucceeded = await runBestEffortSavedItemSync({
-      item,
-      patch,
-    });
-    if (!savedItemSyncSucceeded) {
-      failedSavedItemSyncCount += 1;
-    }
+  if (transactions.length > 0) {
+    await db.transact(transactions);
   }
 
+  const failedSavedItemSyncCount = await runBestEffortSavedItemSyncForItems({
+    items: matchedItems,
+    patch,
+  });
+
   return {
-    updatedItemCount,
+    updatedItemCount: matchedItems.length,
     skippedItemCount,
     failedSavedItemSyncCount,
   };

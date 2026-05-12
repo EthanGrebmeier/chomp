@@ -87,6 +87,7 @@ type GroceryListProps = {
   sortBy: 'name' | 'recent';
   onViewListsPress?: () => void;
   onDeleteOrLeave: () => void;
+  onActiveListChange?: (listId: string) => void;
 };
 
 type GroupingBulkAction = {
@@ -105,6 +106,7 @@ export const GroceryList = ({
   sortBy: initialSortBy,
   onViewListsPress,
   onDeleteOrLeave,
+  onActiveListChange,
 }: GroceryListProps) => {
   const shareListSheetRef = useRef<ShareListSheetRef>(null);
   const editListNameSheetRef = useRef<EditListNameSheetRef>(null);
@@ -658,6 +660,7 @@ export const GroceryList = ({
           setBulkSelectionState(currentState =>
             exitBulkSelectionMode(currentState)
           );
+          onActiveListChange?.(moveSelectionPayload.destinationListId);
         },
       });
     } catch {

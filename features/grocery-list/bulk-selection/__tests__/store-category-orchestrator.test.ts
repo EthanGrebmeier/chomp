@@ -8,15 +8,41 @@ import {
 } from '../store-category-orchestrator';
 
 const {
-  updateGroceryItemOnlyMock,
+  dbTransactMock,
   syncSavedItemFromGroceryItemMock,
 } = vi.hoisted(() => ({
-  updateGroceryItemOnlyMock: vi.fn(),
+  dbTransactMock: vi.fn(),
   syncSavedItemFromGroceryItemMock: vi.fn(),
 }));
 
-vi.mock('../../instant/update-grocery-item-only', () => ({
-  updateGroceryItemOnly: updateGroceryItemOnlyMock,
+vi.mock('@/lib/instant', () => ({
+  db: {
+    transact: dbTransactMock,
+    tx: {
+      grocery_items: new Proxy(
+        {},
+        {
+          get: (_, itemId: string) => ({
+            update: (payload: unknown) => ({
+              type: 'update',
+              itemId,
+              payload,
+            }),
+            link: (payload: unknown) => ({
+              type: 'link',
+              itemId,
+              payload,
+            }),
+            unlink: (payload: unknown) => ({
+              type: 'unlink',
+              itemId,
+              payload,
+            }),
+          }),
+        }
+      ),
+    },
+  },
 }));
 
 vi.mock('../../instant/sync-saved-item-from-grocery-item', () => ({
@@ -24,7 +50,7 @@ vi.mock('../../instant/sync-saved-item-from-grocery-item', () => ({
 }));
 
 beforeEach(() => {
-  updateGroceryItemOnlyMock.mockReset();
+  dbTransactMock.mockReset();
   syncSavedItemFromGroceryItemMock.mockReset();
 });
 
@@ -73,7 +99,7 @@ describe('store and category bulk payload builders', () => {
 
 describe('bulk store/category write adapters', () => {
   it('updates selected grocery items and does best-effort store sync', async () => {
-    updateGroceryItemOnlyMock.mockResolvedValue(undefined);
+    dbTransactMock.mockResolvedValue(undefined);
     syncSavedItemFromGroceryItemMock
       .mockResolvedValueOnce(undefined)
       .mockRejectedValueOnce(new Error('permission mismatch'));
@@ -105,7 +131,7 @@ describe('bulk store/category write adapters', () => {
       storeId: undefined,
     });
 
-    expect(updateGroceryItemOnlyMock).toHaveBeenCalledTimes(2);
+    expect(dbTransactMock).toHaveBeenCalledTimes(1);
     expect(syncSavedItemFromGroceryItemMock).toHaveBeenCalledTimes(2);
     expect(result).toEqual({
       updatedItemCount: 2,
@@ -115,7 +141,7 @@ describe('bulk store/category write adapters', () => {
   });
 
   it('skips missing selections and syncs category only when linked saved item exists', async () => {
-    updateGroceryItemOnlyMock.mockResolvedValue(undefined);
+    dbTransactMock.mockResolvedValue(undefined);
     syncSavedItemFromGroceryItemMock.mockResolvedValue(undefined);
 
     const result = await runBulkCategoryUpdate({
@@ -130,7 +156,7 @@ describe('bulk store/category write adapters', () => {
       category: 'produce',
     });
 
-    expect(updateGroceryItemOnlyMock).toHaveBeenCalledTimes(1);
+    expect(dbTransactMock).toHaveBeenCalledTimes(1);
     expect(syncSavedItemFromGroceryItemMock).not.toHaveBeenCalled();
     expect(result).toEqual({
       updatedItemCount: 1,

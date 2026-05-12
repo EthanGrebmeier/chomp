@@ -127,6 +127,7 @@ export default function List() {
               sortBy={settings.sortBy}
               onViewListsPress={() => selectListSheetRef.current?.present()}
               onDeleteOrLeave={handleDeleteOrLeave}
+              onActiveListChange={setActiveListId}
             />
           </Animated.View>
         ) : null}
