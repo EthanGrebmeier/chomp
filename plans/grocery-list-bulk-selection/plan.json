@@ -105,7 +105,7 @@
       "tickets": [
         {
           "id": "P2-T1",
-          "status": "todo",
+          "status": "done",
           "title": "Implement bottom control cross-fade for mode transitions",
           "summary": "Add animation state that fades default nav/add controls out and bulk toolbar in at the same bottom alignment zone to provide a clear mode-change affordance.",
           "acceptanceCriteria": [

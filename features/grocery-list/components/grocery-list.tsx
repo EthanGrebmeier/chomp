@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { BookOpenIcon, CalendarIcon, SettingsIcon } from 'lucide-react-native';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
@@ -374,49 +375,70 @@ export const GroceryList = ({
 
       <>
         <View className="bottom-safe absolute left-6 z-10">
-          <View className="h-10 flex-row items-center gap-6 overflow-hidden rounded-full border border-border bg-accent/90 px-4 shadow-sm">
-            <HapticPressable
-              onPress={handleOpenMealPlan}
-              className="active:opacity-80"
-              hapticType="selection"
-              hitSlop={10}
+          {!bulkSelectionState.isActive && (
+            <Animated.View
+              entering={FadeIn.duration(200)}
+              exiting={FadeOut.duration(200)}
             >
-              <Icon
-                as={CalendarIcon}
-                size={24}
-                strokeWidth={2}
-                className="text-accent-foreground"
-              />
-            </HapticPressable>
-            <HapticPressable
-              onPress={handleOpenRecipes}
-              className="gap-2 active:opacity-80"
-              hapticType="selection"
-              hitSlop={10}
-            >
-              <Icon
-                as={BookOpenIcon}
-                size={24}
-                strokeWidth={2}
-                className="mt-0.5 text-accent-foreground"
-              />
-            </HapticPressable>
-            <HapticPressable
-              onPress={handleOpenSettings}
-              className="gap-2 active:opacity-80"
-              hapticType="selection"
-              hitSlop={10}
-            >
-              <Icon
-                as={SettingsIcon}
-                size={24}
-                strokeWidth={2}
-                className="mt-0.5 text-accent-foreground"
-              />
-            </HapticPressable>
-          </View>
+              <View className="h-10 flex-row items-center gap-6 overflow-hidden rounded-full border border-border bg-accent/90 px-4 shadow-sm">
+                <HapticPressable
+                  onPress={handleOpenMealPlan}
+                  className="active:opacity-80"
+                  hapticType="selection"
+                  hitSlop={10}
+                >
+                  <Icon
+                    as={CalendarIcon}
+                    size={24}
+                    strokeWidth={2}
+                    className="text-accent-foreground"
+                  />
+                </HapticPressable>
+                <HapticPressable
+                  onPress={handleOpenRecipes}
+                  className="gap-2 active:opacity-80"
+                  hapticType="selection"
+                  hitSlop={10}
+                >
+                  <Icon
+                    as={BookOpenIcon}
+                    size={24}
+                    strokeWidth={2}
+                    className="mt-0.5 text-accent-foreground"
+                  />
+                </HapticPressable>
+                <HapticPressable
+                  onPress={handleOpenSettings}
+                  className="gap-2 active:opacity-80"
+                  hapticType="selection"
+                  hitSlop={10}
+                >
+                  <Icon
+                    as={SettingsIcon}
+                    size={24}
+                    strokeWidth={2}
+                    className="mt-0.5 text-accent-foreground"
+                  />
+                </HapticPressable>
+              </View>
+            </Animated.View>
+          )}
         </View>
-        <AddItemSheet groceryListId={listId ?? ''} />
+        <AddItemSheet
+          groceryListId={listId ?? ''}
+          isTriggerVisible={!bulkSelectionState.isActive}
+        />
+        {bulkSelectionState.isActive && (
+          <Animated.View
+            className="bottom-safe absolute inset-x-0 z-10 items-center"
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+          >
+            <View className="h-10 min-w-52 flex-row items-center justify-center rounded-full border border-border bg-accent/90 px-5 shadow-sm">
+              <View className="h-1.5 w-20 rounded-full bg-muted-foreground/30" />
+            </View>
+          </Animated.View>
+        )}
       </>
     </>
   );

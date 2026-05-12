@@ -83,9 +83,13 @@ const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
 
 type AddItemSheetProps = {
   groceryListId: string;
+  isTriggerVisible?: boolean;
 };
 
-const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
+const AddItemSheet = ({
+  groceryListId,
+  isTriggerVisible = true,
+}: AddItemSheetProps) => {
   const ref = useRef<TrueSheet>(null);
   const {
     reset,
@@ -238,18 +242,22 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
 
   return (
     <>
-      <Button
-        size="wide-small"
-        onPress={openSheet}
-        className="bottom-safe absolute right-6 z-10"
-      >
-        <Icon
-          as={PlusIcon}
-          size={28}
-          strokeWidth={3}
-          className="text-primary-foreground"
-        />
-      </Button>
+      {isTriggerVisible && (
+        <Animated.View
+          className="bottom-safe absolute right-6 z-10"
+          entering={FadeIn.duration(200)}
+          exiting={FadeOut.duration(200)}
+        >
+          <Button size="wide-small" onPress={openSheet}>
+            <Icon
+              as={PlusIcon}
+              size={28}
+              strokeWidth={3}
+              className="text-primary-foreground"
+            />
+          </Button>
+        </Animated.View>
+      )}
       <BottomSheet
         detents={[1]}
         name="add-item-sheet"
@@ -362,9 +370,10 @@ const AddItemSheet = ({ groceryListId }: AddItemSheetProps) => {
 
 type AddItemProps = {
   groceryListId: string;
+  isTriggerVisible?: boolean;
 };
 
-const AddItem = ({ groceryListId }: AddItemProps) => {
+const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
   const onSubmit = ({
     item,
     listId,
@@ -391,7 +400,10 @@ const AddItem = ({ groceryListId }: AddItemProps) => {
 
   return (
     <ItemSheetProvider listId={groceryListId} onSubmit={onSubmit} mode="add">
-      <AddItemSheet groceryListId={groceryListId} />
+      <AddItemSheet
+        groceryListId={groceryListId}
+        isTriggerVisible={isTriggerVisible}
+      />
     </ItemSheetProvider>
   );
 };
