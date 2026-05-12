@@ -1,6 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { PlusIcon, StoreIcon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -47,13 +47,26 @@ type StoreSheetProps = {
   storeId?: string;
   storeName?: string;
   onSelect: (storeId?: string, storeName?: string) => void;
+  hideTrigger?: boolean;
+  sheetName?: string;
 };
 
-export const StoreSheet = ({
-  storeId,
-  storeName,
-  onSelect,
-}: StoreSheetProps) => {
+export type StoreSheetRef = {
+  present: () => void;
+  dismiss: () => void;
+};
+
+export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
+  (
+    {
+      storeId,
+      storeName,
+      onSelect,
+      hideTrigger = false,
+      sheetName = 'store-sheet',
+    },
+    ref
+  ) => {
   const sheetRef = useRef<TrueSheet>(null);
   const createStoreSheetRef = useRef<TrueSheet>(null);
   const { data: stores, isLoading } = useStores();
@@ -80,6 +93,11 @@ export const StoreSheet = ({
     setLocalStoreId(storeId);
     sheetRef.current?.present();
   };
+
+  useImperativeHandle(ref, () => ({
+    present: openSheet,
+    dismiss: () => sheetRef.current?.dismiss(),
+  }));
 
   const handleConfirm = () => {
     const nextStoreName =
@@ -124,35 +142,37 @@ export const StoreSheet = ({
 
   return (
     <>
-      <WithLayoutTransition>
-        <HapticPressable onPress={openSheet} hapticType="light">
-          <Pill
-            className={cn(!localStoreId && 'border-dashed')}
-            icon={
-              <Icon
-                className={
-                  hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
-                }
-                as={StoreIcon}
-                size={16}
-              />
-            }
-            textClassName={cn(
-              'font-semibold',
-              hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
-            )}
-            closeIconClassName={
-              hasSelectedStore ? 'text-foreground' : undefined
-            }
-            hasValue={hasSelectedStore}
-            onClear={() => onSelect(undefined, undefined)}
-          >
-            {selectedStoreName ?? 'Store'}
-          </Pill>
-        </HapticPressable>
-      </WithLayoutTransition>
+      {!hideTrigger && (
+        <WithLayoutTransition>
+          <HapticPressable onPress={openSheet} hapticType="light">
+            <Pill
+              className={cn(!localStoreId && 'border-dashed')}
+              icon={
+                <Icon
+                  className={
+                    hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
+                  }
+                  as={StoreIcon}
+                  size={16}
+                />
+              }
+              textClassName={cn(
+                'font-semibold',
+                hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
+              )}
+              closeIconClassName={
+                hasSelectedStore ? 'text-foreground' : undefined
+              }
+              hasValue={hasSelectedStore}
+              onClear={() => onSelect(undefined, undefined)}
+            >
+              {selectedStoreName ?? 'Store'}
+            </Pill>
+          </HapticPressable>
+        </WithLayoutTransition>
+      )}
 
-      <BottomSheet detents={[0.7]} scrollable ref={sheetRef} name="store-sheet">
+      <BottomSheet detents={[0.7]} scrollable ref={sheetRef} name={sheetName}>
         <BottomSheet.Header
           className="mb-0 px-4"
           dismissButton={
@@ -262,4 +282,7 @@ export const StoreSheet = ({
       </BottomSheet>
     </>
   );
-};
+  }
+);
+
+StoreSheet.displayName = 'StoreSheet';

@@ -4,3 +4,4 @@
 2026-05-12 [P2-T1]: Added a 200ms cross-fade between standard bottom controls and a centered bulk-mode toolbar shell, including animated add-button visibility and stable bottom alignment.
 2026-05-12 [P2-T2]: Replaced the placeholder bulk toolbar shell with ordered Set Store/Set Category/Move/Delete actions using required icons, delete-destructive styling, and selection-count driven disabled state.
 2026-05-12 [P3-T1]: Implemented bulk delete orchestration with selected-count confirmation, selected-item soft-delete writes, success lifecycle reset, and unit coverage for confirm/cancel paths.
+2026-05-12 [P4-T1]: Wired bulk Set Store/Set Category actions to the existing picker sheets via imperative sheet handles, captured None/value submissions against currently selected items, and added payload-builder tests for selected-item targeting.

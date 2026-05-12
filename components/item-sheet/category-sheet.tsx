@@ -1,6 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { LucideIcon, TagIcon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { categoryOptions } from '../../features/shared/category/categories';
@@ -52,9 +52,17 @@ const CategoryOption = ({
 type CategorySheetProps = {
   category?: string;
   onSelect: (category?: string) => void;
+  hideTrigger?: boolean;
+  sheetName?: string;
 };
 
-export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
+export type CategorySheetRef = {
+  present: () => void;
+  dismiss: () => void;
+};
+
+export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
+  ({ category, onSelect, hideTrigger = false, sheetName = 'category-sheet' }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const [localCategory, setLocalCategory] = useState<string | undefined>(
@@ -70,6 +78,11 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
     setLocalCategory(category);
     sheetRef.current?.present();
   };
+
+  useImperativeHandle(ref, () => ({
+    present: openSheet,
+    dismiss: () => sheetRef.current?.dismiss(),
+  }));
 
   const handleConfirm = () => {
     onSelect(localCategory);
@@ -87,23 +100,25 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
 
   return (
     <>
-      <WithLayoutTransition>
-        <HapticPressable onPress={openSheet} hapticType="light">
-          <Pill
-            className={cn(!selectedCategory && 'border-dashed')}
-            hasValue={!!selectedCategory}
-          >
-            {selectedCategory ? selectedCategory.label : 'Category'}
-          </Pill>
-        </HapticPressable>
-      </WithLayoutTransition>
+      {!hideTrigger && (
+        <WithLayoutTransition>
+          <HapticPressable onPress={openSheet} hapticType="light">
+            <Pill
+              className={cn(!selectedCategory && 'border-dashed')}
+              hasValue={!!selectedCategory}
+            >
+              {selectedCategory ? selectedCategory.label : 'Category'}
+            </Pill>
+          </HapticPressable>
+        </WithLayoutTransition>
+      )}
 
       <BottomSheet
         detents={[0.7]}
         scrollable
         ref={sheetRef}
         onOpen={handleScrollToSelectedCategory}
-        name="category-sheet"
+        name={sheetName}
       >
         <BottomSheet.Header
           className="px-4"
@@ -137,4 +152,7 @@ export const CategorySheet = ({ category, onSelect }: CategorySheetProps) => {
       </BottomSheet>
     </>
   );
-};
+  }
+);
+
+CategorySheet.displayName = 'CategorySheet';

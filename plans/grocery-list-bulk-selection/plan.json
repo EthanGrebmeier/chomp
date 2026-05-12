@@ -198,7 +198,7 @@
       "tickets": [
         {
           "id": "P4-T1",
-          "status": "todo",
+          "status": "done",
           "title": "Attach store and category sheets to bulk action shell",
           "summary": "Wire bulk Set Store and Set Category actions to existing picker sheets, including None semantics, selected-count aware submission, and disabled behavior inherited from selection state.",
           "acceptanceCriteria": [

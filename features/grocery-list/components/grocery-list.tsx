@@ -15,11 +15,23 @@ import Animated, {
 import { toast } from 'sonner-native';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
+import {
+  CategorySheet,
+  CategorySheetRef,
+} from '../../../components/item-sheet/category-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
+import {
+  StoreSheet,
+  StoreSheetRef,
+} from '../../../components/item-sheet/store-sheet';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
 import { navigation } from '../../../lib/navigation';
+import {
+  buildBulkCategorySelectionPayload,
+  buildBulkStoreSelectionPayload,
+} from '../bulk-selection/store-category-orchestrator';
 import {
   clearBulkSelection,
   createBulkSelectionState,
@@ -188,7 +200,18 @@ export const GroceryList = ({
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
   const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
   const deleteListConfirmationSheetRef = useRef<TrueSheet | null>(null);
+  const bulkStoreSheetRef = useRef<StoreSheetRef>(null);
+  const bulkCategorySheetRef = useRef<CategorySheetRef>(null);
   const searchInputRef = useRef<RNTextInput>(null);
+  const [bulkStoreSelectionDraft, setBulkStoreSelectionDraft] = useState<{
+    selectedItemIds: string[];
+    storeId?: string;
+    storeName?: string;
+  } | null>(null);
+  const [bulkCategorySelectionDraft, setBulkCategorySelectionDraft] = useState<{
+    selectedItemIds: string[];
+    category?: string;
+  } | null>(null);
 
   const dismissSearch = () => {
     searchInputRef.current?.blur();
@@ -361,6 +384,16 @@ export const GroceryList = ({
   };
 
   const handleBulkToolbarActionPress = async (actionId: BulkToolbarActionId) => {
+    if (actionId === 'set-store') {
+      bulkStoreSheetRef.current?.present();
+      return;
+    }
+
+    if (actionId === 'set-category') {
+      bulkCategorySheetRef.current?.present();
+      return;
+    }
+
     if (actionId !== 'delete') {
       return;
     }
@@ -381,6 +414,34 @@ export const GroceryList = ({
     } catch {
       toast.error('Failed to delete selected items');
     }
+  };
+
+  const handleBulkStoreSheetSelect = (
+    nextStoreId?: string,
+    nextStoreName?: string
+  ) => {
+    const payload = buildBulkStoreSelectionPayload({
+      selectedItemIds: bulkSelectionState.selectedItemIds,
+      storeId: nextStoreId,
+      storeName: nextStoreName,
+    });
+    if (!payload) {
+      return;
+    }
+
+    setBulkStoreSelectionDraft(payload);
+  };
+
+  const handleBulkCategorySheetSelect = (nextCategory?: string) => {
+    const payload = buildBulkCategorySelectionPayload({
+      selectedItemIds: bulkSelectionState.selectedItemIds,
+      category: nextCategory,
+    });
+    if (!payload) {
+      return;
+    }
+
+    setBulkCategorySelectionDraft(payload);
   };
 
   return (
@@ -451,6 +512,21 @@ export const GroceryList = ({
         />
         <ShareListSheet ref={shareListSheetRef} />
         <EditListNameSheet ref={editListNameSheetRef} />
+        <CategorySheet
+          ref={bulkCategorySheetRef}
+          category={bulkCategorySelectionDraft?.category}
+          onSelect={handleBulkCategorySheetSelect}
+          hideTrigger
+          sheetName="bulk-category-sheet"
+        />
+        <StoreSheet
+          ref={bulkStoreSheetRef}
+          storeId={bulkStoreSelectionDraft?.storeId}
+          storeName={bulkStoreSelectionDraft?.storeName}
+          onSelect={handleBulkStoreSheetSelect}
+          hideTrigger
+          sheetName="bulk-store-sheet"
+        />
       </View>
 
       <>
