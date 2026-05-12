@@ -1,13 +1,9 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import {
-  ArrowRightLeft,
   BookOpenIcon,
   CalendarIcon,
   SettingsIcon,
-  Store,
-  Tags,
-  Trash2,
 } from 'lucide-react-native';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
@@ -21,12 +17,8 @@ import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
-import { Text } from '../../../components/ui/text';
-import { cn } from '../../../lib/utils';
 import { db } from '../../../lib/instant';
 import { navigation } from '../../../lib/navigation';
-import { useUpdateSettings } from '../hooks/useUpdateSettings';
-import { getBulkToolbarActions } from '../bulk-selection/toolbar';
 import {
   clearBulkSelection,
   createBulkSelectionState,
@@ -35,12 +27,14 @@ import {
   selectAllVisibleUncheckedItems,
   toggleBulkSelectionItem,
 } from '../bulk-selection/controller';
+import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
+import { BulkSelectionToolbar } from './bulk-selection-toolbar';
 import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
 import { DeleteListConfirmationSheet } from './delete-list-confirmation-sheet';
 import {
@@ -340,16 +334,6 @@ export const GroceryList = ({
     );
   };
 
-  const bulkToolbarActions = getBulkToolbarActions(
-    bulkSelectionState.selectedItemIds.size
-  );
-  const bulkToolbarIcons = {
-    'set-store': Store,
-    'set-category': Tags,
-    move: ArrowRightLeft,
-    delete: Trash2,
-  } as const;
-
   const handleBulkToolbarActionPress = () => {
     // Ticket P2-T2 only delivers toolbar shell; write flows attach in later tickets.
   };
@@ -481,43 +465,10 @@ export const GroceryList = ({
           style={bulkToolbarAnimatedStyle}
           pointerEvents={bulkSelectionState.isActive ? 'auto' : 'none'}
         >
-          <View className="h-16 min-w-72 flex-row items-center justify-between rounded-full border border-border bg-accent/90 px-5 shadow-sm">
-            {bulkToolbarActions.map(action => (
-              <HapticPressable
-                key={action.id}
-                onPress={handleBulkToolbarActionPress}
-                disabled={action.isDisabled}
-                haptic={!action.isDisabled}
-                hapticType="selection"
-                accessibilityRole="button"
-                accessibilityLabel={action.label}
-                accessibilityState={{ disabled: action.isDisabled }}
-                className={cn(
-                  'items-center gap-1 px-1.5',
-                  action.isDisabled && 'opacity-40'
-                )}
-              >
-                <Icon
-                  as={bulkToolbarIcons[action.id]}
-                  size={18}
-                  strokeWidth={2.25}
-                  className={
-                    action.isDestructive ? 'text-destructive' : 'text-foreground'
-                  }
-                />
-                <Text
-                  className={cn(
-                    'text-[10px] font-medium leading-none',
-                    action.isDestructive
-                      ? 'text-destructive'
-                      : 'text-accent-foreground'
-                  )}
-                >
-                  {action.label}
-                </Text>
-              </HapticPressable>
-            ))}
-          </View>
+          <BulkSelectionToolbar
+            selectedItemCount={bulkSelectionState.selectedItemIds.size}
+            onActionPress={handleBulkToolbarActionPress}
+          />
         </Animated.View>
       </>
     </>
