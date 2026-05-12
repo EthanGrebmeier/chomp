@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 
 import { cn } from '../../lib/utils';
 
@@ -10,6 +10,18 @@ type CheckboxProps = {
   hitSlop?: number;
   className?: string;
 };
+
+const keyframe = new Keyframe({
+  0: {
+    opacity: 0,
+    transform: [{ scale: 0 }],
+  },
+  100: {
+    opacity: 1,
+    transform: [{ scale: 1 }],
+    easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+  },
+});
 
 export const Checkbox = ({
   checked,
@@ -27,12 +39,12 @@ export const Checkbox = ({
       onPress={onPress}
       hapticType="selection"
     >
-      <View
-        className={cn(
-          'h-full w-full rounded-full',
-          checked && 'bg-accent-foreground'
-        )}
-      />
+      {checked && (
+        <Animated.View
+          entering={keyframe.duration(100)}
+          className={cn('h-full w-full rounded-full bg-accent-foreground')}
+        />
+      )}
     </HapticPressable>
   );
 };
