@@ -162,7 +162,7 @@
       "tickets": [
         {
           "id": "P3-T1",
-          "status": "todo",
+          "status": "done",
           "title": "Implement bulk delete orchestrator path",
           "summary": "Build the delete action flow that prompts confirmation with selected-count context, executes soft-delete updates for selected grocery items, then resets mode state and shows a generic success toast.",
           "acceptanceCriteria": [

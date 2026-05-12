@@ -4,11 +4,14 @@ import { View } from 'react-native';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { cn } from '../../../lib/utils';
-import { getBulkToolbarActions } from '../bulk-selection/toolbar';
+import {
+  BulkToolbarActionId,
+  getBulkToolbarActions,
+} from '../bulk-selection/toolbar';
 
 type BulkSelectionToolbarProps = {
   selectedItemCount: number;
-  onActionPress: () => void;
+  onActionPress: (actionId: BulkToolbarActionId) => void;
 };
 
 const bulkToolbarIcons = {
@@ -29,7 +32,7 @@ export const BulkSelectionToolbar = ({
       {bulkToolbarActions.map(action => (
         <HapticPressable
           key={action.id}
-          onPress={onActionPress}
+          onPress={() => onActionPress(action.id)}
           disabled={action.isDisabled}
           haptic={!action.isDisabled}
           hapticType="selection"

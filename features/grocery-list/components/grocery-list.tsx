@@ -6,12 +6,13 @@ import {
   SettingsIcon,
 } from 'lucide-react-native';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, TextInput as RNTextInput, View } from 'react-native';
+import { Alert, Keyboard, TextInput as RNTextInput, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { toast } from 'sonner-native';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
@@ -27,6 +28,11 @@ import {
   selectAllVisibleUncheckedItems,
   toggleBulkSelectionItem,
 } from '../bulk-selection/controller';
+import {
+  getBulkDeleteConfirmationCopy,
+  runBulkDelete,
+} from '../bulk-selection/delete-orchestrator';
+import { BulkToolbarActionId } from '../bulk-selection/toolbar';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
@@ -80,7 +86,8 @@ export const GroceryList = ({
   const { mutate: updateSettings } = useUpdateSettings();
   const { user } = db.useAuth();
   const activeItemIds = filterActiveItems(items);
-  const { mutate: clearGroceryList } = useClearGroceryList();
+  const { mutate: clearGroceryList, mutateAsync: clearGroceryListAsync } =
+    useClearGroceryList();
 
   const isOwner = user?.id === ownerId;
 
@@ -334,8 +341,47 @@ export const GroceryList = ({
     );
   };
 
-  const handleBulkToolbarActionPress = () => {
-    // Ticket P2-T2 only delivers toolbar shell; write flows attach in later tickets.
+  const confirmBulkDelete = (selectedCount: number) => {
+    const copy = getBulkDeleteConfirmationCopy(selectedCount);
+
+    return new Promise<boolean>(resolve => {
+      Alert.alert(copy.title, copy.description, [
+        {
+          text: copy.cancelLabel,
+          style: 'cancel',
+          onPress: () => resolve(false),
+        },
+        {
+          text: copy.confirmLabel,
+          style: 'destructive',
+          onPress: () => resolve(true),
+        },
+      ]);
+    });
+  };
+
+  const handleBulkToolbarActionPress = async (actionId: BulkToolbarActionId) => {
+    if (actionId !== 'delete') {
+      return;
+    }
+
+    try {
+      await runBulkDelete({
+        selectedItemIds: bulkSelectionState.selectedItemIds,
+        confirmDelete: confirmBulkDelete,
+        deleteItems: async itemIds => {
+          await clearGroceryListAsync({ itemIds });
+        },
+        onDeleteSuccess: () => {
+          setBulkSelectionState(currentState =>
+            exitBulkSelectionMode(currentState)
+          );
+          toast.success('Bulk action complete');
+        },
+      });
+    } catch {
+      toast.error('Failed to complete bulk action');
+    }
   };
 
   return (

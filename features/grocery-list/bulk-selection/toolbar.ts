@@ -1,4 +1,8 @@
-type BulkToolbarActionId = 'set-store' | 'set-category' | 'move' | 'delete';
+export type BulkToolbarActionId =
+  | 'set-store'
+  | 'set-category'
+  | 'move'
+  | 'delete';
 
 export type BulkToolbarAction = {
   id: BulkToolbarActionId;
