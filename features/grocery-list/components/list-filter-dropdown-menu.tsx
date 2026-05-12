@@ -42,7 +42,27 @@ export const ListFilterDropdownMenu = ({
         <Icon as={ListFilter} size={24} />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger key="sort-by-submenu">
+            <DropdownMenuItemTitle>Sort By</DropdownMenuItemTitle>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuCheckboxItem
+              key="sort-recent"
+              value={sortBy === 'recent' ? 'on' : 'off'}
+              onValueChange={() => onSortByChange('recent')}
+            >
+              <DropdownMenuItemTitle>Recent</DropdownMenuItemTitle>
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              key="sort-name"
+              value={sortBy === 'name' ? 'on' : 'off'}
+              onValueChange={() => onSortByChange('name')}
+            >
+              <DropdownMenuItemTitle>Alphabetical</DropdownMenuItemTitle>
+            </DropdownMenuCheckboxItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger key="group-by-submenu">
             <DropdownMenuItemTitle>Group By</DropdownMenuItemTitle>
@@ -78,43 +98,21 @@ export const ListFilterDropdownMenu = ({
             </DropdownMenuCheckboxItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger key="sort-by-submenu">
-            <DropdownMenuItemTitle>Sort By</DropdownMenuItemTitle>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuCheckboxItem
-              key="sort-recent"
-              value={sortBy === 'recent' ? 'on' : 'off'}
-              onValueChange={() => onSortByChange('recent')}
-            >
-              <DropdownMenuItemTitle>Recent</DropdownMenuItemTitle>
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              key="sort-name"
-              value={sortBy === 'name' ? 'on' : 'off'}
-              onValueChange={() => onSortByChange('name')}
-            >
-              <DropdownMenuItemTitle>Alphabetical</DropdownMenuItemTitle>
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
         <DropdownMenuGroup>
-        <DropdownMenuItem
-          key="open-all-groupings"
-          disabled={!hasEnabledGroupings}
-          onSelect={onOpenAllGroupings}
-        >
-          <DropdownMenuItemTitle>Open all groupings</DropdownMenuItemTitle>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          key="collapse-all-groupings"
-          disabled={!hasEnabledGroupings}
-          onSelect={onCollapseAllGroupings}
-        >
-          <DropdownMenuItemTitle>Collapse all groupings</DropdownMenuItemTitle>
-        </DropdownMenuItem>
+          <DropdownMenuItem
+            key="open-all-groupings"
+            disabled={!hasEnabledGroupings}
+            onSelect={onOpenAllGroupings}
+          >
+            <DropdownMenuItemTitle>Open Groupings</DropdownMenuItemTitle>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            key="collapse-all-groupings"
+            disabled={!hasEnabledGroupings}
+            onSelect={onCollapseAllGroupings}
+          >
+            <DropdownMenuItemTitle>Collapse Groupings</DropdownMenuItemTitle>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenuRoot>
