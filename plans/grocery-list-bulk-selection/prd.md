@@ -31,26 +31,27 @@ Bulk actions exit mode on success and show simple generic success toasts.
 8. As a shopper, I want bottom nav/add controls to fade away and the bulk toolbar to fade in, so that mode change feels clear and polished.
 9. As a shopper, I want transition timing to feel quick and smooth, so that toggling mode does not feel laggy.
 10. As a shopper, I want toolbar actions disabled until I select at least one item, so that I avoid empty-state action attempts.
-11. As a shopper, I want `Select All` and `Clear All` next to the close icon, so that bulk utilities are easy to reach.
+11. As a shopper, I want `Select All` and `Clear All` in the header while bulk mode is active, so that bulk utilities are easy to reach.
 12. As a shopper, I want to exit mode via a prominent `X`, so that leaving mode is always obvious.
-13. As a shopper, I want the overflow menu to show only the "enter" option when not in mode, so that entry behavior is unambiguous.
-14. As a shopper, I want bulk delete to ask for confirmation, so that accidental multi-delete is prevented.
-15. As a shopper, I want bulk set store to reuse the existing store sheet, so that behavior stays consistent with item-level editing.
-16. As a shopper, I want bulk set category to reuse the existing category sheet, so that behavior stays consistent with item-level editing.
-17. As a shopper, I want bulk move to reuse the existing list-selection sheet, so that list-picking feels familiar.
-18. As a shopper, I want selecting `None` for store or category to clear that field on all selected items, so that removal is as easy as assignment.
-19. As a shopper, I want the move destination list to show my current list as disabled, so that I keep orientation without invalid selection.
-20. As a shopper, I want move behavior to be true transfer (remove from source), so that "move" does not create duplicates in my current list.
-21. As a shopper, I want move conflicts in destination to merge/increment existing quantities, so that target lists stay clean.
-22. As a shopper, I want moved item checked-state semantics preserved, so that transfer logic stays predictable.
-23. As a shopper, I want mode selection cleared when I exit mode, so that stale selections do not cause accidental actions later.
-24. As a shopper, I want successful bulk actions to exit mode automatically, so that I return to normal browsing immediately.
-25. As a shopper, I want a simple success toast after bulk actions, so that I get confirmation without noisy detail.
-26. As a shared-list collaborator, I want bulk actions to respect list permissions, so that operations remain safe in collaborative contexts.
-27. As a user with linked saved items, I want store/category bulk updates to sync saved items when possible, so that template data stays aligned with my edits.
-28. As a user with mixed linkage states, I want saved-item sync to be best-effort, so that bulk item updates still succeed even if some linked syncs are skipped.
-29. As a design-conscious user, I want clear iconography on bulk actions, so that each action is recognizable at a glance.
-30. As a user switching frequently between actions, I want destructive action placed last in the toolbar, so that accidental destructive taps are less likely.
+13. As a shopper, I want filter/sort/grouping controls to stay available in bulk mode, so that I can keep organizing the current view while selecting.
+14. As a shopper, I want the overflow menu to show only the "enter" option when not in mode, so that entry behavior is unambiguous.
+15. As a shopper, I want bulk delete to ask for confirmation, so that accidental multi-delete is prevented.
+16. As a shopper, I want bulk set store to reuse the existing store sheet, so that behavior stays consistent with item-level editing.
+17. As a shopper, I want bulk set category to reuse the existing category sheet, so that behavior stays consistent with item-level editing.
+18. As a shopper, I want bulk move to reuse the existing list-selection sheet, so that list-picking feels familiar.
+19. As a shopper, I want selecting `None` for store or category to clear that field on all selected items, so that removal is as easy as assignment.
+20. As a shopper, I want the move destination list to show my current list as disabled, so that I keep orientation without invalid selection.
+21. As a shopper, I want move behavior to be true transfer (remove from source), so that "move" does not create duplicates in my current list.
+22. As a shopper, I want move conflicts in destination to merge/increment existing quantities, so that target lists stay clean.
+23. As a shopper, I want moved item checked-state semantics preserved, so that transfer logic stays predictable.
+24. As a shopper, I want mode selection cleared when I exit mode, so that stale selections do not cause accidental actions later.
+25. As a shopper, I want successful bulk actions to exit mode automatically, so that I return to normal browsing immediately.
+26. As a shopper, I want a simple success toast after bulk actions, so that I get confirmation without noisy detail.
+27. As a shared-list collaborator, I want bulk actions to respect list permissions, so that operations remain safe in collaborative contexts.
+28. As a user with linked saved items, I want store/category bulk updates to sync saved items when possible, so that template data stays aligned with my edits.
+29. As a user with mixed linkage states, I want saved-item sync to be best-effort, so that bulk item updates still succeed even if some linked syncs are skipped.
+30. As a design-conscious user, I want clear iconography on bulk actions, so that each action is recognizable at a glance.
+31. As a user switching frequently between actions, I want destructive action placed last in the toolbar, so that accidental destructive taps are less likely.
 
 ## Implementation Decisions
 
@@ -63,7 +64,8 @@ Bulk actions exit mode on success and show simple generic success toasts.
 - Replace active-mode header controls:
   - Hide overflow menu.
   - Show close (`X`) control.
-  - Show `Select All` / `Clear All` adjacent to close.
+  - Keep filter/sort/grouping dropdown available.
+  - Show `Select All` / `Clear All` in the left header slot.
 - Hide section-level clear controls while mode is active.
 - Replace bottom controls through cross-fade transition (~200ms):
   - Fade out nav cluster and add-item button.

@@ -121,12 +121,26 @@ export const GroceryListHeader = ({
             {isDisconnected ? (
               <Icon as={WifiOff} size={20} className="text-destructive" />
             ) : null}
-            {isBulkSelectionModeActive ? (
-              <Animated.View
-                key="bulk-right-controls"
-                entering={FadeIn.duration(180)}
-                exiting={FadeOut.duration(120)}
-              >
+            <Animated.View
+              key={
+                isBulkSelectionModeActive
+                  ? 'bulk-right-controls'
+                  : 'default-right-controls'
+              }
+              entering={FadeIn.duration(180)}
+              exiting={FadeOut.duration(120)}
+              className="flex-row items-center gap-4"
+            >
+              <ListFilterDropdownMenu
+                groupBy={groupBy}
+                sortBy={sortBy}
+                hasEnabledGroupings={groupBy !== 'none'}
+                onGroupByChange={onGroupByChange}
+                onSortByChange={onSortByChange}
+                onOpenAllGroupings={onOpenAllGroupings}
+                onCollapseAllGroupings={onCollapseAllGroupings}
+              />
+              {isBulkSelectionModeActive ? (
                 <Button
                   variant="ghost"
                   className="h-8 px-0"
@@ -139,24 +153,7 @@ export const GroceryListHeader = ({
                     className="text-foreground"
                   />
                 </Button>
-              </Animated.View>
-            ) : (
-              <Animated.View
-                key="default-right-controls"
-                entering={FadeIn.duration(180)}
-                exiting={FadeOut.duration(120)}
-                className="flex-row items-center gap-4"
-              >
-                <ListFilterDropdownMenu
-                  groupBy={groupBy}
-                  sortBy={sortBy}
-                  hasEnabledGroupings={groupBy !== 'none'}
-                  onGroupByChange={onGroupByChange}
-                  onSortByChange={onSortByChange}
-                  onOpenAllGroupings={onOpenAllGroupings}
-                  onCollapseAllGroupings={onCollapseAllGroupings}
-                />
-
+              ) : (
                 <GroceryListDropdownMenu
                   items={items}
                   ownerId={ownerId}
@@ -168,8 +165,8 @@ export const GroceryListHeader = ({
                   showEnterBulkSelectionAction={true}
                   onEnterBulkSelectionMode={onEnterBulkSelectionMode}
                 />
-              </Animated.View>
-            )}
+              )}
+            </Animated.View>
           </View>
         )}
       </View>
