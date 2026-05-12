@@ -386,6 +386,62 @@ export const GroceryList = ({
     );
   };
 
+  const handleSelectBulkSectionItems = (itemIds: string[]) => {
+    const selectableItemIds = new Set(
+      filteredItems
+        .filter(item => !item.isChecked)
+        .map(item => item.id)
+        .filter(id => itemIds.includes(id))
+    );
+
+    if (selectableItemIds.size === 0) {
+      return;
+    }
+
+    setBulkSelectionState(currentState => {
+      if (!currentState.isActive) {
+        return currentState;
+      }
+
+      const nextSelectedItemIds = new Set(currentState.selectedItemIds);
+      selectableItemIds.forEach(id => {
+        nextSelectedItemIds.add(id);
+      });
+
+      return {
+        ...currentState,
+        selectedItemIds: nextSelectedItemIds,
+      };
+    });
+  };
+
+  const handleDeselectBulkSectionItems = (itemIds: string[]) => {
+    if (itemIds.length === 0) {
+      return;
+    }
+
+    const itemIdSet = new Set(itemIds);
+
+    setBulkSelectionState(currentState => {
+      if (!currentState.isActive || currentState.selectedItemIds.size === 0) {
+        return currentState;
+      }
+
+      const nextSelectedItemIds = new Set(
+        [...currentState.selectedItemIds].filter(id => !itemIdSet.has(id))
+      );
+
+      if (nextSelectedItemIds.size === currentState.selectedItemIds.size) {
+        return currentState;
+      }
+
+      return {
+        ...currentState,
+        selectedItemIds: nextSelectedItemIds,
+      };
+    });
+  };
+
   const confirmBulkDelete = (selectedCount: number) => {
     const copy = getBulkDeleteConfirmationCopy(selectedCount);
 
@@ -714,6 +770,10 @@ export const GroceryList = ({
               isBulkSelectionModeActive={bulkSelectionState.isActive}
               selectedBulkItemIds={bulkSelectionState.selectedItemIds}
               onToggleBulkSelectionItem={handleToggleBulkSelectionItem}
+              onSelectBulkSelectionSectionItems={handleSelectBulkSectionItems}
+              onDeselectBulkSelectionSectionItems={
+                handleDeselectBulkSectionItems
+              }
             />
           </View>
         </EditItemProvider>

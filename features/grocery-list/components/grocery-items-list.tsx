@@ -1,13 +1,12 @@
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { cn } from '../../../lib/utils';
-import { useClearGroceryList } from '../instant/clear-list';
 import { GroceryListItemWithRecipe } from '../types';
 import { groupItemsBy } from '../util';
 
@@ -27,6 +26,8 @@ type GroceryItemsListProps = {
   isBulkSelectionModeActive?: boolean;
   selectedBulkItemIds?: Set<string>;
   onToggleBulkSelectionItem?: (itemId: string) => void;
+  onSelectBulkSelectionSectionItems?: (itemIds: string[]) => void;
+  onDeselectBulkSelectionSectionItems?: (itemIds: string[]) => void;
 };
 
 type GroceryListRow =
@@ -55,9 +56,10 @@ export const GroceryItemsList = ({
   isBulkSelectionModeActive = false,
   selectedBulkItemIds = new Set<string>(),
   onToggleBulkSelectionItem,
+  onSelectBulkSelectionSectionItems,
+  onDeselectBulkSelectionSectionItems,
 }: GroceryItemsListProps) => {
   const { present: presentEditSheet } = useEditItemSheet();
-  const { mutate: clearGroceryList } = useClearGroceryList();
 
   const [collapsedSectionsByGroup, setCollapsedSectionsByGroup] = useState<
     Record<GroceryItemsListProps['groupBy'], Set<string>>
@@ -251,49 +253,67 @@ export const GroceryItemsList = ({
     sectionItemCounts,
   ]);
 
-  const handleClearSection = useCallback(
-    (sectionKey: string, sectionTitle: string) => {
+  const handleSelectSectionItems = useCallback(
+    (sectionKey: string) => {
       const itemIds = sectionItemIds.get(sectionKey) ?? [];
-      if (itemIds.length === 0) return;
-
-      const sectionLabel = sectionTitle || 'this section';
-      Alert.alert(
-        'Clear section',
-        `Are you sure you want to clear ${sectionLabel}? This action cannot be undone.`,
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Clear',
-            style: 'destructive',
-            onPress: () => {
-              clearGroceryList({ itemIds });
-            },
-          },
-        ]
-      );
+      if (itemIds.length === 0) {
+        return;
+      }
+      onSelectBulkSelectionSectionItems?.(itemIds);
     },
-    [clearGroceryList, sectionItemIds]
+    [onSelectBulkSelectionSectionItems, sectionItemIds]
+  );
+
+  const handleDeselectSectionItems = useCallback(
+    (sectionKey: string) => {
+      const itemIds = sectionItemIds.get(sectionKey) ?? [];
+      if (itemIds.length === 0) {
+        return;
+      }
+      onDeselectBulkSelectionSectionItems?.(itemIds);
+    },
+    [onDeselectBulkSelectionSectionItems, sectionItemIds]
   );
 
   const renderSectionHeader = useCallback(
-    (row: Extract<GroceryListRow, { type: 'header' }>) => (
-      <CollapsibleSectionHeader
-        title={row.title}
-        itemCount={row.itemCount}
-        isExpanded={row.isExpanded}
-        onToggle={() => toggleSection(row.sectionKey)}
-        onClearPress={
-          isBulkSelectionModeActive
-            ? undefined
-            : () => handleClearSection(row.sectionKey, row.title)
-        }
-        showCollapse={true}
-      />
-    ),
-    [handleClearSection, isBulkSelectionModeActive, toggleSection]
+    (row: Extract<GroceryListRow, { type: 'header' }>) => {
+      const sectionIds = sectionItemIds.get(row.sectionKey) ?? [];
+      const hasSectionItems = sectionIds.length > 0;
+      const areAllSectionItemsSelected =
+        hasSectionItems && sectionIds.every(id => selectedBulkItemIds.has(id));
+
+      return (
+        <CollapsibleSectionHeader
+          title={row.title}
+          itemCount={row.itemCount}
+          isExpanded={row.isExpanded}
+          onToggle={() => toggleSection(row.sectionKey)}
+          actionLabel={
+            isBulkSelectionModeActive && hasSectionItems
+              ? areAllSectionItemsSelected
+                ? 'Deselect all'
+                : 'Select all'
+              : undefined
+          }
+          onActionPress={
+            isBulkSelectionModeActive && hasSectionItems
+              ? areAllSectionItemsSelected
+                ? () => handleDeselectSectionItems(row.sectionKey)
+                : () => handleSelectSectionItems(row.sectionKey)
+              : undefined
+          }
+          showCollapse={true}
+        />
+      );
+    },
+    [
+      handleDeselectSectionItems,
+      handleSelectSectionItems,
+      isBulkSelectionModeActive,
+      sectionItemIds,
+      selectedBulkItemIds,
+      toggleSection,
+    ]
   );
 
   const renderRow = useCallback(

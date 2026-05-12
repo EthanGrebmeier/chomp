@@ -11,7 +11,8 @@ type CollapsibleSectionHeaderProps = {
   itemCount?: number;
   isExpanded: boolean;
   onToggle: () => void;
-  onClearPress?: () => void;
+  actionLabel?: string;
+  onActionPress?: () => void;
   showCollapse?: boolean;
 };
 
@@ -20,7 +21,8 @@ export const CollapsibleSectionHeader = ({
   itemCount,
   isExpanded,
   onToggle,
-  onClearPress,
+  actionLabel,
+  onActionPress,
   showCollapse = true,
 }: CollapsibleSectionHeaderProps) => {
   return (
@@ -38,10 +40,10 @@ export const CollapsibleSectionHeader = ({
             )}
           </TouchableOpacity>
           <View className="flex-row items-center gap-3">
-            {isExpanded && onClearPress ? (
-              <TouchableOpacity onPress={onClearPress}>
-                <Text className="text-sm font-medium text-destructive">
-                  Clear
+            {isExpanded && actionLabel && onActionPress ? (
+              <TouchableOpacity onPress={onActionPress}>
+                <Text className="text-sm font-medium text-muted-foreground">
+                  {actionLabel}
                 </Text>
               </TouchableOpacity>
             ) : null}
