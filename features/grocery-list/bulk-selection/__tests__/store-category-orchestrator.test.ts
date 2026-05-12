@@ -10,9 +10,11 @@ import {
 const {
   dbTransactMock,
   syncSavedItemFromGroceryItemMock,
+  syncRecipeIngredientsFromGroceryItemMock,
 } = vi.hoisted(() => ({
   dbTransactMock: vi.fn(),
   syncSavedItemFromGroceryItemMock: vi.fn(),
+  syncRecipeIngredientsFromGroceryItemMock: vi.fn(),
 }));
 
 vi.mock('@/lib/instant', () => ({
@@ -49,9 +51,15 @@ vi.mock('../../instant/sync-saved-item-from-grocery-item', () => ({
   syncSavedItemFromGroceryItem: syncSavedItemFromGroceryItemMock,
 }));
 
+vi.mock('../../instant/sync-recipe-ingredients-from-grocery-item', () => ({
+  syncRecipeIngredientsFromGroceryItem:
+    syncRecipeIngredientsFromGroceryItemMock,
+}));
+
 beforeEach(() => {
   dbTransactMock.mockReset();
   syncSavedItemFromGroceryItemMock.mockReset();
+  syncRecipeIngredientsFromGroceryItemMock.mockReset();
 });
 
 describe('store and category bulk payload builders', () => {
@@ -103,6 +111,7 @@ describe('bulk store/category write adapters', () => {
     syncSavedItemFromGroceryItemMock
       .mockResolvedValueOnce(undefined)
       .mockRejectedValueOnce(new Error('permission mismatch'));
+    syncRecipeIngredientsFromGroceryItemMock.mockResolvedValue(undefined);
 
     const result = await runBulkStoreUpdate({
       selectedItemIds: ['item-1', 'item-2'],
@@ -110,6 +119,8 @@ describe('bulk store/category write adapters', () => {
         {
           id: 'item-1',
           name: 'Milk',
+          unit: 'each',
+          recipe: { id: 'recipe-1' },
           store: { id: 'store-old' },
           saved_item: {
             id: 'saved-1',
@@ -120,6 +131,8 @@ describe('bulk store/category write adapters', () => {
         {
           id: 'item-2',
           name: 'Eggs',
+          unit: 'each',
+          recipe: { id: 'recipe-2' },
           store: { id: 'store-old' },
           saved_item: {
             id: 'saved-2',
@@ -133,6 +146,7 @@ describe('bulk store/category write adapters', () => {
 
     expect(dbTransactMock).toHaveBeenCalledTimes(1);
     expect(syncSavedItemFromGroceryItemMock).toHaveBeenCalledTimes(2);
+    expect(syncRecipeIngredientsFromGroceryItemMock).toHaveBeenCalledTimes(2);
     expect(result).toEqual({
       updatedItemCount: 2,
       skippedItemCount: 0,
@@ -143,6 +157,7 @@ describe('bulk store/category write adapters', () => {
   it('skips missing selections and syncs category only when linked saved item exists', async () => {
     dbTransactMock.mockResolvedValue(undefined);
     syncSavedItemFromGroceryItemMock.mockResolvedValue(undefined);
+    syncRecipeIngredientsFromGroceryItemMock.mockResolvedValue(undefined);
 
     const result = await runBulkCategoryUpdate({
       selectedItemIds: ['item-1', 'item-2'],
@@ -150,6 +165,8 @@ describe('bulk store/category write adapters', () => {
         {
           id: 'item-1',
           name: 'Bananas',
+          unit: 'bunch',
+          recipe: { id: 'recipe-1' },
           saved_item: null,
         },
       ],
@@ -158,6 +175,7 @@ describe('bulk store/category write adapters', () => {
 
     expect(dbTransactMock).toHaveBeenCalledTimes(1);
     expect(syncSavedItemFromGroceryItemMock).not.toHaveBeenCalled();
+    expect(syncRecipeIngredientsFromGroceryItemMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       updatedItemCount: 1,
       skippedItemCount: 1,

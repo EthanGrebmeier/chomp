@@ -1,6 +1,7 @@
 import { db } from '@/lib/instant';
 
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import { syncRecipeIngredientsFromGroceryItem } from '../instant/sync-recipe-ingredients-from-grocery-item';
 import { syncSavedItemFromGroceryItem } from '../instant/sync-saved-item-from-grocery-item';
 
 export type BulkStoreSelectionPayload = {
@@ -17,7 +18,11 @@ export type BulkCategorySelectionPayload = {
 export type BulkStoreCategorySelectedItem = {
   id: string;
   name: string;
+  unit?: string;
   store?: {
+    id?: string;
+  } | null;
+  recipe?: {
     id?: string;
   } | null;
   saved_item?: {
@@ -108,6 +113,52 @@ const runBestEffortSavedItemSyncForItems = async ({
   );
 };
 
+const runBestEffortRecipeSyncForItems = async ({
+  items,
+  patch,
+}: {
+  items: BulkStoreCategorySelectedItem[];
+  patch: {
+    storeId?: string;
+    category?: string;
+  };
+}) => {
+  await Promise.all(
+    items.map(item =>
+      runBestEffortRecipeSync({
+        item,
+        patch,
+      })
+    )
+  );
+};
+
+const runBestEffortRecipeSync = async ({
+  item,
+  patch,
+}: {
+  item: BulkStoreCategorySelectedItem;
+  patch: {
+    storeId?: string;
+    category?: string;
+  };
+}) => {
+  if (!item.recipe?.id || !item.unit) {
+    return;
+  }
+
+  try {
+    await syncRecipeIngredientsFromGroceryItem({
+      recipeId: item.recipe.id,
+      matchName: item.name,
+      matchUnit: item.unit,
+      patch,
+    });
+  } catch {
+    // Recipe sync is intentionally best-effort and never blocks the bulk action.
+  }
+};
+
 const runBestEffortSavedItemSync = async ({
   item,
   patch,
@@ -187,6 +238,10 @@ export const runBulkStoreUpdate = async ({
     items: matchedItems,
     patch,
   });
+  await runBestEffortRecipeSyncForItems({
+    items: matchedItems,
+    patch,
+  });
 
   return {
     updatedItemCount: matchedItems.length,
@@ -219,6 +274,10 @@ export const runBulkCategoryUpdate = async ({
   }
 
   const failedSavedItemSyncCount = await runBestEffortSavedItemSyncForItems({
+    items: matchedItems,
+    patch,
+  });
+  await runBestEffortRecipeSyncForItems({
     items: matchedItems,
     patch,
   });

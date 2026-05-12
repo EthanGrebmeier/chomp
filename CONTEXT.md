@@ -52,6 +52,14 @@ _Avoid_: Mixed select-and-edit interactions
 Bulk store/category updates always update selected grocery items and attempt linked saved-item updates when possible, without blocking overall success.
 _Avoid_: All-or-nothing sync requirement
 
+**Best-Effort Recipe Ingredient Sync**:
+Bulk store/category updates also attempt to propagate to recipe ingredients for recipe-linked items when an ingredient can be matched, without blocking overall success.
+_Avoid_: Failing the whole bulk action on partial recipe-sync errors
+
+**Bulk Recipe Ingredient Match Rule**:
+A recipe ingredient is considered the same ingredient for bulk propagation when it shares the selected grocery item's pre-edit name and unit (normalized), and all matches are updated.
+_Avoid_: Guessing by partial name only or selecting a single arbitrary match
+
 **Bulk Delete Confirmation**:
 Bulk delete requires explicit confirmation before applying the delete action.
 _Avoid_: One-tap destructive bulk delete
@@ -105,6 +113,8 @@ _Avoid_: Leading destructive action placement
 - **Section Clear Suppression** removes per-section clear controls during Bulk Selection Mode
 - **Selection-Only Row Behavior** prevents edit-sheet entry while Bulk Selection Mode is active
 - **Best-Effort Saved Item Sync** allows partial saved-item sync without failing the bulk grocery-item update
+- **Best-Effort Recipe Ingredient Sync** allows partial recipe-ingredient sync without failing the bulk grocery-item update
+- **Bulk Recipe Ingredient Match Rule** matches by pre-edit normalized name and unit and updates all matching recipe ingredients
 - **Bulk Delete Confirmation** gates destructive bulk delete with user confirmation
 - **Mode Entry/Exit Control** exposes entry through menu and exit through a dedicated X icon
 - **Checked Section Visibility Rule** hides all checked rows during Bulk Selection Mode
