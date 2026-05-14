@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AppState, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
@@ -19,9 +20,16 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '../../../components/ui/dropdown-menu';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
 import { useClearMealPlan, useUserMealPlanData } from '../hooks';
+import {
+  DEFAULT_MEAL_PLANNER_VIEW_MODE,
+  getMealPlannerViewModePreferenceKey,
+  getStoredMealPlannerViewMode,
+  MealPlannerViewMode,
+} from '../lib/view-mode-preference';
 import { MealPlanItemWithStore } from '../types';
 
 import {
@@ -34,21 +42,24 @@ import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
 import { ListSelectorSheet, ListSelectorSheetRef } from './list-selector-sheet';
 import { MealPlanDate } from './meal-plan-date';
 import { MealPlanDateView } from './meal-plan-date-view';
-import { MealPlanDayListView } from './meal-plan-day-list-view';
+import {
+  MealPlanDayListView,
+  MealPlanDayListViewRef,
+} from './meal-plan-day-list-view';
 
 const DAYS_RANGE = 30; //  days before and after today
 
 type MealPlannerProps = {
   listId: string;
+  initialViewMode?: MealPlannerViewMode;
 };
 
-type MealPlannerViewMode = 'calendar' | 'list';
-
-export const MealPlanner = ({ listId }: MealPlannerProps) => {
+export const MealPlanner = ({ listId, initialViewMode }: MealPlannerProps) => {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
   const listSelectorSheet = useRef<ListSelectorSheetRef>(null);
+  const dayListViewRef = useRef<MealPlanDayListViewRef>(null);
   const pagerRef = useRef<PagerView>(null);
   const isProgrammaticNavigationRef = useRef(false);
   const shouldReturnToListSelectorRef = useRef(false);
@@ -56,10 +67,12 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
   const { recipes, items } = useUserMealPlanData(listId);
   const { mutate: clearMealPlan } = useClearMealPlan();
   const hasMealPlanEntries = recipes.length > 0 || items.length > 0;
-  const [viewMode, setViewMode] = useState<MealPlannerViewMode>('calendar');
+  const [viewMode, setViewMode] = useState<MealPlannerViewMode>(
+    initialViewMode ?? DEFAULT_MEAL_PLANNER_VIEW_MODE
+  );
   const [isViewModeHydrated, setIsViewModeHydrated] = useState(false);
   const viewModePreferenceKey = useMemo(
-    () => `meal-planner:view-mode:${user?.id ?? 'anonymous'}`,
+    () => getMealPlannerViewModePreferenceKey(user?.id),
     [user?.id]
   );
 
@@ -123,11 +136,8 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
 
     const loadViewModePreference = async () => {
       try {
-        const storedMode = await AsyncStorage.getItem(viewModePreferenceKey);
-        if (
-          !isCancelled &&
-          (storedMode === 'calendar' || storedMode === 'list')
-        ) {
+        const storedMode = await getStoredMealPlannerViewMode(user?.id);
+        if (!isCancelled && storedMode) {
           setViewMode(storedMode);
         }
       } finally {
@@ -141,7 +151,7 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
     return () => {
       isCancelled = true;
     };
-  }, [viewModePreferenceKey]);
+  }, [user?.id, viewModePreferenceKey]);
 
   useEffect(() => {
     if (!isViewModeHydrated) return;
@@ -221,6 +231,11 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
     handleDatePress(today);
   };
 
+  const handleHeaderPress = () => {
+    if (viewMode !== 'list') return;
+    dayListViewRef.current?.scrollToToday();
+  };
+
   const handleClearMealPlan = () => {
     if (!hasMealPlanEntries) return;
 
@@ -242,10 +257,26 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
     );
   };
 
+  const calendarOpacityStyle = useAnimatedStyle(
+    () => ({
+      opacity: withTiming(viewMode === 'calendar' ? 1 : 0, { duration: 150 }),
+    }),
+    [viewMode]
+  );
+
+  const listOpacityStyle = useAnimatedStyle(
+    () => ({
+      opacity: withTiming(viewMode === 'list' ? 1 : 0, { duration: 150 }),
+    }),
+    [viewMode]
+  );
+
   return (
     <View style={{ flex: 1 }}>
-      <View className="flex-row items-center justify-between px-4">
-        <Heading>Meal Plan</Heading>
+      <View className="flex-row items-center px-4">
+        <HapticPressable className="h-10 flex-1 justify-center" onPress={handleHeaderPress}>
+          <Heading>Meal Plan</Heading>
+        </HapticPressable>
         <View className="flex-row items-center gap-1">
           <Button
             variant="ghost"
@@ -298,58 +329,71 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} />
       <EditItemSheet ref={editItemSheet} />
-      {viewMode === 'calendar' ? (
-        <>
-          <MealPlanDate
-            currentDate={currentDate}
-            onTodayPress={handleTodayPress}
-          />
-          <MealPlanDateSelector
-            dates={daysOfPlan}
-            currentDate={currentDate}
-            onDatePress={handleDatePress}
-            isProgrammaticNavigationRef={isProgrammaticNavigationRef}
-            datesWithMeals={datesWithMeals}
-            datesAllMealsAdded={datesAllMealsAdded}
-          />
-          <PagerView
-            ref={pagerRef}
-            style={{ flex: 1 }}
-            initialPage={initialPageIndex}
-            onPageSelected={handlePageSelected}
-          >
-            {daysOfPlan.map(date => (
-              <View key={date.toISOString()} style={{ flex: 1 }}>
-                <MealPlanDateView
-                  listId={listId}
-                  recipes={getRecipesForDate(date)}
-                  items={getItemsForDate(date)}
-                  onMealPress={({ mealPlanRecipe, recipe }) => {
-                    shouldReturnToListSelectorRef.current = false;
-                    editMealSheet.current?.open({ mealPlanRecipe, recipe });
-                  }}
-                  onItemPress={handleItemPress}
-                />
-              </View>
-            ))}
-          </PagerView>
-        </>
-      ) : (
-        <View className="flex-1 pt-2">
-          <MealPlanDayListView
-            daysOfPlan={daysOfPlan}
-            todayIndex={initialPageIndex}
-            recipes={recipes}
-            items={items}
-            onDayPress={handleDayListDayPress}
-            onMealPress={({ mealPlanRecipe, recipe }) => {
-              shouldReturnToListSelectorRef.current = false;
-              editMealSheet.current?.open({ mealPlanRecipe, recipe });
-            }}
-            onItemPress={handleItemPress}
-          />
-        </View>
-      )}
+      <View className="relative flex-1">
+        <Animated.View
+          style={[{ flex: 1 }, calendarOpacityStyle]}
+          pointerEvents={viewMode === 'calendar' ? 'auto' : 'none'}
+        >
+          <View className="flex-1">
+            <MealPlanDate
+              currentDate={currentDate}
+              onTodayPress={handleTodayPress}
+            />
+            <MealPlanDateSelector
+              dates={daysOfPlan}
+              currentDate={currentDate}
+              onDatePress={handleDatePress}
+              isProgrammaticNavigationRef={isProgrammaticNavigationRef}
+              datesWithMeals={datesWithMeals}
+              datesAllMealsAdded={datesAllMealsAdded}
+            />
+            <PagerView
+              ref={pagerRef}
+              style={{ flex: 1 }}
+              initialPage={initialPageIndex}
+              onPageSelected={handlePageSelected}
+            >
+              {daysOfPlan.map(date => (
+                <View key={date.toISOString()} style={{ flex: 1 }}>
+                  <MealPlanDateView
+                    listId={listId}
+                    recipes={getRecipesForDate(date)}
+                    items={getItemsForDate(date)}
+                    onMealPress={({ mealPlanRecipe, recipe }) => {
+                      shouldReturnToListSelectorRef.current = false;
+                      editMealSheet.current?.open({ mealPlanRecipe, recipe });
+                    }}
+                    onItemPress={handleItemPress}
+                  />
+                </View>
+              ))}
+            </PagerView>
+          </View>
+        </Animated.View>
+        <Animated.View
+          style={[
+            { flex: 1, position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+            listOpacityStyle,
+          ]}
+          pointerEvents={viewMode === 'list' ? 'auto' : 'none'}
+        >
+          <View className="flex-1 pt-2">
+            <MealPlanDayListView
+              ref={dayListViewRef}
+              daysOfPlan={daysOfPlan}
+              todayIndex={initialPageIndex}
+              recipes={recipes}
+              items={items}
+              onDayPress={handleDayListDayPress}
+              onMealPress={({ mealPlanRecipe, recipe }) => {
+                shouldReturnToListSelectorRef.current = false;
+                editMealSheet.current?.open({ mealPlanRecipe, recipe });
+              }}
+              onItemPress={handleItemPress}
+            />
+          </View>
+        </Animated.View>
+      </View>
       <Button
         size="wide-small"
         onPress={handleAddPress}
