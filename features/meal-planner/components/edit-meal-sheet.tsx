@@ -354,7 +354,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     };
 
     const footerContent = mealPlanRecipeToEdit ? (
-      <View className="pb-safe px-4">
+      <View className="bg-background pb-safe border-t border-border px-4 pt-3">
         <MetaBarLayout>
           <View className="flex-row items-center gap-2">
             <Pressable onPress={() => calendarSheetRef.current?.present()}>
@@ -413,7 +413,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                 setSelectedDate(format(date, 'yyyy-MM-dd'));
               }}
             />
-            <View className="min-h-0 flex-1 pb-28">
+            <View className="min-h-0 flex-1">
               {selectedRecipe && (
                 <BottomSheet.Header
                   title={
@@ -448,6 +448,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                     recipe={selectedRecipeWithIngredients}
                     mode="meal-plan"
                     mealPlanIngredients={mealPlanIngredients}
+                    bottomContentInset={132}
                     showHeader={false}
                     showFooter={false}
                     onBack={() => {}}

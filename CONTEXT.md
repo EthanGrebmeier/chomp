@@ -100,6 +100,46 @@ _Avoid_: Silent success or overly detailed result toasts
 Bulk toolbar actions are ordered as Set Store, Set Category, Move, then Delete (destructive last).
 _Avoid_: Leading destructive action placement
 
+**Meal Plan View Mode**:
+The meal planner supports two top-level presentations of the same schedule data: Calendar View and Day List View.
+_Avoid_: Separate datasets per view
+
+**Meal Plan Day List Window Rule**:
+Day List View uses the same rolling 61-day planning window as Calendar View (30 days before today through 30 days after today).
+_Avoid_: A shorter or different day range in list mode
+
+**Meal Plan Day List Density Rule**:
+In Day List View, days with no meals render as compact tappable day rows rather than hidden or expanded sections.
+_Avoid_: Auto-expanding empty days on scroll
+
+**Meal Plan Day List Section Stability Rule**:
+Day sections in Day List View are never collapsible and always render their full meal contents.
+_Avoid_: Accordion behavior, scroll-triggered expansion, or partial section rendering
+
+**Meal Plan Day Tap Add Rule**:
+In Day List View, tapping a day header opens Add to Meal Plan with that day preselected, regardless of whether the day currently has meals.
+_Avoid_: Restricting tap-to-add only to empty days
+
+**Meal Plan Day List Initial Position Rule**:
+When Day List View opens, the list initializes with Today as the topmost visible row instead of scrolling after render.
+_Avoid_: Post-render auto-scroll behavior for initial positioning
+
+**Meal Plan Today Indicator Rule**:
+Day List View marks Today with a dedicated visual indicator, without maintaining a moving "active day" highlight while scrolling.
+_Avoid_: Sticky active-day state tied to viewport position
+
+**Meal Plan View Preference Persistence Rule**:
+Meal planner reopens in the last view mode the user selected (Calendar or Day List) via local per-user persistence.
+_Avoid_: Resetting to Calendar every time the screen remounts
+
+**Meal Plan View Toggle Control Rule**:
+The meal planner header uses one compact icon button beside overflow actions to switch between Calendar and Day List views.
+_Avoid_: Wide segmented controls in the header action area
+
+**Meal Plan View Toggle Icon Semantics Rule**:
+The header toggle icon represents the target view mode that will be activated when tapped.
+_Avoid_: Showing the currently active mode icon on the toggle
+
 ## Relationships
 
 - **Bulk Selection Mode** includes only **Selectable Items**
@@ -125,6 +165,16 @@ _Avoid_: Leading destructive action placement
 - **Bottom Control Transition Rule** animates mode changes with a short cross-fade
 - **Bulk Success Feedback Rule** confirms completion with concise user feedback
 - **Toolbar Action Order Rule** places delete as the right-most action in the bulk toolbar
+- **Meal Plan View Mode** keeps Calendar View and Day List View as alternate renderings of the same meal plan data
+- **Meal Plan Day List Window Rule** keeps Day List View and Calendar View aligned to the same 61-day date window
+- **Meal Plan Day List Density Rule** keeps empty days compact but tappable in Day List View
+- **Meal Plan Day List Section Stability Rule** keeps all day sections fully expanded and non-collapsible
+- **Meal Plan Day Tap Add Rule** lets any day header open Add to Meal Plan for that specific date
+- **Meal Plan Day List Initial Position Rule** initializes Day List View with Today at the top
+- **Meal Plan Today Indicator Rule** highlights Today only, not a scroll-driven active day
+- **Meal Plan View Preference Persistence Rule** restores the user’s previously selected meal-plan view mode
+- **Meal Plan View Toggle Control Rule** keeps view switching as a single compact header icon control
+- **Meal Plan View Toggle Icon Semantics Rule** shows the destination view icon on the toggle button
 
 ## Example dialogue
 

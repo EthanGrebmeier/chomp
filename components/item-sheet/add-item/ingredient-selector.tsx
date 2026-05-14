@@ -135,6 +135,7 @@ type IngredientSelectorProps = {
   onEditIngredient?: (id: string) => void;
   showHeader?: boolean;
   headerTitle?: ReactNode;
+  bottomContentInset?: number;
 };
 
 export type IngredientSelectorRef = {
@@ -174,6 +175,7 @@ export const IngredientSelector = forwardRef<
     onEditIngredient,
     showHeader = true,
     headerTitle,
+    bottomContentInset,
   }: IngredientSelectorProps,
   ref
 ) {
@@ -361,6 +363,7 @@ export const IngredientSelector = forwardRef<
   const shouldShowFooter = showFooter ?? Boolean(onAddToList ?? listId);
   const isAddingResolved =
     (isAdding ?? isAddingInternal) || isResolvingConflict;
+  const resolvedBottomInset = bottomContentInset ?? (shouldShowFooter ? 88 : 16);
 
   useEffect(() => {
     onBusyStateChange?.(isAddingResolved);
@@ -415,7 +418,9 @@ export const IngredientSelector = forwardRef<
 
         <ScrollView
           className="min-h-24 flex-1"
-          contentContainerClassName={shouldShowFooter ? 'pb-12' : undefined}
+          contentContainerStyle={{ paddingBottom: resolvedBottomInset }}
+          contentInset={{ bottom: resolvedBottomInset }}
+          scrollIndicatorInsets={{ bottom: resolvedBottomInset }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled

@@ -294,7 +294,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
 
   const footer =
     mode === 'recipe' && selectedRecipe ? (
-      <View className="pb-safe gap-4 px-4">
+      <View className="bg-background pb-safe gap-4 border-t border-border px-4 pt-3">
         <ScrollingMetaBar>
           <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
           <MealTimeSheet mealTime={recipeMealTag} onSelect={setRecipeMealTag} />
@@ -308,7 +308,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         </Button>
       </View>
     ) : mode === 'item' ? (
-      <View className="pb-safe gap-4 px-4">
+      <View className="bg-background pb-safe gap-4 border-t border-border px-4 pt-3">
         <MealPlanMetaBar
           date={selectedDate}
           onDateChange={setSelectedDate}
@@ -361,6 +361,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               <IngredientSelector
                 recipe={selectedRecipe}
                 mode="meal-plan"
+                bottomContentInset={180}
                 mealPlanIngredients={mealPlanIngredients}
                 onBack={handleBackToRecipes}
                 onDismiss={() => sheetRef.current?.dismiss()}
