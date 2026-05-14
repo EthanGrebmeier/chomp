@@ -2,8 +2,15 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { CheckIcon, ShoppingCartIcon } from 'lucide-react-native';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { PencilIcon, ShoppingCartIcon } from 'lucide-react-native';
+import {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -17,6 +24,7 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { Button } from '../../../components/ui/button';
+import { Checkbox } from '../../../components/ui/checkbox';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
@@ -80,28 +88,9 @@ const MealPlanRow = ({
     <HapticPressable
       onPress={onToggle}
       hapticType="selection"
-      className={cn(
-        'mb-2 flex-row items-center gap-3 rounded-xl px-4 py-2 transition-colors',
-        isSelected ? 'bg-muted' : 'bg-muted/50'
-      )}
+      className="mb-2 flex-row items-center gap-3 px-4 py-2"
     >
-      <View
-        className={cn(
-          'size-6 items-center justify-center rounded-full',
-          isSelected
-            ? 'bg-primary'
-            : 'border-2 border-dashed border-muted-foreground/40'
-        )}
-      >
-        {isSelected && (
-          <Icon
-            strokeWidth={3}
-            as={CheckIcon}
-            size={14}
-            className="text-primary-foreground"
-          />
-        )}
-      </View>
+      <Checkbox checked={isSelected} onPress={onToggle} className="mr-1" />
       <View className="flex-1">
         <View className="flex-row items-center justify-between">
           <Text
@@ -165,35 +154,14 @@ const MealPlanRecipeRow = ({
       : undefined;
 
   return (
-    <View
-      className={cn(
-        'mb-2 rounded-xl px-4 py-2',
-        isSelected ? 'bg-muted' : 'bg-muted/50'
-      )}
-    >
+    <View className="mb-2 py-2">
       <View className="flex-row items-center gap-2">
         <HapticPressable
           onPress={onToggle}
           hapticType="selection"
           className="flex-1 flex-row items-center gap-3"
         >
-          <View
-            className={cn(
-              'size-6 items-center justify-center rounded-full',
-              isSelected
-                ? 'bg-primary'
-                : 'border-2 border-dashed border-muted-foreground/40'
-            )}
-          >
-            {isSelected ? (
-              <Icon
-                strokeWidth={3}
-                as={CheckIcon}
-                size={14}
-                className="text-primary-foreground"
-              />
-            ) : null}
-          </View>
+          <Checkbox checked={isSelected} onPress={onToggle} className="mr-1" />
           <View className="flex-1 flex-row items-center gap-2">
             <RecipeCardContent
               name={name}
@@ -218,7 +186,12 @@ const MealPlanRecipeRow = ({
           </View>
         </HapticPressable>
         <Button variant="ghost" size="sm" onPress={onReview}>
-          <Text>Review</Text>
+          <Icon
+            as={PencilIcon}
+            size={16}
+            strokeWidth={3}
+            className="text-muted-foreground"
+          />
         </Button>
       </View>
     </View>
@@ -236,7 +209,14 @@ type ListSelectorSheetProps = {
   }) => void;
 };
 
-export const ListSelectorSheet = ({ listId, onEditMeal }: ListSelectorSheetProps) => {
+export type ListSelectorSheetRef = {
+  open: () => void;
+};
+
+export const ListSelectorSheet = forwardRef<
+  ListSelectorSheetRef,
+  ListSelectorSheetProps
+>(({ listId, onEditMeal }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
   const isDarkMode = useColorScheme() === 'dark';
   // Track deselected IDs instead of selected — everything is selected by default
@@ -385,6 +365,14 @@ export const ListSelectorSheet = ({ listId, onEditMeal }: ListSelectorSheetProps
     sheetRef.current?.present();
   }, [resetSelection]);
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      open: handleOpenSheet,
+    }),
+    [handleOpenSheet]
+  );
+
   const handleReview = useCallback(
     (mealPlanRecipe: MealPlanRecipeWithRecipe) => {
       sheetRef.current?.dismiss();
@@ -511,15 +499,22 @@ export const ListSelectorSheet = ({ listId, onEditMeal }: ListSelectorSheetProps
             ) : (
               daySections.map(section => (
                 <View key={section.date} className="mb-2">
-                  <Text className="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Text className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                     {section.label}
                   </Text>
                   {section.entries.map(entry => {
                     if (entry.kind === 'recipe') {
                       const { recipe: mealPlanRecipe } = entry;
                       const recipe = mealPlanRecipe.recipe;
+                      const selectedIngredientCount =
+                        mealPlanRecipe.ingredient_snapshots?.filter(
+                          snapshot => snapshot.isSelected
+                        ).length;
                       const ingredientCount =
-                        recipe.recipe_ingredients?.length ?? 0;
+                        typeof selectedIngredientCount === 'number' &&
+                        (mealPlanRecipe.ingredient_snapshots?.length ?? 0) > 0
+                          ? selectedIngredientCount
+                          : recipe.recipe_ingredients?.length ?? 0;
                       const servings = mealPlanRecipe.servings || 1;
                       return (
                         <MealPlanRecipeRow
@@ -579,7 +574,7 @@ export const ListSelectorSheet = ({ listId, onEditMeal }: ListSelectorSheetProps
       </Button>
     </>
   );
-};
+});
 
 ListSelectorSheet.displayName = 'ListSelectorSheet';
 

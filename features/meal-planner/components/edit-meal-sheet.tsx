@@ -54,9 +54,11 @@ export type EditMealSheetRef = {
   open: ({
     mealPlanRecipe,
     recipe,
+    onDismiss,
   }: {
     mealPlanRecipe: MealPlanRecipe;
     recipe: Recipe;
+    onDismiss?: () => void;
   }) => void;
 };
 
@@ -83,6 +85,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
     const lastSyncedSnapshotRef = useRef<string | null>(null);
     const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const onDismissRef = useRef<(() => void) | undefined>(undefined);
 
     const getSnapshot = useCallback(
       (recipeId: string | null, mealTagValue?: string, dateValue?: string) =>
@@ -132,14 +135,17 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       open: ({
         mealPlanRecipe,
         recipe,
+        onDismiss,
       }: {
         mealPlanRecipe: MealPlanRecipe;
         recipe: Recipe;
+        onDismiss?: () => void;
       }) => {
         setSelectedDate(mealPlanRecipe.date);
         setSelectedRecipe(recipe);
         setMealPlanRecipeToEdit(mealPlanRecipe);
         setMealTag(mealPlanRecipe.mealTag ?? undefined);
+        onDismissRef.current = onDismiss;
         lastSyncedSnapshotRef.current = getSnapshot(
           recipe.id,
           mealPlanRecipe.mealTag ?? undefined,
@@ -162,6 +168,13 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         clearTimeout(updateTimeoutRef.current);
         updateTimeoutRef.current = null;
       }
+    };
+
+    const handleSheetDismiss = () => {
+      const onDismiss = onDismissRef.current;
+      onDismissRef.current = undefined;
+      resetState();
+      onDismiss?.();
     };
 
     const handleRemoveMeal = () => {
@@ -383,7 +396,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
             KeyboardController.dismiss();
             flushAutoSave();
           }}
-          onDismiss={resetState}
+          onDismiss={handleSheetDismiss}
           footer={footerContent}
         >
           <BottomSheet.SheetView className="pb-safe flex-1">
@@ -416,6 +429,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                       recipeName={selectedRecipe.name}
                       onRemove={handleRemoveMeal}
                       onViewRecipe={() => {
+                        onDismissRef.current = undefined;
                         router.push(navigation.goToRecipe(selectedRecipe.id));
                         sheetRef.current?.dismiss();
                         calendarSheetRef.current?.dismiss();
