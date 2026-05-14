@@ -80,6 +80,7 @@ export const GroceryListHeader = ({
                 variant="ghost"
                 className="h-8 px-0"
                 onPress={onSelectAllBulkItems}
+                hitSlop={14}
               >
                 <Text className="text-sm font-medium text-foreground">
                   Select All
@@ -90,6 +91,7 @@ export const GroceryListHeader = ({
                 className="h-8 px-0"
                 onPress={onClearBulkSelection}
                 disabled={selectedBulkItemCount === 0}
+                hitSlop={14}
               >
                 <Text className="text-sm font-medium text-foreground">
                   Clear All

@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -24,6 +24,7 @@ export default function List() {
   const [activeListId, setActiveListId] = useState<string | undefined>(
     undefined
   );
+  const [activeListChangeVersion, setActiveListChangeVersion] = useState(0);
   const { data: lists, isLoading: listsLoading } = useGroceryLists();
   const { user } = db.useAuth();
   const createGroceryList = useCreateGroceryList();
@@ -32,13 +33,24 @@ export default function List() {
   const trackListAccess = useTrackListAccess();
   const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
 
+  const handleActiveListChange = useCallback(
+    (nextListId?: string) => {
+      setActiveListId(nextListId);
+      setActiveListChangeVersion(version => version + 1);
+
+      if (nextListId) {
+        trackListAccess(nextListId);
+      }
+    },
+    [trackListAccess]
+  );
+
   // Set active list from URL param if provided
   useEffect(() => {
     if (listIdParam && lists?.grocery_lists.some(l => l.id === listIdParam)) {
-      setActiveListId(listIdParam);
-      trackListAccess(listIdParam);
+      handleActiveListChange(listIdParam);
     }
-  }, [listIdParam, lists, trackListAccess]);
+  }, [handleActiveListChange, listIdParam, lists]);
 
   // Set default list if none selected or selection is stale
   useEffect(() => {
@@ -54,18 +66,23 @@ export default function List() {
         (!activeListId || !activeListStillExists)
       ) {
         const defaultListId = lists.grocery_lists[0].id;
-        setActiveListId(defaultListId);
-        trackListAccess(defaultListId);
+        handleActiveListChange(defaultListId);
         return;
       }
 
       if (!lists?.grocery_lists.length) {
-        setActiveListId(undefined);
+        handleActiveListChange(undefined);
       }
     };
 
     setOrCreateDefaultList();
-  }, [lists, activeListId, createGroceryList, listsLoading, trackListAccess]);
+  }, [
+    activeListId,
+    createGroceryList,
+    handleActiveListChange,
+    lists,
+    listsLoading,
+  ]);
 
   const activeList = lists?.grocery_lists.find(
     list => list.id === activeListId
@@ -89,9 +106,9 @@ export default function List() {
       list => list.id !== activeListId
     );
     if (remainingLists && remainingLists.length > 0) {
-      setActiveListId(remainingLists[0].id);
+      handleActiveListChange(remainingLists[0].id);
     } else {
-      setActiveListId(undefined);
+      handleActiveListChange(undefined);
     }
   };
 
@@ -127,7 +144,8 @@ export default function List() {
               sortBy={settings.sortBy}
               onViewListsPress={() => selectListSheetRef.current?.present()}
               onDeleteOrLeave={handleDeleteOrLeave}
-              onActiveListChange={setActiveListId}
+              onActiveListChange={listId => handleActiveListChange(listId)}
+              activeListChangeVersion={activeListChangeVersion}
             />
           </Animated.View>
         ) : null}
@@ -135,7 +153,7 @@ export default function List() {
       <SelectGroceryListSheet
         ref={selectListSheetRef}
         selectedListId={activeListId}
-        onSelectList={setActiveListId}
+        onSelectList={handleActiveListChange}
       />
     </View>
   );

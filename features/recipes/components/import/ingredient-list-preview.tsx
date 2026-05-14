@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { CategoryTag } from '@/components/category-tag';
 import {
@@ -47,6 +47,8 @@ const getIngredientQuantityDisplay = (
   return null;
 };
 
+const formatUnbreakableQuantity = (value: string) => value.replace(/ /g, '\u00A0');
+
 export const IngredientListHeader = ({
   selectedCount,
   totalCount,
@@ -78,6 +80,11 @@ export const IngredientListPreview = ({
   onEdit,
   showHeader = true,
 }: IngredientListPreviewProps) => {
+  const compactTextStyle = Platform.select({
+    android: { includeFontPadding: false },
+    default: undefined,
+  });
+
   if (ingredients.length === 0) {
     return (
       <View className="items-center justify-center py-8">
@@ -117,41 +124,55 @@ export const IngredientListPreview = ({
             <Checkbox
               checked={isSelected}
               onPress={() => onToggleSelection(index)}
-              className="mr-2"
+              className="mr-1"
             />
             <HapticPressable
-              className="flex-1"
+              className="flex-1 gap-1 py-1"
               onPress={() => onEdit?.(index, ingredient)}
               disabled={!onEdit}
               accessibilityLabel={`Edit ingredient: ${ingredient.name}`}
               accessibilityRole="button"
               hapticType="light"
             >
-              <View className="flex-row items-start justify-between">
-                <View className="min-w-0 flex-1 pr-2">
-                  <Text
-                    className={cn(
-                      'text-xl font-medium text-foreground',
-                      !isSelected && 'text-muted-foreground'
-                    )}
-                  >
-                    {ingredient.name}
-                  </Text>
+              <View className="flex-row items-center justify-between">
+                <View className="relative flex-1 flex-row gap-2 pr-2">
+                  <View className="flex-row items-center gap-2">
+                    <Text
+                      className={cn(
+                        'text-xl leading-[22px] tracking-tight text-foreground',
+                        !isSelected && 'text-muted-foreground'
+                      )}
+                      style={compactTextStyle}
+                    >
+                      {ingredient.name}
+                      {quantityDisplay ? (
+                        <>
+                          {'  '}
+                          <Text
+                            className="pl-2 text-base leading-[22px] text-muted-foreground"
+                            style={compactTextStyle}
+                          >
+                            {formatUnbreakableQuantity(quantityDisplay)}
+                          </Text>
+                        </>
+                      ) : null}
+                    </Text>
+                  </View>
                 </View>
-                {quantityDisplay ? (
-                  <Text className="shrink-0 text-lg text-muted-foreground">
-                    {quantityDisplay}
-                  </Text>
-                ) : null}
+                <View className="flex-row items-center gap-2">
+                  {ingredient.category ? (
+                    <CategoryTag category={ingredient.category} />
+                  ) : null}
+                </View>
               </View>
               {notes ? (
-                <Text className="text-base text-muted-foreground">{notes}</Text>
+                <Text
+                  className="text-base leading-[18px] text-muted-foreground"
+                  style={compactTextStyle}
+                >
+                  {notes}
+                </Text>
               ) : null}
-              <View className="min-h-6 flex-row items-center gap-2 pb-1.5">
-                {ingredient.category ? (
-                  <CategoryTag category={ingredient.category} />
-                ) : null}
-              </View>
             </HapticPressable>
           </ListItem>
         );

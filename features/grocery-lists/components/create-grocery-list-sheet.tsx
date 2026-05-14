@@ -37,9 +37,6 @@ export const CreateGroceryListSheet = forwardRef<
   useImperativeHandle(ref, () => ({
     present: () => {
       sheetRef.current?.present();
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
     },
     dismiss: () => sheetRef.current?.dismiss(),
   }));
@@ -69,12 +66,15 @@ export const CreateGroceryListSheet = forwardRef<
     <BottomSheet
       name="create-grocery-list-sheet"
       ref={sheetRef}
+      onOpen={() => {
+        inputRef.current?.focus();
+      }}
       onStartClose={() => {
         KeyboardController.dismiss();
         setNewListName('');
       }}
       footer={
-        <View className="px-10 pb-4">
+        <View className="px-10 pb-safe">
           <Button onPress={handleCreateList} disabled={overLimit || !newListName.trim()}>
             <Text>Create List</Text>
           </Button>

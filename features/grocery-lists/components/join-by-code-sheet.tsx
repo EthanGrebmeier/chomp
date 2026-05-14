@@ -60,9 +60,6 @@ export const JoinByCodeSheet = forwardRef<
   useImperativeHandle(ref, () => ({
     present: () => {
       sheetRef.current?.present();
-      setTimeout(() => {
-        otpRef.current?.focus();
-      }, 100);
     },
     dismiss: () => sheetRef.current?.dismiss(),
   }));
@@ -113,6 +110,9 @@ export const JoinByCodeSheet = forwardRef<
     <BottomSheet
       name="join-by-code-sheet"
       ref={sheetRef}
+      onOpen={() => {
+        otpRef.current?.focus();
+      }}
       onStartClose={() => {
         KeyboardController.dismiss();
         resetCode();

@@ -63,9 +63,7 @@ const EditMealIngredientSheetContents = ({
   }, [onDismiss, reset]);
 
   const handleOpen = useCallback(() => {
-    setTimeout(() => {
-      itemInputRef.current?.focus();
-    }, 100);
+    itemInputRef.current?.focus();
   }, [itemInputRef]);
 
   return (

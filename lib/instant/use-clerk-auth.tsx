@@ -8,8 +8,6 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import { ActivityIndicator } from 'react-native';
-import Animated, { FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
 import {
@@ -463,53 +461,5 @@ export const InstantAuthHandler = ({
     segments,
   ]);
 
-  if (showBlockingOverlay && instantAuthState.shouldBlockAuthUi) {
-    return (
-      <Animated.View
-        exiting={FadeOut.duration(200)}
-        pointerEvents="auto"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 9999,
-          elevation: 9999,
-        }}
-        className="items-center justify-center bg-background"
-      >
-        <ActivityIndicator />
-      </Animated.View>
-    );
-  }
-
   return null;
-};
-
-export const InstantAuthBlockingOverlay = () => {
-  const { shouldBlockAuthUi } = useInstantAuthState();
-
-  if (!shouldBlockAuthUi) {
-    return null;
-  }
-
-  return (
-    <Animated.View
-      exiting={FadeOut.duration(400)}
-      pointerEvents="auto"
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 9999,
-        elevation: 9999,
-      }}
-      className="items-center justify-center bg-background"
-    >
-      <ActivityIndicator />
-    </Animated.View>
-  );
 };

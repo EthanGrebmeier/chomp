@@ -30,9 +30,6 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
       present: (currentUnit: string) => {
         setUnitValue(currentUnit ?? '');
         sheetRef.current?.present();
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 100);
       },
       dismiss: () => sheetRef.current?.dismiss(),
     }));
@@ -59,9 +56,12 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
       <BottomSheet
         name="edit-unit-sheet"
         ref={sheetRef}
+        onOpen={() => {
+          inputRef.current?.focus();
+        }}
         onDismiss={handleDismiss}
         footer={
-          <View className="px-10 pb-4">
+          <View className="px-10 pb-safe">
             <Button onPress={handleSave} disabled={!canSave}>
               <Text>Save</Text>
             </Button>

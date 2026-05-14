@@ -62,10 +62,7 @@ const EditSheetContents = ({
   }, [reset, onDismiss]);
 
   const handleOpen = useCallback(() => {
-    // Focus the name input when sheet opens
-    setTimeout(() => {
-      itemInputRef.current?.focus();
-    }, 100);
+    itemInputRef.current?.focus();
   }, [itemInputRef]);
 
   return (

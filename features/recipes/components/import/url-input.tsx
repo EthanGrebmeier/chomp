@@ -8,6 +8,8 @@ import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
+import { BottomSheet } from '../../../../components/bottom-sheet';
+
 export type UrlInputProps = {
   value: string;
   onChangeText: (text: string) => void;
@@ -45,7 +47,7 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
             Recipe URL
           </Text>
           <View className="relative flex-1">
-            <RNTextInput
+            <BottomSheet.TextInput
               ref={inputRef}
               value={value}
               onChangeText={onChangeText}
@@ -59,7 +61,6 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
               editable={!disabled}
               selectTextOnFocus
               className={cn(
-                'h-12 rounded-xl border bg-input px-4 pr-10 text-sm leading-4 text-foreground',
                 error ? 'border-destructive' : 'border-border',
                 disabled && 'opacity-50'
               )}

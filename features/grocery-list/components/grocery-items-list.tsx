@@ -18,6 +18,7 @@ type GroceryItemsListProps = {
   totalItemCount: number;
   groupBy: 'category' | 'none' | 'recipe' | 'store';
   sortBy: 'name' | 'recent';
+  collapsedSectionsResetKey?: number;
   groupingBulkAction?: {
     type: 'collapse' | 'expand';
     id: number;
@@ -29,6 +30,16 @@ type GroceryItemsListProps = {
   onSelectBulkSelectionSectionItems?: (itemIds: string[]) => void;
   onDeselectBulkSelectionSectionItems?: (itemIds: string[]) => void;
 };
+
+const createInitialCollapsedSectionsByGroup = (): Record<
+  GroceryItemsListProps['groupBy'],
+  Set<string>
+> => ({
+  category: new Set(['checked']),
+  none: new Set(['checked']),
+  recipe: new Set(['checked']),
+  store: new Set(['checked']),
+});
 
 type GroceryListRow =
   | {
@@ -51,6 +62,7 @@ export const GroceryItemsList = ({
   totalItemCount,
   groupBy,
   sortBy,
+  collapsedSectionsResetKey,
   groupingBulkAction,
   onListInteraction,
   isBulkSelectionModeActive = false,
@@ -63,12 +75,7 @@ export const GroceryItemsList = ({
 
   const [collapsedSectionsByGroup, setCollapsedSectionsByGroup] = useState<
     Record<GroceryItemsListProps['groupBy'], Set<string>>
-  >(() => ({
-    category: new Set(['checked']),
-    none: new Set(['checked']),
-    recipe: new Set(['checked']),
-    store: new Set(['checked']),
-  }));
+  >(createInitialCollapsedSectionsByGroup);
   const lastAppliedBulkActionId = useRef<number | null>(null);
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
@@ -98,6 +105,8 @@ export const GroceryItemsList = ({
         toggleCollapsedState(sectionKey);
         return;
       }
+
+      toggleCollapsedState(sectionKey);
     },
     [collapsedSections, toggleCollapsedState]
   );
@@ -169,6 +178,11 @@ export const GroceryItemsList = ({
     }
     return keys;
   }, [checkedItems.length, groupedUncheckedItems, isBulkSelectionModeActive]);
+
+  useEffect(() => {
+    setCollapsedSectionsByGroup(createInitialCollapsedSectionsByGroup());
+    lastAppliedBulkActionId.current = null;
+  }, [collapsedSectionsResetKey]);
 
   useEffect(() => {
     if (!groupingBulkAction || groupBy === 'none') {

@@ -5,10 +5,10 @@ import { Jaro_400Regular } from '@expo-google-fonts/jaro';
 import { PortalHost } from '@rn-primitives/portal';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRootNavigationState, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SQLite from 'expo-sqlite';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
@@ -21,8 +21,8 @@ import { Toaster } from 'sonner-native';
 
 import { tokenCache } from '@/lib/clerk-token-cache';
 import {
-  InstantAuthBlockingOverlay,
   InstantAuthHandler,
+  useInstantAuthState,
 } from '@/lib/instant/use-clerk-auth';
 import { MigrationProvider } from '@/providers/migration-provider';
 import { QueryClientProvider } from '@/providers/query-client-provider';
@@ -34,12 +34,9 @@ configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
 });
-void SplashScreen.preventAutoHideAsync().catch(() => {
-  // Ignore if splash is already controlled elsewhere.
-});
+SplashScreen.preventAutoHideAsync();
 
 const db = SQLite.openDatabaseSync('db.db');
-const SPLASH_MAX_BLOCK_MS = 6000;
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -118,34 +115,52 @@ export default function RootLayout() {
     'alpino-regular': require('../assets/fonts/alpino/Alpino-Regular.otf'),
     'alpino-medium': require('../assets/fonts/alpino/Alpino-Medium.otf'),
   });
-  const [isAuthBlockingSplash, setIsAuthBlockingSplash] = useState(true);
-  const [hasSplashBlockTimedOut, setHasSplashBlockTimedOut] = useState(false);
+  const { hasAppAccess, isReconciled, shouldBlockAuthUi } =
+    useInstantAuthState();
+  const rootNavigationState = useRootNavigationState();
+  const segments = useSegments();
   const hasHiddenSplashRef = useRef(false);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setHasSplashBlockTimedOut(true);
-    }, SPLASH_MAX_BLOCK_MS);
-
-    return () => {
-      clearTimeout(timeout);
-    };
+  const hideSplashScreen = useCallback(async () => {
+    try {
+      await SplashScreen.hideAsync();
+    } catch {
+      // Ignore native splash hide errors during reloads.
+    }
   }, []);
 
   useEffect(() => {
     const areFontsReady = fontsLoaded || Boolean(fontLoadError);
+    const isNavigationReady = Boolean(rootNavigationState?.key);
+    const topLevelSegment = segments[0];
+    const isOnTabsGroup = topLevelSegment === '(tabs)';
+    const isOnAuthGroup = topLevelSegment === '(auth)';
+    const hasReachedInitialLandingPoint = hasAppAccess
+      ? isOnTabsGroup
+      : isOnAuthGroup;
     const shouldKeepSplashVisible =
-      (isAuthBlockingSplash && !hasSplashBlockTimedOut) || !areFontsReady;
+      !areFontsReady ||
+      !isNavigationReady ||
+      shouldBlockAuthUi ||
+      !isReconciled ||
+      !hasReachedInitialLandingPoint;
 
     if (shouldKeepSplashVisible || hasHiddenSplashRef.current) {
       return;
     }
 
     hasHiddenSplashRef.current = true;
-    void SplashScreen.hideAsync().catch(() => {
-      // Ignore if splash was already hidden.
-    });
-  }, [fontLoadError, fontsLoaded, isAuthBlockingSplash, hasSplashBlockTimedOut]);
+    setTimeout(hideSplashScreen, 300);
+  }, [
+    fontLoadError,
+    fontsLoaded,
+    hasAppAccess,
+    hideSplashScreen,
+    isReconciled,
+    rootNavigationState?.key,
+    segments,
+    shouldBlockAuthUi,
+  ]);
 
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -161,12 +176,8 @@ export default function RootLayout() {
         <KeyboardProvider>
           <MigrationProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
-              <InstantAuthHandler
-                showBlockingOverlay={false}
-                onBlockingAuthLoadChange={setIsAuthBlockingSplash}
-              />
+              <InstantAuthHandler />
               <InitialLayout />
-              <InstantAuthBlockingOverlay />
               <PortalHost />
             </GestureHandlerRootView>
           </MigrationProvider>

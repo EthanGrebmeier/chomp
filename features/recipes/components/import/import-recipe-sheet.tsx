@@ -6,8 +6,8 @@ import {
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import {
-  forwardRef,
   ReactElement,
+  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -295,9 +295,7 @@ export const ImportRecipeSheet = forwardRef<
   }, []);
 
   const handleEditNameSheetOpen = useCallback(() => {
-    setTimeout(() => {
-      recipeNameInputRef.current?.focus();
-    }, 100);
+    recipeNameInputRef.current?.focus();
   }, []);
 
   const handleSaveRecipeName = useCallback(() => {
@@ -360,7 +358,7 @@ export const ImportRecipeSheet = forwardRef<
         const originalHadIngredients = state.data.ingredients.length > 0;
 
         return (
-          <View className="">
+          <View className="gap-4">
             <BottomSheet.Header
               title="Review Recipe"
               className="mb-0 px-4"
@@ -408,8 +406,8 @@ export const ImportRecipeSheet = forwardRef<
             <ScrollView
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              className="max-h-[400px] min-h-24 "
-              contentContainerClassName="pb-8"
+              className="max-h-[420px] min-h-24"
+              contentContainerClassName="px-4 pb-28"
             >
               <IngredientListPreview
                 ingredients={state.ingredients}
@@ -460,7 +458,7 @@ export const ImportRecipeSheet = forwardRef<
   const renderFooter = useCallback(() => {
     if (state.status === 'idle') {
       return (
-        <View className="px-10 pb-4">
+        <View className="px-10 pb-safe">
           <Button onPress={handleSubmitUrl} disabled={!url.trim()}>
             <Text>Import Recipe</Text>
           </Button>
@@ -473,7 +471,7 @@ export const ImportRecipeSheet = forwardRef<
       const isRetryable = RETRYABLE_ERROR_CODES.includes(errorCode);
 
       return (
-        <View className="gap-2 px-10 pb-4">
+        <View className="gap-2 px-10 pb-safe">
           {isRetryable ? (
             <Button onPress={handleSubmitUrl}>
               <Text>Try Again</Text>
@@ -496,7 +494,7 @@ export const ImportRecipeSheet = forwardRef<
     const selectedCount = state.selectedIndices.size;
 
     return (
-      <View className="bg-card px-10 py-4">
+      <View className="px-10 pb-safe">
         <Button
           onPress={handleConfirmImport}
           disabled={isNameTooLong || !state.editedName.trim()}
@@ -511,12 +509,9 @@ export const ImportRecipeSheet = forwardRef<
     );
   }, [state, url, handleSubmitUrl, handleRetry, handleConfirmImport]);
 
-  const setSheetOptions = useCallback(
-    (options: { footer?: ReactElement }) => {
-      setSheetFooter(options.footer);
-    },
-    []
-  );
+  const setSheetOptions = useCallback((options: { footer?: ReactElement }) => {
+    setSheetFooter(options.footer);
+  }, []);
 
   const footerStateKey = (() => {
     if (state.status === 'idle') {
@@ -585,7 +580,7 @@ export const ImportRecipeSheet = forwardRef<
         onOpen={handleEditNameSheetOpen}
         detents={['auto']}
         footer={
-          <View className="gap-2 px-10 pb-4">
+          <View className="gap-2 px-10 pb-safe">
             <Button
               onPress={handleSaveRecipeName}
               disabled={isDraftNameTooLong || !draftRecipeName.trim()}
