@@ -43,9 +43,9 @@ import { ListSelectorSheet, ListSelectorSheetRef } from './list-selector-sheet';
 import { MealPlanDate } from './meal-plan-date';
 import { MealPlanDateView } from './meal-plan-date-view';
 import {
-  MealPlanDayListView,
-  MealPlanDayListViewRef,
-} from './meal-plan-day-list-view';
+  MealPlanWeekGridView,
+  MealPlanWeekGridViewRef,
+} from './meal-plan-week-grid-view';
 
 const DAYS_RANGE = 30; //  days before and after today
 
@@ -59,7 +59,7 @@ export const MealPlanner = ({ listId, initialViewMode }: MealPlannerProps) => {
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
   const listSelectorSheet = useRef<ListSelectorSheetRef>(null);
-  const dayListViewRef = useRef<MealPlanDayListViewRef>(null);
+  const dayListViewRef = useRef<MealPlanWeekGridViewRef>(null);
   const pagerRef = useRef<PagerView>(null);
   const isProgrammaticNavigationRef = useRef(false);
   const shouldReturnToListSelectorRef = useRef(false);
@@ -378,10 +378,8 @@ export const MealPlanner = ({ listId, initialViewMode }: MealPlannerProps) => {
           pointerEvents={viewMode === 'list' ? 'auto' : 'none'}
         >
           <View className="flex-1 pt-2">
-            <MealPlanDayListView
+            <MealPlanWeekGridView
               ref={dayListViewRef}
-              daysOfPlan={daysOfPlan}
-              todayIndex={initialPageIndex}
               recipes={recipes}
               items={items}
               onDayPress={handleDayListDayPress}
