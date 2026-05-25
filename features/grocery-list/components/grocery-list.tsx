@@ -63,11 +63,6 @@ import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
 import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
-import {
-  getStoredMealPlannerViewMode,
-  MealPlannerViewMode,
-} from '../../meal-planner/lib/view-mode-preference';
-
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { BulkSelectionToolbar } from './bulk-selection-toolbar';
 import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
@@ -224,8 +219,6 @@ export const GroceryList = ({
   const bulkStoreSheetRef = useRef<StoreSheetRef>(null);
   const bulkCategorySheetRef = useRef<CategorySheetRef>(null);
   const bulkMoveListSheetRef = useRef<SelectGroceryListSheetRef>(null);
-  const mealPlanInitialViewModeRef = useRef<MealPlannerViewMode | null>(null);
-  const hasLoadedMealPlanInitialViewModeRef = useRef(false);
   const searchInputRef = useRef<RNTextInput>(null);
   const [bulkStoreSelectionDraft, setBulkStoreSelectionDraft] = useState<{
     selectedItemIds: string[];
@@ -247,28 +240,6 @@ export const GroceryList = ({
     searchInputRef.current?.blur();
     Keyboard.dismiss();
   };
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const preloadMealPlanInitialViewMode = async () => {
-      try {
-        const mode = await getStoredMealPlannerViewMode(user?.id);
-        if (!isCancelled) {
-          mealPlanInitialViewModeRef.current = mode;
-        }
-      } finally {
-        if (!isCancelled) {
-          hasLoadedMealPlanInitialViewModeRef.current = true;
-        }
-      }
-    };
-
-    void preloadMealPlanInitialViewMode();
-    return () => {
-      isCancelled = true;
-    };
-  }, [user?.id]);
 
   const handleGroupByChange = (
     newGroupBy: 'category' | 'none' | 'recipe' | 'store'
@@ -369,16 +340,9 @@ export const GroceryList = ({
     router.push(navigation.goToRecipes(listId));
   };
 
-  const handleOpenMealPlan = async () => {
+  const handleOpenMealPlan = () => {
     if (!listId) return;
-
-    const mode = await getStoredMealPlannerViewMode(user?.id);
-    mealPlanInitialViewModeRef.current = mode;
-    hasLoadedMealPlanInitialViewModeRef.current = true;
-
-    router.push(
-      navigation.goToMealPlan(listId, mealPlanInitialViewModeRef.current ?? undefined)
-    );
+    router.push(navigation.goToMealPlan(listId));
   };
 
   const handleEnterBulkSelectionMode = () => {

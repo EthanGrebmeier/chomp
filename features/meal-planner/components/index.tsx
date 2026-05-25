@@ -1,15 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
-import {
-  CalendarDaysIcon,
-  MoreHorizontalIcon,
-  PlusIcon,
-  Rows3Icon,
-} from 'lucide-react-native';
+import { MoreHorizontalIcon, PlusIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AppState, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
-import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
@@ -20,16 +13,9 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '../../../components/ui/dropdown-menu';
-import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
 import { useClearMealPlan, useUserMealPlanData } from '../hooks';
-import {
-  DEFAULT_MEAL_PLANNER_VIEW_MODE,
-  getMealPlannerViewModePreferenceKey,
-  getStoredMealPlannerViewMode,
-  MealPlannerViewMode,
-} from '../lib/view-mode-preference';
 import { MealPlanItemWithStore } from '../types';
 
 import {
@@ -42,39 +28,24 @@ import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
 import { ListSelectorSheet, ListSelectorSheetRef } from './list-selector-sheet';
 import { MealPlanDate } from './meal-plan-date';
 import { MealPlanDateView } from './meal-plan-date-view';
-import {
-  MealPlanWeekGridView,
-  MealPlanWeekGridViewRef,
-} from './meal-plan-week-grid-view';
 
 const DAYS_RANGE = 30; //  days before and after today
 
 type MealPlannerProps = {
   listId: string;
-  initialViewMode?: MealPlannerViewMode;
 };
 
-export const MealPlanner = ({ listId, initialViewMode }: MealPlannerProps) => {
+export const MealPlanner = ({ listId }: MealPlannerProps) => {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
   const listSelectorSheet = useRef<ListSelectorSheetRef>(null);
-  const dayListViewRef = useRef<MealPlanWeekGridViewRef>(null);
   const pagerRef = useRef<PagerView>(null);
   const isProgrammaticNavigationRef = useRef(false);
   const shouldReturnToListSelectorRef = useRef(false);
-  const { user } = db.useAuth();
   const { recipes, items } = useUserMealPlanData(listId);
   const { mutate: clearMealPlan } = useClearMealPlan();
   const hasMealPlanEntries = recipes.length > 0 || items.length > 0;
-  const [viewMode, setViewMode] = useState<MealPlannerViewMode>(
-    initialViewMode ?? DEFAULT_MEAL_PLANNER_VIEW_MODE
-  );
-  const [isViewModeHydrated, setIsViewModeHydrated] = useState(false);
-  const viewModePreferenceKey = useMemo(
-    () => getMealPlannerViewModePreferenceKey(user?.id),
-    [user?.id]
-  );
 
   const { datesWithMeals, datesAllMealsAdded } = useMemo(() => {
     const mealStatusByDate = new Map<
@@ -130,33 +101,6 @@ export const MealPlanner = ({ listId, initialViewMode }: MealPlannerProps) => {
 
   const [currentPageIndex, setCurrentPageIndex] =
     useState<number>(initialPageIndex);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const loadViewModePreference = async () => {
-      try {
-        const storedMode = await getStoredMealPlannerViewMode(user?.id);
-        if (!isCancelled && storedMode) {
-          setViewMode(storedMode);
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsViewModeHydrated(true);
-        }
-      }
-    };
-
-    void loadViewModePreference();
-    return () => {
-      isCancelled = true;
-    };
-  }, [user?.id, viewModePreferenceKey]);
-
-  useEffect(() => {
-    if (!isViewModeHydrated) return;
-    void AsyncStorage.setItem(viewModePreferenceKey, viewMode);
-  }, [isViewModeHydrated, viewMode, viewModePreferenceKey]);
 
   // When app becomes active, check if the day has changed and navigate to today
   useEffect(() => {
@@ -215,25 +159,13 @@ export const MealPlanner = ({ listId, initialViewMode }: MealPlannerProps) => {
   }, []);
 
   const handleAddPress = () => {
-    const dateStr =
-      viewMode === 'calendar'
-        ? format(currentDate, 'yyyy-MM-dd')
-        : format(startOfDay(new Date()), 'yyyy-MM-dd');
+    const dateStr = format(currentDate, 'yyyy-MM-dd');
     addToMealPlanSheet.current?.present({ defaultDate: dateStr });
   };
-
-  const handleDayListDayPress = useCallback((date: string) => {
-    addToMealPlanSheet.current?.present({ defaultDate: date });
-  }, []);
 
   const handleTodayPress = () => {
     const today = startOfDay(new Date());
     handleDatePress(today);
-  };
-
-  const handleHeaderPress = () => {
-    if (viewMode !== 'list') return;
-    dayListViewRef.current?.scrollToToday();
   };
 
   const handleClearMealPlan = () => {
@@ -257,42 +189,13 @@ export const MealPlanner = ({ listId, initialViewMode }: MealPlannerProps) => {
     );
   };
 
-  const calendarOpacityStyle = useAnimatedStyle(
-    () => ({
-      opacity: withTiming(viewMode === 'calendar' ? 1 : 0, { duration: 150 }),
-    }),
-    [viewMode]
-  );
-
-  const listOpacityStyle = useAnimatedStyle(
-    () => ({
-      opacity: withTiming(viewMode === 'list' ? 1 : 0, { duration: 150 }),
-    }),
-    [viewMode]
-  );
-
   return (
     <View style={{ flex: 1 }}>
       <View className="flex-row items-center px-4">
-        <HapticPressable className="h-10 flex-1 justify-center" onPress={handleHeaderPress}>
+        <View className="h-10 flex-1 justify-center">
           <Heading>Meal Plan</Heading>
-        </HapticPressable>
+        </View>
         <View className="flex-row items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10"
-            onPress={() =>
-              setViewMode(prevMode =>
-                prevMode === 'calendar' ? 'list' : 'calendar'
-              )
-            }
-          >
-            <Icon
-              as={viewMode === 'calendar' ? Rows3Icon : CalendarDaysIcon}
-              size={20}
-            />
-          </Button>
           <DropdownMenuRoot
             trigger={
               <Button variant="ghost" size="icon" className="h-10 w-10">
@@ -329,68 +232,40 @@ export const MealPlanner = ({ listId, initialViewMode }: MealPlannerProps) => {
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} />
       <EditItemSheet ref={editItemSheet} />
-      <View className="relative flex-1">
-        <Animated.View
-          style={[{ flex: 1 }, calendarOpacityStyle]}
-          pointerEvents={viewMode === 'calendar' ? 'auto' : 'none'}
+      <View className="flex-1">
+        <MealPlanDate
+          currentDate={currentDate}
+          onTodayPress={handleTodayPress}
+        />
+        <MealPlanDateSelector
+          dates={daysOfPlan}
+          currentDate={currentDate}
+          onDatePress={handleDatePress}
+          isProgrammaticNavigationRef={isProgrammaticNavigationRef}
+          datesWithMeals={datesWithMeals}
+          datesAllMealsAdded={datesAllMealsAdded}
+        />
+        <PagerView
+          ref={pagerRef}
+          style={{ flex: 1 }}
+          initialPage={initialPageIndex}
+          onPageSelected={handlePageSelected}
         >
-          <View className="flex-1">
-            <MealPlanDate
-              currentDate={currentDate}
-              onTodayPress={handleTodayPress}
-            />
-            <MealPlanDateSelector
-              dates={daysOfPlan}
-              currentDate={currentDate}
-              onDatePress={handleDatePress}
-              isProgrammaticNavigationRef={isProgrammaticNavigationRef}
-              datesWithMeals={datesWithMeals}
-              datesAllMealsAdded={datesAllMealsAdded}
-            />
-            <PagerView
-              ref={pagerRef}
-              style={{ flex: 1 }}
-              initialPage={initialPageIndex}
-              onPageSelected={handlePageSelected}
-            >
-              {daysOfPlan.map(date => (
-                <View key={date.toISOString()} style={{ flex: 1 }}>
-                  <MealPlanDateView
-                    listId={listId}
-                    recipes={getRecipesForDate(date)}
-                    items={getItemsForDate(date)}
-                    onMealPress={({ mealPlanRecipe, recipe }) => {
-                      shouldReturnToListSelectorRef.current = false;
-                      editMealSheet.current?.open({ mealPlanRecipe, recipe });
-                    }}
-                    onItemPress={handleItemPress}
-                  />
-                </View>
-              ))}
-            </PagerView>
-          </View>
-        </Animated.View>
-        <Animated.View
-          style={[
-            { flex: 1, position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
-            listOpacityStyle,
-          ]}
-          pointerEvents={viewMode === 'list' ? 'auto' : 'none'}
-        >
-          <View className="flex-1 pt-2">
-            <MealPlanWeekGridView
-              ref={dayListViewRef}
-              recipes={recipes}
-              items={items}
-              onDayPress={handleDayListDayPress}
-              onMealPress={({ mealPlanRecipe, recipe }) => {
-                shouldReturnToListSelectorRef.current = false;
-                editMealSheet.current?.open({ mealPlanRecipe, recipe });
-              }}
-              onItemPress={handleItemPress}
-            />
-          </View>
-        </Animated.View>
+          {daysOfPlan.map(date => (
+            <View key={date.toISOString()} style={{ flex: 1 }}>
+              <MealPlanDateView
+                listId={listId}
+                recipes={getRecipesForDate(date)}
+                items={getItemsForDate(date)}
+                onMealPress={({ mealPlanRecipe, recipe }) => {
+                  shouldReturnToListSelectorRef.current = false;
+                  editMealSheet.current?.open({ mealPlanRecipe, recipe });
+                }}
+                onItemPress={handleItemPress}
+              />
+            </View>
+          ))}
+        </PagerView>
       </View>
       <Button
         size="wide-small"

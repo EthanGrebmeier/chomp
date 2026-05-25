@@ -36,7 +36,6 @@ export interface ListParams {
 
 export interface ListMealPlanParams {
   listId: string;
-  initialView?: 'calendar' | 'list';
 }
 
 export interface RecipeParams {
@@ -65,10 +64,10 @@ export function buildListUrl(params?: ListParams): Href {
 }
 
 export function buildMealPlanSheetUrl(params: ListMealPlanParams): Href {
-  const { listId, initialView } = params;
+  const { listId } = params;
   return {
     pathname: '/meal-plan/[listId]',
-    params: initialView ? { listId, initialView } : { listId },
+    params: { listId },
   } as unknown as Href;
 }
 
@@ -109,8 +108,7 @@ export const navigation = {
     buildRecipesUrl(listId ? { listId } : undefined),
 
   // Meal plan sheet navigation
-  goToMealPlan: (listId: string, initialView?: 'calendar' | 'list') =>
-    buildMealPlanSheetUrl({ listId, initialView }),
+  goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -128,8 +126,7 @@ export function useNavigation() {
     goToRecipes: (listId?: string) => navigation.goToRecipes(listId),
 
     // Meal plan sheet navigation
-    goToMealPlan: (listId: string, initialView?: 'calendar' | 'list') =>
-      navigation.goToMealPlan(listId, initialView),
+    goToMealPlan: (listId: string) => navigation.goToMealPlan(listId),
 
     // Recipe navigation
     goToRecipe: (recipeId: string, listId?: string) =>
@@ -148,8 +145,7 @@ export const navActions = {
     buildRecipesUrl(listId ? { listId } : undefined),
 
   // Meal plan sheet navigation
-  goToMealPlan: (listId: string, initialView?: 'calendar' | 'list') =>
-    buildMealPlanSheetUrl({ listId, initialView }),
+  goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
