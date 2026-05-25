@@ -184,6 +184,7 @@ const MealPlanDateSelector = ({
               allMealsAdded={datesAllMealsAdded.has(dateKey)}
               onPress={onDatePress}
               width={dateWidth}
+              isDropEnabled={weekIndex === currentWeekIndex}
             />
           ))}
         </View>

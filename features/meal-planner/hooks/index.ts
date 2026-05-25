@@ -6,6 +6,7 @@ export { useRemoveRecipeFromMealPlan } from './useRemoveRecipeFromMealPlan';
 export { useRemoveItemFromMealPlan } from './useRemoveItemFromMealPlan';
 export { useUpdateMealPlanRecipe } from './useUpdateMealPlanRecipe';
 export { useUpdateMealPlanItem } from './useUpdateMealPlanItem';
+export { useUpdateMealPlanItemDate } from './useUpdateMealPlanItemData';
 export { useUnmarkMealAdded } from './useUnmarkMealAdded';
 export { useClearMealPlan } from './useClearMealPlan';
 

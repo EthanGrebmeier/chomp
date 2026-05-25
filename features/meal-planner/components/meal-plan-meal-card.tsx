@@ -1,16 +1,13 @@
-import { Alert, View } from 'react-native';
+import { useRef } from 'react';
+import { GestureResponderEvent, View } from 'react-native';
+import { DraxView } from 'react-native-drax';
 
-import { ListItem } from '../../../components/ui/list-item';
 import { Checkbox } from '../../../components/ui/checkbox';
-import {
-  ContextMenuItem,
-  ContextMenuItemTitle,
-  ContextMenuRoot,
-} from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
+import { ListItem } from '../../../components/ui/list-item';
+import { cn } from '../../../lib/utils';
 import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { Recipe } from '../../recipes/types';
-import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { MealPlanRecipeWithRecipe } from '../types';
 
 type MealPlanMealCardProps = {
@@ -34,10 +31,15 @@ const MealPlanMealCard = ({
   onMealPress,
   onIndicatorPress,
 }: MealPlanMealCardProps) => {
-  const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
+  const pressGestureStateRef = useRef({
+    startX: 0,
+    startY: 0,
+    isDragGesture: false,
+  });
   const recipeWithIngredients = recipe as unknown as {
     recipe_ingredients?: unknown[];
   };
+  const DRAG_DISTANCE_THRESHOLD = 8;
   const selectedIngredientCount = mealPlanRecipe.ingredient_snapshots?.filter(
     snapshot => snapshot.isSelected
   ).length;
@@ -49,57 +51,84 @@ const MealPlanMealCard = ({
         ? recipeWithIngredients.recipe_ingredients.length
         : undefined;
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Delete Meal',
-      `Are you sure you want to delete "${recipe.name}" from your meal plan?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () =>
-            removeRecipeFromMealPlan({ mealPlanRecipeId: mealPlanRecipe.id }),
-        },
-      ]
-    );
+  const handlePressIn = (event: GestureResponderEvent) => {
+    pressGestureStateRef.current = {
+      startX: event.nativeEvent.pageX,
+      startY: event.nativeEvent.pageY,
+      isDragGesture: false,
+    };
+  };
+
+  const markAsDragGestureIfMoved = (event: GestureResponderEvent) => {
+    const { startX, startY } = pressGestureStateRef.current;
+    const horizontalDistance = Math.abs(event.nativeEvent.pageX - startX);
+    const verticalDistance = Math.abs(event.nativeEvent.pageY - startY);
+
+    if (
+      horizontalDistance > DRAG_DISTANCE_THRESHOLD ||
+      verticalDistance > DRAG_DISTANCE_THRESHOLD
+    ) {
+      pressGestureStateRef.current.isDragGesture = true;
+    }
+  };
+
+  const handleMealCardPress = () => {
+    if (pressGestureStateRef.current.isDragGesture) {
+      return;
+    }
+
+    onMealPress({
+      mealPlanRecipe,
+      recipe,
+    });
   };
 
   return (
-    <ContextMenuRoot
-      trigger={
-        <ListItem
-          className={!isLast ? 'border-b border-dashed border-border' : undefined}
-        >
-          <HapticPressable
-            key={mealPlanRecipe.id}
-            onPress={() =>
-              onMealPress({
-                mealPlanRecipe,
-                recipe,
-              })
-            }
-            className="flex-1"
-          >
-            <View className="w-full flex-row items-center gap-3 py-1">
-              <Checkbox
-                checked={!!mealPlanRecipe.addedToList}
-                onPress={() => onIndicatorPress(mealPlanRecipe)}
-              />
-              <RecipeCardContent
-                name={recipe.name}
-                ingredientCount={ingredientCount}
-                className="flex-1"
-              />
-            </View>
-          </HapticPressable>
-        </ListItem>
-      }
+    <DraxView
+      draggingStyle={{
+        opacity: 0.5,
+      }}
+      hoverDraggingStyle={{
+        opacity: 0.8,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      }}
+      longPressDelay={200}
+      draggable
+      payload={{
+        type: 'recipe',
+        id: mealPlanRecipe.id,
+      }}
     >
-      <ContextMenuItem key="delete-meal" destructive onSelect={handleDelete}>
-        <ContextMenuItemTitle>Delete Meal</ContextMenuItemTitle>
-      </ContextMenuItem>
-    </ContextMenuRoot>
+      <ListItem
+        className={cn(
+          !isLast ? 'border-b border-dashed border-border' : undefined
+        )}
+      >
+        <HapticPressable
+          key={mealPlanRecipe.id}
+          onPress={handleMealCardPress}
+          onPressIn={handlePressIn}
+          onTouchMove={markAsDragGestureIfMoved}
+          onLongPress={() => {
+            pressGestureStateRef.current.isDragGesture = true;
+          }}
+          className="flex-1"
+        >
+          <View className="w-full flex-row items-center gap-3 py-1">
+            <Checkbox
+              checked={!!mealPlanRecipe.addedToList}
+              onPress={() => onIndicatorPress(mealPlanRecipe)}
+            />
+            <RecipeCardContent
+              name={recipe.name}
+              ingredientCount={ingredientCount}
+              className="flex-1"
+            />
+          </View>
+        </HapticPressable>
+      </ListItem>
+    </DraxView>
   );
 };
 

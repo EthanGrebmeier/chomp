@@ -1,4 +1,5 @@
 import { Alert, View } from 'react-native';
+import { DraxView } from 'react-native-drax';
 
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { Checkbox } from '../../../components/ui/checkbox';
@@ -45,38 +46,50 @@ const MealPlanItemCard = ({
   };
 
   return (
-    <ContextMenuRoot
-      trigger={
-        <ListItem
-          className={!isLast ? 'border-b border-dashed border-border' : undefined}
-        >
-          <HapticPressable
-            key={mealPlanItem.id}
-            onPress={() => onItemPress(mealPlanItem)}
-            className="flex-1"
-          >
-            <View className="w-full flex-row items-center gap-3 py-1">
-              <Checkbox
-                checked={!!mealPlanItem.addedToList}
-                onPress={() => onIndicatorPress(mealPlanItem)}
-              />
-              <View className="flex-1 flex-row items-center justify-between gap-3">
-                <Text className="flex-1 text-xl font-medium text-foreground">
-                  {mealPlanItem.name}
-                </Text>
-                <Text className="text-sm text-muted-foreground">
-                  {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
-                </Text>
-              </View>
-            </View>
-          </HapticPressable>
-        </ListItem>
-      }
+    <DraxView
+      draggingStyle={{
+        opacity: 0.5,
+      }}
+      longPressDelay={200}
+      draggable
+      payload={{
+        type: 'item',
+        id: mealPlanItem.id,
+      }}
     >
-      <ContextMenuItem key="delete-item" destructive onSelect={handleDelete}>
-        <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
-      </ContextMenuItem>
-    </ContextMenuRoot>
+      <ContextMenuRoot
+        trigger={
+          <ListItem
+            className={!isLast ? 'border-b border-dashed border-border' : undefined}
+          >
+            <HapticPressable
+              key={mealPlanItem.id}
+              onPress={() => onItemPress(mealPlanItem)}
+              className="flex-1"
+            >
+              <View className="w-full flex-row items-center gap-3 py-1">
+                <Checkbox
+                  checked={!!mealPlanItem.addedToList}
+                  onPress={() => onIndicatorPress(mealPlanItem)}
+                />
+                <View className="flex-1 flex-row items-center justify-between gap-3">
+                  <Text className="flex-1 text-xl font-medium text-foreground">
+                    {mealPlanItem.name}
+                  </Text>
+                  <Text className="text-sm text-muted-foreground">
+                    {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
+                  </Text>
+                </View>
+              </View>
+            </HapticPressable>
+          </ListItem>
+        }
+      >
+        <ContextMenuItem key="delete-item" destructive onSelect={handleDelete}>
+          <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
+        </ContextMenuItem>
+      </ContextMenuRoot>
+    </DraxView>
   );
 };
 

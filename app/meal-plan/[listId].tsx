@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
+import { DraxProvider } from 'react-native-drax';
 
 import { MealPlanner } from '@/features/meal-planner/components';
 
@@ -12,7 +13,9 @@ export default function MealPlanSheetRoute() {
 
   return (
     <View className="bg-background pt-6" style={{ flex: 1 }}>
-      <MealPlanner listId={listId} />
+      <DraxProvider>
+        <MealPlanner listId={listId} />
+      </DraxProvider>
     </View>
   );
 }
