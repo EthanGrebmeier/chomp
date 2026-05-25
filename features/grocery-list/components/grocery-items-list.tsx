@@ -57,6 +57,9 @@ type GroceryListRow =
       isLastInSection: boolean;
     };
 
+const MEASURED_HEADER_HEIGHT = 52;
+const MEASURED_ITEM_HEIGHT = 72;
+
 export const GroceryItemsList = ({
   items,
   totalItemCount,
@@ -80,35 +83,23 @@ export const GroceryItemsList = ({
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
 
-  const toggleCollapsedState = useCallback(
+  const toggleSection = useCallback(
     (sectionKey: string) => {
-      setCollapsedSectionsByGroup(prev => {
-        const nextByGroup = { ...prev };
-        const next = new Set(nextByGroup[groupBy]);
-        if (next.has(sectionKey)) {
-          next.delete(sectionKey);
+      setCollapsedSectionsByGroup(previous => {
+        const nextByGroup = { ...previous };
+        const nextCollapsedSections = new Set(nextByGroup[groupBy]);
+
+        if (nextCollapsedSections.has(sectionKey)) {
+          nextCollapsedSections.delete(sectionKey);
         } else {
-          next.add(sectionKey);
+          nextCollapsedSections.add(sectionKey);
         }
-        nextByGroup[groupBy] = next;
+
+        nextByGroup[groupBy] = nextCollapsedSections;
         return nextByGroup;
       });
     },
     [groupBy]
-  );
-
-  const toggleSection = useCallback(
-    (sectionKey: string) => {
-      const isExpanding = collapsedSections.has(sectionKey);
-
-      if (isExpanding) {
-        toggleCollapsedState(sectionKey);
-        return;
-      }
-
-      toggleCollapsedState(sectionKey);
-    },
-    [collapsedSections, toggleCollapsedState]
   );
 
   const { uncheckedItems, checkedItems } = useMemo(() => {
@@ -331,7 +322,21 @@ export const GroceryItemsList = ({
   );
 
   const renderRow = useCallback(
-    ({ item }: ListRenderItemInfo<GroceryListRow>) => {
+    ({ item, target }: ListRenderItemInfo<GroceryListRow>) => {
+      // FlashList may invoke measurement renders; keep them lightweight.
+      if (target === 'Measurement') {
+        return (
+          <View
+            style={{
+              height:
+                item.type === 'header'
+                  ? MEASURED_HEADER_HEIGHT
+                  : MEASURED_ITEM_HEIGHT,
+            }}
+          />
+        );
+      }
+
       if (item.type === 'header') {
         return renderSectionHeader(item);
       }
@@ -342,14 +347,10 @@ export const GroceryItemsList = ({
           item={item.item}
           isChecked={Boolean(item.item.isChecked)}
           className={cn(showBorder && 'border-b border-dashed border-border')}
-          onEdit={() => {
-            presentEditSheet(item.item);
-          }}
+          onEdit={presentEditSheet}
           isBulkSelectionModeActive={isBulkSelectionModeActive}
           isBulkSelected={selectedBulkItemIds.has(item.item.id)}
-          onToggleBulkSelection={() =>
-            onToggleBulkSelectionItem?.(item.item.id)
-          }
+          onToggleBulkSelection={onToggleBulkSelectionItem}
         />
       );
     },
@@ -407,17 +408,20 @@ export const GroceryItemsList = ({
       keyExtractor={item =>
         item.type === 'header'
           ? `header-${item.sectionKey}`
-          : `item-${item.sectionKey}-${item.item.id}-${item.item.isChecked ? 'checked' : 'unchecked'}`
+          : `item-${item.item.id}`
       }
       getItemType={item => item.type}
-      drawDistance={300}
+      drawDistance={150}
       stickyHeaderIndices={listRows.stickyHeaderIndices}
       contentContainerClassName="pb-36"
       contentContainerStyle={{ flexGrow: 1 }}
       showsVerticalScrollIndicator={false}
       onScrollBeginDrag={onListInteraction}
       onTouchStart={onListInteraction}
-      maintainVisibleContentPosition={{ disabled: true }}
+      maintainVisibleContentPosition={{
+        disabled: false,
+        autoscrollToTopThreshold: 0,
+      }}
     />
   );
 };

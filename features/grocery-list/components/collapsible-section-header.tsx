@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import { ChevronDownIcon } from 'lucide-react-native';
-import { TouchableOpacity, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { Icon } from '../../../components/ui/icon';
@@ -16,7 +17,7 @@ type CollapsibleSectionHeaderProps = {
   showCollapse?: boolean;
 };
 
-export const CollapsibleSectionHeader = ({
+const CollapsibleSectionHeaderComponent = ({
   title,
   itemCount,
   isExpanded,
@@ -29,7 +30,7 @@ export const CollapsibleSectionHeader = ({
     <View className={cn('bg-background px-4 pt-1')}>
       {showCollapse ? (
         <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={onToggle} className="flex-1">
+          <Pressable onPress={onToggle} className="flex-1">
             <Text className="text-base font-semibold capitalize text-foreground">
               {title}
             </Text>
@@ -38,16 +39,16 @@ export const CollapsibleSectionHeader = ({
                 {itemCount} items
               </Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
           <View className="flex-row items-center gap-3">
             {isExpanded && actionLabel && onActionPress ? (
-              <TouchableOpacity onPress={onActionPress}>
+              <Pressable onPress={onActionPress}>
                 <Text className="text-sm font-medium text-muted-foreground">
                   {actionLabel}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             ) : null}
-            <TouchableOpacity onPress={onToggle}>
+            <Pressable onPress={onToggle}>
               <Animated.View
                 style={{
                   transform: [{ rotate: isExpanded ? '180deg' : '0deg' }],
@@ -59,7 +60,7 @@ export const CollapsibleSectionHeader = ({
                   className="text-muted-foreground"
                 />
               </Animated.View>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       ) : (
@@ -71,3 +72,15 @@ export const CollapsibleSectionHeader = ({
     </View>
   );
 };
+
+export const CollapsibleSectionHeader = memo(
+  CollapsibleSectionHeaderComponent,
+  (previousProps, nextProps) =>
+    previousProps.title === nextProps.title &&
+    previousProps.itemCount === nextProps.itemCount &&
+    previousProps.isExpanded === nextProps.isExpanded &&
+    previousProps.actionLabel === nextProps.actionLabel &&
+    previousProps.showCollapse === nextProps.showCollapse &&
+    previousProps.onToggle === nextProps.onToggle &&
+    previousProps.onActionPress === nextProps.onActionPress
+);

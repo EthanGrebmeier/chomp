@@ -19,7 +19,17 @@ type ListItemProps = {
   onDelete?: () => void;
 };
 
-export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
+type SwipeableListItemProps = {
+  className?: string;
+  children?: React.ReactNode;
+  onDelete: () => void;
+};
+
+const SwipeableListItem = ({
+  className,
+  children,
+  onDelete,
+}: SwipeableListItemProps) => {
   const screenWidth = useWindowDimensions().width;
 
   const listItemXPos = useSharedValue(0);
@@ -68,8 +78,7 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
             .failOffsetY([-5, 5])
             .onUpdate(event => {
               if (
-                (event.velocityX > 0 && event.translationX > 0) ||
-                !onDelete
+                event.velocityX > 0 && event.translationX > 0
               ) {
                 return;
               }
@@ -91,7 +100,7 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
                   { duration: 180 },
                   () => {
                     // After animation completes, trigger the delete mutation
-                    onDelete && scheduleOnRN(onDelete);
+                    scheduleOnRN(onDelete);
                   }
                 );
               } else {
@@ -120,5 +129,30 @@ export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
         <Icon as={TrashIcon} color="white" size={24} />
       </Animated.View>
     </View>
+  );
+};
+
+const BasicListItem = ({
+  className,
+  children,
+}: Pick<ListItemProps, 'className' | 'children'>) => {
+  return (
+    <View className="overflow-hidden">
+      <View className={cn('z-10 flex-row items-center gap-2 px-4 py-1', className)}>
+        {children}
+      </View>
+    </View>
+  );
+};
+
+export const ListItem = ({ className, children, onDelete }: ListItemProps) => {
+  if (!onDelete) {
+    return <BasicListItem className={className}>{children}</BasicListItem>;
+  }
+
+  return (
+    <SwipeableListItem className={className} onDelete={onDelete}>
+      {children}
+    </SwipeableListItem>
   );
 };

@@ -1,4 +1,8 @@
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  Keyframe,
+  LayoutAnimationConfig,
+} from 'react-native-reanimated';
 
 import { cn } from '../../lib/utils';
 
@@ -51,13 +55,15 @@ export const Checkbox = ({
       onPress={onPress}
       hapticType="selection"
     >
-      {checked && (
-        <Animated.View
-          entering={checkedKeyframe.duration(100)}
-          exiting={uncheckedKeyframe.duration(150)}
-          className={cn('h-full w-full rounded-sm bg-accent-foreground')}
-        />
-      )}
+      <LayoutAnimationConfig skipEntering={!checked} skipExiting={checked}>
+        {checked && (
+          <Animated.View
+            entering={checkedKeyframe.duration(100)}
+            exiting={uncheckedKeyframe.duration(150)}
+            className={cn('h-full w-full rounded-sm bg-accent-foreground')}
+          />
+        )}
+      </LayoutAnimationConfig>
     </HapticPressable>
   );
 };

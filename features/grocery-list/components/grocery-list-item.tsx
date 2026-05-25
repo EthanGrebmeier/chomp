@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Alert, Platform, View } from 'react-native';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { Platform, Pressable, View } from 'react-native';
+import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, {
+  SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -11,11 +14,6 @@ import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { RecipeTag } from '../../../components/recipe-tag';
 import { StoreTag } from '../../../components/store-tag';
 import { Checkbox } from '../../../components/ui/checkbox';
-import {
-  ContextMenuItem,
-  ContextMenuItemTitle,
-  ContextMenuRoot,
-} from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
@@ -29,13 +27,37 @@ type GroceryListItemProps = {
   item: GroceryListItemWithRecipe;
   isChecked: boolean;
   className?: string;
-  onEdit?: () => void;
+  onEdit?: (item: GroceryListItemWithRecipe) => void;
   isBulkSelectionModeActive?: boolean;
   isBulkSelected?: boolean;
-  onToggleBulkSelection?: () => void;
+  onToggleBulkSelection?: (itemId: string) => void;
 };
 
-export const GroceryListItem = ({
+const SWIPE_ACTION_WIDTH = 88;
+
+type SwipeDeleteActionProps = {
+  drag: SharedValue<number>;
+  onPress: () => void;
+};
+
+const SwipeDeleteAction = ({ drag, onPress }: SwipeDeleteActionProps) => {
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: drag.value + SWIPE_ACTION_WIDTH }],
+  }));
+
+  return (
+    <Animated.View style={[animatedStyle, { width: SWIPE_ACTION_WIDTH }]}>
+      <Pressable
+        className="h-full items-center justify-center bg-destructive"
+        onPress={onPress}
+      >
+        <Text className="text-sm font-semibold text-foreground">Delete</Text>
+      </Pressable>
+    </Animated.View>
+  );
+};
+
+const GroceryListItemComponent = ({
   item,
   isChecked,
   className,
@@ -46,9 +68,8 @@ export const GroceryListItem = ({
 }: GroceryListItemProps) => {
   const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
   const notes = item.notes?.trim();
-  const checkItemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const hasMountedRef = useRef(false);
+  const swipeableRef = useRef<SwipeableMethods | null>(null);
 
   const theme = useTheme();
   const compactTextStyle = Platform.select({
@@ -64,19 +85,17 @@ export const GroceryListItem = ({
   }, [isChecked, item.id]);
 
   useEffect(() => {
-    strikethroughWidth.value = withTiming(internalIsChecked ? 1 : 0, {
+    const targetValue = internalIsChecked ? 1 : 0;
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      strikethroughWidth.value = targetValue;
+      return;
+    }
+
+    strikethroughWidth.value = withTiming(targetValue, {
       duration: 300,
     });
   }, [internalIsChecked, strikethroughWidth]);
-
-  useEffect(
-    () => () => {
-      if (checkItemTimeoutRef.current) {
-        clearTimeout(checkItemTimeoutRef.current);
-      }
-    },
-    []
-  );
 
   const strikethroughStyle = useAnimatedStyle(() => {
     return {
@@ -85,63 +104,49 @@ export const GroceryListItem = ({
   });
 
   const onCheck = () => {
+    swipeableRef.current?.close();
+
     if (isBulkSelectionModeActive) {
-      onToggleBulkSelection?.();
+      onToggleBulkSelection?.(item.id);
       return;
     }
 
-    if (checkItemTimeoutRef.current) {
-      clearTimeout(checkItemTimeoutRef.current);
-    }
-
-    if (internalIsChecked) {
-      checkListItem({ itemId: item.id, isChecked: false });
-    } else {
-      checkItemTimeoutRef.current = setTimeout(() => {
-        checkListItem({ itemId: item.id, isChecked: true });
-      }, 1000);
-    }
-
-    setInternalIsChecked(!internalIsChecked);
-  };
-
-  const handleDelete = () => {
-    Alert.alert(
-      'Delete Item',
-      `Are you sure you want to delete "${item.name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => removeGroceryListItem({ itemId: item.id }),
-        },
-      ]
-    );
+    setInternalIsChecked(previousIsChecked => {
+      const nextIsChecked = !previousIsChecked;
+      checkListItem({ itemId: item.id, isChecked: nextIsChecked });
+      return nextIsChecked;
+    });
   };
 
   const handleRowPress = () => {
+    swipeableRef.current?.close();
+
     if (isBulkSelectionModeActive) {
-      onToggleBulkSelection?.();
+      onToggleBulkSelection?.(item.id);
       return;
     }
 
-    onEdit?.();
+    onEdit?.(item);
   };
 
   const checkboxChecked = isBulkSelectionModeActive
     ? isBulkSelected
     : internalIsChecked;
 
+  const handleSwipeDeletePress = useCallback(() => {
+    swipeableRef.current?.close();
+    removeGroceryListItem({ itemId: item.id });
+  }, [item.id]);
+
+  const renderRightActions = useCallback(
+    (_: SharedValue<number>, drag: SharedValue<number>) => (
+      <SwipeDeleteAction drag={drag} onPress={handleSwipeDeletePress} />
+    ),
+    [handleSwipeDeletePress]
+  );
+
   const itemContent = (
-    <ListItem
-      onDelete={
-        isBulkSelectionModeActive
-          ? undefined
-          : () => removeGroceryListItem({ itemId: item.id })
-      }
-      className={className}
-    >
+    <ListItem className={className}>
       <Checkbox checked={checkboxChecked} onPress={onCheck} className="mr-1" />
 
       <HapticPressable
@@ -208,19 +213,36 @@ export const GroceryListItem = ({
     </ListItem>
   );
 
+  if (isBulkSelectionModeActive) {
+    return itemContent;
+  }
+
   return (
-    isBulkSelectionModeActive ? (
-      itemContent
-    ) : (
-      <ContextMenuRoot trigger={itemContent}>
-        <ContextMenuItem
-          key="delete-grocery-item"
-          destructive
-          onSelect={handleDelete}
-        >
-          <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
-        </ContextMenuItem>
-      </ContextMenuRoot>
-    )
+    <ReanimatedSwipeable
+      ref={swipeableRef}
+      enableTrackpadTwoFingerGesture
+      friction={2}
+      rightThreshold={40}
+      overshootRight={false}
+      renderRightActions={renderRightActions}
+    >
+      {itemContent}
+    </ReanimatedSwipeable>
   );
 };
+
+export const GroceryListItem = memo(
+  GroceryListItemComponent,
+  (previousProps, nextProps) => {
+    return (
+      previousProps.item === nextProps.item &&
+      previousProps.isChecked === nextProps.isChecked &&
+      previousProps.className === nextProps.className &&
+      previousProps.isBulkSelectionModeActive ===
+        nextProps.isBulkSelectionModeActive &&
+      previousProps.isBulkSelected === nextProps.isBulkSelected &&
+      previousProps.onEdit === nextProps.onEdit &&
+      previousProps.onToggleBulkSelection === nextProps.onToggleBulkSelection
+    );
+  }
+);
