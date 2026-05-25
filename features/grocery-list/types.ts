@@ -5,6 +5,14 @@ import schema from '../../instant.schema';
 import { Recipe } from '../recipes/types';
 import { Store } from '../stores/types';
 
+export type GroceryListGroupBy = 'category' | 'none' | 'recipe' | 'store';
+export type GroceryListSortBy =
+  | 'category'
+  | 'name'
+  | 'recent'
+  | 'recipe'
+  | 'store';
+
 export type GroceryListLinkedSavedItem = InstaQLEntity<
   typeof schema,
   'saved_items',

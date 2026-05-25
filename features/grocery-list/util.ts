@@ -1,4 +1,8 @@
-import { GroceryListItemWithRecipe } from './types';
+import {
+  GroceryListGroupBy,
+  GroceryListItemWithRecipe,
+  GroceryListSortBy,
+} from './types';
 
 const normalizeGroupToken = (value?: string | null): string =>
   (value ?? '')
@@ -6,33 +10,72 @@ const normalizeGroupToken = (value?: string | null): string =>
     .toLowerCase()
     .replace(/\s+/g, ' ');
 
-const sortItems = (
+const compareOptionalLabels = (
+  aValue: string | null | undefined,
+  bValue: string | null | undefined,
+  fallbackLabel: string
+) => {
+  const aLabel = aValue?.trim() || fallbackLabel;
+  const bLabel = bValue?.trim() || fallbackLabel;
+  const aIsFallback = aLabel === fallbackLabel;
+  const bIsFallback = bLabel === fallbackLabel;
+
+  if (aIsFallback && !bIsFallback) return 1;
+  if (!aIsFallback && bIsFallback) return -1;
+
+  return aLabel.localeCompare(bLabel, undefined, {
+    sensitivity: 'base',
+  });
+};
+
+export const sortItems = (
   items: GroceryListItemWithRecipe[],
-  sortBy: 'name' | 'recent'
+  sortBy: GroceryListSortBy
 ): GroceryListItemWithRecipe[] => {
   return [...items].sort((a, b) => {
-    // First sort by checked status: unchecked items first
-    if (a.isChecked && !b.isChecked) return 1;
-    if (!a.isChecked && b.isChecked) return -1;
-
     if (sortBy === 'recent') {
-      // Sort by most recent first (based on createdAt)
       const aTime = new Date(a.createdAt).getTime();
       const bTime = new Date(b.createdAt).getTime();
       return bTime - aTime;
-    } else {
-      // Sort alphabetically by name
-      return a.name.localeCompare(b.name, undefined, {
-        sensitivity: 'base',
-      });
     }
+
+    if (sortBy === 'category') {
+      const categoryComparison = compareOptionalLabels(
+        a.category,
+        b.category,
+        'Uncategorized'
+      );
+      if (categoryComparison !== 0) return categoryComparison;
+    }
+
+    if (sortBy === 'recipe') {
+      const recipeComparison = compareOptionalLabels(
+        a.recipe?.name,
+        b.recipe?.name,
+        'Ungrouped'
+      );
+      if (recipeComparison !== 0) return recipeComparison;
+    }
+
+    if (sortBy === 'store') {
+      const storeComparison = compareOptionalLabels(
+        a.store?.name,
+        b.store?.name,
+        'No Store'
+      );
+      if (storeComparison !== 0) return storeComparison;
+    }
+
+    return a.name.localeCompare(b.name, undefined, {
+      sensitivity: 'base',
+    });
   });
 };
 
 export const groupItemsBy = (
   items: GroceryListItemWithRecipe[],
-  groupBy: 'category' | 'none' | 'recipe' | 'store',
-  sortBy: 'name' | 'recent' = 'recent'
+  groupBy: GroceryListGroupBy,
+  sortBy: GroceryListSortBy = 'recent'
 ): Map<string, GroceryListItemWithRecipe[]> => {
   const groups = new Map<string, GroceryListItemWithRecipe[]>();
   const storeDisplayByKey = new Map<string, string>();

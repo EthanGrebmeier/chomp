@@ -13,9 +13,10 @@ import {
   DropdownMenuTrigger,
 } from '../../../components/native-dropdown';
 import { Icon } from '../../../components/ui/icon';
+import { GroceryListGroupBy, GroceryListSortBy } from '../types';
 
-type GroupByValue = 'category' | 'none' | 'recipe' | 'store';
-type SortByValue = 'name' | 'recent';
+type GroupByValue = GroceryListGroupBy;
+type SortByValue = GroceryListSortBy;
 
 type ListFilterDropdownMenuProps = {
   groupBy: GroupByValue;
@@ -60,6 +61,27 @@ export const ListFilterDropdownMenu = ({
               onValueChange={() => onSortByChange('name')}
             >
               <DropdownMenuItemTitle>Alphabetical</DropdownMenuItemTitle>
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              key="sort-category"
+              value={sortBy === 'category' ? 'on' : 'off'}
+              onValueChange={() => onSortByChange('category')}
+            >
+              <DropdownMenuItemTitle>Category</DropdownMenuItemTitle>
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              key="sort-recipe"
+              value={sortBy === 'recipe' ? 'on' : 'off'}
+              onValueChange={() => onSortByChange('recipe')}
+            >
+              <DropdownMenuItemTitle>Recipe</DropdownMenuItemTitle>
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              key="sort-store"
+              value={sortBy === 'store' ? 'on' : 'off'}
+              onValueChange={() => onSortByChange('store')}
+            >
+              <DropdownMenuItemTitle>Store</DropdownMenuItemTitle>
             </DropdownMenuCheckboxItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>

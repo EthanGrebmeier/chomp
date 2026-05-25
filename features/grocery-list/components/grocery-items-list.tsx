@@ -7,8 +7,12 @@ import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { cn } from '../../../lib/utils';
-import { GroceryListItemWithRecipe } from '../types';
-import { groupItemsBy } from '../util';
+import {
+  GroceryListGroupBy,
+  GroceryListItemWithRecipe,
+  GroceryListSortBy,
+} from '../types';
+import { groupItemsBy, sortItems } from '../util';
 
 import { CollapsibleSectionHeader } from './collapsible-section-header';
 import { GroceryListItem } from './grocery-list-item';
@@ -16,8 +20,8 @@ import { GroceryListItem } from './grocery-list-item';
 type GroceryItemsListProps = {
   items: GroceryListItemWithRecipe[];
   totalItemCount: number;
-  groupBy: 'category' | 'none' | 'recipe' | 'store';
-  sortBy: 'name' | 'recent';
+  groupBy: GroceryListGroupBy;
+  sortBy: GroceryListSortBy;
   collapsedSectionsResetKey?: number;
   groupingBulkAction?: {
     type: 'collapse' | 'expand';
@@ -104,19 +108,10 @@ export const GroceryItemsList = ({
 
   const { uncheckedItems, checkedItems } = useMemo(() => {
     const nextUncheckedItems = items.filter(item => !item.isChecked);
-    const nextCheckedItems = items.filter(item => item.isChecked);
-
-    nextCheckedItems.sort((a, b) => {
-      if (sortBy === 'recent') {
-        const aTime = new Date(a.createdAt).getTime();
-        const bTime = new Date(b.createdAt).getTime();
-        return bTime - aTime;
-      }
-
-      return a.name.localeCompare(b.name, undefined, {
-        sensitivity: 'base',
-      });
-    });
+    const nextCheckedItems = sortItems(
+      items.filter(item => item.isChecked),
+      sortBy
+    );
 
     return {
       uncheckedItems: nextUncheckedItems,

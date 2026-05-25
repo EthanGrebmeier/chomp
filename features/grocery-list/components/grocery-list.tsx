@@ -62,7 +62,13 @@ import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
-import { BaseGroceryItem, GroceryListItemWithRecipe } from '../types';
+import {
+  BaseGroceryItem,
+  GroceryListGroupBy,
+  GroceryListItemWithRecipe,
+  GroceryListSortBy,
+} from '../types';
+
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { BulkSelectionToolbar } from './bulk-selection-toolbar';
 import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
@@ -82,8 +88,8 @@ type GroceryListProps = {
   ownerId?: string;
   isShared?: boolean;
   items: GroceryListItemWithRecipe[];
-  groupBy: 'category' | 'none' | 'recipe' | 'store';
-  sortBy: 'name' | 'recent';
+  groupBy: GroceryListGroupBy;
+  sortBy: GroceryListSortBy;
   onViewListsPress?: () => void;
   onDeleteOrLeave: () => void;
   onActiveListChange?: (listId: string) => void;
@@ -123,10 +129,8 @@ export const GroceryList = ({
     existingItemId: string;
     newItem: BaseGroceryItem;
   } | null>(null);
-  const [groupBy, setGroupBy] = useState<
-    'category' | 'none' | 'recipe' | 'store'
-  >(initialGroupBy);
-  const [sortBy, setSortBy] = useState<'name' | 'recent'>(initialSortBy);
+  const [groupBy, setGroupBy] = useState<GroceryListGroupBy>(initialGroupBy);
+  const [sortBy, setSortBy] = useState<GroceryListSortBy>(initialSortBy);
   const [groupingBulkAction, setGroupingBulkAction] =
     useState<GroupingBulkAction | null>(null);
   const [searchQuery] = useState('');
@@ -241,14 +245,12 @@ export const GroceryList = ({
     Keyboard.dismiss();
   };
 
-  const handleGroupByChange = (
-    newGroupBy: 'category' | 'none' | 'recipe' | 'store'
-  ) => {
+  const handleGroupByChange = (newGroupBy: GroceryListGroupBy) => {
     setGroupBy(newGroupBy);
     updateSettings({ groupBy: newGroupBy });
   };
 
-  const handleSortByChange = (newSortBy: 'name' | 'recent') => {
+  const handleSortByChange = (newSortBy: GroceryListSortBy) => {
     setSortBy(newSortBy);
     updateSettings({ sortBy: newSortBy });
   };

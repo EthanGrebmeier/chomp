@@ -3,11 +3,12 @@ import { eq } from 'drizzle-orm';
 import { appSettingsTable } from '../../../db/schema';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { db } from '../../../providers/migration-provider';
+import { GroceryListGroupBy, GroceryListSortBy } from '../types';
 
 type UpdateSettingsArgs = {
   listName?: string;
-  groupBy?: 'category' | 'none' | 'recipe' | 'store';
-  sortBy?: 'name' | 'recent';
+  groupBy?: GroceryListGroupBy;
+  sortBy?: GroceryListSortBy;
   savedItemsSortBy?: 'name' | 'category';
   savedItemsFilterCategory?: string | null;
 };

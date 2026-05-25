@@ -14,7 +14,7 @@ export const appSettingsTable = sqliteTable('app_settings', {
   groupBy: text({ enum: ['category', 'none', 'recipe', 'store'] })
     .notNull()
     .default('none'),
-  sortBy: text({ enum: ['name', 'recent'] })
+  sortBy: text({ enum: ['category', 'name', 'recent', 'recipe', 'store'] })
     .notNull()
     .default('recent'),
   hasSeededSavedItems: int({ mode: 'boolean' }).notNull().default(false),

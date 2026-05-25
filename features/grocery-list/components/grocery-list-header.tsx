@@ -6,7 +6,11 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
-import { GroceryListItemWithRecipe } from '../types';
+import {
+  GroceryListGroupBy,
+  GroceryListItemWithRecipe,
+  GroceryListSortBy,
+} from '../types';
 
 import { GroceryListDropdownMenu } from './dropdown-menu';
 import { ListFilterDropdownMenu } from './list-filter-dropdown-menu';
@@ -22,10 +26,10 @@ type GroceryListHeaderProps = {
   onDeleteOrLeave: () => void;
   onEditNamePress: () => void;
   onViewListsPress?: () => void;
-  groupBy: 'category' | 'none' | 'recipe' | 'store';
-  sortBy: 'name' | 'recent';
-  onGroupByChange: (value: 'category' | 'none' | 'recipe' | 'store') => void;
-  onSortByChange: (value: 'name' | 'recent') => void;
+  groupBy: GroceryListGroupBy;
+  sortBy: GroceryListSortBy;
+  onGroupByChange: (value: GroceryListGroupBy) => void;
+  onSortByChange: (value: GroceryListSortBy) => void;
   onOpenAllGroupings: () => void;
   onCollapseAllGroupings: () => void;
   isBulkSelectionModeActive: boolean;
