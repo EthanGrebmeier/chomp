@@ -13,6 +13,11 @@ export type UpdateGroceryItemOnlyArgs = {
   selectedLocalSavedItemId?: string;
 };
 
+export type CheckedStateUpdate = {
+  itemId: string;
+  isChecked: boolean;
+};
+
 /**
  * Writes the grocery_items row, reconciles the grocery_items↔stores link, and
  * performs grocery_items↔saved_items relink when the caller supplies a new
@@ -79,4 +84,20 @@ export const updateGroceryItemOnly = async ({
       }),
     ]);
   }
+};
+
+export const updateGroceryItemsCheckedState = async (
+  updates: CheckedStateUpdate[]
+) => {
+  if (updates.length === 0) {
+    return;
+  }
+
+  await db.transact(
+    updates.map(({ itemId, isChecked }) =>
+      db.tx.grocery_items[itemId].update({
+        isChecked,
+      })
+    )
+  );
 };
