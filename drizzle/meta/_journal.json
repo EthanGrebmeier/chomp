@@ -50,6 +50,13 @@
       "when": 1779750462147,
       "tag": "0006_worthless_bulldozer",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1779752287919,
+      "tag": "0007_smooth_mikhail_rasputin",
+      "breakpoints": true
     }
   ]
 }
