@@ -13,10 +13,7 @@ const rules = {
     },
   },
   $users: {
-    bind: [
-      'isSelf',
-      'auth.id == data.id',
-    ],
+    bind: ['isSelf', 'auth.id == data.id'],
     allow: {
       view: 'isSelf',
       create: 'false',
@@ -88,7 +85,10 @@ const rules = {
     },
   },
   meal_plan_recipe_ingredient_snapshots: {
-    bind: ['isOwner', "auth.id in data.ref('meal_plan_recipe.grocery_list.shares.user_id')"],
+    bind: [
+      'isOwner',
+      "auth.id in data.ref('meal_plan_recipe.grocery_list.shares.user_id')",
+    ],
     allow: {
       view: 'isOwner',
       create: 'isOwner',
@@ -128,6 +128,8 @@ const rules = {
       update: 'isSelf',
     },
   },
+  // Lockdown new attributes from being created
+  attrs: { allow: { $default: 'false' } },
 } satisfies InstantRules;
 
 export default rules;
