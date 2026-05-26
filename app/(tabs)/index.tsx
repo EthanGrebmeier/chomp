@@ -9,7 +9,6 @@ import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
 } from '@/features/grocery-lists/components/select-grocery-list-sheet';
-import { useCreateGroceryList } from '@/features/grocery-lists/instant/useCreateGroceryList';
 import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDeleteGroceryList';
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
@@ -27,7 +26,6 @@ export default function List() {
   const [activeListChangeVersion, setActiveListChangeVersion] = useState(0);
   const { data: lists, isLoading: listsLoading } = useGroceryLists();
   const { user } = db.useAuth();
-  const createGroceryList = useCreateGroceryList();
   const deleteGroceryList = useDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
   const trackListAccess = useTrackListAccess();
@@ -35,6 +33,10 @@ export default function List() {
 
   const handleActiveListChange = useCallback(
     (nextListId?: string) => {
+      if (nextListId === activeListId) {
+        return;
+      }
+
       setActiveListId(nextListId);
       setActiveListChangeVersion(version => version + 1);
 
@@ -42,7 +44,7 @@ export default function List() {
         trackListAccess(nextListId);
       }
     },
-    [trackListAccess]
+    [activeListId, trackListAccess]
   );
 
   // Set active list from URL param if provided
@@ -78,7 +80,6 @@ export default function List() {
     setOrCreateDefaultList();
   }, [
     activeListId,
-    createGroceryList,
     handleActiveListChange,
     lists,
     listsLoading,
