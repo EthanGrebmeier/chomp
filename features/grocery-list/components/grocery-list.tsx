@@ -1,6 +1,6 @@
 import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { router } from 'expo-router';
+import { Href, router } from 'expo-router';
 import {
   BookOpenIcon,
   CalendarIcon,
@@ -101,6 +101,8 @@ type GroupingBulkAction = {
   id: number;
 };
 
+const NAVIGATION_LOCK_DURATION_MS = 1500;
+
 export const GroceryList = ({
   listId,
   listName,
@@ -137,11 +139,49 @@ export const GroceryList = ({
   const [bulkSelectionState, setBulkSelectionState] = useState(() =>
     createBulkSelectionState()
   );
+  const [isRoutePushPending, setIsRoutePushPending] = useState(false);
   const standardControlsOpacity = useSharedValue(1);
   const bulkToolbarOpacity = useSharedValue(0);
+  const routePushLockRef = useRef(false);
+  const routePushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const deferredQuery = useDeferredValue(searchQuery.trim());
   const normalizedQuery = deferredQuery.toLowerCase();
+
+  const releaseRoutePushLock = () => {
+    routePushLockRef.current = false;
+    setIsRoutePushPending(false);
+    if (routePushTimeoutRef.current) {
+      clearTimeout(routePushTimeoutRef.current);
+      routePushTimeoutRef.current = null;
+    }
+  };
+
+  const pushWithRouteLock = (href: Href) => {
+    if (routePushLockRef.current) return;
+
+    routePushLockRef.current = true;
+    setIsRoutePushPending(true);
+
+    if (routePushTimeoutRef.current) {
+      clearTimeout(routePushTimeoutRef.current);
+    }
+
+    routePushTimeoutRef.current = setTimeout(() => {
+      releaseRoutePushLock();
+    }, NAVIGATION_LOCK_DURATION_MS);
+
+    router.push(href);
+  };
+
+  useEffect(
+    () => () => {
+      if (routePushTimeoutRef.current) {
+        clearTimeout(routePushTimeoutRef.current);
+      }
+    },
+    []
+  );
 
   const filteredItems = useMemo(() => {
     if (!normalizedQuery) return items;
@@ -335,16 +375,16 @@ export const GroceryList = ({
   };
 
   const handleOpenSettings = () => {
-    router.push('/settings');
+    pushWithRouteLock('/settings');
   };
 
   const handleOpenRecipes = () => {
-    router.push(navigation.goToRecipes(listId));
+    pushWithRouteLock(navigation.goToRecipes(listId));
   };
 
   const handleOpenMealPlan = () => {
     if (!listId) return;
-    router.push(navigation.goToMealPlan(listId));
+    pushWithRouteLock(navigation.goToMealPlan(listId));
   };
 
   const handleEnterBulkSelectionMode = () => {
@@ -839,6 +879,7 @@ export const GroceryList = ({
           <View className="h-10 flex-row items-center gap-6 overflow-hidden rounded-full border border-border bg-accent/90 px-4 shadow-sm">
             <HapticPressable
               onPress={handleOpenMealPlan}
+              disabled={isRoutePushPending}
               className="active:opacity-80"
               hapticType="selection"
               hitSlop={10}
@@ -852,6 +893,7 @@ export const GroceryList = ({
             </HapticPressable>
             <HapticPressable
               onPress={handleOpenRecipes}
+              disabled={isRoutePushPending}
               className="gap-2 active:opacity-80"
               hapticType="selection"
               hitSlop={10}
@@ -865,6 +907,7 @@ export const GroceryList = ({
             </HapticPressable>
             <HapticPressable
               onPress={handleOpenSettings}
+              disabled={isRoutePushPending}
               className="gap-2 active:opacity-80"
               hapticType="selection"
               hitSlop={10}
