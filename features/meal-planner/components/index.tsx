@@ -14,7 +14,6 @@ import {
   DropdownMenuRoot,
 } from '../../../components/ui/dropdown-menu';
 import { Icon } from '../../../components/ui/icon';
-import { db } from '../../../lib/instant';
 import { useClearMealPlan, useUserMealPlanData } from '../hooks';
 import { MealPlanItemWithStore } from '../types';
 

@@ -3,11 +3,24 @@ import {
   addWeeks,
   format,
   isSameDay,
+  isToday,
   startOfWeek,
 } from 'date-fns';
-import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  MutableRefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { View, useWindowDimensions } from 'react-native';
+import { DraxDragWithReceiverEventData } from 'react-native-drax';
 import PagerView from 'react-native-pager-view';
+import { z } from 'zod';
+
+import { useUpdateMealPlanItemDate } from '../../hooks/useUpdateMealPlanItemData';
+import { useUpdateMealPlanRecipe } from '../../hooks/useUpdateMealPlanRecipe';
 
 import { MealPlanDateSelectorDate } from './meal-plan-date-selector-date';
 
@@ -26,6 +39,9 @@ const WEEK_RANGE = 30;
 type WeekDate = {
   date: Date;
   dateKey: string;
+  dayLabel: string;
+  weekdayLabel: string;
+  isDateToday: boolean;
 };
 
 const buildWeek = (weekStart: Date): WeekDate[] =>
@@ -34,8 +50,30 @@ const buildWeek = (weekStart: Date): WeekDate[] =>
     return {
       date,
       dateKey: format(date, 'yyyy-MM-dd'),
+      dayLabel: format(date, 'd'),
+      weekdayLabel: format(date, 'EE'),
+      isDateToday: isToday(date),
     };
   });
+
+const dragPayloadSchema = z.union([
+  z.discriminatedUnion('type', [
+    z.object({
+      type: z.literal('recipe'),
+      id: z.string(),
+    }),
+    z.object({
+      type: z.literal('item'),
+      id: z.string(),
+    }),
+  ]),
+  z.object({
+    recipeId: z.string(),
+  }),
+  z.object({
+    itemId: z.string(),
+  }),
+]);
 
 const MealPlanDateSelector = ({
   dates,
@@ -47,6 +85,10 @@ const MealPlanDateSelector = ({
 }: MealPlanDateSelectorProps) => {
   const pagerRef = useRef<PagerView>(null);
   const { width } = useWindowDimensions();
+  const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
+  const { mutate: updateMealPlanItemDate } = useUpdateMealPlanItemDate();
+  const syncPagerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Prefer the parent-provided date range to keep mount work small.
   const weeks = useMemo(() => {
@@ -112,21 +154,48 @@ const MealPlanDateSelector = ({
   useEffect(() => {
     setCurrentWeekIndex(initialWeekIndex);
     scrollStartWeekIndexRef.current = initialWeekIndex;
-    setTimeout(() => {
+    if (syncPagerTimeoutRef.current) {
+      clearTimeout(syncPagerTimeoutRef.current);
+    }
+    syncPagerTimeoutRef.current = setTimeout(() => {
       pagerRef.current?.setPageWithoutAnimation(initialWeekIndex);
     }, 0);
+    return () => {
+      if (syncPagerTimeoutRef.current) {
+        clearTimeout(syncPagerTimeoutRef.current);
+        syncPagerTimeoutRef.current = null;
+      }
+    };
   }, [initialWeekIndex]);
+
+  useEffect(
+    () => () => {
+      if (scrollIdleTimeoutRef.current) {
+        clearTimeout(scrollIdleTimeoutRef.current);
+        scrollIdleTimeoutRef.current = null;
+      }
+    },
+    []
+  );
 
   const handlePageScrollStateChanged = (e: {
     nativeEvent: { pageScrollState: 'idle' | 'dragging' | 'settling' };
   }) => {
     const state = e.nativeEvent.pageScrollState;
     if (state === 'dragging') {
+      if (scrollIdleTimeoutRef.current) {
+        clearTimeout(scrollIdleTimeoutRef.current);
+        scrollIdleTimeoutRef.current = null;
+      }
       isScrollingRef.current = true;
       scrollStartWeekIndexRef.current = currentWeekIndex;
     } else if (state === 'idle') {
-      setTimeout(() => {
+      if (scrollIdleTimeoutRef.current) {
+        clearTimeout(scrollIdleTimeoutRef.current);
+      }
+      scrollIdleTimeoutRef.current = setTimeout(() => {
         isScrollingRef.current = false;
+        scrollIdleTimeoutRef.current = null;
       }, 100);
     }
   };
@@ -160,6 +229,48 @@ const MealPlanDateSelector = ({
     isAutoScrollingRef.current = false;
     isProgrammaticNavigationRef.current = false;
   };
+
+  const handleReceiveDragDrop = useCallback(
+    (date: Date, event: DraxDragWithReceiverEventData) => {
+      const droppedDate = format(date, 'yyyy-MM-dd');
+      const payload = dragPayloadSchema.parse(event.dragged?.payload);
+
+      if ('recipeId' in payload) {
+        updateMealPlanRecipe({
+          mealPlanRecipeId: payload.recipeId,
+          updates: {
+            date: droppedDate,
+          },
+        });
+        return;
+      }
+
+      if ('itemId' in payload) {
+        updateMealPlanItemDate({
+          mealPlanItemId: payload.itemId,
+          date: droppedDate,
+        });
+        return;
+      }
+
+      if (payload.type === 'recipe') {
+        updateMealPlanRecipe({
+          mealPlanRecipeId: payload.id,
+          updates: {
+            date: droppedDate,
+          },
+        });
+        return;
+      }
+
+      updateMealPlanItemDate({
+        mealPlanItemId: payload.id,
+        date: droppedDate,
+      });
+    },
+    [updateMealPlanItemDate, updateMealPlanRecipe]
+  );
+
   const dateWidth = (width - 32 - 4 * 6) / 7; // Account for px-4 and gap-1 (16px each side = 32px total)
 
   return (
@@ -172,21 +283,30 @@ const MealPlanDateSelector = ({
     >
       {weeks.map((weekDates, weekIndex) => (
         <View
-          key={weekIndex}
+          key={weekDates[0]?.dateKey ?? `week-${weekIndex}`}
           className="flex-row items-center justify-between gap-1 px-4"
         >
-          {weekDates.map(({ date, dateKey }) => (
-            <MealPlanDateSelectorDate
-              key={dateKey}
-              date={date}
-              isSelected={isSameDay(date, currentDate)}
-              hasMeals={datesWithMeals.has(dateKey)}
-              allMealsAdded={datesAllMealsAdded.has(dateKey)}
-              onPress={onDatePress}
-              width={dateWidth}
-              isDropEnabled={weekIndex === currentWeekIndex}
-            />
-          ))}
+          {Math.abs(weekIndex - currentWeekIndex) <= 1
+            ? weekDates.map(
+                ({ date, dateKey, dayLabel, weekdayLabel, isDateToday }) => (
+                  <MealPlanDateSelectorDate
+                    key={dateKey}
+                    date={date}
+                    dateKey={dateKey}
+                    dayLabel={dayLabel}
+                    weekdayLabel={weekdayLabel}
+                    isDateToday={isDateToday}
+                    isSelected={isSameDay(date, currentDate)}
+                    hasMeals={datesWithMeals.has(dateKey)}
+                    allMealsAdded={datesAllMealsAdded.has(dateKey)}
+                    onPress={onDatePress}
+                    onReceiveDragDrop={handleReceiveDragDrop}
+                    width={dateWidth}
+                    isDropEnabled={weekIndex === currentWeekIndex}
+                  />
+                )
+              )
+            : null}
         </View>
       ))}
     </PagerView>
