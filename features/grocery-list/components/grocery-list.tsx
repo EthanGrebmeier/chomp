@@ -38,6 +38,7 @@ import {
   clearBulkSelection,
   createBulkSelectionState,
   enterBulkSelectionMode,
+  enterBulkSelectionModeWithItem,
   exitBulkSelectionMode,
   selectAllVisibleUncheckedItems,
   toggleBulkSelectionItem,
@@ -71,8 +72,6 @@ import {
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { BulkSelectionToolbar } from './bulk-selection-toolbar';
-import { ClearListConfirmationSheet } from './clear-list-confirmation-sheet';
-import { DeleteListConfirmationSheet } from './delete-list-confirmation-sheet';
 import {
   EditListNameSheet,
   EditListNameSheetRef,
@@ -258,8 +257,6 @@ export const GroceryList = ({
   }));
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
-  const clearListConfirmationSheetRef = useRef<TrueSheet | null>(null);
-  const deleteListConfirmationSheetRef = useRef<TrueSheet | null>(null);
   const bulkStoreSheetRef = useRef<StoreSheetRef>(null);
   const bulkCategorySheetRef = useRef<CategorySheetRef>(null);
   const bulkMoveListSheetRef = useRef<SelectGroceryListSheetRef>(null);
@@ -337,16 +334,20 @@ export const GroceryList = ({
   };
 
   const handleClearListPress = () => {
-    clearListConfirmationSheetRef.current?.present();
-  };
-
-  const handleConfirmClearList = () => {
     if (!listId) return;
-    clearGroceryList({ itemIds: activeItemIds });
-  };
 
-  const handleCancelClearList = () => {
-    clearListConfirmationSheetRef.current?.dismiss();
+    Alert.alert(
+      'Clear Grocery List',
+      'Are you sure you want to clear your entire grocery list? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear List',
+          style: 'destructive',
+          onPress: () => clearGroceryList({ itemIds: activeItemIds }),
+        },
+      ]
+    );
   };
 
   const handleSharePress = () => {
@@ -356,16 +357,20 @@ export const GroceryList = ({
   };
 
   const handleDeleteOrLeavePress = () => {
-    deleteListConfirmationSheetRef.current?.present();
-  };
+    const title = isOwner ? 'Delete List' : 'Leave List';
+    const description = isOwner
+      ? 'Are you sure you want to delete this list? All items will be permanently removed and this action cannot be undone.'
+      : 'Are you sure you want to leave this list? You will no longer have access to it.';
+    const confirmText = isOwner ? 'Delete List' : 'Leave List';
 
-  const handleConfirmDeleteOrLeave = () => {
-    deleteListConfirmationSheetRef.current?.dismiss();
-    onDeleteOrLeave();
-  };
-
-  const handleCancelDeleteOrLeave = () => {
-    deleteListConfirmationSheetRef.current?.dismiss();
+    Alert.alert(title, description, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: confirmText,
+        style: 'destructive',
+        onPress: onDeleteOrLeave,
+      },
+    ]);
   };
 
   const handleEditNamePress = () => {
@@ -423,6 +428,20 @@ export const GroceryList = ({
 
     setBulkSelectionState(currentState =>
       toggleBulkSelectionItem(currentState, {
+        id: item.id,
+        isChecked: Boolean(item.isChecked),
+      })
+    );
+  };
+
+  const handleEnterBulkSelectionModeWithItem = (itemId: string) => {
+    const item = filteredItems.find(candidate => candidate.id === itemId);
+    if (!item) {
+      return;
+    }
+
+    setBulkSelectionState(currentState =>
+      enterBulkSelectionModeWithItem(currentState, {
         id: item.id,
         isChecked: Boolean(item.isChecked),
       })
@@ -814,6 +833,9 @@ export const GroceryList = ({
               isBulkSelectionModeActive={bulkSelectionState.isActive}
               selectedBulkItemIds={bulkSelectionState.selectedItemIds}
               onToggleBulkSelectionItem={handleToggleBulkSelectionItem}
+              onEnterBulkSelectionModeWithItem={
+                handleEnterBulkSelectionModeWithItem
+              }
               onSelectBulkSelectionSectionItems={handleSelectBulkSectionItems}
               onDeselectBulkSelectionSectionItems={
                 handleDeselectBulkSectionItems
@@ -827,17 +849,6 @@ export const GroceryList = ({
           onCreateSeparate={handleCreateSeparateItem}
           onCancel={handleCancelConflict}
         />
-        <ClearListConfirmationSheet
-          ref={clearListConfirmationSheetRef}
-          onConfirm={handleConfirmClearList}
-          onCancel={handleCancelClearList}
-        />
-        <DeleteListConfirmationSheet
-          ref={deleteListConfirmationSheetRef}
-          isOwner={isOwner}
-          onConfirm={handleConfirmDeleteOrLeave}
-          onCancel={handleCancelDeleteOrLeave}
-        />
         <ShareListSheet ref={shareListSheetRef} />
         <EditListNameSheet ref={editListNameSheetRef} />
         <CategorySheet
@@ -845,6 +856,7 @@ export const GroceryList = ({
           category={bulkCategorySelectionDraft?.category}
           onSelect={handleBulkCategorySheetSelect}
           hideTrigger
+          showBackButton={false}
           sheetName="bulk-category-sheet"
           openRequestId={bulkCategoryOpenRequestId}
         />
@@ -854,6 +866,7 @@ export const GroceryList = ({
           storeName={bulkStoreSelectionDraft?.storeName}
           onSelect={handleBulkStoreSheetSelect}
           hideTrigger
+          showBackButton={false}
           sheetName="bulk-store-sheet"
           openRequestId={bulkStoreOpenRequestId}
         />

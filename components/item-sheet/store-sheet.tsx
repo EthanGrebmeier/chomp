@@ -55,6 +55,7 @@ type StoreSheetProps = {
   storeName?: string;
   onSelect: (storeId?: string, storeName?: string) => void;
   hideTrigger?: boolean;
+  showBackButton?: boolean;
   sheetName?: string;
   openRequestId?: number;
 };
@@ -71,6 +72,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       storeName,
       onSelect,
       hideTrigger = false,
+      showBackButton = true,
       sheetName = 'store-sheet',
       openRequestId,
     },
@@ -150,7 +152,6 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
         setTimeout(() => {
           setNewlyCreatedStore(null);
         }, 1000);
-        toast.success(`Store "${trimmedName}" created`);
         createStoreSheetRef.current?.dismiss();
       } catch {
         toast.error('Failed to create store');
@@ -184,7 +185,9 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
           <BottomSheet.Header
             className="mb-0 px-4"
             dismissButton={
-              <BackButton onPress={() => sheetRef.current?.dismiss()} />
+              showBackButton ? (
+                <BackButton onPress={() => sheetRef.current?.dismiss()} />
+              ) : undefined
             }
             title="Store"
             button={
@@ -271,9 +274,11 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
               className="mb-0"
               title="New Store"
               dismissButton={
-                <BackButton
-                  onPress={() => createStoreSheetRef.current?.dismiss()}
-                />
+                showBackButton ? (
+                  <BackButton
+                    onPress={() => createStoreSheetRef.current?.dismiss()}
+                  />
+                ) : undefined
               }
             />
             <View className="mt-4">

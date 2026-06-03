@@ -4,6 +4,7 @@ import {
   clearBulkSelection,
   createBulkSelectionState,
   enterBulkSelectionMode,
+  enterBulkSelectionModeWithItem,
   exitBulkSelectionMode,
   selectAllVisibleUncheckedItems,
   toggleBulkSelectionItem,
@@ -16,6 +17,29 @@ describe('bulk selection controller', () => {
 
     expect(activeState.isActive).toBe(true);
     expect([...activeState.selectedItemIds]).toEqual([]);
+  });
+
+  it('enters mode with an unchecked item selected', () => {
+    const initialState = createBulkSelectionState();
+    const activeState = enterBulkSelectionModeWithItem(initialState, {
+      id: 'item-a',
+      isChecked: false,
+    });
+
+    expect(activeState.isActive).toBe(true);
+    expect([...activeState.selectedItemIds]).toEqual(['item-a']);
+  });
+
+  it('does not enter mode from a checked item', () => {
+    const initialState = createBulkSelectionState();
+    const nextState = enterBulkSelectionModeWithItem(initialState, {
+      id: 'item-checked',
+      isChecked: true,
+    });
+
+    expect(nextState).toBe(initialState);
+    expect(nextState.isActive).toBe(false);
+    expect([...nextState.selectedItemIds]).toEqual([]);
   });
 
   it('prevents selecting checked items', () => {

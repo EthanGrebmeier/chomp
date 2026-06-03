@@ -60,6 +60,7 @@ type CategorySheetProps = {
   category?: string | null;
   onSelect: (category?: string) => void;
   hideTrigger?: boolean;
+  showBackButton?: boolean;
   sheetName?: string;
   openRequestId?: number;
 };
@@ -75,6 +76,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
       category,
       onSelect,
       hideTrigger = false,
+      showBackButton = true,
       sheetName = 'category-sheet',
       openRequestId,
     },
@@ -151,7 +153,9 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
           className="px-4"
           title="Category"
           dismissButton={
-            <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            showBackButton ? (
+              <BackButton onPress={() => sheetRef.current?.dismiss()} />
+            ) : undefined
           }
           button={
             <ConfirmButton

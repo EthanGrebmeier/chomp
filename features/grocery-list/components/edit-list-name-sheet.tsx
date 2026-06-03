@@ -58,12 +58,9 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
       <BottomSheet
         name="edit-list-name-sheet"
         ref={sheetRef}
-        onOpen={() => {
-          inputRef.current?.focus();
-        }}
         onStartClose={handleDismiss}
         footer={
-          <View className="px-10 pb-safe">
+          <View className="pb-safe px-10">
             <Button onPress={handleSave} disabled={!listName.trim()}>
               <Text>Save</Text>
             </Button>

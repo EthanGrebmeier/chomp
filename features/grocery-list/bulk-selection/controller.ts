@@ -20,6 +20,20 @@ export const enterBulkSelectionMode = (
   selectedItemIds: new Set(),
 });
 
+export const enterBulkSelectionModeWithItem = (
+  state: BulkSelectionState,
+  item: SelectableGroceryItem
+): BulkSelectionState => {
+  if (item.isChecked) {
+    return state;
+  }
+
+  return {
+    isActive: true,
+    selectedItemIds: new Set([item.id]),
+  };
+};
+
 export const exitBulkSelectionMode = (
   _state: BulkSelectionState
 ): BulkSelectionState => ({

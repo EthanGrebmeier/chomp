@@ -31,9 +31,11 @@ type GroceryListItemProps = {
   isBulkSelectionModeActive?: boolean;
   isBulkSelected?: boolean;
   onToggleBulkSelection?: (itemId: string) => void;
+  onEnterBulkSelectionModeWithItem?: (itemId: string) => void;
 };
 
 const SWIPE_ACTION_WIDTH = 88;
+const LONG_PRESS_SUPPRESSION_MS = 750;
 
 type SwipeDeleteActionProps = {
   drag: SharedValue<number>;
@@ -65,11 +67,13 @@ const GroceryListItemComponent = ({
   isBulkSelectionModeActive = false,
   isBulkSelected = false,
   onToggleBulkSelection,
+  onEnterBulkSelectionModeWithItem,
 }: GroceryListItemProps) => {
   const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
   const notes = item.notes?.trim();
   const hasMountedRef = useRef(false);
   const swipeableRef = useRef<SwipeableMethods | null>(null);
+  const lastLongPressAtRef = useRef(0);
 
   const theme = useTheme();
   const compactTextStyle = Platform.select({
@@ -121,12 +125,28 @@ const GroceryListItemComponent = ({
   const handleRowPress = () => {
     swipeableRef.current?.close();
 
+    if (Date.now() - lastLongPressAtRef.current < LONG_PRESS_SUPPRESSION_MS) {
+      return;
+    }
+
     if (isBulkSelectionModeActive) {
       onToggleBulkSelection?.(item.id);
       return;
     }
 
     onEdit?.(item);
+  };
+
+  const handleRowLongPress = () => {
+    lastLongPressAtRef.current = Date.now();
+    swipeableRef.current?.close();
+
+    if (isBulkSelectionModeActive) {
+      onToggleBulkSelection?.(item.id);
+      return;
+    }
+
+    onEnterBulkSelectionModeWithItem?.(item.id);
   };
 
   const checkboxChecked = isBulkSelectionModeActive
@@ -152,6 +172,8 @@ const GroceryListItemComponent = ({
       <HapticPressable
         className="flex-1 gap-1 py-1"
         onPress={handleRowPress}
+        onLongPress={handleRowLongPress}
+        delayLongPress={200}
         hapticType="light"
       >
         <View className="flex-row items-center justify-between ">
@@ -242,7 +264,9 @@ export const GroceryListItem = memo(
         nextProps.isBulkSelectionModeActive &&
       previousProps.isBulkSelected === nextProps.isBulkSelected &&
       previousProps.onEdit === nextProps.onEdit &&
-      previousProps.onToggleBulkSelection === nextProps.onToggleBulkSelection
+      previousProps.onToggleBulkSelection === nextProps.onToggleBulkSelection &&
+      previousProps.onEnterBulkSelectionModeWithItem ===
+        nextProps.onEnterBulkSelectionModeWithItem
     );
   }
 );

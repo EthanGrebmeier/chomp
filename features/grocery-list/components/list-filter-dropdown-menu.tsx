@@ -40,7 +40,7 @@ export const ListFilterDropdownMenu = ({
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger>
-        <Icon as={ListFilter} size={24} />
+        <Icon as={ListFilter} size={24} hitSlop={14} />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuSub>

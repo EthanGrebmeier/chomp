@@ -31,6 +31,7 @@ type GroceryItemsListProps = {
   isBulkSelectionModeActive?: boolean;
   selectedBulkItemIds?: Set<string>;
   onToggleBulkSelectionItem?: (itemId: string) => void;
+  onEnterBulkSelectionModeWithItem?: (itemId: string) => void;
   onSelectBulkSelectionSectionItems?: (itemIds: string[]) => void;
   onDeselectBulkSelectionSectionItems?: (itemIds: string[]) => void;
 };
@@ -75,6 +76,7 @@ export const GroceryItemsList = ({
   isBulkSelectionModeActive = false,
   selectedBulkItemIds = new Set<string>(),
   onToggleBulkSelectionItem,
+  onEnterBulkSelectionModeWithItem,
   onSelectBulkSelectionSectionItems,
   onDeselectBulkSelectionSectionItems,
 }: GroceryItemsListProps) => {
@@ -346,11 +348,13 @@ export const GroceryItemsList = ({
           isBulkSelectionModeActive={isBulkSelectionModeActive}
           isBulkSelected={selectedBulkItemIds.has(item.item.id)}
           onToggleBulkSelection={onToggleBulkSelectionItem}
+          onEnterBulkSelectionModeWithItem={onEnterBulkSelectionModeWithItem}
         />
       );
     },
     [
       isBulkSelectionModeActive,
+      onEnterBulkSelectionModeWithItem,
       onToggleBulkSelectionItem,
       presentEditSheet,
       renderSectionHeader,

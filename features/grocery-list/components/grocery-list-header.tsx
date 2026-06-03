@@ -150,6 +150,7 @@ export const GroceryListHeader = ({
                 <Button
                   variant="ghost"
                   className="h-8 px-0"
+                  hitSlop={14}
                   onPress={onExitBulkSelectionMode}
                 >
                   <Icon
@@ -163,7 +164,7 @@ export const GroceryListHeader = ({
                 <GroceryListDropdownMenu
                   items={items}
                   ownerId={ownerId}
-                  trigger={<Icon as={MoreHorizontal} size={24} />}
+                  trigger={<Icon hitSlop={14} as={MoreHorizontal} size={24} />}
                   onClearListPress={onClearListPress}
                   onSharePress={onSharePress}
                   onDeleteOrLeave={onDeleteOrLeave}
