@@ -52,7 +52,7 @@ export const RecipeAddToListButton = ({
     setSelectedListIdForIngredients(null);
     setIsSubmitting(false);
     if (listIdToNavigate) {
-      router.push(navigation.goToList(listIdToNavigate));
+      router.dismissTo(navigation.goToList(listIdToNavigate));
     }
   };
 
