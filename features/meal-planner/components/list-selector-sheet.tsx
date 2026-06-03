@@ -61,8 +61,7 @@ const formatMealPlanDate = (dateStr: string): string => {
 type MealPlanRowProps = {
   name: string;
   mealTag?: string;
-  detail?: string;
-  trailing?: string;
+  quantity?: string;
   isSelected: boolean;
   onToggle: () => void;
 };
@@ -70,57 +69,55 @@ type MealPlanRowProps = {
 const MealPlanRow = ({
   name,
   mealTag,
-  detail,
-  trailing,
+  quantity,
   isSelected,
   onToggle,
 }: MealPlanRowProps) => {
-  const compactTextStyle = Platform.select({
-    android: { includeFontPadding: false },
-    default: undefined,
-  });
-
-  const metaParts: string[] = [];
-  if (mealTag && mealTag !== 'None') metaParts.push(mealTag);
-  if (detail) metaParts.push(detail);
+  const subtitle = mealTag && mealTag !== 'None' ? mealTag : undefined;
 
   return (
-    <HapticPressable
-      onPress={onToggle}
-      hapticType="selection"
-      className="mb-2 flex-row items-center gap-3 px-4 py-2"
-    >
-      <Checkbox checked={isSelected} onPress={onToggle} className="mr-1" />
-      <View className="flex-1">
-        <View className="flex-row items-center justify-between">
+    <View className="mb-2 py-2">
+      <HapticPressable
+        onPress={onToggle}
+        hapticType="selection"
+        className="flex-1 flex-row items-center gap-3"
+      >
+        <Checkbox checked={isSelected} onPress={onToggle} className="mr-1" />
+        <View className="flex-1">
           <Text
             className={cn(
-              'flex-1 text-xl leading-[22px] tracking-tight',
+              'overflow-ellipsis text-xl font-medium',
               isSelected ? 'text-foreground' : 'text-muted-foreground'
             )}
-            style={compactTextStyle}
+            numberOfLines={2}
           >
             {name}
+            {quantity ? (
+              <Text
+                className={cn(
+                  'text-base font-normal text-muted-foreground',
+                  !isSelected && 'text-muted-foreground/80'
+                )}
+              >
+                {'  '}
+                {quantity}
+              </Text>
+            ) : null}
           </Text>
-          {trailing && (
+          {subtitle ? (
             <Text
-              className="ml-2 text-base leading-[22px] text-muted-foreground"
-              style={compactTextStyle}
+              className={cn(
+                'text-sm text-muted-foreground',
+                !isSelected && 'text-muted-foreground/80'
+              )}
+              numberOfLines={1}
             >
-              {trailing}
+              {subtitle}
             </Text>
-          )}
+          ) : null}
         </View>
-        {metaParts.length > 0 && (
-          <Text
-            className="text-base leading-[18px] text-muted-foreground"
-            style={compactTextStyle}
-          >
-            {metaParts.join(' · ')}
-          </Text>
-        )}
-      </View>
-    </HapticPressable>
+      </HapticPressable>
+    </View>
   );
 };
 
@@ -413,10 +410,6 @@ export const ListSelectorSheet = forwardRef<
           const totalAdded = result.addedRecipes + result.addedItems;
           if (totalAdded === 0) {
             toast.info('No new meals to add - all meals already added to list');
-          } else {
-            toast.success(
-              `Added ${totalAdded} item${totalAdded > 1 ? 's' : ''} to list`
-            );
           }
           sheetRef.current?.dismiss();
           router.back();
@@ -465,17 +458,10 @@ export const ListSelectorSheet = forwardRef<
       >
         <View>
           <BottomSheet.Header
-            className="mb-0 px-4"
+            className="mbpx-4"
             title="Add to Grocery List"
             subsection={
               <>
-                <BottomSheet.Subtext className="px-16">
-                  {isLoading
-                    ? 'Loading meals…'
-                    : unaddedCount === 0
-                      ? 'No meals to add.'
-                      : `${subtext}. Select the meals you want to add to your grocery list.`}
-                </BottomSheet.Subtext>
                 {unaddedCount === 0 && (
                   <BottomSheet.Subtext className="px-6">
                     <Text>Add meals to your meal plan to see them here.</Text>
@@ -514,7 +500,7 @@ export const ListSelectorSheet = forwardRef<
                         typeof selectedIngredientCount === 'number' &&
                         (mealPlanRecipe.ingredient_snapshots?.length ?? 0) > 0
                           ? selectedIngredientCount
-                          : recipe.recipe_ingredients?.length ?? 0;
+                          : (recipe.recipe_ingredients?.length ?? 0);
                       const servings = mealPlanRecipe.servings || 1;
                       return (
                         <MealPlanRecipeRow
@@ -536,7 +522,7 @@ export const ListSelectorSheet = forwardRef<
                         key={item.id}
                         name={item.name}
                         mealTag={item.mealTag}
-                        trailing={formatQuantityUnit(item.quantity, item.unit)}
+                        quantity={formatQuantityUnit(item.quantity, item.unit)}
                         isSelected={isSelected(item.id)}
                         onToggle={() => toggleItem(item.id)}
                       />
