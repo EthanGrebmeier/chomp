@@ -226,14 +226,25 @@ export const InstantAuthHandler = ({
   const { isLoading: isLoadingInstant, user: liveInstantUser } = db.useAuth();
 
   const isBlockingAuthLoad = isLoadingInstant && !hasAuthLoadingTimedOut;
+  const liveGuestInstantAuth =
+    !isSignedIn &&
+    !isLoadingInstant &&
+    liveInstantUser &&
+    !liveInstantUser.email
+      ? (liveInstantUser as InstantAuthSession)
+      : undefined;
   const instantAuthState = useMemo(
     () =>
       buildInstantAuthStateSnapshot({
         isSignedIn,
-        instantAuth: resolvedInstantAuth,
-        isResolvingAuthState,
+        instantAuth: liveGuestInstantAuth ?? resolvedInstantAuth,
+        isResolvingAuthState: liveGuestInstantAuth
+          ? false
+          : isResolvingAuthState,
         isBlockingAuthLoad,
-        didExpireSignedInSession,
+        didExpireSignedInSession: liveGuestInstantAuth
+          ? false
+          : didExpireSignedInSession,
         isGuestContinuationPending,
       }),
     [
@@ -242,6 +253,7 @@ export const InstantAuthHandler = ({
       isGuestContinuationPending,
       isResolvingAuthState,
       isSignedIn,
+      liveGuestInstantAuth,
       resolvedInstantAuth,
     ]
   );

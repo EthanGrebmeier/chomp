@@ -11,6 +11,10 @@ const DEFAULT_LIST_VISIBILITY_RETRY_DELAY_MS = 200;
 const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+const logDefaultListInitialization = (message: string, data?: unknown) => {
+  console.info(`[default-list-initialization] ${message}`, data ?? '');
+};
+
 const waitForDefaultGroceryList = async (listId: string) => {
   for (
     let attempt = 0;
@@ -23,11 +27,21 @@ const waitForDefaultGroceryList = async (listId: string) => {
       },
     });
 
+    logDefaultListInitialization('visibility check', {
+      attempt: attempt + 1,
+      listId,
+      userCount: data?.$users?.length ?? 0,
+      visibleListIds:
+        data?.$users?.[0]?.grocery_lists?.map((groceryList) => groceryList.id) ??
+        [],
+    });
+
     const hasList = data?.$users?.[0]?.grocery_lists?.some(
       (groceryList) => groceryList.id === listId
     );
 
     if (hasList) {
+      logDefaultListInitialization('list became visible', { listId });
       return;
     }
 
@@ -39,6 +53,12 @@ const waitForDefaultGroceryList = async (listId: string) => {
 
 export const initializeDefaultGroceryList = async () => {
   const authUser = await db.getAuth();
+  logDefaultListInitialization('auth loaded', {
+    hasAuthUser: Boolean(authUser),
+    authUserId: authUser?.id,
+    hasEmail: Boolean(authUser?.email),
+  });
+
   if (!authUser?.id) {
     return null;
   }
@@ -52,12 +72,24 @@ export const initializeDefaultGroceryList = async () => {
   const isGuest = !authUser.email;
   const currentUser = data?.$users?.[0];
   const existingListCount = currentUser?.grocery_lists?.length ?? 0;
+  logDefaultListInitialization('current user lists loaded', {
+    isGuest,
+    hasCurrentUser: Boolean(currentUser),
+    existingListCount,
+    existingListIds:
+      currentUser?.grocery_lists?.map((groceryList) => groceryList.id) ?? [],
+    hasInitializedGroceryList: currentUser?.hasInitializedGroceryList,
+  });
 
   if (
     (!isGuest && currentUser?.hasInitializedGroceryList) ||
     existingListCount > 0
   ) {
-    return currentUser?.grocery_lists?.[0]?.id ?? null;
+    const existingListId = currentUser?.grocery_lists?.[0]?.id ?? null;
+    logDefaultListInitialization('using existing list', {
+      listId: existingListId,
+    });
+    return existingListId;
   }
 
   const listId = id();
@@ -102,7 +134,14 @@ export const initializeDefaultGroceryList = async () => {
     );
   }
 
+  logDefaultListInitialization('creating default list', {
+    listId,
+    shareId,
+    authUserId: authUser.id,
+    isGuest,
+  });
   await db.transact(transactions);
+  logDefaultListInitialization('default list transaction resolved', { listId });
   await waitForDefaultGroceryList(listId);
   return listId;
 };

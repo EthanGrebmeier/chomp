@@ -25,7 +25,9 @@ export default function Welcome() {
     try {
       const listId = await continueAsGuest();
       router.replace(navigation.goToList(listId ?? undefined));
-    } catch {
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[guest-continuation] welcome screen failed', error);
       toast.error('Failed to continue as a guest. Please try again.');
       setIsContinuingAsGuest(false);
     }

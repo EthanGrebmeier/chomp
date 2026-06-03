@@ -16,7 +16,7 @@ const rules = {
     bind: ['isSelf', 'auth.id == data.id'],
     allow: {
       view: 'isSelf',
-      create: 'false',
+      create: 'isSelf',
       update: 'isSelf',
     },
   },

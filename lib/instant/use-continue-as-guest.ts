@@ -4,9 +4,25 @@ import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/u
 
 import { db } from '.';
 
-const GUEST_AUTH_RETRY_COUNT = 10;
-const GUEST_AUTH_RETRY_DELAY_MS = 100;
+const GUEST_AUTH_RETRY_COUNT = 20;
+const GUEST_AUTH_RETRY_DELAY_MS = 250;
 type GuestContinuationListener = (isPending: boolean) => void;
+
+const describeAuth = (auth: Awaited<ReturnType<typeof db.getAuth>>) => {
+  if (!auth) {
+    return { status: 'none' };
+  }
+
+  return {
+    status: auth.email ? 'email-session' : 'guest-session',
+    id: auth.id,
+    hasEmail: Boolean(auth.email),
+  };
+};
+
+const logGuestContinuation = (message: string, data?: unknown) => {
+  console.info(`[guest-continuation] ${message}`, data ?? '');
+};
 
 const guestContinuationListeners = new Set<GuestContinuationListener>();
 let isGuestContinuationPending = false;
@@ -35,8 +51,13 @@ export const getIsGuestContinuationPending = () => isGuestContinuationPending;
 const waitForGuestAuth = async () => {
   for (let attempt = 0; attempt < GUEST_AUTH_RETRY_COUNT; attempt += 1) {
     const auth = await db.getAuth();
+    logGuestContinuation('waitForGuestAuth attempt', {
+      attempt: attempt + 1,
+      auth: describeAuth(auth),
+    });
 
     if (auth && !auth.email) {
+      logGuestContinuation('guest auth became available', describeAuth(auth));
       return auth;
     }
 
@@ -51,21 +72,32 @@ const waitForGuestAuth = async () => {
 export const useContinueAsGuest = () => {
   return useCallback(async () => {
     setIsGuestContinuationPending(true);
+    logGuestContinuation('started');
 
     try {
       const existingAuth = await db.getAuth();
+      logGuestContinuation('existing auth loaded', describeAuth(existingAuth));
 
       if (existingAuth?.email) {
+        logGuestContinuation('signing out existing email session');
         await db.auth.signOut();
       }
 
       if (!existingAuth || existingAuth.email) {
+        logGuestContinuation('calling signInAsGuest');
         await db.auth.signInAsGuest();
+        logGuestContinuation('signInAsGuest resolved');
       }
 
       await waitForGuestAuth();
-      return await initializeDefaultGroceryList();
+      const listId = await initializeDefaultGroceryList();
+      logGuestContinuation('default list initialization resolved', { listId });
+      return listId;
+    } catch (error) {
+      console.error('[guest-continuation] failed', error);
+      throw error;
     } finally {
+      logGuestContinuation('finished');
       setIsGuestContinuationPending(false);
     }
   }, []);
