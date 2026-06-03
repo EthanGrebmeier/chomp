@@ -189,7 +189,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       },
       {
         onSuccess: () => {
-          toast.success(`${selectedRecipe.name} added to meal plan`);
           resetSheetState();
           sheetRef.current?.dismiss();
         },
@@ -226,7 +225,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       },
       {
         onSuccess: () => {
-          toast.success(`${itemName} added to meal plan`);
           resetMealPlanItemState();
           handleItemSuccess();
         },

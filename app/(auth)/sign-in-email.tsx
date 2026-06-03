@@ -140,11 +140,6 @@ const isEmailCodeUnavailableError = (error: unknown) => {
   );
 };
 
-const getEmailDeliverySuccessMessage = (strategy: EmailDeliveryStrategy) =>
-  strategy === 'email_code'
-    ? 'Verification code sent to your email'
-    : 'Verification link sent to your email';
-
 export default function SignInEmail() {
   const { signIn, setActive, isLoaded: isSignInLoaded } = useSignIn();
   const { signUp, isLoaded: isSignUpLoaded } = useSignUp();
@@ -424,8 +419,7 @@ export default function SignInEmail() {
     });
 
     try {
-      const strategy = await sendSignInEmailCode(normalizedEmail);
-      toast.success(getEmailDeliverySuccessMessage(strategy));
+      await sendSignInEmailCode(normalizedEmail);
     } catch (err: unknown) {
       const clerkError = getClerkError(err);
       const errorMessage = getErrorMessage(err);
@@ -436,8 +430,7 @@ export default function SignInEmail() {
         });
 
         try {
-          const strategy = await sendSignUpEmailCode(normalizedEmail);
-          toast.success(getEmailDeliverySuccessMessage(strategy));
+          await sendSignUpEmailCode(normalizedEmail);
         } catch (signUpError) {
           errorEmailAuth('sign-up email delivery failed', {
             email: maskEmail(normalizedEmail),
@@ -580,7 +573,6 @@ export default function SignInEmail() {
       }
 
       clearCodeInput();
-      toast.success('Verification code resent');
     } catch (err: unknown) {
       errorEmailAuth('resending email code failed', {
         pendingFlow,

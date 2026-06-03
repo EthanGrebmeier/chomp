@@ -74,7 +74,6 @@ export const JoinByCodeSheet = forwardRef<
       try {
         const result = await joinGroceryListByCode.mutateAsync(joinCode);
         if (result.success) {
-          toast.success(`Joined "${result.listName}"`);
           resetCode();
           sheetRef.current?.dismiss();
           onJoined(result.listId);

@@ -410,7 +410,6 @@ const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
       selectedCloudSavedItemStoreId,
       selectedLocalSavedItemId,
     });
-    toast.success(`${item.name} added`);
   };
 
   return (

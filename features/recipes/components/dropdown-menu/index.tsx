@@ -59,13 +59,9 @@ export const RecipeDropdownMenu = ({
     }
 
     try {
-      const result = await Share.share({
+      await Share.share({
         url: shareUrl,
       });
-
-      if (result.action === Share.sharedAction) {
-        toast.success('Recipe link shared');
-      }
     } catch {
       toast.error('Failed to share recipe link');
     }
@@ -73,7 +69,6 @@ export const RecipeDropdownMenu = ({
 
   const handleDelete = () => {
     // Navigate away immediately so we do not briefly render the deleted recipe state.
-    toast.success('Recipe deleted');
     router.back();
     deleteRecipe(recipe.id, {
       onError: () => {
@@ -99,9 +94,6 @@ export const RecipeDropdownMenu = ({
         },
       },
       {
-        onSuccess: () => {
-          toast.success('Recipe updated');
-        },
         onError: () => {
           toast.error('Failed to update recipe');
         },

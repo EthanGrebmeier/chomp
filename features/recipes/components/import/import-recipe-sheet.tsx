@@ -226,7 +226,6 @@ export const ImportRecipeSheet = forwardRef<
         if (!isSheetOpenRef.current) return;
 
         saveSuccess(result.id);
-        toast.success('Recipe imported successfully');
         onImportSuccess?.(result.id);
         sheetRef.current?.dismiss();
       },

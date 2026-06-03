@@ -7,7 +7,6 @@ import {
   useState,
 } from 'react';
 import { View } from 'react-native';
-import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { CategorySheet } from '../../../components/item-sheet/category-sheet';
@@ -191,7 +190,6 @@ export const SavedItemSheetProvider = ({
         category: item.category,
         storeId: item.storeId,
       });
-      toast.success(`${item.name} added to saved items`);
     }
   };
 

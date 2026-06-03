@@ -122,10 +122,8 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
           storeId: editingStore.id,
           updates: { name: trimmedName },
         });
-        toast.success(`Store "${trimmedName}" updated`);
       } else {
         await createStore({ name: trimmedName });
-        toast.success(`Store "${trimmedName}" created`);
       }
       sheetRef.current?.dismiss();
       reset();

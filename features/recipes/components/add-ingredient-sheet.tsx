@@ -7,7 +7,6 @@ import {
   useState,
 } from 'react';
 import { View } from 'react-native';
-import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { ItemForm } from '../../../components/item-sheet/item-form';
@@ -143,7 +142,7 @@ export const AddIngredientProvider = ({
   // In edit mode the Update Ingredient button is gone; all persistence
   // flows through useLiveIngredientSync, so onSubmit has nothing to do.
   // Add mode still runs its single-shot addRecipeIngredient path with the
-  // success toast and sheet-stays-open continuous-entry behavior.
+  // sheet-stays-open continuous-entry behavior.
   const onSubmit = ({ item }: { item: BaseGroceryItem }) => {
     if (isEditing) return;
     addRecipeIngredient({
@@ -155,7 +154,6 @@ export const AddIngredientProvider = ({
       notes: item.notes,
       storeId: item.storeId,
     });
-    toast.success(`${item.name} added`);
   };
 
   // In edit mode, route autocomplete picks through the live-sync hook so it

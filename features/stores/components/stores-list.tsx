@@ -73,7 +73,6 @@ export const StoresList = ({ stores, onEditStore }: StoresListProps) => {
   const handleDelete = async (store: Store) => {
     try {
       await deleteStore({ storeId: store.id });
-      toast.success(`Store "${store.name}" deleted`);
     } catch (error) {
       toast.error('Failed to delete store');
     }

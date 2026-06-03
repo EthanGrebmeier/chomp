@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { toast } from 'sonner-native';
 
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -25,7 +24,6 @@ export default function JoinListByCode() {
   } = useJoinGroceryListByCode({
     onSuccess: result => {
       if (result.success) {
-        toast.success(`Joined "${result.listName}"`);
         router.replace(navigation.goToList(result.listId));
       }
     },

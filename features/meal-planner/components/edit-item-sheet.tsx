@@ -63,7 +63,6 @@ const EditItemSheetContent = ({
               },
               {
                 onSuccess: () => {
-                  toast.success('Item deleted');
                   onClose();
                 },
                 onError: () => {

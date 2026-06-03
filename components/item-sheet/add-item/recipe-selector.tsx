@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, ListRenderItemInfo, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { toast } from 'sonner-native';
 
 import {
   CreateRecipeSheet,
@@ -91,7 +90,6 @@ export const RecipeSelector = ({
         onSuccess: result => {
           onDismiss?.();
           router.push(navigation.goToRecipe(result.id));
-          toast.success('Recipe created');
         },
       }
     );

@@ -38,15 +38,10 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
     const handleShareLink = async () => {
       try {
         const deepLinkUrl = buildListURL(joinCode);
-        const result = await Share.share({
+        await Share.share({
           message: deepLinkUrl,
           url: deepLinkUrl,
         });
-
-        if (result.action === Share.sharedAction) {
-          // Content was shared
-          toast.success('Invite link shared');
-        }
       } catch (error) {
         toast.error('Failed to share invite link');
         console.log('Error sharing:', error);

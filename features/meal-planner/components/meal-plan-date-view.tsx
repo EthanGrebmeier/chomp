@@ -265,8 +265,6 @@ export const MealPlanDateView = ({
           const totalAdded = result.addedRecipes + result.addedItems;
           if (totalAdded === 0) {
             toast.info('Already added to list');
-          } else {
-            toast.success(`Added ${quickReviewMealPlanRecipe.recipe.name} to list`);
           }
           closeQuickReviewSheet();
         },
@@ -316,8 +314,6 @@ export const MealPlanDateView = ({
             const totalAdded = result.addedRecipes + result.addedItems;
             if (totalAdded === 0) {
               toast.info('Already added to list');
-            } else {
-              toast.success(`Added ${name} to list`);
             }
           },
           onError: () => {
