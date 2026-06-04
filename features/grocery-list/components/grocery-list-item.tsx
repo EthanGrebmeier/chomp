@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -138,6 +139,7 @@ const GroceryListItemComponent = ({
   };
 
   const handleRowLongPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     lastLongPressAtRef.current = Date.now();
     swipeableRef.current?.close();
 
