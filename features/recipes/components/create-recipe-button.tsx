@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 
+import { useInstantAuthState } from '@/lib/instant/use-clerk-auth';
 import { navigation } from '@/lib/navigation';
 
 import { Button } from '../../../components/ui/button';
@@ -14,13 +15,17 @@ import {
   DropdownMenuRoot,
 } from '../../../components/ui/dropdown-menu';
 import { Icon } from '../../../components/ui/icon';
-import { useCreateRecipe } from '../hooks';
+import { useCreateRecipe } from '../hooks/useCreateRecipe';
 
 import { CreateRecipeSheet, CreateRecipeSheetRef } from './create-recipe-sheet';
 import {
   ImportRecipeSheet,
   ImportRecipeSheetRef,
 } from './import/import-recipe-sheet';
+import {
+  GuestRecipeImportSheet,
+  GuestRecipeImportSheetRef,
+} from './import/guest-recipe-import-sheet';
 
 type CreateRecipeButtonProps = {
   onSuccess?: (result: { id: string }) => void;
@@ -32,14 +37,21 @@ export const CreateRecipeButton = ({
   listId,
 }: CreateRecipeButtonProps) => {
   const { mutate: createRecipe } = useCreateRecipe();
+  const { status } = useInstantAuthState();
   const createSheetRef = useRef<CreateRecipeSheetRef>(null);
   const importSheetRef = useRef<ImportRecipeSheetRef>(null);
+  const guestImportSheetRef = useRef<GuestRecipeImportSheetRef>(null);
 
   const handleCreateRecipe = () => {
     createSheetRef.current?.present();
   };
 
   const handleImportFromUrl = () => {
+    if (status === 'guest') {
+      guestImportSheetRef.current?.present();
+      return;
+    }
+
     importSheetRef.current?.present();
   };
 
@@ -108,6 +120,7 @@ export const CreateRecipeButton = ({
         ref={importSheetRef}
         onImportSuccess={handleImportSuccess}
       />
+      <GuestRecipeImportSheet ref={guestImportSheetRef} />
     </>
   );
 };
