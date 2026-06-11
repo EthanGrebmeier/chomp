@@ -256,7 +256,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
         <BottomSheet
           ref={createStoreSheetRef}
           name="create-store-sheet"
-          detents={[0.3]}
+          detents={['auto']}
           footer={
             <View className="px-10 pb-4">
               <Button

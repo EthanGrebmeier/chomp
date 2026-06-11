@@ -13,7 +13,7 @@ import { SavedItemsListSkeleton } from '@/features/saved-items/components/saved-
 import {
   StoreSheetProvider,
   useStoreSheet,
-} from '@/features/stores/components/store-sheet';
+} from '@/features/stores/components/create-store-sheet';
 import { StoresList } from '@/features/stores/components/stores-list';
 import { useStores } from '@/features/stores/instant/use-stores';
 
