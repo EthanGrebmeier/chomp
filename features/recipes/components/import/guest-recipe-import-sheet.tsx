@@ -1,15 +1,11 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
-import { SparklesIcon } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { THEME } from '@/lib/theme';
 
 export type GuestRecipeImportSheetRef = {
   present: () => void;
@@ -19,8 +15,6 @@ export type GuestRecipeImportSheetRef = {
 export const GuestRecipeImportSheet = forwardRef<GuestRecipeImportSheetRef>(
   (_, ref) => {
     const sheetRef = useRef<TrueSheet>(null);
-    const { colorScheme } = useColorScheme();
-    const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
 
     useImperativeHandle(ref, () => ({
       present: () => sheetRef.current?.present(),
@@ -41,8 +35,8 @@ export const GuestRecipeImportSheet = forwardRef<GuestRecipeImportSheetRef>(
             <Button size="lg" onPress={handleCreateAccount}>
               <Text>Create Account</Text>
             </Button>
-            <Button 
-            size="lg"
+            <Button
+              size="lg"
               variant="outline"
               onPress={() => sheetRef.current?.dismiss()}
             >
