@@ -31,8 +31,12 @@ const EditItemSheetContent = ({
 }) => {
   const {
     itemName,
+    itemNameInputKey,
+    itemNameDefaultValue,
+    getItemName,
     setItemName,
-    itemNotes,
+    itemNotesInputKey,
+    itemNotesDefaultValue,
     setItemNotes,
     showMatchingItems,
     setShowMatchingItems,
@@ -44,10 +48,11 @@ const EditItemSheetContent = ({
 
   const handleRemoveItem = () => {
     if (!itemToEdit) return;
+    const currentItemName = getItemName();
 
     Alert.alert(
       'Delete Item',
-      `Are you sure you want to delete "${itemName}" from your meal plan?`,
+      `Are you sure you want to delete "${currentItemName}" from your meal plan?`,
       [
         {
           text: 'Cancel',
@@ -82,7 +87,9 @@ const EditItemSheetContent = ({
         <View className="flex-1">
           <ItemInput
             placeholder="Item name"
-            value={itemName}
+            inputKey={itemNameInputKey}
+            defaultValue={itemNameDefaultValue}
+            matchingValue={itemName}
             onChangeText={text => {
               setItemName(text);
               setShowMatchingItems(true);
@@ -102,9 +109,10 @@ const EditItemSheetContent = ({
 
       <View className="gap-4">
         <BottomSheet.BareTextInput
+          key={itemNotesInputKey}
           className="min-h-24 text-base text-foreground"
           placeholder="Notes"
-          value={itemNotes}
+          defaultValue={itemNotesDefaultValue}
           onChangeText={setItemNotes}
           multiline
           textAlignVertical="top"
@@ -128,6 +136,8 @@ const EditItemSheetContainer = ({
   const {
     itemName,
     itemNotes,
+    getItemName,
+    getItemNotes,
     quantity,
     setQuantity,
     unit,
@@ -168,10 +178,10 @@ const EditItemSheetContainer = ({
     });
 
   const getCurrentUpdates = () => ({
-    name: itemName.trim(),
+    name: getItemName().trim(),
     quantity,
     unit,
-    notes: itemNotes.trim() || undefined,
+    notes: getItemNotes().trim() || undefined,
     category,
     storeId,
     date: selectedDate,
@@ -246,6 +256,8 @@ const EditItemSheetContainer = ({
     };
   }, [
     category,
+    getItemName,
+    getItemNotes,
     isValid,
     itemName,
     itemNotes,

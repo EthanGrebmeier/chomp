@@ -8,7 +8,8 @@ import { MealTagFilterSelector } from './meal-tag-filter-selector';
 import { RecipeSortBy, RecipeSortBySelector } from './recipe-sort-by-selector';
 
 type RecipeFiltersProps = {
-  searchQuery: string;
+  searchDefaultValue: string;
+  searchInputKey: number;
   onSearchChange: (value: string) => void;
   mealTag?: string;
   onMealTagChange: (value?: string) => void;
@@ -17,7 +18,8 @@ type RecipeFiltersProps = {
 };
 
 export const RecipeFilters = ({
-  searchQuery,
+  searchDefaultValue,
+  searchInputKey,
   onSearchChange,
   mealTag,
   onMealTagChange,
@@ -32,9 +34,10 @@ export const RecipeFilters = ({
             <Icon as={SearchIcon} size={18} className="text-muted-foreground" />
           </View>
           <TextInput
+            key={searchInputKey}
             className="pl-10"
             placeholder="Search recipes..."
-            value={searchQuery}
+            defaultValue={searchDefaultValue}
             onChangeText={onSearchChange}
             autoCorrect={false}
           />

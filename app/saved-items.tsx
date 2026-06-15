@@ -1,15 +1,17 @@
 import { PlusIcon, SearchIcon } from 'lucide-react-native';
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { useDebounceCallback } from 'usehooks-ts';
 
-import { TextInput } from '@/components/text-input';
 import { Heading } from '@/components/text/heading';
+import { TextInput } from '@/components/text-input';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { useSettings } from '@/features/grocery-list/hooks/useSettings';
 import { useUpdateSettings } from '@/features/grocery-list/hooks/useUpdateSettings';
 import {
@@ -22,12 +24,23 @@ import { SavedItemsListSkeleton } from '@/features/saved-items/components/saved-
 import { SortBySelector } from '@/features/saved-items/components/sort-by-selector';
 import { useUnifiedSavedItems } from '@/features/saved-items/unified/use-unified-saved-items';
 
+const SEARCH_QUERY_DEBOUNCE_MS = 300;
+
 const SavedItemsContent = () => {
   const { data: savedItems, isLoading } = useUnifiedSavedItems();
   const { data: settings } = useSettings();
   const { mutate: updateSettings } = useUpdateSettings();
   const { present } = useSavedItemSheet();
   const [searchQuery, setSearchQuery] = useState('');
+  const {
+    inputKey: searchInputKey,
+    defaultValue: searchDefaultValue,
+    handleChangeText: handleSearchInputChange,
+  } = useUncontrolledTextInput();
+  const debouncedSetSearchQuery = useDebounceCallback(
+    setSearchQuery,
+    SEARCH_QUERY_DEBOUNCE_MS
+  );
 
   const [sortBy, setSortBy] = useState<'name' | 'category'>(
     settings?.savedItemsSortBy ?? 'name'
@@ -50,6 +63,14 @@ const SavedItemsContent = () => {
     setFilterCategory(category);
     updateSettings({ savedItemsFilterCategory: category ?? null });
   };
+
+  const handleSearchChange = useCallback(
+    (text: string) => {
+      handleSearchInputChange(text);
+      debouncedSetSearchQuery(text);
+    },
+    [debouncedSetSearchQuery, handleSearchInputChange]
+  );
 
   const filteredItems = useMemo(() => {
     let items = savedItems;
@@ -84,10 +105,11 @@ const SavedItemsContent = () => {
             <Icon as={SearchIcon} size={18} className="text-muted-foreground" />
           </View>
           <TextInput
+            key={searchInputKey}
             className="pl-10"
             placeholder="Search items..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+            defaultValue={searchDefaultValue}
+            onChangeText={handleSearchChange}
             autoCorrect={false}
           />
         </View>

@@ -11,7 +11,9 @@ import { cn } from '@/lib/utils';
 import { BottomSheet } from '../../../../components/bottom-sheet';
 
 export type UrlInputProps = {
-  value: string;
+  inputKey: number;
+  defaultValue: string;
+  hasValue: boolean;
   onChangeText: (text: string) => void;
   onSubmit: () => void;
   error?: string;
@@ -24,7 +26,19 @@ export type UrlInputRef = {
 };
 
 export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
-  ({ value, onChangeText, onSubmit, error, disabled, className }, ref) => {
+  (
+    {
+      inputKey,
+      defaultValue,
+      hasValue,
+      onChangeText,
+      onSubmit,
+      error,
+      disabled,
+      className,
+    },
+    ref
+  ) => {
     const inputRef = useRef<RNTextInput>(null);
     const { colorScheme } = useColorScheme();
     const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
@@ -37,6 +51,7 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
 
     const handleClear = useCallback(() => {
       onChangeText('');
+      inputRef.current?.setNativeProps({ text: '' });
       inputRef.current?.focus();
     }, [onChangeText]);
 
@@ -48,8 +63,9 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
           </Text>
           <View className="relative flex-1">
             <BottomSheet.TextInput
+              key={inputKey}
               ref={inputRef}
-              value={value}
+              defaultValue={defaultValue}
               onChangeText={onChangeText}
               onSubmitEditing={onSubmit}
               placeholder="https://example.com/recipe"
@@ -65,7 +81,7 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
                 disabled && 'opacity-50'
               )}
             />
-            {value.length > 0 && !disabled && (
+            {hasValue && !disabled && (
               <View className="absolute right-2 top-0 h-12 items-center justify-center">
                 <Button
                   variant="ghost"

@@ -1,6 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { LinkIcon } from 'lucide-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -10,6 +10,7 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
+import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
 
 type RecipeUrlSheetProps = {
   sourceUrl?: string;
@@ -23,19 +24,26 @@ export const RecipeUrlSheet = ({
   canGoBack = true,
 }: RecipeUrlSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
-  const [draftUrl, setDraftUrl] = useState(sourceUrl ?? '');
+  const draftUrlInput = useUncontrolledTextInput(sourceUrl ?? '');
+  const {
+    inputKey: draftUrlInputKey,
+    defaultValue: draftUrlDefaultValue,
+    handleChangeText: handleDraftUrlChange,
+    getValue: getDraftUrl,
+    reset: resetDraftUrl,
+  } = draftUrlInput;
 
   useEffect(() => {
-    setDraftUrl(sourceUrl ?? '');
-  }, [sourceUrl]);
+    resetDraftUrl(sourceUrl ?? '');
+  }, [resetDraftUrl, sourceUrl]);
 
   const openSheet = () => {
-    setDraftUrl(sourceUrl ?? '');
+    resetDraftUrl(sourceUrl ?? '');
     sheetRef.current?.present();
   };
 
   const handleSave = () => {
-    onSelect(draftUrl.trim() || undefined);
+    onSelect(getDraftUrl().trim() || undefined);
     sheetRef.current?.dismiss();
   };
 
@@ -77,8 +85,9 @@ export const RecipeUrlSheet = ({
 
           <View className="gap-4 pb-4">
             <BottomSheet.TextInput
-              value={draftUrl}
-              onChangeText={setDraftUrl}
+              key={draftUrlInputKey}
+              defaultValue={draftUrlDefaultValue}
+              onChangeText={handleDraftUrlChange}
               onSubmitEditing={handleSave}
               placeholder="https://example.com/recipe"
               keyboardType="url"

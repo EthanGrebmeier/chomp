@@ -342,6 +342,7 @@ const AddItemSheet = ({
                     recipe={selectedRecipe}
                     onBack={handleBackToRecipes}
                     onDismiss={() => ref.current?.dismiss()}
+                    listId={groceryListId}
                     selectedIds={selectedIngredientIds}
                     onToggleIngredient={toggleIngredient}
                     onToggleAll={toggleAllIngredients}
@@ -356,7 +357,7 @@ const AddItemSheet = ({
                 >
                   <RecipeSelector
                     onSelectRecipe={handleRecipeSelect}
-                    onDismiss={() => ref.current?.dismiss()}
+                    listId={groceryListId}
                   />
                 </Animated.View>
               )}

@@ -1,14 +1,16 @@
 import { PlusIcon, SearchIcon } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { useDebounceCallback } from 'usehooks-ts';
 
-import { TextInput } from '@/components/text-input';
 import { Heading } from '@/components/text/heading';
+import { TextInput } from '@/components/text-input';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { SavedItemsListSkeleton } from '@/features/saved-items/components/saved-items-list-skeleton';
 import {
   StoreSheetProvider,
@@ -17,10 +19,29 @@ import {
 import { StoresList } from '@/features/stores/components/stores-list';
 import { useStores } from '@/features/stores/instant/use-stores';
 
+const SEARCH_QUERY_DEBOUNCE_MS = 300;
+
 const StoresContent = () => {
   const { data: stores, isLoading } = useStores();
   const { present } = useStoreSheet();
   const [searchQuery, setSearchQuery] = useState('');
+  const {
+    inputKey: searchInputKey,
+    defaultValue: searchDefaultValue,
+    handleChangeText: handleSearchInputChange,
+  } = useUncontrolledTextInput();
+  const debouncedSetSearchQuery = useDebounceCallback(
+    setSearchQuery,
+    SEARCH_QUERY_DEBOUNCE_MS
+  );
+
+  const handleSearchChange = useCallback(
+    (text: string) => {
+      handleSearchInputChange(text);
+      debouncedSetSearchQuery(text);
+    },
+    [debouncedSetSearchQuery, handleSearchInputChange]
+  );
 
   const filteredStores = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -46,10 +67,11 @@ const StoresContent = () => {
             <Icon as={SearchIcon} size={18} className="text-muted-foreground" />
           </View>
           <TextInput
+            key={searchInputKey}
             className="pl-10"
             placeholder="Search stores..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+            defaultValue={searchDefaultValue}
+            onChangeText={handleSearchChange}
             autoCorrect={false}
           />
         </View>

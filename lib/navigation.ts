@@ -80,8 +80,10 @@ export function buildMealPlanSheetUrl(params: ListMealPlanParams): Href {
  */
 export function buildRecipeUrl(params: RecipeParams) {
   const { recipeId, listId } = params;
-  const query = listId ? `?listId=${listId}` : '';
-  return `/recipes/${recipeId}${query}` as const;
+  return {
+    pathname: '/recipes/[recipeId]',
+    params: listId ? { recipeId, listId } : { recipeId },
+  } as unknown as Href;
 }
 
 /**

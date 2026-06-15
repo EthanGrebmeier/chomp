@@ -8,6 +8,7 @@ import { MetaBarLayout } from '../../../components/meta-bar-layout';
 import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
+import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
 import { MealTimeSheet } from '../../meal-planner/components/meal-time-sheet';
 
 import { RecipeUrlSheet } from './recipe-url-sheet';
@@ -38,11 +39,14 @@ export const CreateRecipeSheet = forwardRef<
   CreateRecipeSheetProps
 >(({ onSubmit, onClose, defaultValues }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
-  const [name, setName] = useState(defaultValues?.name ?? '');
-  const [mealTag, setMealTag] = useState<string | undefined>(undefined);
-  const [description, setDescription] = useState(
+  const nameInput = useUncontrolledTextInput(defaultValues?.name ?? '');
+  const descriptionInput = useUncontrolledTextInput(
     defaultValues?.description ?? ''
   );
+  const [canSubmit, setCanSubmit] = useState(
+    Boolean(defaultValues?.name?.trim())
+  );
+  const [mealTag, setMealTag] = useState<string | undefined>(undefined);
   const [sourceUrl, setSourceUrl] = useState(defaultValues?.sourceUrl ?? '');
   const nameInputRef = useRef<TextInput>(null);
   const isEditing = !!defaultValues;
@@ -50,9 +54,11 @@ export const CreateRecipeSheet = forwardRef<
   useImperativeHandle(ref, () => ({
     present: () => {
       // Reset or set initial values when opening
-      setName(defaultValues?.name ?? '');
+      const nextName = defaultValues?.name ?? '';
+      nameInput.reset(nextName);
+      descriptionInput.reset(defaultValues?.description ?? '');
+      setCanSubmit(Boolean(nextName.trim()));
       setMealTag(defaultValues?.mealTag ?? undefined);
-      setDescription(defaultValues?.description ?? '');
       setSourceUrl(defaultValues?.sourceUrl ?? '');
       sheetRef.current?.present();
     },
@@ -62,17 +68,23 @@ export const CreateRecipeSheet = forwardRef<
   }));
 
   const handleSubmit = () => {
-    if (!name.trim()) {
+    const name = nameInput.getValue().trim();
+    if (!name) {
       return;
     }
 
     onSubmit({
-      name: name.trim(),
+      name,
       mealTag,
-      description: description.trim() || undefined,
+      description: descriptionInput.getValue().trim() || undefined,
       sourceUrl: sourceUrl.trim() || undefined,
     });
     sheetRef.current?.dismiss();
+  };
+
+  const handleNameChange = (text: string) => {
+    nameInput.handleChangeText(text);
+    setCanSubmit(Boolean(text.trim()));
   };
 
   const handleClose = () => {
@@ -87,7 +99,7 @@ export const CreateRecipeSheet = forwardRef<
       onStartClose={handleClose}
       footer={
         <View className="px-10 pb-4">
-          <Button onPress={handleSubmit} disabled={!name.trim()}>
+          <Button onPress={handleSubmit} disabled={!canSubmit}>
             <Text>{isEditing ? 'Update Recipe' : 'Create Recipe'}</Text>
           </Button>
         </View>
@@ -102,19 +114,20 @@ export const CreateRecipeSheet = forwardRef<
         <View>
           <View>
             <BottomSheet.BareTextInput
+              key={nameInput.inputKey}
               ref={nameInputRef}
-              value={name}
-              onChangeText={setName}
+              defaultValue={nameInput.defaultValue}
+              onChangeText={handleNameChange}
               placeholder="Recipe name"
               className="text-2xl font-bold "
-              autoFocus
               autoCapitalize="words"
             />
           </View>
           <View>
             <BottomSheet.BareTextInput
-              value={description}
-              onChangeText={setDescription}
+              key={descriptionInput.inputKey}
+              defaultValue={descriptionInput.defaultValue}
+              onChangeText={descriptionInput.handleChangeText}
               placeholder="Description"
               multiline
               numberOfLines={5}

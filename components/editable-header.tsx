@@ -1,10 +1,11 @@
-import { ReactNode, forwardRef, useRef, useState } from 'react';
+import { ReactNode, forwardRef, useRef } from 'react';
 import { TextInput, View } from 'react-native';
 import { useDebounceCallback } from 'usehooks-ts';
 
 import { cn } from '../lib/utils';
 
 import { TextDisplayInput } from './text-input';
+import { useUncontrolledTextInput } from './use-uncontrolled-text-input';
 
 export type EditableHeaderProps = {
   /** The current name value */
@@ -49,14 +50,14 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
     },
     ref
   ) => {
-    const [localValue, setLocalValue] = useState(value);
+    const titleInput = useUncontrolledTextInput(value);
     const hasClearedName = useRef(false);
     const previousText = useRef(value);
 
     const debouncedOnChangeText = useDebounceCallback(onChangeText, 500);
 
     const handleChangeText = (text: string) => {
-      setLocalValue(text);
+      titleInput.handleChangeText(text);
       debouncedOnChangeText(text);
 
       // Handle backspace clearing in autofocus mode
@@ -68,7 +69,7 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
         text.length === 0
       ) {
         // If backspace was pressed and we're in autofocus mode, clear the entire title
-        setLocalValue('');
+        titleInput.reset();
         debouncedOnChangeText('');
         hasClearedName.current = true;
         previousText.current = '';
@@ -86,7 +87,7 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
         !hasClearedName.current
       ) {
         // If backspace is pressed and we're in autofocus mode with default name, clear the entire title
-        setLocalValue('');
+        titleInput.reset();
         debouncedOnChangeText('');
         hasClearedName.current = true;
       }
@@ -96,9 +97,10 @@ export const EditableHeader = forwardRef<TextInput, EditableHeaderProps>(
     return (
       <View className={cn('shrink px-4', className)}>
         <TextDisplayInput
+          key={titleInput.inputKey}
           ref={ref}
           onChangeText={handleChangeText}
-          value={localValue}
+          defaultValue={titleInput.defaultValue}
           multiline={multiline}
           onFocus={onFocus}
           onBlur={onBlur}

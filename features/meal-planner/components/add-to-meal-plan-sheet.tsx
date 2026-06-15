@@ -359,6 +359,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               <IngredientSelector
                 recipe={selectedRecipe}
                 mode="meal-plan"
+                listId={listId}
                 bottomContentInset={180}
                 mealPlanIngredients={mealPlanIngredients}
                 onBack={handleBackToRecipes}
@@ -376,10 +377,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               />
             </Animated.View>
           ) : (
-            <RecipeSelector
-              onSelectRecipe={handleSelectRecipe}
-              onDismiss={() => sheetRef.current?.dismiss()}
-            />
+            <RecipeSelector onSelectRecipe={handleSelectRecipe} />
           )
         ) : (
           <View className="px-4">

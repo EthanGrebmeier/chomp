@@ -3,11 +3,18 @@ import { BottomSheet } from '../bottom-sheet';
 import { useItemSheet } from './use-item-sheet';
 
 export const NotesInput = () => {
-  const { notesInputValue, onChangeNotesText } = useItemSheet();
+  const {
+    notesInputKey,
+    notesInputDefaultValue,
+    notesInputRef,
+    onChangeNotesText,
+  } = useItemSheet();
 
   return (
     <BottomSheet.BareTextInput
-      value={notesInputValue}
+      key={notesInputKey}
+      ref={notesInputRef}
+      defaultValue={notesInputDefaultValue}
       onChangeText={onChangeNotesText}
       placeholder="Notes"
       multiline

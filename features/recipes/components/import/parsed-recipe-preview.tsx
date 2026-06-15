@@ -1,8 +1,10 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TextInput as RNTextInput, View } from 'react-native';
+import { useDebounceCallback } from 'usehooks-ts';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Text } from '@/components/ui/text';
+import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 
 export type ParsedRecipePreviewProps = {
   recipeName: string;
@@ -17,12 +19,26 @@ export const ParsedRecipePreview = ({
   maxNameLength,
 }: ParsedRecipePreviewProps) => {
   const nameInputRef = useRef<RNTextInput>(null);
+  const nameInput = useUncontrolledTextInput(recipeName);
+  const [nameLength, setNameLength] = useState(recipeName.length);
+  const debouncedOnNameChange = useDebounceCallback(onNameChange, 300);
+
+  useEffect(() => {
+    nameInput.reset(recipeName);
+    setNameLength(recipeName.length);
+  }, [nameInput.reset, recipeName]);
+
+  const handleNameChange = (name: string) => {
+    nameInput.handleChangeText(name);
+    setNameLength(name.length);
+    debouncedOnNameChange(name);
+  };
 
   // Show character counter when within 20 characters of limit
   const showCharCount =
-    maxNameLength && recipeName.length >= maxNameLength - 20;
-  const isNearLimit = maxNameLength && recipeName.length >= maxNameLength - 10;
-  const isAtLimit = maxNameLength && recipeName.length >= maxNameLength;
+    maxNameLength && nameLength >= maxNameLength - 20;
+  const isNearLimit = maxNameLength && nameLength >= maxNameLength - 10;
+  const isAtLimit = maxNameLength && nameLength >= maxNameLength;
 
   return (
     <View className="gap-4">
@@ -42,14 +58,15 @@ export const ParsedRecipePreview = ({
                     : 'text-muted-foreground'
               }`}
             >
-              {recipeName.length}/{maxNameLength}
+              {nameLength}/{maxNameLength}
             </Text>
           )}
         </View>
         <BottomSheet.TextInput
+          key={nameInput.inputKey}
           ref={nameInputRef}
-          value={recipeName}
-          onChangeText={onNameChange}
+          defaultValue={nameInput.defaultValue}
+          onChangeText={handleNameChange}
           placeholder="Enter recipe name"
           autoCapitalize="words"
           selectTextOnFocus

@@ -18,6 +18,7 @@ import { BareTextInput } from '@/components/text-input';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import { useTheme } from '@/hooks/use-theme';
 import { getEmailLinkRedirectUrl } from '@/lib/clerk/email-link';
@@ -149,8 +150,8 @@ export default function SignInEmail() {
   const { bottom } = useSafeAreaInsets();
   const theme = useTheme();
   const otpRef = useRef<OtpInputRef>(null);
+  const emailInput = useUncontrolledTextInput();
 
-  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [pendingFlow, setPendingFlow] = useState<PendingFlow | null>(null);
   const [isSendingCode, setIsSendingCode] = useState(false);
@@ -161,7 +162,7 @@ export default function SignInEmail() {
   const signInEmailLinkRedirectUrl = getEmailLinkRedirectUrl('sign-in');
   const signUpEmailLinkRedirectUrl = getEmailLinkRedirectUrl('sign-up');
 
-  const normalizeEmail = () => email.trim().toLowerCase();
+  const normalizeEmail = () => emailInput.getValue().trim().toLowerCase();
   const normalizeCode = () => code.replace(/\D/g, '').trim();
   const clearCodeInput = useCallback(() => {
     setCode('');
@@ -626,9 +627,10 @@ export default function SignInEmail() {
 
                 <View className="gap-4">
                   <BareTextInput
+                    key={emailInput.inputKey}
                     placeholder="Email"
-                    value={email}
-                    onChangeText={setEmail}
+                    defaultValue={emailInput.defaultValue}
+                    onChangeText={emailInput.handleChangeText}
                     autoCapitalize="none"
                     keyboardType="email-address"
                     autoComplete="email"

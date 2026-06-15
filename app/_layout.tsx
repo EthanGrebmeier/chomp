@@ -74,7 +74,7 @@ function InitialLayout() {
         <Stack.Screen
           name="recipes"
           options={{
-            presentation: 'formSheet',
+            presentation: 'card',
             sheetAllowedDetents: [1],
             sheetInitialDetentIndex: 0,
             contentStyle: {

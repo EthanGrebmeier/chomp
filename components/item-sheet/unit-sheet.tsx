@@ -12,6 +12,7 @@ import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
 import { Text } from '../ui/text';
+import { useUncontrolledTextInput } from '../use-uncontrolled-text-input';
 
 import { EditUnitSheet, EditUnitSheetRef } from './edit-unit-sheet';
 import { formatQuantityUnit, normalizeUnit } from './unit-utils';
@@ -59,7 +60,8 @@ export const UnitSheet = ({
   const sheetRef = useRef<TrueSheet>(null);
   const editSheetRef = useRef<EditUnitSheetRef>(null);
   const quantityInputRef = useRef<TextInput>(null);
-  const [localQuantity, setLocalQuantity] = useState(quantity.toString());
+  const quantityInput = useUncontrolledTextInput(quantity.toString());
+  const [quantityIsValid, setQuantityIsValid] = useState(quantity > 0);
   const [localUnit, setLocalUnit] = useState(normalizeUnit(unit));
 
   const normalizedLocalUnit = normalizeUnit(localUnit);
@@ -71,18 +73,21 @@ export const UnitSheet = ({
     UNIT_OPTIONS.find(option => option.value === normalizedLocalUnit)?.label ??
     normalizedLocalUnit;
 
-  const isValid = !!localQuantity.length && parseInt(localQuantity, 10) > 0;
+  const isValid = quantityIsValid;
 
   const formatDisplay = () => formatQuantityUnit(quantity, unit);
 
   const openSheet = () => {
-    setLocalQuantity(quantity.toString());
+    const nextQuantity = quantity.toString();
+    quantityInput.reset(nextQuantity);
+    setQuantityIsValid(parseInt(nextQuantity, 10) > 0);
     setLocalUnit(normalizeUnit(unit));
     sheetRef.current?.present();
   };
 
   const handleQuantityChange = (text: string) => {
-    setLocalQuantity(text);
+    quantityInput.handleChangeText(text);
+    setQuantityIsValid(!!text.length && parseInt(text, 10) > 0);
   };
 
   const handleUnitSelect = (value: string) => {
@@ -95,7 +100,7 @@ export const UnitSheet = ({
 
   const handleConfirm = () => {
     if (!isValid) return;
-    const parsed = parseInt(localQuantity, 10);
+    const parsed = parseInt(quantityInput.getValue(), 10);
     onQuantityChange(parsed);
     onUnitChange(normalizedLocalUnit);
     sheetRef.current?.dismiss();
@@ -142,8 +147,9 @@ export const UnitSheet = ({
           <View className="px-4">
             <View className="flex-row items-center justify-between gap-3 rounded-xl bg-muted px-4 py-3 ">
               <TextInput
+                key={quantityInput.inputKey}
                 ref={quantityInputRef}
-                value={localQuantity}
+                defaultValue={quantityInput.defaultValue}
                 onChangeText={handleQuantityChange}
                 keyboardType="number-pad"
                 className="flex-1 text-2xl font-bold leading-7 text-foreground"

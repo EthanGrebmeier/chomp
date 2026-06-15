@@ -1,6 +1,6 @@
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -13,18 +13,54 @@ import { toast } from 'sonner-native';
 import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 
 const formatFieldLabel = (field: string) =>
   field.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 
+type MissingFieldInputProps = {
+  field: string;
+  disabled: boolean;
+  registerField: (field: string, getValue: () => string) => () => void;
+};
+
+const MissingFieldInput = ({
+  field,
+  disabled,
+  registerField,
+}: MissingFieldInputProps) => {
+  const fieldInput = useUncontrolledTextInput();
+  const label = formatFieldLabel(field);
+
+  useEffect(() => registerField(field, fieldInput.getValue), [
+    field,
+    fieldInput.getValue,
+    registerField,
+  ]);
+
+  return (
+    <View className="gap-2">
+      <Text className="text-sm font-medium">{label}</Text>
+      <TextInput
+        key={fieldInput.inputKey}
+        placeholder={label}
+        defaultValue={fieldInput.defaultValue}
+        onChangeText={fieldInput.handleChangeText}
+        autoCapitalize="none"
+        editable={!disabled}
+      />
+    </View>
+  );
+};
+
 export default function ContinueSignUp() {
   const { signUp, setActive, isLoaded } = useSignUp();
   const { signOut } = useAuth();
   const router = useRouter();
   const signInToInstant = useInstantSignIn();
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const fieldGettersRef = useRef<Record<string, () => string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const missingFields = useMemo(
@@ -39,9 +75,16 @@ export default function ContinueSignUp() {
     }
   }, [isLoaded, router, signUp?.id]);
 
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const registerField = useCallback(
+    (field: string, getValue: () => string) => {
+      fieldGettersRef.current[field] = getValue;
+
+      return () => {
+        delete fieldGettersRef.current[field];
+      };
+    },
+    []
+  );
 
   const handleSubmit = async () => {
     if (!isLoaded || !signUp?.id) return;
@@ -54,6 +97,13 @@ export default function ContinueSignUp() {
     setIsSubmitting(true);
 
     try {
+      const formData = missingFields.reduce<Record<string, string>>(
+        (values, field) => {
+          values[field] = fieldGettersRef.current[field]?.() ?? '';
+          return values;
+        },
+        {}
+      );
       const result = await signUp.update(formData);
       if (result?.status === 'complete') {
         await setActive({ session: result.createdSessionId });
@@ -131,18 +181,12 @@ export default function ContinueSignUp() {
           ) : (
             <View className="gap-4">
               {missingFields.map((field) => (
-                <View key={field} className="gap-2">
-                  <Text className="text-sm font-medium">
-                    {formatFieldLabel(field)}
-                  </Text>
-                  <TextInput
-                    placeholder={formatFieldLabel(field)}
-                    value={formData[field] || ''}
-                    onChangeText={(value) => handleChange(field, value)}
-                    autoCapitalize="none"
-                    editable={!isSubmitting}
-                  />
-                </View>
+                <MissingFieldInput
+                  key={field}
+                  field={field}
+                  disabled={isSubmitting}
+                  registerField={registerField}
+                />
               ))}
 
               <Button

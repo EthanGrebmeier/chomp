@@ -10,7 +10,7 @@ import { useEditItemSheet } from './edit-item/edit-item-sheet';
 import { useItemSheet } from './use-item-sheet';
 
 export const RecipeTag = () => {
-  const { recipe, setRecipe } = useItemSheet();
+  const { recipe, setRecipe, listId } = useItemSheet();
   const { dismiss, clearRecipe } = useEditItemSheet();
 
   if (!recipe) {
@@ -18,7 +18,7 @@ export const RecipeTag = () => {
   }
 
   const handleGoToRecipe = () => {
-    router.push(navigation.goToRecipe(recipe.id));
+    router.push(navigation.goToRecipe(recipe.id, listId));
     dismiss();
   };
 

@@ -1,14 +1,15 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
   LayoutAnimationConfig,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useDebounceCallback } from 'usehooks-ts';
 
 import { Text } from '@/components/ui/text';
+import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { RecipeFilters } from '@/features/recipes/components/recipe-filters';
 import { RecipeList } from '@/features/recipes/components/recipe-list';
 import { RecipeListSkeleton } from '@/features/recipes/components/recipe-list-skeleton';
@@ -23,13 +24,32 @@ import { EmptySubtext } from '../../components/text/empty-subtext';
 import { Heading } from '../../components/text/heading';
 import { CreateRecipeButton } from '../../features/recipes/components/create-recipe-button';
 
+const SEARCH_QUERY_DEBOUNCE_MS = 300;
+
 export default function Recipes() {
   const { listId } = useLocalSearchParams<{ listId?: string }>();
   const { data: recipes, isLoading } = useRecipes();
-  const { bottom } = useSafeAreaInsets();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [mealTag, setMealTag] = useState<string | undefined>();
   const [sortBy, setSortBy] = useState<RecipeSortOption>('recent');
+  const {
+    inputKey: searchInputKey,
+    defaultValue: searchDefaultValue,
+    handleChangeText: handleSearchInputChange,
+  } = useUncontrolledTextInput();
+  const debouncedSetSearchQuery = useDebounceCallback(
+    setSearchQuery,
+    SEARCH_QUERY_DEBOUNCE_MS
+  );
+
+  const handleSearchChange = useCallback(
+    (text: string) => {
+      handleSearchInputChange(text);
+      debouncedSetSearchQuery(text);
+    },
+    [debouncedSetSearchQuery, handleSearchInputChange]
+  );
 
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const deferredMealTag = useDeferredValue(mealTag);
@@ -51,7 +71,6 @@ export default function Recipes() {
     filteredRecipes.length === 0 &&
     (recipes?.length ?? 0) > 0 &&
     hasActiveFilters;
-  const actionBottom = bottom + 16;
 
   return (
     <View className="flex-1 bg-background pt-6 ">
@@ -60,8 +79,9 @@ export default function Recipes() {
       </View>
       <View className="mt-2">
         <RecipeFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          searchInputKey={searchInputKey}
+          searchDefaultValue={searchDefaultValue}
+          onSearchChange={handleSearchChange}
           mealTag={mealTag}
           onMealTagChange={setMealTag}
           sortBy={sortBy}
@@ -76,7 +96,7 @@ export default function Recipes() {
           {mealTag && !searchQuery.trim() && ` in ${mealTag}`}
         </Text>
       </View>
-      <View className="absolute right-6 z-10" style={{ bottom: actionBottom }}>
+      <View className="absolute bottom-0 right-6 z-10">
         <CreateRecipeButton listId={listId} />
       </View>
       <View className="flex-1">

@@ -521,7 +521,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
             <View className="flex-1 gap-2">
               <RecipeSelector
                 onSelectRecipe={handleRecipeChange}
-                onDismiss={() => changeRecipeSheetRef.current?.dismiss()}
                 fillHeight
               />
             </View>

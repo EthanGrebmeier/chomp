@@ -1,13 +1,18 @@
-import { router } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, ListRenderItemInfo, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { useDebounceCallback } from 'usehooks-ts';
 
 import {
   CreateRecipeSheet,
   CreateRecipeSheetRef,
 } from '../../../features/recipes/components/create-recipe-sheet';
+import { EmptyRecipePrompt } from '../../../features/recipes/components/empty-recipe-prompt';
 import { RecipeCardContent } from '../../../features/recipes/components/recipe-card';
+import {
+  RecipeDetailSheet,
+  RecipeDetailSheetRef,
+} from '../../../features/recipes/components/recipe-detail-sheet';
 import { RecipeFilters } from '../../../features/recipes/components/recipe-filters';
 import { useCreateRecipe, useRecipes } from '../../../features/recipes/hooks';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
@@ -15,22 +20,24 @@ import {
   RecipeSortOption,
   filterRecipes,
 } from '../../../features/recipes/utils/filter-recipes';
-import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
 import { HapticPressable } from '../../ui/haptic-pressable';
 import { Text } from '../../ui/text';
+import { useUncontrolledTextInput } from '../../use-uncontrolled-text-input';
 
 import { CreateRecipeInlineButton } from './create-recipe-inline-button';
 
+const SEARCH_QUERY_DEBOUNCE_MS = 300;
+
 type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
-  onDismiss?: () => void;
+  listId?: string;
   fillHeight?: boolean;
 };
 
 export const RecipeSelector = ({
   onSelectRecipe,
-  onDismiss,
+  listId,
   fillHeight = false,
 }: RecipeSelectorProps) => {
   const { data: recipes, isLoading } = useRecipes();
@@ -39,6 +46,24 @@ export const RecipeSelector = ({
   const [mealTag, setMealTag] = useState<string | undefined>();
   const [sortBy, setSortBy] = useState<RecipeSortOption>('recent');
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
+  const recipeDetailSheetRef = useRef<RecipeDetailSheetRef>(null);
+  const {
+    inputKey: searchInputKey,
+    defaultValue: searchDefaultValue,
+    handleChangeText: handleSearchInputChange,
+  } = useUncontrolledTextInput();
+  const debouncedSetSearchQuery = useDebounceCallback(
+    setSearchQuery,
+    SEARCH_QUERY_DEBOUNCE_MS
+  );
+
+  const handleSearchChange = useCallback(
+    (text: string) => {
+      handleSearchInputChange(text);
+      debouncedSetSearchQuery(text);
+    },
+    [debouncedSetSearchQuery, handleSearchInputChange]
+  );
 
   const filteredRecipes = useMemo(() => {
     return filterRecipes(recipes ?? [], {
@@ -88,8 +113,7 @@ export const RecipeSelector = ({
       },
       {
         onSuccess: result => {
-          onDismiss?.();
-          router.push(navigation.goToRecipe(result.id));
+          recipeDetailSheetRef.current?.present(result.id);
         },
       }
     );
@@ -99,16 +123,9 @@ export const RecipeSelector = ({
     return (
       <View
         style={{ minHeight: 500 }}
-        className="items-center justify-center gap-4"
+        className="flex-1 items-center justify-center gap-4"
       >
-        <View className="items-center">
-          <Text className="text-lg font-semibold text-foreground">
-            No recipes yet
-          </Text>
-          <Text className="text-muted-foreground">
-            Create a recipe to add ingredients to your list
-          </Text>
-        </View>
+        <EmptyRecipePrompt />
         <CreateRecipeInlineButton
           label="Create Recipe"
           onPress={() => createRecipeSheetRef.current?.present()}
@@ -117,6 +134,7 @@ export const RecipeSelector = ({
           ref={createRecipeSheetRef}
           onSubmit={handleCreateRecipe}
         />
+        <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
       </View>
     );
   }
@@ -124,8 +142,9 @@ export const RecipeSelector = ({
   return (
     <View className={cn(fillHeight ? 'flex-1 pb-6' : 'pb-6')}>
       <RecipeFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        searchInputKey={searchInputKey}
+        searchDefaultValue={searchDefaultValue}
+        onSearchChange={handleSearchChange}
         mealTag={mealTag}
         onMealTagChange={setMealTag}
         sortBy={sortBy}
@@ -161,6 +180,7 @@ export const RecipeSelector = ({
           renderItem={renderRecipeItem}
         />
       )}
+      <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
     </View>
   );
 };

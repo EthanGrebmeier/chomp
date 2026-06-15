@@ -6,6 +6,7 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
+import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
 import { createStore } from '../instant/create-store';
 import { updateStore } from '../instant/update-store';
 import { Store } from '../types';
@@ -28,8 +29,10 @@ export const useStoreSheet = () => {
 type StoreSheetInternalContextType = {
   sheetRef: React.RefObject<TrueSheet | null>;
   nameInputRef: React.RefObject<TextInput | null>;
-  name: string;
-  setName: (name: string) => void;
+  nameInputKey: number;
+  nameDefaultValue: string;
+  canSubmit: boolean;
+  onNameChange: (name: string) => void;
   reset: () => void;
   onSubmit: () => void;
 };
@@ -48,8 +51,16 @@ const useStoreSheetInternal = () => {
 };
 
 const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
-  const { reset, nameInputRef, name, setName, onSubmit, sheetRef } =
-    useStoreSheetInternal();
+  const {
+    reset,
+    nameInputRef,
+    nameInputKey,
+    nameDefaultValue,
+    canSubmit,
+    onNameChange,
+    onSubmit,
+    sheetRef,
+  } = useStoreSheetInternal();
 
   return (
     <BottomSheet
@@ -61,7 +72,7 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
       }}
       footer={
         <View className="px-10 pb-4">
-          <Button variant="default" onPress={onSubmit} disabled={!name.trim()}>
+          <Button variant="default" onPress={onSubmit} disabled={!canSubmit}>
             <Text>{submitLabel}</Text>
           </Button>
         </View>
@@ -76,9 +87,10 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
             Store Name
           </Text>
           <TextInput
+            key={nameInputKey}
             ref={nameInputRef}
-            value={name}
-            onChangeText={setName}
+            defaultValue={nameDefaultValue}
+            onChangeText={onNameChange}
             placeholder="Enter store name..."
             placeholderTextColor="#9ca3af"
             className="rounded-xl border border-border bg-input px-4 py-3 text-base text-foreground"
@@ -98,19 +110,21 @@ type StoreSheetProviderProps = {
 
 export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
   const [editingStore, setEditingStore] = useState<Store | null>(null);
-  const [name, setName] = useState('');
+  const nameInput = useUncontrolledTextInput();
+  const [canSubmit, setCanSubmit] = useState(false);
   const nameInputRef = useRef<TextInput>(null);
   const sheetRef = useRef<TrueSheet>(null);
 
   const isEditing = !!editingStore;
 
   const reset = () => {
-    setName('');
+    nameInput.reset();
+    setCanSubmit(false);
     setEditingStore(null);
   };
 
   const onSubmit = async () => {
-    const trimmedName = name.trim();
+    const trimmedName = nameInput.getValue().trim();
     if (!trimmedName) {
       toast.error('Store name cannot be empty');
       return;
@@ -134,13 +148,20 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
     }
   };
 
+  const onNameChange = (name: string) => {
+    nameInput.handleChangeText(name);
+    setCanSubmit(name.trim().length > 0);
+  };
+
   const present = (store?: Store) => {
     if (store) {
       setEditingStore(store);
-      setName(store.name);
+      nameInput.reset(store.name);
+      setCanSubmit(store.name.trim().length > 0);
     } else {
       setEditingStore(null);
-      setName('');
+      nameInput.reset();
+      setCanSubmit(false);
     }
     sheetRef.current?.present();
   };
@@ -151,8 +172,10 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
         value={{
           sheetRef,
           nameInputRef,
-          name,
-          setName,
+          nameInputKey: nameInput.inputKey,
+          nameDefaultValue: nameInput.defaultValue,
+          canSubmit,
+          onNameChange,
           reset,
           onSubmit,
         }}

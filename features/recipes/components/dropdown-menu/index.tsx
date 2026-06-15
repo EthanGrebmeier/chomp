@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { ReactNode, useRef } from 'react';
-import { Share } from 'react-native';
+import { Alert, Share } from 'react-native';
 import { toast } from 'sonner-native';
 
 import {
@@ -26,11 +26,13 @@ import {
 type RecipeDropdownMenuProps = {
   trigger: ReactNode;
   recipe: RecipeWithIngredients;
+  onClose?: () => void;
 };
 
 export const RecipeDropdownMenu = ({
   trigger,
   recipe,
+  onClose,
 }: RecipeDropdownMenuProps) => {
   const { user } = db.useAuth();
   const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
@@ -69,12 +71,27 @@ export const RecipeDropdownMenu = ({
 
   const handleDelete = () => {
     // Navigate away immediately so we do not briefly render the deleted recipe state.
-    router.back();
+    if (onClose) {
+      onClose();
+    } else {
+      router.back();
+    }
     deleteRecipe(recipe.id, {
       onError: () => {
         toast.error('Failed to delete recipe');
       },
     });
+  };
+
+  const handleConfirmDelete = () => {
+    Alert.alert(
+      'Delete Recipe',
+      `Are you sure you want to delete "${recipe.name}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: handleDelete },
+      ]
+    );
   };
 
   const handleEditRecipe = (data: {
@@ -126,7 +143,7 @@ export const RecipeDropdownMenu = ({
           {isOwner && (
             <DropdownMenuGroup>
               <DropdownMenuItem
-                onSelect={handleDelete}
+                onSelect={handleConfirmDelete}
                 destructive
                 key="delete-recipe"
               >

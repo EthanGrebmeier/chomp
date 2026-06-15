@@ -7,6 +7,8 @@ export const ItemForm = () => {
   const {
     recipe,
     itemInputValue,
+    itemInputKey,
+    itemInputDefaultValue,
     itemInputRef,
     showMatchingItems,
     setShowMatchingItems,
@@ -28,7 +30,9 @@ export const ItemForm = () => {
     <>
       <ItemInput
         placeholder="Add Item"
-        value={itemInputValue}
+        inputKey={itemInputKey}
+        defaultValue={itemInputDefaultValue}
+        matchingValue={itemInputValue}
         onChangeText={onChangeItemText}
         onSelect={onSelect}
         showMatchingItems={showMatchingItems}

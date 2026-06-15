@@ -11,7 +11,9 @@ import { MatchingItem, useMatchingItems } from './use-matching-items';
 
 type ItemInputProps = {
   placeholder: string;
-  value: string;
+  inputKey: number;
+  defaultValue: string;
+  matchingValue: string;
   onChangeText: (text: string) => void;
   onSelect: (item: MatchingItem) => void;
   showMatchingItems: boolean;
@@ -23,7 +25,9 @@ type ItemInputProps = {
 
 export const ItemInput = ({
   placeholder,
-  value,
+  inputKey,
+  defaultValue,
+  matchingValue,
   onChangeText,
   onSelect,
   showMatchingItems,
@@ -32,7 +36,7 @@ export const ItemInput = ({
   inputRef,
   disableAutocomplete = false,
 }: ItemInputProps) => {
-  const { matchingItems } = useMatchingItems(value);
+  const { matchingItems } = useMatchingItems(matchingValue);
   const isApplyingSuggestionRef = useRef(false);
   const hideSuggestionsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
@@ -63,6 +67,7 @@ export const ItemInput = ({
       hideSuggestionsTimeoutRef.current = null;
     }
     onChangeText(item.name);
+    inputRef?.current?.setNativeProps({ text: item.name });
     onSelect(item);
     setShowMatchingItems(false);
     setTimeout(() => {
@@ -90,10 +95,11 @@ export const ItemInput = ({
   return (
     <View className="w-full">
       <BottomSheet.BareTextInput
+        key={inputKey}
         ref={inputRef}
         className="text-2xl font-bold text-foreground"
         placeholder={placeholder}
-        value={value}
+        defaultValue={defaultValue}
         onChangeText={handleChangeText}
         onBlur={handleInputBlur}
         autoCorrect={false}

@@ -79,6 +79,8 @@ export const useLiveIngredientSync = ({
   const {
     itemInputValue,
     notesInputValue,
+    itemInputValueRef,
+    notesInputValueRef,
     category,
     quantity,
     unit,
@@ -98,8 +100,6 @@ export const useLiveIngredientSync = ({
   // handle) always read the freshest values without re-subscribing.
   const stateRef = useRef({
     selectedIngredientId,
-    itemInputValue,
-    notesInputValue,
     category,
     quantity,
     unit,
@@ -108,8 +108,6 @@ export const useLiveIngredientSync = ({
   });
   stateRef.current = {
     selectedIngredientId,
-    itemInputValue,
-    notesInputValue,
     category,
     quantity,
     unit,
@@ -120,14 +118,14 @@ export const useLiveIngredientSync = ({
   const buildCurrent = useCallback((): IngredientSnapshot => {
     const s = stateRef.current;
     return {
-      name: s.itemInputValue,
+      name: itemInputValueRef.current,
       category: s.category,
-      notes: s.notesInputValue,
+      notes: notesInputValueRef.current,
       quantity: s.quantity,
       unit: s.unit,
       storeId: s.storeId,
     };
-  }, []);
+  }, [itemInputValueRef, notesInputValueRef]);
 
   const commit = useCallback(() => {
     const snapshot = snapshotRef.current;
@@ -138,7 +136,9 @@ export const useLiveIngredientSync = ({
     // enforce: non-empty trimmed name AND truthy quantity AND truthy unit.
     // Intermediate invalid states (e.g. cleared name) simply skip writes
     // until the form is valid again.
-    if (!state.isValid) return;
+    if (!itemInputValueRef.current.trim() || !state.quantity || !state.unit) {
+      return;
+    }
 
     const current = buildCurrent();
     const diff = diffIngredientSnapshot({ snapshot, current });
@@ -171,7 +171,7 @@ export const useLiveIngredientSync = ({
         currentStoreIdRef.current = current.storeId;
       }
     });
-  }, [buildCurrent]);
+  }, [buildCurrent, itemInputValueRef]);
 
   const debouncedCommit = useDebounceCallback(commit, DEBOUNCE_MS);
 
@@ -217,7 +217,9 @@ export const useLiveIngredientSync = ({
       if (!snapshot) return;
       const state = stateRef.current;
       if (!state.selectedIngredientId) return;
-      if (!state.isValid) return;
+      if (!itemInputValueRef.current.trim() || !state.quantity || !state.unit) {
+        return;
+      }
 
       // Cancel any in-flight text debounce so a stale pre-pick keystroke
       // can't land after the authoritative pick write.
@@ -262,7 +264,7 @@ export const useLiveIngredientSync = ({
         currentStoreIdRef.current = match.storeId;
       }
     },
-    [debouncedCommit]
+    [debouncedCommit, itemInputValueRef]
   );
 
   const handle = useMemo<LiveIngredientSyncHandle>(

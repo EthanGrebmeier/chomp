@@ -29,7 +29,8 @@ export const useLiveSavedItemSync = ({
   onPromoteToCloud,
   handleRef,
 }: UseLiveSavedItemSyncArgs): LiveSavedItemSyncHandle => {
-  const { itemInputValue, category, storeId } = useItemSheet();
+  const { itemInputValue, itemInputValueRef, category, storeId } =
+    useItemSheet();
 
   const snapshotRef = useRef<SavedItemSnapshot | null>(null);
   const currentStoreIdRef = useRef<string | undefined>(editingItem?.storeId);
@@ -38,12 +39,10 @@ export const useLiveSavedItemSync = ({
   // Keep the stable callbacks below reading fresh values without forcing
   // debounced callback re-subscription on every keystroke.
   const stateRef = useRef({
-    itemInputValue,
     category,
     storeId,
   });
   stateRef.current = {
-    itemInputValue,
     category,
     storeId,
   };
@@ -56,11 +55,11 @@ export const useLiveSavedItemSync = ({
   const buildCurrent = useCallback((): SavedItemSnapshot => {
     const state = stateRef.current;
     return {
-      name: state.itemInputValue,
+      name: itemInputValueRef.current,
       category: state.category,
       storeId: state.storeId,
     };
-  }, []);
+  }, [itemInputValueRef]);
 
   const commit = useCallback(() => {
     const snapshot = snapshotRef.current;

@@ -23,6 +23,7 @@ import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
 import { Text } from '../ui/text';
+import { useUncontrolledTextInput } from '../use-uncontrolled-text-input';
 
 type StoreOptionProps = {
   label: string;
@@ -84,7 +85,8 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
     const [localStoreId, setLocalStoreId] = useState<string | undefined | null>(
       storeId
     );
-    const [newStoreName, setNewStoreName] = useState('');
+    const newStoreNameInput = useUncontrolledTextInput();
+    const [canCreateStore, setCanCreateStore] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [newlyCreatedStore, setNewlyCreatedStore] = useState<{
       id: string;
@@ -137,7 +139,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
     };
 
     const handleCreateStore = async () => {
-      const trimmedName = newStoreName.trim();
+      const trimmedName = newStoreNameInput.getValue().trim();
       if (!trimmedName) {
         toast.error('Store name cannot be empty');
         return;
@@ -147,7 +149,8 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       try {
         const { id: newStoreId } = await createStore({ name: trimmedName });
         setNewlyCreatedStore({ id: newStoreId, name: trimmedName });
-        setNewStoreName('');
+        newStoreNameInput.reset();
+        setCanCreateStore(false);
         setLocalStoreId(newStoreId);
         setTimeout(() => {
           setNewlyCreatedStore(null);
@@ -160,7 +163,12 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       }
     };
 
-    const canCreate = newStoreName.trim().length > 0 && !isCreating;
+    const handleNewStoreNameChange = (text: string) => {
+      newStoreNameInput.handleChangeText(text);
+      setCanCreateStore(text.trim().length > 0);
+    };
+
+    const canCreate = canCreateStore && !isCreating;
 
     return (
       <>
@@ -286,8 +294,9 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
                 Store Name
               </Text>
               <BottomSheet.TextInput
-                value={newStoreName}
-                onChangeText={setNewStoreName}
+                key={newStoreNameInput.inputKey}
+                defaultValue={newStoreNameInput.defaultValue}
+                onChangeText={handleNewStoreNameChange}
                 placeholder="My Store"
                 placeholderTextColor="#9ca3af"
                 autoCapitalize="words"

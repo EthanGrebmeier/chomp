@@ -11,6 +11,7 @@ import { TextInput } from '../../../components/text-input';
 import { Button } from '../../../components/ui/button';
 import { CloseButton } from '../../../components/ui/close-button';
 import { Text } from '../../../components/ui/text';
+import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
 import { useCreateGroceryList } from '../instant/useCreateGroceryList';
 
 export type CreateGroceryListSheetRef = {
@@ -29,7 +30,11 @@ export const CreateGroceryListSheet = forwardRef<
   CreateGroceryListSheetProps
 >(({ onCreated }, ref) => {
   const sheetRef = useRef<TrueSheet>(null);
-  const [newListName, setNewListName] = useState('');
+  const listNameInput = useUncontrolledTextInput();
+  const [listNameMeta, setListNameMeta] = useState({
+    length: 0,
+    hasText: false,
+  });
   const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const createGroceryList = useCreateGroceryList();
@@ -42,25 +47,37 @@ export const CreateGroceryListSheet = forwardRef<
   }));
 
   const handleCreateList = async () => {
-    if (!newListName.trim()) return;
+    const newListName = listNameInput.getValue();
+    const trimmedListName = newListName.trim();
+    if (!trimmedListName) return;
 
     if (newListName.length > MAX_LIST_NAME_LENGTH) {
       return;
     }
 
-    const result = await createGroceryList(newListName.trim());
-    setNewListName('');
+    const result = await createGroceryList(trimmedListName);
+    listNameInput.reset();
+    setListNameMeta({ length: 0, hasText: false });
     sheetRef.current?.dismiss();
     onCreated(result.listId);
   };
 
+  const handleListNameChange = (text: string) => {
+    listNameInput.handleChangeText(text);
+    setListNameMeta({
+      length: text.length,
+      hasText: text.trim().length > 0,
+    });
+  };
+
   const handleCancel = () => {
-    setNewListName('');
+    listNameInput.reset();
+    setListNameMeta({ length: 0, hasText: false });
     sheetRef.current?.dismiss();
   };
 
-  const showLimit = newListName.length > MAX_LIST_NAME_LENGTH - 8;
-  const overLimit = newListName.length > MAX_LIST_NAME_LENGTH;
+  const showLimit = listNameMeta.length > MAX_LIST_NAME_LENGTH - 8;
+  const overLimit = listNameMeta.length > MAX_LIST_NAME_LENGTH;
 
   return (
     <BottomSheet
@@ -71,11 +88,15 @@ export const CreateGroceryListSheet = forwardRef<
       }}
       onStartClose={() => {
         KeyboardController.dismiss();
-        setNewListName('');
+        listNameInput.reset();
+        setListNameMeta({ length: 0, hasText: false });
       }}
       footer={
         <View className="px-10 pb-safe">
-          <Button onPress={handleCreateList} disabled={overLimit || !newListName.trim()}>
+          <Button
+            onPress={handleCreateList}
+            disabled={overLimit || !listNameMeta.hasText}
+          >
             <Text>Create List</Text>
           </Button>
         </View>
@@ -101,15 +122,16 @@ export const CreateGroceryListSheet = forwardRef<
                     overLimit && 'text-red-500'
                   )}
                 >
-                  {newListName.length} / {MAX_LIST_NAME_LENGTH}
+                  {listNameMeta.length} / {MAX_LIST_NAME_LENGTH}
                 </Text>
               </Animated.View>
             )}
           </View>
           <TextInput
+            key={listNameInput.inputKey}
             ref={inputRef}
-            value={newListName}
-            onChangeText={setNewListName}
+            defaultValue={listNameInput.defaultValue}
+            onChangeText={handleListNameChange}
             placeholder="My Grocery List"
             placeholderTextColor="#9ca3af"
             className="h-12 rounded-xl border border-input bg-input px-4 text-base leading-5 text-foreground"

@@ -1,5 +1,15 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { TextInput } from 'react-native';
+import { useDebounceCallback } from 'usehooks-ts';
+
+import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 
 import {
   BaseGroceryItem,
@@ -15,10 +25,18 @@ const itemSheetContext = createContext<{
   setSelectedItem: (item: MatchingItem | null) => void;
   onSubmit: () => void;
   itemInputValue: string;
+  itemInputKey: number;
+  itemInputDefaultValue: string;
+  itemInputValueRef: React.MutableRefObject<string>;
   itemInputRef: React.RefObject<TextInput | null>;
   onChangeItemText: (text: string) => void;
   notesInputValue: string;
-
+  notesInputKey: number;
+  notesInputDefaultValue: string;
+  notesInputValueRef: React.MutableRefObject<string>;
+  notesInputRef: React.RefObject<TextInput | null>;
+  getItemInputValue: () => string;
+  getNotesInputValue: () => string;
   onChangeNotesText: (text: string) => void;
   showMatchingItems: boolean;
   setShowMatchingItems: (show: boolean) => void;
@@ -30,6 +48,7 @@ const itemSheetContext = createContext<{
   setUnit: (unit: string) => void;
   recipe?: Recipe | null;
   setRecipe: (recipe?: Recipe | null) => void;
+  listId?: string;
   storeId?: string;
   setStoreId: (storeId?: string) => void;
   storeName?: string;
@@ -40,6 +59,8 @@ const itemSheetContext = createContext<{
   disableAutocomplete: boolean;
   mode: ItemSheetMode;
 } | null>(null);
+
+const TEXT_COMMIT_DEBOUNCE_MS = 150;
 
 export const useItemSheet = () => {
   const context = useContext(itemSheetContext);
@@ -89,6 +110,25 @@ export const ItemSheetProvider = ({
   const [selectedItem, setSelectedItem] = useState<MatchingItem | null>(
     null
   );
+  const itemInput = useUncontrolledTextInput();
+  const notesInput = useUncontrolledTextInput();
+  const {
+    inputKey: itemInputKey,
+    defaultValue: itemInputDefaultValue,
+    valueRef: itemInputValueRef,
+    handleChangeText: handleItemInputTextChange,
+    getValue: getItemInputValue,
+    reset: resetItemInput,
+    setValue: setItemInputNativeValue,
+  } = itemInput;
+  const {
+    inputKey: notesInputKey,
+    defaultValue: notesInputDefaultValue,
+    valueRef: notesInputValueRef,
+    handleChangeText: handleNotesInputTextChange,
+    getValue: getNotesInputValue,
+    reset: resetNotesInput,
+  } = notesInput;
   const [itemInputValue, setItemInputValue] = useState('');
   const [notesInputValue, setNotesInputValue] = useState('');
   const [category, setCategory] = useState<string | undefined>(undefined);
@@ -101,10 +141,23 @@ export const ItemSheetProvider = ({
   const [storeId, setStoreId] = useState<string | undefined>(undefined);
   const [storeName, setStoreName] = useState<string | undefined>(undefined);
   const itemInputRef = useRef<TextInput>(null);
+  const notesInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
+  const commitItemInputValue = useDebounceCallback(
+    setItemInputValue,
+    TEXT_COMMIT_DEBOUNCE_MS
+  );
+  const commitNotesInputValue = useDebounceCallback(
+    setNotesInputValue,
+    TEXT_COMMIT_DEBOUNCE_MS
+  );
 
   const reset = () => {
+    commitItemInputValue.cancel();
+    commitNotesInputValue.cancel();
     setSelectedItem(null);
+    resetItemInput();
+    resetNotesInput();
     setItemInputValue('');
     setNotesInputValue('');
     setCategory(undefined);
@@ -117,31 +170,43 @@ export const ItemSheetProvider = ({
     setShowMatchingItems(false);
   };
 
-  const setFromItem = (item: GroceryListItemWithRecipe | BaseGroceryItem) => {
-    setSelectedItem(null);
-    setItemInputValue(item.name);
-    setCategory(item.category);
-    setQuantity(item.quantity);
-    setUnit(item.unit);
-    setNotesInputValue(item.notes ?? '');
-    // Handle recipe - only available on GroceryListItemWithRecipe
-    if ('recipe' in item) {
-      setRecipe(item.recipe);
-      setInitialRecipeId(item.recipe?.id);
-    }
-    // Always derive store state from the incoming item so edit sheets don't
-    // keep stale store selection between items.
-    const derivedStoreId =
-      ('store' in item ? item.store?.id : undefined) ??
-      ('storeId' in item ? item.storeId : undefined) ??
-      ('saved_item' in item ? item.saved_item?.store?.id : undefined);
-    const derivedStoreName =
-      ('store' in item ? item.store?.name : undefined) ??
-      ('saved_item' in item ? item.saved_item?.store?.name : undefined);
-    setStoreId(derivedStoreId);
-    setStoreName(derivedStoreName);
-    setShowMatchingItems(false);
-  };
+  const setFromItem = useCallback(
+    (item: GroceryListItemWithRecipe | BaseGroceryItem) => {
+      commitItemInputValue.cancel();
+      commitNotesInputValue.cancel();
+      setSelectedItem(null);
+      resetItemInput(item.name);
+      setItemInputValue(item.name);
+      setCategory(item.category);
+      setQuantity(item.quantity);
+      setUnit(item.unit);
+      resetNotesInput(item.notes ?? '');
+      setNotesInputValue(item.notes ?? '');
+      // Handle recipe - only available on GroceryListItemWithRecipe
+      if ('recipe' in item) {
+        setRecipe(item.recipe);
+        setInitialRecipeId(item.recipe?.id);
+      }
+      // Always derive store state from the incoming item so edit sheets don't
+      // keep stale store selection between items.
+      const derivedStoreId =
+        ('store' in item ? item.store?.id : undefined) ??
+        ('storeId' in item ? item.storeId : undefined) ??
+        ('saved_item' in item ? item.saved_item?.store?.id : undefined);
+      const derivedStoreName =
+        ('store' in item ? item.store?.name : undefined) ??
+        ('saved_item' in item ? item.saved_item?.store?.name : undefined);
+      setStoreId(derivedStoreId);
+      setStoreName(derivedStoreName);
+      setShowMatchingItems(false);
+    },
+    [
+      commitItemInputValue,
+      commitNotesInputValue,
+      resetItemInput,
+      resetNotesInput,
+    ]
+  );
 
   // Expose setFromItem to parent via ref
   useEffect(() => {
@@ -150,7 +215,7 @@ export const ItemSheetProvider = ({
         item: GroceryListItemWithRecipe | BaseGroceryItem
       ) => setFromItem(item);
     }
-  }, [setFromItemRef]);
+  }, [setFromItem, setFromItemRef]);
 
   // Check if recipe was cleared (had initial recipe, now undefined/null)
   const recipeCleared = !!initialRecipeId && !recipe;
@@ -170,11 +235,11 @@ export const ItemSheetProvider = ({
     onSubmit({
       listId,
       item: {
-        name: itemInputValue,
+        name: getItemInputValue(),
         category: category,
         quantity: quantity,
         unit: unit,
-        notes: notesInputValue,
+        notes: getNotesInputValue(),
         storeId: storeId,
       },
       clearedRecipeId: recipeCleared ? initialRecipeId : undefined,
@@ -186,9 +251,13 @@ export const ItemSheetProvider = ({
   };
 
   const onSelect = (item: MatchingItem) => {
+    commitItemInputValue.cancel();
+    commitNotesInputValue.cancel();
     setSelectedItem(item);
+    setItemInputNativeValue(item.name, itemInputRef);
     setItemInputValue(item.name);
     setCategory(item.category);
+    resetNotesInput(item.notes ?? '');
     setNotesInputValue(item.notes ?? '');
     setStoreId(item.storeId);
     setStoreName(undefined);
@@ -202,12 +271,14 @@ export const ItemSheetProvider = ({
   };
 
   const onChangeItemText = (text: string) => {
+    handleItemInputTextChange(text);
     setSelectedItem(null);
-    setItemInputValue(text);
+    commitItemInputValue(text);
     setShowMatchingItems(true);
   };
   const onChangeNotesText = (text: string) => {
-    setNotesInputValue(text);
+    handleNotesInputTextChange(text);
+    commitNotesInputValue(text);
   };
 
   return (
@@ -218,8 +289,17 @@ export const ItemSheetProvider = ({
         setSelectedItem,
         onSubmit: submitItem,
         itemInputValue,
+        itemInputKey,
+        itemInputDefaultValue,
+        itemInputValueRef,
         itemInputRef,
         notesInputValue,
+        notesInputKey,
+        notesInputDefaultValue,
+        notesInputValueRef,
+        notesInputRef,
+        getItemInputValue,
+        getNotesInputValue,
         onChangeNotesText,
         showMatchingItems,
         setShowMatchingItems,
@@ -232,6 +312,7 @@ export const ItemSheetProvider = ({
         setUnit,
         recipe,
         setRecipe,
+        listId,
         storeId,
         setStoreId,
         storeName,

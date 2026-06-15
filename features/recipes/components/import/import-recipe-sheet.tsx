@@ -28,6 +28,7 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { checkNetworkStatus } from '@/hooks/use-network-status';
 import { THEME } from '@/lib/theme';
 
@@ -72,11 +73,30 @@ export const ImportRecipeSheet = forwardRef<
   const editSheetRef = useRef<EditParsedIngredientSheetRef>(null);
   const editRecipeNameSheetRef = useRef<TrueSheet>(null);
   const recipeNameInputRef = useRef<RNTextInput>(null);
-  const [url, setUrl] = useState('');
+  const urlInput = useUncontrolledTextInput();
+  const draftNameInput = useUncontrolledTextInput();
+  const [urlHasValue, setUrlHasValue] = useState(false);
   const [validationError, setValidationError] = useState<string | undefined>();
-  const [draftRecipeName, setDraftRecipeName] = useState('');
+  const [draftRecipeNameMeta, setDraftRecipeNameMeta] = useState({
+    length: 0,
+    hasText: false,
+  });
   const [sheetFooter, setSheetFooter] = useState<ReactElement | undefined>();
   const footerStateKeyRef = useRef('');
+  const {
+    inputKey: urlInputKey,
+    defaultValue: urlDefaultValue,
+    handleChangeText: handleUrlInputChange,
+    getValue: getUrlValue,
+    reset: resetUrlInput,
+  } = urlInput;
+  const {
+    inputKey: draftNameInputKey,
+    defaultValue: draftNameDefaultValue,
+    handleChangeText: handleDraftNameInputChange,
+    getValue: getDraftNameValue,
+    reset: resetDraftNameInput,
+  } = draftNameInput;
 
   // Track if sheet is open to ignore responses after dismissal
   const isSheetOpenRef = useRef(false);
@@ -111,8 +131,11 @@ export const ImportRecipeSheet = forwardRef<
   useImperativeHandle(ref, () => ({
     present: () => {
       reset();
-      setUrl('');
+      resetUrlInput();
+      setUrlHasValue(false);
       setValidationError(undefined);
+      resetDraftNameInput();
+      setDraftRecipeNameMeta({ length: 0, hasText: false });
       isSheetOpenRef.current = true;
       isConfirmingRef.current = false;
       sheetRef.current?.present();
@@ -132,13 +155,16 @@ export const ImportRecipeSheet = forwardRef<
     // Dismiss edit sheet if open
     editSheetRef.current?.dismiss();
     editRecipeNameSheetRef.current?.dismiss();
-    setDraftRecipeName('');
+    resetDraftNameInput();
+    setDraftRecipeNameMeta({ length: 0, hasText: false });
     reset();
-    setUrl('');
+    resetUrlInput();
+    setUrlHasValue(false);
     setValidationError(undefined);
-  }, [reset]);
+  }, [reset, resetDraftNameInput, resetUrlInput]);
 
   const handleSubmitUrl = useCallback(async () => {
+    const url = getUrlValue();
     const validation = validateRecipeUrl(url);
     if (!validation.valid) {
       setValidationError(validation.error);
@@ -187,7 +213,7 @@ export const ImportRecipeSheet = forwardRef<
         },
       }
     );
-  }, [url, submitUrl, parseRecipe, parseSuccess, parseError]);
+  }, [getUrlValue, submitUrl, parseRecipe, parseSuccess, parseError]);
 
   const handleConfirmImport = useCallback(async () => {
     if (state.status !== 'preview') return;
@@ -257,6 +283,28 @@ export const ImportRecipeSheet = forwardRef<
     goBack();
   }, [goBack]);
 
+  const handleUrlChange = useCallback(
+    (text: string) => {
+      handleUrlInputChange(text);
+      setUrlHasValue(text.trim().length > 0);
+      if (validationError) {
+        setValidationError(undefined);
+      }
+    },
+    [handleUrlInputChange, validationError]
+  );
+
+  const handleDraftRecipeNameChange = useCallback(
+    (text: string) => {
+      handleDraftNameInputChange(text);
+      setDraftRecipeNameMeta({
+        length: text.length,
+        hasText: text.trim().length > 0,
+      });
+    },
+    [handleDraftNameInputChange]
+  );
+
   const handleEditIngredient = useCallback(
     (index: number, ingredient: ParsedIngredient) => {
       // Prevent multiple edit sheets from opening
@@ -283,26 +331,31 @@ export const ImportRecipeSheet = forwardRef<
     if (isEditingNameRef.current) return;
     if (state.status !== 'preview') return;
     isEditingNameRef.current = true;
-    setDraftRecipeName(state.editedName);
+    resetDraftNameInput(state.editedName);
+    setDraftRecipeNameMeta({
+      length: state.editedName.length,
+      hasText: state.editedName.trim().length > 0,
+    });
     editRecipeNameSheetRef.current?.present();
-  }, [state]);
+  }, [resetDraftNameInput, state]);
 
   const handleCloseEditNameSheet = useCallback(() => {
     Keyboard.dismiss();
     isEditingNameRef.current = false;
-    setDraftRecipeName('');
-  }, []);
+    resetDraftNameInput();
+    setDraftRecipeNameMeta({ length: 0, hasText: false });
+  }, [resetDraftNameInput]);
 
   const handleEditNameSheetOpen = useCallback(() => {
     recipeNameInputRef.current?.focus();
   }, []);
 
   const handleSaveRecipeName = useCallback(() => {
-    const truncatedName = draftRecipeName.slice(0, MAX_RECIPE_NAME_LENGTH);
+    const truncatedName = getDraftNameValue().slice(0, MAX_RECIPE_NAME_LENGTH);
     if (!truncatedName.trim()) return;
     editName(truncatedName);
     editRecipeNameSheetRef.current?.dismiss();
-  }, [draftRecipeName, editName]);
+  }, [editName, getDraftNameValue]);
 
   const renderContent = () => {
     switch (state.status) {
@@ -321,8 +374,10 @@ export const ImportRecipeSheet = forwardRef<
             <UrlInput
               className="pb-20"
               ref={urlInputRef}
-              value={url}
-              onChangeText={setUrl}
+              inputKey={urlInputKey}
+              defaultValue={urlDefaultValue}
+              hasValue={urlHasValue}
+              onChangeText={handleUrlChange}
               onSubmit={handleSubmitUrl}
               error={validationError}
             />
@@ -458,7 +513,7 @@ export const ImportRecipeSheet = forwardRef<
     if (state.status === 'idle') {
       return (
         <View className="px-10 pb-safe">
-          <Button onPress={handleSubmitUrl} disabled={!url.trim()}>
+          <Button onPress={handleSubmitUrl} disabled={!urlHasValue}>
             <Text>Import Recipe</Text>
           </Button>
         </View>
@@ -506,7 +561,7 @@ export const ImportRecipeSheet = forwardRef<
         </Button>
       </View>
     );
-  }, [state, url, handleSubmitUrl, handleRetry, handleConfirmImport]);
+  }, [state, urlHasValue, handleSubmitUrl, handleRetry, handleConfirmImport]);
 
   const setSheetOptions = useCallback((options: { footer?: ReactElement }) => {
     setSheetFooter(options.footer);
@@ -514,7 +569,7 @@ export const ImportRecipeSheet = forwardRef<
 
   const footerStateKey = (() => {
     if (state.status === 'idle') {
-      return `idle:${url.trim().length > 0 ? 'enabled' : 'disabled'}`;
+      return `idle:${urlHasValue ? 'enabled' : 'disabled'}`;
     }
 
     if (state.status === 'error') {
@@ -544,9 +599,10 @@ export const ImportRecipeSheet = forwardRef<
   }, [footerStateKey, renderFooter, setSheetOptions]);
 
   const content = renderContent();
-  const isDraftNameTooLong = draftRecipeName.length > MAX_RECIPE_NAME_LENGTH;
+  const isDraftNameTooLong =
+    draftRecipeNameMeta.length > MAX_RECIPE_NAME_LENGTH;
   const showDraftCharCount =
-    draftRecipeName.length >= MAX_RECIPE_NAME_LENGTH - 20;
+    draftRecipeNameMeta.length >= MAX_RECIPE_NAME_LENGTH - 20;
 
   return (
     <>
@@ -582,7 +638,7 @@ export const ImportRecipeSheet = forwardRef<
           <View className="gap-2 px-10 pb-safe">
             <Button
               onPress={handleSaveRecipeName}
-              disabled={isDraftNameTooLong || !draftRecipeName.trim()}
+              disabled={isDraftNameTooLong || !draftRecipeNameMeta.hasText}
             >
               <Text>Save Name</Text>
             </Button>
@@ -607,19 +663,21 @@ export const ImportRecipeSheet = forwardRef<
                   className={`text-xs ${
                     isDraftNameTooLong
                       ? 'text-destructive'
-                      : draftRecipeName.length >= MAX_RECIPE_NAME_LENGTH - 10
+                      : draftRecipeNameMeta.length >=
+                          MAX_RECIPE_NAME_LENGTH - 10
                         ? 'text-amber-600 dark:text-amber-400'
                         : 'text-muted-foreground'
                   }`}
                 >
-                  {draftRecipeName.length}/{MAX_RECIPE_NAME_LENGTH}
+                  {draftRecipeNameMeta.length}/{MAX_RECIPE_NAME_LENGTH}
                 </Text>
               )}
             </View>
             <BottomSheet.TextInput
+              key={draftNameInputKey}
               ref={recipeNameInputRef}
-              value={draftRecipeName}
-              onChangeText={setDraftRecipeName}
+              defaultValue={draftNameDefaultValue}
+              onChangeText={handleDraftRecipeNameChange}
               placeholder="Enter recipe name"
               autoCapitalize="words"
               selectTextOnFocus

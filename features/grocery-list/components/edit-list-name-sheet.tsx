@@ -8,6 +8,7 @@ import { TextInput } from '../../../components/text-input';
 import { Button } from '../../../components/ui/button';
 import { CloseButton } from '../../../components/ui/close-button';
 import { Text } from '../../../components/ui/text';
+import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
 import { useUpdateGroceryListName } from '../../grocery-lists/instant/useUpdateGroceryListName';
 
 export type EditListNameSheetRef = {
@@ -18,7 +19,8 @@ export type EditListNameSheetRef = {
 export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
   (_, ref) => {
     const sheetRef = useRef<TrueSheet>(null);
-    const [listName, setListName] = useState('');
+    const listNameInput = useUncontrolledTextInput();
+    const [canSave, setCanSave] = useState(false);
     const [listId, setListId] = useState<string | null>(null);
     const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
@@ -27,21 +29,28 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
     useImperativeHandle(ref, () => ({
       present: (id: string, currentName: string) => {
         setListId(id);
-        setListName(currentName);
+        listNameInput.reset(currentName);
+        setCanSave(currentName.trim().length > 0);
         sheetRef.current?.present();
       },
       dismiss: () => sheetRef.current?.dismiss(),
     }));
 
     const handleSave = async () => {
-      if (!listName.trim() || !listId) return;
+      const trimmedListName = listNameInput.getValue().trim();
+      if (!trimmedListName || !listId) return;
 
       try {
-        await updateGroceryListName(listId, listName.trim());
+        await updateGroceryListName(listId, trimmedListName);
         sheetRef.current?.dismiss();
       } catch (error) {
         console.error('Failed to update list name:', error);
       }
+    };
+
+    const handleChangeText = (text: string) => {
+      listNameInput.handleChangeText(text);
+      setCanSave(text.trim().length > 0);
     };
 
     const handleCancel = () => {
@@ -50,7 +59,8 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
 
     const handleDismiss = () => {
       KeyboardController.dismiss();
-      setListName('');
+      listNameInput.reset();
+      setCanSave(false);
       setListId(null);
     };
 
@@ -61,7 +71,7 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
         onStartClose={handleDismiss}
         footer={
           <View className="pb-safe px-10">
-            <Button onPress={handleSave} disabled={!listName.trim()}>
+            <Button onPress={handleSave} disabled={!canSave}>
               <Text>Save</Text>
             </Button>
           </View>
@@ -75,9 +85,10 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
 
           <View className="my-4">
             <TextInput
+              key={listNameInput.inputKey}
               ref={inputRef}
-              value={listName}
-              onChangeText={setListName}
+              defaultValue={listNameInput.defaultValue}
+              onChangeText={handleChangeText}
               placeholder="List name"
               placeholderTextColor="#9ca3af"
               className="h-12 rounded-xl border border-input bg-input px-4 text-base text-foreground"

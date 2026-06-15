@@ -26,8 +26,11 @@ export const MealPlanItemForm = ({
   const itemInputRef = useRef<TextInput>(null);
   const {
     itemName,
+    itemNameInputKey,
+    itemNameDefaultValue,
     setItemName,
-    itemNotes,
+    itemNotesInputKey,
+    itemNotesDefaultValue,
     setItemNotes,
     quantity,
     setQuantity,
@@ -73,7 +76,9 @@ export const MealPlanItemForm = ({
     <View>
       <ItemInput
         placeholder="Item name"
-        value={itemName}
+        inputKey={itemNameInputKey}
+        defaultValue={itemNameDefaultValue}
+        matchingValue={itemName}
         onChangeText={handleItemTextChange}
         onSelect={handleSelectSavedItem}
         showMatchingItems={showMatchingItems}
@@ -82,7 +87,8 @@ export const MealPlanItemForm = ({
         inputRef={itemInputRef}
       />
       <BottomSheet.BareTextInput
-        value={itemNotes}
+        key={itemNotesInputKey}
+        defaultValue={itemNotesDefaultValue}
         onChangeText={setItemNotes}
         placeholder={notesPlaceholder}
         multiline

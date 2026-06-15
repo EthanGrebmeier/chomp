@@ -8,6 +8,7 @@ import { TextInput } from '../text-input';
 import { Button } from '../ui/button';
 import { CloseButton } from '../ui/close-button';
 import { Text } from '../ui/text';
+import { useUncontrolledTextInput } from '../use-uncontrolled-text-input';
 
 import { MAX_UNIT_LENGTH } from './units';
 
@@ -24,23 +25,29 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
   ({ onSave }, ref) => {
     const sheetRef = useRef<TrueSheet>(null);
     const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
-    const [unitValue, setUnitValue] = useState('');
+    const unitInput = useUncontrolledTextInput();
+    const [canSave, setCanSave] = useState(false);
 
     useImperativeHandle(ref, () => ({
       present: (currentUnit: string) => {
-        setUnitValue(currentUnit ?? '');
+        const nextUnit = currentUnit ?? '';
+        unitInput.reset(nextUnit);
+        setCanSave(nextUnit.trim().length > 0);
         sheetRef.current?.present();
       },
       dismiss: () => sheetRef.current?.dismiss(),
     }));
 
-    const trimmedUnit = unitValue.trim();
-    const canSave = trimmedUnit.length > 0;
-
     const handleSave = () => {
+      const trimmedUnit = unitInput.getValue().trim();
       if (!canSave) return;
       onSave(trimmedUnit);
       sheetRef.current?.dismiss();
+    };
+
+    const handleChangeText = (text: string) => {
+      unitInput.handleChangeText(text);
+      setCanSave(text.trim().length > 0);
     };
 
     const handleCancel = () => {
@@ -49,7 +56,8 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
 
     const handleDismiss = () => {
       KeyboardController.dismiss();
-      setUnitValue('');
+      unitInput.reset();
+      setCanSave(false);
     };
 
     return (
@@ -77,9 +85,10 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
 
           <View className="my-4 gap-2">
             <BottomSheet.TextInput
+              key={unitInput.inputKey}
               ref={inputRef}
-              value={unitValue}
-              onChangeText={setUnitValue}
+              defaultValue={unitInput.defaultValue}
+              onChangeText={handleChangeText}
               placeholder="e.g. bunch"
               placeholderTextColor="#9ca3af"
               autoCapitalize="none"

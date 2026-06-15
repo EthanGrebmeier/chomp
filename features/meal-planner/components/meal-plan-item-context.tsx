@@ -1,14 +1,22 @@
 import React, { createContext, useContext, useState } from 'react';
+import { useDebounceCallback } from 'usehooks-ts';
 
 import { normalizeUnit } from '../../../components/item-sheet/unit-utils';
+import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
 import { BaseGroceryItem } from '../../grocery-list/types';
 
 type MealPlanItemContextValue = {
   // Item state
   itemName: string;
   setItemName: (name: string) => void;
+  itemNameInputKey: number;
+  itemNameDefaultValue: string;
+  getItemName: () => string;
   itemNotes: string;
   setItemNotes: (notes: string) => void;
+  itemNotesInputKey: number;
+  itemNotesDefaultValue: string;
+  getItemNotes: () => string;
   quantity: number;
   setQuantity: (quantity: number) => void;
   unit: string;
@@ -34,6 +42,8 @@ const MealPlanItemContext = createContext<MealPlanItemContextValue | undefined>(
   undefined
 );
 
+const TEXT_COMMIT_DEBOUNCE_MS = 150;
+
 export type MealPlanItemInitialValues = {
   itemName?: string;
   itemNotes?: string;
@@ -54,8 +64,12 @@ export const MealPlanItemProvider = ({
   children,
   initialValues,
 }: MealPlanItemProviderProps) => {
-  const [itemName, setItemName] = useState(initialValues?.itemName ?? '');
-  const [itemNotes, setItemNotes] = useState(initialValues?.itemNotes ?? '');
+  const initialItemName = initialValues?.itemName ?? '';
+  const initialItemNotes = initialValues?.itemNotes ?? '';
+  const itemNameInput = useUncontrolledTextInput(initialItemName);
+  const itemNotesInput = useUncontrolledTextInput(initialItemNotes);
+  const [itemName, setCommittedItemName] = useState(initialItemName);
+  const [itemNotes, setCommittedItemNotes] = useState(initialItemNotes);
   const [quantity, setQuantity] = useState(initialValues?.quantity ?? 1);
   const [unit, setUnit] = useState(normalizeUnit(initialValues?.unit));
   const [category, setCategory] = useState<string | undefined>(
@@ -71,10 +85,32 @@ export const MealPlanItemProvider = ({
     initialValues?.mealTag
   );
   const [showMatchingItems, setShowMatchingItems] = useState(false);
+  const commitItemName = useDebounceCallback(
+    setCommittedItemName,
+    TEXT_COMMIT_DEBOUNCE_MS
+  );
+  const commitItemNotes = useDebounceCallback(
+    setCommittedItemNotes,
+    TEXT_COMMIT_DEBOUNCE_MS
+  );
+
+  const setItemName = (name: string) => {
+    itemNameInput.handleChangeText(name);
+    commitItemName(name);
+  };
+
+  const setItemNotes = (notes: string) => {
+    itemNotesInput.handleChangeText(notes);
+    commitItemNotes(notes);
+  };
 
   const resetState = () => {
-    setItemName('');
-    setItemNotes('');
+    commitItemName.cancel();
+    commitItemNotes.cancel();
+    itemNameInput.reset();
+    itemNotesInput.reset();
+    setCommittedItemName('');
+    setCommittedItemNotes('');
     setQuantity(1);
     setUnit('each');
     setCategory(undefined);
@@ -85,21 +121,29 @@ export const MealPlanItemProvider = ({
   };
 
   const populateFromItem = (item: BaseGroceryItem) => {
-    setItemName(item.name);
+    commitItemName.cancel();
+    itemNameInput.reset(item.name);
+    setCommittedItemName(item.name);
     setUnit(normalizeUnit(item.unit));
     if (item.category) setCategory(item.category);
     setShowMatchingItems(false);
   };
 
   const isValid = () => {
-    return itemName.trim().length > 0 && selectedDate !== undefined;
+    return itemNameInput.getValue().trim().length > 0 && selectedDate !== undefined;
   };
 
   const value: MealPlanItemContextValue = {
     itemName,
     setItemName,
+    itemNameInputKey: itemNameInput.inputKey,
+    itemNameDefaultValue: itemNameInput.defaultValue,
+    getItemName: itemNameInput.getValue,
     itemNotes,
     setItemNotes,
+    itemNotesInputKey: itemNotesInput.inputKey,
+    itemNotesDefaultValue: itemNotesInput.defaultValue,
+    getItemNotes: itemNotesInput.getValue,
     quantity,
     setQuantity,
     unit,

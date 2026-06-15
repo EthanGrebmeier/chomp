@@ -101,8 +101,16 @@ export const useLiveItemSync = ({
   currentItemName,
   handleRef,
 }: UseLiveItemSyncArgs): UseLiveItemSyncHandle => {
-  const { itemInputValue, notesInputValue, category, quantity, unit, storeId } =
-    useItemSheet();
+  const {
+    itemInputValue,
+    notesInputValue,
+    itemInputValueRef,
+    notesInputValueRef,
+    category,
+    quantity,
+    unit,
+    storeId,
+  } = useItemSheet();
 
   const snapshotRef = useRef<ItemSnapshot | null>(null);
   const postPickContextRef = useRef<PostPickContext | null>(null);
@@ -112,8 +120,6 @@ export const useLiveItemSync = ({
   // always read the freshest values without resubscribing.
   const stateRef = useRef({
     selectedItemId,
-    itemInputValue,
-    notesInputValue,
     category,
     quantity,
     unit,
@@ -126,8 +132,6 @@ export const useLiveItemSync = ({
   });
   stateRef.current = {
     selectedItemId,
-    itemInputValue,
-    notesInputValue,
     category,
     quantity,
     unit,
@@ -142,14 +146,14 @@ export const useLiveItemSync = ({
   const buildCurrent = useCallback((): ItemSnapshot => {
     const s = stateRef.current;
     return {
-      name: s.itemInputValue,
+      name: itemInputValueRef.current,
       category: s.category,
-      notes: s.notesInputValue,
+      notes: notesInputValueRef.current,
       quantity: s.quantity,
       unit: s.unit,
       storeId: s.storeId,
     };
-  }, []);
+  }, [itemInputValueRef, notesInputValueRef]);
 
   // Resolve external link state: after a pick, postPickContextRef shadows the
   // initial-present props so the writer reconciles against the actual linked
@@ -175,7 +179,7 @@ export const useLiveItemSync = ({
     if (!state.selectedItemId) return;
     // Treat a temporarily-cleared name as "don't touch it yet"; the user is
     // mid-edit and an empty name would otherwise corrupt the item row.
-    if (!state.itemInputValue.trim()) return;
+    if (!itemInputValueRef.current.trim()) return;
 
     const current = buildCurrent();
     const diff = diffItemSnapshot({ snapshot, current });
@@ -197,7 +201,12 @@ export const useLiveItemSync = ({
       currentStoreId: resolveLinkedStoreId(),
       currentSavedItemId: resolveLinkedSavedItemId(),
     });
-  }, [buildCurrent, resolveLinkedStoreId, resolveLinkedSavedItemId]);
+  }, [
+    buildCurrent,
+    itemInputValueRef,
+    resolveLinkedStoreId,
+    resolveLinkedSavedItemId,
+  ]);
 
   const debouncedCommit = useDebounceCallback(
     commitGroceryItemLive,

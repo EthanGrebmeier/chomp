@@ -6,12 +6,13 @@ import { TextInput } from '../../../components/text-input';
 import { Icon } from '../../../components/ui/icon';
 
 type SearchBarProps = {
-  value: string;
+  inputKey: number;
+  defaultValue: string;
   onChangeText: (text: string) => void;
 };
 
 export const SearchBar = forwardRef<RNTextInput, SearchBarProps>(
-  ({ value, onChangeText }, ref) => {
+  ({ inputKey, defaultValue, onChangeText }, ref) => {
     return (
       <View className="px-4">
         <View className="relative">
@@ -19,10 +20,11 @@ export const SearchBar = forwardRef<RNTextInput, SearchBarProps>(
             <Icon as={SearchIcon} size={18} className="text-muted-foreground" />
           </View>
           <TextInput
+            key={inputKey}
             ref={ref}
             className="pl-10"
             placeholder="Search items..."
-            value={value}
+            defaultValue={defaultValue}
             onChangeText={onChangeText}
             autoCorrect={false}
           />

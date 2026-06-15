@@ -65,6 +65,8 @@ const SavedItemSheetContents = ({ isEditing }: { isEditing: boolean }) => {
     mode,
     itemInputRef,
     itemInputValue,
+    itemInputKey,
+    itemInputDefaultValue,
     showMatchingItems,
     setShowMatchingItems,
     onChangeItemText,
@@ -117,7 +119,9 @@ const SavedItemSheetContents = ({ isEditing }: { isEditing: boolean }) => {
       <BottomSheet.SheetView className="pb-safe gap-4">
         <ItemInput
           placeholder="Item name"
-          value={itemInputValue}
+          inputKey={itemInputKey}
+          defaultValue={itemInputDefaultValue}
+          matchingValue={itemInputValue}
           onChangeText={onChangeItemText}
           onSelect={onSelect}
           showMatchingItems={showMatchingItems}

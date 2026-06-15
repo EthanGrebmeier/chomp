@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router';
 import { PencilLineIcon } from 'lucide-react-native';
 import {
   forwardRef,
@@ -18,6 +17,10 @@ import {
   RecipeConflictSheet,
   RecipeConflictSheetRef,
 } from '../../../features/grocery-list/components/recipe-conflict-sheet';
+import {
+  RecipeDetailSheet,
+  RecipeDetailSheetRef,
+} from '../../../features/recipes/components/recipe-detail-sheet';
 import { addRecipeToList } from '../../../features/recipes/instant/add-recipe-to-list';
 import {
   RecipeIngredient,
@@ -85,7 +88,9 @@ const IngredientRow = ({
               </Text>
             </Text>
           </View>
-          {ingredient.category ? <CategoryTag category={ingredient.category} /> : null}
+          {ingredient.category ? (
+            <CategoryTag category={ingredient.category} />
+          ) : null}
         </View>
         {ingredient.notes ? (
           <Text
@@ -105,7 +110,11 @@ const IngredientRow = ({
           hapticType="selection"
           className="rounded-md p-2"
         >
-          <Icon as={PencilLineIcon} size={16} className="text-muted-foreground" />
+          <Icon
+            as={PencilLineIcon}
+            size={16}
+            className="text-muted-foreground"
+          />
         </HapticPressable>
       ) : null}
     </ListItem>
@@ -179,7 +188,7 @@ export const IngredientSelector = forwardRef<
   }: IngredientSelectorProps,
   ref
 ) {
-  const router = useRouter();
+  const recipeDetailSheetRef = useRef<RecipeDetailSheetRef>(null);
   const ingredients = useMemo<MealPlanSelectableIngredient[]>(
     () =>
       mealPlanIngredients ??
@@ -211,9 +220,7 @@ export const IngredientSelector = forwardRef<
 
   useEffect(() => {
     if (!isControlled) {
-      setInternalSelectedIds(
-        new Set(ingredientIds)
-      );
+      setInternalSelectedIds(new Set(ingredientIds));
     }
   }, [ingredientIds, isControlled]);
 
@@ -224,8 +231,7 @@ export const IngredientSelector = forwardRef<
   const allSelected = effectiveSelectedIds.size === ingredients.length;
 
   const handleGoToRecipe = () => {
-    onDismiss();
-    router.push(`/recipes/${recipe.id}`);
+    recipeDetailSheetRef.current?.present(recipe.id);
   };
 
   const handleToggleIngredient = (id: string) => {
@@ -255,7 +261,9 @@ export const IngredientSelector = forwardRef<
   const handleToggleAll = () => {
     if (isControlled) {
       const shouldSelectAll = effectiveSelectedIds.size !== ingredients.length;
-      const nextSelected = shouldSelectAll ? new Set(ingredientIds) : new Set<string>();
+      const nextSelected = shouldSelectAll
+        ? new Set(ingredientIds)
+        : new Set<string>();
       onToggleAll?.();
       onPersistSelection?.(nextSelected);
       return;
@@ -363,7 +371,8 @@ export const IngredientSelector = forwardRef<
   const shouldShowFooter = showFooter ?? Boolean(onAddToList ?? listId);
   const isAddingResolved =
     (isAdding ?? isAddingInternal) || isResolvingConflict;
-  const resolvedBottomInset = bottomContentInset ?? (shouldShowFooter ? 88 : 16);
+  const resolvedBottomInset =
+    bottomContentInset ?? (shouldShowFooter ? 88 : 16);
 
   useEffect(() => {
     onBusyStateChange?.(isAddingResolved);
@@ -426,7 +435,8 @@ export const IngredientSelector = forwardRef<
           nestedScrollEnabled
         >
           {ingredients.map((ingredient, index) => {
-            const ingredientId = ingredient.sourceRecipeIngredientId ?? ingredient.id;
+            const ingredientId =
+              ingredient.sourceRecipeIngredientId ?? ingredient.id;
             return (
               <IngredientRow
                 className={cn(
@@ -438,7 +448,9 @@ export const IngredientSelector = forwardRef<
                 isSelected={effectiveSelectedIds.has(ingredientId)}
                 onToggle={() => handleToggleIngredient(ingredientId)}
                 onEdit={
-                  onEditIngredient ? () => onEditIngredient(ingredientId) : undefined
+                  onEditIngredient
+                    ? () => onEditIngredient(ingredientId)
+                    : undefined
                 }
               />
             );
@@ -472,6 +484,7 @@ export const IngredientSelector = forwardRef<
         }}
         isPending={isResolvingConflict}
       />
+      <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
     </>
   );
 });

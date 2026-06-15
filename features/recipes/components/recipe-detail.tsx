@@ -25,9 +25,14 @@ import { RecipeIngredientItem } from './recipe-ingredient-item';
 type RecipeDetailContentProps = {
   recipe: RecipeWithIngredients;
   listId?: string;
+  onClose?: () => void;
 };
 
-const RecipeDetailContent = ({ recipe, listId }: RecipeDetailContentProps) => {
+const RecipeDetailContent = ({
+  recipe,
+  listId,
+  onClose,
+}: RecipeDetailContentProps) => {
   const { user } = db.useAuth();
   const { present } = useAddIngredientSheet();
 
@@ -39,10 +44,10 @@ const RecipeDetailContent = ({ recipe, listId }: RecipeDetailContentProps) => {
   };
 
   return (
-    <View className="flex-1 gap-4 pt-8">
+    <View className="flex-1 gap-4 pt-4">
       <View className="relative min-h-10 px-4">
         <View className="absolute left-4 top-0 z-10">
-          <BackButton />
+          <BackButton onPress={onClose} />
         </View>
         <Heading className="px-14 text-center">{recipe.name}</Heading>
         <View className="absolute right-4 top-0">
@@ -53,6 +58,7 @@ const RecipeDetailContent = ({ recipe, listId }: RecipeDetailContentProps) => {
               </View>
             }
             recipe={recipe}
+            onClose={onClose}
           />
         </View>
       </View>
@@ -144,12 +150,17 @@ const RecipeDetailContent = ({ recipe, listId }: RecipeDetailContentProps) => {
 type RecipeDetailProps = {
   recipe: RecipeWithIngredients;
   listId?: string;
+  onClose?: () => void;
 };
 
-export const RecipeDetail = ({ recipe, listId }: RecipeDetailProps) => {
+export const RecipeDetail = ({
+  recipe,
+  listId,
+  onClose,
+}: RecipeDetailProps) => {
   return (
     <AddIngredientProvider recipeId={recipe.id}>
-      <RecipeDetailContent recipe={recipe} listId={listId} />
+      <RecipeDetailContent recipe={recipe} listId={listId} onClose={onClose} />
     </AddIngredientProvider>
   );
 };
