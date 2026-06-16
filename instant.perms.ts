@@ -75,6 +75,15 @@ const rules = {
       update: 'isOwner',
     },
   },
+  categories: {
+    bind: ['isOwner', "auth.id in data.ref('user.id')"],
+    allow: {
+      view: 'isOwner',
+      create: 'auth.id != null',
+      delete: 'isOwner',
+      update: 'isOwner',
+    },
+  },
   meal_plan_recipes: {
     bind: ['isOwner', "auth.id in data.ref('grocery_list.shares.user_id')"],
     allow: {

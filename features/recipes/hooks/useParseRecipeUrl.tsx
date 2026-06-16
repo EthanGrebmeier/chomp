@@ -1,10 +1,7 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { useMutation } from '@tanstack/react-query';
 
-import {
-  Category,
-  categoryOptions,
-} from '@/features/shared/category/categories';
+import { categoryOptions } from '@/features/shared/category/categories';
 
 import { parseRecipeUrl, RecipeParseError } from '../api/parse-recipe-url';
 import { IngredientCategory, ParseRecipeUrlResponse } from '../api/types';
@@ -93,7 +90,7 @@ function getMockParseRecipeResponse(url: string): ParseRecipeUrlResponse {
 function normalizeCategory(category: string): IngredientCategory {
   const lowerCategory = category.toLowerCase();
   const match = categoryOptions.find(opt => opt.value === lowerCategory);
-  return (match?.value ?? 'other') as Category;
+  return match?.value ?? 'other';
 }
 
 /**

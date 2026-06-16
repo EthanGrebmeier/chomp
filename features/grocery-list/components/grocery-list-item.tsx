@@ -20,12 +20,14 @@ import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import { cn } from '../../../lib/utils';
+import { CategoryOption } from '../../shared/category/categories';
 import { checkListItem } from '../instant/check-list-item';
 import { removeGroceryListItem } from '../instant/remove-grocery-list-item';
 import { GroceryListItemWithRecipe } from '../types';
 
 type GroceryListItemProps = {
   item: GroceryListItemWithRecipe;
+  categoryOptions: CategoryOption[];
   isChecked: boolean;
   className?: string;
   onEdit?: (item: GroceryListItemWithRecipe) => void;
@@ -62,6 +64,7 @@ const SwipeDeleteAction = ({ drag, onPress }: SwipeDeleteActionProps) => {
 
 const GroceryListItemComponent = ({
   item,
+  categoryOptions,
   isChecked,
   className,
   onEdit,
@@ -215,7 +218,12 @@ const GroceryListItemComponent = ({
             </View>
           </View>
           <View className="flex-row items-center gap-2">
-            {item.category && <CategoryTag category={item.category} />}
+            {item.category ? (
+              <CategoryTag
+                category={item.category}
+                categoryOptions={categoryOptions}
+              />
+            ) : null}
           </View>
         </View>
         {notes ? (
@@ -260,6 +268,7 @@ export const GroceryListItem = memo(
   (previousProps, nextProps) => {
     return (
       previousProps.item === nextProps.item &&
+      previousProps.categoryOptions === nextProps.categoryOptions &&
       previousProps.isChecked === nextProps.isChecked &&
       previousProps.className === nextProps.className &&
       previousProps.isBulkSelectionModeActive ===

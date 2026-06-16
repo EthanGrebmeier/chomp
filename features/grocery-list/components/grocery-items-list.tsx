@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
+import { useCategoryOptions } from '../../categories/use-category-options';
 import { cn } from '../../../lib/utils';
 import {
   GroceryListGroupBy,
@@ -81,6 +82,7 @@ export const GroceryItemsList = ({
   onDeselectBulkSelectionSectionItems,
 }: GroceryItemsListProps) => {
   const { present: presentEditSheet } = useEditItemSheet();
+  const { data: categoryOptions } = useCategoryOptions();
 
   const [collapsedSectionsByGroup, setCollapsedSectionsByGroup] = useState<
     Record<GroceryItemsListProps['groupBy'], Set<string>>
@@ -112,19 +114,20 @@ export const GroceryItemsList = ({
     const nextUncheckedItems = items.filter(item => !item.isChecked);
     const nextCheckedItems = sortItems(
       items.filter(item => item.isChecked),
-      sortBy
+      sortBy,
+      categoryOptions
     );
 
     return {
       uncheckedItems: nextUncheckedItems,
       checkedItems: nextCheckedItems,
     };
-  }, [items, sortBy]);
+  }, [categoryOptions, items, sortBy]);
 
   // Group unchecked items based on selected grouping
   const groupedUncheckedItems = useMemo(
-    () => groupItemsBy(uncheckedItems, groupBy, sortBy),
-    [uncheckedItems, groupBy, sortBy]
+    () => groupItemsBy(uncheckedItems, groupBy, sortBy, categoryOptions),
+    [categoryOptions, uncheckedItems, groupBy, sortBy]
   );
 
   const sectionItemIds = useMemo(() => {
@@ -342,6 +345,7 @@ export const GroceryItemsList = ({
       return (
         <GroceryListItem
           item={item.item}
+          categoryOptions={categoryOptions}
           isChecked={Boolean(item.item.isChecked)}
           className={cn(showBorder && 'border-b border-dashed border-border')}
           onEdit={presentEditSheet}

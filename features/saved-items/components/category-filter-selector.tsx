@@ -7,7 +7,8 @@ import {
 } from '../../../components/native-dropdown';
 import { Pill } from '../../../components/ui/pill';
 import { cn } from '../../../lib/utils';
-import { categoryOptions } from '../../shared/category/categories';
+import { useCategoryOptions } from '../../categories/use-category-options';
+import { getCategoryLabel } from '../../shared/category/categories';
 
 type CategoryFilterSelectorProps = {
   category?: string | null;
@@ -18,19 +19,22 @@ export const CategoryFilterSelector = ({
   category,
   onSelect,
 }: CategoryFilterSelectorProps) => {
-  const selectedCategory = categoryOptions.find(opt => opt.value === category);
+  const { data: categoryOptions } = useCategoryOptions();
+  const selectedCategoryLabel = getCategoryLabel(categoryOptions, category);
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger>
         <Pill
           className={cn(
-            selectedCategory ? 'border border-border' : cn('border-transparent')
+            selectedCategoryLabel
+              ? 'border border-border'
+              : cn('border-transparent')
           )}
           textClassName={cn(
-            selectedCategory ? 'text-black' : 'text-muted-foreground'
+            selectedCategoryLabel ? 'text-black' : 'text-muted-foreground'
           )}
         >
-          {selectedCategory ? selectedCategory.label : 'All Categories'}
+          {selectedCategoryLabel ?? 'All Categories'}
         </Pill>
       </DropdownMenuTrigger>
       <DropdownMenuContent>

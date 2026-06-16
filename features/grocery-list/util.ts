@@ -1,4 +1,11 @@
 import {
+  CategoryOption,
+  builtInCategoryOptions,
+  getCategoryLabel,
+  getFallbackCategoryLabel,
+} from '../shared/category/categories';
+
+import {
   GroceryListGroupBy,
   GroceryListItemWithRecipe,
   GroceryListSortBy,
@@ -30,7 +37,8 @@ const compareOptionalLabels = (
 
 export const sortItems = (
   items: GroceryListItemWithRecipe[],
-  sortBy: GroceryListSortBy
+  sortBy: GroceryListSortBy,
+  categoryOptions: CategoryOption[] = builtInCategoryOptions
 ): GroceryListItemWithRecipe[] => {
   return [...items].sort((a, b) => {
     if (sortBy === 'recent') {
@@ -41,8 +49,8 @@ export const sortItems = (
 
     if (sortBy === 'category') {
       const categoryComparison = compareOptionalLabels(
-        a.category,
-        b.category,
+        a.category ? getCategoryLabel(categoryOptions, a.category) : undefined,
+        b.category ? getCategoryLabel(categoryOptions, b.category) : undefined,
         'Uncategorized'
       );
       if (categoryComparison !== 0) return categoryComparison;
@@ -75,25 +83,32 @@ export const sortItems = (
 export const groupItemsBy = (
   items: GroceryListItemWithRecipe[],
   groupBy: GroceryListGroupBy,
-  sortBy: GroceryListSortBy = 'recent'
+  sortBy: GroceryListSortBy = 'recent',
+  categoryOptions: CategoryOption[] = builtInCategoryOptions
 ): Map<string, GroceryListItemWithRecipe[]> => {
   const groups = new Map<string, GroceryListItemWithRecipe[]>();
+  const categoryDisplayByKey = new Map<string, string>();
   const storeDisplayByKey = new Map<string, string>();
 
   if (groupBy === 'none') {
     // Sort items based on sortBy parameter
-    const sortedItems = sortItems(items, sortBy);
+    const sortedItems = sortItems(items, sortBy, categoryOptions);
     groups.set('', sortedItems);
     return groups;
   }
 
   if (groupBy === 'category') {
     items.forEach(item => {
-      const category = item.category ?? 'Uncategorized';
-      if (!groups.has(category)) {
-        groups.set(category, []);
+      const categoryKey = item.category ?? 'Uncategorized';
+      const categoryLabel = item.category
+        ? (getCategoryLabel(categoryOptions, item.category) ??
+          getFallbackCategoryLabel(item.category))
+        : 'Uncategorized';
+      if (!groups.has(categoryKey)) {
+        groups.set(categoryKey, []);
+        categoryDisplayByKey.set(categoryKey, categoryLabel);
       }
-      groups.get(category)!.push(item);
+      groups.get(categoryKey)!.push(item);
     });
   }
 
@@ -123,7 +138,7 @@ export const groupItemsBy = (
 
   // Sort items within each group based on sortBy parameter
   for (const [key, groupItems] of groups.entries()) {
-    groups.set(key, sortItems(groupItems, sortBy));
+    groups.set(key, sortItems(groupItems, sortBy, categoryOptions));
   }
 
   // Convert to array, sort groups based on grouping type
@@ -132,9 +147,11 @@ export const groupItemsBy = (
   if (groupBy === 'category') {
     // Sort category groups: put Uncategorized at the bottom, others alphabetically
     sortedGroups = Array.from(groups.entries()).sort(([a], [b]) => {
-      if (a === 'Uncategorized') return 1;
-      if (b === 'Uncategorized') return -1;
-      return a.localeCompare(b);
+      const aLabel = categoryDisplayByKey.get(a) ?? a;
+      const bLabel = categoryDisplayByKey.get(b) ?? b;
+      if (aLabel === 'Uncategorized') return 1;
+      if (bLabel === 'Uncategorized') return -1;
+      return aLabel.localeCompare(bLabel, undefined, { sensitivity: 'base' });
     });
   } else if (groupBy === 'recipe') {
     // Sort recipe groups: put Ungrouped at the bottom, others chronologically by earliest item
@@ -169,10 +186,12 @@ export const groupItemsBy = (
   }
 
   const sortedGroupsMap =
-    groupBy === 'store'
+    groupBy === 'store' || groupBy === 'category'
       ? new Map(
           sortedGroups.map(([key, groupItems]) => [
-            storeDisplayByKey.get(key) ?? key,
+            groupBy === 'store'
+              ? (storeDisplayByKey.get(key) ?? key)
+              : (categoryDisplayByKey.get(key) ?? key),
             groupItems,
           ])
         )

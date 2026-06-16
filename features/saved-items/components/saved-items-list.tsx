@@ -14,12 +14,14 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import { categoryOptions } from '../../shared/category/categories';
+import { useCategoryOptions } from '../../categories/use-category-options';
+import { CategoryOption } from '../../shared/category/categories';
 import { UnifiedSavedItem } from '../types';
 import { deleteSavedItem } from '../unified/delete-saved-item';
 
 type SavedItemRowProps = {
   item: UnifiedSavedItem;
+  categoryOptions: CategoryOption[];
   isLast: boolean;
   onDelete: () => void;
   onPress: () => void;
@@ -27,6 +29,7 @@ type SavedItemRowProps = {
 
 const SavedItemRow = ({
   item,
+  categoryOptions,
   isLast,
   onDelete,
   onPress,
@@ -70,7 +73,12 @@ const SavedItemRow = ({
                   {item.name}
                 </Text>
               </View>
-              {item.category && <CategoryTag category={item.category} />}
+              {item.category ? (
+                <CategoryTag
+                  category={item.category}
+                  categoryOptions={categoryOptions}
+                />
+              ) : null}
             </View>
             {notes ? (
               <Text
@@ -109,6 +117,7 @@ export const SavedItemsList = ({
   sortBy,
   onEditItem,
 }: SavedItemsListProps) => {
+  const { data: categoryOptions } = useCategoryOptions();
   const handleDelete = (item: UnifiedSavedItem) => {
     deleteSavedItem({ item });
   };
@@ -120,7 +129,7 @@ export const SavedItemsList = ({
       order[cat.value] = index;
     });
     return order;
-  }, []);
+  }, [categoryOptions]);
 
   // Sort items based on sortBy preference
   const sortedItems = useMemo(() => {
@@ -166,6 +175,7 @@ export const SavedItemsList = ({
       renderItem={({ item, index }) => (
         <SavedItemRow
           item={item}
+          categoryOptions={categoryOptions}
           isLast={index === sortedItems.length - 1}
           onDelete={() => handleDelete(item)}
           onPress={() => onEditItem(item)}

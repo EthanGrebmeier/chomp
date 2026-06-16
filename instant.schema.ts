@@ -97,6 +97,12 @@ const _schema = i.schema({
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
+    categories: i.entity({
+      name: i.string(),
+      value: i.string().indexed(),
+      createdAt: i.string(),
+      updatedAt: i.string(),
+    }),
   },
   links: {
     grocery_listsGrocery_items: {
@@ -287,6 +293,19 @@ const _schema = i.schema({
         on: '$users',
         has: 'many',
         label: 'stores',
+      },
+    },
+    categories_users: {
+      forward: {
+        on: 'categories',
+        has: 'one',
+        label: 'user',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: '$users',
+        has: 'many',
+        label: 'categories',
       },
     },
     grocery_items_stores: {

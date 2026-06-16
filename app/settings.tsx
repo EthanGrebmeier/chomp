@@ -1,5 +1,10 @@
 import { router } from 'expo-router';
-import { BookmarkIcon, ChevronRightIcon, StoreIcon } from 'lucide-react-native';
+import {
+  BookmarkIcon,
+  ChevronRightIcon,
+  StoreIcon,
+  TagIcon,
+} from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { Heading } from '@/components/text/heading';
@@ -16,6 +21,10 @@ export default function Settings() {
 
   const handleNavigateToStores = () => {
     router.push('/stores');
+  };
+
+  const handleNavigateToCategories = () => {
+    router.push('/categories');
   };
 
   return (
@@ -45,7 +54,7 @@ export default function Settings() {
             </HapticPressable>
             <HapticPressable
               onPress={handleNavigateToStores}
-              className="flex-row items-center justify-between active:opacity-70"
+              className="flex-row items-center justify-between border-b border-border pb-4 active:opacity-70"
             >
               <View className="flex-row items-center gap-3">
                 <Icon
@@ -54,6 +63,24 @@ export default function Settings() {
                   className="text-muted-foreground"
                 />
                 <Text className="font-medium">My Stores</Text>
+              </View>
+              <Icon
+                as={ChevronRightIcon}
+                size={20}
+                className="text-muted-foreground"
+              />
+            </HapticPressable>
+            <HapticPressable
+              onPress={handleNavigateToCategories}
+              className="flex-row items-center justify-between active:opacity-70"
+            >
+              <View className="flex-row items-center gap-3">
+                <Icon
+                  as={TagIcon}
+                  size={20}
+                  className="text-muted-foreground"
+                />
+                <Text className="font-medium">My Categories</Text>
               </View>
               <Icon
                 as={ChevronRightIcon}

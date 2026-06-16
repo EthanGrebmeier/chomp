@@ -1,7 +1,4 @@
-import { Category } from '@/features/shared/category/categories';
-
-// Re-export Category as IngredientCategory for clarity in this context
-export type IngredientCategory = Category;
+export type IngredientCategory = string;
 
 // Request
 export type ParseRecipeUrlRequest = {
