@@ -71,11 +71,16 @@ export const useItemSheet = () => {
 };
 
 type ItemSheetMode = 'add' | 'update';
+type DefaultStoreSelection = {
+  id: string;
+  name: string;
+};
 
 type ItemSheetProviderProps = {
   mode: ItemSheetMode;
   children: React.ReactNode;
   listId?: string;
+  defaultStore?: DefaultStoreSelection | null;
   onSubmit: (args: {
     item: BaseGroceryItem;
     listId?: string;
@@ -101,6 +106,7 @@ type ItemSheetProviderProps = {
 export const ItemSheetProvider = ({
   children,
   listId,
+  defaultStore,
   onSubmit,
   setFromItemRef,
   disableAutocomplete = false,
@@ -165,8 +171,8 @@ export const ItemSheetProvider = ({
     setUnit('each');
     setRecipe(undefined);
     setInitialRecipeId(undefined);
-    setStoreId(undefined);
-    setStoreName(undefined);
+    setStoreId(mode === 'add' ? defaultStore?.id : undefined);
+    setStoreName(mode === 'add' ? defaultStore?.name : undefined);
     setShowMatchingItems(false);
   };
 
@@ -259,8 +265,10 @@ export const ItemSheetProvider = ({
     setCategory(item.category);
     resetNotesInput(item.notes ?? '');
     setNotesInputValue(item.notes ?? '');
-    setStoreId(item.storeId);
-    setStoreName(undefined);
+      const defaultStoreId = mode === 'add' ? defaultStore?.id : undefined;
+      const defaultStoreName = mode === 'add' ? defaultStore?.name : undefined;
+      setStoreId(item.storeId ?? defaultStoreId);
+      setStoreName(item.storeId ? undefined : defaultStoreName);
     setShowMatchingItems(false);
     // Notify observers (e.g. useLiveItemSync in the Edit flow) on the next
     // macrotask so React can commit the state updates above first. This keeps

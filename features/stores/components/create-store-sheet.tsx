@@ -11,6 +11,8 @@ import { createStore } from '../instant/create-store';
 import { updateStore } from '../instant/update-store';
 import { Store } from '../types';
 
+import { DefaultStoreToggle } from './default-store-toggle';
+
 type StoreSheetContextType = {
   present: (store?: Store) => void;
 };
@@ -31,8 +33,10 @@ type StoreSheetInternalContextType = {
   nameInputRef: React.RefObject<TextInput | null>;
   nameInputKey: number;
   nameDefaultValue: string;
+  isDefault: boolean;
   canSubmit: boolean;
   onNameChange: (name: string) => void;
+  onDefaultChange: () => void;
   reset: () => void;
   onSubmit: () => void;
 };
@@ -56,8 +60,10 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
     nameInputRef,
     nameInputKey,
     nameDefaultValue,
+    isDefault,
     canSubmit,
     onNameChange,
+    onDefaultChange,
     onSubmit,
     sheetRef,
   } = useStoreSheetInternal();
@@ -86,19 +92,22 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
           <Text className="mb-2 text-sm font-medium text-muted-foreground">
             Store Name
           </Text>
-          <TextInput
+          <BottomSheet.TextInput
             key={nameInputKey}
-            ref={nameInputRef}
             defaultValue={nameDefaultValue}
             onChangeText={onNameChange}
-            placeholder="Enter store name..."
+            placeholder="My Store"
             placeholderTextColor="#9ca3af"
-            className="rounded-xl border border-border bg-input px-4 py-3 text-base text-foreground"
             autoCapitalize="words"
             returnKeyType="done"
             onSubmitEditing={onSubmit}
           />
         </View>
+        <DefaultStoreToggle
+          checked={isDefault}
+          className="mt-4"
+          onToggle={onDefaultChange}
+        />
       </BottomSheet.SheetView>
     </BottomSheet>
   );
@@ -111,6 +120,7 @@ type StoreSheetProviderProps = {
 export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
   const [editingStore, setEditingStore] = useState<Store | null>(null);
   const nameInput = useUncontrolledTextInput();
+  const [isDefault, setIsDefault] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   const nameInputRef = useRef<TextInput>(null);
   const sheetRef = useRef<TrueSheet>(null);
@@ -119,6 +129,7 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
 
   const reset = () => {
     nameInput.reset();
+    setIsDefault(false);
     setCanSubmit(false);
     setEditingStore(null);
   };
@@ -134,14 +145,14 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
       if (isEditing && editingStore) {
         await updateStore({
           storeId: editingStore.id,
-          updates: { name: trimmedName },
+          updates: { name: trimmedName, isDefault },
         });
       } else {
-        await createStore({ name: trimmedName });
+        await createStore({ name: trimmedName, isDefault });
       }
       sheetRef.current?.dismiss();
       reset();
-    } catch (error) {
+    } catch {
       toast.error(
         isEditing ? 'Failed to update store' : 'Failed to create store'
       );
@@ -157,10 +168,12 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
     if (store) {
       setEditingStore(store);
       nameInput.reset(store.name);
+      setIsDefault(!!store.isDefault);
       setCanSubmit(store.name.trim().length > 0);
     } else {
       setEditingStore(null);
       nameInput.reset();
+      setIsDefault(false);
       setCanSubmit(false);
     }
     sheetRef.current?.present();
@@ -174,8 +187,10 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
           nameInputRef,
           nameInputKey: nameInput.inputKey,
           nameDefaultValue: nameInput.defaultValue,
+          isDefault,
           canSubmit,
           onNameChange,
+          onDefaultChange: () => setIsDefault(current => !current),
           reset,
           onSubmit,
         }}

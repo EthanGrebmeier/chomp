@@ -93,6 +93,7 @@ const _schema = i.schema({
     }),
     stores: i.entity({
       name: i.string(),
+      isDefault: i.boolean().indexed().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),

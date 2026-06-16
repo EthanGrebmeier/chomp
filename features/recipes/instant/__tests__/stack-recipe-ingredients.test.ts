@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  applyDefaultStoreToStackableIngredients,
   buildIngredientMatchKey,
   planIngredientStacking,
 } from '../stack-recipe-ingredients-plan';
@@ -173,5 +174,41 @@ describe('stack-recipe-ingredients planning', () => {
     expect(plan.quantityUpdates.size).toBe(0);
     expect(plan.createEntries).toHaveLength(0);
     expect(plan.conflicts).toHaveLength(1);
+  });
+
+  it('applies the default store to ingredients without stores', () => {
+    const ingredients = applyDefaultStoreToStackableIngredients(
+      [
+        {
+          name: 'Milk',
+          quantity: 1,
+          unit: 'gallon',
+          category: 'Dairy',
+        },
+      ],
+      { id: 'default-store', name: 'Target' }
+    );
+
+    expect(ingredients[0]?.storeId).toBe('default-store');
+    expect(ingredients[0]?.storeName).toBe('Target');
+  });
+
+  it('keeps explicit ingredient stores when a default store exists', () => {
+    const ingredients = applyDefaultStoreToStackableIngredients(
+      [
+        {
+          name: 'Eggs',
+          quantity: 1,
+          unit: 'dozen',
+          category: 'Dairy',
+          storeId: 'explicit-store',
+          storeName: 'Costco',
+        },
+      ],
+      { id: 'default-store', name: 'Target' }
+    );
+
+    expect(ingredients[0]?.storeId).toBe('explicit-store');
+    expect(ingredients[0]?.storeName).toBe('Costco');
   });
 });

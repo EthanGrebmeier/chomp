@@ -1,6 +1,7 @@
 export type Store = {
   id: string;
   name: string;
+  isDefault?: boolean;
   createdAt: string;
   updatedAt: string;
 };

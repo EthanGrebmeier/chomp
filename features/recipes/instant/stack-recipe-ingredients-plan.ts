@@ -9,6 +9,11 @@ export type StackableIngredientInput = {
   recipeId?: string;
 };
 
+export type DefaultStoreForStacking = {
+  id: string;
+  name?: string | null;
+};
+
 export type ConflictResolution = 'prompt' | 'increment' | 'separate';
 
 export type IngredientConflict = {
@@ -72,6 +77,27 @@ export const buildIngredientMatchKey = ({
   storeName?: string | null;
 }): string =>
   `${buildIngredientNameKey(name)}|${normalizeToken(unit)}|${normalizeToken(category)}|${buildStoreNameKey(storeName)}`;
+
+export const applyDefaultStoreToStackableIngredients = <
+  T extends StackableIngredientInput,
+>(
+  ingredients: T[],
+  defaultStore?: DefaultStoreForStacking | null
+): T[] => {
+  if (!defaultStore) {
+    return ingredients;
+  }
+
+  return ingredients.map(ingredient =>
+    ingredient.storeId
+      ? ingredient
+      : {
+          ...ingredient,
+          storeId: defaultStore.id,
+          storeName: defaultStore.name ?? null,
+        }
+  );
+};
 
 const byMostRecentlyUpdated = (
   left: Pick<ExistingIngredientForStacking, 'updatedAt'>,

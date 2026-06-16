@@ -1,6 +1,7 @@
 import {
   addIngredientsWithStacking,
   ConflictResolution,
+  DefaultStoreForStacking,
 } from './stack-recipe-ingredients';
 
 export type RecipeIngredientInput = {
@@ -18,6 +19,7 @@ export type AddRecipeToListArgs = {
   listId: string;
   // Pass ingredients directly to avoid queryOnce which doesn't work offline
   ingredients: RecipeIngredientInput[];
+  defaultStore?: DefaultStoreForStacking | null;
   conflictResolution?: ConflictResolution;
 };
 
@@ -25,11 +27,13 @@ export const addRecipeToList = async ({
   recipeId,
   listId,
   ingredients,
+  defaultStore,
   conflictResolution = 'prompt',
 }: AddRecipeToListArgs) => {
   const result = await addIngredientsWithStacking({
     listId,
     conflictResolution,
+    defaultStore,
     ingredients: ingredients.map(ingredient => ({
       ...ingredient,
       recipeId,

@@ -29,6 +29,7 @@ export const addMealsToGroceryList = async ({
   selectedItemIds,
   skippedItemIds,
 }: AddMealsToGroceryListArgs) => {
+  const user = await db.getAuth();
   const result = await db.queryOnce({
     grocery_lists: {
       $: {
@@ -47,8 +48,14 @@ export const addMealsToGroceryList = async ({
         store: {},
       },
     },
+    stores: {
+      user: {},
+    },
   });
   const mealPlanData = result.data.grocery_lists?.[0];
+  const defaultStore =
+    result.data.stores?.find(store => store.user?.id === user?.id && store.isDefault) ??
+    null;
 
   const now = new Date().toISOString();
   const updateTransactions: Parameters<typeof db.transact>[0] = [];
@@ -165,6 +172,7 @@ export const addMealsToGroceryList = async ({
     await addIngredientsWithStacking({
       listId,
       ingredients: ingredientsToAdd,
+      defaultStore,
       // Meal-plan bulk add is a single action; create separate items on metadata conflicts.
       conflictResolution: 'separate',
     });

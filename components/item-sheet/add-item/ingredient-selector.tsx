@@ -26,6 +26,7 @@ import {
   RecipeIngredient,
   RecipeWithIngredients,
 } from '../../../features/recipes/types';
+import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
 import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
 import { BackButton } from '../../ui/back-button';
@@ -217,6 +218,7 @@ export const IngredientSelector = forwardRef<
     SelectedIngredientInput[] | null
   >(null);
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
+  const { data: defaultStore } = useDefaultStore();
 
   useEffect(() => {
     if (!isControlled) {
@@ -310,6 +312,7 @@ export const IngredientSelector = forwardRef<
         recipeId: recipe.id,
         listId,
         ingredients: pendingConflictIngredients,
+        defaultStore,
         conflictResolution: resolution,
       });
 
@@ -341,6 +344,7 @@ export const IngredientSelector = forwardRef<
         recipeId: recipe.id,
         listId,
         ingredients: selectedIngredients,
+        defaultStore,
       });
 
       if (result.requiresConflictResolution) {
@@ -360,6 +364,7 @@ export const IngredientSelector = forwardRef<
     }
   }, [
     buildSelectedIngredients,
+    defaultStore,
     effectiveSelectedIds.size,
     listId,
     onAddToList,

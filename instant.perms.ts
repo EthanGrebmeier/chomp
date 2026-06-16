@@ -129,7 +129,7 @@ const rules = {
     },
   },
   // Lockdown new attributes from being created
-  attrs: { allow: { $default: 'false' } },
+  attrs: { allow: { $default: 'true' } },
 } satisfies InstantRules;
 
 export default rules;

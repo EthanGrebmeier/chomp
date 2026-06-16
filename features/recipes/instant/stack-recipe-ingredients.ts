@@ -3,7 +3,9 @@ import { id, tx } from '@instantdb/react-native';
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import {
+  applyDefaultStoreToStackableIngredients,
   ConflictResolution,
+  DefaultStoreForStacking,
   IngredientConflict,
   planIngredientStacking,
   StackableIngredientInput,
@@ -11,6 +13,7 @@ import {
 export type {
   AggregatedIngredient,
   ConflictResolution,
+  DefaultStoreForStacking,
   IngredientConflict,
   ExistingIngredientForStacking,
   StackableIngredientInput,
@@ -19,6 +22,7 @@ export {
   buildIngredientMatchKey,
   buildIngredientNameKey,
   buildStoreNameKey,
+  applyDefaultStoreToStackableIngredients,
   planIngredientStacking,
 } from './stack-recipe-ingredients-plan';
 
@@ -38,6 +42,7 @@ type ExistingGroceryItem = {
 type AddIngredientsWithStackingArgs = {
   listId: string;
   ingredients: StackableIngredientInput[];
+  defaultStore?: DefaultStoreForStacking | null;
   conflictResolution?: ConflictResolution;
 };
 
@@ -51,9 +56,15 @@ export type AddIngredientsWithStackingResult = {
 export const addIngredientsWithStacking = async ({
   listId,
   ingredients,
+  defaultStore,
   conflictResolution = 'prompt',
 }: AddIngredientsWithStackingArgs): Promise<AddIngredientsWithStackingResult> => {
-  if (ingredients.length === 0) {
+  const ingredientsWithDefaultStore = applyDefaultStoreToStackableIngredients(
+    ingredients,
+    defaultStore
+  );
+
+  if (ingredientsWithDefaultStore.length === 0) {
     return {
       requiresConflictResolution: false,
       conflicts: [],
@@ -88,7 +99,7 @@ export const addIngredientsWithStacking = async ({
       storeName: item.store?.name,
       storeId: item.store?.id,
     })),
-    ingredients,
+    ingredients: ingredientsWithDefaultStore,
     conflictResolution,
   });
 

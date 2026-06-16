@@ -46,9 +46,18 @@ const StoreRow = ({ store, isLast, onDelete, onPress }: StoreRowProps) => {
             hapticType="light"
             className="flex-1 flex-row items-center justify-between py-1"
           >
-            <Text className="text-base font-medium text-foreground">
-              {store.name}
-            </Text>
+            <View className="flex-1 flex-row items-center gap-2">
+              <Text className="text-base font-medium text-foreground">
+                {store.name}
+              </Text>
+              {store.isDefault ? (
+                <View className="rounded-full bg-primary/10 px-2 py-0.5">
+                  <Text className="text-xs font-semibold text-primary">
+                    Default
+                  </Text>
+                </View>
+              ) : null}
+            </View>
           </HapticPressable>
         </ListItem>
       }
@@ -89,8 +98,9 @@ export const StoresList = ({ stores, onEditStore }: StoresListProps) => {
     );
   }
 
-  // Sort stores alphabetically by name
+  // Sort default first, then alphabetically by name.
   const sortedStores = [...stores].sort((a, b) =>
+    Number(!!b.isDefault) - Number(!!a.isDefault) ||
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
 

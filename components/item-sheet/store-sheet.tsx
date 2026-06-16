@@ -11,6 +11,7 @@ import {
 import { ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { DefaultStoreToggle } from '../../features/stores/components/default-store-toggle';
 import { createStore } from '../../features/stores/instant/create-store';
 import { useStores } from '../../features/stores/instant/use-stores';
 import { cn } from '../../lib/utils';
@@ -27,26 +28,39 @@ import { useUncontrolledTextInput } from '../use-uncontrolled-text-input';
 
 type StoreOptionProps = {
   label: string;
+  isDefault?: boolean;
   isSelected: boolean;
   onPress: () => void;
 };
 
-const StoreOption = ({ label, isSelected, onPress }: StoreOptionProps) => (
+const StoreOption = ({
+  label,
+  isDefault = false,
+  isSelected,
+  onPress,
+}: StoreOptionProps) => (
   <HapticPressable onPress={onPress} hapticType="selection">
     <View
       className={cn(
-        'flex-row items-center justify-center gap-3 rounded-xl px-2 py-3',
+        'relative flex-row items-center justify-center rounded-xl px-2 py-3',
         isSelected && 'bg-muted'
       )}
     >
       <Text
         className={cn(
-          'text-base font-medium',
+          'text-center text-base font-medium',
           isSelected ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
         {label}
       </Text>
+      {isDefault ? (
+        <View className="absolute bottom-0 right-2 top-0 justify-center">
+          <View className="rounded-full bg-primary/10 px-2 py-0.5">
+            <Text className="text-xs font-semibold text-primary">Default</Text>
+          </View>
+        </View>
+      ) : null}
     </View>
   </HapticPressable>
 );
@@ -82,15 +96,22 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
     const sheetRef = useRef<TrueSheet>(null);
     const createStoreSheetRef = useRef<TrueSheet>(null);
     const { data: stores, isLoading } = useStores();
+    const sortedStores = [...stores].sort(
+      (left, right) =>
+        Number(!!right.isDefault) - Number(!!left.isDefault) ||
+        left.name.toLowerCase().localeCompare(right.name.toLowerCase())
+    );
     const [localStoreId, setLocalStoreId] = useState<string | undefined | null>(
       storeId
     );
     const newStoreNameInput = useUncontrolledTextInput();
+    const [newStoreIsDefault, setNewStoreIsDefault] = useState(false);
     const [canCreateStore, setCanCreateStore] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [newlyCreatedStore, setNewlyCreatedStore] = useState<{
       id: string;
       name: string;
+      isDefault?: boolean;
     } | null>(null);
 
     // Find selected store - check newly created first, then query results
@@ -135,6 +156,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
     };
 
     const handleOpenCreateStore = () => {
+      setNewStoreIsDefault(false);
       createStoreSheetRef.current?.present();
     };
 
@@ -147,9 +169,17 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
 
       setIsCreating(true);
       try {
-        const { id: newStoreId } = await createStore({ name: trimmedName });
-        setNewlyCreatedStore({ id: newStoreId, name: trimmedName });
+        const { id: newStoreId } = await createStore({
+          name: trimmedName,
+          isDefault: newStoreIsDefault,
+        });
+        setNewlyCreatedStore({
+          id: newStoreId,
+          name: trimmedName,
+          isDefault: newStoreIsDefault,
+        });
         newStoreNameInput.reset();
+        setNewStoreIsDefault(false);
         setCanCreateStore(false);
         setLocalStoreId(newStoreId);
         setTimeout(() => {
@@ -248,10 +278,11 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
                 </Text>
               </View>
             ) : (
-              stores.map(store => (
+              sortedStores.map(store => (
                 <StoreOption
                   key={store.id}
                   label={store.name}
+                  isDefault={!!store.isDefault}
                   isSelected={store.id === localStoreId}
                   onPress={() => setLocalStoreId(store.id)}
                 />
@@ -305,6 +336,11 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
                 editable={!isCreating}
               />
             </View>
+            <DefaultStoreToggle
+              checked={newStoreIsDefault}
+              className="mt-4"
+              onToggle={() => setNewStoreIsDefault(current => !current)}
+            />
           </BottomSheet.SheetView>
         </BottomSheet>
       </>

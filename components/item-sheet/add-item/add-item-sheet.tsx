@@ -22,6 +22,7 @@ import {
   addRecipeToList,
 } from '../../../features/recipes/instant/add-recipe-to-list';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
+import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
 import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
 import { Button } from '../../ui/button';
@@ -89,11 +90,13 @@ const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
 
 type AddItemSheetProps = {
   groceryListId: string;
+  defaultStore?: { id: string; name: string } | null;
   isTriggerVisible?: boolean;
 };
 
 const AddItemSheet = ({
   groceryListId,
+  defaultStore,
   isTriggerVisible = true,
 }: AddItemSheetProps) => {
   const triggerOpacity = useSharedValue(isTriggerVisible ? 1 : 0);
@@ -119,16 +122,17 @@ const AddItemSheet = ({
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
 
   useEffect(() => {
-    triggerOpacity.value = withTiming(isTriggerVisible ? 1 : 0, {
+    triggerOpacity.set(withTiming(isTriggerVisible ? 1 : 0, {
       duration: 200,
-    });
+    }));
   }, [isTriggerVisible, triggerOpacity]);
 
   const triggerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: triggerOpacity.value,
+    opacity: triggerOpacity.get(),
   }));
 
   const openSheet = () => {
+    reset();
     ref.current?.present();
   };
 
@@ -206,6 +210,7 @@ const AddItemSheet = ({
           unit: ingredient.unit,
           notes: ingredient.notes ?? null,
           category: ingredient.category ?? null,
+          storeName: ingredient.store?.name ?? null,
           storeId: ingredient.store?.id,
         }));
 
@@ -213,6 +218,7 @@ const AddItemSheet = ({
         recipeId: selectedRecipe.id,
         listId: groceryListId,
         ingredients: selectedIngredients,
+        defaultStore,
       });
 
       if (result.requiresConflictResolution) {
@@ -241,6 +247,7 @@ const AddItemSheet = ({
         recipeId: selectedRecipe.id,
         listId: groceryListId,
         ingredients: pendingConflictIngredients,
+        defaultStore,
         conflictResolution: resolution,
       });
 
@@ -390,6 +397,7 @@ type AddItemProps = {
 };
 
 const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
+  const { data: defaultStore } = useDefaultStore();
   const onSubmit = ({
     item,
     listId,
@@ -414,9 +422,15 @@ const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
   };
 
   return (
-    <ItemSheetProvider listId={groceryListId} onSubmit={onSubmit} mode="add">
+    <ItemSheetProvider
+      listId={groceryListId}
+      defaultStore={defaultStore}
+      onSubmit={onSubmit}
+      mode="add"
+    >
       <AddItemSheet
         groceryListId={groceryListId}
+        defaultStore={defaultStore}
         isTriggerVisible={isTriggerVisible}
       />
     </ItemSheetProvider>
