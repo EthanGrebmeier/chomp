@@ -44,7 +44,7 @@ const RecipeDetailContent = ({
   };
 
   return (
-    <View className="flex-1 gap-4 pt-4">
+    <View className="flex-1 gap-4">
       <View className="relative min-h-10 px-4">
         <View className="absolute left-4 top-0 z-10">
           <BackButton onPress={onClose} />
@@ -132,7 +132,7 @@ const RecipeDetailContent = ({
       </View>
       {isOwner && <RecipeAddToListButton recipe={recipe} listId={listId} />}
       {isOwner && (
-        <View className="absolute bottom-6 right-6 z-20">
+        <View className="bottom-safe absolute right-6 z-20">
           <Button size="wide-small" onPress={() => present()}>
             <Icon
               as={PlusIcon}

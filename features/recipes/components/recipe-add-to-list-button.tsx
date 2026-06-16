@@ -117,7 +117,7 @@ export const RecipeAddToListButton = ({
 
   return (
     <>
-      <View className="absolute bottom-6 left-6 z-20">
+      <View className="bottom-safe absolute left-6 z-20">
         <Button
           variant="secondary"
           size="wide-small"

@@ -32,7 +32,7 @@ export default function RecipeDetailPage() {
           exiting={FadeOut.duration(200)}
           className="flex-1"
         >
-          <View className="pt-safe flex-1">
+          <View className="flex-1">
             <View className="flex-1 items-center justify-center">
               <Text className="text-muted-foreground">Recipe not found</Text>
             </View>

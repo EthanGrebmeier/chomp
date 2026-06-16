@@ -48,6 +48,7 @@ export const RecipeList = ({ recipes, listId }: RecipeListProps) => {
 
   return (
     <FlatList
+      keyboardDismissMode="on-drag"
       contentContainerClassName="pb-24"
       data={recipes}
       renderItem={({ item, index }) => (

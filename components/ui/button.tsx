@@ -53,13 +53,10 @@ const buttonVariants = cva(
       },
       size: {
         default: cn(
-          'px-3 py-1 sm:h-9',
+          'px-3 py-1 h-10',
           Platform.select({ web: 'has-[>svg]:px-3' })
         ),
-        sm: cn(
-          'h-8 px-4 py-1 sm:h-9',
-          Platform.select({ web: 'has-[>svg]:px-2.5' })
-        ),
+        sm: cn('h-8 px-4 py-1', Platform.select({ web: 'has-[>svg]:px-2.5' })),
         lg: cn(
           'h-10 px-6 sm:h-10',
           Platform.select({ web: 'has-[>svg]:px-4' })
@@ -92,7 +89,7 @@ const buttonTextVariants = cva(
         default: 'text-primary-foreground text-lg font-semibold',
         destructive: 'text-white',
         outline: cn(
-          'group-active:text-accent-foreground',
+          'group-active:text-accent-foreground font-semibold text-lg',
           Platform.select({ web: 'group-hover:text-accent-foreground' })
         ),
         secondary: 'text-secondary-foreground',
@@ -255,7 +252,7 @@ function Button({
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
       <AnimatedHapticPressable
         className={cn(
-          props.disabled && 'opacity-50',
+          props.disabled && 'opacity-80',
           buttonVariants({ variant, size }),
           className
         )}

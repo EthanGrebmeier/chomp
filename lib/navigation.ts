@@ -51,11 +51,33 @@ export interface RecipesParams {
   listId?: string;
 }
 
+export interface CreateRecipeManualParams {
+  listId?: string;
+  name?: string;
+}
+
+export interface CreateRecipeImportParams {
+  listId?: string;
+}
+
+const buildQueryString = (params: Record<string, string | undefined>) => {
+  const query = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value) {
+      query.set(key, value);
+    }
+  }
+
+  const queryString = query.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
 /**
  * Builds a URL for a specific tab
  */
 export function buildRecipesUrl(params?: RecipesParams): Href {
-  const query = params?.listId ? `?listId=${params.listId}` : '';
+  const query = buildQueryString({ listId: params?.listId });
   return `/recipes${query}` as Href;
 }
 
@@ -63,7 +85,7 @@ export function buildRecipesUrl(params?: RecipesParams): Href {
  * Builds a URL for the single grocery list page
  */
 export function buildListUrl(params?: ListParams): Href {
-  const query = params?.listId ? `?listId=${params.listId}` : '';
+  const query = buildQueryString({ listId: params?.listId });
   return `/(tabs)${query}` as Href;
 }
 
@@ -84,6 +106,23 @@ export function buildRecipeUrl(params: RecipeParams) {
     pathname: '/recipes/[recipeId]',
     params: listId ? { recipeId, listId } : { recipeId },
   } as unknown as Href;
+}
+
+export function buildCreateRecipeManualUrl(
+  params?: CreateRecipeManualParams
+): Href {
+  const query = buildQueryString({
+    listId: params?.listId,
+    name: params?.name,
+  });
+  return `/recipes/create/manual${query}` as Href;
+}
+
+export function buildCreateRecipeImportUrl(
+  params?: CreateRecipeImportParams
+): Href {
+  const query = buildQueryString({ listId: params?.listId });
+  return `/recipes/create/import${query}` as Href;
 }
 
 /**
@@ -120,6 +159,10 @@ export const navigation = {
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
     buildRecipeUrl({ recipeId, listId }),
+  goToCreateRecipeManual: (listId?: string, name?: string) =>
+    buildCreateRecipeManualUrl({ listId, name }),
+  goToCreateRecipeImport: (listId?: string) =>
+    buildCreateRecipeImportUrl({ listId }),
 } as const;
 
 /**
@@ -138,6 +181,10 @@ export function useNavigation() {
     // Recipe navigation
     goToRecipe: (recipeId: string, listId?: string) =>
       navigation.goToRecipe(recipeId, listId),
+    goToCreateRecipeManual: (listId?: string, name?: string) =>
+      navigation.goToCreateRecipeManual(listId, name),
+    goToCreateRecipeImport: (listId?: string) =>
+      navigation.goToCreateRecipeImport(listId),
   };
 }
 
@@ -157,6 +204,10 @@ export const navActions = {
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
     buildRecipeUrl({ recipeId, listId }),
+  goToCreateRecipeManual: (listId?: string, name?: string) =>
+    buildCreateRecipeManualUrl({ listId, name }),
+  goToCreateRecipeImport: (listId?: string) =>
+    buildCreateRecipeImportUrl({ listId }),
 } as const;
 
 /**
@@ -174,5 +225,7 @@ export const ROUTES = {
   RECIPES: {
     INDEX: '/recipes',
     DETAIL: (recipeId: string) => `/recipes/${recipeId}`,
+    CREATE_MANUAL: '/recipes/create/manual',
+    CREATE_IMPORT: '/recipes/create/import',
   },
 } as const;

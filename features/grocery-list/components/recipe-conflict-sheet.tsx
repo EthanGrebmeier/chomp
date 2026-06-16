@@ -50,6 +50,7 @@ export const RecipeConflictSheet = forwardRef<
           <View className="gap-2 px-10 pb-2">
             <Button
               variant="default"
+              size="lg"
               onPress={onIncrement}
               disabled={isPending}
             >
@@ -57,6 +58,7 @@ export const RecipeConflictSheet = forwardRef<
             </Button>
             <Button
               variant="outline"
+              size="lg"
               onPress={onCreateSeparate}
               disabled={isPending}
             >
@@ -65,7 +67,7 @@ export const RecipeConflictSheet = forwardRef<
           </View>
         }
       >
-        <BottomSheet.SheetView className="pb-16">
+        <BottomSheet.SheetView className="pb-safe-offset-12">
           <BottomSheet.Header
             subsection={
               <BottomSheet.Subtext className="px-8 text-muted-foreground">

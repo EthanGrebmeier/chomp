@@ -24,7 +24,7 @@ export const AddItemConflictSheet = ({
       ref={ref}
       footer={
         <View className="px-10 pb-4">
-          <Button variant="default" onPress={onIncrement}>
+          <Button size="lg" variant="default" onPress={onIncrement}>
             <Text>Increment Quantities</Text>
           </Button>
         </View>
@@ -37,10 +37,10 @@ export const AddItemConflictSheet = ({
             This item already exists in the list. What would you like to do?
           </Text>
           <View className="gap-2">
-            <Button variant="outline" onPress={onCreateSeparate}>
+            <Button size="lg" variant="outline" onPress={onCreateSeparate}>
               <Text>Create Separate Items</Text>
             </Button>
-            <Button onPress={onCancel} variant="ghost">
+            <Button size="lg" onPress={onCancel} variant="ghost">
               <Text>Cancel</Text>
             </Button>
           </View>

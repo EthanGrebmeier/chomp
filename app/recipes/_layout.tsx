@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function RecipesLayout() {
   return (
     <View className="flex-1 bg-background">
-      <SafeAreaView className="flex-1">
+      <SafeAreaView edges={['top']} className="flex-1">
         <Stack
           screenOptions={{
             headerShown: false,

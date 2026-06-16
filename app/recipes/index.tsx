@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import Animated, {
@@ -22,6 +22,7 @@ import {
 import { EmptyHeading } from '../../components/text/empty-heading';
 import { EmptySubtext } from '../../components/text/empty-subtext';
 import { Heading } from '../../components/text/heading';
+import { BackButton } from '../../components/ui/back-button';
 import { CreateRecipeButton } from '../../features/recipes/components/create-recipe-button';
 
 const SEARCH_QUERY_DEBOUNCE_MS = 300;
@@ -73,8 +74,9 @@ export default function Recipes() {
     hasActiveFilters;
 
   return (
-    <View className="flex-1 bg-background pt-6 ">
-      <View className="px-4">
+    <View className="flex-1 bg-background ">
+      <View className="flex-row items-center gap-2 px-4">
+        <BackButton onPress={() => router.back()} />
         <Heading>Recipe Book</Heading>
       </View>
       <View className="mt-2">
@@ -96,7 +98,7 @@ export default function Recipes() {
           {mealTag && !searchQuery.trim() && ` in ${mealTag}`}
         </Text>
       </View>
-      <View className="absolute bottom-0 right-6 z-10">
+      <View className="bottom-safe absolute right-6 z-10">
         <CreateRecipeButton listId={listId} />
       </View>
       <View className="flex-1">
