@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BareTextInput, TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ export const CreateRecipePageForm = ({
   const sourceUrlInput = useUncontrolledTextInput();
   const [mealTag, setMealTag] = useState<string | undefined>();
   const [canSubmit, setCanSubmit] = useState(Boolean(initialName.trim()));
+  const bottomSheetBottom = useSafeAreaInsets().bottom;
 
   const handleNameChange = (text: string) => {
     nameInput.handleChangeText(text);
@@ -130,7 +132,12 @@ export const CreateRecipePageForm = ({
         </View>
       </ScrollView>
 
-      <KeyboardStickyView>
+      <KeyboardStickyView
+        offset={{
+          closed: -bottomSheetBottom,
+          opened: -16,
+        }}
+      >
         <Button
           size="xl"
           onPress={handleSubmit}
