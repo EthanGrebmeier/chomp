@@ -73,6 +73,7 @@ type StoreSheetProps = {
   showBackButton?: boolean;
   sheetName?: string;
   openRequestId?: number;
+  disabled?: boolean;
 };
 
 export type StoreSheetRef = {
@@ -90,6 +91,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       showBackButton = true,
       sheetName = 'store-sheet',
       openRequestId,
+      disabled = false,
     },
     ref
   ) => {
@@ -126,9 +128,10 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       Boolean(localStoreId) && !stores.some(store => store.id === localStoreId);
 
     const openSheet = useCallback(() => {
+      if (disabled) return;
       setLocalStoreId(storeId);
       sheetRef.current?.present();
-    }, [storeId]);
+    }, [disabled, storeId]);
 
     useEffect(() => {
       if (openRequestId === undefined) {
@@ -204,12 +207,21 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       <>
         {!hideTrigger && (
           <WithLayoutTransition>
-            <HapticPressable onPress={openSheet} hapticType="light">
+            <HapticPressable
+              onPress={openSheet}
+              hapticType="light"
+              disabled={disabled}
+            >
               <Pill
-                className={cn(!localStoreId && 'border-dashed')}
+                className={cn(
+                  !localStoreId && 'border-dashed',
+                  disabled && 'opacity-50'
+                )}
                 textClassName={cn(
                   'font-semibold',
-                  hasSelectedStore ? 'text-foreground' : 'text-muted-foreground'
+                  hasSelectedStore && !disabled
+                    ? 'text-foreground'
+                    : 'text-muted-foreground'
                 )}
                 hasValue={hasSelectedStore}
               >

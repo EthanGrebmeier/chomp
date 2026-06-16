@@ -136,10 +136,15 @@ export const CreateRecipeSheet = forwardRef<
           </View>
           <MetaBarLayout>
             <ScrollingMetaBar>
-              <MealTimeSheet mealTime={mealTag} onSelect={setMealTag} />
+              <MealTimeSheet
+                mealTime={mealTag}
+                onSelect={setMealTag}
+                disabled={!canSubmit}
+              />
               <RecipeUrlSheet
                 sourceUrl={sourceUrl}
                 onSelect={url => setSourceUrl(url ?? '')}
+                disabled={!canSubmit}
               />
             </ScrollingMetaBar>
           </MetaBarLayout>

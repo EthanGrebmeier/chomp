@@ -135,6 +135,7 @@ const EditItemSheetContainer = ({
 }) => {
   const {
     itemName,
+    hasItemTitle,
     itemNotes,
     getItemName,
     getItemNotes,
@@ -297,6 +298,7 @@ const EditItemSheetContainer = ({
               onSubmit={() => {}}
               isValid={isValid()}
               showAction={false}
+              optionsDisabled={!hasItemTitle}
             />
           </View>
         ) : undefined

@@ -12,6 +12,7 @@ export const MetaBar = () => {
     setCategory,
     quantity,
     setQuantity,
+    hasItemTitle,
     unit,
     setUnit,
     storeId,
@@ -19,6 +20,7 @@ export const MetaBar = () => {
     storeName,
     setStoreName,
   } = useItemSheet();
+  const optionsDisabled = !hasItemTitle;
 
   return (
     <MetaBarLayout>
@@ -28,11 +30,17 @@ export const MetaBar = () => {
           unit={unit}
           onQuantityChange={setQuantity}
           onUnitChange={setUnit}
+          disabled={optionsDisabled}
         />
-        <CategorySheet category={category} onSelect={setCategory} />
+        <CategorySheet
+          category={category}
+          onSelect={setCategory}
+          disabled={optionsDisabled}
+        />
         <StoreSheet
           storeId={storeId}
           storeName={storeName}
+          disabled={optionsDisabled}
           onSelect={(nextStoreId, nextStoreName) => {
             setStoreId(nextStoreId);
             setStoreName(nextStoreName);

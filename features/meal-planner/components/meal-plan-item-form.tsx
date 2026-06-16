@@ -26,6 +26,7 @@ export const MealPlanItemForm = ({
   const itemInputRef = useRef<TextInput>(null);
   const {
     itemName,
+    hasItemTitle,
     itemNameInputKey,
     itemNameDefaultValue,
     setItemName,
@@ -112,6 +113,7 @@ export const MealPlanItemForm = ({
           onSubmit={onSubmit}
           isValid={isValid()}
           showAction={false}
+          optionsDisabled={!hasItemTitle}
         />
       ) : null}
     </View>

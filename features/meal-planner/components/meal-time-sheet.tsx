@@ -69,12 +69,14 @@ type MealTimeSheetProps = {
   mealTime?: string;
   onSelect: (mealTime?: string) => void;
   canGoBack?: boolean;
+  disabled?: boolean;
 };
 
 export const MealTimeSheet = ({
   mealTime,
   onSelect,
   canGoBack = true,
+  disabled = false,
 }: MealTimeSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const [localMealTime, setLocalMealTime] = useState<string | undefined>(
@@ -84,6 +86,7 @@ export const MealTimeSheet = ({
   const selectedMealTime = mealTimeOptions.find(opt => opt.value === mealTime);
 
   const openSheet = () => {
+    if (disabled) return;
     setLocalMealTime(mealTime);
     sheetRef.current?.present();
   };
@@ -96,9 +99,17 @@ export const MealTimeSheet = ({
   return (
     <>
       <WithLayoutTransition>
-        <HapticPressable onPress={openSheet} hapticType="light">
+        <HapticPressable
+          onPress={openSheet}
+          hapticType="light"
+          disabled={disabled}
+        >
           <Pill
-            className={cn(!mealTime && 'border-dashed')}
+            className={cn(
+              !mealTime && 'border-dashed',
+              disabled && 'opacity-50'
+            )}
+            textClassName={cn(disabled && 'text-muted-foreground')}
             icon={
               <Icon
                 className="text-muted-foreground"
@@ -107,7 +118,7 @@ export const MealTimeSheet = ({
               />
             }
             hasValue={!!selectedMealTime}
-            onClear={() => onSelect(undefined)}
+            onClear={disabled ? undefined : () => onSelect(undefined)}
           >
             {selectedMealTime ? selectedMealTime.label : 'Meal Time'}
           </Pill>

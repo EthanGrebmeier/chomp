@@ -49,6 +49,7 @@ type UnitSheetProps = {
   unit: string;
   onQuantityChange: (quantity: number) => void;
   onUnitChange: (unit: string) => void;
+  disabled?: boolean;
 };
 
 export const UnitSheet = ({
@@ -56,6 +57,7 @@ export const UnitSheet = ({
   unit,
   onQuantityChange,
   onUnitChange,
+  disabled = false,
 }: UnitSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const editSheetRef = useRef<EditUnitSheetRef>(null);
@@ -78,6 +80,7 @@ export const UnitSheet = ({
   const formatDisplay = () => formatQuantityUnit(quantity, unit);
 
   const openSheet = () => {
+    if (disabled) return;
     const nextQuantity = quantity.toString();
     quantityInput.reset(nextQuantity);
     setQuantityIsValid(parseInt(nextQuantity, 10) > 0);
@@ -109,9 +112,16 @@ export const UnitSheet = ({
   return (
     <>
       <WithLayoutTransition>
-        <HapticPressable onPress={openSheet} hapticType="light">
+        <HapticPressable
+          onPress={openSheet}
+          hapticType="light"
+          disabled={disabled}
+        >
           <Pill
-            textClassName="font-semibold"
+            textClassName={cn(
+              'font-semibold',
+              disabled && 'text-muted-foreground'
+            )}
             icon={
               <Icon
                 className="text-muted-foreground"
@@ -120,7 +130,7 @@ export const UnitSheet = ({
               />
             }
             hasValue={true}
-            className="min-w-16 justify-between"
+            className={cn('min-w-16 justify-between', disabled && 'opacity-50')}
           >
             {formatDisplay()}
           </Pill>

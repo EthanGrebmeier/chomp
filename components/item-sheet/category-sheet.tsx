@@ -63,6 +63,7 @@ type CategorySheetProps = {
   showBackButton?: boolean;
   sheetName?: string;
   openRequestId?: number;
+  disabled?: boolean;
 };
 
 export type CategorySheetRef = {
@@ -79,6 +80,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
       showBackButton = true,
       sheetName = 'category-sheet',
       openRequestId,
+      disabled = false,
     },
     ref
   ) => {
@@ -94,9 +96,10 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
   const selectedCategory = categoryOptions[selectedCategoryIndex];
 
   const openSheet = useCallback(() => {
+    if (disabled) return;
     setLocalCategory(category);
     sheetRef.current?.present();
-  }, [category]);
+  }, [category, disabled]);
 
   useEffect(() => {
     if (openRequestId === undefined) {
@@ -131,9 +134,17 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
     <>
       {!hideTrigger && (
         <WithLayoutTransition>
-          <HapticPressable onPress={openSheet} hapticType="light">
+          <HapticPressable
+            onPress={openSheet}
+            hapticType="light"
+            disabled={disabled}
+          >
             <Pill
-              className={cn(!selectedCategory && 'border-dashed')}
+              className={cn(
+                !selectedCategory && 'border-dashed',
+                disabled && 'opacity-50'
+              )}
+              textClassName={cn(disabled && 'text-muted-foreground')}
               hasValue={!!selectedCategory}
             >
               {selectedCategory ? selectedCategory.label : 'Category'}

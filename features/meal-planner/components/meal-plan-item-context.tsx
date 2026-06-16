@@ -8,6 +8,7 @@ import { BaseGroceryItem } from '../../grocery-list/types';
 type MealPlanItemContextValue = {
   // Item state
   itemName: string;
+  hasItemTitle: boolean;
   setItemName: (name: string) => void;
   itemNameInputKey: number;
   itemNameDefaultValue: string;
@@ -69,6 +70,9 @@ export const MealPlanItemProvider = ({
   const itemNameInput = useUncontrolledTextInput(initialItemName);
   const itemNotesInput = useUncontrolledTextInput(initialItemNotes);
   const [itemName, setCommittedItemName] = useState(initialItemName);
+  const [hasItemTitle, setHasItemTitle] = useState(
+    initialItemName.trim().length > 0
+  );
   const [itemNotes, setCommittedItemNotes] = useState(initialItemNotes);
   const [quantity, setQuantity] = useState(initialValues?.quantity ?? 1);
   const [unit, setUnit] = useState(normalizeUnit(initialValues?.unit));
@@ -96,6 +100,7 @@ export const MealPlanItemProvider = ({
 
   const setItemName = (name: string) => {
     itemNameInput.handleChangeText(name);
+    setHasItemTitle(name.trim().length > 0);
     commitItemName(name);
   };
 
@@ -110,6 +115,7 @@ export const MealPlanItemProvider = ({
     itemNameInput.reset();
     itemNotesInput.reset();
     setCommittedItemName('');
+    setHasItemTitle(false);
     setCommittedItemNotes('');
     setQuantity(1);
     setUnit('each');
@@ -124,6 +130,7 @@ export const MealPlanItemProvider = ({
     commitItemName.cancel();
     itemNameInput.reset(item.name);
     setCommittedItemName(item.name);
+    setHasItemTitle(item.name.trim().length > 0);
     setUnit(normalizeUnit(item.unit));
     if (item.category) setCategory(item.category);
     setShowMatchingItems(false);
@@ -135,6 +142,7 @@ export const MealPlanItemProvider = ({
 
   const value: MealPlanItemContextValue = {
     itemName,
+    hasItemTitle,
     setItemName,
     itemNameInputKey: itemNameInput.inputKey,
     itemNameDefaultValue: itemNameInput.defaultValue,

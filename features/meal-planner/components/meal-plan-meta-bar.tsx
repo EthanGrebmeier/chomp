@@ -26,6 +26,7 @@ type MealPlanMetaBarProps = {
   isValid: boolean;
   submitLabel?: string;
   showAction?: boolean;
+  optionsDisabled?: boolean;
 };
 
 export const MealPlanMetaBar = ({
@@ -45,6 +46,7 @@ export const MealPlanMetaBar = ({
   isValid,
   submitLabel = 'Add Item',
   showAction = true,
+  optionsDisabled = false,
 }: MealPlanMetaBarProps) => {
   return (
     <MetaBarLayout
@@ -57,8 +59,16 @@ export const MealPlanMetaBar = ({
       }
     >
       <ScrollingMetaBar>
-        <DatePillSheet date={date} onSelect={onDateChange} />
-        <MealTimeSheet mealTime={mealTag} onSelect={onMealTagChange} />
+        <DatePillSheet
+          date={date}
+          onSelect={onDateChange}
+          disabled={optionsDisabled}
+        />
+        <MealTimeSheet
+          mealTime={mealTag}
+          onSelect={onMealTagChange}
+          disabled={optionsDisabled}
+        />
       </ScrollingMetaBar>
       <ScrollingMetaBar className="mt-2">
         <UnitSheet
@@ -66,9 +76,18 @@ export const MealPlanMetaBar = ({
           unit={unit}
           onQuantityChange={onQuantityChange}
           onUnitChange={onUnitChange}
+          disabled={optionsDisabled}
         />
-        <CategorySheet category={category} onSelect={onCategoryChange} />
-        <StoreSheet storeId={storeId} onSelect={onStoreIdChange} />
+        <CategorySheet
+          category={category}
+          onSelect={onCategoryChange}
+          disabled={optionsDisabled}
+        />
+        <StoreSheet
+          storeId={storeId}
+          onSelect={onStoreIdChange}
+          disabled={optionsDisabled}
+        />
       </ScrollingMetaBar>
     </MetaBarLayout>
   );

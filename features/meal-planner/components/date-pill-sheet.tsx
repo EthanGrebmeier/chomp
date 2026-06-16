@@ -15,16 +15,19 @@ type DatePillSheetProps = {
   date?: string;
   onSelect: (date: string) => void;
   canGoBack?: boolean;
+  disabled?: boolean;
 };
 
 export const DatePillSheet = ({
   date,
   onSelect,
   canGoBack = true,
+  disabled = false,
 }: DatePillSheetProps) => {
   const sheetRef = useRef<CalendarSheetRef>(null);
 
   const openSheet = () => {
+    if (disabled) return;
     sheetRef.current?.present();
   };
 
@@ -48,9 +51,14 @@ export const DatePillSheet = ({
 
   return (
     <>
-      <HapticPressable onPress={openSheet} hapticType="light">
+      <HapticPressable
+        onPress={openSheet}
+        hapticType="light"
+        disabled={disabled}
+      >
         <Pill
-          className={cn(!date && 'border-dashed')}
+          className={cn(!date && 'border-dashed', disabled && 'opacity-50')}
+          textClassName={cn(disabled && 'text-muted-foreground')}
           icon={
             <Icon
               className="text-muted-foreground"

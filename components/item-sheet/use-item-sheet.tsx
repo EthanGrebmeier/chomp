@@ -25,6 +25,7 @@ const itemSheetContext = createContext<{
   setSelectedItem: (item: MatchingItem | null) => void;
   onSubmit: () => void;
   itemInputValue: string;
+  hasItemTitle: boolean;
   itemInputKey: number;
   itemInputDefaultValue: string;
   itemInputValueRef: React.MutableRefObject<string>;
@@ -136,6 +137,7 @@ export const ItemSheetProvider = ({
     reset: resetNotesInput,
   } = notesInput;
   const [itemInputValue, setItemInputValue] = useState('');
+  const [hasItemTitle, setHasItemTitle] = useState(false);
   const [notesInputValue, setNotesInputValue] = useState('');
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
@@ -165,6 +167,7 @@ export const ItemSheetProvider = ({
     resetItemInput();
     resetNotesInput();
     setItemInputValue('');
+    setHasItemTitle(false);
     setNotesInputValue('');
     setCategory(undefined);
     setQuantity(1);
@@ -183,6 +186,7 @@ export const ItemSheetProvider = ({
       setSelectedItem(null);
       resetItemInput(item.name);
       setItemInputValue(item.name);
+      setHasItemTitle(item.name.trim().length > 0);
       setCategory(item.category);
       setQuantity(item.quantity);
       setUnit(item.unit);
@@ -262,6 +266,7 @@ export const ItemSheetProvider = ({
     setSelectedItem(item);
     setItemInputNativeValue(item.name, itemInputRef);
     setItemInputValue(item.name);
+    setHasItemTitle(item.name.trim().length > 0);
     setCategory(item.category);
     resetNotesInput(item.notes ?? '');
     setNotesInputValue(item.notes ?? '');
@@ -281,6 +286,7 @@ export const ItemSheetProvider = ({
   const onChangeItemText = (text: string) => {
     handleItemInputTextChange(text);
     setSelectedItem(null);
+    setHasItemTitle(text.trim().length > 0);
     commitItemInputValue(text);
     setShowMatchingItems(true);
   };
@@ -297,6 +303,7 @@ export const ItemSheetProvider = ({
         setSelectedItem,
         onSubmit: submitItem,
         itemInputValue,
+        hasItemTitle,
         itemInputKey,
         itemInputDefaultValue,
         itemInputValueRef,

@@ -106,6 +106,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const {
     itemName,
+    hasItemTitle,
     quantity,
     unit,
     category,
@@ -323,6 +324,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           onSubmit={handleAddItem}
           isValid={isValid()}
           showAction={false}
+          optionsDisabled={!hasItemTitle}
         />
         <Button onPress={handleAddItem} disabled={!isValid() || isAddingItem}>
           <Text>Add Item</Text>

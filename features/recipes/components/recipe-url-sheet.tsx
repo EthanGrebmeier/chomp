@@ -11,17 +11,20 @@ import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
 import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
+import { cn } from '../../../lib/utils';
 
 type RecipeUrlSheetProps = {
   sourceUrl?: string;
   onSelect: (sourceUrl?: string) => void;
   canGoBack?: boolean;
+  disabled?: boolean;
 };
 
 export const RecipeUrlSheet = ({
   sourceUrl,
   onSelect,
   canGoBack = true,
+  disabled = false,
 }: RecipeUrlSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const draftUrlInput = useUncontrolledTextInput(sourceUrl ?? '');
@@ -38,6 +41,7 @@ export const RecipeUrlSheet = ({
   }, [resetDraftUrl, sourceUrl]);
 
   const openSheet = () => {
+    if (disabled) return;
     resetDraftUrl(sourceUrl ?? '');
     sheetRef.current?.present();
   };
@@ -49,13 +53,19 @@ export const RecipeUrlSheet = ({
 
   return (
     <>
-      <HapticPressable onPress={openSheet} hapticType="light">
+      <HapticPressable
+        onPress={openSheet}
+        hapticType="light"
+        disabled={disabled}
+      >
         <Pill
+          className={cn(disabled && 'opacity-50')}
+          textClassName={cn(disabled && 'text-muted-foreground')}
           icon={
             <Icon className="text-muted-foreground" as={LinkIcon} size={16} />
           }
           hasValue={!!sourceUrl}
-          onClear={() => onSelect(undefined)}
+          onClear={disabled ? undefined : () => onSelect(undefined)}
         >
           Recipe URL
         </Pill>
