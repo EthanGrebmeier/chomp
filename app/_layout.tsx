@@ -8,7 +8,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRootNavigationState, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SQLite from 'expo-sqlite';
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
@@ -24,6 +24,7 @@ import {
   InstantAuthHandler,
   useInstantAuthState,
 } from '@/lib/instant/use-clerk-auth';
+import { useStartupEasUpdate } from '@/lib/use-startup-eas-update';
 import { MigrationProvider } from '@/providers/migration-provider';
 import { QueryClientProvider } from '@/providers/query-client-provider';
 
@@ -44,6 +45,20 @@ if (!publishableKey) {
   throw new Error(
     'Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env'
   );
+}
+
+const hideSplashScreen = async () => {
+  try {
+    await SplashScreen.hideAsync();
+  } catch {
+    // Ignore native splash hide errors during reloads.
+  }
+};
+
+function DevelopmentDrizzleStudio() {
+  useDrizzleStudio(db as unknown as Parameters<typeof useDrizzleStudio>[0]);
+
+  return null;
 }
 
 function InitialLayout() {
@@ -108,7 +123,11 @@ function InitialLayout() {
   );
 }
 
-export default function RootLayout() {
+function RootLayoutContent({
+  isStartupUpdateReady,
+}: {
+  isStartupUpdateReady: boolean;
+}) {
   const [fontsLoaded, fontLoadError] = useFonts({
     'averia-serif-libre': AveriaSerifLibre_400Regular,
     'jaro-regular': Jaro_400Regular,
@@ -121,14 +140,6 @@ export default function RootLayout() {
   const segments = useSegments();
   const hasHiddenSplashRef = useRef(false);
 
-  const hideSplashScreen = useCallback(async () => {
-    try {
-      await SplashScreen.hideAsync();
-    } catch {
-      // Ignore native splash hide errors during reloads.
-    }
-  }, []);
-
   useEffect(() => {
     const areFontsReady = fontsLoaded || Boolean(fontLoadError);
     const isNavigationReady = Boolean(rootNavigationState?.key);
@@ -139,6 +150,7 @@ export default function RootLayout() {
       ? isOnTabsGroup
       : isOnAuthGroup;
     const shouldKeepSplashVisible =
+      !isStartupUpdateReady ||
       !areFontsReady ||
       !isNavigationReady ||
       shouldBlockAuthUi ||
@@ -150,22 +162,22 @@ export default function RootLayout() {
     }
 
     hasHiddenSplashRef.current = true;
-    setTimeout(hideSplashScreen, 300);
+    const timeoutId = setTimeout(hideSplashScreen, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [
     fontLoadError,
     fontsLoaded,
     hasAppAccess,
-    hideSplashScreen,
     isReconciled,
+    isStartupUpdateReady,
     rootNavigationState?.key,
     segments,
     shouldBlockAuthUi,
   ]);
 
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useDrizzleStudio(db as unknown as Parameters<typeof useDrizzleStudio>[0]);
-  }
   return (
     <ClerkProvider
       __experimental_resourceCache={resourceCache}
@@ -176,6 +188,9 @@ export default function RootLayout() {
         <KeyboardProvider>
           <MigrationProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
+              {process.env.NODE_ENV === 'development' ? (
+                <DevelopmentDrizzleStudio />
+              ) : null}
               <InstantAuthHandler />
               <InitialLayout />
               <PortalHost />
@@ -185,4 +200,14 @@ export default function RootLayout() {
       </QueryClientProvider>
     </ClerkProvider>
   );
+}
+
+export default function RootLayout() {
+  const { isReady: isStartupUpdateReady } = useStartupEasUpdate();
+
+  if (!isStartupUpdateReady) {
+    return null;
+  }
+
+  return <RootLayoutContent isStartupUpdateReady={isStartupUpdateReady} />;
 }
