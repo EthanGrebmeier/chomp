@@ -1,4 +1,4 @@
-import { useAuth, useSignIn, useSignUp } from '@clerk/clerk-expo';
+import { useAuth, useSignIn, useSignUp } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
@@ -24,24 +24,41 @@ import { useTheme } from '@/hooks/use-theme';
 import { getEmailLinkRedirectUrl } from '@/lib/clerk/email-link';
 import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 
-type PendingFlow = 'sign-in' | 'sign-up';
+type PendingFlow = 'sign-in';
 type EmailDeliveryStrategy = 'email_code' | 'email_link';
+type ClerkErrorDetail = {
+  code?: string;
+  longMessage?: string;
+  message?: string;
+  meta?: unknown;
+};
 type ClerkError = {
-  errors?: {
-    code?: string;
-    longMessage?: string;
-    message?: string;
-    meta?: unknown;
-  }[];
+  code?: string;
+  errors?: ClerkErrorDetail[];
+  longMessage?: string;
+  message?: string;
   status?: number;
 };
 
 const getClerkError = (error: unknown) => {
-  if (!error || typeof error !== 'object' || !('errors' in error)) {
+  if (!error || typeof error !== 'object') {
     return null;
   }
 
-  return (error as ClerkError).errors?.[0] ?? null;
+  const clerkError = error as ClerkError;
+  if (clerkError.errors?.[0]) {
+    return clerkError.errors[0];
+  }
+
+  if (clerkError.code || clerkError.message || clerkError.longMessage) {
+    return {
+      code: clerkError.code,
+      longMessage: clerkError.longMessage,
+      message: clerkError.message,
+    };
+  }
+
+  return null;
 };
 
 const getErrorMessage = (error: unknown) => {
@@ -141,11 +158,25 @@ const isEmailCodeUnavailableError = (error: unknown) => {
   );
 };
 
+const throwIfFutureError = (error: unknown | null | undefined) => {
+  if (error) {
+    throw error;
+  }
+};
+
 export default function SignInEmail() {
-  const { signIn, setActive, isLoaded: isSignInLoaded } = useSignIn();
-  const { signUp, isLoaded: isSignUpLoaded } = useSignUp();
+  const {
+    signIn,
+    errors: signInErrors,
+    fetchStatus: signInFetchStatus,
+  } = useSignIn();
+  const {
+    signUp,
+    errors: signUpErrors,
+    fetchStatus: signUpFetchStatus,
+  } = useSignUp();
   const { signOut } = useAuth();
-  const { replace } = useRouter();
+  const { push, replace } = useRouter();
   const signInToInstant = useInstantSignIn();
   const { bottom } = useSafeAreaInsets();
   const theme = useTheme();
@@ -157,10 +188,15 @@ export default function SignInEmail() {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
   const [isResendingCode, setIsResendingCode] = useState(false);
-  const isLoaded = isSignInLoaded && isSignUpLoaded;
-  const isBusy = isSendingCode || isVerifyingCode || isResendingCode;
+  const isLoaded =
+    signInFetchStatus === 'idle' && signUpFetchStatus === 'idle';
+  const isBusy =
+    signInFetchStatus === 'fetching' ||
+    signUpFetchStatus === 'fetching' ||
+    isSendingCode ||
+    isVerifyingCode ||
+    isResendingCode;
   const signInEmailLinkRedirectUrl = getEmailLinkRedirectUrl('sign-in');
-  const signUpEmailLinkRedirectUrl = getEmailLinkRedirectUrl('sign-up');
 
   const normalizeEmail = () => emailInput.getValue().trim().toLowerCase();
   const normalizeCode = () => code.replace(/\D/g, '').trim();
@@ -168,6 +204,19 @@ export default function SignInEmail() {
     setCode('');
     otpRef.current?.clear();
   }, []);
+  const getLatestSignInErrorMessage = () =>
+    signInErrors.fields.identifier?.message ??
+    signInErrors.fields.code?.message ??
+    signInErrors.global?.[0]?.longMessage ??
+    signInErrors.global?.[0]?.message ??
+    null;
+  const getLatestSignUpErrorMessage = () =>
+    signUpErrors.fields.emailAddress?.message ??
+    signUpErrors.fields.code?.message ??
+    signUpErrors.fields.captcha?.message ??
+    signUpErrors.global?.[0]?.longMessage ??
+    signUpErrors.global?.[0]?.message ??
+    null;
 
   const resetToSignedOutState = async () => {
     try {
@@ -177,29 +226,18 @@ export default function SignInEmail() {
     }
   };
 
-  const completeAuthentication = async (
-    sessionId: string | null,
-    options: { shouldCreateDefaultList?: boolean } = {}
-  ) => {
-    const { shouldCreateDefaultList = false } = options;
+  const completeAuthentication = async (options: {
+    finalize: () => Promise<{ error: unknown | null }>;
+    shouldCreateDefaultList?: boolean;
+  }) => {
+    const { finalize, shouldCreateDefaultList = false } = options;
 
-    if (!setActive) {
-      errorEmailAuth(
-        'setActive was unavailable while completing authentication'
-      );
-      return;
-    }
-
-    if (!sessionId) {
-      errorEmailAuth('missing session id while completing authentication');
-      toast.error('We could not finish signing you in. Please try again.');
-      return;
-    }
-
-    logEmailAuth('activating Clerk session', {
-      hasSessionId: Boolean(sessionId),
+    logEmailAuth('finalizing Clerk authentication', {
+      shouldCreateDefaultList,
     });
-    await setActive({ session: sessionId });
+
+    const { error } = await finalize();
+    throwIfFutureError(error);
 
     try {
       await signInToInstant();
@@ -216,192 +254,77 @@ export default function SignInEmail() {
     }
   };
 
-  const sendSignUpEmailCode = async (
-    normalizedEmail: string
-  ): Promise<EmailDeliveryStrategy> => {
-    if (!signUp) {
-      throw new Error('Sign-up is not ready yet.');
-    }
-
-    logEmailAuth('starting sign-up email delivery', {
-      email: maskEmail(normalizedEmail),
-    });
-
-    const signUpAttempt = await signUp.create({
-      emailAddress: normalizedEmail,
-    });
-
-    logEmailAuth('created sign-up attempt', {
-      email: maskEmail(normalizedEmail),
-      status: signUpAttempt.status,
-    });
-
-    if (signUpAttempt.status === 'complete') {
-      await completeAuthentication(signUpAttempt.createdSessionId, {
-        shouldCreateDefaultList: true,
-      });
-      return 'email_code';
-    }
-
-    try {
-      await signUpAttempt.prepareEmailAddressVerification({
-        strategy: 'email_code',
-      });
-
-      logEmailAuth('sent sign-up email code', {
-        email: maskEmail(normalizedEmail),
-      });
-
-      setPendingFlow('sign-up');
-      clearCodeInput();
-      return 'email_code';
-    } catch (error) {
-      if (!isEmailCodeUnavailableError(error)) {
-        throw error;
-      }
-
-      warnEmailAuth(
-        'email code unavailable for sign-up, falling back to email link',
-        {
-          email: maskEmail(normalizedEmail),
-          error: getClerkErrorPayload(error),
-          redirectUrl: signUpEmailLinkRedirectUrl,
-        }
-      );
-
-      await signUpAttempt.prepareEmailAddressVerification({
-        strategy: 'email_link',
-        redirectUrl: signUpEmailLinkRedirectUrl,
-      });
-
-      logEmailAuth('sent sign-up email link fallback', {
-        email: maskEmail(normalizedEmail),
-      });
-
-      setPendingFlow(null);
-      clearCodeInput();
-      return 'email_link';
-    }
-  };
-
   const sendSignInEmailCode = async (
     normalizedEmail: string
   ): Promise<EmailDeliveryStrategy> => {
-    if (!signIn) {
-      throw new Error('Sign-in is not ready yet.');
+    if (signIn.identifier && signIn.identifier !== normalizedEmail) {
+      const { error: resetSignInError } = await signIn.reset();
+      throwIfFutureError(resetSignInError);
+
+      const { error: resetSignUpError } = await signUp.reset();
+      throwIfFutureError(resetSignUpError);
     }
 
-    const signInAttempt =
-      signIn.identifier === normalizedEmail
-        ? signIn
-        : await signIn.create({ identifier: normalizedEmail });
+    logEmailAuth('starting sign-in-or-up email delivery', {
+      email: maskEmail(normalizedEmail),
+    });
+
+    const { error: createError } = await signIn.create({
+      identifier: normalizedEmail,
+      signUpIfMissing: true,
+    });
+    throwIfFutureError(createError);
 
     const supportedStrategies =
-      signInAttempt.supportedFirstFactors?.map(factor => factor.strategy) ?? [];
+      signIn.supportedFirstFactors?.map(factor => factor.strategy) ?? [];
 
-    logEmailAuth('loaded sign-in attempt factors', {
+    logEmailAuth('created sign-in-or-up attempt', {
       email: maskEmail(normalizedEmail),
-      identifier: signInAttempt.identifier,
+      identifier: signIn.identifier,
+      status: signIn.status,
       supportedStrategies,
     });
 
-    const emailCodeFactor = signInAttempt.supportedFirstFactors?.find(
-      factor => factor.strategy === 'email_code'
-    );
-    const emailLinkFactor = signInAttempt.supportedFirstFactors?.find(
-      factor => factor.strategy === 'email_link'
-    );
-
-    if (
-      !emailCodeFactor &&
-      emailLinkFactor &&
-      'emailAddressId' in emailLinkFactor
-    ) {
-      warnEmailAuth(
-        'email code unsupported for sign-in, falling back to email link',
-        {
-          email: maskEmail(normalizedEmail),
-          supportedStrategies,
-          redirectUrl: signInEmailLinkRedirectUrl,
-        }
-      );
-
-      const preparedSignInAttempt = await signInAttempt.prepareFirstFactor({
-        strategy: 'email_link',
-        emailAddressId: emailLinkFactor.emailAddressId,
-        redirectUrl: signInEmailLinkRedirectUrl,
-      });
-
-      if (preparedSignInAttempt.status === 'complete') {
-        await completeAuthentication(preparedSignInAttempt.createdSessionId);
-      }
-
-      setPendingFlow(null);
-      clearCodeInput();
-      return 'email_link';
-    }
-
-    if (!emailCodeFactor || !('emailAddressId' in emailCodeFactor)) {
-      throw new Error('Email sign-in is not available for this account.');
-    }
-
-    try {
-      const preparedSignInAttempt = await signInAttempt.prepareFirstFactor({
-        strategy: 'email_code',
-        emailAddressId: emailCodeFactor.emailAddressId,
-      });
-
-      logEmailAuth('prepared sign-in first factor', {
+    const { error: sendCodeError } = await signIn.emailCode.sendCode();
+    if (!sendCodeError) {
+      logEmailAuth('sent sign-in-or-up email code', {
         email: maskEmail(normalizedEmail),
-        status: preparedSignInAttempt.status,
-        strategy: 'email_code',
       });
-
-      if (preparedSignInAttempt.status === 'complete') {
-        await completeAuthentication(preparedSignInAttempt.createdSessionId);
-        return 'email_code';
-      }
 
       setPendingFlow('sign-in');
       clearCodeInput();
       return 'email_code';
-    } catch (error) {
-      if (
-        !emailLinkFactor ||
-        !('emailAddressId' in emailLinkFactor) ||
-        !isEmailCodeUnavailableError(error)
-      ) {
-        throw error;
-      }
-
-      warnEmailAuth(
-        'failed to prepare email code for sign-in, falling back to email link',
-        {
-          email: maskEmail(normalizedEmail),
-          error: getClerkErrorPayload(error),
-          supportedStrategies,
-          redirectUrl: signInEmailLinkRedirectUrl,
-        }
-      );
-
-      const preparedSignInAttempt = await signInAttempt.prepareFirstFactor({
-        strategy: 'email_link',
-        emailAddressId: emailLinkFactor.emailAddressId,
-        redirectUrl: signInEmailLinkRedirectUrl,
-      });
-
-      if (preparedSignInAttempt.status === 'complete') {
-        await completeAuthentication(preparedSignInAttempt.createdSessionId);
-      }
-
-      setPendingFlow(null);
-      clearCodeInput();
-      return 'email_link';
     }
+
+    if (!isEmailCodeUnavailableError(sendCodeError)) {
+      throw sendCodeError;
+    }
+
+    warnEmailAuth('email code unavailable, falling back to sign-in email link', {
+      email: maskEmail(normalizedEmail),
+      error: getClerkErrorPayload(sendCodeError),
+      supportedStrategies,
+      redirectUrl: signInEmailLinkRedirectUrl,
+    });
+
+    const { error: linkError } = await signIn.emailLink.sendLink({
+      verificationUrl: signInEmailLinkRedirectUrl,
+    });
+    throwIfFutureError(linkError);
+
+    if (signIn.status === 'complete') {
+      await completeAuthentication({
+        finalize: () => signIn.finalize(),
+      });
+    }
+
+    setPendingFlow(null);
+    clearCodeInput();
+    return 'email_link';
   };
 
   const sendEmailCode = async () => {
-    if (!isLoaded || !signIn) {
+    if (!isLoaded) {
       return;
     }
 
@@ -415,8 +338,8 @@ export default function SignInEmail() {
     logEmailAuth('user requested email authentication', {
       email: maskEmail(normalizedEmail),
       isLoaded,
-      isSignInLoaded,
-      isSignUpLoaded,
+      signInFetchStatus,
+      signUpFetchStatus,
     });
 
     try {
@@ -425,23 +348,7 @@ export default function SignInEmail() {
       const clerkError = getClerkError(err);
       const errorMessage = getErrorMessage(err);
 
-      if (clerkError?.code === 'form_identifier_not_found') {
-        warnEmailAuth('email not found during sign-in, starting sign-up flow', {
-          email: maskEmail(normalizedEmail),
-        });
-
-        try {
-          await sendSignUpEmailCode(normalizedEmail);
-        } catch (signUpError) {
-          errorEmailAuth('sign-up email delivery failed', {
-            email: maskEmail(normalizedEmail),
-            error: getClerkErrorPayload(signUpError),
-          });
-          toast.error(
-            getErrorMessage(signUpError) ?? 'Failed to send verification code'
-          );
-        }
-      } else if (clerkError?.code === 'form_param_format_invalid') {
+      if (clerkError?.code === 'form_param_format_invalid') {
         toast.error('Please enter a valid email address');
       } else if (clerkError?.code === 'strategy_for_user_invalid') {
         toast.error(
@@ -452,13 +359,49 @@ export default function SignInEmail() {
           email: maskEmail(normalizedEmail),
           error: getClerkErrorPayload(err),
         });
-        toast.error(errorMessage ?? 'Failed to send verification code');
+        toast.error(
+          errorMessage ??
+            getLatestSignInErrorMessage() ??
+            'Failed to send verification code'
+        );
       }
     }
   };
 
+  const transferVerifiedSignInToSignUp = async () => {
+    const { error } = await signUp.create({ transfer: true });
+    throwIfFutureError(error);
+
+    logEmailAuth('transferred verified sign-in to sign-up', {
+      status: signUp.status,
+      missingFields: signUp.missingFields,
+    });
+
+    if (signUp.status === 'complete') {
+      await completeAuthentication({
+        finalize: () => signUp.finalize(),
+        shouldCreateDefaultList: true,
+      });
+      return;
+    }
+
+    if (signUp.status === 'missing_requirements') {
+      push('/(auth)/continue');
+      return;
+    }
+
+    errorEmailAuth('unexpected sign-up status after transfer', {
+      status: signUp.status,
+      missingFields: signUp.missingFields,
+    });
+    toast.error(
+      getLatestSignUpErrorMessage() ??
+        'We could not finish creating your account. Please try again.'
+    );
+  };
+
   const verifyEmailCode = async () => {
-    if (!isLoaded || !pendingFlow || !signIn || !signUp) {
+    if (!isLoaded || !pendingFlow) {
       return;
     }
 
@@ -476,37 +419,51 @@ export default function SignInEmail() {
     });
 
     try {
-      if (pendingFlow === 'sign-up') {
-        const signUpAttempt = await signUp.attemptEmailAddressVerification({
-          code: normalizedCode,
-        });
+      const { error } = await signIn.emailCode.verifyCode({
+        code: normalizedCode,
+      });
 
-        logEmailAuth('received sign-up code verification result', {
-          status: signUpAttempt.status,
-        });
-
-        if (signUpAttempt.status === 'complete') {
-          await completeAuthentication(signUpAttempt.createdSessionId, {
-            shouldCreateDefaultList: true,
-          });
+      if (error) {
+        if (getClerkError(error)?.code === 'sign_up_if_missing_transfer') {
+          await transferVerifiedSignInToSignUp();
           return;
         }
-      } else {
-        const signInAttempt = await signIn.attemptFirstFactor({
-          strategy: 'email_code',
-          code: normalizedCode,
-        });
 
-        logEmailAuth('received sign-in code verification result', {
-          status: signInAttempt.status,
+        errorEmailAuth('email code verification returned an error', {
+          pendingFlow,
+          email: maskEmail(normalizeEmail()),
+          error: getClerkErrorPayload(error),
         });
-
-        if (signInAttempt.status === 'complete') {
-          await completeAuthentication(signInAttempt.createdSessionId);
-          return;
-        }
+        toast.error(
+          getErrorMessage(error) ??
+            getLatestSignInErrorMessage() ??
+            'Failed to verify code'
+        );
+        return;
       }
 
+      logEmailAuth('received sign-in code verification result', {
+        status: signIn.status,
+      });
+
+      if (signIn.status === 'complete') {
+        await completeAuthentication({
+          finalize: () => signIn.finalize(),
+        });
+        return;
+      }
+
+      if (
+        signIn.status === 'needs_second_factor' ||
+        signIn.status === 'needs_client_trust'
+      ) {
+        toast.error('Additional verification is required. Please try again.');
+        return;
+      }
+
+      errorEmailAuth('unexpected sign-in status after code verification', {
+        status: signIn.status,
+      });
       toast.error(
         'We could not finish signing you in. Please request a new code.'
       );
@@ -516,7 +473,12 @@ export default function SignInEmail() {
         email: maskEmail(normalizeEmail()),
         error: getClerkErrorPayload(err),
       });
-      toast.error(getErrorMessage(err) ?? 'Failed to verify code');
+      toast.error(
+        getErrorMessage(err) ??
+          getLatestSignInErrorMessage() ??
+          getLatestSignUpErrorMessage() ??
+          'Failed to verify code'
+      );
     }
   };
 
@@ -546,7 +508,7 @@ export default function SignInEmail() {
   };
 
   const onResendCode = async () => {
-    if (!isLoaded || !pendingFlow || !signIn || !signUp) {
+    if (!isLoaded || !pendingFlow) {
       return;
     }
 
@@ -560,19 +522,7 @@ export default function SignInEmail() {
     setIsResendingCode(true);
 
     try {
-      if (pendingFlow === 'sign-up') {
-        if (signUp.emailAddress !== normalizedEmail) {
-          await sendSignUpEmailCode(normalizedEmail);
-        } else {
-          await signUp.prepareEmailAddressVerification({
-            strategy: 'email_code',
-          });
-          setPendingFlow('sign-up');
-        }
-      } else {
-        await sendSignInEmailCode(normalizedEmail);
-      }
-
+      await sendSignInEmailCode(normalizedEmail);
       clearCodeInput();
     } catch (err: unknown) {
       errorEmailAuth('resending email code failed', {
@@ -580,7 +530,11 @@ export default function SignInEmail() {
         email: maskEmail(normalizedEmail),
         error: getClerkErrorPayload(err),
       });
-      toast.error(getErrorMessage(err) ?? 'Failed to resend verification code');
+      toast.error(
+        getErrorMessage(err) ??
+          getLatestSignInErrorMessage() ??
+          'Failed to resend verification code'
+      );
       setIsResendingCode(false);
       return;
     }

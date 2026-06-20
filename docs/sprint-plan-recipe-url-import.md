@@ -335,7 +335,7 @@ export const parseRecipeUrl = async (
 **Implementation**:
 
 ```typescript
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '@clerk/expo';
 import { useMutation } from '@tanstack/react-query';
 
 import { parseRecipeUrl, RecipeParseError } from '../api/parse-recipe-url';

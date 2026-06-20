@@ -1,5 +1,5 @@
-import { ClerkProvider } from '@clerk/clerk-expo';
-import { resourceCache } from '@clerk/clerk-expo/resource-cache';
+import { ClerkProvider } from '@clerk/expo';
+import { resourceCache } from '@clerk/expo/resource-cache';
 import { AveriaSerifLibre_400Regular } from '@expo-google-fonts/averia-serif-libre';
 import { Jaro_400Regular } from '@expo-google-fonts/jaro';
 import { PortalHost } from '@rn-primitives/portal';

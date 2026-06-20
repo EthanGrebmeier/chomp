@@ -1,4 +1,4 @@
-import { useAuth, useClerk, useSignIn, useSignUp } from '@clerk/clerk-expo';
+import { useAuth, useClerk, useSignIn, useSignUp } from '@clerk/expo';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import {
-  EMAIL_LINK_FLOW_PARAM,
   EMAIL_LINK_COMPLETE_ROUTE,
   EMAIL_LINK_CONTINUE_ROUTE,
+  EMAIL_LINK_FLOW_PARAM,
 } from '@/lib/clerk/email-link';
 import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 
@@ -22,15 +22,20 @@ type VerificationState =
   | 'client-mismatch'
   | 'other-device';
 
-const getFailureState = (error: unknown): Exclude<
-  VerificationState,
-  'verifying' | 'finishing'
-> => {
+const getFailureState = (
+  error: unknown
+): Exclude<VerificationState, 'verifying' | 'finishing'> => {
   const clerkError =
     error && typeof error === 'object' && 'errors' in error
-      ? (error as {
-          errors?: { code?: string; message?: string; longMessage?: string }[];
-        }).errors?.[0]
+      ? (
+          error as {
+            errors?: {
+              code?: string;
+              message?: string;
+              longMessage?: string;
+            }[];
+          }
+        ).errors?.[0]
       : null;
 
   const details = [
@@ -117,8 +122,8 @@ const getFailureStateFromParams = (
 
 export default function VerifyEmailLink() {
   const { handleEmailLinkVerification } = useClerk();
-  const { isLoaded: isSignInLoaded } = useSignIn();
-  const { isLoaded: isSignUpLoaded } = useSignUp();
+  const { fetchStatus: signInFetchStatus } = useSignIn();
+  const { fetchStatus: signUpFetchStatus } = useSignUp();
   const { signOut } = useAuth();
   const signInToInstant = useInstantSignIn();
   const router = useRouter();
@@ -128,25 +133,9 @@ export default function VerifyEmailLink() {
   const [verificationState, setVerificationState] =
     useState<VerificationState>('verifying');
 
-  const isLoaded = isSignInLoaded && isSignUpLoaded;
+  const isLoaded = signInFetchStatus === 'idle' && signUpFetchStatus === 'idle';
   const failureStateFromParams = getFailureStateFromParams(params);
   const emailLinkFlow = getEmailLinkFlow(params);
-
-  useEffect(() => {
-    logVerification('screen mounted with params', params);
-  }, [params]);
-
-  useEffect(() => {
-    logVerification('clerk load state changed', {
-      isLoaded,
-      isSignInLoaded,
-      isSignUpLoaded,
-    });
-  }, [isLoaded, isSignInLoaded, isSignUpLoaded]);
-
-  useEffect(() => {
-    logVerification('verification state changed', verificationState);
-  }, [verificationState]);
 
   useEffect(() => {
     if (verificationState !== 'verifying') {
@@ -207,7 +196,9 @@ export default function VerifyEmailLink() {
             to.startsWith(`${EMAIL_LINK_COMPLETE_ROUTE}?`)
           ) {
             setVerificationState('finishing');
-            logVerification('starting Instant sign-in after successful verification');
+            logVerification(
+              'starting Instant sign-in after successful verification'
+            );
 
             try {
               await signInToInstant();
@@ -267,7 +258,10 @@ export default function VerifyEmailLink() {
         setVerificationState('failed');
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error('[verify-email-link] Clerk email link verification failed', error);
+        console.error(
+          '[verify-email-link] Clerk email link verification failed',
+          error
+        );
         if (!isCancelled) {
           setVerificationState(getFailureState(error));
         }
@@ -341,7 +335,10 @@ export default function VerifyEmailLink() {
           </View>
 
           <View className="gap-4">
-            <Button size="lg" onPress={() => router.replace('/(auth)/sign-in-email')}>
+            <Button
+              size="lg"
+              onPress={() => router.replace('/(auth)/sign-in-email')}
+            >
               <Text>Back to Email Sign In</Text>
             </Button>
 

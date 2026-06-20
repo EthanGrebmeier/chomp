@@ -13,15 +13,19 @@ Integrate the recipe parsing API to allow users to import recipes from URLs. The
 ## Architecture Decisions
 
 ### Data Layer Pattern
+
 Following existing patterns, the feature will use:
+
 - `features/recipes/api/` - API client functions (new directory for external API calls)
 - `features/recipes/hooks/` - React hooks wrapping API + mutations
 - `features/recipes/components/import/` - UI components for import flow
 
 ### Auth Pattern
+
 Use `useAuth().getToken()` from Clerk internally within the hook, matching the pattern in `lib/instant/use-clerk-auth.tsx`. The API client function accepts the token as a parameter, while the hook handles token retrieval.
 
 ### State Management
+
 The import flow uses a state machine pattern: `idle → loading → preview → saving → success/error`
 
 ---
@@ -33,9 +37,11 @@ The import flow uses a state machine pattern: `idle → loading → preview → 
 **Description**: Add `sourceUrl` and `servings` fields to the `recipes` entity to store import metadata.
 
 **Files**:
+
 - `instant.schema.ts`
 
 **Changes**:
+
 ```typescript
 recipes: i.entity({
   // ... existing fields
@@ -45,11 +51,13 @@ recipes: i.entity({
 ```
 
 **Commands**:
+
 ```bash
 npx instant-cli push schema --app $EXPO_PUBLIC_INSTANT_APP_ID --token $INSTANT_APP_ADMIN_TOKEN --yes
 ```
 
 **Validation**:
+
 - Schema push succeeds
 - TypeScript types update correctly
 - Existing recipes unaffected
@@ -67,9 +75,11 @@ npx instant-cli push schema --app $EXPO_PUBLIC_INSTANT_APP_ID --token $INSTANT_A
 **Description**: Create TypeScript types for the recipe parsing API request, response, and errors.
 
 **Files**:
+
 - `features/recipes/api/types.ts` (new)
 
 **Types to Define**:
+
 ```typescript
 // Request
 export type ParseRecipeUrlRequest = {
@@ -124,6 +134,7 @@ export type RateLimitInfo = {
 ```
 
 **Validation**:
+
 - TypeScript compiles without errors
 - Types match API spec in `docs/api-spec-ingredients-from-url.md`
 
@@ -136,15 +147,17 @@ export type RateLimitInfo = {
 **Description**: Create user-friendly error messages for each API error code.
 
 **Files**:
+
 - `features/recipes/constants/import-errors.ts` (new)
 
 **Content**:
+
 ```typescript
 import { ParseRecipeUrlErrorCode } from '../api/types';
 
 export const IMPORT_ERROR_MESSAGES: Record<ParseRecipeUrlErrorCode, string> = {
   invalid_url: 'Please enter a valid URL starting with http:// or https://',
-  unsupported_content: 'This page doesn\'t appear to contain a recipe',
+  unsupported_content: "This page doesn't appear to contain a recipe",
   unauthorized: 'Please sign in to import recipes',
   not_found: 'The recipe page could not be found',
   fetch_timeout: 'The request timed out. Please try again',
@@ -154,12 +167,15 @@ export const IMPORT_ERROR_MESSAGES: Record<ParseRecipeUrlErrorCode, string> = {
   server_error: 'Something went wrong. Please try again later',
 };
 
-export const getImportErrorMessage = (code: ParseRecipeUrlErrorCode): string => {
+export const getImportErrorMessage = (
+  code: ParseRecipeUrlErrorCode
+): string => {
   return IMPORT_ERROR_MESSAGES[code] ?? 'An unexpected error occurred';
 };
 ```
 
 **Validation**:
+
 - All error codes have messages
 - Messages are user-friendly and actionable
 
@@ -172,29 +188,31 @@ export const getImportErrorMessage = (code: ParseRecipeUrlErrorCode): string => 
 **Description**: Create a utility function to validate recipe URLs before submission.
 
 **Files**:
+
 - `features/recipes/utils/validate-recipe-url.ts` (new)
 - `features/recipes/utils/__tests__/validate-recipe-url.test.ts` (new)
 
 **Implementation**:
+
 ```typescript
-export type UrlValidationResult = 
+export type UrlValidationResult =
   | { valid: true; url: string }
   | { valid: false; error: string };
 
 export const validateRecipeUrl = (input: string): UrlValidationResult => {
   const trimmed = input.trim();
-  
+
   if (!trimmed) {
     return { valid: false, error: 'Please enter a URL' };
   }
 
   try {
     const url = new URL(trimmed);
-    
+
     if (!['http:', 'https:'].includes(url.protocol)) {
       return { valid: false, error: 'URL must start with http:// or https://' };
     }
-    
+
     return { valid: true, url: trimmed };
   } catch {
     return { valid: false, error: 'Please enter a valid URL' };
@@ -203,6 +221,7 @@ export const validateRecipeUrl = (input: string): UrlValidationResult => {
 ```
 
 **Test Cases**:
+
 - Valid https URL
 - Valid http URL
 - Missing protocol
@@ -211,6 +230,7 @@ export const validateRecipeUrl = (input: string): UrlValidationResult => {
 - Whitespace handling
 
 **Validation**:
+
 - All unit tests pass
 - Edge cases covered
 
@@ -223,10 +243,12 @@ export const validateRecipeUrl = (input: string): UrlValidationResult => {
 **Description**: Create the API client function that calls the recipe parsing endpoint.
 
 **Files**:
+
 - `features/recipes/api/parse-recipe-url.ts` (new)
 - `features/recipes/api/index.ts` (new)
 
 **Implementation**:
+
 ```typescript
 import {
   ParseRecipeUrlRequest,
@@ -260,22 +282,30 @@ export const parseRecipeUrl = async (
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(request),
   });
 
   // Extract rate limit info from headers
-  const rateLimitInfo: RateLimitInfo | undefined = response.headers.get('X-RateLimit-Limit')
+  const rateLimitInfo: RateLimitInfo | undefined = response.headers.get(
+    'X-RateLimit-Limit'
+  )
     ? {
         limit: parseInt(response.headers.get('X-RateLimit-Limit') ?? '30', 10),
-        remaining: parseInt(response.headers.get('X-RateLimit-Remaining') ?? '30', 10),
-        resetSeconds: parseInt(response.headers.get('X-RateLimit-Reset') ?? '60', 10),
+        remaining: parseInt(
+          response.headers.get('X-RateLimit-Remaining') ?? '30',
+          10
+        ),
+        resetSeconds: parseInt(
+          response.headers.get('X-RateLimit-Reset') ?? '60',
+          10
+        ),
       }
     : undefined;
 
   if (!response.ok) {
-    const errorBody = await response.json() as ParseRecipeUrlError;
+    const errorBody = (await response.json()) as ParseRecipeUrlError;
     throw new RecipeParseError(
       errorBody.error.code,
       errorBody.error.message,
@@ -288,6 +318,7 @@ export const parseRecipeUrl = async (
 ```
 
 **Validation**:
+
 - Function accepts URL and token
 - Returns typed response on success
 - Throws `RecipeParseError` with code and message on failure
@@ -302,12 +333,14 @@ export const parseRecipeUrl = async (
 **Description**: Create a React hook that wraps the API client with TanStack Query mutation and handles auth.
 
 **Files**:
+
 - `features/recipes/hooks/useParseRecipeUrl.tsx` (new)
 - Update `features/recipes/hooks/index.ts`
 
 **Implementation**:
+
 ```typescript
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '@clerk/expo';
 import { useMutation } from '@tanstack/react-query';
 
 import { parseRecipeUrl, RecipeParseError } from '../api/parse-recipe-url';
@@ -316,19 +349,22 @@ import { ParseRecipeUrlResponse } from '../api/types';
 export const useParseRecipeUrl = () => {
   const { getToken } = useAuth();
 
-  return useMutation<ParseRecipeUrlResponse, RecipeParseError, { url: string }>({
-    mutationFn: async ({ url }) => {
-      const token = await getToken();
-      if (!token) {
-        throw new RecipeParseError('unauthorized', 'Not authenticated');
-      }
-      return parseRecipeUrl({ url }, token);
-    },
-  });
+  return useMutation<ParseRecipeUrlResponse, RecipeParseError, { url: string }>(
+    {
+      mutationFn: async ({ url }) => {
+        const token = await getToken();
+        if (!token) {
+          throw new RecipeParseError('unauthorized', 'Not authenticated');
+        }
+        return parseRecipeUrl({ url }, token);
+      },
+    }
+  );
 };
 ```
 
 **Validation**:
+
 - Hook returns mutation object with `mutate`, `data`, `error`, `isPending`
 - Auth token retrieved internally
 - Error is typed as `RecipeParseError`
@@ -342,15 +378,18 @@ export const useParseRecipeUrl = () => {
 **Description**: Create a temporary test screen to validate the API integration works end-to-end.
 
 **Files**:
+
 - `app/test-import.tsx` (new, temporary)
 
 **Implementation**:
+
 - Text input for URL
 - Button to trigger parse
 - Display loading, error, and success states
 - Show parsed recipe data as JSON
 
 **Validation**:
+
 - Can enter URL and submit
 - Loading state shows during request
 - Error messages display correctly
@@ -372,9 +411,11 @@ export const useParseRecipeUrl = () => {
 **Description**: Create a text input component for entering recipe URLs with validation and clipboard paste.
 
 **Files**:
+
 - `features/recipes/components/import/url-input.tsx` (new)
 
 **Features**:
+
 - Text input with URL keyboard type
 - Real-time validation feedback
 - Paste from clipboard button
@@ -382,6 +423,7 @@ export const useParseRecipeUrl = () => {
 - Keyboard dismissal handling via `KeyboardController`
 
 **Props**:
+
 ```typescript
 type UrlInputProps = {
   value: string;
@@ -393,6 +435,7 @@ type UrlInputProps = {
 ```
 
 **Validation**:
+
 - Component renders correctly
 - Paste button reads from clipboard
 - Clear button resets input
@@ -408,15 +451,18 @@ type UrlInputProps = {
 **Description**: Create a component to display the parsed recipe metadata with editable name.
 
 **Files**:
+
 - `features/recipes/components/import/parsed-recipe-preview.tsx` (new)
 
 **Features**:
+
 - Editable recipe name input
 - Display servings (read-only)
 - Display source URL (read-only, truncated)
 - Ingredient count badge
 
 **Props**:
+
 ```typescript
 type ParsedRecipePreviewProps = {
   recipeName: string;
@@ -428,6 +474,7 @@ type ParsedRecipePreviewProps = {
 ```
 
 **Validation**:
+
 - Name is editable
 - Servings and URL display correctly
 - Handles null/missing values gracefully
@@ -441,9 +488,11 @@ type ParsedRecipePreviewProps = {
 **Description**: Create a component to display parsed ingredients with remove capability.
 
 **Files**:
+
 - `features/recipes/components/import/ingredient-list-preview.tsx` (new)
 
 **Features**:
+
 - List of ingredients with quantity, unit, name, notes
 - Display category tag using existing `CategoryTag` component
 - Remove button per ingredient (swipe or icon)
@@ -451,6 +500,7 @@ type ParsedRecipePreviewProps = {
 - Format: "2 cups flour (sifted)" or "1 chicken breast"
 
 **Props**:
+
 ```typescript
 type IngredientListPreviewProps = {
   ingredients: ParsedIngredient[];
@@ -459,6 +509,7 @@ type IngredientListPreviewProps = {
 ```
 
 **Validation**:
+
 - All ingredients display with correct formatting
 - Category tags display with correct styling (using existing `CategoryTag` component)
 - Remove works and updates list
@@ -474,15 +525,22 @@ type IngredientListPreviewProps = {
 **Description**: Define the state machine types and transitions for the import flow.
 
 **Files**:
+
 - `features/recipes/types/import-state.ts` (new)
 
 **States**:
+
 ```typescript
 export type ImportState =
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'error'; error: RecipeParseError }
-  | { status: 'preview'; data: ParseRecipeUrlResponse; editedName: string; selectedIngredients: ParsedIngredient[] }
+  | {
+      status: 'preview';
+      data: ParseRecipeUrlResponse;
+      editedName: string;
+      selectedIngredients: ParsedIngredient[];
+    }
   | { status: 'saving' }
   | { status: 'success'; recipeId: string };
 
@@ -500,6 +558,7 @@ export type ImportAction =
 ```
 
 **Validation**:
+
 - Types compile correctly
 - All states and transitions defined
 
@@ -512,14 +571,17 @@ export type ImportAction =
 **Description**: Create a hook that manages the import state machine.
 
 **Files**:
+
 - `features/recipes/hooks/useImportRecipeState.tsx` (new)
 
 **Implementation**:
+
 - Use `useReducer` with defined state types
 - Expose state and dispatch
 - Helper methods: `submitUrl`, `editName`, `removeIngredient`, `confirm`, `reset`, `goBack`
 
 **Validation**:
+
 - State transitions work correctly
 - Can move through full flow: idle → loading → preview → saving → success
 
@@ -532,9 +594,11 @@ export type ImportAction =
 **Description**: Create the main bottom sheet component that orchestrates the import flow.
 
 **Files**:
+
 - `features/recipes/components/import/import-recipe-sheet.tsx` (new)
 
 **Features**:
+
 - Uses `BottomSheet` component pattern from existing sheets
 - Renders different content based on state:
   - `idle`: URL input
@@ -547,6 +611,7 @@ export type ImportAction =
 - Exposes `present()` and `dismiss()` via ref
 
 **Validation**:
+
 - Sheet opens and closes correctly
 - All states render appropriate content
 - Navigation between states works
@@ -565,10 +630,12 @@ export type ImportAction =
 **Description**: Add an "Import from URL" option accessible from the recipes screen.
 
 **Files**:
+
 - `features/recipes/components/import-recipe-button.tsx` (new)
 - Update `app/(tabs)/recipes.tsx`
 
 **Options** (pick one):
+
 - **Option A**: Dropdown menu on existing FAB with "Create" and "Import" options
 - **Option B**: Separate smaller button next to FAB
 - **Option C**: Menu in header
@@ -576,6 +643,7 @@ export type ImportAction =
 **Recommended**: Option A - dropdown on FAB, similar to `RecipeDropdownMenu` pattern.
 
 **Validation**:
+
 - Entry point is visible and accessible
 - Tapping opens import sheet
 - Doesn't disrupt existing create flow
@@ -589,10 +657,12 @@ export type ImportAction =
 **Description**: Create a function to transform parsed API data to `CreateRecipeArgs` format.
 
 **Files**:
+
 - `features/recipes/utils/transform-parsed-recipe.ts` (new)
 - `features/recipes/utils/__tests__/transform-parsed-recipe.test.ts` (new)
 
 **Implementation**:
+
 ```typescript
 import { ParseRecipeUrlResponse, ParsedIngredient } from '../api/types';
 import { CreateRecipeArgs } from '../instant/create-recipe';
@@ -609,7 +679,7 @@ export const transformParsedRecipe = (
       sourceUrl: data.sourceUrl,
       // Note: servings stored in description or new field after schema update
     },
-    ingredients: selectedIngredients.map((ing) => ({
+    ingredients: selectedIngredients.map(ing => ({
       name: ing.name,
       quantity: ing.quantity ?? 1,
       unit: ing.unit ?? '',
@@ -621,6 +691,7 @@ export const transformParsedRecipe = (
 ```
 
 **Test Cases**:
+
 - Full data transformation
 - Null quantity defaults to 1
 - Null unit defaults to empty string
@@ -630,6 +701,7 @@ export const transformParsedRecipe = (
 - Category passed through from API
 
 **Validation**:
+
 - All tests pass
 - Output matches `CreateRecipeArgs` type
 
@@ -642,14 +714,17 @@ export const transformParsedRecipe = (
 **Description**: Connect the import sheet to the real `useParseRecipeUrl` hook.
 
 **Files**:
+
 - Update `features/recipes/components/import/import-recipe-sheet.tsx`
 
 **Changes**:
+
 - Call `useParseRecipeUrl` mutation on URL submit
 - Update state machine on success/error
 - Pass rate limit info to error display
 
 **Validation**:
+
 - Real API call fires on submit
 - Success populates preview state
 - Errors display with user-friendly messages
@@ -664,15 +739,18 @@ export const transformParsedRecipe = (
 **Description**: On import confirmation, create the recipe using existing `useCreateRecipe` hook.
 
 **Files**:
+
 - Update `features/recipes/components/import/import-recipe-sheet.tsx`
 
 **Changes**:
+
 - Call `transformParsedRecipe` with current state
 - Call `useCreateRecipe().mutate()` with transformed data
 - Handle success: dispatch `SAVE_SUCCESS` with recipe ID
 - Handle error: dispatch `SAVE_ERROR`
 
 **Validation**:
+
 - Confirming import creates recipe in InstantDB
 - Recipe appears in recipe list
 - Ingredients are attached to recipe
@@ -687,10 +765,12 @@ export const transformParsedRecipe = (
 **Description**: Handle successful import with navigation and feedback.
 
 **Files**:
+
 - Update `features/recipes/components/import/import-recipe-sheet.tsx`
 - May need toast utility (check if exists)
 
 **Changes**:
+
 - On `SAVE_SUCCESS`:
   - Dismiss sheet
   - Show success toast: "Recipe imported successfully"
@@ -698,6 +778,7 @@ export const transformParsedRecipe = (
   - Reset state
 
 **Validation**:
+
 - Sheet dismisses on success
 - Toast appears
 - Navigates to new recipe detail page
@@ -712,9 +793,11 @@ export const transformParsedRecipe = (
 **Description**: Remove the temporary test screen created in Sprint 1.
 
 **Files**:
+
 - Delete `app/test-import.tsx`
 
 **Validation**:
+
 - Test screen removed
 - No broken imports
 
@@ -731,15 +814,18 @@ export const transformParsedRecipe = (
 **Description**: Create a polished error display component for the import sheet.
 
 **Files**:
+
 - `features/recipes/components/import/import-error.tsx` (new)
 
 **Features**:
+
 - Icon indicating error type (e.g., warning, network)
 - User-friendly error message from constants
 - Retry button for transient errors (timeout, server_error, rate_limited)
 - Different action for non-retryable errors (invalid_url → edit URL)
 
 **Validation**:
+
 - Each error code displays correctly
 - Retry button calls parse again
 - "Edit URL" returns to input state
@@ -753,16 +839,19 @@ export const transformParsedRecipe = (
 **Description**: Add polished loading indicators during API call and save.
 
 **Files**:
+
 - Update `features/recipes/components/import/import-recipe-sheet.tsx`
 - May create `features/recipes/components/import/import-loading.tsx`
 
 **Features**:
+
 - Skeleton or spinner during parse
 - "Importing recipe..." text
 - Disable interactions during loading
 - Optional: Cancel button (aborts fetch)
 
 **Validation**:
+
 - Loading state is visually clear
 - UI doesn't flash between states
 - Interactions disabled appropriately
@@ -776,6 +865,7 @@ export const transformParsedRecipe = (
 **Description**: Handle various edge cases in the import flow.
 
 **Cases**:
+
 - Empty ingredient list from API (show warning, allow import anyway)
 - Very long recipe name (truncate or allow edit)
 - Network offline (detect and show appropriate message)
@@ -783,11 +873,13 @@ export const transformParsedRecipe = (
 - Double-tap prevention on confirm button
 
 **Files**:
+
 - `hooks/use-network-status.ts` (new) - Network connectivity hook
 - `features/recipes/components/import/import-recipe-sheet.tsx` (updated)
 - `features/recipes/components/import/parsed-recipe-preview.tsx` (updated)
 
 **Implementation Details**:
+
 - Created `useNetworkStatus` hook using `@react-native-community/netinfo`
 - Added `checkNetworkStatus()` utility for one-time checks before API calls
 - Empty ingredients: Shows warning message but allows import to create recipe without ingredients
@@ -797,6 +889,7 @@ export const transformParsedRecipe = (
 - Double-tap: Uses ref to prevent multiple confirm button presses
 
 **Validation**:
+
 - Each edge case handled gracefully
 - No crashes or undefined behavior
 
@@ -809,11 +902,13 @@ export const transformParsedRecipe = (
 **Description**: Display rate limit information and handle 429 responses gracefully.
 
 **Features**:
+
 - Show "Retry in X seconds" on rate limit error
 - Optional: Display remaining requests in UI
 - Disable submit button during cooldown
 
 **Validation**:
+
 - Rate limit error shows countdown
 - Can retry after cooldown
 
@@ -871,6 +966,7 @@ features/recipes/
 ## Definition of Done
 
 Each task is complete when:
+
 1. Code is written and compiles without errors
 2. Specified validation criteria are met
 3. No new linter warnings introduced
@@ -878,6 +974,7 @@ Each task is complete when:
 5. Feature works in development build
 
 Each sprint is complete when:
+
 1. All tasks are done
 2. Sprint demo goal is achievable
 3. No regressions in existing functionality

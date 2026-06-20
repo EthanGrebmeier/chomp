@@ -20,7 +20,7 @@
     "push-schema": "npx instant-cli@latest push schema"
   },
   "dependencies": {
-    "@clerk/clerk-expo": "2.19.31",
+    "@clerk/expo": "3.4.6",
     "@expo-google-fonts/averia-serif-libre": "^0.4.1",
     "@expo-google-fonts/jaro": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",
@@ -47,6 +47,7 @@
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.44.5",
     "expo": "~55.0.26",
+    "expo-apple-authentication": "^56.0.4",
     "expo-clipboard": "~55.0.13",
     "expo-constants": "~55.0.16",
     "expo-crypto": "~55.0.15",
