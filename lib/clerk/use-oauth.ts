@@ -1,32 +1,18 @@
-import { useAuth, useSSO } from '@clerk/expo';
+import { useAuth } from '@clerk/expo';
 import { useSignInWithApple } from '@clerk/expo/apple';
-import * as AuthSession from 'expo-auth-session';
+import { useSignInWithGoogle } from '@clerk/expo/google';
 import { useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
-// Ensure web browser auth sessions are properly closed
-WebBrowser.maybeCompleteAuthSession();
 
 type OAuthStrategy = 'oauth_google' | 'oauth_apple';
 
-// Preloads the browser for Android devices to reduce authentication load time
-const useWarmUpBrowser = () => {
-  useEffect(() => {
-    if (Platform.OS !== 'android') return;
-    void WebBrowser.warmUpAsync();
-    return () => {
-      void WebBrowser.coolDownAsync();
-    };
-  }, []);
-};
-
 export function useOAuthFlow() {
-  const { startSSOFlow } = useSSO();
+  const { startGoogleAuthenticationFlow } = useSignInWithGoogle();
   const { startAppleAuthenticationFlow } = useSignInWithApple();
   const { signOut } = useAuth();
   const router = useRouter();
@@ -42,22 +28,12 @@ export function useOAuthFlow() {
     }
   }, [signOut]);
 
-  useWarmUpBrowser();
-
   const handleGoogleOAuth = useCallback(async () => {
     try {
       setIsLoading('oauth_google');
 
-      const redirectUrl = AuthSession.makeRedirectUri({
-        scheme: 'chomp',
-        path: 'oauth-callback',
-      });
-
       const { createdSessionId, setActive, signIn, signUp } =
-        await startSSOFlow({
-          strategy: 'oauth_google',
-          redirectUrl,
-        });
+        await startGoogleAuthenticationFlow();
       const shouldCreateDefaultList = signUp?.status === 'complete';
 
       if (createdSessionId && setActive) {
@@ -86,24 +62,28 @@ export function useOAuthFlow() {
       }
 
       toast.error('Sign in incomplete. Please try again.');
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('OAuth error:', err);
+    } catch (err: unknown) {
       // Don't show error for user cancellation
       if (
         err &&
         typeof err === 'object' &&
-        'message' in err &&
-        typeof err.message === 'string' &&
-        !err.message.includes('cancelled') &&
-        !err.message.includes('canceled')
+        'code' in err &&
+        (err.code === 'SIGN_IN_CANCELLED' || err.code === '-5')
       ) {
-        toast.error('Sign in failed. Please try again.');
+        return;
       }
+      // eslint-disable-next-line no-console
+      console.error('Google sign in error:', err);
+      toast.error('Sign in failed. Please try again.');
     } finally {
       setIsLoading(null);
     }
-  }, [resetToSignedOutState, router, signInToInstant, startSSOFlow]);
+  }, [
+    resetToSignedOutState,
+    router,
+    signInToInstant,
+    startGoogleAuthenticationFlow,
+  ]);
 
   const handleAppleSignIn = useCallback(async () => {
     try {
@@ -161,7 +141,8 @@ export function useOAuthFlow() {
     startAppleAuthenticationFlow,
   ]);
 
-  const signInWithGoogle = useCallback(() => {
+  const signInWithGoogle = useCallback(async () => {
+    if (Platform.OS !== 'ios' && Platform.OS !== 'android') return;
     return handleGoogleOAuth();
   }, [handleGoogleOAuth]);
 

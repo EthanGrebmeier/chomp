@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "chomp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.ethangrebmeier.chomp",
@@ -23,7 +22,6 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.ethangrebmeier.chomp"
     },
@@ -63,7 +61,9 @@
       "expo-secure-store",
       "expo-apple-authentication",
       "@react-native-community/datetimepicker",
-      "expo-image"
+      "expo-image",
+      "expo-status-bar",
+      "@clerk/expo"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -73,7 +73,10 @@
       "router": {},
       "eas": {
         "projectId": "eaca5365-c88e-4712-b89c-b3f737a6cde5"
-      }
+      },
+      "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID": "588662563984-e215s7s4qvpilsm05vrlolimpe18r1it.apps.googleusercontent.com",
+      "EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID": "588662563984-q7st72u4inr2dl2bpb1967uvvs0r09g9.apps.googleusercontent.com",
+      "EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME": "com.googleusercontent.apps.588662563984-q7st72u4inr2dl2bpb1967uvvs0r09g9"
     },
     "owner": "ethangrebmeier",
     "runtimeVersion": {

@@ -3,7 +3,6 @@ import { resourceCache } from '@clerk/expo/resource-cache';
 import { AveriaSerifLibre_400Regular } from '@expo-google-fonts/averia-serif-libre';
 import { Jaro_400Regular } from '@expo-google-fonts/jaro';
 import { PortalHost } from '@rn-primitives/portal';
-import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { useFonts } from 'expo-font';
 import { Stack, useRootNavigationState, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -31,6 +30,8 @@ import { QueryClientProvider } from '@/providers/query-client-provider';
 import '../global.css';
 import { useTheme } from '../hooks/use-theme';
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
@@ -54,12 +55,6 @@ const hideSplashScreen = async () => {
     // Ignore native splash hide errors during reloads.
   }
 };
-
-function DevelopmentDrizzleStudio() {
-  useDrizzleStudio(db as unknown as Parameters<typeof useDrizzleStudio>[0]);
-
-  return null;
-}
 
 function InitialLayout() {
   const theme = useTheme();
@@ -187,14 +182,13 @@ function RootLayoutContent({
       <QueryClientProvider>
         <KeyboardProvider>
           <MigrationProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              {process.env.NODE_ENV === 'development' ? (
-                <DevelopmentDrizzleStudio />
-              ) : null}
-              <InstantAuthHandler />
-              <InitialLayout />
-              <PortalHost />
-            </GestureHandlerRootView>
+            <SafeAreaProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <InstantAuthHandler />
+                <InitialLayout />
+                <PortalHost />
+              </GestureHandlerRootView>
+            </SafeAreaProvider>
           </MigrationProvider>
         </KeyboardProvider>
       </QueryClientProvider>

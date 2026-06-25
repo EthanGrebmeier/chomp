@@ -1,11 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { Href, router } from 'expo-router';
-import {
-  BookOpenIcon,
-  CalendarIcon,
-  SettingsIcon,
-} from 'lucide-react-native';
+import { BookOpenIcon, CalendarIcon, SettingsIcon } from 'lucide-react-native';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Keyboard, TextInput as RNTextInput, View } from 'react-native';
 import Animated, {
@@ -142,7 +138,9 @@ export const GroceryList = ({
   const standardControlsOpacity = useSharedValue(1);
   const bulkToolbarOpacity = useSharedValue(0);
   const routePushLockRef = useRef(false);
-  const routePushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const routePushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   const deferredQuery = useDeferredValue(searchQuery.trim());
   const normalizedQuery = deferredQuery.toLowerCase();
@@ -246,7 +244,11 @@ export const GroceryList = ({
     bulkToolbarOpacity.value = withTiming(bulkSelectionState.isActive ? 1 : 0, {
       duration: 200,
     });
-  }, [bulkSelectionState.isActive, bulkToolbarOpacity, standardControlsOpacity]);
+  }, [
+    bulkSelectionState.isActive,
+    bulkToolbarOpacity,
+    standardControlsOpacity,
+  ]);
 
   const standardControlsAnimatedStyle = useAnimatedStyle(() => ({
     opacity: standardControlsOpacity.value,
@@ -393,15 +395,11 @@ export const GroceryList = ({
   };
 
   const handleEnterBulkSelectionMode = () => {
-    setBulkSelectionState(currentState =>
-      enterBulkSelectionMode(currentState)
-    );
+    setBulkSelectionState(currentState => enterBulkSelectionMode(currentState));
   };
 
   const handleExitBulkSelectionMode = () => {
-    setBulkSelectionState(currentState =>
-      exitBulkSelectionMode(currentState)
-    );
+    setBulkSelectionState(currentState => exitBulkSelectionMode(currentState));
   };
 
   const handleSelectAllBulkItems = () => {
@@ -523,7 +521,9 @@ export const GroceryList = ({
     });
   };
 
-  const handleBulkToolbarActionPress = async (actionId: BulkToolbarActionId) => {
+  const handleBulkToolbarActionPress = async (
+    actionId: BulkToolbarActionId
+  ) => {
     if (actionId === 'set-store') {
       const selectedItems = filteredItems.filter(item =>
         bulkSelectionState.selectedItemIds.has(item.id)
@@ -622,7 +622,9 @@ export const GroceryList = ({
         selectedItems,
         storeId: payload.storeId,
       });
-      setBulkSelectionState(currentState => exitBulkSelectionMode(currentState));
+      setBulkSelectionState(currentState =>
+        exitBulkSelectionMode(currentState)
+      );
     } catch {
       toast.error('Failed to update store for selected items');
     }
@@ -647,7 +649,9 @@ export const GroceryList = ({
         selectedItems,
         category: payload.category,
       });
-      setBulkSelectionState(currentState => exitBulkSelectionMode(currentState));
+      setBulkSelectionState(currentState =>
+        exitBulkSelectionMode(currentState)
+      );
     } catch {
       toast.error('Failed to update category for selected items');
     }

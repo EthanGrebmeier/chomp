@@ -1,0 +1,44 @@
+diff --git a/ios/ExpoSQLite.podspec b/ios/ExpoSQLite.podspec
+index 46338662d6f2f90a8cb6b224ff82b3909964fd2a..6072ac4219b13f37c13aadcf351494eaf9e65584 100644
+--- a/ios/ExpoSQLite.podspec
++++ b/ios/ExpoSQLite.podspec
+@@ -56,7 +56,8 @@ Pod::Spec.new do |s|
+   Pod::UI.message("SQLite build flags: #{sqlite_cflags}")
+ 
+   # Consistent SQLite build flags for Swift module exposing from the umbrella header
+-  swift_flags = sqlite_cflags.split(' ').map { |flag| "-Xcc #{flag}" }.join(' ')
++  swift_flags = '-Xcc -fmodule-map-file=$(PODS_TARGET_SRCROOT)/ExpoSQLitePrivate.modulemap'
++  swift_flags << ' ' << sqlite_cflags.split(' ').map { |flag| "-Xcc #{flag}" }.join(' ')
+ 
+   if podfile_properties['expo.sqlite.withSQLiteVecExtension'] == 'true'
+     swift_flags += ' -DWITH_SQLITE_VEC'
+@@ -68,6 +69,7 @@ Pod::Spec.new do |s|
+     'DEFINES_MODULE' => 'YES',
+     'OTHER_CFLAGS' => '$(inherited) ' + sqlite_cflags,
+     'OTHER_SWIFT_FLAGS' => '$(inherited) ' + swift_flags,
++    'SWIFT_ENABLE_EXPLICIT_MODULES' => 'NO',
+   }
+   s.source_files = "**/*.{c,h,m,swift}"
+ 
+diff --git a/ios/ExpoSQLitePrivate.modulemap b/ios/ExpoSQLitePrivate.modulemap
+new file mode 100644
+index 0000000000000000000000000000000000000000..f7c527b9eedb773104516b90766689d71a271bc6
+--- /dev/null
++++ b/ios/ExpoSQLitePrivate.modulemap
+@@ -0,0 +1,4 @@
++module ExpoSQLitePrivate {
++  header "sqlite3.h"
++  export *
++}
+diff --git a/ios/SQLiteModule.swift b/ios/SQLiteModule.swift
+index 368bb7a5381ce388c2d638dc3e52374f4101a0a8..2595932f57975943948f37094fe136f9db8732e0 100644
+--- a/ios/SQLiteModule.swift
++++ b/ios/SQLiteModule.swift
+@@ -1,6 +1,7 @@
+ // Copyright 2015-present 650 Industries. All rights reserved.
+ 
+ import ExpoModulesCore
++@_implementationOnly import ExpoSQLitePrivate
+ 
+ private typealias SQLiteColumnNames = [String]
+ private typealias SQLiteColumnValues = [Any]
