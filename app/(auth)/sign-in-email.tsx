@@ -22,7 +22,7 @@ import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-inp
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import { useTheme } from '@/hooks/use-theme';
 import { getEmailLinkRedirectUrl } from '@/lib/clerk/email-link';
-import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
+import { InstantBridgeError, useInstantSignIn } from '@/lib/instant/use-clerk-auth';
 
 type PendingFlow = 'sign-in';
 type EmailDeliveryStrategy = 'email_code' | 'email_link';
@@ -188,6 +188,10 @@ export default function SignInEmail() {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
   const [isResendingCode, setIsResendingCode] = useState(false);
+  const [isFinishingSignIn, setIsFinishingSignIn] = useState(false);
+  const [bridgeRetry, setBridgeRetry] = useState<{
+    shouldCreateDefaultList: boolean;
+  } | null>(null);
   const isLoaded =
     signInFetchStatus === 'idle' && signUpFetchStatus === 'idle';
   const isBusy =
@@ -195,7 +199,8 @@ export default function SignInEmail() {
     signUpFetchStatus === 'fetching' ||
     isSendingCode ||
     isVerifyingCode ||
-    isResendingCode;
+    isResendingCode ||
+    isFinishingSignIn;
   const signInEmailLinkRedirectUrl = getEmailLinkRedirectUrl('sign-in');
 
   const normalizeEmail = () => emailInput.getValue().trim().toLowerCase();
@@ -226,6 +231,42 @@ export default function SignInEmail() {
     }
   };
 
+  const finishInstantSignIn = async (shouldCreateDefaultList: boolean) => {
+    setIsFinishingSignIn(true);
+
+    try {
+      await signInToInstant();
+      if (shouldCreateDefaultList) {
+        await initializeDefaultGroceryList();
+      }
+      setBridgeRetry(null);
+      replace('/(tabs)');
+    } catch (error) {
+      // Clerk auth already succeeded. A transient Instant bridge timeout should
+      // not tear down the Clerk session — keep it and let the user retry the
+      // bridge without re-entering their email or code.
+      if (error instanceof InstantBridgeError) {
+        errorEmailAuth('Instant bridge timed out after Clerk auth completed', {
+          isTimeout: error.isTimeout,
+          error: getClerkErrorPayload(error.cause),
+        });
+        setBridgeRetry({ shouldCreateDefaultList });
+        toast.error(
+          'Network issue finishing sign-in. Check your connection and tap Retry.'
+        );
+        return;
+      }
+
+      errorEmailAuth('Instant sign-in failed after Clerk auth completed', {
+        error: getClerkErrorPayload(error),
+      });
+      await resetToSignedOutState();
+      toast.error('We could not finish signing you in. Please try again.');
+    } finally {
+      setIsFinishingSignIn(false);
+    }
+  };
+
   const completeAuthentication = async (options: {
     finalize: () => Promise<{ error: unknown | null }>;
     shouldCreateDefaultList?: boolean;
@@ -239,19 +280,15 @@ export default function SignInEmail() {
     const { error } = await finalize();
     throwIfFutureError(error);
 
-    try {
-      await signInToInstant();
-      if (shouldCreateDefaultList) {
-        await initializeDefaultGroceryList();
-      }
-      replace('/(tabs)');
-    } catch (error) {
-      errorEmailAuth('Instant sign-in failed after Clerk auth completed', {
-        error: getClerkErrorPayload(error),
-      });
-      await resetToSignedOutState();
-      toast.error('We could not finish signing you in. Please try again.');
+    await finishInstantSignIn(shouldCreateDefaultList);
+  };
+
+  const onRetryFinishPress = async () => {
+    if (!bridgeRetry) {
+      return;
     }
+
+    await finishInstantSignIn(bridgeRetry.shouldCreateDefaultList);
   };
 
   const sendSignInEmailCode = async (
@@ -566,7 +603,36 @@ export default function SignInEmail() {
           className="flex-1 justify-between px-4 pt-8"
           style={{ paddingBottom: bottom + 16 }}
         >
-          {!pendingFlow ? (
+          {bridgeRetry ? (
+            <>
+              <View className="w-full gap-6">
+                <View className="w-full items-start justify-start gap-2">
+                  <Text variant="h1">Almost there</Text>
+                  <View>
+                    <Text variant="muted">
+                      We verified your email but couldn&apos;t finish connecting.
+                      Check your internet connection and try again.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View className="w-full items-center">
+                <Button
+                  className="w-full"
+                  onPress={onRetryFinishPress}
+                  disabled={isFinishingSignIn}
+                  size="lg"
+                >
+                  {isFinishingSignIn ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text>Retry</Text>
+                  )}
+                </Button>
+              </View>
+            </>
+          ) : !pendingFlow ? (
             <>
               <View className="w-full gap-6">
                 <View className="w-full items-start justify-start gap-2">

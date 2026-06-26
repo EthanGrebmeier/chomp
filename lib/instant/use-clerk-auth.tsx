@@ -28,6 +28,9 @@ const AUTH_RESTORE_RETRY_COUNT = 10;
 const AUTH_RESTORE_RETRY_DELAY_MS = 250;
 const AUTH_WELCOME_ROUTE = '/(auth)';
 const AUTH_EXPIRED_ROUTE = '/(auth)/sign-in';
+const BRIDGE_STEP_TIMEOUT_MS = 15000;
+const BRIDGE_RETRY_COUNT = 3;
+const BRIDGE_RETRY_BASE_DELAY_MS = 750;
 type InstantAuthSession = Awaited<ReturnType<typeof db.getAuth>>;
 export type InstantAuthStatus =
   | 'loading'
@@ -70,6 +73,64 @@ const INITIAL_INSTANT_AUTH_STATE: InstantAuthState = {
 let instantAuthStateSnapshot = INITIAL_INSTANT_AUTH_STATE;
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Thrown when the Clerk -> Instant bridge fails but the Clerk session is still
+ * valid. Callers should keep the Clerk session (so `InstantAuthHandler` can
+ * retry the bridge) instead of signing the user out.
+ */
+export class InstantBridgeError extends Error {
+  readonly isTimeout: boolean;
+  readonly cause?: unknown;
+
+  constructor(message: string, options?: { isTimeout?: boolean; cause?: unknown }) {
+    super(message);
+    this.name = 'InstantBridgeError';
+    this.isTimeout = options?.isTimeout ?? false;
+    this.cause = options?.cause;
+  }
+}
+
+const logBridge = (message: string, payload?: unknown) => {
+  if (payload === undefined) {
+    // eslint-disable-next-line no-console
+    console.log(`[instant-bridge] ${message}`);
+    return;
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`[instant-bridge] ${message}`, payload);
+};
+
+class BridgeTimeoutError extends Error {
+  constructor(step: string, timeoutMs: number) {
+    super(`Instant bridge step "${step}" timed out after ${timeoutMs}ms`);
+    this.name = 'BridgeTimeoutError';
+  }
+}
+
+const withTimeout = async <T,>(
+  step: string,
+  timeoutMs: number,
+  task: () => Promise<T>
+): Promise<T> => {
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      task(),
+      new Promise<never>((_resolve, reject) => {
+        timeoutHandle = setTimeout(() => {
+          reject(new BridgeTimeoutError(step, timeoutMs));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+  }
+};
 
 const waitForInstantAuthRestore = async () => {
   for (let attempt = 0; attempt < AUTH_RESTORE_RETRY_COUNT; attempt += 1) {
@@ -147,16 +208,75 @@ const buildInstantAuthStateSnapshot = ({
   };
 };
 
+const isTimeoutLikeError = (error: unknown) => {
+  if (error instanceof BridgeTimeoutError) {
+    return true;
+  }
+
+  const message =
+    error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+
+  return /timed out|timeout|network|fetch failed/i.test(message);
+};
+
 const signInWithClerkToken = async (getToken: () => Promise<string | null>) => {
-  const idToken = await getToken();
+  const idToken = await withTimeout('clerk.getToken', BRIDGE_STEP_TIMEOUT_MS, () =>
+    getToken()
+  );
 
   if (!idToken) {
     throw new Error('Missing Clerk ID token');
   }
 
-  await db.auth.signInWithIdToken({
-    clientName: process.env.EXPO_PUBLIC_INSTANT_CLIENT_NAME!,
-    idToken,
+  await withTimeout('instant.signInWithIdToken', BRIDGE_STEP_TIMEOUT_MS, () =>
+    db.auth.signInWithIdToken({
+      clientName: process.env.EXPO_PUBLIC_INSTANT_CLIENT_NAME!,
+      idToken,
+    })
+  );
+};
+
+const bridgeClerkToInstant = async (getToken: () => Promise<string | null>) => {
+  const existingAuth = await db.getAuth();
+
+  if (existingAuth && !existingAuth.email) {
+    await db.auth.signOut();
+  }
+
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= BRIDGE_RETRY_COUNT; attempt += 1) {
+    try {
+      await signInWithClerkToken(getToken);
+
+      const restoredAuth = await waitForInstantAuthRestore();
+
+      if (!restoredAuth?.email) {
+        throw new BridgeTimeoutError('instant.authRestore', BRIDGE_STEP_TIMEOUT_MS);
+      }
+
+      return;
+    } catch (error) {
+      lastError = error;
+      const canRetry = attempt < BRIDGE_RETRY_COUNT && isTimeoutLikeError(error);
+
+      logBridge('bridge attempt failed', {
+        attempt,
+        canRetry,
+        error: error instanceof Error ? error.message : error,
+      });
+
+      if (!canRetry) {
+        break;
+      }
+
+      await sleep(BRIDGE_RETRY_BASE_DELAY_MS * attempt);
+    }
+  }
+
+  throw new InstantBridgeError('Clerk to Instant bridge failed', {
+    isTimeout: isTimeoutLikeError(lastError),
+    cause: lastError,
   });
 };
 
@@ -166,19 +286,7 @@ export const useInstantSignIn = () => {
   getTokenRef.current = getToken;
 
   return useCallback(async () => {
-    const existingAuth = await db.getAuth();
-
-    if (existingAuth && !existingAuth.email) {
-      await db.auth.signOut();
-    }
-
-    await signInWithClerkToken(getTokenRef.current);
-
-    const restoredAuth = await waitForInstantAuthRestore();
-
-    if (!restoredAuth?.email) {
-      throw new Error('Instant auth session did not become available in time');
-    }
+    await bridgeClerkToInstant(getTokenRef.current);
   }, []);
 };
 
@@ -354,7 +462,15 @@ export const InstantAuthHandler = ({
 
             await signInToInstant();
             nextResolvedInstantAuth = await waitForInstantAuthRestore();
-          } catch {
+          } catch (error) {
+            // Transient network failure: keep the Clerk session intact so the
+            // in-flight sign-in screen (or the next transition) can retry the
+            // bridge without forcing the user to re-authenticate.
+            if (error instanceof InstantBridgeError && error.isTimeout) {
+              nextResolvedInstantAuth = null;
+              return;
+            }
+
             await Promise.allSettled([db.auth.signOut(), signOut()]);
 
             if (!isCancelled) {

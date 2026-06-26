@@ -16,7 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
-import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
+import {
+  InstantBridgeError,
+  useInstantSignIn,
+} from '@/lib/instant/use-clerk-auth';
 
 type ClerkErrorDetail = {
   code?: string;
@@ -129,6 +132,8 @@ export default function ContinueSignUp() {
   const signInToInstant = useInstantSignIn();
   const fieldGettersRef = useRef<Record<string, () => string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFinishingSignIn, setIsFinishingSignIn] = useState(false);
+  const [bridgeFailed, setBridgeFailed] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const isLoaded = fetchStatus === 'idle';
 
@@ -142,7 +147,7 @@ export default function ContinueSignUp() {
   );
   const hasLegalAcceptedRequirement =
     missingFields.includes('legal_accepted');
-  const isBusy = isSubmitting || fetchStatus === 'fetching';
+  const isBusy = isSubmitting || isFinishingSignIn || fetchStatus === 'fetching';
   const canSubmit = !isBusy && (!hasLegalAcceptedRequirement || legalAccepted);
 
   useEffect(() => {
@@ -176,20 +181,40 @@ export default function ContinueSignUp() {
     errors.global?.[0]?.message ??
     null;
 
+  const finishInstantSignIn = async () => {
+    setIsFinishingSignIn(true);
+
+    try {
+      await signInToInstant();
+      await initializeDefaultGroceryList();
+      setBridgeFailed(false);
+      replace('/(tabs)');
+    } catch (error) {
+      // Clerk sign-up already finalized. A transient Instant bridge timeout
+      // should not tear down the Clerk session — keep it and let the user
+      // retry the bridge.
+      if (error instanceof InstantBridgeError) {
+        setBridgeFailed(true);
+        toast.error(
+          'Network issue finishing sign-in. Check your connection and tap Retry.'
+        );
+        return;
+      }
+
+      await resetToSignedOutState();
+      toast.error('We could not finish signing you in. Please try again.');
+    } finally {
+      setIsFinishingSignIn(false);
+    }
+  };
+
   const completeSignUp = async () => {
     if (!signUp) return;
 
     const { error } = await signUp.finalize();
     throwIfFutureError(error);
 
-    try {
-      await signInToInstant();
-      await initializeDefaultGroceryList();
-      replace('/(tabs)');
-    } catch {
-      await resetToSignedOutState();
-      toast.error('We could not finish signing you in. Please try again.');
-    }
+    await finishInstantSignIn();
   };
 
   const handleSubmit = async () => {
@@ -276,7 +301,25 @@ export default function ContinueSignUp() {
             </Text>
           </View>
 
-          {missingFields.length === 0 ? (
+          {bridgeFailed ? (
+            <View className="gap-4">
+              <Text variant="muted" className="text-center">
+                We created your account but couldn&apos;t finish connecting.
+                Check your internet connection and try again.
+              </Text>
+              <Button
+                onPress={finishInstantSignIn}
+                disabled={isFinishingSignIn}
+                size="lg"
+              >
+                {isFinishingSignIn ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text>Retry</Text>
+                )}
+              </Button>
+            </View>
+          ) : missingFields.length === 0 ? (
             <View className="gap-4">
               <Text variant="muted" className="text-center">
                 No additional details are required. Please return to the welcome
