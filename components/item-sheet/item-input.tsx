@@ -40,9 +40,9 @@ export const ItemInput = ({
 }: ItemInputProps) => {
   const { matchingItems } = useMatchingItems(matchingValue);
   const isApplyingSuggestionRef = useRef(false);
-  const hideSuggestionsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const hideSuggestionsTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   useEffect(() => {
     return () => {
@@ -116,7 +116,7 @@ export const ItemInput = ({
           className="absolute left-0 right-0 top-[75%] z-10  flex-row flex-wrap gap-1.5 overflow-hidden pt-4"
         >
           {matchingItems.map(item => (
-            <Animated.View key={item.name}>
+            <Animated.View key={item.cloudSavedItemId ?? item.localSavedItemId}>
               <HapticPressable
                 className={cn(
                   'flex-row items-center justify-between self-start rounded-xl border border-border bg-[#F3F4F6] px-2 py-0.5 dark:bg-[#1E2023]'

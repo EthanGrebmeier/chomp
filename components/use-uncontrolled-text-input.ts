@@ -22,7 +22,15 @@ export const useUncontrolledTextInput = (initialValue = '') => {
 
   const setValue = useCallback((value: string, inputRef?: TextInputRef) => {
     valueRef.current = value;
-    inputRef?.current?.setNativeProps({ text: value });
+    // On the new architecture (Fabric) `setNativeProps({ text: '' })` is a
+    // no-op, so clearing in place must go through TextInput's supported
+    // imperative `clear()` method. Without this the field keeps its old text
+    // after a continuous-add submit even though the value ref was reset.
+    if (value === '') {
+      inputRef?.current?.clear();
+    } else {
+      inputRef?.current?.setNativeProps({ text: value });
+    }
   }, []);
 
   return {

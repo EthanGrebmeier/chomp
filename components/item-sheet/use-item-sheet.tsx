@@ -242,6 +242,15 @@ export const ItemSheetProvider = ({
   const recipeCleared = !!initialRecipeId && !recipe;
 
   const submitItem = () => {
+    // Mirror the footer button's `disabled={!isValid}` guard. The button is
+    // gated on `isValid`, but the return key routes here directly, so without
+    // this check pressing enter on an empty field would create a blank item.
+    // Read the live input value (not the debounced `itemInputValue`) so a
+    // fast enter press right after typing is still validated correctly.
+    if (!getItemInputValue().trim().length || !quantity || !unit) {
+      return;
+    }
+
     const selectedCloudSavedItemId =
       selectedItem?.source === 'cloud'
         ? selectedItem.cloudSavedItemId
