@@ -4,6 +4,7 @@ import { ActivityIndicator, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
+import { LegalConsent } from '@/components/auth/legal-consent';
 import { WelcomeGraphic } from '@/components/branding/welcome-graphic';
 import { Button } from '@/components/ui/button';
 import { useContinueAsGuest } from '@/lib/instant/use-continue-as-guest';
@@ -16,6 +17,7 @@ export default function Welcome() {
   const router = useRouter();
   const continueAsGuest = useContinueAsGuest();
   const [isContinuingAsGuest, setIsContinuingAsGuest] = useState(false);
+  const [isSocialLoading, setIsSocialLoading] = useState(false);
 
   const colorScheme = useColorScheme();
 
@@ -41,45 +43,37 @@ export default function Welcome() {
       )}
     >
       <View className="mt-12 flex-1 justify-between  px-6">
-        <View className="items-center justify-start gap-2">
-          <Text
-            className={cn(
-              ' text-center font-medium uppercase',
-              colorScheme === 'dark'
-                ? 'text-primary-foreground'
-                : 'text-primary'
-            )}
-          >
-            Welcome to
-          </Text>
-          <Text
-            className={cn(
-              'text-center text-[88px] font-bold uppercase leading-none ',
-              colorScheme === 'dark' ? 'text-foreground' : 'text-primary'
-            )}
-          >
-            Chomp
-          </Text>
-        </View>
-        <View className="w-full flex-1 translate-x-[-12px] translate-y-[-18px] items-center justify-center">
-          <WelcomeGraphic />
+        <View className="items-center justify-start gap-12">
+          <View className="items-center justify-start gap-2">
+            <Text
+              className={cn(
+                'text-center text-[88px] font-bold uppercase leading-none ',
+                colorScheme === 'dark' ? 'text-foreground' : 'text-primary'
+              )}
+            >
+              Chomp
+            </Text>
+          </View>
+          <View className="w-full translate-x-[-12px] translate-y-[-18px] items-center justify-center">
+            <WelcomeGraphic width={300} height={300} />
+          </View>
         </View>
 
         <View className=" justify-end gap-2">
           <Button
             size="xl"
+            variant="default"
             className="w-full"
             onPress={() => router.push('/(auth)/sign-in')}
-            disabled={isContinuingAsGuest}
           >
-            <Text>Sign In</Text>
+            <Text>Sign in</Text>
           </Button>
 
           <Button
             variant="ghost"
             size="xl"
             onPress={handleContinueAsGuest}
-            disabled={isContinuingAsGuest}
+            disabled={isSocialLoading || isContinuingAsGuest}
           >
             {isContinuingAsGuest ? (
               <ActivityIndicator color="white" />
@@ -87,6 +81,8 @@ export default function Welcome() {
               <Text>Continue as a Guest</Text>
             )}
           </Button>
+
+          <LegalConsent className="mt-2 px-4" />
         </View>
       </View>
     </SafeAreaView>

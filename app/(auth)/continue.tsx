@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
+import { LegalLink } from '@/components/auth/legal-consent';
 import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -348,7 +349,9 @@ export default function ContinueSignUp() {
                     disabled={isBusy}
                   />
                   <Text className="flex-1 text-sm">
-                    I agree to the Terms of Service and Privacy Policy.
+                    I agree to the{' '}
+                    <LegalLink document="terms" label="Terms of Service" /> and{' '}
+                    <LegalLink document="privacy" label="Privacy Policy" />.
                   </Text>
                 </View>
               ) : null}

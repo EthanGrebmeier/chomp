@@ -1,6 +1,6 @@
 import { useAuth, useSignIn, useSignUp } from '@clerk/expo';
-import { useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -180,11 +180,14 @@ export default function SignInEmail() {
   } = useSignUp();
   const { signOut } = useAuth();
   const { push, replace } = useRouter();
+  const params = useLocalSearchParams<{ email?: string }>();
+  const initialEmail = typeof params.email === 'string' ? params.email : '';
   const signInToInstant = useInstantSignIn();
   const { bottom } = useSafeAreaInsets();
   const theme = useTheme();
   const otpRef = useRef<OtpInputRef>(null);
-  const emailInput = useUncontrolledTextInput();
+  const emailInput = useUncontrolledTextInput(initialEmail);
+  const hasAutoSentRef = useRef(false);
 
   const [code, setCode] = useState('');
   const [pendingFlow, setPendingFlow] = useState<PendingFlow | null>(null);
@@ -192,6 +195,9 @@ export default function SignInEmail() {
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
   const [isResendingCode, setIsResendingCode] = useState(false);
   const [isFinishingSignIn, setIsFinishingSignIn] = useState(false);
+  const [isAutoSending, setIsAutoSending] = useState(() =>
+    Boolean(initialEmail.trim())
+  );
   const [bridgeRetry, setBridgeRetry] = useState<{
     shouldCreateDefaultList: boolean;
   } | null>(null);
@@ -537,6 +543,29 @@ export default function SignInEmail() {
     setIsSendingCode(false);
   };
 
+  // When arriving with a pre-filled email (e.g. from the sign-in screen),
+  // send the verification code automatically to skip the extra tap.
+  useEffect(() => {
+    if (hasAutoSentRef.current || !isLoaded || pendingFlow) {
+      return;
+    }
+
+    if (!initialEmail.trim()) {
+      return;
+    }
+
+    hasAutoSentRef.current = true;
+    const timer = setTimeout(async () => {
+      await onSendCodePress();
+      // On success the code screen takes over; on failure fall back to the
+      // pre-filled email form so the user can retry.
+      setIsAutoSending(false);
+    }, 0);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, pendingFlow, initialEmail]);
+
   const onVerifyCodePress = async () => {
     setIsVerifyingCode(true);
     try {
@@ -584,16 +613,6 @@ export default function SignInEmail() {
     setIsResendingCode(false);
   };
 
-  if (!isLoaded) {
-    return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="px-4 pt-2">
@@ -634,6 +653,10 @@ export default function SignInEmail() {
                 </Button>
               </View>
             </>
+          ) : isAutoSending && !pendingFlow ? (
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator size="large" />
+            </View>
           ) : !pendingFlow ? (
             <>
               <View className="w-full gap-6">
