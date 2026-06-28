@@ -135,6 +135,7 @@ export const ItemSheetProvider = ({
     handleChangeText: handleNotesInputTextChange,
     getValue: getNotesInputValue,
     reset: resetNotesInput,
+    setValue: setNotesInputNativeValue,
   } = notesInput;
   const [itemInputValue, setItemInputValue] = useState('');
   const [hasItemTitle, setHasItemTitle] = useState(false);
@@ -160,12 +161,22 @@ export const ItemSheetProvider = ({
     TEXT_COMMIT_DEBOUNCE_MS
   );
 
-  const reset = () => {
+  const reset = ({
+    keepInputsMounted = false,
+  }: { keepInputsMounted?: boolean } = {}) => {
     commitItemInputValue.cancel();
     commitNotesInputValue.cancel();
     setSelectedItem(null);
-    resetItemInput();
-    resetNotesInput();
+    // For continuous add entry we clear the text in place (setNativeProps)
+    // instead of remounting via a key bump. Remounting unmounts the focused
+    // input, which dismisses and re-opens the keyboard (a visible flicker).
+    if (keepInputsMounted) {
+      setItemInputNativeValue('', itemInputRef);
+      setNotesInputNativeValue('', notesInputRef);
+    } else {
+      resetItemInput();
+      resetNotesInput();
+    }
     setItemInputValue('');
     setHasItemTitle(false);
     setNotesInputValue('');
@@ -257,7 +268,15 @@ export const ItemSheetProvider = ({
       selectedCloudSavedItemStoreId,
       selectedLocalSavedItemId,
     });
-    reset();
+    // In add mode the sheet stays open for continuous entry. Clear the inputs
+    // in place (no remount) so the field keeps focus and the keyboard stays up
+    // until the user dismisses it manually.
+    if (mode === 'add') {
+      reset({ keepInputsMounted: true });
+      itemInputRef.current?.focus();
+    } else {
+      reset();
+    }
   };
 
   const onSelect = (item: MatchingItem) => {

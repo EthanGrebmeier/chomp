@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { TextInput } from 'react-native';
 import { useDebounceCallback } from 'usehooks-ts';
 
 import { normalizeUnit } from '../../../components/item-sheet/unit-utils';
@@ -34,7 +35,9 @@ type MealPlanItemContextValue = {
   setShowMatchingItems: (show: boolean) => void;
 
   // Helper methods
-  resetState: () => void;
+  resetState: (options?: {
+    itemNameInputRef?: React.RefObject<TextInput | null>;
+  }) => void;
   populateFromItem: (item: BaseGroceryItem) => void;
   isValid: () => boolean;
 };
@@ -109,10 +112,20 @@ export const MealPlanItemProvider = ({
     commitItemNotes(notes);
   };
 
-  const resetState = () => {
+  const resetState = (options?: {
+    itemNameInputRef?: React.RefObject<TextInput | null>;
+  }) => {
     commitItemName.cancel();
     commitItemNotes.cancel();
-    itemNameInput.reset();
+    // For continuous add entry, clear the name field in place (setNativeProps)
+    // instead of remounting via a key bump. Remounting the focused input
+    // dismisses and re-opens the keyboard, causing a visible flicker. The
+    // notes field isn't focused during entry, so a remount there is fine.
+    if (options?.itemNameInputRef) {
+      itemNameInput.setValue('', options.itemNameInputRef);
+    } else {
+      itemNameInput.reset();
+    }
     itemNotesInput.reset();
     setCommittedItemName('');
     setHasItemTitle(false);

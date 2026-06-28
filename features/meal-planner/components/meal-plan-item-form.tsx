@@ -14,6 +14,8 @@ type MealPlanItemFormProps = {
   notesPlaceholder?: string;
   notesStyle?: 'inline' | 'bordered';
   showMetaBar?: boolean;
+  inputRef?: React.RefObject<TextInput | null>;
+  keepKeyboardOnSubmit?: boolean;
 };
 
 export const MealPlanItemForm = ({
@@ -22,8 +24,11 @@ export const MealPlanItemForm = ({
   notesPlaceholder = 'Notes',
   notesStyle = 'inline',
   showMetaBar = true,
+  inputRef,
+  keepKeyboardOnSubmit = false,
 }: MealPlanItemFormProps) => {
-  const itemInputRef = useRef<TextInput>(null);
+  const internalItemInputRef = useRef<TextInput>(null);
+  const itemInputRef = inputRef ?? internalItemInputRef;
   const {
     itemName,
     hasItemTitle,
@@ -86,6 +91,7 @@ export const MealPlanItemForm = ({
         setShowMatchingItems={setShowMatchingItems}
         onSubmit={onSubmit}
         inputRef={itemInputRef}
+        keepKeyboardOnSubmit={keepKeyboardOnSubmit}
       />
       <BottomSheet.BareTextInput
         key={itemNotesInputKey}

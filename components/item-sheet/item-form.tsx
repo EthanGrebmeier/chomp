@@ -40,6 +40,7 @@ export const ItemForm = () => {
         onSubmit={handleSubmitEditing}
         inputRef={itemInputRef}
         disableAutocomplete={disableAutocomplete}
+        keepKeyboardOnSubmit={mode === 'add'}
       />
       {recipe && <RecipeTag />}
       <NotesInput />

@@ -21,6 +21,7 @@ type ItemInputProps = {
   onSubmit: () => void;
   inputRef?: React.RefObject<TextInput | null>;
   disableAutocomplete?: boolean;
+  keepKeyboardOnSubmit?: boolean;
 };
 
 export const ItemInput = ({
@@ -35,6 +36,7 @@ export const ItemInput = ({
   onSubmit,
   inputRef,
   disableAutocomplete = false,
+  keepKeyboardOnSubmit = false,
 }: ItemInputProps) => {
   const { matchingItems } = useMatchingItems(matchingValue);
   const isApplyingSuggestionRef = useRef(false);
@@ -105,6 +107,7 @@ export const ItemInput = ({
         autoCorrect={false}
         autoCapitalize="words"
         onSubmitEditing={onSubmit}
+        submitBehavior={keepKeyboardOnSubmit ? 'submit' : 'blurAndSubmit'}
       />
       {shouldShowAutocomplete && (
         <Animated.View

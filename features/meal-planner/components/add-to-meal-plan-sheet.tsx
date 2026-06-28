@@ -1,6 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
@@ -104,6 +104,7 @@ export type AddToMealPlanSheetRef = {
 
 const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const itemInputRef = useRef<TextInput>(null);
   const {
     itemName,
     hasItemTitle,
@@ -205,10 +206,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     setSelectedRecipe(null);
   };
 
-  const handleItemSuccess = () => {
-    sheetRef.current?.dismiss();
-  };
-
   const handleAddItem = () => {
     if (!itemName || !selectedDate) return;
 
@@ -226,8 +223,10 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       },
       {
         onSuccess: () => {
-          resetMealPlanItemState();
-          handleItemSuccess();
+          // Keep the sheet open for continuous entry. Clear the name field in
+          // place (no remount) so it keeps focus and the keyboard stays up.
+          resetMealPlanItemState({ itemNameInputRef: itemInputRef });
+          itemInputRef.current?.focus();
         },
         onError: () => {
           toast.error('Failed to add item');
@@ -383,7 +382,12 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           )
         ) : (
           <View className="px-4">
-            <MealPlanItemForm onSubmit={handleAddItem} showMetaBar={false} />
+            <MealPlanItemForm
+              onSubmit={handleAddItem}
+              showMetaBar={false}
+              inputRef={itemInputRef}
+              keepKeyboardOnSubmit
+            />
           </View>
         )}
       </View>
