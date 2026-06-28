@@ -22,7 +22,10 @@ import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-inp
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import { useTheme } from '@/hooks/use-theme';
 import { getEmailLinkRedirectUrl } from '@/lib/clerk/email-link';
-import { InstantBridgeError, useInstantSignIn } from '@/lib/instant/use-clerk-auth';
+import {
+  InstantBridgeError,
+  useInstantSignIn,
+} from '@/lib/instant/use-clerk-auth';
 
 type PendingFlow = 'sign-in';
 type EmailDeliveryStrategy = 'email_code' | 'email_link';
@@ -192,8 +195,7 @@ export default function SignInEmail() {
   const [bridgeRetry, setBridgeRetry] = useState<{
     shouldCreateDefaultList: boolean;
   } | null>(null);
-  const isLoaded =
-    signInFetchStatus === 'idle' && signUpFetchStatus === 'idle';
+  const isLoaded = signInFetchStatus === 'idle' && signUpFetchStatus === 'idle';
   const isBusy =
     signInFetchStatus === 'fetching' ||
     signUpFetchStatus === 'fetching' ||
@@ -337,12 +339,15 @@ export default function SignInEmail() {
       throw sendCodeError;
     }
 
-    warnEmailAuth('email code unavailable, falling back to sign-in email link', {
-      email: maskEmail(normalizedEmail),
-      error: getClerkErrorPayload(sendCodeError),
-      supportedStrategies,
-      redirectUrl: signInEmailLinkRedirectUrl,
-    });
+    warnEmailAuth(
+      'email code unavailable, falling back to sign-in email link',
+      {
+        email: maskEmail(normalizedEmail),
+        error: getClerkErrorPayload(sendCodeError),
+        supportedStrategies,
+        redirectUrl: signInEmailLinkRedirectUrl,
+      }
+    );
 
     const { error: linkError } = await signIn.emailLink.sendLink({
       verificationUrl: signInEmailLinkRedirectUrl,
@@ -599,10 +604,7 @@ export default function SignInEmail() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
         className="flex-1"
       >
-        <View
-          className="flex-1 justify-between px-4 pt-8"
-          style={{ paddingBottom: bottom + 16 }}
-        >
+        <View className="flex-1 justify-between px-4 pt-8">
           {bridgeRetry ? (
             <>
               <View className="w-full gap-6">
@@ -610,8 +612,8 @@ export default function SignInEmail() {
                   <Text variant="h1">Almost there</Text>
                   <View>
                     <Text variant="muted">
-                      We verified your email but couldn&apos;t finish connecting.
-                      Check your internet connection and try again.
+                      We verified your email but couldn&apos;t finish
+                      connecting. Check your internet connection and try again.
                     </Text>
                   </View>
                 </View>
@@ -636,7 +638,7 @@ export default function SignInEmail() {
             <>
               <View className="w-full gap-6">
                 <View className="w-full items-start justify-start gap-2">
-                  <Text variant="h1">Sign In with Email</Text>
+                  <Text variant="h1">Sign in with Email</Text>
                   <View>
                     <Text variant="muted">
                       Enter your email and we&apos;ll send you a verification
@@ -666,7 +668,7 @@ export default function SignInEmail() {
                   className="w-full"
                   onPress={onSendCodePress}
                   disabled={isBusy}
-                  size="lg"
+                  size="xl"
                 >
                   {isSendingCode ? (
                     <ActivityIndicator color="white" />
