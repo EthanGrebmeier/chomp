@@ -229,7 +229,7 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
         }}
       />
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
-      <EditMealSheet ref={editMealSheet} />
+      <EditMealSheet ref={editMealSheet} listId={listId} />
       <EditItemSheet ref={editItemSheet} />
       <View className="flex-1">
         <MealPlanDate

@@ -48,7 +48,9 @@ import { MealPlanRecipeTitle } from './meal-plan-recipe-title';
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 import { MealTimeSheet } from './meal-time-sheet';
 
-type EditMealSheetProps = {};
+type EditMealSheetProps = {
+  listId: string;
+};
 
 export type EditMealSheetRef = {
   open: ({
@@ -63,7 +65,7 @@ export type EditMealSheetRef = {
 };
 
 export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
-  (_props, ref) => {
+  ({ listId }, ref) => {
     const [mealTag, setMealTag] = useState<string | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<string | undefined>(
       undefined
@@ -190,6 +192,14 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 
     const handleRecipeChange = (recipe: RecipeWithIngredients) => {
       setSelectedRecipe(recipe);
+      changeRecipeSheetRef.current?.dismiss();
+    };
+
+    const handleCreateRecipe = (initialName?: string) => {
+      onDismissRef.current = undefined;
+      router.dismissTo(navigation.goToCreateRecipeManual(listId, initialName));
+      sheetRef.current?.dismiss();
+      calendarSheetRef.current?.dismiss();
       changeRecipeSheetRef.current?.dismiss();
     };
 
@@ -521,6 +531,8 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
             <View className="flex-1 gap-2">
               <RecipeSelector
                 onSelectRecipe={handleRecipeChange}
+                onCreateRecipe={handleCreateRecipe}
+                listId={listId}
                 fillHeight
               />
             </View>

@@ -31,12 +31,14 @@ const SEARCH_QUERY_DEBOUNCE_MS = 300;
 
 type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
+  onCreateRecipe?: (initialName?: string) => void;
   listId?: string;
   fillHeight?: boolean;
 };
 
 export const RecipeSelector = ({
   onSelectRecipe,
+  onCreateRecipe,
   listId,
   fillHeight = false,
 }: RecipeSelectorProps) => {
@@ -119,6 +121,20 @@ export const RecipeSelector = ({
     );
   };
 
+  const handleCreateRecipePress = (initialName?: string) => {
+    if (onCreateRecipe) {
+      onCreateRecipe(initialName);
+      return;
+    }
+
+    if (initialName) {
+      handleCreateRecipe({ name: initialName });
+      return;
+    }
+
+    createRecipeSheetRef.current?.present();
+  };
+
   if (!recipes || recipes.length === 0) {
     return (
       <View
@@ -128,13 +144,17 @@ export const RecipeSelector = ({
         <EmptyRecipePrompt />
         <CreateRecipeInlineButton
           label="Create Recipe"
-          onPress={() => createRecipeSheetRef.current?.present()}
+          onPress={() => handleCreateRecipePress()}
         />
-        <CreateRecipeSheet
-          ref={createRecipeSheetRef}
-          onSubmit={handleCreateRecipe}
-        />
-        <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
+        {!onCreateRecipe ? (
+          <>
+            <CreateRecipeSheet
+              ref={createRecipeSheetRef}
+              onSubmit={handleCreateRecipe}
+            />
+            <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
+          </>
+        ) : null}
       </View>
     );
   }
@@ -167,7 +187,7 @@ export const RecipeSelector = ({
           {searchQuery.trim() && (
             <CreateRecipeInlineButton
               label={`Create "${searchQuery.trim()}"`}
-              onPress={() => handleCreateRecipe({ name: searchQuery.trim() })}
+              onPress={() => handleCreateRecipePress(searchQuery.trim())}
             />
           )}
         </Animated.View>
@@ -180,7 +200,9 @@ export const RecipeSelector = ({
           renderItem={renderRecipeItem}
         />
       )}
-      <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
+      {!onCreateRecipe ? (
+        <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
+      ) : null}
     </View>
   );
 };
