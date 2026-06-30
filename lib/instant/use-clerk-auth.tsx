@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/expo';
+import type { Href } from 'expo-router';
 import { useRouter, useSegments } from 'expo-router';
 import {
   useCallback,
@@ -19,15 +20,22 @@ import {
   getIsGuestContinuationPending,
   subscribeToGuestContinuationState,
 } from './use-continue-as-guest';
+import {
+  getIsEmailAuthCompletionActive,
+  subscribeToEmailAuthCompletionState,
+} from './email-auth-completion';
+import { redirectSignedOutAuth } from './auth-redirect';
 
 import { db } from '.';
+
+export { runWithEmailAuthCompletion } from './email-auth-completion';
 
 let activeAuthControllerId: string | null = null;
 const AUTH_LOADING_TIMEOUT_MS = 4000;
 const AUTH_RESTORE_RETRY_COUNT = 10;
 const AUTH_RESTORE_RETRY_DELAY_MS = 250;
-const AUTH_WELCOME_ROUTE = '/(auth)';
-const AUTH_EXPIRED_ROUTE = '/(auth)/sign-in';
+const AUTH_WELCOME_ROUTE: Href = '/(auth)';
+const AUTH_EXPIRED_ROUTE: Href = '/(auth)/sign-in';
 const BRIDGE_STEP_TIMEOUT_MS = 15000;
 const BRIDGE_RETRY_COUNT = 3;
 const BRIDGE_RETRY_BASE_DELAY_MS = 750;
@@ -311,6 +319,7 @@ export const InstantAuthHandler = ({
   const authTransitionRef = useRef(false);
   const previousIsSignedInRef = useRef<boolean | undefined>(isSignedIn);
   const getTokenRef = useRef(getToken);
+  const pendingAuthRedirectTargetRef = useRef<Href | null>(null);
   getTokenRef.current = getToken;
   const instanceIdRef = useRef(
     `auth-handler-${Math.random().toString(36).slice(2)}`
@@ -329,6 +338,11 @@ export const InstantAuthHandler = ({
     subscribeToGuestContinuationState,
     getIsGuestContinuationPending,
     getIsGuestContinuationPending
+  );
+  const isEmailAuthCompletionActive = useSyncExternalStore(
+    subscribeToEmailAuthCompletionState,
+    getIsEmailAuthCompletionActive,
+    getIsEmailAuthCompletionActive
   );
 
   const { isLoading: isLoadingInstant, user: liveInstantUser } = db.useAuth();
@@ -410,6 +424,11 @@ export const InstantAuthHandler = ({
       authTransitionRef.current ||
       !isAuthController
     ) {
+      return;
+    }
+
+    if (isEmailAuthCompletionActive) {
+      setIsResolvingAuthState(true);
       return;
     }
 
@@ -539,6 +558,7 @@ export const InstantAuthHandler = ({
     isSignedIn,
     isLoadingInstant,
     isBlockingAuthLoad,
+    isEmailAuthCompletionActive,
     isAuthController,
     signInToInstant,
     signOut,
@@ -568,16 +588,22 @@ export const InstantAuthHandler = ({
       toast.info('Your session expired. Please sign in again.');
       setDidExpireSignedInSession(false);
 
-      if (!isOnAuthRoute) {
-        router.replace(AUTH_EXPIRED_ROUTE);
-      }
+      redirectSignedOutAuth({
+        isOnAuthRoute,
+        pendingTargetRef: pendingAuthRedirectTargetRef,
+        router,
+        target: AUTH_EXPIRED_ROUTE,
+      });
 
       return;
     }
 
-    if (!isOnAuthRoute) {
-      router.replace(AUTH_WELCOME_ROUTE);
-    }
+    redirectSignedOutAuth({
+      isOnAuthRoute,
+      pendingTargetRef: pendingAuthRedirectTargetRef,
+      router,
+      target: AUTH_WELCOME_ROUTE,
+    });
   }, [
     didExpireSignedInSession,
     instantAuthState.hasAppAccess,
