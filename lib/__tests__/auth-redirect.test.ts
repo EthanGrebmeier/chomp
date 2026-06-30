@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { redirectSignedOutAuth } from '../instant/auth-redirect';
 
 const authWelcomeRoute = '/(auth)' as Href;
-const authExpiredRoute = '/(auth)/sign-in' as Href;
+const authExpiredRoute = authWelcomeRoute;
 
 const createRouter = (canDismiss: boolean) => ({
   canDismiss: vi.fn(() => canDismiss),
@@ -13,7 +13,7 @@ const createRouter = (canDismiss: boolean) => ({
 });
 
 describe('redirectSignedOutAuth', () => {
-  it('queues the expired-session route and dismisses active stacks', () => {
+  it('queues the signed-out index route for expired sessions and dismisses active stacks', () => {
     const router = createRouter(true);
     const pendingTargetRef = { current: null as Href | null };
 
@@ -64,7 +64,7 @@ describe('redirectSignedOutAuth', () => {
     expect(router.replace).toHaveBeenCalledWith(authWelcomeRoute);
   });
 
-  it('preserves a queued expired-session target after the dismiss completes', () => {
+  it('preserves a queued expired-session index target after the dismiss completes', () => {
     const router = createRouter(false);
     const pendingTargetRef = { current: authExpiredRoute as Href | null };
 
