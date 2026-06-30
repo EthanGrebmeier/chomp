@@ -1,4 +1,5 @@
 import { useAuth, useSignIn, useSignUp } from '@clerk/expo';
+import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -8,10 +9,7 @@ import {
   View,
 } from 'react-native';
 import { OtpInput, OtpInputRef } from 'react-native-otp-entry';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
 import { BareTextInput } from '@/components/text-input';
@@ -21,65 +19,21 @@ import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import { useTheme } from '@/hooks/use-theme';
+import {
+  getClerkError,
+  getClerkErrorPayload,
+  getSafeClerkErrorMessage,
+  isClerkMissingSessionError,
+} from '@/lib/clerk/auth-errors';
 import { getEmailLinkRedirectUrl } from '@/lib/clerk/email-link';
 import {
   InstantBridgeError,
+  runWithEmailAuthCompletion,
   useInstantSignIn,
 } from '@/lib/instant/use-clerk-auth';
 
 type PendingFlow = 'sign-in';
 type EmailDeliveryStrategy = 'email_code' | 'email_link';
-type ClerkErrorDetail = {
-  code?: string;
-  longMessage?: string;
-  message?: string;
-  meta?: unknown;
-};
-type ClerkError = {
-  code?: string;
-  errors?: ClerkErrorDetail[];
-  longMessage?: string;
-  message?: string;
-  status?: number;
-};
-
-const getClerkError = (error: unknown) => {
-  if (!error || typeof error !== 'object') {
-    return null;
-  }
-
-  const clerkError = error as ClerkError;
-  if (clerkError.errors?.[0]) {
-    return clerkError.errors[0];
-  }
-
-  if (clerkError.code || clerkError.message || clerkError.longMessage) {
-    return {
-      code: clerkError.code,
-      longMessage: clerkError.longMessage,
-      message: clerkError.message,
-    };
-  }
-
-  return null;
-};
-
-const getErrorMessage = (error: unknown) => {
-  const clerkError = getClerkError(error);
-  if (clerkError?.longMessage) {
-    return clerkError.longMessage;
-  }
-
-  if (clerkError?.message) {
-    return clerkError.message;
-  }
-
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return null;
-};
 
 const maskEmail = (value: string) => {
   const normalizedValue = value.trim().toLowerCase();
@@ -91,21 +45,6 @@ const maskEmail = (value: string) => {
 
   const visibleLocalPart = localPart.slice(0, 2);
   return `${visibleLocalPart}***@${domainPart}`;
-};
-
-const getClerkErrorPayload = (error: unknown) => {
-  const clerkError = getClerkError(error);
-
-  return {
-    message: getErrorMessage(error),
-    code: clerkError?.code,
-    longMessage: clerkError?.longMessage,
-    meta: clerkError?.meta,
-    status:
-      error && typeof error === 'object' && 'status' in error
-        ? (error as ClerkError).status
-        : undefined,
-  };
 };
 
 const logEmailAuth = (message: string, payload?: unknown) => {
@@ -183,11 +122,11 @@ export default function SignInEmail() {
   const params = useLocalSearchParams<{ email?: string }>();
   const initialEmail = typeof params.email === 'string' ? params.email : '';
   const signInToInstant = useInstantSignIn();
-  const { bottom } = useSafeAreaInsets();
   const theme = useTheme();
   const otpRef = useRef<OtpInputRef>(null);
   const emailInput = useUncontrolledTextInput(initialEmail);
   const hasAutoSentRef = useRef(false);
+  const isVerifyingRef = useRef(false);
 
   const [code, setCode] = useState('');
   const [pendingFlow, setPendingFlow] = useState<PendingFlow | null>(null);
@@ -212,7 +151,7 @@ export default function SignInEmail() {
   const signInEmailLinkRedirectUrl = getEmailLinkRedirectUrl('sign-in');
 
   const normalizeEmail = () => emailInput.getValue().trim().toLowerCase();
-  const normalizeCode = () => code.replace(/\D/g, '').trim();
+  const normalizeCode = (value: string = code) => value.replace(/\D/g, '').trim();
   const clearCodeInput = useCallback(() => {
     setCode('');
     otpRef.current?.clear();
@@ -281,14 +220,30 @@ export default function SignInEmail() {
   }) => {
     const { finalize, shouldCreateDefaultList = false } = options;
 
-    logEmailAuth('finalizing Clerk authentication', {
-      shouldCreateDefaultList,
+    await runWithEmailAuthCompletion(async () => {
+      logEmailAuth('finalizing Clerk authentication', {
+        shouldCreateDefaultList,
+      });
+
+      try {
+        const { error } = await finalize();
+        throwIfFutureError(error);
+      } catch (error) {
+        if (!isClerkMissingSessionError(error)) {
+          throw error;
+        }
+
+        warnEmailAuth(
+          'Clerk finalize reported a stale session after email verification',
+          {
+            shouldCreateDefaultList,
+            error: getClerkErrorPayload(error),
+          }
+        );
+      }
+
+      await finishInstantSignIn(shouldCreateDefaultList);
     });
-
-    const { error } = await finalize();
-    throwIfFutureError(error);
-
-    await finishInstantSignIn(shouldCreateDefaultList);
   };
 
   const onRetryFinishPress = async () => {
@@ -296,7 +251,9 @@ export default function SignInEmail() {
       return;
     }
 
-    await finishInstantSignIn(bridgeRetry.shouldCreateDefaultList);
+    await runWithEmailAuthCompletion(() =>
+      finishInstantSignIn(bridgeRetry.shouldCreateDefaultList)
+    );
   };
 
   const sendSignInEmailCode = async (
@@ -394,7 +351,7 @@ export default function SignInEmail() {
       await sendSignInEmailCode(normalizedEmail);
     } catch (err: unknown) {
       const clerkError = getClerkError(err);
-      const errorMessage = getErrorMessage(err);
+      const errorMessage = getSafeClerkErrorMessage(err);
 
       if (clerkError?.code === 'form_param_format_invalid') {
         toast.error('Please enter a valid email address');
@@ -448,12 +405,12 @@ export default function SignInEmail() {
     );
   };
 
-  const verifyEmailCode = async () => {
+  const verifyEmailCode = async (codeOverride?: string) => {
     if (!isLoaded || !pendingFlow) {
       return;
     }
 
-    const normalizedCode = normalizeCode();
+    const normalizedCode = normalizeCode(codeOverride ?? code);
 
     if (!normalizedCode) {
       toast.error('Please enter the verification code');
@@ -483,7 +440,7 @@ export default function SignInEmail() {
           error: getClerkErrorPayload(error),
         });
         toast.error(
-          getErrorMessage(error) ??
+          getSafeClerkErrorMessage(error) ??
             getLatestSignInErrorMessage() ??
             'Failed to verify code'
         );
@@ -522,7 +479,7 @@ export default function SignInEmail() {
         error: getClerkErrorPayload(err),
       });
       toast.error(
-        getErrorMessage(err) ??
+        getSafeClerkErrorMessage(err) ??
           getLatestSignInErrorMessage() ??
           getLatestSignUpErrorMessage() ??
           'Failed to verify code'
@@ -566,16 +523,59 @@ export default function SignInEmail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, pendingFlow, initialEmail]);
 
-  const onVerifyCodePress = async () => {
-    setIsVerifyingCode(true);
-    try {
-      await verifyEmailCode();
-    } catch {
-      setIsVerifyingCode(false);
+  const submitCode = async (codeValue: string) => {
+    // Guard against double submission (e.g. onFilled firing alongside a manual
+    // press, or an autofill landing while a verification is already in flight).
+    if (isVerifyingRef.current) {
       return;
     }
 
-    setIsVerifyingCode(false);
+    isVerifyingRef.current = true;
+    setIsVerifyingCode(true);
+    try {
+      await verifyEmailCode(codeValue);
+    } catch {
+      // verifyEmailCode surfaces its own errors via toast.
+    } finally {
+      isVerifyingRef.current = false;
+      setIsVerifyingCode(false);
+    }
+  };
+
+  const onVerifyCodePress = async () => {
+    await submitCode(code);
+  };
+
+  // Auto-submit once the code is complete, whether it was typed, pasted, or
+  // delivered by the OS autofill suggestion.
+  const onOtpFilled = (value: string) => {
+    setCode(value);
+    void submitCode(value);
+  };
+
+  // Fallback for when iOS's QuickType suggestion no-ops (e.g. the field already
+  // had digits typed): pull the code straight from the clipboard.
+  const onPasteCode = async () => {
+    if (!pendingFlow || isBusy) {
+      return;
+    }
+
+    try {
+      const clipboardText = await Clipboard.getStringAsync();
+      const match = clipboardText.match(/\d{6}/);
+
+      if (!match) {
+        toast.error('No 6-digit code found on your clipboard.');
+        return;
+      }
+
+      const pastedCode = match[0];
+      otpRef.current?.setValue(pastedCode);
+      setCode(pastedCode);
+      await submitCode(pastedCode);
+    } catch {
+      toast.error('Could not read the code from your clipboard.');
+    }
   };
 
   const onResendCode = async () => {
@@ -602,7 +602,7 @@ export default function SignInEmail() {
         error: getClerkErrorPayload(err),
       });
       toast.error(
-        getErrorMessage(err) ??
+        getSafeClerkErrorMessage(err) ??
           getLatestSignInErrorMessage() ??
           'Failed to resend verification code'
       );
@@ -717,19 +717,22 @@ export default function SignInEmail() {
                 </View>
 
                 <View className="gap-4">
-                  <View className="items-center">
+                  <View>
                     <OtpInput
                       ref={otpRef}
                       numberOfDigits={6}
                       onTextChange={setCode}
-                      onFilled={setCode}
+                      onFilled={onOtpFilled}
                       blurOnFilled
                       disabled={isBusy}
                       type="numeric"
                       textInputProps={{
                         accessibilityLabel: 'Email verification code input',
                         autoCorrect: false,
-                        autoComplete: 'one-time-code',
+                        autoComplete:
+                          Platform.OS === 'android'
+                            ? 'sms-otp'
+                            : 'one-time-code',
                         contextMenuHidden: false,
                         keyboardType: 'number-pad',
                         selectTextOnFocus: true,
@@ -737,12 +740,11 @@ export default function SignInEmail() {
                       }}
                       theme={{
                         containerStyle: {
-                          width: 'auto',
                           gap: 8,
                         },
                         pinCodeContainerStyle: {
-                          width: 44,
-                          height: 56,
+                          flex: 1,
+                          aspectRatio: 44 / 56,
                           borderRadius: 16,
                           borderWidth: 1,
                           borderColor: theme.input,
@@ -764,6 +766,17 @@ export default function SignInEmail() {
                         },
                       }}
                     />
+                  </View>
+
+                  <View className="items-center">
+                    <Button
+                      onPress={onPasteCode}
+                      disabled={isBusy}
+                      variant="link"
+                      size="sm"
+                    >
+                      <Text>Paste code</Text>
+                    </Button>
                   </View>
                 </View>
               </View>

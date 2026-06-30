@@ -18,21 +18,15 @@ import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import {
+  getClerkErrorPayload,
+  getSafeClerkErrorMessage,
+  isClerkMissingSessionError,
+} from '@/lib/clerk/auth-errors';
+import {
   InstantBridgeError,
+  runWithEmailAuthCompletion,
   useInstantSignIn,
 } from '@/lib/instant/use-clerk-auth';
-
-type ClerkErrorDetail = {
-  code?: string;
-  longMessage?: string;
-  message?: string;
-};
-type ClerkError = {
-  code?: string;
-  errors?: ClerkErrorDetail[];
-  longMessage?: string;
-  message?: string;
-};
 
 const SIGN_UP_UPDATE_FIELDS: Record<string, string> = {
   email_address: 'emailAddress',
@@ -47,44 +41,6 @@ const formatFieldLabel = (field: string) =>
 
 const getSignUpUpdateField = (field: string) =>
   SIGN_UP_UPDATE_FIELDS[field] ?? field;
-
-const getClerkError = (error: unknown) => {
-  if (!error || typeof error !== 'object') {
-    return null;
-  }
-
-  const clerkError = error as ClerkError;
-  if (clerkError.errors?.[0]) {
-    return clerkError.errors[0];
-  }
-
-  if (clerkError.code || clerkError.message || clerkError.longMessage) {
-    return {
-      code: clerkError.code,
-      longMessage: clerkError.longMessage,
-      message: clerkError.message,
-    };
-  }
-
-  return null;
-};
-
-const getErrorMessage = (error: unknown) => {
-  const clerkError = getClerkError(error);
-  if (clerkError?.longMessage) {
-    return clerkError.longMessage;
-  }
-
-  if (clerkError?.message) {
-    return clerkError.message;
-  }
-
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return null;
-};
 
 const throwIfFutureError = (error: unknown | null | undefined) => {
   if (error) {
@@ -212,10 +168,28 @@ export default function ContinueSignUp() {
   const completeSignUp = async () => {
     if (!signUp) return;
 
-    const { error } = await signUp.finalize();
-    throwIfFutureError(error);
+    await runWithEmailAuthCompletion(async () => {
+      try {
+        const { error } = await signUp.finalize();
+        throwIfFutureError(error);
+      } catch (error) {
+        if (!isClerkMissingSessionError(error)) {
+          throw error;
+        }
 
-    await finishInstantSignIn();
+        // eslint-disable-next-line no-console
+        console.warn(
+          '[continue-sign-up] Clerk finalize reported a stale session',
+          getClerkErrorPayload(error)
+        );
+      }
+
+      await finishInstantSignIn();
+    });
+  };
+
+  const onRetryFinishPress = async () => {
+    await runWithEmailAuthCompletion(finishInstantSignIn);
   };
 
   const handleSubmit = async () => {
@@ -267,7 +241,7 @@ export default function ContinueSignUp() {
       toast.error('Sign up incomplete. Please try again.');
     } catch (err: unknown) {
       toast.error(
-        getErrorMessage(err) ??
+        getSafeClerkErrorMessage(err) ??
           getLatestSignUpErrorMessage() ??
           'Failed to continue sign up.'
       );
@@ -309,7 +283,7 @@ export default function ContinueSignUp() {
                 Check your internet connection and try again.
               </Text>
               <Button
-                onPress={finishInstantSignIn}
+                onPress={onRetryFinishPress}
                 disabled={isFinishingSignIn}
                 size="lg"
               >
