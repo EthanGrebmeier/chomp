@@ -24,9 +24,13 @@ export type UnifiedSavedItem = {
   store?: { id: string; name: string };
   source: 'local' | 'cloud';
   /**
-   * Owner user id of the underlying saved_item. Only present for cloud rows;
-   * local-only entries are inherently per-device and have no owner id.
+   * Owner user id of the underlying saved_item or account-scoped local row.
+   * Shared default local rows do not have an owner id.
    */
   ownerId?: string;
+  /**
+   * Whether a local row is part of the shared seeded grocery catalog.
+   */
+  isDefault?: boolean;
 };
 

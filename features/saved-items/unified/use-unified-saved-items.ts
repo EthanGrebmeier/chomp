@@ -16,7 +16,7 @@ export const useUnifiedSavedItems = () => {
     data: localItems,
     isLoading: isLoadingLocal,
     error: localError,
-  } = useLocalSavedItems();
+  } = useLocalSavedItems(user?.id);
 
   // Fetch cloud items from InstantDB
   const cloudResult = db.useQuery(
@@ -35,12 +35,12 @@ export const useUnifiedSavedItems = () => {
       : null
   );
 
-  const cloudItems = cloudResult.data?.saved_items ?? [];
   const isLoadingCloud = cloudResult.isLoading;
   const cloudError = cloudResult.error;
 
   // Merge local and cloud items
   const unifiedItems = useMemo((): UnifiedSavedItem[] => {
+    const cloudItems = cloudResult.data?.saved_items ?? [];
     const localUnified: UnifiedSavedItem[] = localItems.map(item => ({
       id: item.id,
       name: item.name,
@@ -48,6 +48,8 @@ export const useUnifiedSavedItems = () => {
       notes: item.notes ?? undefined,
       storeId: item.storeId ?? undefined,
       source: 'local' as const,
+      ownerId: item.ownerId ?? undefined,
+      isDefault: item.isDefault,
     }));
 
     const cloudUnified: UnifiedSavedItem[] = cloudItems.map(item => ({
@@ -63,12 +65,12 @@ export const useUnifiedSavedItems = () => {
 
     // Combine both arrays
     return [...localUnified, ...cloudUnified];
-  }, [localItems, cloudItems]);
+  }, [localItems, cloudResult.data?.saved_items]);
 
   return {
     data: unifiedItems,
     isLoading: isLoadingLocal || isLoadingCloud,
-    error: localError || cloudError,
+    error: localError ?? cloudError,
   };
 };
 

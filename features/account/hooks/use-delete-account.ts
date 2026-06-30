@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/expo';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 
 import { markManualSignOutIntent } from '../../../lib/clerk/signout-intent';
@@ -8,6 +8,7 @@ import { AccountDeleteError, deleteAccount } from '../api';
 
 export const useDeleteAccount = () => {
   const { getToken, signOut } = useAuth();
+  const queryClient = useQueryClient();
 
   return useMutation<void, AccountDeleteError, void>({
     mutationFn: async () => {
@@ -24,6 +25,7 @@ export const useDeleteAccount = () => {
       // the session is gone. Suppress the "session expired" toast since this is
       // intentional.
       markManualSignOutIntent();
+      queryClient.clear();
       await Promise.allSettled([signOut(), db.auth.signOut()]);
       router.dismissAll();
     },

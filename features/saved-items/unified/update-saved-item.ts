@@ -24,10 +24,12 @@ export const updateSavedItem = async ({
     const updatedItem: BaseSavedItem = {
       name: updates.name ?? item.name,
       category: updates.category ?? item.category,
+      notes: updates.notes ?? item.notes,
       storeId: updates.storeId ?? item.storeId,
     };
 
-    // Delete the local item first
+    // Delete account-owned local rows first. Shared defaults are protected by
+    // deleteLocalItem and remain available as catalog suggestions.
     await deleteLocalItem({ itemId: item.id });
 
     // Create a new cloud item with the updated values

@@ -130,6 +130,8 @@ export const mealPlanRelations = relations(mealPlanTable, ({ many }) => ({
 // Local saved items (default grocery items stored locally to save cloud storage)
 export const localSavedItemTable = sqliteTable('local_saved_item', {
   id: text().primaryKey(),
+  ownerId: text(),
+  isDefault: int({ mode: 'boolean' }).notNull().default(false),
   name: text().notNull(),
   category: text(),
   notes: text(),

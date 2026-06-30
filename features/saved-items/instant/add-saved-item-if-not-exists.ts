@@ -1,5 +1,5 @@
 import { id } from '@instantdb/react-native';
-import { eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 
 import { localSavedItemTable } from '../../../db/schema';
 import { db } from '../../../lib/instant';
@@ -20,7 +20,15 @@ export const addSavedItemIfNotExists = async (item: BaseSavedItem) => {
   const sqliteItem = await sqliteDb
     .select()
     .from(localSavedItemTable)
-    .where(eq(localSavedItemTable.name, item.name));
+    .where(
+      and(
+        eq(localSavedItemTable.name, item.name),
+        or(
+          eq(localSavedItemTable.isDefault, true),
+          eq(localSavedItemTable.ownerId, user.id)
+        )
+      )
+    );
 
   // Check if instantdb item already exists (case-insensitive name match)
   const { data } = await db.queryOnce({

@@ -20,6 +20,7 @@ export const addSavedItem = async (item: AddSavedItemArgs) => {
       trimStringFields({
         name: item.name,
         category: item.category,
+        notes: item.notes,
         createdAt: now,
         updatedAt: now,
       })

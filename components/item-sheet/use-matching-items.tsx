@@ -8,8 +8,8 @@ export type MatchingItem = BaseGroceryItem & {
   cloudSavedItemId?: string;
   localSavedItemId?: string;
   /**
-   * Owner user id of the underlying saved_item. Populated for cloud matches
-   * only; local matches do not carry an ownerId.
+   * Owner user id of the underlying saved_item or account-scoped local match.
+   * Shared default local matches do not carry an ownerId.
    */
   ownerId?: string;
 };
@@ -56,7 +56,7 @@ export const useMatchingItems = (
           source: item.source,
           cloudSavedItemId: item.source === 'cloud' ? item.id : undefined,
           localSavedItemId: item.source === 'local' ? item.id : undefined,
-          ownerId: item.source === 'cloud' ? item.ownerId : undefined,
+          ownerId: item.ownerId,
         })
       );
   }, [savedItems, value]);

@@ -1,4 +1,5 @@
-import { useAuth } from '@clerk/expo';
+import { useAuth, useUser } from '@clerk/expo';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Href } from 'expo-router';
 import { useRouter, useSegments } from 'expo-router';
 import {
@@ -16,15 +17,15 @@ import {
   markManualSignOutIntent,
 } from '../clerk/signout-intent';
 
-import {
-  getIsGuestContinuationPending,
-  subscribeToGuestContinuationState,
-} from './use-continue-as-guest';
+import { redirectSignedOutAuth } from './auth-redirect';
 import {
   getIsEmailAuthCompletionActive,
   subscribeToEmailAuthCompletionState,
 } from './email-auth-completion';
-import { redirectSignedOutAuth } from './auth-redirect';
+import {
+  getIsGuestContinuationPending,
+  subscribeToGuestContinuationState,
+} from './use-continue-as-guest';
 
 import { db } from '.';
 
@@ -247,7 +248,7 @@ const signInWithClerkToken = async (getToken: () => Promise<string | null>) => {
 const bridgeClerkToInstant = async (getToken: () => Promise<string | null>) => {
   const existingAuth = await db.getAuth();
 
-  if (existingAuth && !existingAuth.email) {
+  if (existingAuth) {
     await db.auth.signOut();
   }
 
@@ -314,7 +315,8 @@ export const InstantAuthHandler = ({
   showBlockingOverlay = true,
   onBlockingAuthLoadChange,
 }: InstantAuthHandlerProps = {}) => {
-  const { isSignedIn, signOut, getToken } = useAuth();
+  const { isSignedIn, signOut, getToken, userId: clerkUserId } = useAuth();
+  const { user: clerkUser } = useUser();
   const signInToInstant = useInstantSignIn();
   const authTransitionRef = useRef(false);
   const previousIsSignedInRef = useRef<boolean | undefined>(isSignedIn);
@@ -333,7 +335,9 @@ export const InstantAuthHandler = ({
     InstantAuthSession | undefined
   >(undefined);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const segments = useSegments();
+  const clerkEmail = clerkUser?.primaryEmailAddress?.emailAddress ?? null;
   const isGuestContinuationPending = useSyncExternalStore(
     subscribeToGuestContinuationState,
     getIsGuestContinuationPending,
@@ -446,10 +450,26 @@ export const InstantAuthHandler = ({
       const didTransitionFromSignedIn =
         previousIsSignedInRef.current === true && isSignedIn === false;
       try {
+        if (didTransitionFromSignedIn) {
+          queryClient.clear();
+        }
+
         const existingAuth = await db.getAuth();
 
         if (isSignedIn) {
           if (existingAuth?.email) {
+            const matchesCurrentClerkUser =
+              (!!clerkUserId && existingAuth.id === clerkUserId) ||
+              (!!clerkEmail && existingAuth.email === clerkEmail);
+
+            if (!matchesCurrentClerkUser) {
+              queryClient.clear();
+              await db.auth.signOut();
+              await signInToInstant();
+              nextResolvedInstantAuth = await waitForInstantAuthRestore();
+              return;
+            }
+
             let clerkToken: string | null = null;
             let didClerkTokenRefreshFail = false;
 
@@ -468,6 +488,7 @@ export const InstantAuthHandler = ({
             // server session has expired. Suppress the follow-up transition
             // toast so we only surface a single "expired" message.
             markManualSignOutIntent();
+            queryClient.clear();
             await Promise.allSettled([db.auth.signOut(), signOut()]);
             nextResolvedInstantAuth = null;
             shouldMarkSessionExpired = true;
@@ -476,6 +497,7 @@ export const InstantAuthHandler = ({
 
           try {
             if (existingAuth) {
+              queryClient.clear();
               await db.auth.signOut();
             }
 
@@ -490,6 +512,7 @@ export const InstantAuthHandler = ({
               return;
             }
 
+            queryClient.clear();
             await Promise.allSettled([db.auth.signOut(), signOut()]);
 
             if (!isCancelled) {
@@ -515,6 +538,7 @@ export const InstantAuthHandler = ({
           // observed the Clerk transition this mount (cold boots after an
           // expiry see undefined -> false, not true -> false).
           const shouldSuppressSignOutToast = consumeManualSignOutIntent();
+          queryClient.clear();
           await db.auth.signOut();
           nextResolvedInstantAuth = null;
 
@@ -560,6 +584,9 @@ export const InstantAuthHandler = ({
     isBlockingAuthLoad,
     isEmailAuthCompletionActive,
     isAuthController,
+    clerkEmail,
+    clerkUserId,
+    queryClient,
     signInToInstant,
     signOut,
   ]);

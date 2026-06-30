@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/expo';
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, View } from 'react-native';
@@ -21,12 +22,14 @@ export const AccountScreen = () => {
   const { isReconciled, hasInstantEmailSession } = useInstantAuthState();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { mutate: deleteAccount, isPending: isDeleting } = useDeleteAccount();
+  const queryClient = useQueryClient();
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
       markManualSignOutIntent();
-      await signOut();
+      queryClient.clear();
+      await Promise.allSettled([signOut(), db.auth.signOut()]);
       // Close the settings/account modal stack; InstantAuthHandler routes back
       // to the welcome screen once the session is gone.
       router.dismissAll();

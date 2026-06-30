@@ -8,8 +8,9 @@ import { groceries } from '../../grocery-list/consts/groceries';
 const APP_SETTINGS_ID = 'default';
 
 /**
- * Seed the local saved items table with default grocery items.
- * This is called on app startup and only runs once (tracked via app_settings flag).
+ * Seed/reconcile the shared local saved item catalog with default grocery items.
+ * This runs after migrations so legacy installs get canonical shared defaults
+ * instead of carrying account-specific edits in default rows.
  */
 export const seedLocalSavedItems = async () => {
   // Ensure app_settings row exists
@@ -36,37 +37,49 @@ export const seedLocalSavedItems = async () => {
     );
   }
 
-  // Check if we've already seeded
-  const currentSettings = await db
-    .select({ hasSeededSavedItems: appSettingsTable.hasSeededSavedItems })
-    .from(appSettingsTable)
-    .where(eq(appSettingsTable.id, APP_SETTINGS_ID))
-    .limit(1);
-
-  if (currentSettings[0]?.hasSeededSavedItems) {
-    // Already seeded, skip
-    return;
-  }
-
   // Generate IDs using the item name as a stable key (prefixed with 'local-')
-  const itemsToInsert = groceries.map((grocery, index) =>
-    trimStringFields({
+  const defaultItems = groceries.map((grocery, index) =>
+    ({
       id: `local-${index}`,
       name: grocery.name,
       category: grocery.category ?? null,
+      notes: null,
+      storeId: null,
+      ownerId: null,
+      isDefault: true,
       createdAt: now,
       updatedAt: now,
     })
   );
 
-  // Insert in chunks to avoid hitting SQLite limits
-  const CHUNK_SIZE = 100;
-  for (let i = 0; i < itemsToInsert.length; i += CHUNK_SIZE) {
-    const chunk = itemsToInsert.slice(i, i + CHUNK_SIZE);
-    await db.insert(localSavedItemTable).values(chunk);
+  for (const item of defaultItems) {
+    const existing = await db
+      .select({ id: localSavedItemTable.id })
+      .from(localSavedItemTable)
+      .where(eq(localSavedItemTable.id, item.id))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await db
+        .update(localSavedItemTable)
+        .set(
+          trimStringFields({
+            name: item.name,
+            category: item.category,
+            notes: item.notes,
+            storeId: item.storeId,
+            ownerId: item.ownerId,
+            isDefault: item.isDefault,
+            updatedAt: now,
+          })
+        )
+        .where(eq(localSavedItemTable.id, item.id));
+      continue;
+    }
+
+    await db.insert(localSavedItemTable).values(trimStringFields(item));
   }
 
-  // Mark as seeded
   await db
     .update(appSettingsTable)
     .set(
@@ -77,5 +90,5 @@ export const seedLocalSavedItems = async () => {
     )
     .where(eq(appSettingsTable.id, APP_SETTINGS_ID));
 
-  console.log(`Seeded ${itemsToInsert.length} local saved items`);
+  return defaultItems.length;
 };
