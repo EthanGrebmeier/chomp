@@ -6,6 +6,7 @@ import { toast } from 'sonner-native';
 
 import { LegalConsent } from '@/components/auth/legal-consent';
 import { SocialButtons } from '@/components/auth/social-buttons';
+import { WelcomeGraphic } from '@/components/branding/welcome-graphic';
 import { BareTextInput } from '@/components/text-input';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
@@ -44,16 +45,19 @@ export default function SignIn() {
         onPress={() => Keyboard.dismiss()}
       >
         <View className="w-full flex-1 px-4 pt-8">
-          <View className="w-full gap-6">
-            <View className="w-full gap-2">
-              <Text variant="h1">Log In</Text>
+          <View className="w-full gap-4">
+            <View className="w-full items-center gap-2 text-center">
+              <View className="w-full translate-x-[-6px] translate-y-[-18px] items-center justify-center">
+                <WelcomeGraphic width={100} height={100} />
+              </View>
+              <Text variant="h2">Log In</Text>
               <Text variant="muted">
                 Enter your email to continue with a verification code
               </Text>
             </View>
 
-            <View className="gap-4">
-              <View className="rounded-2xl border border-border bg-input px-4 py-3">
+            <View className="gap-4 ">
+              <View className="my-4 rounded-2xl border border-border bg-input px-4 py-3">
                 <BareTextInput
                   placeholder="Email"
                   onChangeText={emailInput.handleChangeText}
