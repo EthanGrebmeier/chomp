@@ -121,7 +121,8 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
       if (openRequestId === undefined) {
         return;
       }
-      openSheet();
+      const frame = requestAnimationFrame(openSheet);
+      return () => cancelAnimationFrame(frame);
     }, [openRequestId, openSheet]);
 
     useImperativeHandle(ref, () => ({
@@ -195,7 +196,13 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
               />
             }
           />
-          <View className="px-2">
+          <ScrollView
+            ref={scrollViewRef}
+            className="max-h-96 px-2"
+            nestedScrollEnabled
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
+          >
             <HapticPressable
               onPress={handleOpenCreateCategory}
               hapticType="light"
@@ -245,7 +252,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
                 />
               ))
             )}
-          </View>
+          </ScrollView>
         </BottomSheet>
 
         <CreateCategorySheet
