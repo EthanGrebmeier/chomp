@@ -43,22 +43,19 @@ export default function Welcome() {
       )}
     >
       <View className="mt-12 flex-1 justify-between  px-6">
-        <View className="items-center justify-start gap-12">
-          <View className="items-center justify-start gap-2">
-            <Text
-              className={cn(
-                'text-center text-[88px] font-bold uppercase leading-none ',
-                colorScheme === 'dark' ? 'text-foreground' : 'text-primary'
-              )}
-            >
-              Chomp
-            </Text>
-          </View>
-          <View className="w-full translate-x-[-12px] translate-y-[-18px] items-center justify-center">
-            <WelcomeGraphic width={300} height={300} />
-          </View>
+        <View className="items-center justify-start gap-2">
+          <Text
+            className={cn(
+              'text-center text-[88px] font-bold uppercase leading-none ',
+              colorScheme === 'dark' ? 'text-foreground' : 'text-primary'
+            )}
+          >
+            Chomp
+          </Text>
         </View>
-
+        <View className="w-full translate-x-[-12px] translate-y-[-18px] items-center justify-center">
+          <WelcomeGraphic width={300} height={300} />
+        </View>
         <View className=" justify-end gap-2">
           <Button
             size="xl"
