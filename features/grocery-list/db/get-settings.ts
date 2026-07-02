@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 
+import { db } from '../../../db/local';
 import { appSettingsTable } from '../../../db/schema';
-import { db } from '../../../providers/migration-provider';
 
 export const getSettings = async () => {
   const result = await db

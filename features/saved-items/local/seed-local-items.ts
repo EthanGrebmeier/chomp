@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 
+import { db } from '../../../db/local';
 import { appSettingsTable, localSavedItemTable } from '../../../db/schema';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { db } from '../../../providers/migration-provider';
 import { groceries } from '../../grocery-list/consts/groceries';
 
 const APP_SETTINGS_ID = 'default';

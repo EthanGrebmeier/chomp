@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 
+import { db } from '../../../db/local';
 import { appSettingsTable } from '../../../db/schema';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { db } from '../../../providers/migration-provider';
 import { GroceryListGroupBy, GroceryListSortBy } from '../types';
 
 type UpdateSettingsArgs = {

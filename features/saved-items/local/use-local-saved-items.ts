@@ -2,8 +2,8 @@ import { and, eq, isNull, or } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { useMemo } from 'react';
 
+import { db } from '../../../db/local';
 import { localSavedItemTable } from '../../../db/schema';
-import { db } from '../../../providers/migration-provider';
 
 import {
   dedupeLocalSavedItemsForOwner,

@@ -1,8 +1,8 @@
 import { and, eq, isNull } from 'drizzle-orm';
 
+import { db } from '../../../db/local';
 import { localSavedItemTable } from '../../../db/schema';
 import { db as instantDb } from '../../../lib/instant';
-import { db } from '../../../providers/migration-provider';
 
 import { normalizeLocalSavedItemOwnerId } from './local-saved-item-scope';
 

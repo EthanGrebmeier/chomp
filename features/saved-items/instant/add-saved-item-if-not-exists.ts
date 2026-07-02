@@ -1,10 +1,10 @@
 import { id } from '@instantdb/react-native';
 import { and, eq, or } from 'drizzle-orm';
 
+import { db as sqliteDb } from '../../../db/local';
 import { localSavedItemTable } from '../../../db/schema';
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { db as sqliteDb } from '../../../providers/migration-provider';
 import { BaseSavedItem } from '../types';
 
 /**

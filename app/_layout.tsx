@@ -6,8 +6,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { useFonts } from 'expo-font';
 import { Stack, useRootNavigationState, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import * as SQLite from 'expo-sqlite';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
@@ -16,6 +15,7 @@ import {
   ReanimatedLogLevel,
   configureReanimatedLogger,
 } from 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
 import { tokenCache } from '@/lib/clerk-token-cache';
@@ -24,21 +24,20 @@ import {
   useInstantAuthState,
 } from '@/lib/instant/use-clerk-auth';
 import { useStartupEasUpdate } from '@/lib/use-startup-eas-update';
-import { MigrationProvider } from '@/providers/migration-provider';
+import {
+  MigrationProvider,
+  type MigrationStatus,
+} from '@/providers/migration-provider';
 import { QueryClientProvider } from '@/providers/query-client-provider';
 
 import '../global.css';
 import { useTheme } from '../hooks/use-theme';
-
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
 });
 SplashScreen.preventAutoHideAsync();
-
-const db = SQLite.openDatabaseSync('db.db');
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -134,9 +133,17 @@ function RootLayoutContent({
   const rootNavigationState = useRootNavigationState();
   const segments = useSegments();
   const hasHiddenSplashRef = useRef(false);
+  const [migrationStatus, setMigrationStatus] =
+    useState<MigrationStatus | null>(null);
+  const handleMigrationStatusChange = useCallback((status: MigrationStatus) => {
+    setMigrationStatus(currentStatus =>
+      currentStatus === status ? currentStatus : status
+    );
+  }, []);
 
   useEffect(() => {
     const areFontsReady = fontsLoaded || Boolean(fontLoadError);
+    const isMigrationErrorVisible = migrationStatus === 'error';
     const isNavigationReady = Boolean(rootNavigationState?.key);
     const topLevelSegment = segments[0];
     const isOnTabsGroup = topLevelSegment === '(tabs)';
@@ -144,15 +151,17 @@ function RootLayoutContent({
     const hasReachedInitialLandingPoint = hasAppAccess
       ? isOnTabsGroup
       : isOnAuthGroup;
-    const shouldKeepSplashVisible =
-      !isStartupUpdateReady ||
-      !areFontsReady ||
-      !isNavigationReady ||
-      shouldBlockAuthUi ||
-      !isReconciled ||
-      !hasReachedInitialLandingPoint;
+    const isAppReady =
+      isNavigationReady &&
+      !shouldBlockAuthUi &&
+      isReconciled &&
+      hasReachedInitialLandingPoint;
+    const canHideSplash =
+      isStartupUpdateReady &&
+      areFontsReady &&
+      (isMigrationErrorVisible || isAppReady);
 
-    if (shouldKeepSplashVisible || hasHiddenSplashRef.current) {
+    if (!canHideSplash || hasHiddenSplashRef.current) {
       return;
     }
 
@@ -168,6 +177,7 @@ function RootLayoutContent({
     hasAppAccess,
     isReconciled,
     isStartupUpdateReady,
+    migrationStatus,
     rootNavigationState?.key,
     segments,
     shouldBlockAuthUi,
@@ -181,7 +191,7 @@ function RootLayoutContent({
     >
       <QueryClientProvider>
         <KeyboardProvider>
-          <MigrationProvider>
+          <MigrationProvider onStatusChange={handleMigrationStatusChange}>
             <SafeAreaProvider>
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <InstantAuthHandler />

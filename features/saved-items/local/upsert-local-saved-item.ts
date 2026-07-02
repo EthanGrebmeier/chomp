@@ -1,10 +1,10 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
 
+import { db } from '../../../db/local';
 import { localSavedItemTable } from '../../../db/schema';
 import { db as instantDb } from '../../../lib/instant';
 import { generateId } from '../../../lib/utils';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { db } from '../../../providers/migration-provider';
 import { BaseSavedItem } from '../types';
 
 import { normalizeLocalSavedItemOwnerId } from './local-saved-item-scope';
