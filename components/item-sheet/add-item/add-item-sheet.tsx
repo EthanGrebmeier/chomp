@@ -92,12 +92,16 @@ type AddItemSheetProps = {
   groceryListId: string;
   defaultStore?: { id: string; name: string } | null;
   isTriggerVisible?: boolean;
+  isItemAdded: boolean;
+  onItemAddedFeedbackComplete: () => void;
 };
 
 const AddItemSheet = ({
   groceryListId,
   defaultStore,
   isTriggerVisible = true,
+  isItemAdded,
+  onItemAddedFeedbackComplete,
 }: AddItemSheetProps) => {
   const triggerOpacity = useSharedValue(isTriggerVisible ? 1 : 0);
   const ref = useRef<TrueSheet>(null);
@@ -106,6 +110,7 @@ const AddItemSheet = ({
     itemInputRef,
     onSubmit,
     isValid,
+    isSubmitting,
     mode: itemSheetMode,
   } = useItemSheet();
   const [mode, setMode] = useState<AddMode>('item');
@@ -138,6 +143,7 @@ const AddItemSheet = ({
 
   const handleClose = () => {
     reset();
+    onItemAddedFeedbackComplete();
     setMode('item');
     setSelectedRecipe(null);
     setPendingConflictIngredients(null);
@@ -298,7 +304,10 @@ const AddItemSheet = ({
                 variant="default"
                 size="lg"
                 onPress={onSubmit}
-                disabled={!isValid}
+                disabled={!isValid || isSubmitting}
+                status={isItemAdded ? 'success' : 'idle'}
+                successLabel="Item Added"
+                onSuccessComplete={onItemAddedFeedbackComplete}
               >
                 <Text className="text-primary-foreground">
                   {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
@@ -398,7 +407,9 @@ type AddItemProps = {
 
 const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
   const { data: defaultStore } = useDefaultStore();
-  const onSubmit = ({
+  const [isItemAdded, setIsItemAdded] = useState(false);
+
+  const onSubmit = async ({
     item,
     listId,
     selectedCloudSavedItemId,
@@ -411,14 +422,22 @@ const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
     selectedCloudSavedItemStoreId?: string;
     selectedLocalSavedItemId?: string;
   }) => {
-    if (!listId) return;
-    addGroceryListItem({
-      listId,
-      item,
-      savedItemId: selectedCloudSavedItemId,
-      selectedCloudSavedItemStoreId,
-      selectedLocalSavedItemId,
-    });
+    if (!listId) return false;
+
+    try {
+      await addGroceryListItem({
+        listId,
+        item,
+        savedItemId: selectedCloudSavedItemId,
+        selectedCloudSavedItemStoreId,
+        selectedLocalSavedItemId,
+      });
+      setIsItemAdded(true);
+      return true;
+    } catch {
+      toast.error('Failed to add item');
+      return false;
+    }
   };
 
   return (
@@ -432,6 +451,8 @@ const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
         groceryListId={groceryListId}
         defaultStore={defaultStore}
         isTriggerVisible={isTriggerVisible}
+        isItemAdded={isItemAdded}
+        onItemAddedFeedbackComplete={() => setIsItemAdded(false)}
       />
     </ItemSheetProvider>
   );

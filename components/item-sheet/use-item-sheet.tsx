@@ -23,7 +23,8 @@ const itemSheetContext = createContext<{
   onSelect: (item: MatchingItem) => void;
   selectedItem: MatchingItem | null;
   setSelectedItem: (item: MatchingItem | null) => void;
-  onSubmit: () => void;
+  onSubmit: () => Promise<void>;
+  isSubmitting: boolean;
   itemInputValue: string;
   hasItemTitle: boolean;
   itemInputKey: number;
@@ -89,7 +90,7 @@ type ItemSheetProviderProps = {
     selectedCloudSavedItemId?: string;
     selectedCloudSavedItemStoreId?: string;
     selectedLocalSavedItemId?: string;
-  }) => void;
+  }) => void | boolean | Promise<void | boolean>;
   setFromItemRef?: React.RefObject<
     ((item: GroceryListItemWithRecipe | BaseGroceryItem) => void) | null
   >;
@@ -152,6 +153,7 @@ export const ItemSheetProvider = ({
   const itemInputRef = useRef<TextInput>(null);
   const notesInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const commitItemInputValue = useDebounceCallback(
     setItemInputValue,
     TEXT_COMMIT_DEBOUNCE_MS
@@ -241,13 +243,18 @@ export const ItemSheetProvider = ({
   // Check if recipe was cleared (had initial recipe, now undefined/null)
   const recipeCleared = !!initialRecipeId && !recipe;
 
-  const submitItem = () => {
+  const submitItem = async () => {
     // Mirror the footer button's `disabled={!isValid}` guard. The button is
     // gated on `isValid`, but the return key routes here directly, so without
     // this check pressing enter on an empty field would create a blank item.
     // Read the live input value (not the debounced `itemInputValue`) so a
     // fast enter press right after typing is still validated correctly.
-    if (!getItemInputValue().trim().length || !quantity || !unit) {
+    if (
+      isSubmitting ||
+      !getItemInputValue().trim().length ||
+      !quantity ||
+      !unit
+    ) {
       return;
     }
 
@@ -262,21 +269,31 @@ export const ItemSheetProvider = ({
         ? selectedItem.localSavedItemId
         : undefined;
 
-    onSubmit({
-      listId,
-      item: {
-        name: getItemInputValue(),
-        category: category,
-        quantity: quantity,
-        unit: unit,
-        notes: getNotesInputValue(),
-        storeId: storeId,
-      },
-      clearedRecipeId: recipeCleared ? initialRecipeId : undefined,
-      selectedCloudSavedItemId,
-      selectedCloudSavedItemStoreId,
-      selectedLocalSavedItemId,
-    });
+    setIsSubmitting(true);
+    const didSubmit = await Promise.resolve()
+      .then(() =>
+        onSubmit({
+          listId,
+          item: {
+            name: getItemInputValue(),
+            category: category,
+            quantity: quantity,
+            unit: unit,
+            notes: getNotesInputValue(),
+            storeId: storeId,
+          },
+          clearedRecipeId: recipeCleared ? initialRecipeId : undefined,
+          selectedCloudSavedItemId,
+          selectedCloudSavedItemStoreId,
+          selectedLocalSavedItemId,
+        })
+      )
+      .catch(() => false);
+    setIsSubmitting(false);
+
+    if (didSubmit === false) {
+      return;
+    }
     // In add mode the sheet stays open for continuous entry. Clear the inputs
     // in place (no remount) so the field keeps focus and the keyboard stays up
     // until the user dismisses it manually.
@@ -330,6 +347,7 @@ export const ItemSheetProvider = ({
         selectedItem,
         setSelectedItem,
         onSubmit: submitItem,
+        isSubmitting,
         itemInputValue,
         hasItemTitle,
         itemInputKey,

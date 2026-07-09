@@ -1,22 +1,13 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import {
-  GestureResponderEvent,
-  Platform,
-  View,
-  type PressableStateCallbackType,
-} from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import { CheckIcon } from 'lucide-react-native';
+import { useEffect } from 'react';
+import { Platform, View, type PressableStateCallbackType } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { HapticPressable } from '@/components/ui/haptic-pressable';
-import { TextClassContext } from '@/components/ui/text';
+import { Icon } from '@/components/ui/icon';
+import { Text, TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
-
-const AnimatedHapticPressable =
-  Animated.createAnimatedComponent(HapticPressable);
 
 const buttonVariants = cva(
   cn(
@@ -121,6 +112,7 @@ const buttonTextVariants = cva(
 
 type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>['size']>;
 type ButtonIconPosition = 'left' | 'right';
+type ButtonStatus = 'idle' | 'success';
 
 const floatingIconOffsets: Record<
   ButtonSize,
@@ -188,6 +180,27 @@ type ButtonProps = React.ComponentProps<typeof HapticPressable> &
       | 'selection'
       | 'impact'
       | 'notification';
+    /**
+     * Displays an acknowledged completion state. Keep this controlled so the
+     * caller can transition to success only after its work has completed.
+     * @default 'idle'
+     */
+    status?: ButtonStatus;
+    /**
+     * Text displayed alongside the success icon when status is 'success'.
+     * @default 'Done'
+     */
+    successLabel?: string;
+    /**
+     * How long the success state is displayed before onSuccessComplete fires.
+     * @default 1500
+     */
+    successDuration?: number;
+    /**
+     * Called after the success state has been visible for successDuration.
+     * Use this to restore status to 'idle'.
+     */
+    onSuccessComplete?: () => void;
   };
 
 function Button({
@@ -199,34 +212,26 @@ function Button({
   iconPosition = 'left',
   haptic = true,
   hapticType = 'light',
-  onPressIn,
-  onPressOut,
+  status = 'idle',
+  successLabel = 'Done',
+  successDuration = 1500,
+  onSuccessComplete,
+  disabled,
   style,
   ...props
 }: ButtonProps) {
-  const scale = useSharedValue(1);
   const resolvedSize = size ?? 'default';
   const hasFloatingIcon = Boolean(icon);
+  const isSuccess = status === 'success';
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  useEffect(() => {
+    if (!isSuccess || !onSuccessComplete) {
+      return;
+    }
 
-  const handlePressIn = (event: GestureResponderEvent) => {
-    scale.value = withSpring(0.97, {
-      damping: 80,
-      stiffness: 600,
-    });
-    onPressIn?.(event);
-  };
-
-  const handlePressOut = (event: GestureResponderEvent) => {
-    scale.value = withSpring(1, {
-      damping: 20,
-      stiffness: 600,
-    });
-    onPressOut?.(event);
-  };
+    const timeoutId = setTimeout(onSuccessComplete, successDuration);
+    return () => clearTimeout(timeoutId);
+  }, [isSuccess, onSuccessComplete, successDuration]);
 
   const renderButtonContents = (content: React.ReactNode) => (
     <>
@@ -248,30 +253,59 @@ function Button({
     </>
   );
 
+  const renderAnimatedContents = (content: React.ReactNode) => (
+    <Animated.View
+      key={isSuccess ? 'success' : 'idle'}
+      entering={FadeIn.duration(180)}
+      exiting={FadeOut.duration(180)}
+    >
+      {content}
+    </Animated.View>
+  );
+
   return (
-    <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
-      <AnimatedHapticPressable
+    <TextClassContext.Provider
+      value={buttonTextVariants({
+        variant: isSuccess ? 'default' : variant,
+        size,
+      })}
+    >
+      <HapticPressable
         className={cn(
-          props.disabled && 'opacity-80',
-          buttonVariants({ variant, size }),
-          className
+          disabled === true && !isSuccess && 'opacity-80',
+          buttonVariants({ variant: isSuccess ? 'default' : variant, size }),
+          className,
+          isSuccess && 'bg-green-600 active:bg-green-700'
         )}
         role="button"
         haptic={haptic}
         hapticType={hapticType}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={[animatedStyle, style]}
+        disabled={disabled === true || isSuccess}
+        style={style}
         {...props}
       >
-        {typeof children === 'function'
-          ? (state: PressableStateCallbackType) =>
-              renderButtonContents(children(state))
-          : renderButtonContents(children)}
-      </AnimatedHapticPressable>
+        {isSuccess ? (
+          renderAnimatedContents(
+            <View className="flex-row items-center justify-center gap-2">
+              <Icon
+                as={CheckIcon}
+                size={20}
+                strokeWidth={3}
+                className="text-white"
+              />
+              <Text className="text-white">{successLabel}</Text>
+            </View>
+          )
+        ) : typeof children === 'function' ? (
+          (state: PressableStateCallbackType) =>
+            renderAnimatedContents(renderButtonContents(children(state)))
+        ) : (
+          renderAnimatedContents(renderButtonContents(children))
+        )}
+      </HapticPressable>
     </TextClassContext.Provider>
   );
 }
 
 export { Button, buttonTextVariants, buttonVariants };
-export type { ButtonProps };
+export type { ButtonProps, ButtonStatus };
