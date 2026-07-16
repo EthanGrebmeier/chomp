@@ -73,6 +73,7 @@ const AddIngredientContents = () => {
 
   return (
     <BottomSheet
+      detents={[1]}
       name="add-ingredient-sheet"
       ref={sheetRef}
       onStartClose={onStartClose}
@@ -82,7 +83,8 @@ const AddIngredientContents = () => {
       }}
       footer={
         isEditing ? undefined : (
-          <View className="px-10 pb-4">
+          <View className="gap-2 px-4 pb-4">
+            <MetaBar />
             <Button onPress={onSubmit} disabled={!isValid}>
               <Text>
                 {mode === 'add' ? 'Add Ingredient' : 'Update Ingredient'}
@@ -94,7 +96,6 @@ const AddIngredientContents = () => {
     >
       <BottomSheet.SheetView className={cn(isEditing ? undefined : 'pb-safe')}>
         <ItemForm />
-        <MetaBar />
       </BottomSheet.SheetView>
     </BottomSheet>
   );
