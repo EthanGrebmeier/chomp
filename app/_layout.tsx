@@ -81,6 +81,18 @@ function InitialLayout() {
           }}
         />
         <Stack.Screen
+          name="frequent-items/[listId]"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              height: '100%',
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
           name="recipes"
           options={{
             presentation: 'card',

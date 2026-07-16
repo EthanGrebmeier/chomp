@@ -1,13 +1,10 @@
-import { Text, TextProps } from 'react-native';
+import type { TextProps } from 'react-native';
 
 import { cn } from '../../lib/utils';
+import { Text } from '../ui/text';
 
 export const EmptyHeading = ({ className, ...props }: TextProps) => {
   return (
-    <Text
-      className={cn('text-center text-xl font-semibold text-foreground', className)}
-      {...props}
-    />
+    <Text variant="h4" className={cn('text-center', className)} {...props} />
   );
 };
-

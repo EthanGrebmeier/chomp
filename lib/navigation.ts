@@ -42,6 +42,10 @@ export interface ListMealPlanParams {
   listId: string;
 }
 
+export interface FrequentItemsParams {
+  listId: string;
+}
+
 export interface RecipeParams {
   recipeId: string;
   listId?: string;
@@ -93,6 +97,14 @@ export function buildMealPlanSheetUrl(params: ListMealPlanParams): Href {
   const { listId } = params;
   return {
     pathname: '/meal-plan/[listId]',
+    params: { listId },
+  } as unknown as Href;
+}
+
+export function buildFrequentItemsSheetUrl(params: FrequentItemsParams): Href {
+  const { listId } = params;
+  return {
+    pathname: '/frequent-items/[listId]',
     params: { listId },
   } as unknown as Href;
 }
@@ -155,6 +167,8 @@ export const navigation = {
 
   // Meal plan sheet navigation
   goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
+  goToFrequentItems: (listId: string) =>
+    buildFrequentItemsSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -177,6 +191,8 @@ export function useNavigation() {
 
     // Meal plan sheet navigation
     goToMealPlan: (listId: string) => navigation.goToMealPlan(listId),
+    goToFrequentItems: (listId: string) =>
+      navigation.goToFrequentItems(listId),
 
     // Recipe navigation
     goToRecipe: (recipeId: string, listId?: string) =>
@@ -200,6 +216,8 @@ export const navActions = {
 
   // Meal plan sheet navigation
   goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
+  goToFrequentItems: (listId: string) =>
+    buildFrequentItemsSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -221,6 +239,9 @@ export const ROUTES = {
   LIST: '/(tabs)',
   MEAL_PLAN: {
     SHEET: (listId: string) => `/meal-plan/${listId}`,
+  },
+  FREQUENT_ITEMS: {
+    SHEET: (listId: string) => `/frequent-items/${listId}`,
   },
   RECIPES: {
     INDEX: '/recipes',

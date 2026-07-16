@@ -294,6 +294,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
                         )}
                       >
                         <Text
+                          tabularNumbers
                           className={cn(
                             'text-sm font-medium',
                             isSelected ? 'text-primary-foreground' : null,

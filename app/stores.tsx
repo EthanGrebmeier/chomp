@@ -79,7 +79,7 @@ const StoresContent = () => {
 
       {/* Store count */}
       <View className="mt-3 px-4">
-        <Text className="text-sm text-muted-foreground">
+        <Text variant="caption" tabularNumbers>
           {filteredStores.length} store{filteredStores.length !== 1 ? 's' : ''}
           {searchQuery && ` matching "${searchQuery}"`}
         </Text>

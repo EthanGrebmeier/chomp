@@ -89,7 +89,9 @@ export const AccountScreen = () => {
         <Text variant="muted" className="mb-1">
           Email
         </Text>
-        <Text className="font-medium">{email}</Text>
+        <Text className="font-medium" numberOfLines={1} ellipsizeMode="middle">
+          {email}
+        </Text>
       </View>
 
       <View className="pb-safe gap-3">

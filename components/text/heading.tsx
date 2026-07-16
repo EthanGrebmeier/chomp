@@ -9,18 +9,23 @@ type HeadingProps = VariantProps<typeof headingVariants> & {
   className?: string;
 };
 
-const headingVariants = cva('text-2xl font-bold text-foreground', {
-  variants: {
-    size: {
-      default: 'text-2xl',
-      lg: 'text-3xl',
-      sm: 'text-xl',
+const headingVariants = cva(
+  'text-2xl font-bold leading-8 tracking-tight text-foreground',
+  {
+    variants: {
+      size: {
+        default: '',
+        lg: 'text-3xl leading-9',
+        sm: 'text-xl leading-7',
+      },
     },
-  },
-});
+  }
+);
 
 export const Heading = ({ children, className, size }: HeadingProps) => {
   return (
-    <Text className={cn(headingVariants({ size }), className)}>{children}</Text>
+    <Text variant="h1" className={cn(headingVariants({ size }), className)}>
+      {children}
+    </Text>
   );
 };

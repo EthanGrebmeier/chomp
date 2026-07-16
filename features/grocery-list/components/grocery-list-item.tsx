@@ -1,11 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Platform,
-  Pressable,
-  type TextLayoutEvent,
-  View,
-} from 'react-native';
+import { Platform, Pressable, type TextLayoutEvent, View } from 'react-native';
 import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, {
@@ -166,12 +161,14 @@ const GroceryListItemComponent = ({
   }, [internalIsChecked, strikethroughLines.length, strikethroughWidth]);
 
   const handleTextLayout = useCallback((event: TextLayoutEvent) => {
-    const nextLines = event.nativeEvent.lines.map(({ height, width, x, y }) => ({
-      height,
-      width,
-      x,
-      y,
-    }));
+    const nextLines = event.nativeEvent.lines.map(
+      ({ height, width, x, y }) => ({
+        height,
+        width,
+        x,
+        y,
+      })
+    );
 
     setStrikethroughLines(previousLines => {
       const linesAreUnchanged =
@@ -264,17 +261,16 @@ const GroceryListItemComponent = ({
           <View className="relative flex-1 flex-row gap-2 pr-2">
             <View className="flex-row items-center gap-2">
               <Text
-                className={cn(
-                  'text-xl leading-[22px] tracking-tight text-foreground',
-                  internalIsChecked && 'text-muted-foreground'
-                )}
+                variant="itemTitle"
+                className={cn(internalIsChecked && 'text-muted-foreground')}
                 style={compactTextStyle}
                 onTextLayout={handleTextLayout}
               >
                 {item.name}
                 {'  '}
                 <Text
-                  className="pl-2 text-base leading-[22px] text-muted-foreground"
+                  variant="itemMeta"
+                  className="pl-2"
                   style={compactTextStyle}
                 >
                   {formatQuantityUnit(item.quantity, item.unit)}
@@ -284,9 +280,7 @@ const GroceryListItemComponent = ({
               {strikethroughLines.map((line, index) => (
                 <StrikethroughLine
                   key={`${line.x}:${line.y}`}
-                  color={
-                    internalIsChecked ? theme.destructive : 'transparent'
-                  }
+                  color={internalIsChecked ? theme.destructive : 'transparent'}
                   line={line}
                   lineIndex={index}
                   progress={strikethroughWidth}
@@ -306,10 +300,8 @@ const GroceryListItemComponent = ({
         </View>
         {notes ? (
           <Text
-            className={cn(
-              'text-base leading-[18px] text-muted-foreground',
-              internalIsChecked && 'opacity-80'
-            )}
+            variant="itemDescription"
+            className={cn(internalIsChecked && 'opacity-80')}
             style={compactTextStyle}
           >
             {notes}

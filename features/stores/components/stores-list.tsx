@@ -47,7 +47,11 @@ const StoreRow = ({ store, isLast, onDelete, onPress }: StoreRowProps) => {
             className="flex-1 flex-row items-center justify-between py-1"
           >
             <View className="flex-1 flex-row items-center gap-2">
-              <Text className="text-base font-medium text-foreground">
+              <Text
+                className="flex-1 text-base font-medium text-foreground"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {store.name}
               </Text>
               {store.isDefault ? (
@@ -99,9 +103,10 @@ export const StoresList = ({ stores, onEditStore }: StoresListProps) => {
   }
 
   // Sort default first, then alphabetically by name.
-  const sortedStores = [...stores].sort((a, b) =>
-    Number(!!b.isDefault) - Number(!!a.isDefault) ||
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  const sortedStores = [...stores].sort(
+    (a, b) =>
+      Number(!!b.isDefault) - Number(!!a.isDefault) ||
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
 
   return (
@@ -120,4 +125,3 @@ export const StoresList = ({ stores, onEditStore }: StoresListProps) => {
     />
   );
 };
-

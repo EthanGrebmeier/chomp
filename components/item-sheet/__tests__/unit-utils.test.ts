@@ -32,7 +32,7 @@ describe('formatQuantityUnit', () => {
   });
 
   it('formats non-each units with quantity and unit', () => {
-    expect(formatQuantityUnit(1, 'cup')).toBe('1 cup');
-    expect(formatQuantityUnit(4, 'MyUnit')).toBe('4 MyUnit');
+    expect(formatQuantityUnit(1, 'cup')).toBe('1\u00A0cup');
+    expect(formatQuantityUnit(4, 'MyUnit')).toBe('4\u00A0MyUnit');
   });
 });

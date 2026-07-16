@@ -1,8 +1,4 @@
-import {
-  AlertTriangleIcon,
-  CheckCircleIcon,
-  XIcon,
-} from 'lucide-react-native';
+import { AlertTriangleIcon, CheckCircleIcon, XIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useCallback, useRef } from 'react';
 import {
@@ -152,8 +148,7 @@ export const ImportRecipePageFlow = ({
 
   if (flow.state.status === 'preview') {
     const originalHadIngredients = flow.state.data.ingredients.length > 0;
-    const isNameTooLong =
-      flow.state.editedName.length > MAX_RECIPE_NAME_LENGTH;
+    const isNameTooLong = flow.state.editedName.length > MAX_RECIPE_NAME_LENGTH;
     const selectedCount = flow.state.selectedIndices.size;
     const showNameCount =
       flow.state.editedName.length >= MAX_RECIPE_NAME_LENGTH - 20;
@@ -168,8 +163,10 @@ export const ImportRecipePageFlow = ({
               </Text>
               {showNameCount ? (
                 <Text
+                  variant="caption"
+                  tabularNumbers
                   className={cn(
-                    'text-xs text-muted-foreground',
+                    'text-xs leading-4',
                     isNameTooLong && 'text-destructive',
                     flow.state.editedName.length >=
                       MAX_RECIPE_NAME_LENGTH - 10 &&

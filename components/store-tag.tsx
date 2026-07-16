@@ -21,9 +21,7 @@ export const StoreTag = ({ name }: StoreTagProps) => {
         strokeWidth={2.5}
         className="text-muted-foreground"
       />
-      <Text className="text-sm leading-[1.1] tracking-[-0.5] text-muted-foreground">
-        {name}
-      </Text>
+      <Text variant="caption">{name}</Text>
     </View>
   );
 };

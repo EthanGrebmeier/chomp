@@ -41,13 +41,11 @@ const getIngredientQuantityDisplay = (
   }
 
   if (normalizedUnit && normalizedUnit !== DEFAULT_UNIT_VALUE) {
-    return normalizedUnit;
+    return normalizedUnit.replace(/ /g, '\u00A0');
   }
 
   return null;
 };
-
-const formatUnbreakableQuantity = (value: string) => value.replace(/ /g, '\u00A0');
 
 export const IngredientListHeader = ({
   selectedCount,
@@ -59,7 +57,7 @@ export const IngredientListHeader = ({
   return (
     <View className="flex-row items-center justify-between">
       <View>
-        <Text className="text-xl font-semibold text-foreground">
+        <Text variant="h4" tabularNumbers>
           Ingredients ({selectedCount}/{totalCount})
         </Text>
       </View>
@@ -138,10 +136,8 @@ export const IngredientListPreview = ({
                 <View className="relative flex-1 flex-row gap-2 pr-2">
                   <View className="flex-row items-center gap-2">
                     <Text
-                      className={cn(
-                        'text-xl leading-[22px] tracking-tight text-foreground',
-                        !isSelected && 'text-muted-foreground'
-                      )}
+                      variant="itemTitle"
+                      className={cn(!isSelected && 'text-muted-foreground')}
                       style={compactTextStyle}
                     >
                       {ingredient.name}
@@ -149,10 +145,11 @@ export const IngredientListPreview = ({
                         <>
                           {'  '}
                           <Text
-                            className="pl-2 text-base leading-[22px] text-muted-foreground"
+                            variant="itemMeta"
+                            className="pl-2"
                             style={compactTextStyle}
                           >
-                            {formatUnbreakableQuantity(quantityDisplay)}
+                            {quantityDisplay}
                           </Text>
                         </>
                       ) : null}
@@ -166,10 +163,7 @@ export const IngredientListPreview = ({
                 </View>
               </View>
               {notes ? (
-                <Text
-                  className="text-base leading-[18px] text-muted-foreground"
-                  style={compactTextStyle}
-                >
+                <Text variant="itemDescription" style={compactTextStyle}>
                   {notes}
                 </Text>
               ) : null}

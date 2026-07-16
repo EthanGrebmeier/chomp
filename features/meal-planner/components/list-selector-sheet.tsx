@@ -173,10 +173,7 @@ const MealPlanRecipeRow = ({
               }
             />
             {trailing ? (
-              <Text
-                className="text-base leading-[22px] text-muted-foreground"
-                style={compactTextStyle}
-              >
+              <Text variant="itemMeta" style={compactTextStyle}>
                 {trailing}
               </Text>
             ) : null}
@@ -485,7 +482,7 @@ export const ListSelectorSheet = forwardRef<
             ) : (
               daySections.map(section => (
                 <View key={section.date} className="mb-2">
-                  <Text className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Text variant="overline" className="mb-2">
                     {section.label}
                   </Text>
                   {section.entries.map(entry => {

@@ -1,7 +1,12 @@
 import * as Slot from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
-import { Platform, Text as RNText, type Role } from 'react-native';
+import {
+  Platform,
+  Text as RNText,
+  type Role,
+  type TextStyle,
+} from 'react-native';
 
 import { cn } from '@/lib/utils';
 
@@ -15,32 +20,43 @@ const textVariants = cva(
   {
     variants: {
       variant: {
-        default: 'tracking-tight',
+        default: '',
         h1: cn(
-          'text-6xl font-bold',
+          'text-4xl font-bold leading-[1.1] tracking-tight',
           Platform.select({ web: 'scroll-m-20 text-balance' })
         ),
         h2: cn(
-          'text-3xl font-bold',
-          Platform.select({ web: 'scroll-m-20 first:mt-0' })
+          'text-3xl font-bold leading-[1.15] tracking-tight',
+          Platform.select({
+            web: 'scroll-m-20 text-balance first:mt-0',
+          })
         ),
         h3: cn(
-          'text-2xl font-semibold tracking-tight',
-          Platform.select({ web: 'scroll-m-20' })
+          'text-2xl font-semibold leading-8 tracking-tight',
+          Platform.select({ web: 'scroll-m-20 text-balance' })
         ),
         h4: cn(
-          'text-xl font-semibold tracking-tight',
-          Platform.select({ web: 'scroll-m-20' })
+          'text-xl font-semibold leading-7 tracking-tight',
+          Platform.select({ web: 'scroll-m-20 text-balance' })
         ),
-        p: 'mt-3 leading-7 sm:mt-6',
-        blockquote: 'mt-4 border-l-2 pl-3 italic sm:mt-6 sm:pl-6',
+        p: 'leading-6',
+        body: '',
+        bodyMuted: 'text-muted-foreground',
+        blockquote: 'border-l-2 pl-3 leading-6 italic sm:pl-6',
         code: cn(
           'bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold'
         ),
-        lead: 'text-muted-foreground text-xl',
+        lead: 'text-muted-foreground text-lg',
         large: 'text-lg font-semibold',
-        small: 'text-sm leading-none',
+        small: 'text-sm',
         muted: 'text-muted-foreground text-sm',
+        label: 'text-sm font-medium',
+        caption: 'text-muted-foreground text-sm',
+        overline:
+          'text-muted-foreground text-xs font-semibold uppercase leading-4 tracking-wider',
+        itemTitle: 'text-xl leading-6 tracking-tight',
+        itemMeta: 'text-muted-foreground text-base leading-6',
+        itemDescription: 'text-muted-foreground text-base leading-6',
       },
     },
     defaultVariants: {
@@ -69,17 +85,24 @@ const ARIA_LEVEL: Partial<Record<TextVariant, string>> = {
   h4: '4',
 };
 
+const TABULAR_NUMBERS_STYLE: TextStyle = {
+  fontVariant: ['tabular-nums'],
+};
+
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
 function Text({
   className,
   asChild = false,
+  tabularNumbers = false,
+  style,
   variant = 'default',
   ...props
 }: React.ComponentProps<typeof RNText> &
   TextVariantProps &
   React.RefAttributes<RNText> & {
     asChild?: boolean;
+    tabularNumbers?: boolean;
   }) {
   const textClass = React.useContext(TextClassContext);
   const Component = asChild ? Slot.Text : RNText;
@@ -88,6 +111,7 @@ function Text({
       className={cn(textVariants({ variant }), textClass, className)}
       role={variant ? ROLE[variant] : undefined}
       aria-level={variant ? ARIA_LEVEL[variant] : undefined}
+      style={[tabularNumbers ? TABULAR_NUMBERS_STYLE : undefined, style]}
       {...props}
     />
   );

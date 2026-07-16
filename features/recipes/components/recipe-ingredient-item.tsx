@@ -67,27 +67,20 @@ export const RecipeIngredientItem = ({
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1 flex-row pr-2">
-            <Text
-              className="text-xl leading-[22px] tracking-tight text-foreground"
-              style={compactTextStyle}
-            >
+            <Text variant="itemTitle" style={compactTextStyle}>
               {ingredient.name}
               {'  '}
-              <Text
-                className="text-base leading-[22px] text-muted-foreground"
-                style={compactTextStyle}
-              >
+              <Text variant="itemMeta" style={compactTextStyle}>
                 {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
               </Text>
             </Text>
           </View>
-          {ingredient.category && <CategoryTag category={ingredient.category} />}
+          {ingredient.category && (
+            <CategoryTag category={ingredient.category} />
+          )}
         </View>
         {notes ? (
-          <Text
-            className="text-base leading-[18px] text-muted-foreground"
-            style={compactTextStyle}
-          >
+          <Text variant="itemDescription" style={compactTextStyle}>
             {notes}
           </Text>
         ) : null}

@@ -66,7 +66,7 @@ const SavedItemRow = ({
             <View className="flex-row items-center justify-between gap-2">
               <View className="flex-1 flex-row pr-2">
                 <Text
-                  className="text-xl leading-[22px] tracking-tight text-foreground"
+                  variant="itemTitle"
                   style={compactTextStyle}
                   numberOfLines={1}
                 >
@@ -82,8 +82,10 @@ const SavedItemRow = ({
             </View>
             {notes ? (
               <Text
-                className="text-base leading-[18px] text-muted-foreground"
+                variant="itemDescription"
                 style={compactTextStyle}
+                numberOfLines={2}
+                ellipsizeMode="tail"
               >
                 {notes}
               </Text>

@@ -57,7 +57,13 @@ const CategoryRowContent = ({
         className="flex-1 flex-row items-center justify-between py-1"
       >
         <View className="flex-1 flex-row items-center">
-          <Text className="text-base font-medium text-foreground">{label}</Text>
+          <Text
+            className="flex-1 text-base font-medium text-foreground"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {label}
+          </Text>
         </View>
       </HapticPressable>
     </ListItem>
@@ -120,11 +126,9 @@ const CategorySectionHeader = ({
 }: Pick<CategoryListSection, 'title' | 'description'>) => {
   return (
     <View className="bg-background px-4 pb-2 pt-5">
-      <Text className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </Text>
+      <Text variant="overline">{title}</Text>
       {description ? (
-        <Text className="mt-1 text-sm text-muted-foreground">
+        <Text variant="caption" className="mt-1">
           {description}
         </Text>
       ) : null}

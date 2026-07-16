@@ -1,7 +1,12 @@
 import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { Href, router } from 'expo-router';
-import { BookOpenIcon, CalendarIcon, SettingsIcon } from 'lucide-react-native';
+import {
+  BookOpenIcon,
+  CalendarIcon,
+  Clock3Icon,
+  SettingsIcon,
+} from 'lucide-react-native';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Keyboard, TextInput as RNTextInput, View } from 'react-native';
 import Animated, {
@@ -26,6 +31,7 @@ import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
 import { navigation } from '../../../lib/navigation';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
@@ -394,6 +400,11 @@ export const GroceryList = ({
     pushWithRouteLock(navigation.goToMealPlan(listId));
   };
 
+  const handleOpenFrequentItems = () => {
+    if (!listId) return;
+    pushWithRouteLock(navigation.goToFrequentItems(listId));
+  };
+
   const handleEnterBulkSelectionMode = () => {
     setBulkSelectionState(currentState => enterBulkSelectionMode(currentState));
   };
@@ -701,7 +712,7 @@ export const GroceryList = ({
           destinationListIdToUse,
           destinationItems
         ) => {
-          const transactions = [];
+          const transactions: Parameters<typeof db.transact>[0] = [];
           const now = new Date().toISOString();
           const destinationItemsMap = new Map(
             destinationItems.map(item => [item.id, item])
@@ -744,6 +755,19 @@ export const GroceryList = ({
               ),
               tx.grocery_items[nextItemId].link({
                 grocery_list: destinationListIdToUse,
+              }),
+              ...buildAddEventTransactions({
+                eventId: nextItemId,
+                listId: destinationListIdToUse,
+                item: {
+                  name: createEntry.name,
+                  quantity: createEntry.quantity,
+                  unit: createEntry.unit,
+                  notes: createEntry.notes ?? undefined,
+                  category: createEntry.category ?? undefined,
+                  storeId: createEntry.storeId,
+                },
+                addedAt: now,
               })
             );
 
@@ -920,6 +944,20 @@ export const GroceryList = ({
                 size={24}
                 strokeWidth={2}
                 className="mt-0.5 text-accent-foreground"
+              />
+            </HapticPressable>
+            <HapticPressable
+              onPress={handleOpenFrequentItems}
+              disabled={isRoutePushPending}
+              className="gap-2 active:opacity-80"
+              hapticType="selection"
+              hitSlop={10}
+            >
+              <Icon
+                as={Clock3Icon}
+                size={24}
+                strokeWidth={2}
+                className="text-accent-foreground"
               />
             </HapticPressable>
             <HapticPressable

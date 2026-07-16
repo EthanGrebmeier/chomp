@@ -38,5 +38,6 @@ export const formatQuantityUnit = (quantity: number, unit?: string | null) => {
     return `x${quantity}`;
   }
 
-  return `${quantity} ${normalizedUnit}`;
+  // Non-breaking spaces keep quantity + unit from wrapping apart (e.g. "1 lb").
+  return `${quantity} ${normalizedUnit}`.replace(/ /g, '\u00A0');
 };

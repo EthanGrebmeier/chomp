@@ -512,7 +512,7 @@ export const ImportRecipeSheet = forwardRef<
   const renderFooter = useCallback(() => {
     if (state.status === 'idle') {
       return (
-        <View className="px-10 pb-safe">
+        <View className="pb-safe px-10">
           <Button onPress={handleSubmitUrl} disabled={!urlHasValue}>
             <Text>Import Recipe</Text>
           </Button>
@@ -525,7 +525,7 @@ export const ImportRecipeSheet = forwardRef<
       const isRetryable = RETRYABLE_ERROR_CODES.includes(errorCode);
 
       return (
-        <View className="gap-2 px-10 pb-safe">
+        <View className="pb-safe gap-2 px-10">
           {isRetryable ? (
             <Button onPress={handleSubmitUrl}>
               <Text>Try Again</Text>
@@ -548,7 +548,7 @@ export const ImportRecipeSheet = forwardRef<
     const selectedCount = state.selectedIndices.size;
 
     return (
-      <View className="px-10 pb-safe">
+      <View className="pb-safe px-10">
         <Button
           onPress={handleConfirmImport}
           disabled={isNameTooLong || !state.editedName.trim()}
@@ -635,7 +635,7 @@ export const ImportRecipeSheet = forwardRef<
         onOpen={handleEditNameSheetOpen}
         detents={['auto']}
         footer={
-          <View className="gap-2 px-10 pb-safe">
+          <View className="pb-safe gap-2 px-10">
             <Button
               onPress={handleSaveRecipeName}
               disabled={isDraftNameTooLong || !draftRecipeNameMeta.hasText}
@@ -655,12 +655,14 @@ export const ImportRecipeSheet = forwardRef<
           <BottomSheet.Header title="Edit Recipe Name" />
           <View className="gap-2">
             <View className="flex-row items-center justify-between">
-              <Text className="text-sm font-medium text-muted-foreground">
+              <Text variant="label" className="text-muted-foreground">
                 Recipe Name
               </Text>
               {showDraftCharCount && (
                 <Text
-                  className={`text-xs ${
+                  variant="caption"
+                  tabularNumbers
+                  className={`text-xs leading-4 ${
                     isDraftNameTooLong
                       ? 'text-destructive'
                       : draftRecipeNameMeta.length >=

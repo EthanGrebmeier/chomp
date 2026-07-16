@@ -2,8 +2,9 @@ import { id } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { BaseGroceryItem } from '../types';
+import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 import { upsertLocalSavedItem } from '../../saved-items/local/upsert-local-saved-item';
+import { BaseGroceryItem } from '../types';
 
 export const addGroceryListItem = async ({
   listId,
@@ -21,7 +22,7 @@ export const addGroceryListItem = async ({
   const itemId = id();
   const now = new Date().toISOString();
 
-  const transactions = [
+  const transactions: Parameters<typeof db.transact>[0] = [
     db.tx.grocery_items[itemId].create(
       trimStringFields({
         name: item.name,
@@ -37,6 +38,12 @@ export const addGroceryListItem = async ({
     ),
     db.tx.grocery_lists[listId].link({
       grocery_items: itemId,
+    }),
+    ...buildAddEventTransactions({
+      eventId: itemId,
+      listId,
+      item,
+      addedAt: now,
     }),
   ];
 

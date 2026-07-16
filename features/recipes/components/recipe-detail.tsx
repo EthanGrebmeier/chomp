@@ -66,22 +66,18 @@ const RecipeDetailContent = ({
       <View className="w-full gap-2 px-4">
         <View className="flex-row gap-4">
           <View>
-            {recipe.mealTag && (
-              <Text className="text-lg text-muted-foreground">
-                {recipe.mealTag}
-              </Text>
-            )}
+            {recipe.mealTag ? (
+              <Text variant="caption">{recipe.mealTag}</Text>
+            ) : null}
           </View>
         </View>
       </View>
-      {recipe.description && (
+      {recipe.description ? (
         <View className="px-4">
-          <Text className="text-lg text-muted-foreground">
-            {recipe.description}
-          </Text>
+          <Text variant="lead">{recipe.description}</Text>
         </View>
-      )}
-      {recipe.sourceUrl && (
+      ) : null}
+      {recipe.sourceUrl ? (
         <View className="items-start px-4">
           <Button
             variant="ghost"
@@ -96,17 +92,17 @@ const RecipeDetailContent = ({
             />
           </Button>
         </View>
-      )}
+      ) : null}
 
       {/* Ingredients */}
       <View className="flex-1 ">
         <View className="flex-row items-center justify-between px-4">
-          <Text className="text-muted-foreground">Ingredients:</Text>
+          <Text variant="overline">Ingredients</Text>
         </View>
         {recipe.recipe_ingredients.length === 0 ? (
           <View className=" flex-1 items-center justify-center">
-            <Text className="text-muted-foreground">No ingredients found</Text>
-            <Text className="text-muted-foreground">
+            <Text variant="bodyMuted">No ingredients found</Text>
+            <Text variant="bodyMuted">
               Press the + button to add ingredients
             </Text>
           </View>

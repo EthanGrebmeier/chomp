@@ -37,7 +37,13 @@ export const GroceryListPicker = ({
             )}
           >
             <View className="flex-row items-center gap-2">
-              <Text className="text-lg">{list.name}</Text>
+              <Text
+                className="flex-1 text-lg"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {list.name}
+              </Text>
               {isShared && (
                 <Icon
                   as={UsersIcon}
@@ -46,7 +52,7 @@ export const GroceryListPicker = ({
                 />
               )}
             </View>
-            <Text className="text-sm text-muted-foreground">
+            <Text variant="caption" tabularNumbers>
               {list.grocery_items?.filter(i => !i.isDeleted && !i.isChecked)
                 .length || 0}{' '}
               items

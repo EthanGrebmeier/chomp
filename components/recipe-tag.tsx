@@ -13,7 +13,7 @@ export const RecipeTag = ({ name }: RecipeTagProps) => {
 
   return (
     <View className="flex-row items-center gap-1 ">
-      <Text className="text-sm italic leading-[1.1] tracking-[-0.5] text-muted-foreground">
+      <Text variant="caption" className="italic">
         {name}
       </Text>
     </View>

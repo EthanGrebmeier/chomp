@@ -6,7 +6,6 @@ import {
 import { useColorScheme } from 'nativewind';
 import { ComponentProps, ReactElement, forwardRef } from 'react';
 import { TextInput as RNTextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BareTextInput } from '@/components/text-input';
 import { cn } from '@/lib/utils';
@@ -54,8 +53,6 @@ export const BottomSheet = ({
 }: BottomSheetProps) => {
   const colorscheme = useColorScheme();
 
-  const { bottom } = useSafeAreaInsets();
-
   return (
     <TrueSheet
       ref={ref}
@@ -92,7 +89,7 @@ const TextInput = forwardRef<
   return (
     <RNTextInput
       className={cn(
-        'h-12 rounded-md bg-muted px-3 leading-4 text-foreground shadow-sm shadow-black/5',
+        'h-12 rounded-md bg-muted px-3 text-base leading-5 text-foreground shadow-sm shadow-black/5',
         className
       )}
       {...props}
@@ -125,7 +122,8 @@ const Header = ({
         <View className="mx-2 flex-1">
           {typeof title === 'string' ? (
             <Text
-              className="text-center text-2xl font-bold leading-tight"
+              variant="h3"
+              className="text-center"
               numberOfLines={2}
               ellipsizeMode="tail"
             >
@@ -139,11 +137,7 @@ const Header = ({
           <View className="w-12 items-end">{button}</View>
         )}
       </View>
-      {subsection && (
-        <View className="mt-2 text-center text-sm text-muted-foreground">
-          {subsection}
-        </View>
-      )}
+      {subsection ? <View className="mt-2">{subsection}</View> : null}
     </View>
   );
 };
@@ -156,9 +150,7 @@ const Subtext = ({
   className?: string;
 }) => {
   return (
-    <Text
-      className={cn('text-center text-base text-muted-foreground', className)}
-    >
+    <Text variant="bodyMuted" className={cn('text-center', className)}>
       {children}
     </Text>
   );

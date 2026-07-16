@@ -38,8 +38,9 @@ export const Pill = ({
       >
         {icon}
         <Text
+          variant="label"
           className={cn(
-            'text-base font-medium leading-[18px]',
+            'text-base leading-5',
             !hasValue && 'text-muted-foreground',
             textClassName
           )}

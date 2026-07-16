@@ -164,6 +164,7 @@ export const JoinByCodeSheet = forwardRef<
                 pinCodeTextStyle: {
                   fontSize: 20,
                   fontFamily: 'monospace',
+                  fontVariant: ['tabular-nums'],
                   color: theme.foreground,
                 },
                 focusedPinCodeContainerStyle: {

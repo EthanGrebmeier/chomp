@@ -30,21 +30,18 @@ export function LegalConsent({
   className,
 }: LegalConsentProps) {
   return (
-    <Text
-      variant="muted"
-      className={cn('text-center text-xs leading-5', className)}
-    >
+    <Text variant="muted" className={cn('text-center', className)}>
       By {action}, you agree to our{' '}
       <LegalLink
         document="terms"
         label="Terms of Service"
-        className="text-xs"
+        className="text-sm"
       />{' '}
       and{' '}
       <LegalLink
         document="privacy"
         label="Privacy Policy"
-        className="text-xs"
+        className="text-sm"
       />
       .
     </Text>

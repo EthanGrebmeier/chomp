@@ -3,6 +3,7 @@ import { MoreHorizontal, WifiOff, X } from 'lucide-react-native';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
+import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
@@ -115,9 +116,7 @@ export const GroceryListHeader = ({
                 variant="ghost"
                 className="px-0 active:bg-transparent dark:active:bg-transparent"
               >
-                <Text className="text-2xl font-bold tracking-tight">
-                  {listName ?? 'Grocery List'}
-                </Text>
+                <Heading>{listName ?? 'Grocery List'}</Heading>
               </Button>
             </Animated.View>
           )}

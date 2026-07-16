@@ -70,19 +70,15 @@ const IngredientRow = ({
         <View className="flex-row items-center justify-between">
           <View className="relative flex-1 flex-row gap-2 pr-2">
             <Text
-              className={cn(
-                'text-xl leading-[22px] tracking-tight text-foreground',
-                !isSelected && 'text-muted-foreground'
-              )}
+              variant="itemTitle"
+              className={cn(!isSelected && 'text-muted-foreground')}
               style={compactTextStyle}
             >
               {ingredient.name}
               {'  '}
               <Text
-                className={cn(
-                  'text-base leading-[22px] text-muted-foreground',
-                  !isSelected && 'opacity-80'
-                )}
+                variant="itemMeta"
+                className={cn(!isSelected && 'opacity-80')}
                 style={compactTextStyle}
               >
                 {formatQuantityUnit(ingredient.quantity, ingredient.unit)}
@@ -95,10 +91,8 @@ const IngredientRow = ({
         </View>
         {ingredient.notes ? (
           <Text
-            className={cn(
-              'text-base leading-[18px] text-muted-foreground',
-              !isSelected && 'opacity-80'
-            )}
+            variant="itemDescription"
+            className={cn(!isSelected && 'opacity-80')}
             style={compactTextStyle}
           >
             {ingredient.notes}
@@ -419,7 +413,7 @@ export const IngredientSelector = forwardRef<
             <Text className="text-lg font-medium text-foreground">
               Ingredients
             </Text>
-            <Text className="text-sm text-muted-foreground">
+            <Text variant="caption" tabularNumbers>
               {effectiveSelectedIds.size} of {ingredients.length} selected
             </Text>
           </View>

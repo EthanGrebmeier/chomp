@@ -5,7 +5,6 @@ import {
   CategoryOption,
   getCategoryLabel,
 } from '../features/shared/category/categories';
-import { cn } from '../lib/utils';
 
 import { Text } from './ui/text';
 
@@ -24,11 +23,7 @@ export const CategoryTag = ({
 
   return (
     <View>
-      <Text
-        className={cn(
-          'text-xs font-medium leading-[1.1] tracking-[-0.2] text-muted-foreground'
-        )}
-      >
+      <Text variant="caption" className="font-medium">
         {label}
       </Text>
     </View>

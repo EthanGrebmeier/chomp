@@ -30,10 +30,19 @@ const _schema = i.schema({
       notes: i.string().optional(),
       category: i.string().optional(),
       isChecked: i.boolean(),
-      createdAt: i.string(),
+      createdAt: i.string().indexed(),
       updatedAt: i.string(),
       isDeleted: i.boolean(),
       deletedAt: i.string().optional(),
+    }),
+    grocery_item_add_events: i.entity({
+      normalizedName: i.string(),
+      name: i.string(),
+      quantity: i.number(),
+      unit: i.string(),
+      notes: i.string().optional(),
+      category: i.string().optional(),
+      addedAt: i.string().indexed(),
     }),
     grocery_list_shares: i.entity({
       grocery_list_id: i.string(),
@@ -113,6 +122,19 @@ const _schema = i.schema({
       },
       reverse: {
         on: 'grocery_items',
+        has: 'one',
+        label: 'grocery_list',
+        onDelete: 'cascade',
+      },
+    },
+    grocery_listsGrocery_item_add_events: {
+      forward: {
+        on: 'grocery_lists',
+        has: 'many',
+        label: 'grocery_item_add_events',
+      },
+      reverse: {
+        on: 'grocery_item_add_events',
         has: 'one',
         label: 'grocery_list',
         onDelete: 'cascade',
@@ -318,6 +340,18 @@ const _schema = i.schema({
         on: 'stores',
         has: 'many',
         label: 'grocery_items',
+      },
+    },
+    grocery_item_add_events_stores: {
+      forward: {
+        on: 'grocery_item_add_events',
+        has: 'one',
+        label: 'store',
+      },
+      reverse: {
+        on: 'stores',
+        has: 'many',
+        label: 'grocery_item_add_events',
       },
     },
     grocery_items_saved_items: {

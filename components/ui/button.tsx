@@ -71,16 +71,16 @@ const buttonVariants = cva(
 
 const buttonTextVariants = cva(
   cn(
-    'text-foreground text-base font-medium',
+    'text-foreground text-base font-semibold leading-5',
     Platform.select({ web: 'pointer-events-none transition-colors' })
   ),
   {
     variants: {
       variant: {
-        default: 'text-primary-foreground text-lg font-semibold',
+        default: 'text-primary-foreground',
         destructive: 'text-white',
         outline: cn(
-          'group-active:text-accent-foreground font-semibold text-lg',
+          'group-active:text-accent-foreground',
           Platform.select({ web: 'group-hover:text-accent-foreground' })
         ),
         secondary: 'text-secondary-foreground',
@@ -94,9 +94,9 @@ const buttonTextVariants = cva(
       },
       size: {
         default: '',
-        sm: '',
+        sm: 'text-sm leading-4',
         lg: '',
-        xl: '',
+        xl: 'text-lg leading-6',
         'wide-small': '',
         icon: '',
         iconLg: '',
@@ -285,24 +285,22 @@ function Button({
         style={style}
         {...props}
       >
-        {isSuccess ? (
-          renderAnimatedContents(
-            <View className="flex-row items-center justify-center gap-2">
-              <Icon
-                as={CheckIcon}
-                size={20}
-                strokeWidth={3}
-                className="text-white"
-              />
-              <Text className="text-white">{successLabel}</Text>
-            </View>
-          )
-        ) : typeof children === 'function' ? (
-          (state: PressableStateCallbackType) =>
-            renderAnimatedContents(renderButtonContents(children(state)))
-        ) : (
-          renderAnimatedContents(renderButtonContents(children))
-        )}
+        {isSuccess
+          ? renderAnimatedContents(
+              <View className="flex-row items-center justify-center gap-2">
+                <Icon
+                  as={CheckIcon}
+                  size={20}
+                  strokeWidth={3}
+                  className="text-white"
+                />
+                <Text className="text-white">{successLabel}</Text>
+              </View>
+            )
+          : typeof children === 'function'
+            ? (state: PressableStateCallbackType) =>
+                renderAnimatedContents(renderButtonContents(children(state)))
+            : renderAnimatedContents(renderButtonContents(children))}
       </HapticPressable>
     </TextClassContext.Provider>
   );

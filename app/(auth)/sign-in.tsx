@@ -87,12 +87,7 @@ export default function SignIn() {
             <View className="w-full flex-1">
               <View className="w-full flex-row items-center gap-3  py-6">
                 <View className="h-px flex-1 bg-border" />
-                <Text
-                  variant="muted"
-                  className="text-sm font-semibold uppercase"
-                >
-                  or
-                </Text>
+                <Text variant="overline">or</Text>
                 <View className="h-px flex-1 bg-border" />
               </View>
 

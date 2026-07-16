@@ -1,5 +1,5 @@
-import { memo } from 'react';
 import { ChevronDownIcon } from 'lucide-react-native';
+import { memo } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -31,14 +31,14 @@ const CollapsibleSectionHeaderComponent = ({
       {showCollapse ? (
         <View className="flex-row items-center justify-between">
           <Pressable onPress={onToggle} className="flex-1">
-            <Text className="text-base font-semibold capitalize text-foreground">
+            <Text className="font-semibold capitalize text-foreground">
               {title}
             </Text>
-            {itemCount !== undefined && (
-              <Text className="text-sm text-muted-foreground">
+            {itemCount !== undefined ? (
+              <Text variant="caption" tabularNumbers>
                 {itemCount} items
               </Text>
-            )}
+            ) : null}
           </Pressable>
           <View className="flex-row items-center gap-3">
             {isExpanded && actionLabel && onActionPress ? (
@@ -64,9 +64,12 @@ const CollapsibleSectionHeaderComponent = ({
           </View>
         </View>
       ) : (
-        <Text className="text-lg font-semibold capitalize text-foreground">
+        <Text
+          tabularNumbers
+          className="text-lg font-semibold capitalize leading-7 text-foreground"
+        >
           {title}
-          {itemCount !== undefined && ` (${itemCount})`}
+          {itemCount !== undefined ? ` (${itemCount})` : null}
         </Text>
       )}
     </View>

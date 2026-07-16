@@ -91,7 +91,7 @@ export default function Recipes() {
         />
       </View>
       <View className="px-4">
-        <Text className="text-sm text-muted-foreground">
+        <Text variant="caption" tabularNumbers>
           {filteredRecipes.length} recipe
           {filteredRecipes.length !== 1 ? 's' : ''}
           {searchQuery.trim() && ` matching "${searchQuery.trim()}"`}

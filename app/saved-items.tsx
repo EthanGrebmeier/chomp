@@ -131,7 +131,7 @@ const SavedItemsContent = () => {
 
       {/* Item count */}
       <View className="px-4">
-        <Text className="text-sm text-muted-foreground">
+        <Text variant="caption" tabularNumbers>
           {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
           {searchQuery && ` matching "${searchQuery}"`}
           {filterCategory && !searchQuery && ' in this category'}

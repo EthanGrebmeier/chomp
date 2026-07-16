@@ -12,6 +12,15 @@ const rules = {
       update: 'isOwner',
     },
   },
+  grocery_item_add_events: {
+    bind: ['isMember', "auth.id in data.ref('grocery_list.shares.user_id')"],
+    allow: {
+      view: 'isMember',
+      create: 'isMember',
+      delete: 'isMember',
+      update: 'isMember',
+    },
+  },
   $users: {
     bind: ['isSelf', 'auth.id == data.id'],
     allow: {

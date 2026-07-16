@@ -263,7 +263,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
                     size={12}
                   />
                 </View>
-                <Text className=" text-base font-bold tracking-[-0.2] text-primary">
+                <Text className="text-base font-semibold text-primary">
                   Create new store
                 </Text>
               </View>

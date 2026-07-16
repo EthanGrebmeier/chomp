@@ -46,7 +46,7 @@ export default function Welcome() {
         <View className="items-center justify-start gap-2">
           <Text
             className={cn(
-              'text-center text-[88px] font-bold uppercase leading-none ',
+              'text-center font-jaro-regular text-[88px] uppercase leading-none tracking-tight',
               colorScheme === 'dark' ? 'text-foreground' : 'text-primary'
             )}
           >
@@ -79,7 +79,7 @@ export default function Welcome() {
             )}
           </Button>
 
-          <LegalConsent className="mt-2 px-4" />
+          <LegalConsent className="mt-2 px-4 text-foreground/80" />
         </View>
       </View>
     </SafeAreaView>

@@ -11,9 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
-import {
-  CategoriesList,
-} from '@/features/categories/components/categories-list';
+import { CategoriesList } from '@/features/categories/components/categories-list';
 import {
   CategorySheetProvider,
   useCategorySheet,
@@ -86,7 +84,7 @@ const CategoriesContent = () => {
       </View>
 
       <View className="mt-3 px-4">
-        <Text className="text-sm text-muted-foreground">
+        <Text variant="caption" tabularNumbers>
           {visibleCategoryCount} categor
           {visibleCategoryCount === 1 ? 'y' : 'ies'}
           {searchQuery ? ` matching "${searchQuery}"` : ''}

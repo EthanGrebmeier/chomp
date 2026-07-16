@@ -92,7 +92,7 @@ export const CreateGroceryListSheet = forwardRef<
         setListNameMeta({ length: 0, hasText: false });
       }}
       footer={
-        <View className="px-10 pb-safe">
+        <View className="pb-safe px-10">
           <Button
             onPress={handleCreateList}
             disabled={overLimit || !listNameMeta.hasText}
@@ -110,17 +110,18 @@ export const CreateGroceryListSheet = forwardRef<
 
         <View className="my-4 gap-2">
           <View className="flex-row items-center justify-between gap-2">
-            <Text className="text-sm text-muted-foreground">List name</Text>
+            <Text variant="label" className="text-muted-foreground">
+              List name
+            </Text>
             {showLimit && (
               <Animated.View
                 entering={FadeIn.duration(200)}
                 exiting={FadeOut.duration(200)}
               >
                 <Text
-                  className={cn(
-                    'text-sm text-muted-foreground',
-                    overLimit && 'text-red-500'
-                  )}
+                  variant="caption"
+                  tabularNumbers
+                  className={cn(overLimit && 'text-red-500')}
                 >
                   {listNameMeta.length} / {MAX_LIST_NAME_LENGTH}
                 </Text>

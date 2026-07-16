@@ -151,7 +151,8 @@ export default function SignInEmail() {
   const signInEmailLinkRedirectUrl = getEmailLinkRedirectUrl('sign-in');
 
   const normalizeEmail = () => emailInput.getValue().trim().toLowerCase();
-  const normalizeCode = (value: string = code) => value.replace(/\D/g, '').trim();
+  const normalizeCode = (value: string = code) =>
+    value.replace(/\D/g, '').trim();
   const clearCodeInput = useCallback(() => {
     setCode('');
     otpRef.current?.clear();
@@ -753,6 +754,7 @@ export default function SignInEmail() {
                         pinCodeTextStyle: {
                           fontSize: 24,
                           fontWeight: '600',
+                          fontVariant: ['tabular-nums'],
                           color: theme.foreground,
                         },
                         focusedPinCodeContainerStyle: {

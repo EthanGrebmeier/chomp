@@ -2,6 +2,7 @@ import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 
 import {
   applyDefaultStoreToStackableIngredients,
@@ -115,7 +116,7 @@ export const addIngredientsWithStacking = async ({
     };
   }
 
-  const transactions = [];
+  const transactions: Parameters<typeof db.transact>[0] = [];
 
   for (const [itemId, quantityToAdd] of quantityUpdates.entries()) {
     const existingItem = existingItems.find(item => item.id === itemId);
@@ -149,6 +150,19 @@ export const addIngredientsWithStacking = async ({
       ),
       tx.grocery_items[itemId].link({
         grocery_list: listId,
+      }),
+      ...buildAddEventTransactions({
+        eventId: itemId,
+        listId,
+        item: {
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          notes: ingredient.notes ?? undefined,
+          category: ingredient.category ?? undefined,
+          storeId: ingredient.storeId,
+        },
+        addedAt: now,
       })
     );
 
