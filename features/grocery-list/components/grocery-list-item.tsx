@@ -1,6 +1,11 @@
 import * as Haptics from 'expo-haptics';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  type TextLayoutEvent,
+  View,
+} from 'react-native';
 import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, {
@@ -45,6 +50,56 @@ type SwipeDeleteActionProps = {
   onPress: () => void;
 };
 
+type StrikethroughLineMetrics = {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+};
+
+type StrikethroughLineProps = {
+  color: string;
+  line: StrikethroughLineMetrics;
+  lineIndex: number;
+  progress: SharedValue<number>;
+  totalLines: number;
+};
+
+const StrikethroughLine = ({
+  color,
+  line,
+  lineIndex,
+  progress,
+  totalLines,
+}: StrikethroughLineProps) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    const lineProgress = Math.min(
+      Math.max(progress.get() * totalLines - lineIndex, 0),
+      1
+    );
+
+    return {
+      width: line.width * lineProgress,
+    };
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        animatedStyle,
+        {
+          position: 'absolute',
+          top: line.y + line.height / 2 - 1,
+          left: line.x,
+          height: 2,
+          backgroundColor: color,
+        },
+      ]}
+    />
+  );
+};
+
 const SwipeDeleteAction = ({ drag, onPress }: SwipeDeleteActionProps) => {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: drag.value + SWIPE_ACTION_WIDTH }],
@@ -74,6 +129,9 @@ const GroceryListItemComponent = ({
   onEnterBulkSelectionModeWithItem,
 }: GroceryListItemProps) => {
   const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
+  const [strikethroughLines, setStrikethroughLines] = useState<
+    StrikethroughLineMetrics[]
+  >([]);
   const notes = item.notes?.trim();
   const hasMountedRef = useRef(false);
   const swipeableRef = useRef<SwipeableMethods | null>(null);
@@ -96,20 +154,41 @@ const GroceryListItemComponent = ({
     const targetValue = internalIsChecked ? 1 : 0;
     if (!hasMountedRef.current) {
       hasMountedRef.current = true;
-      strikethroughWidth.value = targetValue;
+      strikethroughWidth.set(targetValue);
       return;
     }
 
-    strikethroughWidth.value = withTiming(targetValue, {
-      duration: 300,
-    });
-  }, [internalIsChecked, strikethroughWidth]);
+    strikethroughWidth.set(
+      withTiming(targetValue, {
+        duration: 300 * Math.max(strikethroughLines.length, 1),
+      })
+    );
+  }, [internalIsChecked, strikethroughLines.length, strikethroughWidth]);
 
-  const strikethroughStyle = useAnimatedStyle(() => {
-    return {
-      width: `${strikethroughWidth.value * 100}%`,
-    };
-  });
+  const handleTextLayout = useCallback((event: TextLayoutEvent) => {
+    const nextLines = event.nativeEvent.lines.map(({ height, width, x, y }) => ({
+      height,
+      width,
+      x,
+      y,
+    }));
+
+    setStrikethroughLines(previousLines => {
+      const linesAreUnchanged =
+        previousLines.length === nextLines.length &&
+        previousLines.every((line, index) => {
+          const nextLine = nextLines[index];
+          return (
+            line.height === nextLine.height &&
+            line.width === nextLine.width &&
+            line.x === nextLine.x &&
+            line.y === nextLine.y
+          );
+        });
+
+      return linesAreUnchanged ? previousLines : nextLines;
+    });
+  }, []);
 
   const onCheck = () => {
     swipeableRef.current?.close();
@@ -190,6 +269,7 @@ const GroceryListItemComponent = ({
                   internalIsChecked && 'text-muted-foreground'
                 )}
                 style={compactTextStyle}
+                onTextLayout={handleTextLayout}
               >
                 {item.name}
                 {'  '}
@@ -201,20 +281,18 @@ const GroceryListItemComponent = ({
                 </Text>
               </Text>
 
-              <Animated.View
-                style={[
-                  strikethroughStyle,
-                  {
-                    position: 'absolute',
-                    top: '50%',
-                    left: 0,
-                    height: 2,
-                    backgroundColor: internalIsChecked
-                      ? theme.destructive
-                      : 'transparent',
-                  },
-                ]}
-              />
+              {strikethroughLines.map((line, index) => (
+                <StrikethroughLine
+                  key={`${line.x}:${line.y}`}
+                  color={
+                    internalIsChecked ? theme.destructive : 'transparent'
+                  }
+                  line={line}
+                  lineIndex={index}
+                  progress={strikethroughWidth}
+                  totalLines={strikethroughLines.length}
+                />
+              ))}
             </View>
           </View>
           <View className="flex-row items-center gap-2">
