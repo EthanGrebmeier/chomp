@@ -30,6 +30,7 @@ export type ExistingIngredientForStacking = {
   name: string;
   quantity: number;
   unit: string;
+  isChecked: boolean;
   category?: string | null;
   updatedAt?: string;
   storeName?: string | null;
@@ -121,6 +122,10 @@ export const planIngredientStacking = ({
   const existingByNameKey = new Map<string, ExistingIngredientForStacking[]>();
 
   for (const item of existingItems) {
+    if (item.isChecked) {
+      continue;
+    }
+
     const matchKey = buildIngredientMatchKey({
       name: item.name,
       unit: item.unit,

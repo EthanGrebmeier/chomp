@@ -2,6 +2,7 @@ import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+
 import {
   applyDefaultStoreToStackableIngredients,
   ConflictResolution,
@@ -36,6 +37,7 @@ type ExistingGroceryItem = {
   updatedAt?: string;
   grocery_list?: { id: string } | null;
   store?: { id: string; name: string } | null;
+  isChecked: boolean;
   isDeleted?: boolean;
 };
 
@@ -94,6 +96,7 @@ export const addIngredientsWithStacking = async ({
       name: item.name,
       quantity: item.quantity,
       unit: item.unit,
+      isChecked: item.isChecked,
       category: item.category,
       updatedAt: item.updatedAt,
       storeName: item.store?.name,
