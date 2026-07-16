@@ -63,9 +63,7 @@ export function SocialButtons({
         className="w-full"
         variant={variant}
         size="xl"
-        icon={
-          <GoogleIcon className={iconColorClass} width={14} height={14} />
-        }
+        icon={<GoogleIcon className={iconColorClass} width={14} height={14} />}
         onPress={signInWithGoogle}
         disabled={isDisabled}
       >
