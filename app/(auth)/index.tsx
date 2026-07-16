@@ -46,7 +46,7 @@ export default function Welcome() {
         <View className="items-center justify-start gap-2">
           <Text
             className={cn(
-              'text-center font-jaro-regular text-[88px] uppercase leading-none tracking-tight',
+              'text-center text-[88px] font-bold uppercase leading-none tracking-tight',
               colorScheme === 'dark' ? 'text-foreground' : 'text-primary'
             )}
           >
