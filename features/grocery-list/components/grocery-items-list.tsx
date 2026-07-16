@@ -6,8 +6,9 @@ import { View } from 'react-native';
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
-import { useCategoryOptions } from '../../categories/use-category-options';
 import { cn } from '../../../lib/utils';
+import { useCategoryOptions } from '../../categories/use-category-options';
+import { getCategoryColor } from '../../shared/category/categories';
 import {
   GroceryListGroupBy,
   GroceryListItemWithRecipe,
@@ -52,6 +53,7 @@ type GroceryListRow =
       type: 'header';
       sectionKey: string;
       title: string;
+      categoryValue?: string;
       itemCount?: number;
       isExpanded: boolean;
     }
@@ -217,6 +219,10 @@ export const GroceryItemsList = ({
           type: 'header',
           sectionKey,
           title: sectionTitle,
+          categoryValue:
+            groupBy === 'category'
+              ? (data[0]?.category ?? undefined)
+              : undefined,
           itemCount,
           isExpanded,
         });
@@ -286,10 +292,15 @@ export const GroceryItemsList = ({
       const hasSectionItems = sectionIds.length > 0;
       const areAllSectionItemsSelected =
         hasSectionItems && sectionIds.every(id => selectedBulkItemIds.has(id));
+      const categoryColor = getCategoryColor(
+        categoryOptions,
+        row.categoryValue
+      );
 
       return (
         <CollapsibleSectionHeader
           title={row.title}
+          categoryColor={categoryColor}
           itemCount={row.itemCount}
           isExpanded={row.isExpanded}
           onToggle={() => toggleSection(row.sectionKey)}
@@ -314,6 +325,7 @@ export const GroceryItemsList = ({
     [
       handleDeselectSectionItems,
       handleSelectSectionItems,
+      categoryOptions,
       isBulkSelectionModeActive,
       sectionItemIds,
       selectedBulkItemIds,
@@ -357,6 +369,7 @@ export const GroceryItemsList = ({
       );
     },
     [
+      categoryOptions,
       isBulkSelectionModeActive,
       onEnterBulkSelectionModeWithItem,
       onToggleBulkSelectionItem,

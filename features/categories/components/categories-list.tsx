@@ -1,6 +1,7 @@
 import { Alert, SectionList, View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { CategoryLabel } from '../../../components/category-label';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import {
@@ -16,6 +17,7 @@ import {
   CategoryOption,
   builtInCategoryOptions,
 } from '../../shared/category/categories';
+import { resolveCategoryColor } from '../../shared/category/category-colors';
 import { deleteCategory } from '../instant/delete-category';
 import { CustomCategory } from '../types';
 
@@ -43,6 +45,7 @@ const CategoryRowContent = ({
   onPress,
 }: CategoryRowProps) => {
   const label = category.kind === 'built-in' ? category.label : category.name;
+  const color = resolveCategoryColor(category.value, category.color);
   const isBuiltIn = category.kind === 'built-in';
 
   return (
@@ -57,13 +60,15 @@ const CategoryRowContent = ({
         className="flex-1 flex-row items-center justify-between py-1"
       >
         <View className="flex-1 flex-row items-center">
-          <Text
-            className="flex-1 text-base font-medium text-foreground"
+          <CategoryLabel
+            color={color}
+            containerClassName="max-w-full self-center"
+            className="text-base font-medium"
             numberOfLines={1}
             ellipsizeMode="tail"
           >
             {label}
-          </Text>
+          </CategoryLabel>
         </View>
       </HapticPressable>
     </ListItem>

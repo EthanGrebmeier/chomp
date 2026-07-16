@@ -12,6 +12,7 @@ import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { db } from '../../../lib/instant';
 import { cn } from '../../../lib/utils';
+import { useCategoryOptions } from '../../categories/use-category-options';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
 
 import {
@@ -35,6 +36,7 @@ const RecipeDetailContent = ({
 }: RecipeDetailContentProps) => {
   const { user } = db.useAuth();
   const { present } = useAddIngredientSheet();
+  const { data: categoryOptions } = useCategoryOptions();
 
   // Check if current user owns the recipe
   const isOwner = recipe.user?.id === user?.id;
@@ -119,6 +121,7 @@ const RecipeDetailContent = ({
                 )}
                 key={item.id}
                 ingredient={item}
+                categoryOptions={categoryOptions}
                 onEdit={isOwner ? handleEditIngredient : undefined}
                 canDelete={isOwner}
               />

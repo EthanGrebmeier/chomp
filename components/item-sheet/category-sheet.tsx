@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { CategoryLabel } from '../../components/category-label';
 import {
   CreateCategorySheet,
   CreateCategorySheetRef,
@@ -17,9 +18,14 @@ import {
 import { useCategoryOptions } from '../../features/categories/use-category-options';
 import {
   createMissingCategoryOption,
+  getCategoryColor,
   getCategoryOptionByValue,
   getFallbackCategoryLabel,
 } from '../../features/shared/category/categories';
+import {
+  CategoryColor,
+  getCategoryTextClassName,
+} from '../../features/shared/category/category-colors';
 import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
@@ -32,12 +38,14 @@ import { Text } from '../ui/text';
 
 type CategoryOptionProps = {
   label: string;
+  color?: CategoryColor;
   isSelected: boolean;
   onPress: () => void;
 };
 
 const CategoryOption = ({
   label,
+  color,
   isSelected,
   onPress,
 }: CategoryOptionProps) => (
@@ -48,14 +56,24 @@ const CategoryOption = ({
         isSelected && 'bg-muted'
       )}
     >
-      <Text
-        className={cn(
-          'text-base font-medium',
-          isSelected ? 'text-foreground' : 'text-muted-foreground'
-        )}
-      >
-        {label}
-      </Text>
+      {color ? (
+        <CategoryLabel
+          color={color}
+          containerClassName="self-center"
+          className="text-base font-medium"
+        >
+          {label}
+        </CategoryLabel>
+      ) : (
+        <Text
+          className={cn(
+            'text-base font-medium',
+            isSelected ? 'text-foreground' : 'text-muted-foreground'
+          )}
+        >
+          {label}
+        </Text>
+      )}
     </View>
   </HapticPressable>
 );
@@ -106,6 +124,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
     const selectedCategoryLabel =
       selectedCategory?.label ??
       (category ? getFallbackCategoryLabel(category) : undefined);
+    const selectedCategoryColor = getCategoryColor(categoryOptions, category);
     const missingLocalCategory =
       localCategory && !getCategoryOptionByValue(categoryOptions, localCategory)
         ? createMissingCategoryOption(localCategory)
@@ -165,7 +184,13 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
                   !selectedCategoryLabel && 'border-dashed',
                   disabled && 'opacity-50'
                 )}
-                textClassName={cn(disabled && 'text-muted-foreground')}
+                textClassName={
+                  selectedCategoryColor
+                    ? getCategoryTextClassName(selectedCategoryColor)
+                    : disabled
+                      ? 'text-muted-foreground'
+                      : undefined
+                }
                 hasValue={!!selectedCategoryLabel}
               >
                 {selectedCategoryLabel ?? 'Category'}
@@ -231,6 +256,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
             {missingLocalCategory ? (
               <CategoryOption
                 label={missingLocalCategory.label}
+                color={missingLocalCategory.color}
                 isSelected={true}
                 onPress={() => setLocalCategory(missingLocalCategory.value)}
               />
@@ -247,6 +273,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
                 <CategoryOption
                   key={categoryOption.value}
                   label={categoryOption.label}
+                  color={categoryOption.color}
                   isSelected={localCategory === categoryOption.value}
                   onPress={() => setLocalCategory(categoryOption.value)}
                 />

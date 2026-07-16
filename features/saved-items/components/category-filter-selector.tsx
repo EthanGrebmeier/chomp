@@ -8,7 +8,11 @@ import {
 import { Pill } from '../../../components/ui/pill';
 import { cn } from '../../../lib/utils';
 import { useCategoryOptions } from '../../categories/use-category-options';
-import { getCategoryLabel } from '../../shared/category/categories';
+import {
+  getCategoryColor,
+  getCategoryLabel,
+} from '../../shared/category/categories';
+import { getCategoryTextClassName } from '../../shared/category/category-colors';
 
 type CategoryFilterSelectorProps = {
   category?: string | null;
@@ -21,6 +25,7 @@ export const CategoryFilterSelector = ({
 }: CategoryFilterSelectorProps) => {
   const { data: categoryOptions } = useCategoryOptions();
   const selectedCategoryLabel = getCategoryLabel(categoryOptions, category);
+  const selectedCategoryColor = getCategoryColor(categoryOptions, category);
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger>
@@ -28,11 +33,13 @@ export const CategoryFilterSelector = ({
           className={cn(
             selectedCategoryLabel
               ? 'border border-border'
-              : cn('border-transparent')
+              : 'border-transparent'
           )}
-          textClassName={cn(
-            selectedCategoryLabel ? 'text-black' : 'text-muted-foreground'
-          )}
+          textClassName={
+            selectedCategoryColor
+              ? getCategoryTextClassName(selectedCategoryColor)
+              : 'text-muted-foreground'
+          }
         >
           {selectedCategoryLabel ?? 'All Categories'}
         </Pill>

@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { ListItem } from '@/components/ui/list-item';
 import { Text } from '@/components/ui/text';
+import { useCategoryOptions } from '@/features/categories/use-category-options';
 
 import { cn } from '../../../../lib/utils';
 import { ParsedIngredient } from '../../api/types';
@@ -78,6 +79,7 @@ export const IngredientListPreview = ({
   onEdit,
   showHeader = true,
 }: IngredientListPreviewProps) => {
+  const { data: categoryOptions } = useCategoryOptions();
   const compactTextStyle = Platform.select({
     android: { includeFontPadding: false },
     default: undefined,
@@ -132,7 +134,7 @@ export const IngredientListPreview = ({
               accessibilityRole="button"
               hapticType="light"
             >
-              <View className="flex-row items-center justify-between">
+              <View className="flex-row justify-between">
                 <View className="relative flex-1 flex-row gap-2 pr-2">
                   <View className="flex-row items-center gap-2">
                     <Text
@@ -156,9 +158,12 @@ export const IngredientListPreview = ({
                     </Text>
                   </View>
                 </View>
-                <View className="flex-row items-center gap-2">
+                <View className="flex-row gap-2">
                   {ingredient.category ? (
-                    <CategoryTag category={ingredient.category} />
+                    <CategoryTag
+                      category={ingredient.category}
+                      categoryOptions={categoryOptions}
+                    />
                   ) : null}
                 </View>
               </View>

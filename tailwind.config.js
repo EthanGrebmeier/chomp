@@ -89,6 +89,126 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // NativeWind does not resolve full OKLCH values stored in CSS variables
+        // on native. These are sRGB fallbacks for the matching global.css tokens.
+        category: {
+          red: {
+            foreground: {
+              light: '#7C2524',
+              dark: '#F1B2AC',
+            },
+            surface: {
+              light: '#E3B8B4',
+              dark: '#442321',
+            },
+            solid: {
+              light: '#ED6862',
+              dark: '#EF7F77',
+            },
+          },
+          orange: {
+            foreground: {
+              light: '#663C1E',
+              dark: '#F1B68E',
+            },
+            surface: {
+              light: '#E3BBA0',
+              dark: '#3A2A1F',
+            },
+            solid: {
+              light: '#D77F3D',
+              dark: '#E88A43',
+            },
+          },
+          gold: {
+            foreground: {
+              light: '#54461E',
+              dark: '#E3C05E',
+            },
+            surface: {
+              light: '#D9C285',
+              dark: '#332D1F',
+            },
+            solid: {
+              light: '#B3953E',
+              dark: '#C1A143',
+            },
+          },
+          green: {
+            foreground: {
+              light: '#225426',
+              dark: '#67E371',
+            },
+            surface: {
+              light: '#8DDA8F',
+              dark: '#213321',
+            },
+            solid: {
+              light: '#45B34F',
+              dark: '#4BC156',
+            },
+          },
+          teal: {
+            foreground: {
+              light: '#22514E',
+              dark: '#67DAD3',
+            },
+            surface: {
+              light: '#8DD3CE',
+              dark: '#213130',
+            },
+            solid: {
+              light: '#45ABA5',
+              dark: '#4BB9B2',
+            },
+          },
+          blue: {
+            foreground: {
+              light: '#1F487B',
+              dark: '#A7C7F0',
+            },
+            surface: {
+              light: '#B1C6E2',
+              dark: '#1F2F42',
+            },
+            solid: {
+              light: '#5A9AEB',
+              dark: '#70A7ED',
+            },
+          },
+          purple: {
+            foreground: {
+              light: '#57298E',
+              dark: '#CCB9F0',
+            },
+            surface: {
+              light: '#C9BDE2',
+              dark: '#33254A',
+            },
+            solid: {
+              light: '#A87EEB',
+              dark: '#B28FEE',
+            },
+          },
+          pink: {
+            foreground: {
+              light: '#752451',
+              dark: '#F1ADCC',
+            },
+            surface: {
+              light: '#E3B5CA',
+              dark: '#412231',
+            },
+            solid: {
+              light: '#EE58A9',
+              dark: '#EF73B3',
+            },
+          },
+          contrast: {
+            light: '#2E2E2E',
+            dark: '#2E2E2E',
+          },
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

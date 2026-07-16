@@ -1,31 +1,32 @@
 import { View } from 'react-native';
 
-import { useCategoryOptions } from '../features/categories/use-category-options';
 import {
   CategoryOption,
+  getCategoryColor,
   getCategoryLabel,
 } from '../features/shared/category/categories';
 
-import { Text } from './ui/text';
+import { CategoryLabel } from './category-label';
 
 type CategoryTagProps = {
   category: string;
-  categoryOptions?: CategoryOption[];
+  categoryOptions: CategoryOption[];
 };
 
 export const CategoryTag = ({
   category,
-  categoryOptions: providedCategoryOptions,
+  categoryOptions,
 }: CategoryTagProps) => {
-  const { data: queriedCategoryOptions } = useCategoryOptions();
-  const categoryOptions = providedCategoryOptions ?? queriedCategoryOptions;
   const label = getCategoryLabel(categoryOptions, category);
+  const color = getCategoryColor(categoryOptions, category);
+
+  if (!label || !color) return null;
 
   return (
     <View>
-      <Text variant="caption" className="font-medium">
+      <CategoryLabel color={color} variant="caption" className="font-medium">
         {label}
-      </Text>
+      </CategoryLabel>
     </View>
   );
 };

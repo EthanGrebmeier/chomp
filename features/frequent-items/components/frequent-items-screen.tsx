@@ -79,8 +79,12 @@ const FrequentItemRow = ({
         hapticType="selection"
         onPress={() => onAdd(item)}
       >
-        <View className="flex-row items-center justify-between">
-          <Text variant="itemTitle" className="flex-1" style={compactTextStyle}>
+        <View className="flex-row justify-between">
+          <Text
+            variant="itemTitle"
+            className="flex-1 pr-2"
+            style={compactTextStyle}
+          >
             {item.name}
             {'  '}
             <Text variant="itemMeta" style={compactTextStyle}>

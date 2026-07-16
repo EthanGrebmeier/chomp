@@ -28,6 +28,31 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --category-red-foreground: oklch(0.4 0.12 25);
+    --category-red-surface: oklch(0.82 0.05 25);
+    --category-red-solid: oklch(0.68 0.167 25);
+    --category-orange-foreground: oklch(0.4 0.073 55);
+    --category-orange-surface: oklch(0.82 0.059 55);
+    --category-orange-solid: oklch(0.68 0.135 55);
+    --category-gold-foreground: oklch(0.4 0.06 90);
+    --category-gold-surface: oklch(0.82 0.084 90);
+    --category-gold-solid: oklch(0.68 0.111 90);
+    --category-green-foreground: oklch(0.4 0.093 145);
+    --category-green-surface: oklch(0.82 0.129 145);
+    --category-green-solid: oklch(0.68 0.171 145);
+    --category-teal-foreground: oklch(0.4 0.051 190);
+    --category-teal-surface: oklch(0.82 0.071 190);
+    --category-teal-solid: oklch(0.68 0.094 190);
+    --category-blue-foreground: oklch(0.4 0.097 255);
+    --category-blue-surface: oklch(0.82 0.046 255);
+    --category-blue-solid: oklch(0.68 0.137 255);
+    --category-purple-foreground: oklch(0.4 0.158 300);
+    --category-purple-surface: oklch(0.82 0.053 300);
+    --category-purple-solid: oklch(0.68 0.16 300);
+    --category-pink-foreground: oklch(0.4 0.123 350);
+    --category-pink-surface: oklch(0.82 0.06 350);
+    --category-pink-solid: oklch(0.68 0.201 350);
+    --category-contrast: oklch(0.18 0 0);
   }
 
   .dark:root {
@@ -54,5 +79,30 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --category-red-foreground: oklch(0.82 0.075 25);
+    --category-red-surface: oklch(0.3 0.051 25);
+    --category-red-solid: oklch(0.72 0.139 25);
+    --category-orange-foreground: oklch(0.82 0.087 55);
+    --category-orange-surface: oklch(0.3 0.031 55);
+    --category-orange-solid: oklch(0.72 0.143 55);
+    --category-gold-foreground: oklch(0.82 0.124 90);
+    --category-gold-surface: oklch(0.3 0.026 90);
+    --category-gold-solid: oklch(0.72 0.118 90);
+    --category-green-foreground: oklch(0.82 0.191 145);
+    --category-green-surface: oklch(0.3 0.04 145);
+    --category-green-solid: oklch(0.72 0.181 145);
+    --category-teal-foreground: oklch(0.82 0.105 190);
+    --category-teal-surface: oklch(0.3 0.022 190);
+    --category-teal-solid: oklch(0.72 0.099 190);
+    --category-blue-foreground: oklch(0.82 0.068 255);
+    --category-blue-surface: oklch(0.3 0.041 255);
+    --category-blue-solid: oklch(0.72 0.118 255);
+    --category-purple-foreground: oklch(0.82 0.078 300);
+    --category-purple-surface: oklch(0.3 0.067 300);
+    --category-purple-solid: oklch(0.72 0.138 300);
+    --category-pink-foreground: oklch(0.82 0.089 350);
+    --category-pink-surface: oklch(0.3 0.053 350);
+    --category-pink-solid: oklch(0.72 0.168 350);
+    --category-contrast: oklch(0.18 0 0);
   }
 }

@@ -1,7 +1,10 @@
+import { CategoryColor, resolveCategoryColor } from './category-colors';
+
 export type CategoryOption = {
   id?: string;
   label: string;
   value: string;
+  color: CategoryColor;
   isBuiltIn: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -11,6 +14,7 @@ type CustomCategoryLike = {
   id: string;
   name: string;
   value: string;
+  color?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -19,42 +23,52 @@ export const categoryOptions = [
   {
     label: 'Produce',
     value: 'produce',
+    color: 'green',
   },
   {
     label: 'Deli',
     value: 'deli',
+    color: 'orange',
   },
   {
     label: 'Dairy',
     value: 'dairy',
+    color: 'blue',
   },
   {
     label: 'Bakery',
     value: 'bakery',
+    color: 'gold',
   },
   {
     label: 'Frozen',
     value: 'frozen',
+    color: 'teal',
   },
   {
     label: 'Beverages',
     value: 'beverages',
+    color: 'purple',
   },
   {
     label: 'Snacks',
     value: 'snacks',
+    color: 'red',
   },
   {
     label: 'Health & Beauty',
     value: 'health-beauty',
+    color: 'pink',
   },
   {
     label: 'Household',
     value: 'household',
+    color: 'orange',
   },
   {
     label: 'Other',
     value: 'other',
+    color: 'purple',
   },
 ] as const;
 export type Category = (typeof categoryOptions)[number]['value'];
@@ -116,12 +130,27 @@ export const getCategoryLabel = (
   value?: string | null
 ) => {
   if (!value) return undefined;
-  return getCategoryOptionByValue(options, value)?.label ?? getFallbackCategoryLabel(value);
+  return (
+    getCategoryOptionByValue(options, value)?.label ??
+    getFallbackCategoryLabel(value)
+  );
+};
+
+export const getCategoryColor = (
+  options: CategoryOption[],
+  value?: string | null
+) => {
+  if (!value) return undefined;
+  return (
+    getCategoryOptionByValue(options, value)?.color ??
+    resolveCategoryColor(value)
+  );
 };
 
 export const createMissingCategoryOption = (value: string): CategoryOption => ({
   label: getFallbackCategoryLabel(value),
   value,
+  color: resolveCategoryColor(value),
   isBuiltIn: false,
 });
 
@@ -133,6 +162,7 @@ export const mergeCategoryOptions = (
       id: category.id,
       label: category.name,
       value: category.value,
+      color: resolveCategoryColor(category.value, category.color),
       isBuiltIn: false,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,

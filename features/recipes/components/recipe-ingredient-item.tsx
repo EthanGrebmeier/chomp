@@ -5,11 +5,13 @@ import { CategoryTag } from '../../../components/category-tag';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
+import { CategoryOption } from '../../shared/category/categories';
 import { useRemoveRecipeIngredient } from '../hooks/useRemoveRecipeIngredient';
 import { RecipeIngredient } from '../types';
 
 type RecipeIngredientItemProps = {
   ingredient: RecipeIngredient;
+  categoryOptions: CategoryOption[];
   className?: string;
   onEdit?: (ingredient: RecipeIngredient) => void;
   canDelete?: boolean;
@@ -17,6 +19,7 @@ type RecipeIngredientItemProps = {
 
 export const RecipeIngredientItem = ({
   ingredient,
+  categoryOptions,
   className,
   onEdit,
   canDelete = true,
@@ -65,7 +68,7 @@ export const RecipeIngredientItem = ({
           pressStartXRef.current = null;
         }}
       >
-        <View className="flex-row items-center justify-between">
+        <View className="flex-row justify-between">
           <View className="flex-1 flex-row pr-2">
             <Text variant="itemTitle" style={compactTextStyle}>
               {ingredient.name}
@@ -75,9 +78,12 @@ export const RecipeIngredientItem = ({
               </Text>
             </Text>
           </View>
-          {ingredient.category && (
-            <CategoryTag category={ingredient.category} />
-          )}
+          {ingredient.category ? (
+            <CategoryTag
+              category={ingredient.category}
+              categoryOptions={categoryOptions}
+            />
+          ) : null}
         </View>
         {notes ? (
           <Text variant="itemDescription" style={compactTextStyle}>

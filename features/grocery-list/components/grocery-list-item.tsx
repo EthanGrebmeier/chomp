@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, type TextLayoutEvent, View } from 'react-native';
+import { Platform, Pressable, View, type TextLayoutEvent } from 'react-native';
 import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, {
@@ -257,7 +257,7 @@ const GroceryListItemComponent = ({
         delayLongPress={200}
         hapticType="light"
       >
-        <View className="flex-row items-center justify-between ">
+        <View className="flex-row  justify-between ">
           <View className="relative flex-1 flex-row gap-2 pr-2">
             <View className="flex-row items-center gap-2">
               <Text
@@ -289,7 +289,7 @@ const GroceryListItemComponent = ({
               ))}
             </View>
           </View>
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row gap-2">
             {item.category ? (
               <CategoryTag
                 category={item.category}

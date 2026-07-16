@@ -109,6 +109,7 @@ const _schema = i.schema({
     categories: i.entity({
       name: i.string(),
       value: i.string().indexed(),
+      color: i.string().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),

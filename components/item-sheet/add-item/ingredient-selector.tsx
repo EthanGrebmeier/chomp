@@ -13,6 +13,7 @@ import { Platform, ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { CategoryTag } from '../../../components/category-tag';
+import { useCategoryOptions } from '../../../features/categories/use-category-options';
 import {
   RecipeConflictSheet,
   RecipeConflictSheetRef,
@@ -26,6 +27,7 @@ import {
   RecipeIngredient,
   RecipeWithIngredients,
 } from '../../../features/recipes/types';
+import { CategoryOption } from '../../../features/shared/category/categories';
 import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
 import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
@@ -42,6 +44,7 @@ import { formatQuantityUnit } from '../unit-utils';
 type IngredientRowProps = {
   className?: string;
   ingredient: RecipeIngredient;
+  categoryOptions: CategoryOption[];
   isSelected: boolean;
   onToggle: () => void;
   onEdit?: () => void;
@@ -50,6 +53,7 @@ type IngredientRowProps = {
 const IngredientRow = ({
   className,
   ingredient,
+  categoryOptions,
   isSelected,
   onToggle,
   onEdit,
@@ -67,7 +71,7 @@ const IngredientRow = ({
         hapticType="selection"
         className="flex-1 gap-1 py-1"
       >
-        <View className="flex-row items-center justify-between">
+        <View className="flex-row justify-between">
           <View className="relative flex-1 flex-row gap-2 pr-2">
             <Text
               variant="itemTitle"
@@ -86,7 +90,10 @@ const IngredientRow = ({
             </Text>
           </View>
           {ingredient.category ? (
-            <CategoryTag category={ingredient.category} />
+            <CategoryTag
+              category={ingredient.category}
+              categoryOptions={categoryOptions}
+            />
           ) : null}
         </View>
         {ingredient.notes ? (
@@ -212,6 +219,7 @@ export const IngredientSelector = forwardRef<
     SelectedIngredientInput[] | null
   >(null);
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
+  const { data: categoryOptions } = useCategoryOptions();
   const { data: defaultStore } = useDefaultStore();
 
   useEffect(() => {
@@ -444,6 +452,7 @@ export const IngredientSelector = forwardRef<
                 )}
                 key={ingredient.id}
                 ingredient={ingredient}
+                categoryOptions={categoryOptions}
                 isSelected={effectiveSelectedIds.has(ingredientId)}
                 onToggle={() => handleToggleIngredient(ingredientId)}
                 onEdit={

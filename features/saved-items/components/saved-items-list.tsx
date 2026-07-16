@@ -63,7 +63,7 @@ const SavedItemRow = ({
             hapticType="light"
             className="flex-1 gap-1 py-1"
           >
-            <View className="flex-row items-center justify-between gap-2">
+            <View className="flex-row justify-between gap-2">
               <View className="flex-1 flex-row pr-2">
                 <Text
                   variant="itemTitle"
