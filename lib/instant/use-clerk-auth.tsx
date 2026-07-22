@@ -10,13 +10,26 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
+import {
+  ActivityIndicator,
+  AppState,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { toast } from 'sonner-native';
 
-import {
-  consumeManualSignOutIntent,
-  markManualSignOutIntent,
-} from '../clerk/signout-intent';
+import { useNetworkStatus } from '@/hooks/use-network-status';
+import { useTheme } from '@/hooks/use-theme';
 
+import { consumeManualSignOutIntent } from '../clerk/signout-intent';
+
+import { createInstantAuthBridge, InstantBridgeError } from './auth-bridge';
+import {
+  doesInstantAuthMatchClerk,
+  getAuthReconciliationAction,
+} from './auth-reconciliation';
 import { redirectSignedOutAuth } from './auth-redirect';
 import {
   getIsEmailAuthCompletionActive,
@@ -30,22 +43,23 @@ import {
 import { db } from '.';
 
 export { runWithEmailAuthCompletion } from './email-auth-completion';
+export { InstantBridgeError } from './auth-bridge';
 
-let activeAuthControllerId: string | null = null;
 const AUTH_LOADING_TIMEOUT_MS = 4000;
 const AUTH_RESTORE_RETRY_COUNT = 10;
 const AUTH_RESTORE_RETRY_DELAY_MS = 250;
 const AUTH_WELCOME_ROUTE: Href = '/(auth)';
 const AUTH_EXPIRED_ROUTE: Href = AUTH_WELCOME_ROUTE;
-const BRIDGE_STEP_TIMEOUT_MS = 15000;
-const BRIDGE_RETRY_COUNT = 3;
-const BRIDGE_RETRY_BASE_DELAY_MS = 750;
+const BRIDGE_BACKGROUND_RETRY_COUNT = 3;
+const BRIDGE_BACKGROUND_RETRY_BASE_DELAY_MS = 1500;
 type InstantAuthSession = Awaited<ReturnType<typeof db.getAuth>>;
 export type InstantAuthStatus =
   | 'loading'
   | 'signed-in'
   | 'guest'
+  | 'bridge-error'
   | 'signed-out';
+export type InstantBridgeStatus = 'idle' | 'pending' | 'error';
 export type InstantAuthState = {
   status: InstantAuthStatus;
   isReconciled: boolean;
@@ -56,14 +70,17 @@ export type InstantAuthState = {
   hasAppAccess: boolean;
   didExpireSignedInSession: boolean;
   isGuestContinuationPending: boolean;
+  bridgeStatus: InstantBridgeStatus;
 };
 type InstantAuthSnapshotArgs = {
+  isClerkLoaded: boolean;
   isSignedIn: boolean | undefined;
   instantAuth: InstantAuthSession | undefined;
   isResolvingAuthState: boolean;
   isBlockingAuthLoad: boolean;
   didExpireSignedInSession: boolean;
   isGuestContinuationPending: boolean;
+  bridgeStatus: InstantBridgeStatus;
 };
 type AuthStateListener = () => void;
 
@@ -78,27 +95,11 @@ const INITIAL_INSTANT_AUTH_STATE: InstantAuthState = {
   hasAppAccess: false,
   didExpireSignedInSession: false,
   isGuestContinuationPending: false,
+  bridgeStatus: 'idle',
 };
 let instantAuthStateSnapshot = INITIAL_INSTANT_AUTH_STATE;
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-/**
- * Thrown when the Clerk -> Instant bridge fails but the Clerk session is still
- * valid. Callers should keep the Clerk session (so `InstantAuthHandler` can
- * retry the bridge) instead of signing the user out.
- */
-export class InstantBridgeError extends Error {
-  readonly isTimeout: boolean;
-  readonly cause?: unknown;
-
-  constructor(message: string, options?: { isTimeout?: boolean; cause?: unknown }) {
-    super(message);
-    this.name = 'InstantBridgeError';
-    this.isTimeout = options?.isTimeout ?? false;
-    this.cause = options?.cause;
-  }
-}
 
 const logBridge = (message: string, payload?: unknown) => {
   if (payload === undefined) {
@@ -111,41 +112,13 @@ const logBridge = (message: string, payload?: unknown) => {
   console.log(`[instant-bridge] ${message}`, payload);
 };
 
-class BridgeTimeoutError extends Error {
-  constructor(step: string, timeoutMs: number) {
-    super(`Instant bridge step "${step}" timed out after ${timeoutMs}ms`);
-    this.name = 'BridgeTimeoutError';
-  }
-}
-
-const withTimeout = async <T,>(
-  step: string,
-  timeoutMs: number,
-  task: () => Promise<T>
-): Promise<T> => {
-  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
-
-  try {
-    return await Promise.race([
-      task(),
-      new Promise<never>((_resolve, reject) => {
-        timeoutHandle = setTimeout(() => {
-          reject(new BridgeTimeoutError(step, timeoutMs));
-        }, timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timeoutHandle) {
-      clearTimeout(timeoutHandle);
-    }
-  }
-};
-
-const waitForInstantAuthRestore = async () => {
+const waitForInstantAuthRestore = async (
+  isExpectedAuth?: (auth: NonNullable<InstantAuthSession>) => boolean
+) => {
   for (let attempt = 0; attempt < AUTH_RESTORE_RETRY_COUNT; attempt += 1) {
     const auth = await db.getAuth();
 
-    if (auth) {
+    if (auth && (!isExpectedAuth || isExpectedAuth(auth))) {
       return auth;
     }
 
@@ -171,25 +144,31 @@ const publishInstantAuthStateSnapshot = (snapshot: InstantAuthState) => {
 };
 
 const buildInstantAuthStateSnapshot = ({
+  isClerkLoaded,
   isSignedIn,
   instantAuth,
   isResolvingAuthState,
   isBlockingAuthLoad,
   didExpireSignedInSession,
   isGuestContinuationPending,
+  bridgeStatus,
 }: InstantAuthSnapshotArgs): InstantAuthState => {
   const isReconciled =
+    isClerkLoaded &&
     instantAuth !== undefined &&
     isSignedIn !== undefined &&
-    !isResolvingAuthState;
+    !isResolvingAuthState &&
+    bridgeStatus !== 'pending';
   const hasInstantEmailSession = Boolean(instantAuth?.email);
   const hasInstantGuestSession = Boolean(instantAuth && !instantAuth.email);
   const shouldBlockAuthUi =
+    !isClerkLoaded ||
     isSignedIn === undefined ||
     isBlockingAuthLoad ||
     isResolvingAuthState ||
     instantAuth === undefined ||
-    didExpireSignedInSession;
+    didExpireSignedInSession ||
+    bridgeStatus === 'pending';
 
   if (!isReconciled) {
     return {
@@ -197,15 +176,19 @@ const buildInstantAuthStateSnapshot = ({
       shouldBlockAuthUi,
       didExpireSignedInSession,
       isGuestContinuationPending,
+      bridgeStatus,
     };
   }
 
   return {
-    status: hasInstantEmailSession
-      ? 'signed-in'
-      : hasInstantGuestSession
-        ? 'guest'
-        : 'signed-out',
+    status:
+      bridgeStatus === 'error'
+        ? 'bridge-error'
+        : hasInstantEmailSession
+          ? 'signed-in'
+          : hasInstantGuestSession
+            ? 'guest'
+            : 'signed-out',
     isReconciled,
     shouldBlockAuthUi,
     isSignedInWithClerk: Boolean(isSignedIn),
@@ -214,88 +197,44 @@ const buildInstantAuthStateSnapshot = ({
     hasAppAccess: hasInstantEmailSession || hasInstantGuestSession,
     didExpireSignedInSession,
     isGuestContinuationPending,
+    bridgeStatus,
   };
 };
 
-const isTimeoutLikeError = (error: unknown) => {
-  if (error instanceof BridgeTimeoutError) {
-    return true;
-  }
-
-  const message =
-    error instanceof Error ? error.message : typeof error === 'string' ? error : '';
-
-  return /timed out|timeout|network|fetch failed/i.test(message);
-};
-
-const signInWithClerkToken = async (getToken: () => Promise<string | null>) => {
-  const idToken = await withTimeout('clerk.getToken', BRIDGE_STEP_TIMEOUT_MS, () =>
-    getToken()
-  );
-
-  if (!idToken) {
-    throw new Error('Missing Clerk ID token');
-  }
-
-  await withTimeout('instant.signInWithIdToken', BRIDGE_STEP_TIMEOUT_MS, () =>
-    db.auth.signInWithIdToken({
+const bridgeClerkToInstant = createInstantAuthBridge({
+  signInWithIdToken: async idToken => {
+    await db.auth.signInWithIdToken({
       clientName: process.env.EXPO_PUBLIC_INSTANT_CLIENT_NAME!,
       idToken,
-    })
-  );
-};
-
-const bridgeClerkToInstant = async (getToken: () => Promise<string | null>) => {
-  const existingAuth = await db.getAuth();
-
-  if (existingAuth) {
-    await db.auth.signOut();
-  }
-
-  let lastError: unknown;
-
-  for (let attempt = 1; attempt <= BRIDGE_RETRY_COUNT; attempt += 1) {
-    try {
-      await signInWithClerkToken(getToken);
-
-      const restoredAuth = await waitForInstantAuthRestore();
-
-      if (!restoredAuth?.email) {
-        throw new BridgeTimeoutError('instant.authRestore', BRIDGE_STEP_TIMEOUT_MS);
-      }
-
-      return;
-    } catch (error) {
-      lastError = error;
-      const canRetry = attempt < BRIDGE_RETRY_COUNT && isTimeoutLikeError(error);
-
-      logBridge('bridge attempt failed', {
-        attempt,
-        canRetry,
-        error: error instanceof Error ? error.message : error,
-      });
-
-      if (!canRetry) {
-        break;
-      }
-
-      await sleep(BRIDGE_RETRY_BASE_DELAY_MS * attempt);
-    }
-  }
-
-  throw new InstantBridgeError('Clerk to Instant bridge failed', {
-    isTimeout: isTimeoutLikeError(lastError),
-    cause: lastError,
-  });
-};
+    });
+  },
+  onAttemptFailed: ({ attempt, canRetry, error }) => {
+    logBridge('bridge attempt failed', {
+      attempt,
+      canRetry,
+      error: error instanceof Error ? error.message : error,
+    });
+  },
+});
 
 export const useInstantSignIn = () => {
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
-  getTokenRef.current = getToken;
+
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
 
   return useCallback(async () => {
     await bridgeClerkToInstant(getTokenRef.current);
+    const restoredAuth = await waitForInstantAuthRestore();
+
+    if (!restoredAuth?.email) {
+      throw new InstantBridgeError(
+        'Instant did not restore the bridged Clerk session',
+        { isTimeout: true }
+      );
+    }
   }, []);
 };
 
@@ -315,28 +254,32 @@ export const InstantAuthHandler = ({
   showBlockingOverlay = true,
   onBlockingAuthLoadChange,
 }: InstantAuthHandlerProps = {}) => {
-  const { isSignedIn, signOut, getToken, userId: clerkUserId } = useAuth();
+  const {
+    isLoaded: isClerkLoaded,
+    isSignedIn,
+    userId: clerkUserId,
+  } = useAuth();
   const { user: clerkUser } = useUser();
   const signInToInstant = useInstantSignIn();
-  const authTransitionRef = useRef(false);
   const previousIsSignedInRef = useRef<boolean | undefined>(isSignedIn);
-  const getTokenRef = useRef(getToken);
-  const pendingAuthRedirectTargetRef = useRef<Href | null>(null);
-  getTokenRef.current = getToken;
-  const instanceIdRef = useRef(
-    `auth-handler-${Math.random().toString(36).slice(2)}`
-  );
-  const [isAuthController, setIsAuthController] = useState(false);
+  const transitionIdRef = useRef(0);
+  const previousAppStateRef = useRef(AppState.currentState);
   const [hasAuthLoadingTimedOut, setHasAuthLoadingTimedOut] = useState(false);
   const [isResolvingAuthState, setIsResolvingAuthState] = useState(true);
   const [didExpireSignedInSession, setDidExpireSignedInSession] =
     useState(false);
+  const [bridgeStatus, setBridgeStatus] = useState<InstantBridgeStatus>('idle');
+  const [bridgeRetryAttempt, setBridgeRetryAttempt] = useState(0);
+  const [reconcileNonce, setReconcileNonce] = useState(0);
+  const [resumeNonce, setResumeNonce] = useState(0);
   const [resolvedInstantAuth, setResolvedInstantAuth] = useState<
     InstantAuthSession | undefined
   >(undefined);
   const router = useRouter();
   const queryClient = useQueryClient();
   const segments = useSegments();
+  const theme = useTheme();
+  const { isOffline } = useNetworkStatus();
   const clerkEmail = clerkUser?.primaryEmailAddress?.emailAddress ?? null;
   const isGuestContinuationPending = useSyncExternalStore(
     subscribeToGuestContinuationState,
@@ -362,21 +305,26 @@ export const InstantAuthHandler = ({
   const instantAuthState = useMemo(
     () =>
       buildInstantAuthStateSnapshot({
+        isClerkLoaded,
         isSignedIn,
         instantAuth: liveGuestInstantAuth ?? resolvedInstantAuth,
         isResolvingAuthState: liveGuestInstantAuth
           ? false
-          : isResolvingAuthState,
+          : isResolvingAuthState || isEmailAuthCompletionActive,
         isBlockingAuthLoad,
         didExpireSignedInSession: liveGuestInstantAuth
           ? false
           : didExpireSignedInSession,
         isGuestContinuationPending,
+        bridgeStatus: liveGuestInstantAuth ? 'idle' : bridgeStatus,
       }),
     [
+      bridgeStatus,
       didExpireSignedInSession,
       isBlockingAuthLoad,
+      isClerkLoaded,
       isGuestContinuationPending,
+      isEmailAuthCompletionActive,
       isResolvingAuthState,
       isSignedIn,
       liveGuestInstantAuth,
@@ -394,7 +342,7 @@ export const InstantAuthHandler = ({
 
   useEffect(() => {
     if (!isLoadingInstant) {
-      setHasAuthLoadingTimedOut(false);
+      queueMicrotask(() => setHasAuthLoadingTimedOut(false));
       return;
     }
 
@@ -408,135 +356,116 @@ export const InstantAuthHandler = ({
   }, [isLoadingInstant]);
 
   useEffect(() => {
-    const instanceId = instanceIdRef.current;
-    if (!activeAuthControllerId) {
-      activeAuthControllerId = instanceId;
-      setIsAuthController(true);
-    }
-    return () => {
-      if (activeAuthControllerId === instanceId) {
-        activeAuthControllerId = null;
-        setIsAuthController(false);
+    const subscription = AppState.addEventListener('change', nextState => {
+      const previousState = previousAppStateRef.current;
+      previousAppStateRef.current = nextState;
+
+      if (nextState === 'active' && previousState !== 'active') {
+        setResumeNonce(current => current + 1);
       }
-    };
+    });
+
+    return () => subscription.remove();
   }, []);
 
   useEffect(() => {
-    if (
-      isSignedIn === undefined ||
-      isBlockingAuthLoad ||
-      authTransitionRef.current ||
-      !isAuthController
-    ) {
+    const transitionId = ++transitionIdRef.current;
+
+    if (!isClerkLoaded || isSignedIn === undefined || isBlockingAuthLoad) {
       return;
     }
 
     if (isEmailAuthCompletionActive) {
-      setIsResolvingAuthState(true);
       return;
     }
-
-    let isCancelled = false;
 
     const runAuthTransition = async () => {
       let shouldMarkSessionExpired = false;
       let nextResolvedInstantAuth: InstantAuthSession | undefined = null;
+      let nextBridgeStatus: InstantBridgeStatus = 'idle';
 
-      if (!isCancelled) {
-        setIsResolvingAuthState(true);
-      }
-
-      authTransitionRef.current = true;
+      setIsResolvingAuthState(true);
       const didTransitionFromSignedIn =
         previousIsSignedInRef.current === true && isSignedIn === false;
+
       try {
         if (didTransitionFromSignedIn) {
           queryClient.clear();
         }
 
         const existingAuth = await db.getAuth();
+        const stableAuth =
+          existingAuth ??
+          (isLoadingInstant ? await waitForInstantAuthRestore() : null);
 
-        if (isSignedIn) {
-          if (existingAuth?.email) {
-            const matchesCurrentClerkUser =
-              (!!clerkUserId && existingAuth.id === clerkUserId) ||
-              (!!clerkEmail && existingAuth.email === clerkEmail);
-
-            if (!matchesCurrentClerkUser) {
-              queryClient.clear();
-              await db.auth.signOut();
-              await signInToInstant();
-              nextResolvedInstantAuth = await waitForInstantAuthRestore();
-              return;
-            }
-
-            let clerkToken: string | null = null;
-            let didClerkTokenRefreshFail = false;
-
-            try {
-              clerkToken = await getTokenRef.current();
-            } catch {
-              didClerkTokenRefreshFail = true;
-            }
-
-            if (!didClerkTokenRefreshFail && clerkToken) {
-              nextResolvedInstantAuth = existingAuth;
-              return;
-            }
-
-            // Clerk reports signed-in but the token is missing/invalid — the
-            // server session has expired. Suppress the follow-up transition
-            // toast so we only surface a single "expired" message.
-            markManualSignOutIntent();
-            queryClient.clear();
-            await Promise.allSettled([db.auth.signOut(), signOut()]);
-            nextResolvedInstantAuth = null;
-            shouldMarkSessionExpired = true;
-            return;
-          }
-
-          try {
-            if (existingAuth) {
-              queryClient.clear();
-              await db.auth.signOut();
-            }
-
-            await signInToInstant();
-            nextResolvedInstantAuth = await waitForInstantAuthRestore();
-          } catch (error) {
-            // Transient network failure: keep the Clerk session intact so the
-            // in-flight sign-in screen (or the next transition) can retry the
-            // bridge without forcing the user to re-authenticate.
-            if (error instanceof InstantBridgeError && error.isTimeout) {
-              nextResolvedInstantAuth = null;
-              return;
-            }
-
-            queryClient.clear();
-            await Promise.allSettled([db.auth.signOut(), signOut()]);
-
-            if (!isCancelled) {
-              toast.error(
-                'Could not restore your session. Please sign in again.'
-              );
-            }
-          }
-
+        if (transitionId !== transitionIdRef.current) {
           return;
         }
 
-        const stableAuth = existingAuth ?? (await waitForInstantAuthRestore());
+        const action = getAuthReconciliationAction({
+          isClerkLoaded,
+          isSignedIn,
+          clerkUserId: clerkUserId ?? null,
+          clerkEmail,
+          instantAuth: stableAuth,
+        });
 
-        if (!stableAuth && isLoadingInstant) {
+        if (action === 'wait') {
           nextResolvedInstantAuth = undefined;
           return;
         }
 
-        if (stableAuth?.email) {
-          // Clerk is signed-out but Instant still has a cached email session.
-          // This is an expired signed-in session regardless of whether we
-          // observed the Clerk transition this mount (cold boots after an
-          // expiry see undefined -> false, not true -> false).
+        if (
+          action === 'keep-email-session' ||
+          action === 'keep-guest-session'
+        ) {
+          nextResolvedInstantAuth = stableAuth;
+          setBridgeRetryAttempt(0);
+          return;
+        }
+
+        if (action === 'bridge-clerk-session') {
+          nextBridgeStatus = 'pending';
+          setBridgeStatus('pending');
+
+          try {
+            await signInToInstant();
+            const restoredAuth = await waitForInstantAuthRestore(auth =>
+              doesInstantAuthMatchClerk({
+                clerkEmail,
+                clerkUserId: clerkUserId ?? null,
+                instantAuth: auth,
+              })
+            );
+
+            if (!restoredAuth?.email) {
+              throw new InstantBridgeError(
+                'Instant did not restore the bridged Clerk session',
+                { isTimeout: true }
+              );
+            }
+
+            if (stableAuth && stableAuth.id !== restoredAuth.id) {
+              queryClient.clear();
+            }
+
+            nextResolvedInstantAuth = restoredAuth;
+            nextBridgeStatus = 'idle';
+            setBridgeRetryAttempt(0);
+          } catch (error) {
+            nextResolvedInstantAuth = null;
+            nextBridgeStatus = 'error';
+            setBridgeRetryAttempt(current => current + 1);
+            logBridge('preserving Clerk session after bridge failure', {
+              error: error instanceof Error ? error.message : error,
+              isOffline,
+            });
+          }
+
+          return;
+        }
+
+        if (action === 'clear-instant-session') {
           const shouldSuppressSignOutToast = consumeManualSignOutIntent();
           queryClient.clear();
           await db.auth.signOut();
@@ -549,9 +478,9 @@ export const InstantAuthHandler = ({
           return;
         }
 
-        nextResolvedInstantAuth = stableAuth;
+        nextResolvedInstantAuth = null;
 
-        if (!stableAuth && didTransitionFromSignedIn) {
+        if (didTransitionFromSignedIn) {
           const shouldSuppressSignOutToast = consumeManualSignOutIntent();
 
           if (!shouldSuppressSignOutToast) {
@@ -559,11 +488,10 @@ export const InstantAuthHandler = ({
           }
         }
       } finally {
-        authTransitionRef.current = false;
-        previousIsSignedInRef.current = isSignedIn;
-
-        if (!isCancelled) {
+        if (transitionId === transitionIdRef.current) {
+          previousIsSignedInRef.current = isSignedIn;
           setResolvedInstantAuth(nextResolvedInstantAuth);
+          setBridgeStatus(nextBridgeStatus);
           setIsResolvingAuthState(false);
 
           if (shouldMarkSessionExpired) {
@@ -574,35 +502,48 @@ export const InstantAuthHandler = ({
     };
 
     void runAuthTransition();
-
-    return () => {
-      isCancelled = true;
-    };
   }, [
-    isSignedIn,
-    isLoadingInstant,
-    isBlockingAuthLoad,
-    isEmailAuthCompletionActive,
-    isAuthController,
     clerkEmail,
     clerkUserId,
+    isBlockingAuthLoad,
+    isClerkLoaded,
+    isEmailAuthCompletionActive,
+    isLoadingInstant,
+    isOffline,
+    isSignedIn,
     queryClient,
+    reconcileNonce,
+    resumeNonce,
     signInToInstant,
-    signOut,
   ]);
 
   useEffect(() => {
-    if (!isAuthController) {
+    if (
+      bridgeStatus !== 'error' ||
+      bridgeRetryAttempt >= BRIDGE_BACKGROUND_RETRY_COUNT ||
+      isOffline
+    ) {
       return;
     }
 
-    if (!instantAuthState.isReconciled || instantAuthState.hasAppAccess) {
+    const timeout = setTimeout(
+      () => setReconcileNonce(current => current + 1),
+      BRIDGE_BACKGROUND_RETRY_BASE_DELAY_MS * Math.max(1, bridgeRetryAttempt)
+    );
+
+    return () => clearTimeout(timeout);
+  }, [bridgeRetryAttempt, bridgeStatus, isOffline]);
+
+  useEffect(() => {
+    if (
+      !instantAuthState.isReconciled ||
+      instantAuthState.hasAppAccess ||
+      instantAuthState.isSignedInWithClerk ||
+      instantAuthState.bridgeStatus !== 'idle'
+    ) {
       return;
     }
 
-    // Guest continuation (and other in-flight sign-ins) briefly land Instant
-    // with a live session before `resolvedInstantAuth` catches up. Don't bounce
-    // the user out while the resolver is still behind the live auth.
     if (isGuestContinuationPending || liveInstantUser) {
       return;
     }
@@ -613,11 +554,10 @@ export const InstantAuthHandler = ({
 
     if (didExpireSignedInSession) {
       toast.info('Your session expired. Please sign in again.');
-      setDidExpireSignedInSession(false);
+      queueMicrotask(() => setDidExpireSignedInSession(false));
 
       redirectSignedOutAuth({
         isOnAuthRoute,
-        pendingTargetRef: pendingAuthRedirectTargetRef,
         router,
         target: AUTH_EXPIRED_ROUTE,
       });
@@ -627,20 +567,102 @@ export const InstantAuthHandler = ({
 
     redirectSignedOutAuth({
       isOnAuthRoute,
-      pendingTargetRef: pendingAuthRedirectTargetRef,
       router,
       target: AUTH_WELCOME_ROUTE,
     });
   }, [
     didExpireSignedInSession,
     instantAuthState.hasAppAccess,
+    instantAuthState.bridgeStatus,
     instantAuthState.isReconciled,
-    isAuthController,
+    instantAuthState.isSignedInWithClerk,
     isGuestContinuationPending,
     liveInstantUser,
     router,
     segments,
   ]);
 
+  const retryBridge = () => {
+    setBridgeRetryAttempt(0);
+    setBridgeStatus('pending');
+    setReconcileNonce(current => current + 1);
+  };
+
+  if (!showBlockingOverlay) {
+    return null;
+  }
+
+  if (
+    instantAuthState.bridgeStatus === 'error' &&
+    instantAuthState.isSignedInWithClerk
+  ) {
+    return (
+      <View style={[styles.overlay, { backgroundColor: theme.background }]}>
+        <Text style={[styles.title, { color: theme.foreground }]}>
+          Reconnecting your account
+        </Text>
+        <Text style={[styles.message, { color: theme.mutedForeground }]}>
+          Your sign-in is safe. Check your connection and try again.
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={retryBridge}
+          style={[styles.retryButton, { backgroundColor: theme.primary }]}
+        >
+          <Text style={[styles.retryText, { color: theme.primaryForeground }]}>
+            Try again
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (instantAuthState.shouldBlockAuthUi) {
+    return (
+      <View style={[styles.overlay, { backgroundColor: theme.background }]}>
+        <ActivityIndicator color={theme.primary} />
+      </View>
+    );
+  }
+
   return null;
 };
+
+const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    gap: 12,
+    zIndex: 1000,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: 16,
+    textAlign: 'center',
+    maxWidth: 320,
+  },
+  retryButton: {
+    marginTop: 8,
+    minHeight: 48,
+    minWidth: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 24,
+    borderCurve: 'continuous',
+    paddingHorizontal: 24,
+  },
+  retryText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+});

@@ -8,11 +8,16 @@ export default function AuthLayout() {
     hasInstantGuestSession,
     isGuestContinuationPending,
     isReconciled,
+    isSignedInWithClerk,
   } = useInstantAuthState();
   const segments = useSegments();
   const isAuthEntryRoute = segments.length === 1;
 
-  if (isReconciled && hasInstantEmailSession && !isGuestContinuationPending) {
+  if (
+    isReconciled &&
+    (hasInstantEmailSession || isSignedInWithClerk) &&
+    !isGuestContinuationPending
+  ) {
     return <Redirect href="/(tabs)" />;
   }
 
@@ -33,4 +38,3 @@ export default function AuthLayout() {
     />
   );
 }
-

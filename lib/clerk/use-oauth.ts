@@ -7,7 +7,10 @@ import { Platform } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
-import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
+import {
+  InstantBridgeError,
+  useInstantSignIn,
+} from '@/lib/instant/use-clerk-auth';
 
 type OAuthStrategy = 'oauth_google' | 'oauth_apple';
 
@@ -44,7 +47,14 @@ export function useOAuthFlow() {
             await initializeDefaultGroceryList();
           }
           router.replace('/(tabs)');
-        } catch {
+        } catch (error) {
+          if (error instanceof InstantBridgeError) {
+            toast.error(
+              'Network issue finishing sign-in. Your account is still signed in.'
+            );
+            return;
+          }
+
           await resetToSignedOutState();
           toast.error('We could not finish signing you in. Please try again.');
         }
@@ -101,7 +111,14 @@ export function useOAuthFlow() {
             await initializeDefaultGroceryList();
           }
           router.replace('/(tabs)');
-        } catch {
+        } catch (error) {
+          if (error instanceof InstantBridgeError) {
+            toast.error(
+              'Network issue finishing sign-in. Your account is still signed in.'
+            );
+            return;
+          }
+
           await resetToSignedOutState();
           toast.error('We could not finish signing you in. Please try again.');
         }

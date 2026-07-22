@@ -12,7 +12,11 @@ import {
   EMAIL_LINK_CONTINUE_ROUTE,
   EMAIL_LINK_FLOW_PARAM,
 } from '@/lib/clerk/email-link';
-import { useInstantSignIn } from '@/lib/instant/use-clerk-auth';
+import {
+  InstantBridgeError,
+  runWithEmailAuthCompletion,
+  useInstantSignIn,
+} from '@/lib/instant/use-clerk-auth';
 
 type VerificationState =
   | 'verifying'
@@ -171,7 +175,7 @@ export default function VerifyEmailLink() {
         failureStateFromParams,
         params,
       });
-      setVerificationState(failureStateFromParams);
+      queueMicrotask(() => setVerificationState(failureStateFromParams));
       return;
     }
 
@@ -206,11 +210,19 @@ export default function VerifyEmailLink() {
                 await initializeDefaultGroceryList();
               }
               logVerification('Instant sign-in completed successfully');
-            } catch {
+            } catch (error) {
               // eslint-disable-next-line no-console
               console.error(
                 '[verify-email-link] Instant sign-in failed after email verification'
               );
+
+              if (error instanceof InstantBridgeError) {
+                if (!isCancelled) {
+                  setVerificationState('finishing');
+                }
+                return;
+              }
+
               try {
                 await signOut();
               } catch {
@@ -268,7 +280,7 @@ export default function VerifyEmailLink() {
       }
     };
 
-    void verifyEmailLink();
+    void runWithEmailAuthCompletion(verifyEmailLink);
 
     return () => {
       isCancelled = true;

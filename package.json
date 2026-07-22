@@ -20,7 +20,7 @@
     "push-schema": "npx instant-cli@latest push schema"
   },
   "dependencies": {
-    "@clerk/expo": "3.5.2",
+    "@clerk/expo": "3.7.8",
     "@expo-google-fonts/averia-serif-libre": "^0.4.1",
     "@expo-google-fonts/jaro": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",

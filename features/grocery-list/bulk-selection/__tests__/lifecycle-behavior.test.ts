@@ -8,15 +8,38 @@ import {
 } from '../controller';
 import { runBulkDelete } from '../delete-orchestrator';
 import { runBulkMove } from '../move-orchestrator';
-import { runBulkCategoryUpdate, runBulkStoreUpdate } from '../store-category-orchestrator';
+import {
+  runBulkCategoryUpdate,
+  runBulkStoreUpdate,
+} from '../store-category-orchestrator';
 import { getBulkToolbarActions } from '../toolbar';
 
 const {
+  transactMock,
   updateGroceryItemOnlyMock,
   syncSavedItemFromGroceryItemMock,
 } = vi.hoisted(() => ({
+  transactMock: vi.fn(),
   updateGroceryItemOnlyMock: vi.fn(),
   syncSavedItemFromGroceryItemMock: vi.fn(),
+}));
+
+vi.mock('@/lib/instant', () => ({
+  db: {
+    transact: transactMock,
+    tx: {
+      grocery_items: new Proxy(
+        {},
+        {
+          get: () => ({
+            link: vi.fn(() => ({})),
+            unlink: vi.fn(() => ({})),
+            update: vi.fn(() => ({})),
+          }),
+        }
+      ),
+    },
+  },
 }));
 
 vi.mock('../../instant/update-grocery-item-only', () => ({
@@ -27,13 +50,22 @@ vi.mock('../../instant/sync-saved-item-from-grocery-item', () => ({
   syncSavedItemFromGroceryItem: syncSavedItemFromGroceryItemMock,
 }));
 
+vi.mock('../../instant/sync-recipe-ingredients-from-grocery-item', () => ({
+  syncRecipeIngredientsFromGroceryItem: vi.fn(),
+}));
+
 const buildActiveSelectionState = () =>
-  selectAllVisibleUncheckedItems(enterBulkSelectionMode(createBulkSelectionState()), [
-    { id: 'item-1', isChecked: false },
-    { id: 'item-2', isChecked: false },
-  ]);
+  selectAllVisibleUncheckedItems(
+    enterBulkSelectionMode(createBulkSelectionState()),
+    [
+      { id: 'item-1', isChecked: false },
+      { id: 'item-2', isChecked: false },
+    ]
+  );
 
 beforeEach(() => {
+  transactMock.mockReset();
+  transactMock.mockResolvedValue(undefined);
   updateGroceryItemOnlyMock.mockReset();
   syncSavedItemFromGroceryItemMock.mockReset();
 });

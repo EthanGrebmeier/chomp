@@ -1,5 +1,6 @@
 import { ClerkProvider } from '@clerk/expo';
 import { resourceCache } from '@clerk/expo/resource-cache';
+import { tokenCache } from '@clerk/expo/token-cache';
 import { AveriaSerifLibre_400Regular } from '@expo-google-fonts/averia-serif-libre';
 import { Jaro_400Regular } from '@expo-google-fonts/jaro';
 import { PortalHost } from '@rn-primitives/portal';
@@ -18,7 +19,6 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
-import { tokenCache } from '@/lib/clerk-token-cache';
 import {
   InstantAuthHandler,
   useInstantAuthState,
@@ -140,7 +140,7 @@ function RootLayoutContent({
     'alpino-regular': require('../assets/fonts/alpino/Alpino-Regular.otf'),
     'alpino-medium': require('../assets/fonts/alpino/Alpino-Medium.otf'),
   });
-  const { hasAppAccess, isReconciled, shouldBlockAuthUi } =
+  const { hasAppAccess, isReconciled, isSignedInWithClerk, shouldBlockAuthUi } =
     useInstantAuthState();
   const rootNavigationState = useRootNavigationState();
   const segments = useSegments();
@@ -160,7 +160,8 @@ function RootLayoutContent({
     const topLevelSegment = segments[0];
     const isOnTabsGroup = topLevelSegment === '(tabs)';
     const isOnAuthGroup = topLevelSegment === '(auth)';
-    const hasReachedInitialLandingPoint = hasAppAccess
+    const shouldUseAppRoutes = hasAppAccess || isSignedInWithClerk;
+    const hasReachedInitialLandingPoint = shouldUseAppRoutes
       ? isOnTabsGroup
       : isOnAuthGroup;
     const isAppReady =
@@ -188,6 +189,7 @@ function RootLayoutContent({
     fontsLoaded,
     hasAppAccess,
     isReconciled,
+    isSignedInWithClerk,
     isStartupUpdateReady,
     migrationStatus,
     rootNavigationState?.key,
@@ -206,8 +208,8 @@ function RootLayoutContent({
           <MigrationProvider onStatusChange={handleMigrationStatusChange}>
             <SafeAreaProvider>
               <GestureHandlerRootView style={{ flex: 1 }}>
-                <InstantAuthHandler />
                 <InitialLayout />
+                <InstantAuthHandler />
                 <PortalHost />
               </GestureHandlerRootView>
             </SafeAreaProvider>

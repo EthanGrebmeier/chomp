@@ -68,7 +68,6 @@ export const BottomSheet = ({
       }
       grabber
       dimmedDetentIndex={0}
-      pageSizing
       footer={footer}
       insetAdjustment={insetAdjustment}
       scrollable={scrollable}
