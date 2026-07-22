@@ -69,7 +69,7 @@ function InitialLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen
-          name="meal-plan/[listId]"
+          name="meal-plan"
           options={{
             presentation: 'formSheet',
             sheetAllowedDetents: [1],

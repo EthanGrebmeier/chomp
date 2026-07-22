@@ -14,9 +14,11 @@ import {
   DropdownMenuRoot,
 } from '../../../components/ui/dropdown-menu';
 import { Icon } from '../../../components/ui/icon';
-import { useClearMealPlan, useUserMealPlanData } from '../hooks';
+import { useClearMealPlan } from '../hooks/useClearMealPlan';
+import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
 import { MealPlanItemWithStore } from '../types';
 
+import { AddMealsToListButton } from './add-meals-to-list-button';
 import {
   AddToMealPlanSheet,
   AddToMealPlanSheetRef,
@@ -24,7 +26,6 @@ import {
 import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
 import { EditItemSheet, EditItemSheetRef } from './edit-item-sheet';
 import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
-import { ListSelectorSheet, ListSelectorSheetRef } from './list-selector-sheet';
 import { MealPlanDate } from './meal-plan-date';
 import { MealPlanDateView } from './meal-plan-date-view';
 
@@ -38,10 +39,8 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
-  const listSelectorSheet = useRef<ListSelectorSheetRef>(null);
   const pagerRef = useRef<PagerView>(null);
   const isProgrammaticNavigationRef = useRef(false);
-  const shouldReturnToListSelectorRef = useRef(false);
   const { recipes, items } = useUserMealPlanData(listId);
   const { mutate: clearMealPlan } = useClearMealPlan();
   const hasMealPlanEntries = recipes.length > 0 || items.length > 0;
@@ -151,12 +150,6 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
     editItemSheet.current?.open(item);
   };
 
-  const handleEditMealSheetDismiss = useCallback(() => {
-    if (!shouldReturnToListSelectorRef.current) return;
-    shouldReturnToListSelectorRef.current = false;
-    listSelectorSheet.current?.open();
-  }, []);
-
   const handleAddPress = () => {
     const dateStr = format(currentDate, 'yyyy-MM-dd');
     addToMealPlanSheet.current?.present({ defaultDate: dateStr });
@@ -216,18 +209,7 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
           </DropdownMenuRoot>
         </View>
       </View>
-      <ListSelectorSheet
-        ref={listSelectorSheet}
-        listId={listId}
-        onEditMeal={({ mealPlanRecipe, recipe }) => {
-          shouldReturnToListSelectorRef.current = true;
-          editMealSheet.current?.open({
-            mealPlanRecipe,
-            recipe,
-            onDismiss: handleEditMealSheetDismiss,
-          });
-        }}
-      />
+      <AddMealsToListButton listId={listId} />
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} listId={listId} />
       <EditItemSheet ref={editItemSheet} />
@@ -257,7 +239,6 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
                 recipes={getRecipesForDate(date)}
                 items={getItemsForDate(date)}
                 onMealPress={({ mealPlanRecipe, recipe }) => {
-                  shouldReturnToListSelectorRef.current = false;
                   editMealSheet.current?.open({ mealPlanRecipe, recipe });
                 }}
                 onItemPress={handleItemPress}

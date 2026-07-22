@@ -101,6 +101,14 @@ export function buildMealPlanSheetUrl(params: ListMealPlanParams): Href {
   } as unknown as Href;
 }
 
+export function buildMealPlanAddToListUrl(params: ListMealPlanParams): Href {
+  const { listId } = params;
+  return {
+    pathname: '/meal-plan/[listId]/add-to-list',
+    params: { listId },
+  } as unknown as Href;
+}
+
 export function buildFrequentItemsSheetUrl(params: FrequentItemsParams): Href {
   const { listId } = params;
   return {
@@ -167,8 +175,9 @@ export const navigation = {
 
   // Meal plan sheet navigation
   goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
-  goToFrequentItems: (listId: string) =>
-    buildFrequentItemsSheetUrl({ listId }),
+  goToMealPlanAddToList: (listId: string) =>
+    buildMealPlanAddToListUrl({ listId }),
+  goToFrequentItems: (listId: string) => buildFrequentItemsSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -191,8 +200,9 @@ export function useNavigation() {
 
     // Meal plan sheet navigation
     goToMealPlan: (listId: string) => navigation.goToMealPlan(listId),
-    goToFrequentItems: (listId: string) =>
-      navigation.goToFrequentItems(listId),
+    goToMealPlanAddToList: (listId: string) =>
+      navigation.goToMealPlanAddToList(listId),
+    goToFrequentItems: (listId: string) => navigation.goToFrequentItems(listId),
 
     // Recipe navigation
     goToRecipe: (recipeId: string, listId?: string) =>
@@ -216,8 +226,9 @@ export const navActions = {
 
   // Meal plan sheet navigation
   goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
-  goToFrequentItems: (listId: string) =>
-    buildFrequentItemsSheetUrl({ listId }),
+  goToMealPlanAddToList: (listId: string) =>
+    buildMealPlanAddToListUrl({ listId }),
+  goToFrequentItems: (listId: string) => buildFrequentItemsSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -239,6 +250,7 @@ export const ROUTES = {
   LIST: '/(tabs)',
   MEAL_PLAN: {
     SHEET: (listId: string) => `/meal-plan/${listId}`,
+    ADD_TO_LIST: (listId: string) => `/meal-plan/${listId}/add-to-list`,
   },
   FREQUENT_ITEMS: {
     SHEET: (listId: string) => `/frequent-items/${listId}`,

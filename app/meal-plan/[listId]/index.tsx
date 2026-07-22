@@ -4,7 +4,7 @@ import { DraxProvider } from 'react-native-drax';
 
 import { MealPlanner } from '@/features/meal-planner/components';
 
-export default function MealPlanSheetRoute() {
+export default function MealPlanRoute() {
   const { listId } = useLocalSearchParams<{ listId?: string }>();
 
   if (!listId) {
@@ -12,7 +12,7 @@ export default function MealPlanSheetRoute() {
   }
 
   return (
-    <View className="bg-background pt-6" style={{ flex: 1 }}>
+    <View className="flex-1 bg-background pt-6">
       <DraxProvider>
         <MealPlanner listId={listId} />
       </DraxProvider>
