@@ -42,6 +42,7 @@ export const addMealsToGroceryList = async ({
           recipe_ingredients: {
             store: {},
           },
+          user: {},
         },
       },
       meal_plan_items: {
@@ -54,8 +55,9 @@ export const addMealsToGroceryList = async ({
   });
   const mealPlanData = result.data.grocery_lists?.[0];
   const defaultStore =
-    result.data.stores?.find(store => store.user?.id === user?.id && store.isDefault) ??
-    null;
+    result.data.stores?.find(
+      store => store.user?.id === user?.id && store.isDefault
+    ) ?? null;
 
   const now = new Date().toISOString();
   const updateTransactions: Parameters<typeof db.transact>[0] = [];
@@ -116,6 +118,14 @@ export const addMealsToGroceryList = async ({
         })
       )
     );
+
+    if (recipe.user?.id === user?.id) {
+      updateTransactions.push(
+        tx.recipes[recipe.id].update({
+          lastAddedToListAt: now,
+        })
+      );
+    }
   }
 
   // Filter for items that haven't been added to a list yet

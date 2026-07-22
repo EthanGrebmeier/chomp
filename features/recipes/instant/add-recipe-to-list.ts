@@ -1,3 +1,5 @@
+import { db } from '../../../lib/instant';
+
 import {
   addIngredientsWithStacking,
   ConflictResolution,
@@ -39,6 +41,17 @@ export const addRecipeToList = async ({
       recipeId,
     })),
   });
+
+  if (
+    !result.requiresConflictResolution &&
+    result.createdCount + result.stackedCount > 0
+  ) {
+    await db.transact([
+      db.tx.recipes[recipeId].update({
+        lastAddedToListAt: new Date().toISOString(),
+      }),
+    ]);
+  }
 
   return {
     ...result,

@@ -56,6 +56,7 @@ const _schema = i.schema({
       visibility: i.string(),
       createdAt: i.string(),
       updatedAt: i.string(),
+      lastAddedToListAt: i.string().optional(),
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       sourceUrl: i.string().optional(), // URL the recipe was imported from
       servings: i.string().optional(), // Serving size info from source

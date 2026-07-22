@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { RecipeWithIngredients } from '../../types';
+import { RecipeGroceryItem, RecipeWithIngredients } from '../../types';
 import { filterRecipes } from '../filter-recipes';
 
 const buildRecipe = (
@@ -25,6 +25,20 @@ const buildIngredient = (name: string) => ({
   unit: '',
   notes: undefined,
   category: undefined,
+});
+
+const buildGroceryItem = (createdAt: string): RecipeGroceryItem => ({
+  id: `item-${Math.random().toString(36).slice(2, 8)}`,
+  name: 'Ingredient',
+  quantity: 1,
+  unit: '',
+  notes: undefined,
+  category: undefined,
+  isChecked: false,
+  createdAt,
+  updatedAt: createdAt,
+  isDeleted: false,
+  deletedAt: undefined,
 });
 
 describe('filterRecipes', () => {
@@ -101,21 +115,71 @@ describe('filterRecipes', () => {
     expect(names).toEqual(['Apple pie', 'banana bread', 'carrot soup']);
   });
 
-  it('sorts by recent updatedAt date', () => {
+  it('sorts by the most recent linked grocery item', () => {
     const recipes = [
       buildRecipe({
-        name: 'Old Recipe',
-        updatedAt: '2023-01-01T00:00:00.000Z',
+        name: 'Older List Addition',
+        grocery_items: [
+          buildGroceryItem('2024-01-01T00:00:00.000Z'),
+          buildGroceryItem('2024-02-01T00:00:00.000Z'),
+        ],
       }),
       buildRecipe({
-        name: 'New Recipe',
-        updatedAt: '2024-02-01T00:00:00.000Z',
+        name: 'Newer List Addition',
+        grocery_items: [buildGroceryItem('2024-03-01T00:00:00.000Z')],
       }),
     ];
 
     const result = filterRecipes(recipes, { sortBy: 'recent' });
     const names = result.map(recipe => recipe.name);
 
-    expect(names).toEqual(['New Recipe', 'Old Recipe']);
+    expect(names).toEqual(['Newer List Addition', 'Older List Addition']);
+  });
+
+  it('uses explicit list activity when it is newer than linked-item history', () => {
+    const recipes = [
+      buildRecipe({
+        name: 'Recently Stacked',
+        lastAddedToListAt: '2024-04-01T00:00:00.000Z',
+        grocery_items: [buildGroceryItem('2024-01-01T00:00:00.000Z')],
+      }),
+      buildRecipe({
+        name: 'Recently Created Item',
+        grocery_items: [buildGroceryItem('2024-03-01T00:00:00.000Z')],
+      }),
+    ];
+
+    const result = filterRecipes(recipes, { sortBy: 'recent' });
+
+    expect(result.map(recipe => recipe.name)).toEqual([
+      'Recently Stacked',
+      'Recently Created Item',
+    ]);
+  });
+
+  it('places never-added recipes afterward by creation date', () => {
+    const recipes = [
+      buildRecipe({
+        name: 'Newest Never Added',
+        createdAt: '2025-03-01T00:00:00.000Z',
+      }),
+      buildRecipe({
+        name: 'Used Recipe',
+        createdAt: '2023-01-01T00:00:00.000Z',
+        grocery_items: [buildGroceryItem('2024-01-01T00:00:00.000Z')],
+      }),
+      buildRecipe({
+        name: 'Older Never Added',
+        createdAt: '2025-02-01T00:00:00.000Z',
+      }),
+    ];
+
+    const result = filterRecipes(recipes, { sortBy: 'recent' });
+
+    expect(result.map(recipe => recipe.name)).toEqual([
+      'Used Recipe',
+      'Newest Never Added',
+      'Older Never Added',
+    ]);
   });
 });

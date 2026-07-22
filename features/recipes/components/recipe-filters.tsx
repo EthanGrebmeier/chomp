@@ -4,8 +4,9 @@ import { View } from 'react-native';
 import { TextInput } from '@/components/text-input';
 import { Icon } from '@/components/ui/icon';
 
-import { MealTagFilterSelector } from './meal-tag-filter-selector';
-import { RecipeSortBy, RecipeSortBySelector } from './recipe-sort-by-selector';
+import { RecipeSortOption } from '../utils/filter-recipes';
+
+import { RecipeFilterDropdownMenu } from './recipe-filter-dropdown-menu';
 
 type RecipeFiltersProps = {
   searchDefaultValue: string;
@@ -13,8 +14,8 @@ type RecipeFiltersProps = {
   onSearchChange: (value: string) => void;
   mealTag?: string;
   onMealTagChange: (value?: string) => void;
-  sortBy?: RecipeSortBy;
-  onSortByChange: (value: RecipeSortBy) => void;
+  sortBy?: RecipeSortOption;
+  onSortByChange: (value: RecipeSortOption) => void;
 };
 
 export const RecipeFilters = ({
@@ -28,24 +29,32 @@ export const RecipeFilters = ({
 }: RecipeFiltersProps) => {
   return (
     <View>
-      <View className="px-4">
-        <View className="relative">
-          <View className="pointer-events-none absolute left-3 top-0 z-10 h-full justify-center">
-            <Icon as={SearchIcon} size={18} className="text-muted-foreground" />
+      <View className="px-4 pb-2">
+        <View className="flex-row items-center gap-4">
+          <View className="relative flex-1">
+            <View className="pointer-events-none absolute left-3 top-0 z-10 h-full justify-center">
+              <Icon
+                as={SearchIcon}
+                size={18}
+                className="text-muted-foreground"
+              />
+            </View>
+            <TextInput
+              key={searchInputKey}
+              className="pl-10"
+              placeholder="Search recipes..."
+              defaultValue={searchDefaultValue}
+              onChangeText={onSearchChange}
+              autoCorrect={false}
+            />
           </View>
-          <TextInput
-            key={searchInputKey}
-            className="pl-10"
-            placeholder="Search recipes..."
-            defaultValue={searchDefaultValue}
-            onChangeText={onSearchChange}
-            autoCorrect={false}
+          <RecipeFilterDropdownMenu
+            mealTag={mealTag}
+            sortBy={sortBy}
+            onMealTagChange={onMealTagChange}
+            onSortByChange={onSortByChange}
           />
         </View>
-      </View>
-      <View className="flex-row gap-2 px-4 pb-2 pt-3">
-        <MealTagFilterSelector mealTag={mealTag} onSelect={onMealTagChange} />
-        <RecipeSortBySelector value={sortBy} onChange={onSortByChange} />
       </View>
     </View>
   );
