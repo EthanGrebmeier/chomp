@@ -2,12 +2,41 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { CheckIcon } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { Platform, View, type PressableStateCallbackType } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { Text, TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
+
+const SUCCESS_TEXT_TRAVEL = 8;
+const successTextEasing = Easing.bezier(0.2, 0, 0, 1);
+
+/** Entering label rises into place while fading in. */
+const successTextEntering = new Keyframe({
+  0: {
+    opacity: 0,
+    transform: [{ translateY: SUCCESS_TEXT_TRAVEL }],
+  },
+  100: {
+    opacity: 1,
+    transform: [{ translateY: 0 }],
+    easing: successTextEasing,
+  },
+});
+
+/** Exiting label drops away while fading out. */
+const successTextExiting = new Keyframe({
+  0: {
+    opacity: 1,
+    transform: [{ translateY: 0 }],
+  },
+  100: {
+    opacity: 0,
+    transform: [{ translateY: SUCCESS_TEXT_TRAVEL }],
+    easing: successTextEasing,
+  },
+});
 
 const buttonVariants = cva(
   cn(
@@ -256,8 +285,8 @@ function Button({
   const renderAnimatedContents = (content: React.ReactNode) => (
     <Animated.View
       key={isSuccess ? 'success' : 'idle'}
-      entering={FadeIn.duration(180)}
-      exiting={FadeOut.duration(180)}
+      entering={successTextEntering.duration(200)}
+      exiting={successTextExiting.duration(160)}
     >
       {content}
     </Animated.View>
