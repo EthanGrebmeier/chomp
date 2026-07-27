@@ -20,7 +20,7 @@ export const MealPlanDate = ({
   const formattedDate = format(currentDate, 'MMM d, yyyy');
 
   return (
-    <View className="min-h-10 flex-row items-center justify-between  px-4">
+    <View className="min-h-10 flex-row items-center justify-between px-4">
       <Animated.View
         key={currentDate.toISOString()}
         entering={FadeIn.duration(140)}
@@ -30,7 +30,7 @@ export const MealPlanDate = ({
           {formattedDate}
         </Text>
       </Animated.View>
-      {showTodayButton && (
+      {showTodayButton ? (
         <Animated.View
           entering={FadeIn.duration(140)}
           exiting={FadeOut.duration(140)}
@@ -45,7 +45,7 @@ export const MealPlanDate = ({
             <Text className="text-sm font-medium">Today</Text>
           </Button>
         </Animated.View>
-      )}
+      ) : null}
     </View>
   );
 };

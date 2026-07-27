@@ -258,7 +258,6 @@ function Button({
       key={isSuccess ? 'success' : 'idle'}
       entering={FadeIn.duration(180)}
       exiting={FadeOut.duration(180)}
-      className="w-full"
     >
       {content}
     </Animated.View>
