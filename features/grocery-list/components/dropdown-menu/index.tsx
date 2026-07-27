@@ -24,8 +24,10 @@ type GroceryListDropdownMenuProps = {
   onEditNamePress: () => void;
   items: GroceryListItemWithRecipe[];
   ownerId?: string;
-  showEnterBulkSelectionAction?: boolean;
+  showBulkSelectionAction?: boolean;
+  isBulkSelectionModeActive?: boolean;
   onEnterBulkSelectionMode?: () => void;
+  onExitBulkSelectionMode?: () => void;
 };
 
 export const GroceryListDropdownMenu = ({
@@ -36,8 +38,10 @@ export const GroceryListDropdownMenu = ({
   onEditNamePress,
   items,
   ownerId,
-  showEnterBulkSelectionAction = false,
+  showBulkSelectionAction = false,
+  isBulkSelectionModeActive = false,
   onEnterBulkSelectionMode,
+  onExitBulkSelectionMode,
 }: GroceryListDropdownMenuProps) => {
   const { user } = db.useAuth();
   const checkedItems = filterCheckedItems(items);
@@ -45,6 +49,11 @@ export const GroceryListDropdownMenu = ({
   const isOwner = user?.id === ownerId;
   const { mutate: clearCheckedItems } = useClearCheckedItems();
   const canDeleteList = useCanDeleteGroceryList();
+  const showBulkSelectionMenuItem =
+    showBulkSelectionAction &&
+    (isBulkSelectionModeActive
+      ? Boolean(onExitBulkSelectionMode)
+      : Boolean(onEnterBulkSelectionMode));
 
   return (
     <DropdownMenuRoot trigger={trigger}>
@@ -59,13 +68,31 @@ export const GroceryListDropdownMenu = ({
             <DropdownMenuItemIcon ios={{ name: 'pencil' }} />
           </DropdownMenuItem>
         )}
-        {showEnterBulkSelectionAction && onEnterBulkSelectionMode ? (
+        {showBulkSelectionMenuItem ? (
           <DropdownMenuItem
-            onSelect={onEnterBulkSelectionMode}
-            key="enter-bulk-selection"
+            onSelect={
+              isBulkSelectionModeActive
+                ? onExitBulkSelectionMode
+                : onEnterBulkSelectionMode
+            }
+            key={
+              isBulkSelectionModeActive
+                ? 'exit-bulk-selection'
+                : 'enter-bulk-selection'
+            }
           >
-            <DropdownMenuItemTitle>Select Items</DropdownMenuItemTitle>
-            <DropdownMenuItemIcon ios={{ name: 'checkmark.circle' }} />
+            <DropdownMenuItemTitle>
+              {isBulkSelectionModeActive
+                ? 'Exit Bulk Select'
+                : 'Select Items'}
+            </DropdownMenuItemTitle>
+            <DropdownMenuItemIcon
+              ios={{
+                name: isBulkSelectionModeActive
+                  ? 'xmark.circle'
+                  : 'checkmark.circle',
+              }}
+            />
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuGroup>

@@ -7,12 +7,14 @@ describe('bulk toolbar actions', () => {
     const actions = getBulkToolbarActions(1);
 
     expect(actions.map(action => action.id)).toEqual([
+      'exit',
       'set-store',
       'set-category',
       'move',
       'delete',
     ]);
     expect(actions.map(action => action.label)).toEqual([
+      'Exit Bulk Select',
       'Set Store',
       'Set Category',
       'Move',
@@ -24,15 +26,22 @@ describe('bulk toolbar actions', () => {
     const actions = getBulkToolbarActions(1);
 
     expect(actions.at(-1)?.id).toBe('delete');
-    expect(actions.filter(action => action.isDestructive).map(action => action.id)).toEqual([
-      'delete',
-    ]);
+    expect(
+      actions.filter(action => action.isDestructive).map(action => action.id)
+    ).toEqual(['delete']);
   });
 
-  it('disables all actions when no items are selected', () => {
+  it('keeps exit enabled when no items are selected', () => {
     const actions = getBulkToolbarActions(0);
+    const exitAction = actions.find(action => action.id === 'exit');
+    const selectionRequiredActions = actions.filter(
+      action => action.id !== 'exit'
+    );
 
-    expect(actions.every(action => action.isDisabled)).toBe(true);
+    expect(exitAction?.isDisabled).toBe(false);
+    expect(selectionRequiredActions.every(action => action.isDisabled)).toBe(
+      true
+    );
   });
 
   it('enables all actions when at least one item is selected', () => {

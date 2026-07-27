@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Store, Tags, Trash2 } from 'lucide-react-native';
+import { ArrowRightLeft, Store, Tags, Trash2, X } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
@@ -15,6 +15,7 @@ type BulkSelectionToolbarProps = {
 };
 
 const bulkToolbarIcons = {
+  exit: X,
   'set-store': Store,
   'set-category': Tags,
   move: ArrowRightLeft,

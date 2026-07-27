@@ -33,8 +33,8 @@ Leaving Bulk Selection Mode clears all currently selected items.
 _Avoid_: Sticky selection across mode sessions
 
 **Action Availability Rule**:
-Bulk toolbar actions remain disabled until at least one Selectable Item is selected.
-_Avoid_: Zero-selection action triggers
+Bulk toolbar item actions (Set Store, Set Category, Move, Delete) remain disabled until at least one Selectable Item is selected. Exit stays enabled regardless of selection count.
+_Avoid_: Zero-selection action triggers for item-mutating actions
 
 **Post-Action Exit Rule**:
 After a successful bulk action, Bulk Selection Mode exits immediately.
@@ -65,8 +65,8 @@ Bulk delete requires explicit confirmation before applying the delete action.
 _Avoid_: One-tap destructive bulk delete
 
 **Mode Entry/Exit Control**:
-The overflow menu only offers entering Bulk Selection Mode; while active, the menu is replaced by an X control that exits the mode.
-_Avoid_: In-menu exit action during active mode
+The overflow menu stays available in Bulk Selection Mode and toggles between Select Items (enter) and Exit Bulk Select (exit). An X exit control also appears as the leftmost action on the bulk toolbar.
+_Avoid_: Replacing the overflow menu with a header-only exit control
 
 **Checked Section Visibility Rule**:
 Checked items are completely hidden while Bulk Selection Mode is active.
@@ -77,8 +77,8 @@ Bulk move always removes selected source items from the current list after desti
 _Avoid_: Copy semantics for move
 
 **Selection Utilities Placement**:
-Select All and Clear All controls appear in the header next to the mode-exit X while Bulk Selection Mode is active.
-_Avoid_: Utility actions hidden in overflow or far from exit control
+Select All and Clear All controls appear in the header while Bulk Selection Mode is active.
+_Avoid_: Utility actions hidden in overflow
 
 **Bulk Clear Field Rule**:
 Choosing None in bulk Set Store or Set Category clears that field on all selected items.
@@ -97,7 +97,7 @@ Successful bulk actions show a simple generic success toast without sync-detail 
 _Avoid_: Silent success or overly detailed result toasts
 
 **Toolbar Action Order Rule**:
-Bulk toolbar actions are ordered as Set Store, Set Category, Move, then Delete (destructive last).
+Bulk toolbar actions are ordered as Exit, Set Store, Set Category, Move, then Delete (destructive last).
 _Avoid_: Leading destructive action placement
 
 **Meal Plan View Mode**:
@@ -148,7 +148,7 @@ _Avoid_: Showing the currently active mode icon on the toggle
 - A **Selectable Item** keeps its **Moved Item State** when moved to another list
 - **Move Merge Rule** resolves destination conflicts by incrementing an existing item
 - **Selection Reset Rule** applies whenever Bulk Selection Mode exits
-- **Action Availability Rule** gates all bulk toolbar actions on non-empty selection
+- **Action Availability Rule** gates item-mutating bulk toolbar actions on non-empty selection while keeping exit enabled
 - **Post-Action Exit Rule** exits mode after successful delete, set store, set category, or move
 - **Section Clear Suppression** removes per-section clear controls during Bulk Selection Mode
 - **Selection-Only Row Behavior** prevents edit-sheet entry while Bulk Selection Mode is active
@@ -156,15 +156,15 @@ _Avoid_: Showing the currently active mode icon on the toggle
 - **Best-Effort Recipe Ingredient Sync** allows partial recipe-ingredient sync without failing the bulk grocery-item update
 - **Bulk Recipe Ingredient Match Rule** matches by pre-edit normalized name and unit and updates all matching recipe ingredients
 - **Bulk Delete Confirmation** gates destructive bulk delete with user confirmation
-- **Mode Entry/Exit Control** exposes entry through menu and exit through a dedicated X icon
+- **Mode Entry/Exit Control** toggles enter/exit in the overflow menu and places an X exit on the bulk toolbar
 - **Checked Section Visibility Rule** hides all checked rows during Bulk Selection Mode
 - **True Move Rule** removes source rows after move, regardless of destination merge outcome
-- **Selection Utilities Placement** keeps bulk utility controls adjacent to mode exit
+- **Selection Utilities Placement** keeps Select All / Clear All in the header during Bulk Selection Mode
 - **Bulk Clear Field Rule** applies a None selection as field-clearing across selected rows
 - **Move Target Visibility Rule** keeps current list visible but not selectable as a move destination
 - **Bottom Control Transition Rule** animates mode changes with a short cross-fade
 - **Bulk Success Feedback Rule** confirms completion with concise user feedback
-- **Toolbar Action Order Rule** places delete as the right-most action in the bulk toolbar
+- **Toolbar Action Order Rule** places exit first and delete as the right-most action in the bulk toolbar
 - **Meal Plan View Mode** keeps Calendar View and Day List View as alternate renderings of the same meal plan data
 - **Meal Plan Day List Window Rule** keeps Day List View and Calendar View aligned to the same 61-day date window
 - **Meal Plan Day List Density Rule** keeps empty days compact but tappable in Day List View

@@ -535,6 +535,11 @@ export const GroceryList = ({
   const handleBulkToolbarActionPress = async (
     actionId: BulkToolbarActionId
   ) => {
+    if (actionId === 'exit') {
+      handleExitBulkSelectionMode();
+      return;
+    }
+
     if (actionId === 'set-store') {
       const selectedItems = filteredItems.filter(item =>
         bulkSelectionState.selectedItemIds.has(item.id)

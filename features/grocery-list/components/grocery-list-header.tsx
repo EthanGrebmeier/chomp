@@ -1,5 +1,5 @@
 import { useNetworkState } from 'expo-network';
-import { MoreHorizontal, WifiOff, X } from 'lucide-react-native';
+import { MoreHorizontal, WifiOff } from 'lucide-react-native';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -121,60 +121,35 @@ export const GroceryListHeader = ({
             </Animated.View>
           )}
         </View>
-        {listId && (
+        {listId ? (
           <View className="h-10 flex-row items-center gap-4">
             {isDisconnected ? (
               <Icon as={WifiOff} size={20} className="text-destructive" />
             ) : null}
-            <Animated.View
-              key={
-                isBulkSelectionModeActive
-                  ? 'bulk-right-controls'
-                  : 'default-right-controls'
-              }
-              entering={FadeIn.duration(180)}
-              exiting={FadeOut.duration(120)}
-              className="flex-row items-center gap-4"
-            >
-              <ListFilterDropdownMenu
-                groupBy={groupBy}
-                sortBy={sortBy}
-                hasEnabledGroupings={groupBy !== 'none'}
-                onGroupByChange={onGroupByChange}
-                onSortByChange={onSortByChange}
-                onOpenAllGroupings={onOpenAllGroupings}
-                onCollapseAllGroupings={onCollapseAllGroupings}
-              />
-              {isBulkSelectionModeActive ? (
-                <Button
-                  variant="ghost"
-                  className="h-8 px-0"
-                  hitSlop={14}
-                  onPress={onExitBulkSelectionMode}
-                >
-                  <Icon
-                    as={X}
-                    strokeWidth={3}
-                    size={20}
-                    className="text-foreground"
-                  />
-                </Button>
-              ) : (
-                <GroceryListDropdownMenu
-                  items={items}
-                  ownerId={ownerId}
-                  trigger={<Icon hitSlop={14} as={MoreHorizontal} size={24} />}
-                  onClearListPress={onClearListPress}
-                  onSharePress={onSharePress}
-                  onDeleteOrLeave={onDeleteOrLeave}
-                  onEditNamePress={onEditNamePress}
-                  showEnterBulkSelectionAction={true}
-                  onEnterBulkSelectionMode={onEnterBulkSelectionMode}
-                />
-              )}
-            </Animated.View>
+            <ListFilterDropdownMenu
+              groupBy={groupBy}
+              sortBy={sortBy}
+              hasEnabledGroupings={groupBy !== 'none'}
+              onGroupByChange={onGroupByChange}
+              onSortByChange={onSortByChange}
+              onOpenAllGroupings={onOpenAllGroupings}
+              onCollapseAllGroupings={onCollapseAllGroupings}
+            />
+            <GroceryListDropdownMenu
+              items={items}
+              ownerId={ownerId}
+              trigger={<Icon hitSlop={14} as={MoreHorizontal} size={24} />}
+              onClearListPress={onClearListPress}
+              onSharePress={onSharePress}
+              onDeleteOrLeave={onDeleteOrLeave}
+              onEditNamePress={onEditNamePress}
+              showBulkSelectionAction={true}
+              isBulkSelectionModeActive={isBulkSelectionModeActive}
+              onEnterBulkSelectionMode={onEnterBulkSelectionMode}
+              onExitBulkSelectionMode={onExitBulkSelectionMode}
+            />
           </View>
-        )}
+        ) : null}
       </View>
     </View>
   );
