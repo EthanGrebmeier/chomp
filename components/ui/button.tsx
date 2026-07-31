@@ -287,6 +287,7 @@ function Button({
       key={isSuccess ? 'success' : 'idle'}
       entering={successTextEntering.duration(200)}
       exiting={successTextExiting.duration(160)}
+      className={hasFloatingIcon ? 'w-full' : undefined}
     >
       {content}
     </Animated.View>
