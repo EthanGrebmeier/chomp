@@ -1,7 +1,6 @@
 import { CheckIcon, Circle } from 'lucide-react-native';
 import { memo } from 'react';
 import { View } from 'react-native';
-import { DraxDragWithReceiverEventData, DraxView } from 'react-native-drax';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { HapticPressable } from '../../../../components/ui/haptic-pressable';
@@ -19,9 +18,7 @@ type MealPlanDateSelectorDateProps = {
   hasMeals: boolean;
   allMealsAdded: boolean;
   onPress: (date: Date) => void;
-  onReceiveDragDrop: (date: Date, event: DraxDragWithReceiverEventData) => void;
   width: number;
-  isDropEnabled: boolean;
 };
 
 const MealPlanDateSelectorDateComponent = ({
@@ -33,9 +30,7 @@ const MealPlanDateSelectorDateComponent = ({
   isSelected,
   hasMeals,
   onPress,
-  onReceiveDragDrop,
   width,
-  isDropEnabled,
 }: MealPlanDateSelectorDateProps) => {
   const content = (
     <>
@@ -98,29 +93,13 @@ const MealPlanDateSelectorDateComponent = ({
 
   return (
     <HapticPressable style={{ width }} onPress={() => onPress(date)}>
-      {isDropEnabled ? (
-        <DraxView
-          onReceiveDragDrop={event => onReceiveDragDrop(date, event)}
-          draggable={false}
-          collisionAlgorithm="center"
-          className={cn(
-            'shrink-0 grow-0 items-center overflow-hidden rounded-xl px-2 pb-4 pt-[22]'
-          )}
-          receivingStyle={{
-            backgroundColor: 'rgba(245, 244, 244, 0.14)',
-          }}
-        >
-          {content}
-        </DraxView>
-      ) : (
-        <View
-          className={cn(
-            'shrink-0 grow-0 items-center overflow-hidden rounded-xl px-2 pb-4 pt-[22]'
-          )}
-        >
-          {content}
-        </View>
-      )}
+      <View
+        className={cn(
+          'shrink-0 grow-0 items-center overflow-hidden rounded-xl px-2 pb-4 pt-[22]'
+        )}
+      >
+        {content}
+      </View>
     </HapticPressable>
   );
 };
@@ -135,7 +114,5 @@ export const MealPlanDateSelectorDate = memo(
     prev.isSelected === next.isSelected &&
     prev.hasMeals === next.hasMeals &&
     prev.width === next.width &&
-    prev.isDropEnabled === next.isDropEnabled &&
-    prev.onPress === next.onPress &&
-    prev.onReceiveDragDrop === next.onReceiveDragDrop
+    prev.onPress === next.onPress
 );

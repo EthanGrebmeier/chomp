@@ -82,16 +82,16 @@ const AddIngredientContents = () => {
         itemInputRef.current?.focus();
       }}
       footer={
-        isEditing ? undefined : (
-          <View className="gap-2 px-4 pb-4">
-            <MetaBar />
+        <View className="gap-2 px-4 pb-4">
+          <MetaBar />
+          {isEditing ? null : (
             <Button onPress={onSubmit} disabled={!isValid}>
               <Text>
                 {mode === 'add' ? 'Add Ingredient' : 'Update Ingredient'}
               </Text>
             </Button>
-          </View>
-        )
+          )}
+        </View>
       }
     >
       <BottomSheet.SheetView className={cn(isEditing ? undefined : 'pb-safe')}>

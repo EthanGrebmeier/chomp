@@ -6,21 +6,9 @@ import {
   isToday,
   startOfWeek,
 } from 'date-fns';
-import {
-  MutableRefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
-import { DraxDragWithReceiverEventData } from 'react-native-drax';
 import PagerView from 'react-native-pager-view';
-import { z } from 'zod';
-
-import { useUpdateMealPlanItemDate } from '../../hooks/useUpdateMealPlanItemData';
-import { useUpdateMealPlanRecipe } from '../../hooks/useUpdateMealPlanRecipe';
 
 import { MealPlanDateSelectorDate } from './meal-plan-date-selector-date';
 
@@ -56,25 +44,6 @@ const buildWeek = (weekStart: Date): WeekDate[] =>
     };
   });
 
-const dragPayloadSchema = z.union([
-  z.discriminatedUnion('type', [
-    z.object({
-      type: z.literal('recipe'),
-      id: z.string(),
-    }),
-    z.object({
-      type: z.literal('item'),
-      id: z.string(),
-    }),
-  ]),
-  z.object({
-    recipeId: z.string(),
-  }),
-  z.object({
-    itemId: z.string(),
-  }),
-]);
-
 const MealPlanDateSelector = ({
   dates,
   currentDate,
@@ -85,10 +54,12 @@ const MealPlanDateSelector = ({
 }: MealPlanDateSelectorProps) => {
   const pagerRef = useRef<PagerView>(null);
   const { width } = useWindowDimensions();
-  const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
-  const { mutate: updateMealPlanItemDate } = useUpdateMealPlanItemDate();
-  const syncPagerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const scrollIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncPagerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const scrollIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   // Prefer the parent-provided date range to keep mount work small.
   const weeks = useMemo(() => {
@@ -230,47 +201,6 @@ const MealPlanDateSelector = ({
     isProgrammaticNavigationRef.current = false;
   };
 
-  const handleReceiveDragDrop = useCallback(
-    (date: Date, event: DraxDragWithReceiverEventData) => {
-      const droppedDate = format(date, 'yyyy-MM-dd');
-      const payload = dragPayloadSchema.parse(event.dragged?.payload);
-
-      if ('recipeId' in payload) {
-        updateMealPlanRecipe({
-          mealPlanRecipeId: payload.recipeId,
-          updates: {
-            date: droppedDate,
-          },
-        });
-        return;
-      }
-
-      if ('itemId' in payload) {
-        updateMealPlanItemDate({
-          mealPlanItemId: payload.itemId,
-          date: droppedDate,
-        });
-        return;
-      }
-
-      if (payload.type === 'recipe') {
-        updateMealPlanRecipe({
-          mealPlanRecipeId: payload.id,
-          updates: {
-            date: droppedDate,
-          },
-        });
-        return;
-      }
-
-      updateMealPlanItemDate({
-        mealPlanItemId: payload.id,
-        date: droppedDate,
-      });
-    },
-    [updateMealPlanItemDate, updateMealPlanRecipe]
-  );
-
   const dateWidth = (width - 32 - 4 * 6) / 7; // Account for px-4 and gap-1 (16px each side = 32px total)
 
   return (
@@ -300,9 +230,7 @@ const MealPlanDateSelector = ({
                     hasMeals={datesWithMeals.has(dateKey)}
                     allMealsAdded={datesAllMealsAdded.has(dateKey)}
                     onPress={onDatePress}
-                    onReceiveDragDrop={handleReceiveDragDrop}
                     width={dateWidth}
-                    isDropEnabled={weekIndex === currentWeekIndex}
                   />
                 )
               )
