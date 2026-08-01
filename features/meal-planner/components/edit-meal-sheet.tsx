@@ -364,7 +364,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     };
 
     const footerContent = mealPlanRecipeToEdit ? (
-      <View className="bg-background pb-safe border-t border-border px-4 pt-3">
+      <View className="pb-safe border-t border-border bg-background px-4 pt-3">
         <MetaBarLayout>
           <View className="flex-row items-center gap-2">
             <Pressable onPress={() => calendarSheetRef.current?.present()}>
@@ -532,7 +532,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
               <RecipeSelector
                 onSelectRecipe={handleRecipeChange}
                 onCreateRecipe={handleCreateRecipe}
-                listId={listId}
                 fillHeight
               />
             </View>

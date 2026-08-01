@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ReactNode, useRef } from 'react';
+import { ReactNode } from 'react';
 import { Alert, Share } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -12,36 +12,31 @@ import {
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
 import { db } from '@/lib/instant';
-import { buildRecipeShareURL } from '@/lib/navigation';
+import { buildRecipeShareURL, navigation } from '@/lib/navigation';
 
 import { useDeleteRecipe } from '../../hooks/useDeleteRecipe';
 import { useDuplicateRecipe } from '../../hooks/useDuplicateRecipe';
-import { useUpdateRecipe } from '../../hooks/useUpdateRecipe';
 import { RecipeWithIngredients } from '../../types';
-import {
-  CreateRecipeSheet,
-  CreateRecipeSheetRef,
-} from '../create-recipe-sheet';
 
 type RecipeDropdownMenuProps = {
   trigger: ReactNode;
   recipe: RecipeWithIngredients;
+  listId?: string;
   onClose?: () => void;
 };
 
 export const RecipeDropdownMenu = ({
   trigger,
   recipe,
+  listId,
   onClose,
 }: RecipeDropdownMenuProps) => {
   const { user } = db.useAuth();
-  const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
 
   // Check if current user owns the recipe
   const isOwner = recipe.user?.id === user?.id;
   const { mutate: duplicateRecipe } = useDuplicateRecipe();
   const { mutate: deleteRecipe } = useDeleteRecipe();
-  const { mutate: updateRecipe } = useUpdateRecipe();
 
   const handleDuplicate = () => {
     duplicateRecipe({
@@ -94,76 +89,43 @@ export const RecipeDropdownMenu = ({
     );
   };
 
-  const handleEditRecipe = (data: {
-    name: string;
-    mealTag?: string;
-    description?: string;
-    sourceUrl?: string;
-  }) => {
-    updateRecipe(
-      {
-        recipeId: recipe.id,
-        updates: {
-          name: data.name,
-          mealTag: data.mealTag,
-          description: data.description,
-          sourceUrl: data.sourceUrl,
-        },
-      },
-      {
-        onError: () => {
-          toast.error('Failed to update recipe');
-        },
-      }
-    );
+  const handleEditRecipe = () => {
+    onClose?.();
+    router.push(navigation.goToEditRecipe(recipe.id, listId));
   };
+
   return (
-    <>
-      <DropdownMenuRoot trigger={trigger}>
-        <DropdownMenuContent>
-          <DropdownMenuGroup>
-            <DropdownMenuItem onSelect={handleShareRecipe} key="share-recipe">
-              <DropdownMenuItemTitle>Share Recipe</DropdownMenuItemTitle>
-              <DropdownMenuItemIcon ios={{ name: 'square.and.arrow.up' }} />
+    <DropdownMenuRoot trigger={trigger}>
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuItem onSelect={handleShareRecipe} key="share-recipe">
+            <DropdownMenuItemTitle>Share Recipe</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'square.and.arrow.up' }} />
+          </DropdownMenuItem>
+          {isOwner ? (
+            <DropdownMenuItem onSelect={handleEditRecipe} key="edit-recipe">
+              <DropdownMenuItemTitle>Edit Recipe</DropdownMenuItemTitle>
+              <DropdownMenuItemIcon ios={{ name: 'pencil' }} />
             </DropdownMenuItem>
-            {isOwner && (
-              <DropdownMenuItem
-                onSelect={() => createRecipeSheetRef.current?.present()}
-                key="edit-recipe"
-              >
-                <DropdownMenuItemTitle>Edit Recipe</DropdownMenuItemTitle>
-                <DropdownMenuItemIcon ios={{ name: 'pencil' }} />
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onSelect={handleDuplicate} key="duplicate">
-              <DropdownMenuItemTitle>Duplicate Recipe</DropdownMenuItemTitle>
-              <DropdownMenuItemIcon ios={{ name: 'doc.on.doc' }} />
+          ) : null}
+          <DropdownMenuItem onSelect={handleDuplicate} key="duplicate">
+            <DropdownMenuItemTitle>Duplicate Recipe</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'doc.on.doc' }} />
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        {isOwner ? (
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              onSelect={handleConfirmDelete}
+              destructive
+              key="delete-recipe"
+            >
+              <DropdownMenuItemTitle>Delete Recipe</DropdownMenuItemTitle>
+              <DropdownMenuItemIcon ios={{ name: 'trash' }} />
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          {isOwner && (
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                onSelect={handleConfirmDelete}
-                destructive
-                key="delete-recipe"
-              >
-                <DropdownMenuItemTitle>Delete Recipe</DropdownMenuItemTitle>
-                <DropdownMenuItemIcon ios={{ name: 'trash' }} />
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenuRoot>
-      <CreateRecipeSheet
-        ref={createRecipeSheetRef}
-        onSubmit={handleEditRecipe}
-        defaultValues={{
-          name: recipe.name,
-          mealTag: recipe.mealTag,
-          description: recipe.description,
-          sourceUrl: recipe.sourceUrl,
-        }}
-      />
-    </>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
   );
 };

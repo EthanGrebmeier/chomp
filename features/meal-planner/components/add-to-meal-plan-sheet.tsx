@@ -398,7 +398,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
             <RecipeSelector
               onSelectRecipe={handleSelectRecipe}
               onCreateRecipe={handleCreateRecipe}
-              listId={listId}
             />
           )
         ) : (

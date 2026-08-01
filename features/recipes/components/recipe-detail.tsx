@@ -60,6 +60,7 @@ const RecipeDetailContent = ({
               </View>
             }
             recipe={recipe}
+            listId={listId}
             onClose={onClose}
           />
         </View>

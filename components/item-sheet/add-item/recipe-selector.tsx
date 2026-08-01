@@ -1,20 +1,12 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, ListRenderItemInfo, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useDebounceCallback } from 'usehooks-ts';
 
-import {
-  CreateRecipeSheet,
-  CreateRecipeSheetRef,
-} from '../../../features/recipes/components/create-recipe-sheet';
 import { EmptyRecipePrompt } from '../../../features/recipes/components/empty-recipe-prompt';
 import { RecipeCardContent } from '../../../features/recipes/components/recipe-card';
-import {
-  RecipeDetailSheet,
-  RecipeDetailSheetRef,
-} from '../../../features/recipes/components/recipe-detail-sheet';
 import { RecipeFilters } from '../../../features/recipes/components/recipe-filters';
-import { useCreateRecipe, useRecipes } from '../../../features/recipes/hooks';
+import { useRecipes } from '../../../features/recipes/hooks/useRecipes';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
 import {
   RecipeSortOption,
@@ -31,24 +23,19 @@ const SEARCH_QUERY_DEBOUNCE_MS = 300;
 
 type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
-  onCreateRecipe?: (initialName?: string) => void;
-  listId?: string;
+  onCreateRecipe: (initialName?: string) => void;
   fillHeight?: boolean;
 };
 
 export const RecipeSelector = ({
   onSelectRecipe,
   onCreateRecipe,
-  listId,
   fillHeight = false,
 }: RecipeSelectorProps) => {
   const { data: recipes, isLoading } = useRecipes();
-  const { mutate: createRecipe } = useCreateRecipe();
   const [searchQuery, setSearchQuery] = useState('');
   const [mealTag, setMealTag] = useState<string | undefined>();
   const [sortBy, setSortBy] = useState<RecipeSortOption>('recent');
-  const createRecipeSheetRef = useRef<CreateRecipeSheetRef>(null);
-  const recipeDetailSheetRef = useRef<RecipeDetailSheetRef>(null);
   const {
     inputKey: searchInputKey,
     defaultValue: searchDefaultValue,
@@ -104,35 +91,8 @@ export const RecipeSelector = ({
     );
   }
 
-  const handleCreateRecipe = (data: { name: string }) => {
-    createRecipe(
-      {
-        recipe: {
-          name: data.name,
-          description: '',
-        },
-        ingredients: [],
-      },
-      {
-        onSuccess: result => {
-          recipeDetailSheetRef.current?.present(result.id);
-        },
-      }
-    );
-  };
-
   const handleCreateRecipePress = (initialName?: string) => {
-    if (onCreateRecipe) {
-      onCreateRecipe(initialName);
-      return;
-    }
-
-    if (initialName) {
-      handleCreateRecipe({ name: initialName });
-      return;
-    }
-
-    createRecipeSheetRef.current?.present();
+    onCreateRecipe(initialName);
   };
 
   if (!recipes || recipes.length === 0) {
@@ -146,15 +106,6 @@ export const RecipeSelector = ({
           label="Create Recipe"
           onPress={() => handleCreateRecipePress()}
         />
-        {!onCreateRecipe ? (
-          <>
-            <CreateRecipeSheet
-              ref={createRecipeSheetRef}
-              onSubmit={handleCreateRecipe}
-            />
-            <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
-          </>
-        ) : null}
       </View>
     );
   }
@@ -184,12 +135,12 @@ export const RecipeSelector = ({
           className="items-center justify-center gap-4 py-8"
         >
           <Text className="text-muted-foreground">No recipes found</Text>
-          {searchQuery.trim() && (
+          {searchQuery.trim() ? (
             <CreateRecipeInlineButton
               label={`Create "${searchQuery.trim()}"`}
               onPress={() => handleCreateRecipePress(searchQuery.trim())}
             />
-          )}
+          ) : null}
         </Animated.View>
       ) : (
         <FlatList
@@ -200,9 +151,6 @@ export const RecipeSelector = ({
           renderItem={renderRecipeItem}
         />
       )}
-      {!onCreateRecipe ? (
-        <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
-      ) : null}
     </View>
   );
 };

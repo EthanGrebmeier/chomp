@@ -11,30 +11,39 @@ import { cn } from '@/lib/utils';
 
 const mealTimeOptions = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
 
-export type CreateRecipePageFormData = {
+export type RecipePageFormData = {
   name: string;
   mealTag?: string;
   description?: string;
   sourceUrl?: string;
 };
 
-type CreateRecipePageFormProps = {
-  initialName?: string;
+type RecipePageFormProps = {
+  initialValues?: Partial<RecipePageFormData>;
   isPending?: boolean;
-  onSubmit: (data: CreateRecipePageFormData) => void;
+  mode: 'create' | 'edit';
+  onSubmit: (data: RecipePageFormData) => void;
 };
 
-export const CreateRecipePageForm = ({
-  initialName = '',
+export const RecipePageForm = ({
+  initialValues,
   isPending = false,
+  mode,
   onSubmit,
-}: CreateRecipePageFormProps) => {
-  const nameInput = useUncontrolledTextInput(initialName);
-  const descriptionInput = useUncontrolledTextInput();
-  const sourceUrlInput = useUncontrolledTextInput();
-  const [mealTag, setMealTag] = useState<string | undefined>();
-  const [canSubmit, setCanSubmit] = useState(Boolean(initialName.trim()));
+}: RecipePageFormProps) => {
+  const nameInput = useUncontrolledTextInput(initialValues?.name ?? '');
+  const descriptionInput = useUncontrolledTextInput(
+    initialValues?.description ?? ''
+  );
+  const sourceUrlInput = useUncontrolledTextInput(
+    initialValues?.sourceUrl ?? ''
+  );
+  const [mealTag, setMealTag] = useState(initialValues?.mealTag);
+  const [canSubmit, setCanSubmit] = useState(
+    Boolean(initialValues?.name?.trim())
+  );
   const bottomSheetBottom = useSafeAreaInsets().bottom;
+  const isEditing = mode === 'edit';
 
   const handleNameChange = (text: string) => {
     nameInput.handleChangeText(text);
@@ -53,11 +62,14 @@ export const CreateRecipePageForm = ({
     });
   };
 
+  const pendingLabel = isEditing ? 'Updating Recipe...' : 'Creating Recipe...';
+  const submitLabel = isEditing ? 'Update Recipe' : 'Create Recipe';
+
   return (
     <View className="flex-1 gap-6">
       <ScrollView
         keyboardDismissMode="on-drag"
-        className="flex-1 "
+        className="flex-1"
         contentContainerClassName="gap-6"
       >
         <View>
@@ -144,7 +156,7 @@ export const CreateRecipePageForm = ({
           disabled={!canSubmit || isPending}
           className={cn(isPending && 'opacity-70')}
         >
-          <Text>{isPending ? 'Creating Recipe...' : 'Create Recipe'}</Text>
+          <Text>{isPending ? pendingLabel : submitLabel}</Text>
         </Button>
       </KeyboardStickyView>
     </View>

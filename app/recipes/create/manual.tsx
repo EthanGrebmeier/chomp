@@ -5,9 +5,9 @@ import { toast } from 'sonner-native';
 import { BackButton } from '@/components/ui/back-button';
 import { Text } from '@/components/ui/text';
 import {
-  CreateRecipePageForm,
-  CreateRecipePageFormData,
-} from '@/features/recipes/components/create-recipe-page-form';
+  RecipePageForm,
+  RecipePageFormData,
+} from '@/features/recipes/components/recipe-page-form';
 import { useCreateRecipe } from '@/features/recipes/hooks/useCreateRecipe';
 import { navigation } from '@/lib/navigation';
 
@@ -23,7 +23,7 @@ export default function ManualCreateRecipePage() {
   const initialName = firstParam(params.name) ?? '';
   const { mutate: createRecipe, isPending } = useCreateRecipe();
 
-  const handleSubmit = (data: CreateRecipePageFormData) => {
+  const handleSubmit = (data: RecipePageFormData) => {
     createRecipe(
       {
         recipe: {
@@ -57,8 +57,9 @@ export default function ManualCreateRecipePage() {
         <View className="w-12" />
       </View>
 
-      <CreateRecipePageForm
-        initialName={initialName}
+      <RecipePageForm
+        mode="create"
+        initialValues={{ name: initialName }}
         isPending={isPending}
         onSubmit={handleSubmit}
       />

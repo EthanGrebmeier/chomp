@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { buildListURL } from '../navigation';
+import { buildEditRecipeUrl, buildListURL } from '../navigation';
 
 const originalApiUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -23,5 +23,29 @@ describe('buildListURL', () => {
     expect(buildListURL('ABC123')).toBe(
       'https://api.example.com/join-list/ABC123'
     );
+  });
+});
+
+describe('buildEditRecipeUrl', () => {
+  it('builds an edit route without a list context', () => {
+    expect(buildEditRecipeUrl({ recipeId: 'recipe-123' })).toEqual({
+      pathname: '/recipes/edit/[recipeId]',
+      params: { recipeId: 'recipe-123' },
+    });
+  });
+
+  it('preserves the list context', () => {
+    expect(
+      buildEditRecipeUrl({
+        recipeId: 'recipe-123',
+        listId: 'list-456',
+      })
+    ).toEqual({
+      pathname: '/recipes/edit/[recipeId]',
+      params: {
+        recipeId: 'recipe-123',
+        listId: 'list-456',
+      },
+    });
   });
 });

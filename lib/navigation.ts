@@ -64,6 +64,11 @@ export interface CreateRecipeImportParams {
   listId?: string;
 }
 
+export interface EditRecipeParams {
+  recipeId: string;
+  listId?: string;
+}
+
 const buildQueryString = (params: Record<string, string | undefined>) => {
   const query = new URLSearchParams();
 
@@ -145,6 +150,14 @@ export function buildCreateRecipeImportUrl(
   return `/recipes/create/import${query}` as Href;
 }
 
+export function buildEditRecipeUrl(params: EditRecipeParams) {
+  const { recipeId, listId } = params;
+  return {
+    pathname: '/recipes/edit/[recipeId]',
+    params: listId ? { recipeId, listId } : { recipeId },
+  } as unknown as Href;
+}
+
 /**
  * Builds a deep link URL for sharing a grocery list by join code
  */
@@ -186,6 +199,8 @@ export const navigation = {
     buildCreateRecipeManualUrl({ listId, name }),
   goToCreateRecipeImport: (listId?: string) =>
     buildCreateRecipeImportUrl({ listId }),
+  goToEditRecipe: (recipeId: string, listId?: string) =>
+    buildEditRecipeUrl({ recipeId, listId }),
 } as const;
 
 /**
@@ -211,6 +226,8 @@ export function useNavigation() {
       navigation.goToCreateRecipeManual(listId, name),
     goToCreateRecipeImport: (listId?: string) =>
       navigation.goToCreateRecipeImport(listId),
+    goToEditRecipe: (recipeId: string, listId?: string) =>
+      navigation.goToEditRecipe(recipeId, listId),
   };
 }
 
@@ -237,6 +254,8 @@ export const navActions = {
     buildCreateRecipeManualUrl({ listId, name }),
   goToCreateRecipeImport: (listId?: string) =>
     buildCreateRecipeImportUrl({ listId }),
+  goToEditRecipe: (recipeId: string, listId?: string) =>
+    buildEditRecipeUrl({ recipeId, listId }),
 } as const;
 
 /**
@@ -260,5 +279,6 @@ export const ROUTES = {
     DETAIL: (recipeId: string) => `/recipes/${recipeId}`,
     CREATE_MANUAL: '/recipes/create/manual',
     CREATE_IMPORT: '/recipes/create/import',
+    EDIT: (recipeId: string) => `/recipes/edit/${recipeId}`,
   },
 } as const;

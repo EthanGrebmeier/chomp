@@ -1,4 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { router } from 'expo-router';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
@@ -23,6 +24,7 @@ import {
 } from '../../../features/recipes/instant/add-recipe-to-list';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
 import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
+import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
 import { Button } from '../../ui/button';
@@ -127,9 +129,11 @@ const AddItemSheet = ({
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
 
   useEffect(() => {
-    triggerOpacity.set(withTiming(isTriggerVisible ? 1 : 0, {
-      duration: 200,
-    }));
+    triggerOpacity.set(
+      withTiming(isTriggerVisible ? 1 : 0, {
+        duration: 200,
+      })
+    );
   }, [isTriggerVisible, triggerOpacity]);
 
   const triggerAnimatedStyle = useAnimatedStyle(() => ({
@@ -169,6 +173,11 @@ const AddItemSheet = ({
   const handleBackToRecipes = () => {
     setSelectedRecipe(null);
     setSelectedIngredientIds(new Set());
+  };
+
+  const handleCreateRecipe = (initialName?: string) => {
+    ref.current?.dismiss();
+    router.push(navigation.goToCreateRecipeManual(groceryListId, initialName));
   };
 
   const handleAddComplete = () => {
@@ -373,7 +382,7 @@ const AddItemSheet = ({
                 >
                   <RecipeSelector
                     onSelectRecipe={handleRecipeSelect}
-                    listId={groceryListId}
+                    onCreateRecipe={handleCreateRecipe}
                   />
                 </Animated.View>
               )}
