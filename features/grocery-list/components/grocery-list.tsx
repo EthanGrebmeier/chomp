@@ -1,13 +1,20 @@
 import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { Href, router } from 'expo-router';
+import { Href, router, useFocusEffect } from 'expo-router';
 import {
   BookOpenIcon,
   CalendarIcon,
   Clock3Icon,
   SettingsIcon,
 } from 'lucide-react-native';
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Alert, Keyboard, TextInput as RNTextInput, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -148,6 +155,20 @@ export const GroceryList = ({
     null
   );
 
+  const resetBulkSelectionMode = useCallback(() => {
+    setBulkSelectionState(currentState => {
+      if (!currentState.isActive && currentState.selectedItemIds.size === 0) {
+        return currentState;
+      }
+
+      return exitBulkSelectionMode(currentState);
+    });
+    standardControlsOpacity.set(1);
+    bulkToolbarOpacity.set(0);
+  }, [bulkToolbarOpacity, standardControlsOpacity]);
+
+  useFocusEffect(resetBulkSelectionMode);
+
   const deferredQuery = useDeferredValue(searchQuery.trim());
   const normalizedQuery = deferredQuery.toLowerCase();
 
@@ -241,15 +262,16 @@ export const GroceryList = ({
   ]);
 
   useEffect(() => {
-    standardControlsOpacity.value = withTiming(
-      bulkSelectionState.isActive ? 0 : 1,
-      {
+    standardControlsOpacity.set(
+      withTiming(bulkSelectionState.isActive ? 0 : 1, {
         duration: 200,
-      }
+      })
     );
-    bulkToolbarOpacity.value = withTiming(bulkSelectionState.isActive ? 1 : 0, {
-      duration: 200,
-    });
+    bulkToolbarOpacity.set(
+      withTiming(bulkSelectionState.isActive ? 1 : 0, {
+        duration: 200,
+      })
+    );
   }, [
     bulkSelectionState.isActive,
     bulkToolbarOpacity,
@@ -257,11 +279,11 @@ export const GroceryList = ({
   ]);
 
   const standardControlsAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: standardControlsOpacity.value,
+    opacity: standardControlsOpacity.get(),
   }));
 
   const bulkToolbarAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: bulkToolbarOpacity.value,
+    opacity: bulkToolbarOpacity.get(),
   }));
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);

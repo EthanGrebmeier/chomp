@@ -83,7 +83,14 @@ describe('bulk mode lifecycle behavior', () => {
     expect(visibleRows.map(item => item.id)).toEqual(['item-1', 'item-3']);
 
     const disabledActions = getBulkToolbarActions(0);
-    expect(disabledActions.every(action => action.isDisabled)).toBe(true);
+    expect(
+      disabledActions.find(action => action.id === 'exit')?.isDisabled
+    ).toBe(false);
+    expect(
+      disabledActions
+        .filter(action => action.id !== 'exit')
+        .every(action => action.isDisabled)
+    ).toBe(true);
 
     const exited = exitBulkSelectionMode(entered);
     expect(exited.isActive).toBe(false);
