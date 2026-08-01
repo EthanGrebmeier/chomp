@@ -23,6 +23,18 @@ describe('auth reconciliation', () => {
     ).toBe('wait');
   });
 
+  it('keeps an existing Instant session while the Clerk session is pending', () => {
+    expect(
+      getAuthReconciliationAction({
+        isClerkLoaded: true,
+        isSignedIn: undefined,
+        clerkUserId: null,
+        clerkEmail: null,
+        instantAuth: signedInInstantUser,
+      })
+    ).toBe('wait');
+  });
+
   it('keeps a matching Instant session without refreshing a Clerk token', () => {
     expect(
       getAuthReconciliationAction({

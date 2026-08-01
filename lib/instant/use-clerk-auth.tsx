@@ -258,7 +258,7 @@ export const InstantAuthHandler = ({
     isLoaded: isClerkLoaded,
     isSignedIn,
     userId: clerkUserId,
-  } = useAuth();
+  } = useAuth({ treatPendingAsSignedOut: false });
   const { user: clerkUser } = useUser();
   const signInToInstant = useInstantSignIn();
   const previousIsSignedInRef = useRef<boolean | undefined>(isSignedIn);
