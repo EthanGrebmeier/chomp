@@ -94,7 +94,7 @@ export const AccountScreen = () => {
         </Text>
       </View>
 
-      <View className="pb-safe gap-3">
+      <View className="pb-safe-offset-12 gap-3">
         <Button
           variant="secondary"
           onPress={handleSignOut}

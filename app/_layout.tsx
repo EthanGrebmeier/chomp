@@ -106,11 +106,10 @@ function InitialLayout() {
         <Stack.Screen
           name="settings"
           options={{
-            presentation: 'formSheet',
-            sheetAllowedDetents: 'fitToContents',
-            sheetInitialDetentIndex: 0,
+            presentation: 'transparentModal',
+            animation: 'none',
             contentStyle: {
-              backgroundColor: theme.background,
+              backgroundColor: 'transparent',
             },
           }}
         />

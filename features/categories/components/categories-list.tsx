@@ -2,8 +2,6 @@ import { Alert, SectionList, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { CategoryLabel } from '../../../components/category-label';
-import { EmptyHeading } from '../../../components/text/empty-heading';
-import { EmptySubtext } from '../../../components/text/empty-subtext';
 import {
   ContextMenuItem,
   ContextMenuItemTitle,
@@ -143,13 +141,11 @@ const CategorySectionHeader = ({
 
 type CategoriesListProps = {
   categories: CustomCategory[];
-  searchQuery?: string;
   onEditCategory: (category: CustomCategory) => void;
 };
 
 export const CategoriesList = ({
   categories,
-  searchQuery = '',
   onEditCategory,
 }: CategoriesListProps) => {
   const handleDelete = async (category: CustomCategory) => {
@@ -160,21 +156,9 @@ export const CategoriesList = ({
     }
   };
 
-  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
-  const visibleBuiltInCategories = normalizedSearchQuery
-    ? builtInCategoryOptions.filter(category =>
-        category.label.toLowerCase().includes(normalizedSearchQuery)
-      )
-    : builtInCategoryOptions;
-  const sortedCustomCategories = [...categories]
-    .filter(
-      category =>
-        !normalizedSearchQuery ||
-        category.name.toLowerCase().includes(normalizedSearchQuery)
-    )
-    .sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-    );
+  const sortedCustomCategories = [...categories].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  );
   const categorySections: CategoryListSection[] = [];
 
   if (sortedCustomCategories.length > 0) {
@@ -187,25 +171,14 @@ export const CategoriesList = ({
     });
   }
 
-  if (visibleBuiltInCategories.length > 0) {
-    categorySections.push({
-      title: 'Default Categories',
-      description: 'Built-in options available for every grocery list.',
-      data: visibleBuiltInCategories.map(category => ({
-        ...category,
-        kind: 'built-in' as const,
-      })),
-    });
-  }
-
-  if (categorySections.length === 0) {
-    return (
-      <View className="flex-1 items-center justify-center px-4">
-        <EmptyHeading>No categories found</EmptyHeading>
-        <EmptySubtext>Try a different search.</EmptySubtext>
-      </View>
-    );
-  }
+  categorySections.push({
+    title: 'Default Categories',
+    description: 'Built-in options available for every grocery list.',
+    data: builtInCategoryOptions.map(category => ({
+      ...category,
+      kind: 'built-in' as const,
+    })),
+  });
 
   return (
     <SectionList

@@ -86,17 +86,17 @@ export const StoresList = ({ stores, onEditStore }: StoresListProps) => {
   const handleDelete = async (store: Store) => {
     try {
       await deleteStore({ storeId: store.id });
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete store');
     }
   };
 
   if (stores.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center px-4">
+      <View className="-mt-32 flex-1 items-center justify-center px-4">
         <EmptyHeading>No stores</EmptyHeading>
         <EmptySubtext>
-          Create stores to organize where you shop for items.
+          Stores help organize where you shop for items.
         </EmptySubtext>
       </View>
     );
