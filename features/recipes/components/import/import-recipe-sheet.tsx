@@ -376,7 +376,6 @@ export const ImportRecipeSheet = forwardRef<
               ref={urlInputRef}
               inputKey={urlInputKey}
               defaultValue={urlDefaultValue}
-              hasValue={urlHasValue}
               onChangeText={handleUrlChange}
               onSubmit={handleSubmitUrl}
               error={validationError}

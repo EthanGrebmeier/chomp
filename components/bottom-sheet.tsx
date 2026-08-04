@@ -5,9 +5,12 @@ import {
 } from '@lodev09/react-native-true-sheet';
 import { useColorScheme } from 'nativewind';
 import { ComponentProps, ReactElement, forwardRef } from 'react';
-import { TextInput as RNTextInput, View } from 'react-native';
+import { View } from 'react-native';
 
-import { BareTextInput } from '@/components/text-input';
+import {
+  BareTextInput,
+  TextInput as OpaqueTextInput,
+} from '@/components/text-input';
 import { cn } from '@/lib/utils';
 
 import { THEME } from '../lib/theme';
@@ -79,14 +82,14 @@ export const BottomSheet = ({
   );
 };
 
-type BottomSheetTextInputProps = ComponentProps<typeof RNTextInput>;
+type BottomSheetTextInputProps = ComponentProps<typeof OpaqueTextInput>;
 
 const TextInput = forwardRef<
-  React.ComponentRef<typeof RNTextInput>,
+  React.ComponentRef<typeof OpaqueTextInput>,
   BottomSheetTextInputProps
 >(({ className, ...props }, ref) => {
   return (
-    <RNTextInput
+    <OpaqueTextInput
       className={cn(
         'h-12 rounded-md bg-muted px-3 text-base leading-5 text-foreground shadow-sm shadow-black/5',
         className

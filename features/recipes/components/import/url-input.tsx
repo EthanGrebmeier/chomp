@@ -1,9 +1,7 @@
-import { XIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { TextInput as RNTextInput, View } from 'react-native';
 
-import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -13,7 +11,6 @@ import { BottomSheet } from '../../../../components/bottom-sheet';
 export type UrlInputProps = {
   inputKey: number;
   defaultValue: string;
-  hasValue: boolean;
   onChangeText: (text: string) => void;
   onSubmit: () => void;
   error?: string;
@@ -30,7 +27,6 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
     {
       inputKey,
       defaultValue,
-      hasValue,
       onChangeText,
       onSubmit,
       error,
@@ -43,17 +39,10 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
     const { colorScheme } = useColorScheme();
     const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
     const placeholderColor = theme.mutedForeground;
-    const iconColor = theme.foreground;
 
     useImperativeHandle(ref, () => ({
       focus: () => inputRef.current?.focus(),
     }));
-
-    const handleClear = useCallback(() => {
-      onChangeText('');
-      inputRef.current?.setNativeProps({ text: '' });
-      inputRef.current?.focus();
-    }, [onChangeText]);
 
     return (
       <View className={cn('gap-2', className)}>
@@ -61,42 +50,27 @@ export const UrlInput = forwardRef<UrlInputRef, UrlInputProps>(
           <Text className="text-sm font-medium text-muted-foreground">
             Recipe URL
           </Text>
-          <View className="relative flex-1">
-            <BottomSheet.TextInput
-              key={inputKey}
-              ref={inputRef}
-              defaultValue={defaultValue}
-              onChangeText={onChangeText}
-              onSubmitEditing={onSubmit}
-              placeholder="https://example.com/recipe"
-              placeholderTextColor={placeholderColor}
-              keyboardType="url"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="go"
-              editable={!disabled}
-              selectTextOnFocus
-              className={cn(
-                error ? 'border-destructive' : 'border-border',
-                disabled && 'opacity-50'
-              )}
-            />
-            {hasValue && !disabled && (
-              <View className="absolute right-2 top-0 h-12 items-center justify-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onPress={handleClear}
-                  className="h-8 w-8"
-                  haptic
-                >
-                  <XIcon size={18} color={iconColor} />
-                </Button>
-              </View>
+          <BottomSheet.TextInput
+            key={inputKey}
+            ref={inputRef}
+            defaultValue={defaultValue}
+            onChangeText={onChangeText}
+            onSubmitEditing={onSubmit}
+            placeholder="https://example.com/recipe"
+            placeholderTextColor={placeholderColor}
+            keyboardType="url"
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="go"
+            editable={!disabled}
+            selectTextOnFocus
+            className={cn(
+              error ? 'border-destructive' : 'border-border',
+              disabled && 'opacity-50'
             )}
-          </View>
+          />
         </View>
-        {error && <Text className="text-sm text-destructive">{error}</Text>}
+        {error ? <Text className="text-sm text-destructive">{error}</Text> : null}
       </View>
     );
   }

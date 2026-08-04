@@ -92,7 +92,7 @@ export const CreateGroceryListSheet = forwardRef<
         setListNameMeta({ length: 0, hasText: false });
       }}
       footer={
-        <View className="pb-safe px-10">
+        <View className="pb-safe px-6">
           <Button
             onPress={handleCreateList}
             disabled={overLimit || !listNameMeta.hasText}
@@ -108,7 +108,7 @@ export const CreateGroceryListSheet = forwardRef<
           dismissButton={<CloseButton onPress={handleCancel} />}
         />
 
-        <View className="my-4 gap-2">
+        <View className="my-4 gap-2 pb-4">
           <View className="flex-row items-center justify-between gap-2">
             <Text variant="label" className="text-muted-foreground">
               List name

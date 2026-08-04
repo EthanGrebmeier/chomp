@@ -1,11 +1,7 @@
-import { AlertTriangleIcon, CheckCircleIcon, XIcon } from 'lucide-react-native';
+import { AlertTriangleIcon, CheckCircleIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { useCallback, useRef } from 'react';
-import {
-  ActivityIndicator,
-  TextInput as RNTextInput,
-  View,
-} from 'react-native';
+import { useRef } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
@@ -38,15 +34,8 @@ export const ImportRecipePageFlow = ({
   onCancel,
 }: ImportRecipePageFlowProps) => {
   const editSheetRef = useRef<EditParsedIngredientSheetRef>(null);
-  const urlTextInputRef = useRef<RNTextInput>(null);
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
-
-  const handleClearUrl = useCallback(() => {
-    flow.handleUrlChange('');
-    urlTextInputRef.current?.setNativeProps({ text: '' });
-    urlTextInputRef.current?.focus();
-  }, [flow]);
 
   if (flow.state.status === 'idle') {
     return (
@@ -61,37 +50,22 @@ export const ImportRecipePageFlow = ({
           <Text className="text-sm font-medium text-muted-foreground">
             Recipe URL
           </Text>
-          <View className="relative">
-            <TextInput
-              key={flow.urlInput.inputKey}
-              ref={urlTextInputRef}
-              defaultValue={flow.urlInput.defaultValue}
-              onChangeText={flow.handleUrlChange}
-              onSubmitEditing={flow.handleSubmitUrl}
-              placeholder="https://example.com/recipe"
-              keyboardType="url"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="go"
-              selectTextOnFocus
-              className={cn(
-                'rounded-xl pr-12',
-                flow.validationError && 'border border-destructive'
-              )}
-            />
-            {flow.urlHasValue ? (
-              <View className="absolute right-2 top-0 h-11 items-center justify-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onPress={handleClearUrl}
-                  className="h-8 w-8"
-                >
-                  <XIcon size={18} color={theme.foreground} />
-                </Button>
-              </View>
-            ) : null}
-          </View>
+          <TextInput
+            key={flow.urlInput.inputKey}
+            defaultValue={flow.urlInput.defaultValue}
+            onChangeText={flow.handleUrlChange}
+            onSubmitEditing={flow.handleSubmitUrl}
+            placeholder="https://example.com/recipe"
+            keyboardType="url"
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="go"
+            selectTextOnFocus
+            className={cn(
+              'rounded-xl',
+              flow.validationError && 'border border-destructive'
+            )}
+          />
           {flow.validationError ? (
             <Text className="text-sm text-destructive">
               {flow.validationError}
