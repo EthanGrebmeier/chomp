@@ -20,6 +20,8 @@ import {
 } from 'react-native';
 import Animated, {
   Easing,
+  FadeIn,
+  FadeOut,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -84,6 +86,7 @@ import {
 } from '../types';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
+import { BulkSelectionControls } from './bulk-selection-controls';
 import { BulkSelectionToolbar } from './bulk-selection-toolbar';
 import {
   EditListNameSheet,
@@ -908,13 +911,36 @@ export const GroceryList = ({
           onOpenAllGroupings={handleOpenAllGroupings}
           onCollapseAllGroupings={handleCollapseAllGroupings}
           isBulkSelectionModeActive={bulkSelectionState.isActive}
-          selectedBulkItemCount={bulkSelectionState.selectedItemIds.size}
           onEnterBulkSelectionMode={handleEnterBulkSelectionMode}
           onExitBulkSelectionMode={handleExitBulkSelectionMode}
-          onSelectAllBulkItems={handleSelectAllBulkItems}
-          onClearBulkSelection={handleClearBulkSelection}
         />
-        {viewSwitcher}
+        {viewSwitcher || bulkSelectionState.isActive ? (
+          <View className="h-12">
+            {bulkSelectionState.isActive ? (
+              <Animated.View
+                key="bulk-selection-controls"
+                entering={FadeIn.duration(180)}
+                exiting={FadeOut.duration(120)}
+                className="absolute inset-0"
+              >
+                <BulkSelectionControls
+                  selectedItemCount={bulkSelectionState.selectedItemIds.size}
+                  onSelectAll={handleSelectAllBulkItems}
+                  onClearAll={handleClearBulkSelection}
+                />
+              </Animated.View>
+            ) : (
+              <Animated.View
+                key="view-switcher"
+                entering={FadeIn.duration(180)}
+                exiting={FadeOut.duration(120)}
+                className="absolute inset-0"
+              >
+                {viewSwitcher}
+              </Animated.View>
+            )}
+          </View>
+        ) : null}
         <View className="flex-1 overflow-hidden">
           <Animated.View
             className="absolute inset-0"
