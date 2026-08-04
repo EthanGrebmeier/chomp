@@ -1,6 +1,6 @@
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { router, useLocalSearchParams } from 'expo-router';
-import { LinkIcon, PlusIcon, UsersIcon } from 'lucide-react-native';
+import { LinkIcon, PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
 import { ActivityIndicator, Alert, Pressable, View } from 'react-native';
 
@@ -122,7 +122,7 @@ export default function GroceryListsIndex() {
         onPress={() => handleSelectList(item.id)}
         accessibilityRole="button"
         accessibilityLabel={`Open ${item.name}`}
-        className="flex-row items-center"
+        className="min-h-[72px] flex-row items-center"
       >
         <View className="flex-1 flex-row items-center gap-2.5">
           <Text
@@ -133,7 +133,9 @@ export default function GroceryListsIndex() {
             {item.name}
           </Text>
           {isShared ? (
-            <Icon as={UsersIcon} size={16} className="text-muted-foreground" />
+            <View className="rounded-lg bg-primary/10 px-1.5 py-0.5">
+              <Text className="font-semibold text-primary">Shared</Text>
+            </View>
           ) : null}
         </View>
       </Pressable>
