@@ -10,12 +10,14 @@ type ListViewTabsProps = {
   activeView: ListView;
   onViewChange: (view: ListView) => void;
   isMealPlanDisabled?: boolean;
+  hasUnaddedMeals?: boolean;
 };
 
 export function ListViewTabs({
   activeView,
   onViewChange,
   isMealPlanDisabled = false,
+  hasUnaddedMeals = false,
 }: ListViewTabsProps) {
   return (
     <View
@@ -41,11 +43,16 @@ export function ListViewTabs({
         </Text>
       </HapticPressable>
       <HapticPressable
-        className="h-11 justify-center"
+        className="h-11 flex-row items-center gap-1.5"
         onPress={() => onViewChange('meal-plan')}
         hapticType="selection"
         disabled={isMealPlanDisabled}
         accessibilityRole="tab"
+        accessibilityLabel={
+          hasUnaddedMeals
+            ? 'Meal Plan, has meals not added to the list'
+            : 'Meal Plan'
+        }
         accessibilityState={{
           disabled: isMealPlanDisabled,
           selected: activeView === 'meal-plan',
@@ -63,6 +70,13 @@ export function ListViewTabs({
         >
           Meal Plan
         </Text>
+        {hasUnaddedMeals ? (
+          <View
+            className="size-2 rounded-full bg-primary"
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          />
+        ) : null}
       </HapticPressable>
     </View>
   );

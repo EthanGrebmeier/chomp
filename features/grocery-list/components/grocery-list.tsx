@@ -49,6 +49,7 @@ import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
 } from '../../grocery-lists/components/select-grocery-list-sheet';
+import { useUserMealPlanData } from '../../meal-planner/hooks/useUserMealPlanData';
 import {
   clearBulkSelection,
   createBulkSelectionState,
@@ -147,6 +148,11 @@ export const GroceryList = ({
   const activeItemIds = filterActiveItems(items);
   const { mutate: clearGroceryList, mutateAsync: clearGroceryListAsync } =
     useClearGroceryList();
+  const { recipes: mealPlanRecipes, items: mealPlanItems } =
+    useUserMealPlanData(listId);
+  const hasUnaddedMeals =
+    mealPlanRecipes.some(recipe => !recipe.addedToList) ||
+    mealPlanItems.some(item => !item.addedToList);
 
   const isOwner = user?.id === ownerId;
 
@@ -937,6 +943,7 @@ export const GroceryList = ({
                 activeView={activeView}
                 onViewChange={onViewChange}
                 isMealPlanDisabled={!listId}
+                hasUnaddedMeals={hasUnaddedMeals}
               />
             </Animated.View>
           )}
