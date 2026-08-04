@@ -122,7 +122,7 @@ export default function GroceryListsIndex() {
         onPress={() => handleSelectList(item.id)}
         accessibilityRole="button"
         accessibilityLabel={`Open ${item.name}`}
-        className="min-h-[72px] flex-row items-center"
+        className="flex-row items-center"
       >
         <View className="flex-1 flex-row items-center gap-2.5">
           <Text
