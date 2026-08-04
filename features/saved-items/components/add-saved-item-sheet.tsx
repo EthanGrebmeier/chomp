@@ -3,6 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -104,19 +105,27 @@ const SavedItemSheetContents = ({ isEditing }: { isEditing: boolean }) => {
       onStartClose={onStartClose}
       onDismiss={isEditing ? onDismiss : undefined}
       onOpen={() => {
-        itemInputRef.current?.focus();
+        if (!isEditing) {
+          itemInputRef.current?.focus();
+        }
       }}
       footer={
-        isEditing ? undefined : (
-        <View className="px-10 pb-4">
-          <Button onPress={onSubmit} disabled={!isValid}>
-            <Text>Add</Text>
-          </Button>
-        </View>
+        isEditing ? (
+          <BottomSheet.SheetView className="pb-safe px-4 pt-3">
+            <SavedItemMetaBar />
+          </BottomSheet.SheetView>
+        ) : (
+          <View className="px-10 pb-4">
+            <Button onPress={onSubmit} disabled={!isValid}>
+              <Text>Add</Text>
+            </Button>
+          </View>
         )
       }
     >
-      <BottomSheet.SheetView className="pb-safe gap-4">
+      <BottomSheet.SheetView
+        className={isEditing ? 'pb-20' : 'pb-safe gap-4'}
+      >
         <ItemInput
           placeholder="Item name"
           inputKey={itemInputKey}
@@ -130,7 +139,7 @@ const SavedItemSheetContents = ({ isEditing }: { isEditing: boolean }) => {
           inputRef={itemInputRef}
           disableAutocomplete={disableAutocomplete}
         />
-        <SavedItemMetaBar />
+        {!isEditing ? <SavedItemMetaBar /> : null}
       </BottomSheet.SheetView>
     </BottomSheet>
   );
@@ -197,7 +206,7 @@ export const SavedItemSheetProvider = ({
     }
   };
 
-  const present = (item?: UnifiedSavedItem) => {
+  const present = useCallback((item?: UnifiedSavedItem) => {
     if (item) {
       setEditingItem(item);
       setFromItemRef.current?.({
@@ -212,10 +221,11 @@ export const SavedItemSheetProvider = ({
       setEditingItem(null);
     }
     sheetRef.current?.present();
-  };
+  }, []);
+  const sheetContextValue = useMemo(() => ({ present }), [present]);
 
   return (
-    <SavedItemSheetContext.Provider value={{ present }}>
+    <SavedItemSheetContext.Provider value={sheetContextValue}>
       <SavedItemSheetInternalContext.Provider value={{ sheetRef, liveSyncRef }}>
         <ItemSheetProvider
           mode={isEditing ? 'update' : 'add'}

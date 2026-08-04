@@ -1,12 +1,11 @@
 import { PlusIcon, SearchIcon } from 'lucide-react-native';
 import { useCallback, useDeferredValue, useMemo, useState } from 'react';
-import { View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { Keyboard, Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useDebounceCallback } from 'usehooks-ts';
 
-import { Heading } from '@/components/text/heading';
 import { TextInput } from '@/components/text-input';
+import { Heading } from '@/components/text/heading';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -20,10 +19,12 @@ import {
   SavedItemSheetProvider,
   useSavedItemSheet,
 } from './add-saved-item-sheet';
-import { CategoryFilterSelector } from './category-filter-selector';
+import {
+  SavedItemsFilterDropdownMenu,
+  type SavedItemsSortOption,
+} from './saved-items-filter-dropdown-menu';
 import { SavedItemsList } from './saved-items-list';
 import { SavedItemsListSkeleton } from './saved-items-list-skeleton';
-import { SortBySelector } from './sort-by-selector';
 
 const SEARCH_QUERY_DEBOUNCE_MS = 300;
 
@@ -47,7 +48,7 @@ function SavedItemsContent({ onBack }: SavedItemsScreenProps) {
     SEARCH_QUERY_DEBOUNCE_MS
   );
 
-  const [sortBy, setSortBy] = useState<'name' | 'category'>(
+  const [sortBy, setSortBy] = useState<SavedItemsSortOption>(
     settings?.savedItemsSortBy ?? 'name'
   );
   const [filterCategory, setFilterCategory] = useState<string | undefined>(
@@ -57,8 +58,9 @@ function SavedItemsContent({ onBack }: SavedItemsScreenProps) {
   const deferredSortBy = useDeferredValue(sortBy);
   const deferredFilterCategory = useDeferredValue(filterCategory);
   const deferredSearchQuery = useDeferredValue(searchQuery);
+  const dismissSearch = () => Keyboard.dismiss();
 
-  const handleSortByChange = (newSortBy: 'name' | 'category') => {
+  const handleSortByChange = (newSortBy: SavedItemsSortOption) => {
     setSortBy(newSortBy);
     updateSettings({ savedItemsSortBy: newSortBy });
   };
@@ -93,42 +95,53 @@ function SavedItemsContent({ onBack }: SavedItemsScreenProps) {
   }, [savedItems, deferredFilterCategory, deferredSearchQuery]);
 
   return (
-    <View className="flex-1 bg-background pt-6">
+    <Pressable
+      className="flex-1 bg-background pt-6"
+      accessible={false}
+      onPress={dismissSearch}
+    >
       <View className="flex-row items-center gap-3 px-4">
         <BackButton onPress={onBack} href="/settings" />
-        <Heading>My Saved Items</Heading>
+        <Heading className="flex-1">My Saved Items</Heading>
+        <Button size="icon" onPress={() => present()}>
+          <Icon
+            as={PlusIcon}
+            size={28}
+            strokeWidth={3}
+            className="text-primary-foreground"
+          />
+        </Button>
       </View>
 
       <View className="mt-4 px-4">
-        <View className="relative">
-          <View className="pointer-events-none absolute left-3 top-0 z-10 h-full justify-center">
-            <Icon as={SearchIcon} size={18} className="text-muted-foreground" />
+        <View className="flex-row items-center gap-4">
+          <View className="relative flex-1">
+            <View className="pointer-events-none absolute left-3 top-0 z-10 h-full justify-center">
+              <Icon
+                as={SearchIcon}
+                size={18}
+                className="text-muted-foreground"
+              />
+            </View>
+            <TextInput
+              key={searchInputKey}
+              className="pl-10"
+              placeholder="Search items..."
+              defaultValue={searchDefaultValue}
+              onChangeText={handleSearchChange}
+              autoCorrect={false}
+            />
           </View>
-          <TextInput
-            key={searchInputKey}
-            className="pl-10"
-            placeholder="Search items..."
-            defaultValue={searchDefaultValue}
-            onChangeText={handleSearchChange}
-            autoCorrect={false}
+          <SavedItemsFilterDropdownMenu
+            category={filterCategory}
+            sortBy={sortBy}
+            onCategoryChange={handleFilterCategoryChange}
+            onSortByChange={handleSortByChange}
           />
         </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="flex-row gap-2 px-4 pb-2"
-        className="mt-3 flex-grow-0"
-      >
-        <SortBySelector value={sortBy} onChange={handleSortByChange} />
-        <CategoryFilterSelector
-          category={filterCategory}
-          onSelect={handleFilterCategoryChange}
-        />
-      </ScrollView>
-
-      <View className="px-4">
+      <View className="mt-3 px-4">
         <Text variant="caption" tabularNumbers>
           {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
           {searchQuery ? ` matching "${searchQuery}"` : ''}
@@ -157,22 +170,12 @@ function SavedItemsContent({ onBack }: SavedItemsScreenProps) {
               items={filteredItems}
               sortBy={deferredSortBy}
               onEditItem={present}
+              onListInteraction={dismissSearch}
             />
           </Animated.View>
         )}
       </View>
-
-      <View className="absolute bottom-6 right-6 z-20">
-        <Button size="wide-small" onPress={() => present()}>
-          <Icon
-            as={PlusIcon}
-            size={28}
-            strokeWidth={3}
-            className="text-primary-foreground"
-          />
-        </Button>
-      </View>
-    </View>
+    </Pressable>
   );
 }
 

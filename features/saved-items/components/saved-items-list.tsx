@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
-import { Alert, FlatList, Platform, View } from 'react-native';
+import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
+import { memo, useCallback, useMemo } from 'react';
+import { Alert, Platform, View } from 'react-native';
 
 import { CategoryTag } from '../../../components/category-tag';
 import { StoreTag } from '../../../components/store-tag';
@@ -23,22 +24,25 @@ type SavedItemRowProps = {
   item: UnifiedSavedItem;
   categoryOptions: CategoryOption[];
   isLast: boolean;
-  onDelete: () => void;
-  onPress: () => void;
+  onDelete: (item: UnifiedSavedItem) => void;
+  onPress: (item: UnifiedSavedItem) => void;
 };
 
-const SavedItemRow = ({
+const compactTextStyle = Platform.select({
+  android: { includeFontPadding: false },
+  default: undefined,
+});
+
+const SavedItemRow = memo(function SavedItemRow({
   item,
   categoryOptions,
   isLast,
   onDelete,
   onPress,
-}: SavedItemRowProps) => {
+}: SavedItemRowProps) {
   const notes = item.notes?.trim();
-  const compactTextStyle = Platform.select({
-    android: { includeFontPadding: false },
-    default: undefined,
-  });
+  const handleDelete = () => onDelete(item);
+  const handlePress = () => onPress(item);
 
   const handleConfirmDelete = () => {
     Alert.alert(
@@ -46,7 +50,7 @@ const SavedItemRow = ({
       `Are you sure you want to delete "${item.name}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: onDelete },
+        { text: 'Delete', style: 'destructive', onPress: handleDelete },
       ]
     );
   };
@@ -56,10 +60,10 @@ const SavedItemRow = ({
       trigger={
         <ListItem
           className={cn(!isLast && 'border-b border-dashed border-border')}
-          onDelete={onDelete}
+          onDelete={handleDelete}
         >
           <HapticPressable
-            onPress={onPress}
+            onPress={handlePress}
             hapticType="light"
             className="flex-1 gap-1 py-1"
           >
@@ -91,7 +95,7 @@ const SavedItemRow = ({
               </Text>
             ) : null}
             <View className="flex-row items-center gap-2">
-              {item.store && <StoreTag name={item.store.name} />}
+              {item.store ? <StoreTag name={item.store.name} /> : null}
             </View>
           </HapticPressable>
         </ListItem>
@@ -106,23 +110,25 @@ const SavedItemRow = ({
       </ContextMenuItem>
     </ContextMenuRoot>
   );
-};
+});
 
 type SavedItemsListProps = {
   items: UnifiedSavedItem[];
   sortBy: 'name' | 'category';
   onEditItem: (item: UnifiedSavedItem) => void;
+  onListInteraction: () => void;
 };
 
 export const SavedItemsList = ({
   items,
   sortBy,
   onEditItem,
+  onListInteraction,
 }: SavedItemsListProps) => {
   const { data: categoryOptions } = useCategoryOptions();
-  const handleDelete = (item: UnifiedSavedItem) => {
-    deleteSavedItem({ item });
-  };
+  const handleDelete = useCallback((item: UnifiedSavedItem) => {
+    void deleteSavedItem({ item });
+  }, []);
 
   // Get category order for sorting
   const categoryOrder = useMemo(() => {
@@ -159,6 +165,19 @@ export const SavedItemsList = ({
     });
   }, [items, sortBy, categoryOrder]);
 
+  const renderItem = useCallback(
+    ({ item, index }: ListRenderItemInfo<UnifiedSavedItem>) => (
+      <SavedItemRow
+        item={item}
+        categoryOptions={categoryOptions}
+        isLast={index === sortedItems.length - 1}
+        onDelete={handleDelete}
+        onPress={onEditItem}
+      />
+    ),
+    [categoryOptions, handleDelete, onEditItem, sortedItems.length]
+  );
+
   if (items.length === 0) {
     return (
       <View className="flex-1 items-center justify-center px-4">
@@ -171,20 +190,17 @@ export const SavedItemsList = ({
   }
 
   return (
-    <FlatList
+    <FlashList
       data={sortedItems}
       contentContainerClassName="pb-safe-offset-12"
-      renderItem={({ item, index }) => (
-        <SavedItemRow
-          item={item}
-          categoryOptions={categoryOptions}
-          isLast={index === sortedItems.length - 1}
-          onDelete={() => handleDelete(item)}
-          onPress={() => onEditItem(item)}
-        />
-      )}
+      renderItem={renderItem}
       keyExtractor={item => item.id}
+      drawDistance={150}
       showsVerticalScrollIndicator={false}
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled"
+      onScrollBeginDrag={onListInteraction}
+      onTouchStart={onListInteraction}
     />
   );
 };
