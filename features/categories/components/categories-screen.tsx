@@ -33,7 +33,23 @@ function CategoriesContent({ onBack }: CategoriesScreenProps) {
     <View className="flex-1 bg-background pt-6">
       <View className="flex-row items-center gap-3 px-4">
         <BackButton onPress={onBack} href="/settings" />
-        <Heading>My Categories</Heading>
+        <View className="flex-1">
+          <Heading>My Categories</Heading>
+        </View>
+        {canCreateCategories ? (
+          <Button
+            size="icon"
+            accessibilityLabel="Add category"
+            onPress={() => present()}
+          >
+            <Icon
+              as={PlusIcon}
+              size={24}
+              strokeWidth={3}
+              className="text-primary-foreground"
+            />
+          </Button>
+        ) : null}
       </View>
 
       <View className="mt-2 flex-1">
@@ -57,19 +73,6 @@ function CategoriesContent({ onBack }: CategoriesScreenProps) {
           </Animated.View>
         )}
       </View>
-
-      {canCreateCategories ? (
-        <View className="absolute bottom-6 right-6 z-20">
-          <Button size="wide-small" onPress={() => present()}>
-            <Icon
-              as={PlusIcon}
-              size={28}
-              strokeWidth={3}
-              className="text-primary-foreground"
-            />
-          </Button>
-        </View>
-      ) : null}
     </View>
   );
 }

@@ -30,7 +30,23 @@ function StoresContent({ onBack }: StoresScreenProps) {
     <View className="flex-1 bg-background pt-6">
       <View className="flex-row items-center gap-3 px-4">
         <BackButton onPress={onBack} href="/settings" />
-        <Heading>My Stores</Heading>
+        <View className="flex-1">
+          <Heading>My Stores</Heading>
+        </View>
+        {canCreateStores ? (
+          <Button
+            size="icon"
+            accessibilityLabel="Add store"
+            onPress={() => present()}
+          >
+            <Icon
+              as={PlusIcon}
+              size={24}
+              strokeWidth={3}
+              className="text-primary-foreground"
+            />
+          </Button>
+        ) : null}
       </View>
 
       <View className={isGuest ? 'mt-4 flex-1' : 'mt-2 flex-1'}>
@@ -54,19 +70,6 @@ function StoresContent({ onBack }: StoresScreenProps) {
           </Animated.View>
         )}
       </View>
-
-      {canCreateStores ? (
-        <View className="absolute bottom-6 right-6 z-20">
-          <Button size="wide-small" onPress={() => present()}>
-            <Icon
-              as={PlusIcon}
-              size={28}
-              strokeWidth={3}
-              className="text-primary-foreground"
-            />
-          </Button>
-        </View>
-      ) : null}
     </View>
   );
 }
