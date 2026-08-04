@@ -39,6 +39,11 @@ export interface ListParams {
   view?: 'meal-plan';
 }
 
+export interface GroceryListsIndexParams {
+  selectedListId?: string;
+  view?: 'meal-plan';
+}
+
 export interface ListMealPlanParams {
   listId: string;
 }
@@ -100,6 +105,19 @@ export function buildListUrl(params?: ListParams): Href {
     view: params?.view,
   });
   return `/(tabs)${query}` as Href;
+}
+
+/**
+ * Builds the URL for the grocery lists index.
+ */
+export function buildGroceryListsIndexUrl(
+  params?: GroceryListsIndexParams
+): Href {
+  const query = buildQueryString({
+    selectedListId: params?.selectedListId,
+    view: params?.view,
+  });
+  return `/grocery-lists${query}` as Href;
 }
 
 export function buildMealPlanUrl(params: ListMealPlanParams): Href {
@@ -186,6 +204,8 @@ export function buildRecipeShareURL(recipeId: string): string | null {
 export const navigation = {
   // Tab navigation
   goToList: (listId?: string) => buildListUrl(listId ? { listId } : undefined),
+  goToGroceryLists: (params?: GroceryListsIndexParams) =>
+    buildGroceryListsIndexUrl(params),
   goToRecipes: (listId?: string) =>
     buildRecipesUrl(listId ? { listId } : undefined),
 
@@ -214,6 +234,8 @@ export function useNavigation() {
   return {
     // Tab navigation
     goToList: (listId?: string) => navigation.goToList(listId),
+    goToGroceryLists: (params?: GroceryListsIndexParams) =>
+      navigation.goToGroceryLists(params),
     goToRecipes: (listId?: string) => navigation.goToRecipes(listId),
 
     // Meal plan view navigation
@@ -241,6 +263,8 @@ export function useNavigation() {
 export const navActions = {
   // Tab navigation
   goToList: (listId?: string) => buildListUrl(listId ? { listId } : undefined),
+  goToGroceryLists: (params?: GroceryListsIndexParams) =>
+    buildGroceryListsIndexUrl(params),
   goToRecipes: (listId?: string) =>
     buildRecipesUrl(listId ? { listId } : undefined),
 
@@ -270,6 +294,9 @@ export const ROUTES = {
     RECIPES: '/recipes',
   },
   LIST: '/(tabs)',
+  GROCERY_LISTS: {
+    INDEX: '/grocery-lists',
+  },
   MEAL_PLAN: {
     VIEW: (listId: string) =>
       `/(tabs)?listId=${encodeURIComponent(listId)}&view=meal-plan`,

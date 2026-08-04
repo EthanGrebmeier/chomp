@@ -29,6 +29,7 @@ export function BackButton({ onPress, className, href }: BackButtonProps) {
       variant="ghost"
       onPress={handlePress}
       hapticType="light"
+      className={'-ml-1.5'}
     >
       <Icon
         className="text-foreground"

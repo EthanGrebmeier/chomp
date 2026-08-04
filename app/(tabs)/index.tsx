@@ -1,24 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
 import { GroceryListSkeleton } from '@/features/grocery-list/components/grocery-list-skeleton';
-import {
-  type ListView,
-  ListViewTabs,
-} from '@/features/grocery-list/components/list-view-tabs';
-import {
-  SelectGroceryListSheet,
-  SelectGroceryListSheetRef,
-} from '@/features/grocery-lists/components/select-grocery-list-sheet';
+import { type ListView } from '@/features/grocery-list/components/list-view-tabs';
 import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDeleteGroceryList';
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
 import { MealPlanner } from '@/features/meal-planner/components';
 import { db } from '@/lib/instant';
+import { buildGroceryListsIndexUrl } from '@/lib/navigation';
 
 import { useSettings } from '../../features/grocery-list/hooks/useSettings';
 
@@ -53,7 +47,6 @@ export default function List() {
   const deleteGroceryList = useDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
   const trackListAccess = useTrackListAccess();
-  const selectListSheetRef = useRef<SelectGroceryListSheetRef>(null);
 
   const handleActiveListChange = useCallback(
     (nextListId?: string) => {
@@ -83,7 +76,6 @@ export default function List() {
     list => list.id === activeListId
   );
   const activeListItems = activeList?.grocery_items ?? [];
-  const isActiveListShared = (activeList?.shares?.length ?? 0) > 1;
 
   const handleDeleteOrLeave = async () => {
     if (!activeListId || !activeList) return;
@@ -122,6 +114,15 @@ export default function List() {
     [activeListId]
   );
 
+  const handleOpenListsIndex = useCallback(() => {
+    router.push(
+      buildGroceryListsIndexUrl({
+        selectedListId: activeListId,
+        view: activeView === 'meal-plan' ? 'meal-plan' : undefined,
+      })
+    );
+  }, [activeListId, activeView]);
+
   return (
     <View className="flex-1 bg-background">
       <View className="pt-safe flex-1">
@@ -146,22 +147,15 @@ export default function List() {
               listName={activeList?.name}
               joinCode={activeList?.joinCode}
               ownerId={activeList?.ownerId}
-              isShared={isActiveListShared}
               items={activeListItems}
               groupBy={settings.groupBy}
               sortBy={settings.sortBy}
-              onViewListsPress={() => selectListSheetRef.current?.present()}
+              onBackPress={handleOpenListsIndex}
               onDeleteOrLeave={handleDeleteOrLeave}
               onActiveListChange={listId => handleActiveListChange(listId)}
               activeListChangeVersion={activeListId}
               activeView={activeView}
-              viewSwitcher={
-                <ListViewTabs
-                  activeView={activeView}
-                  onViewChange={handleViewChange}
-                  isMealPlanDisabled={!activeListId}
-                />
-              }
+              onViewChange={handleViewChange}
               alternateContent={
                 activeListId ? (
                   <MealPlanner listId={activeListId} showHeader={false} />
@@ -171,11 +165,6 @@ export default function List() {
           </Animated.View>
         ) : null}
       </View>
-      <SelectGroceryListSheet
-        ref={selectListSheetRef}
-        selectedListId={activeListId}
-        onSelectList={handleActiveListChange}
-      />
     </View>
   );
 }

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   buildEditRecipeUrl,
+  buildGroceryListsIndexUrl,
   buildListUrl,
   buildListURL,
   buildMealPlanUrl,
@@ -57,6 +58,19 @@ describe('buildEditRecipeUrl', () => {
 });
 
 describe('list workspace navigation', () => {
+  it('builds the grocery lists index URL with the active workspace context', () => {
+    expect(
+      buildGroceryListsIndexUrl({
+        selectedListId: 'list-456',
+        view: 'meal-plan',
+      })
+    ).toBe('/grocery-lists?selectedListId=list-456&view=meal-plan');
+  });
+
+  it('builds the grocery lists index URL without optional context', () => {
+    expect(buildGroceryListsIndexUrl()).toBe('/grocery-lists');
+  });
+
   it('builds the default grocery list URL without a view parameter', () => {
     expect(buildListUrl({ listId: 'list-456' })).toBe(
       '/(tabs)?listId=list-456'
@@ -73,5 +87,14 @@ describe('list workspace navigation', () => {
     expect(navigation.goToMealPlan('list-456')).toBe(
       '/(tabs)?listId=list-456&view=meal-plan'
     );
+  });
+
+  it('preserves the meal-plan view when returning from the list index', () => {
+    expect(
+      buildListUrl({
+        listId: 'list-789',
+        view: 'meal-plan',
+      })
+    ).toBe('/(tabs)?listId=list-789&view=meal-plan');
   });
 });

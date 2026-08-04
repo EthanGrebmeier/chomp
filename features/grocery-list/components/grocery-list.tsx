@@ -93,8 +93,9 @@ import {
   EditListNameSheetRef,
 } from './edit-list-name-sheet';
 import { GroceryItemsList } from './grocery-items-list';
+import { GroceryListActions } from './grocery-list-actions';
 import { GroceryListHeader } from './grocery-list-header';
-import { type ListView } from './list-view-tabs';
+import { type ListView, ListViewTabs } from './list-view-tabs';
 import { ShareListSheet, ShareListSheetRef } from './share-list-sheet';
 
 type GroceryListProps = {
@@ -102,16 +103,15 @@ type GroceryListProps = {
   listName?: string;
   joinCode?: string;
   ownerId?: string;
-  isShared?: boolean;
   items: GroceryListItemWithRecipe[];
   groupBy: GroceryListGroupBy;
   sortBy: GroceryListSortBy;
-  onViewListsPress?: () => void;
+  onBackPress: () => void;
   onDeleteOrLeave: () => void;
   onActiveListChange?: (listId: string) => void;
   activeListChangeVersion?: string;
   activeView?: ListView;
-  viewSwitcher?: ReactNode;
+  onViewChange: (view: ListView) => void;
   alternateContent?: ReactNode;
 };
 
@@ -128,16 +128,15 @@ export const GroceryList = ({
   listName,
   joinCode,
   ownerId,
-  isShared = false,
   items,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
-  onViewListsPress,
+  onBackPress,
   onDeleteOrLeave,
   onActiveListChange,
   activeListChangeVersion,
   activeView = 'grocery-list',
-  viewSwitcher,
+  onViewChange,
   alternateContent,
 }: GroceryListProps) => {
   const { width: viewportWidth } = useWindowDimensions();
@@ -894,53 +893,59 @@ export const GroceryList = ({
       >
         {/** Header */}
         <GroceryListHeader
-          listId={listId}
-          ownerId={ownerId}
-          isShared={isShared}
-          items={items}
           listName={listName}
-          onClearListPress={handleClearListPress}
-          onSharePress={handleSharePress}
-          onDeleteOrLeave={handleDeleteOrLeavePress}
-          onEditNamePress={handleEditNamePress}
-          onViewListsPress={onViewListsPress}
-          groupBy={groupBy}
-          sortBy={sortBy}
-          onGroupByChange={handleGroupByChange}
-          onSortByChange={handleSortByChange}
-          onOpenAllGroupings={handleOpenAllGroupings}
-          onCollapseAllGroupings={handleCollapseAllGroupings}
-          isBulkSelectionModeActive={bulkSelectionState.isActive}
-          onEnterBulkSelectionMode={handleEnterBulkSelectionMode}
-          onExitBulkSelectionMode={handleExitBulkSelectionMode}
+          onBackPress={onBackPress}
+          actions={
+            activeView === 'grocery-list' && listId ? (
+              <GroceryListActions
+                items={items}
+                ownerId={ownerId}
+                groupBy={groupBy}
+                sortBy={sortBy}
+                onClearListPress={handleClearListPress}
+                onSharePress={handleSharePress}
+                onDeleteOrLeave={handleDeleteOrLeavePress}
+                onEditNamePress={handleEditNamePress}
+                onGroupByChange={handleGroupByChange}
+                onSortByChange={handleSortByChange}
+                onOpenAllGroupings={handleOpenAllGroupings}
+                onCollapseAllGroupings={handleCollapseAllGroupings}
+                isBulkSelectionModeActive={bulkSelectionState.isActive}
+                onEnterBulkSelectionMode={handleEnterBulkSelectionMode}
+                onExitBulkSelectionMode={handleExitBulkSelectionMode}
+              />
+            ) : null
+          }
         />
-        {viewSwitcher || bulkSelectionState.isActive ? (
-          <View className="h-12">
-            {bulkSelectionState.isActive ? (
-              <Animated.View
-                key="bulk-selection-controls"
-                entering={FadeIn.duration(180)}
-                exiting={FadeOut.duration(120)}
-                className="absolute inset-0"
-              >
-                <BulkSelectionControls
-                  selectedItemCount={bulkSelectionState.selectedItemIds.size}
-                  onSelectAll={handleSelectAllBulkItems}
-                  onClearAll={handleClearBulkSelection}
-                />
-              </Animated.View>
-            ) : (
-              <Animated.View
-                key="view-switcher"
-                entering={FadeIn.duration(180)}
-                exiting={FadeOut.duration(120)}
-                className="absolute inset-0"
-              >
-                {viewSwitcher}
-              </Animated.View>
-            )}
-          </View>
-        ) : null}
+        <View className="h-12">
+          {bulkSelectionState.isActive ? (
+            <Animated.View
+              key="bulk-selection-controls"
+              entering={FadeIn.duration(180)}
+              exiting={FadeOut.duration(120)}
+              className="absolute inset-0"
+            >
+              <BulkSelectionControls
+                selectedItemCount={bulkSelectionState.selectedItemIds.size}
+                onSelectAll={handleSelectAllBulkItems}
+                onClearAll={handleClearBulkSelection}
+              />
+            </Animated.View>
+          ) : (
+            <Animated.View
+              key="view-switcher"
+              entering={FadeIn.duration(180)}
+              exiting={FadeOut.duration(120)}
+              className="absolute inset-0"
+            >
+              <ListViewTabs
+                activeView={activeView}
+                onViewChange={onViewChange}
+                isMealPlanDisabled={!listId}
+              />
+            </Animated.View>
+          )}
+        </View>
         <View className="flex-1 overflow-hidden">
           <Animated.View
             className="absolute inset-0"
