@@ -2,7 +2,7 @@ import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinkIcon, PlusIcon } from 'lucide-react-native';
 import { useRef } from 'react';
-import { ActivityIndicator, Alert, Pressable, View } from 'react-native';
+import { ActivityIndicator, Alert, View } from 'react-native';
 
 import { Heading } from '@/components/text/heading';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,8 @@ import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGr
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
 import { db } from '@/lib/instant';
 import { buildListUrl } from '@/lib/navigation';
+
+import { HapticPressable } from '../../components/ui/haptic-pressable';
 
 type GroceryList = NonNullable<
   ReturnType<typeof useGroceryLists>['data']
@@ -118,7 +120,7 @@ export default function GroceryListsIndex() {
     const isShared = (item.shares?.length ?? 0) > 1;
 
     const row = (
-      <Pressable
+      <HapticPressable
         onPress={() => handleSelectList(item.id)}
         accessibilityRole="button"
         accessibilityLabel={`Open ${item.name}`}
@@ -138,7 +140,7 @@ export default function GroceryListsIndex() {
             </View>
           ) : null}
         </View>
-      </Pressable>
+      </HapticPressable>
     );
 
     return (
