@@ -2,8 +2,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { Heading } from '@/components/text/heading';
 import { BackButton } from '@/components/ui/back-button';
-import { Text } from '@/components/ui/text';
 import {
   RecipePageForm,
   RecipePageFormData,
@@ -46,23 +46,22 @@ export default function ManualCreateRecipePage() {
   };
 
   return (
-    <View className="flex-1 bg-background px-4">
-      <View className="mb-4 flex-row items-center">
-        <View className="w-12 items-start">
-          <BackButton />
+    <View className="flex-1 bg-background pt-6">
+      <View className="mb-6 flex-row items-center gap-3 px-4">
+        <BackButton />
+        <View className="flex-1">
+          <Heading>Create Recipe</Heading>
         </View>
-        <View className="mx-2 flex-1">
-          <Text className="text-center text-2xl font-bold">Create Recipe</Text>
-        </View>
-        <View className="w-12" />
       </View>
 
-      <RecipePageForm
-        mode="create"
-        initialValues={{ name: initialName }}
-        isPending={isPending}
-        onSubmit={handleSubmit}
-      />
+      <View className="flex-1 px-4">
+        <RecipePageForm
+          mode="create"
+          initialValues={{ name: initialName }}
+          isPending={isPending}
+          onSubmit={handleSubmit}
+        />
+      </View>
     </View>
   );
 }

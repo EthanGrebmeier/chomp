@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { Heading } from '@/components/text/heading';
 import { BackButton } from '@/components/ui/back-button';
 import { Text } from '@/components/ui/text';
 import { RecipeDetailSkeleton } from '@/features/recipes/components/recipe-detail-skeleton';
@@ -63,17 +64,14 @@ export default function EditRecipePage() {
 
   if (!recipe || !isOwner) {
     return (
-      <View className="flex-1 bg-background px-4">
-        <View className="mb-4 flex-row items-center">
-          <View className="w-12 items-start">
-            <BackButton />
+      <View className="flex-1 bg-background pt-6">
+        <View className="mb-6 flex-row items-center gap-3 px-4">
+          <BackButton />
+          <View className="flex-1">
+            <Heading>Edit Recipe</Heading>
           </View>
-          <View className="mx-2 flex-1">
-            <Text className="text-center text-2xl font-bold">Edit Recipe</Text>
-          </View>
-          <View className="w-12" />
         </View>
-        <View className="flex-1 items-center justify-center">
+        <View className="flex-1 items-center justify-center px-4">
           <Text className="text-center text-muted-foreground">
             {recipe
               ? 'You can only edit recipes you own.'
@@ -85,28 +83,27 @@ export default function EditRecipePage() {
   }
 
   return (
-    <View className="flex-1 bg-background px-4">
-      <View className="mb-4 flex-row items-center">
-        <View className="w-12 items-start">
-          <BackButton />
+    <View className="flex-1 bg-background pt-6">
+      <View className="mb-6 flex-row items-center gap-3 px-4">
+        <BackButton />
+        <View className="flex-1">
+          <Heading>Edit Recipe</Heading>
         </View>
-        <View className="mx-2 flex-1">
-          <Text className="text-center text-2xl font-bold">Edit Recipe</Text>
-        </View>
-        <View className="w-12" />
       </View>
 
-      <RecipePageForm
-        mode="edit"
-        initialValues={{
-          name: recipe.name,
-          mealTag: recipe.mealTag,
-          description: recipe.description,
-          sourceUrl: recipe.sourceUrl,
-        }}
-        isPending={isPending}
-        onSubmit={handleSubmit}
-      />
+      <View className="flex-1 px-4">
+        <RecipePageForm
+          mode="edit"
+          initialValues={{
+            name: recipe.name,
+            mealTag: recipe.mealTag,
+            description: recipe.description,
+            sourceUrl: recipe.sourceUrl,
+          }}
+          isPending={isPending}
+          onSubmit={handleSubmit}
+        />
+      </View>
     </View>
   );
 }
