@@ -1,10 +1,14 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
 import { GroceryListSkeleton } from '@/features/grocery-list/components/grocery-list-skeleton';
+import {
+  type ListView,
+  ListViewTabs,
+} from '@/features/grocery-list/components/list-view-tabs';
 import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
@@ -13,18 +17,38 @@ import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDelete
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
+import { MealPlanner } from '@/features/meal-planner/components';
 import { db } from '@/lib/instant';
 
 import { useSettings } from '../../features/grocery-list/hooks/useSettings';
 
 export default function List() {
-  const { listId: listIdParam } = useLocalSearchParams<{ listId?: string }>();
+  const { listId: listIdParam, view: viewParam } = useLocalSearchParams<{
+    listId?: string;
+    view?: string;
+  }>();
   const { data: settings, isLoading: settingsLoading } = useSettings();
-  const [activeListId, setActiveListId] = useState<string | undefined>(
-    undefined
-  );
-  const [activeListChangeVersion, setActiveListChangeVersion] = useState(0);
+  const [selectedListId, setSelectedListId] = useState<
+    string | null | undefined
+  >(listIdParam);
   const { data: lists, isLoading: listsLoading } = useGroceryLists();
+  const selectedList =
+    selectedListId === null
+      ? undefined
+      : lists?.grocery_lists.find(list => list.id === selectedListId);
+  const parameterList = lists?.grocery_lists.find(
+    list => list.id === listIdParam
+  );
+  const activeListId =
+    selectedListId === null
+      ? undefined
+      : (selectedList?.id ?? parameterList?.id ?? lists?.grocery_lists[0]?.id);
+  const requestedView: ListView =
+    viewParam === 'meal-plan' ? 'meal-plan' : 'grocery-list';
+  const activeView: ListView =
+    requestedView === 'meal-plan' && !activeListId && !listsLoading
+      ? 'grocery-list'
+      : requestedView;
   const { user } = db.useAuth();
   const deleteGroceryList = useDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
@@ -37,53 +61,23 @@ export default function List() {
         return;
       }
 
-      setActiveListId(nextListId);
-      setActiveListChangeVersion(version => version + 1);
-
-      if (nextListId) {
-        trackListAccess(nextListId);
-      }
+      setSelectedListId(nextListId ?? null);
+      router.setParams({ listId: nextListId });
     },
-    [activeListId, trackListAccess]
+    [activeListId]
   );
 
-  // Set active list from URL param if provided
   useEffect(() => {
-    if (listIdParam && lists?.grocery_lists.some(l => l.id === listIdParam)) {
-      handleActiveListChange(listIdParam);
+    if (activeListId) {
+      trackListAccess(activeListId);
     }
-  }, [handleActiveListChange, listIdParam, lists]);
+  }, [activeListId, trackListAccess]);
 
-  // Set default list if none selected or selection is stale
   useEffect(() => {
-    const setOrCreateDefaultList = async () => {
-      if (listsLoading) return;
-
-      const activeListStillExists = Boolean(
-        activeListId && lists?.grocery_lists.some(l => l.id === activeListId)
-      );
-
-      if (
-        lists?.grocery_lists.length &&
-        (!activeListId || !activeListStillExists)
-      ) {
-        const defaultListId = lists.grocery_lists[0].id;
-        handleActiveListChange(defaultListId);
-        return;
-      }
-
-      if (!lists?.grocery_lists.length) {
-        handleActiveListChange(undefined);
-      }
-    };
-
-    setOrCreateDefaultList();
-  }, [
-    activeListId,
-    handleActiveListChange,
-    lists,
-    listsLoading,
-  ]);
+    if (viewParam === 'meal-plan' && !activeListId && !listsLoading) {
+      router.setParams({ view: undefined });
+    }
+  }, [activeListId, listsLoading, viewParam]);
 
   const activeList = lists?.grocery_lists.find(
     list => list.id === activeListId
@@ -114,6 +108,19 @@ export default function List() {
   };
 
   const isLoading = listsLoading || settingsLoading;
+
+  const handleViewChange = useCallback(
+    (nextView: ListView) => {
+      if (nextView === 'meal-plan' && !activeListId) {
+        return;
+      }
+
+      router.setParams({
+        view: nextView === 'meal-plan' ? 'meal-plan' : undefined,
+      });
+    },
+    [activeListId]
+  );
 
   return (
     <View className="flex-1 bg-background">
@@ -146,7 +153,20 @@ export default function List() {
               onViewListsPress={() => selectListSheetRef.current?.present()}
               onDeleteOrLeave={handleDeleteOrLeave}
               onActiveListChange={listId => handleActiveListChange(listId)}
-              activeListChangeVersion={activeListChangeVersion}
+              activeListChangeVersion={activeListId}
+              activeView={activeView}
+              viewSwitcher={
+                <ListViewTabs
+                  activeView={activeView}
+                  onViewChange={handleViewChange}
+                  isMealPlanDisabled={!activeListId}
+                />
+              }
+              alternateContent={
+                activeListId ? (
+                  <MealPlanner listId={activeListId} showHeader={false} />
+                ) : null
+              }
             />
           </Animated.View>
         ) : null}

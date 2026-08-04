@@ -1,6 +1,10 @@
 import { View } from 'react-native';
 
-import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/ui/skeleton';
+import {
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
+} from '@/components/ui/skeleton';
 
 import { GroceryItemSkeleton } from './grocery-item-skeleton';
 
@@ -16,6 +20,12 @@ export const GroceryListSkeleton = () => {
             <SkeletonCircle size={24} />
           </View>
         </View>
+      </View>
+
+      {/* View switcher */}
+      <View className="h-12 flex-row items-center gap-6 px-4">
+        <Skeleton className="h-5 w-24 rounded-md" />
+        <Skeleton className="h-5 w-20 rounded-md" />
       </View>
 
       {/* First section header */}
@@ -57,7 +67,7 @@ export const GroceryListSkeleton = () => {
 
       {/* Bottom actions */}
       <View className="bottom-safe pointer-events-none absolute left-6 z-10">
-        <Skeleton className="h-10 w-40 rounded-full" />
+        <Skeleton className="h-10 w-36 rounded-full" />
       </View>
       <View className="bottom-safe pointer-events-none absolute right-6 z-10">
         <SkeletonCircle size={52} />
@@ -65,4 +75,3 @@ export const GroceryListSkeleton = () => {
     </View>
   );
 };
-

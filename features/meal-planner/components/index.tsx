@@ -20,6 +20,10 @@ import { MealPlanItemWithStore } from '../types';
 
 import { AddMealsToListButton } from './add-meals-to-list-button';
 import {
+  AddMealsToListConfirmation,
+  AddMealsToListSheetRef,
+} from './add-meals-to-list-confirmation';
+import {
   AddToMealPlanSheet,
   AddToMealPlanSheetRef,
 } from './add-to-meal-plan-sheet';
@@ -33,10 +37,19 @@ const DAYS_RANGE = 30; //  days before and after today
 
 type MealPlannerProps = {
   listId: string;
+  listName?: string;
+  onViewListsPress?: () => void;
+  showHeader?: boolean;
 };
 
-export const MealPlanner = ({ listId }: MealPlannerProps) => {
+export const MealPlanner = ({
+  listId,
+  listName,
+  onViewListsPress,
+  showHeader = true,
+}: MealPlannerProps) => {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
+  const addMealsToListSheet = useRef<AddMealsToListSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
   const pagerRef = useRef<PagerView>(null);
@@ -44,6 +57,9 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
   const { recipes, items } = useUserMealPlanData(listId);
   const { mutate: clearMealPlan } = useClearMealPlan();
   const hasMealPlanEntries = recipes.length > 0 || items.length > 0;
+  const unaddedCount =
+    recipes.filter(recipe => !recipe.addedToList).length +
+    items.filter(item => !item.addedToList).length;
 
   const { datesWithMeals, datesAllMealsAdded } = useMemo(() => {
     const mealStatusByDate = new Map<
@@ -183,33 +199,46 @@ export const MealPlanner = ({ listId }: MealPlannerProps) => {
 
   return (
     <View style={{ flex: 1 }}>
-      <View className="flex-row items-center px-4">
-        <View className="h-10 flex-1 justify-center">
-          <Heading>Meal Plan</Heading>
+      {showHeader ? (
+        <View className="flex-row items-center px-4">
+          <View className="h-10 flex-1 justify-center">
+            <Button
+              onPress={onViewListsPress}
+              disabled={!onViewListsPress}
+              variant="ghost"
+              className="self-start px-0 active:bg-transparent dark:active:bg-transparent"
+            >
+              <Heading>{listName ?? 'Meal Plan'}</Heading>
+            </Button>
+          </View>
+          <View className="flex-row items-center gap-1">
+            <DropdownMenuRoot
+              trigger={
+                <Button variant="ghost" size="icon" className="h-10 w-10">
+                  <Icon as={MoreHorizontalIcon} size={20} />
+                </Button>
+              }
+            >
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  key="clear-meal-plan"
+                  destructive
+                  onSelect={handleClearMealPlan}
+                  disabled={!hasMealPlanEntries}
+                >
+                  <DropdownMenuItemTitle>Clear Meal Plan</DropdownMenuItemTitle>
+                  <DropdownMenuItemIcon ios={{ name: 'xmark.circle' }} />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenuRoot>
+          </View>
         </View>
-        <View className="flex-row items-center gap-1">
-          <DropdownMenuRoot
-            trigger={
-              <Button variant="ghost" size="icon" className="h-10 w-10">
-                <Icon as={MoreHorizontalIcon} size={20} />
-              </Button>
-            }
-          >
-            <DropdownMenuContent>
-              <DropdownMenuItem
-                key="clear-meal-plan"
-                destructive
-                onSelect={handleClearMealPlan}
-                disabled={!hasMealPlanEntries}
-              >
-                <DropdownMenuItemTitle>Clear Meal Plan</DropdownMenuItemTitle>
-                <DropdownMenuItemIcon ios={{ name: 'xmark.circle' }} />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenuRoot>
-        </View>
-      </View>
-      <AddMealsToListButton listId={listId} />
+      ) : null}
+      <AddMealsToListButton
+        unaddedCount={unaddedCount}
+        onPress={() => addMealsToListSheet.current?.present()}
+      />
+      <AddMealsToListConfirmation ref={addMealsToListSheet} listId={listId} />
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} listId={listId} />
       <EditItemSheet ref={editItemSheet} />

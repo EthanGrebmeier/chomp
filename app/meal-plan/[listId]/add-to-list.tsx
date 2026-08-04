@@ -1,6 +1,6 @@
-import { useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 
-import { AddMealsToListConfirmation } from '@/features/meal-planner/components/add-meals-to-list-confirmation';
+import { navigation } from '@/lib/navigation';
 
 export default function AddMealsToListRoute() {
   const { listId } = useLocalSearchParams<{ listId?: string }>();
@@ -9,5 +9,5 @@ export default function AddMealsToListRoute() {
     return null;
   }
 
-  return <AddMealsToListConfirmation listId={listId} />;
+  return <Redirect href={navigation.goToMealPlan(listId)} />;
 }

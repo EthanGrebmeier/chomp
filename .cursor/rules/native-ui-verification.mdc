@@ -1,0 +1,13 @@
+---
+description: Verification workflow for the React Native application
+alwaysApply: true
+---
+
+# Native UI Verification
+
+- This is a React Native application whose primary runtime is the iOS simulator.
+- Do not launch a browser, Expo web, or browser automation to verify native UI or behavior unless the user explicitly requests web verification.
+- Do not take screenshots as a routine verification step unless the user explicitly requests them.
+- After changes, use the repository's required static checks and relevant automated tests.
+- Leave native visual and interaction verification to the user's iOS simulator unless the user explicitly asks the agent to operate a supported simulator tool.
+- Clearly state when behavior has not been verified in the native runtime. Do not treat browser behavior as evidence of native behavior.

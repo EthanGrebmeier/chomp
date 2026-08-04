@@ -36,6 +36,7 @@ export type TabRoute = 'list' | 'recipes';
 // Dynamic route parameters
 export interface ListParams {
   listId?: string;
+  view?: 'meal-plan';
 }
 
 export interface ListMealPlanParams {
@@ -94,16 +95,18 @@ export function buildRecipesUrl(params?: RecipesParams): Href {
  * Builds a URL for the single grocery list page
  */
 export function buildListUrl(params?: ListParams): Href {
-  const query = buildQueryString({ listId: params?.listId });
+  const query = buildQueryString({
+    listId: params?.listId,
+    view: params?.view,
+  });
   return `/(tabs)${query}` as Href;
 }
 
-export function buildMealPlanSheetUrl(params: ListMealPlanParams): Href {
-  const { listId } = params;
-  return {
-    pathname: '/meal-plan/[listId]',
-    params: { listId },
-  } as unknown as Href;
+export function buildMealPlanUrl(params: ListMealPlanParams): Href {
+  return buildListUrl({
+    listId: params.listId,
+    view: 'meal-plan',
+  });
 }
 
 export function buildMealPlanAddToListUrl(params: ListMealPlanParams): Href {
@@ -186,8 +189,8 @@ export const navigation = {
   goToRecipes: (listId?: string) =>
     buildRecipesUrl(listId ? { listId } : undefined),
 
-  // Meal plan sheet navigation
-  goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
+  // Meal plan view navigation
+  goToMealPlan: (listId: string) => buildMealPlanUrl({ listId }),
   goToMealPlanAddToList: (listId: string) =>
     buildMealPlanAddToListUrl({ listId }),
   goToFrequentItems: (listId: string) => buildFrequentItemsSheetUrl({ listId }),
@@ -213,7 +216,7 @@ export function useNavigation() {
     goToList: (listId?: string) => navigation.goToList(listId),
     goToRecipes: (listId?: string) => navigation.goToRecipes(listId),
 
-    // Meal plan sheet navigation
+    // Meal plan view navigation
     goToMealPlan: (listId: string) => navigation.goToMealPlan(listId),
     goToMealPlanAddToList: (listId: string) =>
       navigation.goToMealPlanAddToList(listId),
@@ -241,8 +244,8 @@ export const navActions = {
   goToRecipes: (listId?: string) =>
     buildRecipesUrl(listId ? { listId } : undefined),
 
-  // Meal plan sheet navigation
-  goToMealPlan: (listId: string) => buildMealPlanSheetUrl({ listId }),
+  // Meal plan view navigation
+  goToMealPlan: (listId: string) => buildMealPlanUrl({ listId }),
   goToMealPlanAddToList: (listId: string) =>
     buildMealPlanAddToListUrl({ listId }),
   goToFrequentItems: (listId: string) => buildFrequentItemsSheetUrl({ listId }),
@@ -268,7 +271,9 @@ export const ROUTES = {
   },
   LIST: '/(tabs)',
   MEAL_PLAN: {
-    SHEET: (listId: string) => `/meal-plan/${listId}`,
+    VIEW: (listId: string) =>
+      `/(tabs)?listId=${encodeURIComponent(listId)}&view=meal-plan`,
+    LEGACY: (listId: string) => `/meal-plan/${listId}`,
     ADD_TO_LIST: (listId: string) => `/meal-plan/${listId}/add-to-list`,
   },
   FREQUENT_ITEMS: {

@@ -1,7 +1,6 @@
-import { useLocalSearchParams } from 'expo-router';
-import { View } from 'react-native';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 
-import { MealPlanner } from '@/features/meal-planner/components';
+import { navigation } from '@/lib/navigation';
 
 export default function MealPlanRoute() {
   const { listId } = useLocalSearchParams<{ listId?: string }>();
@@ -10,9 +9,5 @@ export default function MealPlanRoute() {
     return null;
   }
 
-  return (
-    <View className="flex-1 bg-background pt-6">
-      <MealPlanner listId={listId} />
-    </View>
-  );
+  return <Redirect href={navigation.goToMealPlan(listId)} />;
 }

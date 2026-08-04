@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { buildEditRecipeUrl, buildListURL } from '../navigation';
+import {
+  buildEditRecipeUrl,
+  buildListUrl,
+  buildListURL,
+  buildMealPlanUrl,
+  navigation,
+} from '../navigation';
 
 const originalApiUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -47,5 +53,25 @@ describe('buildEditRecipeUrl', () => {
         listId: 'list-456',
       },
     });
+  });
+});
+
+describe('list workspace navigation', () => {
+  it('builds the default grocery list URL without a view parameter', () => {
+    expect(buildListUrl({ listId: 'list-456' })).toBe(
+      '/(tabs)?listId=list-456'
+    );
+  });
+
+  it('builds a deep link to the inline meal plan view', () => {
+    expect(buildMealPlanUrl({ listId: 'list-456' })).toBe(
+      '/(tabs)?listId=list-456&view=meal-plan'
+    );
+  });
+
+  it('routes existing meal-plan navigation calls to the inline view', () => {
+    expect(navigation.goToMealPlan('list-456')).toBe(
+      '/(tabs)?listId=list-456&view=meal-plan'
+    );
   });
 });

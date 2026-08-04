@@ -1,29 +1,20 @@
-import { router } from 'expo-router';
 import { ShoppingCartIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { navigation } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
-import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
-
 type AddMealsToListButtonProps = {
-  listId: string;
+  unaddedCount: number;
+  onPress: () => void;
 };
 
-export function AddMealsToListButton({ listId }: AddMealsToListButtonProps) {
-  const { recipes, items } = useUserMealPlanData(listId);
-  const unaddedCount =
-    recipes.filter(recipe => !recipe.addedToList).length +
-    items.filter(item => !item.addedToList).length;
-
-  const handlePress = () => {
-    router.push(navigation.goToMealPlanAddToList(listId));
-  };
-
+export function AddMealsToListButton({
+  unaddedCount,
+  onPress,
+}: AddMealsToListButtonProps) {
   return (
     <Button
       size="iconLg"
@@ -32,7 +23,12 @@ export function AddMealsToListButton({ listId }: AddMealsToListButtonProps) {
         'absolute bottom-12 left-6 z-10 h-10 w-24 transition-opacity',
         unaddedCount === 0 && 'opacity-50'
       )}
-      onPress={handlePress}
+      onPress={onPress}
+      accessibilityLabel={
+        unaddedCount > 0
+          ? `Review ${unaddedCount} meal plan entries to add to the grocery list`
+          : 'Review meal plan entries for the grocery list'
+      }
     >
       <View className="flex-row items-center gap-2">
         <Icon

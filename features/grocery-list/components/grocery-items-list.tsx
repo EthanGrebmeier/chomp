@@ -24,7 +24,7 @@ type GroceryItemsListProps = {
   totalItemCount: number;
   groupBy: GroceryListGroupBy;
   sortBy: GroceryListSortBy;
-  collapsedSectionsResetKey?: number;
+  collapsedSectionsResetKey?: string;
   groupingBulkAction?: {
     type: 'collapse' | 'expand';
     id: number;
