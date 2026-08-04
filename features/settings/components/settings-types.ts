@@ -1,8 +1,5 @@
-export type SettingsView =
-  | 'root'
+export type SettingsSubmenu =
   | 'saved-items'
   | 'stores'
   | 'categories'
   | 'account';
-
-export type SettingsSubmenu = Exclude<SettingsView, 'root'>;

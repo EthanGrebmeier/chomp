@@ -65,7 +65,7 @@ export const AccountScreen = () => {
 
   if (!isReconciled) {
     return (
-      <View className="flex-1 p-4">
+      <View className="p-4">
         <ActivityIndicator />
       </View>
     );
@@ -73,7 +73,7 @@ export const AccountScreen = () => {
 
   if (!hasInstantEmailSession) {
     return (
-      <View className="flex-1 p-4">
+      <View className="p-4">
         <Text variant="muted">You are not signed in.</Text>
       </View>
     );
@@ -84,7 +84,7 @@ export const AccountScreen = () => {
   const isBusy = isSigningOut || isDeleting;
 
   return (
-    <View className="flex-1 justify-between p-4">
+    <View className="gap-12 p-4">
       <View>
         <Text variant="muted" className="mb-1">
           Email
@@ -94,7 +94,7 @@ export const AccountScreen = () => {
         </Text>
       </View>
 
-      <View className="pb-safe-offset-12 gap-3">
+      <View className="gap-3 ">
         <Button
           variant="secondary"
           onPress={handleSignOut}

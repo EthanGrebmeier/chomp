@@ -29,7 +29,7 @@ export function SettingsMenu({ onSelect, onCreateAccount }: SettingsMenuProps) {
     <View className="justify-between gap-4 px-4">
       <View className="gap-4">
         <Heading className="ml-4">Settings</Heading>
-        <View className="mb-8 gap-4 p-4">
+        <View className="gap-4 p-4">
           <HapticPressable
             onPress={() => onSelect('saved-items')}
             className="flex-row items-center justify-between border-b border-border pb-4 active:opacity-70"

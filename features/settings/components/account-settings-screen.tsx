@@ -10,7 +10,7 @@ type AccountSettingsScreenProps = {
 
 export function AccountSettingsScreen({ onBack }: AccountSettingsScreenProps) {
   return (
-    <View className="flex-1 bg-background pt-6">
+    <View className="bg-background pt-6">
       <View className="flex-row items-center gap-3 px-4">
         <BackButton onPress={onBack} href="/settings" />
         <Heading>Account</Heading>

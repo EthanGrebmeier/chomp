@@ -106,10 +106,55 @@ function InitialLayout() {
         <Stack.Screen
           name="settings"
           options={{
-            presentation: 'transparentModal',
-            animation: 'none',
+            presentation: 'formSheet',
+            sheetAllowedDetents: 'fitToContents',
+            sheetInitialDetentIndex: 0,
             contentStyle: {
-              backgroundColor: 'transparent',
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="saved-items"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="stores"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="categories"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="account"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: 'fitToContents',
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: theme.background,
             },
           }}
         />
