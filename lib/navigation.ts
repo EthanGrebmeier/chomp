@@ -48,10 +48,6 @@ export interface ListMealPlanParams {
   listId: string;
 }
 
-export interface FrequentItemsParams {
-  listId: string;
-}
-
 export interface RecipeParams {
   recipeId: string;
   listId?: string;
@@ -135,14 +131,6 @@ export function buildMealPlanAddToListUrl(params: ListMealPlanParams): Href {
   } as unknown as Href;
 }
 
-export function buildFrequentItemsSheetUrl(params: FrequentItemsParams): Href {
-  const { listId } = params;
-  return {
-    pathname: '/frequent-items/[listId]',
-    params: { listId },
-  } as unknown as Href;
-}
-
 /**
  * Builds a URL for a recipe detail page
  */
@@ -213,7 +201,6 @@ export const navigation = {
   goToMealPlan: (listId: string) => buildMealPlanUrl({ listId }),
   goToMealPlanAddToList: (listId: string) =>
     buildMealPlanAddToListUrl({ listId }),
-  goToFrequentItems: (listId: string) => buildFrequentItemsSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -242,7 +229,6 @@ export function useNavigation() {
     goToMealPlan: (listId: string) => navigation.goToMealPlan(listId),
     goToMealPlanAddToList: (listId: string) =>
       navigation.goToMealPlanAddToList(listId),
-    goToFrequentItems: (listId: string) => navigation.goToFrequentItems(listId),
 
     // Recipe navigation
     goToRecipe: (recipeId: string, listId?: string) =>
@@ -272,7 +258,6 @@ export const navActions = {
   goToMealPlan: (listId: string) => buildMealPlanUrl({ listId }),
   goToMealPlanAddToList: (listId: string) =>
     buildMealPlanAddToListUrl({ listId }),
-  goToFrequentItems: (listId: string) => buildFrequentItemsSheetUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -302,9 +287,6 @@ export const ROUTES = {
       `/(tabs)?listId=${encodeURIComponent(listId)}&view=meal-plan`,
     LEGACY: (listId: string) => `/meal-plan/${listId}`,
     ADD_TO_LIST: (listId: string) => `/meal-plan/${listId}/add-to-list`,
-  },
-  FREQUENT_ITEMS: {
-    SHEET: (listId: string) => `/frequent-items/${listId}`,
   },
   RECIPES: {
     INDEX: '/recipes',

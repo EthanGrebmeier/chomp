@@ -2,7 +2,7 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
+import { FrequentItemsScreen } from '../../../features/frequent-items/components/frequent-items-screen';
 import {
   RecipeConflictSheet,
   RecipeConflictSheetRef,
@@ -38,7 +39,7 @@ import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 import { IngredientSelector } from './ingredient-selector';
 import { RecipeSelector } from './recipe-selector';
 
-type AddMode = 'item' | 'recipe';
+type AddMode = 'item' | 'recipe' | 'recent';
 
 type ModeToggleProps = {
   mode: AddMode;
@@ -86,6 +87,25 @@ const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
           Recipe
         </Text>
       </HapticPressable>
+      <HapticPressable
+        onPress={() => onModeChange('recent')}
+        className={cn(
+          'rounded-full px-4 py-2',
+          mode === 'recent' ? 'bg-primary' : 'bg-muted'
+        )}
+        hapticType="light"
+      >
+        <Text
+          className={cn(
+            'text-base font-semibold',
+            mode === 'recent'
+              ? 'text-primary-foreground'
+              : 'text-muted-foreground'
+          )}
+        >
+          Recent
+        </Text>
+      </HapticPressable>
     </View>
   );
 };
@@ -105,6 +125,7 @@ const AddItemSheet = ({
   isItemAdded,
   onItemAddedFeedbackComplete,
 }: AddItemSheetProps) => {
+  const { height: windowHeight } = useWindowDimensions();
   const triggerOpacity = useSharedValue(isTriggerVisible ? 1 : 0);
   const ref = useRef<TrueSheet>(null);
   const {
@@ -299,12 +320,12 @@ const AddItemSheet = ({
         detents={[1]}
         name="add-item-sheet"
         ref={ref}
-        viewClassName={mode === 'recipe' ? 'flex-1' : undefined}
+        viewClassName={selectedRecipe ? 'flex-1' : undefined}
         onOpen={() => {
           itemInputRef.current?.focus();
         }}
         onDismiss={handleClose}
-        scrollable={mode === 'recipe'}
+        scrollable
         footer={
           mode === 'item' ? (
             <View className="pb-safe gap-4 px-4">
@@ -341,21 +362,21 @@ const AddItemSheet = ({
           ) : undefined
         }
       >
-        <View className={mode === 'recipe' ? 'flex-1' : undefined}>
-          {!selectedRecipe && (
+        <View className={selectedRecipe ? 'flex-1' : undefined}>
+          {!selectedRecipe ? (
             <Animated.View
               entering={FadeIn.duration(300)}
               exiting={FadeOut.duration(300)}
             >
               <ModeToggle mode={mode} onModeChange={handleModeChange} />
             </Animated.View>
-          )}
+          ) : null}
           {mode === 'item' ? (
             <View className="px-4">
               <ItemForm />
             </View>
-          ) : (
-            <View className="flex-1">
+          ) : mode === 'recipe' ? (
+            <View className={selectedRecipe ? 'flex-1' : undefined}>
               {selectedRecipe ? (
                 <Animated.View
                   key="ingredient-selector"
@@ -377,15 +398,22 @@ const AddItemSheet = ({
               ) : (
                 <Animated.View
                   key="recipe-selector"
-                  className="flex-1"
                   entering={FadeIn.duration(300)}
                 >
                   <RecipeSelector
+                    listHeight={Math.max(240, windowHeight - 250)}
                     onSelectRecipe={handleRecipeSelect}
                     onCreateRecipe={handleCreateRecipe}
                   />
                 </Animated.View>
               )}
+            </View>
+          ) : (
+            <View>
+              <FrequentItemsScreen
+                listHeight={Math.max(320, windowHeight - 180)}
+                listId={groceryListId}
+              />
             </View>
           )}
         </View>

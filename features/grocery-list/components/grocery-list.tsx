@@ -1,7 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { Href, router, useFocusEffect } from 'expo-router';
-import { BookOpenIcon, Clock3Icon, SettingsIcon } from 'lucide-react-native';
+import { BookOpenIcon, SettingsIcon } from 'lucide-react-native';
 import {
   type ReactNode,
   useCallback,
@@ -461,11 +461,6 @@ export const GroceryList = ({
 
   const handleOpenRecipes = () => {
     pushWithRouteLock(navigation.goToRecipes(listId));
-  };
-
-  const handleOpenFrequentItems = () => {
-    if (!listId) return;
-    pushWithRouteLock(navigation.goToFrequentItems(listId));
   };
 
   const handleEnterBulkSelectionMode = () => {
@@ -1059,20 +1054,6 @@ export const GroceryList = ({
                 size={24}
                 strokeWidth={2}
                 className="mt-0.5 text-accent-foreground"
-              />
-            </HapticPressable>
-            <HapticPressable
-              onPress={handleOpenFrequentItems}
-              disabled={isRoutePushPending}
-              className="gap-2 active:opacity-80"
-              hapticType="selection"
-              hitSlop={10}
-            >
-              <Icon
-                as={Clock3Icon}
-                size={24}
-                strokeWidth={2}
-                className="text-accent-foreground"
               />
             </HapticPressable>
             <HapticPressable

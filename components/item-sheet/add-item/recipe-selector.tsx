@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, ListRenderItemInfo, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDebounceCallback } from 'usehooks-ts';
 
 import { EmptyRecipePrompt } from '../../../features/recipes/components/empty-recipe-prompt';
@@ -25,13 +26,16 @@ type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
   onCreateRecipe: (initialName?: string) => void;
   fillHeight?: boolean;
+  listHeight?: number;
 };
 
 export const RecipeSelector = ({
   onSelectRecipe,
   onCreateRecipe,
   fillHeight = false,
+  listHeight,
 }: RecipeSelectorProps) => {
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { data: recipes, isLoading } = useRecipes();
   const [searchQuery, setSearchQuery] = useState('');
   const [mealTag, setMealTag] = useState<string | undefined>();
@@ -145,10 +149,13 @@ export const RecipeSelector = ({
       ) : (
         <FlatList
           className={cn(fillHeight && 'flex-1')}
+          contentInset={{ bottom: safeAreaBottom + 24 }}
           data={filteredRecipes}
           keyExtractor={item => item.id}
-          showsVerticalScrollIndicator={false}
           renderItem={renderRecipeItem}
+          scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
+          showsVerticalScrollIndicator={false}
+          style={listHeight ? { height: listHeight } : undefined}
         />
       )}
     </View>

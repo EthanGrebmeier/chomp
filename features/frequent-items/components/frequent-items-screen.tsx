@@ -1,7 +1,7 @@
-import { FlashList } from '@shopify/flash-list';
 import { PlusIcon } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { FlatList, Platform, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
 import { CategoryTag } from '@/components/category-tag';
@@ -29,6 +29,7 @@ import {
 
 type FrequentItemsScreenProps = {
   listId: string;
+  listHeight?: number;
 };
 
 type FrequentItemRowProps = {
@@ -117,14 +118,18 @@ const FrequentItemRow = ({
 };
 
 const FrequentItemsSkeleton = () => (
-  <View className="flex-1">
+  <View style={{ minHeight: 500 }}>
     {Array.from({ length: 8 }, (_, index) => (
       <ListItemSkeleton key={index} showBorder={index !== 7} />
     ))}
   </View>
 );
 
-export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
+export const FrequentItemsScreen = ({
+  listId,
+  listHeight,
+}: FrequentItemsScreenProps) => {
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { frequentItems, isLoading, error } = useFrequentItems(listId);
   const { data: stores } = useStores();
   const { data: categoryOptions } = useCategoryOptions();
@@ -189,7 +194,7 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="pb-6">
       <View className="gap-1 px-4 pb-3">
         <View className="flex-row items-center gap-2">
           <Heading>Frequent Items</Heading>
@@ -198,27 +203,31 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
           Your most-added items from the last 90 days.
         </Text>
       </View>
-
       {isLoading ? (
         <FrequentItemsSkeleton />
       ) : error ? (
-        <View className="flex-1 items-center justify-center gap-1 px-6">
+        <View
+          style={{ minHeight: 500 }}
+          className="items-center justify-center gap-1 px-6"
+        >
           <EmptyHeading>Couldn&apos;t load frequent items</EmptyHeading>
           <EmptySubtext>
             Check your connection, then reopen this sheet.
           </EmptySubtext>
         </View>
       ) : visibleItems.length === 0 ? (
-        <View className="flex-1 items-center justify-center gap-1 px-6">
+        <View
+          style={{ minHeight: 500 }}
+          className="items-center justify-center gap-1 px-6"
+        >
           <EmptyHeading>No frequent items yet</EmptyHeading>
           <EmptySubtext>
             Items added at least twice within 90 days will appear here.
           </EmptySubtext>
         </View>
       ) : (
-        <FlashList
-          contentInsetAdjustmentBehavior="automatic"
-          contentContainerClassName="pb-safe"
+        <FlatList
+          contentInset={{ bottom: safeAreaBottom + 24 }}
           data={visibleItems}
           keyExtractor={item => item.normalizedName}
           renderItem={({ item, index }) => (
@@ -229,7 +238,9 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
               onAdd={handleAdd}
             />
           )}
+          scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
           showsVerticalScrollIndicator={false}
+          style={listHeight ? { height: listHeight } : undefined}
         />
       )}
     </View>
