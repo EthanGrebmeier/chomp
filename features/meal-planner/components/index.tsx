@@ -1,20 +1,12 @@
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
-import { MoreHorizontalIcon, PlusIcon } from 'lucide-react-native';
+import { PlusIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, View } from 'react-native';
+import { AppState, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuItemIcon,
-  DropdownMenuItemTitle,
-  DropdownMenuRoot,
-} from '../../../components/ui/dropdown-menu';
 import { Icon } from '../../../components/ui/icon';
-import { useClearMealPlan } from '../hooks/useClearMealPlan';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
 import { MealPlanItemWithStore } from '../types';
 
@@ -32,6 +24,7 @@ import { EditItemSheet, EditItemSheetRef } from './edit-item-sheet';
 import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
 import { MealPlanDate } from './meal-plan-date';
 import { MealPlanDateView } from './meal-plan-date-view';
+import { MealPlanDropdownMenu } from './meal-plan-dropdown-menu';
 
 const DAYS_RANGE = 30; //  days before and after today
 
@@ -55,8 +48,6 @@ export const MealPlanner = ({
   const pagerRef = useRef<PagerView>(null);
   const isProgrammaticNavigationRef = useRef(false);
   const { recipes, items } = useUserMealPlanData(listId);
-  const { mutate: clearMealPlan } = useClearMealPlan();
-  const hasMealPlanEntries = recipes.length > 0 || items.length > 0;
   const unaddedCount =
     recipes.filter(recipe => !recipe.addedToList).length +
     items.filter(item => !item.addedToList).length;
@@ -176,27 +167,6 @@ export const MealPlanner = ({
     handleDatePress(today);
   };
 
-  const handleClearMealPlan = () => {
-    if (!hasMealPlanEntries) return;
-
-    Alert.alert(
-      'Clear Meal Plan',
-      'Are you sure you want to remove all meals and items from your meal plan?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: () =>
-            clearMealPlan({
-              mealPlanRecipeIds: recipes.map(recipe => recipe.id),
-              mealPlanItemIds: items.map(item => item.id),
-            }),
-        },
-      ]
-    );
-  };
-
   return (
     <View style={{ flex: 1 }}>
       {showHeader ? (
@@ -212,25 +182,7 @@ export const MealPlanner = ({
             </Button>
           </View>
           <View className="flex-row items-center gap-1">
-            <DropdownMenuRoot
-              trigger={
-                <Button variant="ghost" size="icon" className="h-10 w-10">
-                  <Icon as={MoreHorizontalIcon} size={20} />
-                </Button>
-              }
-            >
-              <DropdownMenuContent>
-                <DropdownMenuItem
-                  key="clear-meal-plan"
-                  destructive
-                  onSelect={handleClearMealPlan}
-                  disabled={!hasMealPlanEntries}
-                >
-                  <DropdownMenuItemTitle>Clear Meal Plan</DropdownMenuItemTitle>
-                  <DropdownMenuItemIcon ios={{ name: 'xmark.circle' }} />
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenuRoot>
+            <MealPlanDropdownMenu recipes={recipes} items={items} />
           </View>
         </View>
       ) : null}

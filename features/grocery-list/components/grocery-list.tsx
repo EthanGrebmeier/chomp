@@ -49,6 +49,7 @@ import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
 } from '../../grocery-lists/components/select-grocery-list-sheet';
+import { MealPlanDropdownMenu } from '../../meal-planner/components/meal-plan-dropdown-menu';
 import { useUserMealPlanData } from '../../meal-planner/hooks/useUserMealPlanData';
 import {
   clearBulkSelection,
@@ -914,6 +915,11 @@ export const GroceryList = ({
                 isBulkSelectionModeActive={bulkSelectionState.isActive}
                 onEnterBulkSelectionMode={handleEnterBulkSelectionMode}
                 onExitBulkSelectionMode={handleExitBulkSelectionMode}
+              />
+            ) : activeView === 'meal-plan' && listId ? (
+              <MealPlanDropdownMenu
+                recipes={mealPlanRecipes}
+                items={mealPlanItems}
               />
             ) : null
           }

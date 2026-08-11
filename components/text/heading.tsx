@@ -1,13 +1,14 @@
 import { VariantProps, cva } from 'class-variance-authority';
+import { ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
 
 import { Text } from '../ui/text';
 
-type HeadingProps = VariantProps<typeof headingVariants> & {
-  children: React.ReactNode;
-  className?: string;
-};
+type HeadingProps = Omit<ComponentProps<typeof Text>, 'className' | 'variant'> &
+  VariantProps<typeof headingVariants> & {
+    className?: string;
+  };
 
 const headingVariants = cva(
   'text-2xl font-bold leading-8 tracking-tight text-foreground',
@@ -22,9 +23,18 @@ const headingVariants = cva(
   }
 );
 
-export const Heading = ({ children, className, size }: HeadingProps) => {
+export const Heading = ({
+  children,
+  className,
+  size,
+  ...props
+}: HeadingProps) => {
   return (
-    <Text variant="h1" className={cn(headingVariants({ size }), className)}>
+    <Text
+      variant="h1"
+      className={cn(headingVariants({ size }), className)}
+      {...props}
+    >
       {children}
     </Text>
   );

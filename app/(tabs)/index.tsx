@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -37,12 +37,13 @@ export default function List() {
     selectedListId === null
       ? undefined
       : (selectedList?.id ?? parameterList?.id ?? lists?.grocery_lists[0]?.id);
-  const requestedView: ListView =
+  const routeView: ListView =
     viewParam === 'meal-plan' ? 'meal-plan' : 'grocery-list';
+  const [selectedView, setSelectedView] = useState<ListView>(routeView);
   const activeView: ListView =
-    requestedView === 'meal-plan' && !activeListId && !listsLoading
+    selectedView === 'meal-plan' && !activeListId && !listsLoading
       ? 'grocery-list'
-      : requestedView;
+      : selectedView;
   const { user } = db.useAuth();
   const deleteGroceryList = useDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
@@ -65,6 +66,12 @@ export default function List() {
       trackListAccess(activeListId);
     }
   }, [activeListId, trackListAccess]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedView(routeView);
+    }, [routeView])
+  );
 
   useEffect(() => {
     if (viewParam === 'meal-plan' && !activeListId && !listsLoading) {
@@ -107,6 +114,7 @@ export default function List() {
         return;
       }
 
+      setSelectedView(nextView);
       router.setParams({
         view: nextView === 'meal-plan' ? 'meal-plan' : undefined,
       });
