@@ -9,5 +9,5 @@ export default function AddMealsToListRoute() {
     return null;
   }
 
-  return <Redirect href={navigation.goToMealPlan(listId)} />;
+  return <Redirect href={navigation.goToMealPlan(listId)} withAnchor />;
 }

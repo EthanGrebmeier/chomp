@@ -188,7 +188,7 @@ export default function SignInEmail() {
         await initializeDefaultGroceryList();
       }
       setBridgeRetry(null);
-      replace('/(tabs)');
+      replace('/(tabs)', { withAnchor: true });
     } catch (error) {
       // Clerk auth already succeeded. A transient Instant bridge timeout should
       // not tear down the Clerk session — keep it and let the user retry the

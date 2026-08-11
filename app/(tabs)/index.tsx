@@ -115,7 +115,7 @@ export default function List() {
   );
 
   const handleOpenListsIndex = useCallback(() => {
-    router.push(
+    router.dismissTo(
       buildGroceryListsIndexUrl({
         selectedListId: activeListId,
         view: activeView === 'meal-plan' ? 'meal-plan' : undefined,

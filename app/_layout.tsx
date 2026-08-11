@@ -67,17 +67,6 @@ function InitialLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen
-          name="grocery-lists"
-          options={{
-            presentation: 'card',
-            animation: 'slide_from_left',
-            contentStyle: {
-              height: '100%',
-              backgroundColor: theme.background,
-            },
-          }}
-        />
-        <Stack.Screen
           name="meal-plan"
           options={{
             presentation: 'formSheet',

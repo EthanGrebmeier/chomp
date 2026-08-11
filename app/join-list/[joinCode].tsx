@@ -24,7 +24,9 @@ export default function JoinListByCode() {
   } = useJoinGroceryListByCode({
     onSuccess: result => {
       if (result.success) {
-        router.replace(navigation.goToList(result.listId));
+        router.replace(navigation.goToList(result.listId), {
+          withAnchor: true,
+        });
       }
     },
   });
@@ -52,7 +54,9 @@ export default function JoinListByCode() {
 
     if (listWithCode) {
       // User already has access, navigate to the list
-      router.replace(navigation.goToList(listWithCode.id));
+      router.replace(navigation.goToList(listWithCode.id), {
+        withAnchor: true,
+      });
       return;
     }
 
@@ -74,7 +78,7 @@ export default function JoinListByCode() {
   ]);
 
   const handleGoToLists = () => {
-    router.replace(navigation.goToList());
+    router.replace(navigation.goToList(), { withAnchor: true });
   };
 
   // Determine error message

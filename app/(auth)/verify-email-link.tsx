@@ -195,10 +195,11 @@ export default function VerifyEmailLink() {
 
           hasResolvedVerification.current = true;
 
-          if (
+          const isCompleteRoute =
             to === EMAIL_LINK_COMPLETE_ROUTE ||
-            to.startsWith(`${EMAIL_LINK_COMPLETE_ROUTE}?`)
-          ) {
+            to.startsWith(`${EMAIL_LINK_COMPLETE_ROUTE}?`);
+
+          if (isCompleteRoute) {
             setVerificationState('finishing');
             logVerification(
               'starting Instant sign-in after successful verification'
@@ -239,7 +240,7 @@ export default function VerifyEmailLink() {
 
           if (!isCancelled) {
             logVerification('navigating after verification', to);
-            router.replace(to as Href);
+            router.replace(to as Href, { withAnchor: isCompleteRoute });
           }
         };
 

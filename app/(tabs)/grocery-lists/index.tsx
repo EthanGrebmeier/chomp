@@ -19,6 +19,7 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
+import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import {
@@ -38,8 +39,6 @@ import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGr
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
 import { db } from '@/lib/instant';
 import { buildListUrl } from '@/lib/navigation';
-
-import { HapticPressable } from '../../components/ui/haptic-pressable';
 
 type GroceryList = NonNullable<
   ReturnType<typeof useGroceryLists>['data']
@@ -65,7 +64,9 @@ export default function GroceryListsIndex() {
 
   const handleSelectList = (listId: string) => {
     void trackListAccess(listId);
-    router.dismissTo(buildListUrl({ listId, view: listView }));
+    router.navigate(buildListUrl({ listId, view: listView }), {
+      withAnchor: true,
+    });
   };
 
   const selectFallbackAfterRemoval = (removedListId: string) => {
