@@ -41,26 +41,63 @@
           "backgroundColor": "#ECEDDB"
         }
       ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "The app accesses your photos to let you select them as recipe images."
-        }
-      ],
       "expo-sqlite",
       [
         "expo-font",
         {
-          "fonts": [
-            "node_modules/@expo-google-fonts/averia-serif-libre/400Regular/AveriaSerifLibre_400Regular.ttf",
-            "node_modules/@expo-google-fonts/jaro/400Regular/Jaro_400Regular.ttf"
-          ]
+          "ios": {
+            "fonts": [
+              "node_modules/@expo-google-fonts/averia-serif-libre/400Regular/AveriaSerifLibre_400Regular.ttf",
+              "node_modules/@expo-google-fonts/jaro/400Regular/Jaro_400Regular.ttf",
+              "assets/fonts/alpino/Alpino-Regular.otf",
+              "assets/fonts/alpino/Alpino-Medium.otf"
+            ]
+          },
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "AveriaSerifLibre-Regular",
+                "fontDefinitions": [
+                  {
+                    "path": "node_modules/@expo-google-fonts/averia-serif-libre/400Regular/AveriaSerifLibre_400Regular.ttf",
+                    "weight": 400
+                  }
+                ]
+              },
+              {
+                "fontFamily": "Jaro-Regular",
+                "fontDefinitions": [
+                  {
+                    "path": "node_modules/@expo-google-fonts/jaro/400Regular/Jaro_400Regular.ttf",
+                    "weight": 400
+                  }
+                ]
+              },
+              {
+                "fontFamily": "Alpino-Regular",
+                "fontDefinitions": [
+                  {
+                    "path": "assets/fonts/alpino/Alpino-Regular.otf",
+                    "weight": 400
+                  }
+                ]
+              },
+              {
+                "fontFamily": "Alpino-Medium",
+                "fontDefinitions": [
+                  {
+                    "path": "assets/fonts/alpino/Alpino-Medium.otf",
+                    "weight": 500
+                  }
+                ]
+              }
+            ]
+          }
         }
       ],
       "expo-web-browser",
       "expo-secure-store",
       "expo-apple-authentication",
-      "@react-native-community/datetimepicker",
       "expo-image",
       "expo-status-bar",
       "@clerk/expo"

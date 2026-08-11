@@ -1,10 +1,7 @@
 import { ClerkProvider } from '@clerk/expo';
 import { resourceCache } from '@clerk/expo/resource-cache';
 import { tokenCache } from '@clerk/expo/token-cache';
-import { AveriaSerifLibre_400Regular } from '@expo-google-fonts/averia-serif-libre';
-import { Jaro_400Regular } from '@expo-google-fonts/jaro';
 import { PortalHost } from '@rn-primitives/portal';
-import { useFonts } from 'expo-font';
 import { Stack, useRootNavigationState, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -31,6 +28,7 @@ import {
 import { QueryClientProvider } from '@/providers/query-client-provider';
 
 import '../global.css';
+import { useAppFonts } from '../hooks/use-app-fonts';
 import { useTheme } from '../hooks/use-theme';
 
 configureReanimatedLogger({
@@ -177,12 +175,7 @@ function RootLayoutContent({
 }: {
   isStartupUpdateReady: boolean;
 }) {
-  const [fontsLoaded, fontLoadError] = useFonts({
-    'averia-serif-libre': AveriaSerifLibre_400Regular,
-    'jaro-regular': Jaro_400Regular,
-    'alpino-regular': require('../assets/fonts/alpino/Alpino-Regular.otf'),
-    'alpino-medium': require('../assets/fonts/alpino/Alpino-Medium.otf'),
-  });
+  const [fontsLoaded, fontLoadError] = useAppFonts();
   const { hasAppAccess, isReconciled, isSignedInWithClerk, shouldBlockAuthUi } =
     useInstantAuthState();
   const rootNavigationState = useRootNavigationState();
@@ -197,7 +190,7 @@ function RootLayoutContent({
   }, []);
 
   useEffect(() => {
-    const areFontsReady = fontsLoaded || Boolean(fontLoadError);
+    const areFontsReady = fontsLoaded ? true : Boolean(fontLoadError);
     const isMigrationErrorVisible = migrationStatus === 'error';
     const isNavigationReady = Boolean(rootNavigationState?.key);
     const topLevelSegment = segments[0];
