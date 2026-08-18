@@ -166,7 +166,11 @@ export default function List() {
               onViewChange={handleViewChange}
               alternateContent={
                 activeListId ? (
-                  <MealPlanner listId={activeListId} showHeader={false} />
+                  <MealPlanner
+                    listId={activeListId}
+                    showHeader={false}
+                    onViewChange={handleViewChange}
+                  />
                 ) : null
               }
             />

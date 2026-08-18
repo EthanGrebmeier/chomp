@@ -20,6 +20,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 
+import { type ListView } from '../../grocery-list/components/list-view-tabs';
 import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { useAddMealsToGroceryList } from '../hooks/useAddMealPlanToGroceryList';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
@@ -211,6 +212,7 @@ function MealPlanRecipeRow({
 type AddMealsToListConfirmationProps = {
   listId: string;
   ref?: React.RefObject<AddMealsToListSheetRef | null>;
+  onViewChange?: (view: ListView) => void;
 };
 
 export type AddMealsToListSheetRef = {
@@ -221,6 +223,7 @@ export type AddMealsToListSheetRef = {
 export function AddMealsToListConfirmation({
   listId,
   ref,
+  onViewChange,
 }: AddMealsToListConfirmationProps) {
   const sheetRef = useRef<TrueSheet>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
@@ -358,6 +361,8 @@ export function AddMealsToListConfirmation({
         onSuccess: result => {
           if (result.addedRecipes + result.addedItems === 0) {
             toast.info('No new meals to add - all meals already added to list');
+          } else {
+            onViewChange?.('grocery-list');
           }
           sheetRef.current?.dismiss();
         },

@@ -7,6 +7,7 @@ import PagerView from 'react-native-pager-view';
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
+import { type ListView } from '../../grocery-list/components/list-view-tabs';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
 import { MealPlanItemWithStore } from '../types';
 
@@ -33,6 +34,7 @@ type MealPlannerProps = {
   listName?: string;
   onViewListsPress?: () => void;
   showHeader?: boolean;
+  onViewChange?: (view: ListView) => void;
 };
 
 export const MealPlanner = ({
@@ -40,6 +42,7 @@ export const MealPlanner = ({
   listName,
   onViewListsPress,
   showHeader = true,
+  onViewChange,
 }: MealPlannerProps) => {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const addMealsToListSheet = useRef<AddMealsToListSheetRef>(null);
@@ -190,7 +193,11 @@ export const MealPlanner = ({
         unaddedCount={unaddedCount}
         onPress={() => addMealsToListSheet.current?.present()}
       />
-      <AddMealsToListConfirmation ref={addMealsToListSheet} listId={listId} />
+      <AddMealsToListConfirmation
+        ref={addMealsToListSheet}
+        listId={listId}
+        onViewChange={onViewChange}
+      />
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} listId={listId} />
       <EditItemSheet ref={editItemSheet} />
@@ -223,6 +230,7 @@ export const MealPlanner = ({
                   editMealSheet.current?.open({ mealPlanRecipe, recipe });
                 }}
                 onItemPress={handleItemPress}
+                onViewChange={onViewChange}
               />
             </View>
           ))}

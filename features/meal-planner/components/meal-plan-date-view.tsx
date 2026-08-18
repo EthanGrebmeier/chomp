@@ -12,6 +12,7 @@ import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { Button } from '../../../components/ui/button';
 import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
+import { type ListView } from '../../grocery-list/components/list-view-tabs';
 import { Recipe } from '../../recipes/types';
 import { useAddMealsToGroceryList, useUnmarkMealAdded } from '../hooks';
 import {
@@ -50,6 +51,7 @@ type MealPlanDateViewProps = {
     recipe: Recipe;
   }) => void;
   onItemPress: (item: MealPlanItemWithStore) => void;
+  onViewChange?: (view: ListView) => void;
 };
 
 const mealTimeOrder: MealTag[] = [
@@ -67,6 +69,7 @@ export const MealPlanDateView = ({
   items,
   onMealPress,
   onItemPress,
+  onViewChange,
 }: MealPlanDateViewProps) => {
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
     useAddMealsToGroceryList();
@@ -265,6 +268,8 @@ export const MealPlanDateView = ({
           const totalAdded = result.addedRecipes + result.addedItems;
           if (totalAdded === 0) {
             toast.info('Already added to list');
+          } else {
+            onViewChange?.('grocery-list');
           }
           closeQuickReviewSheet();
         },
@@ -273,7 +278,14 @@ export const MealPlanDateView = ({
         },
       }
     );
-  }, [addMealsToGroceryList, closeQuickReviewSheet, isAddingToList, listId, quickReviewMealPlanRecipe]);
+  }, [
+    addMealsToGroceryList,
+    closeQuickReviewSheet,
+    isAddingToList,
+    listId,
+    onViewChange,
+    quickReviewMealPlanRecipe,
+  ]);
 
   const handleIndicatorPress = useCallback(
     (

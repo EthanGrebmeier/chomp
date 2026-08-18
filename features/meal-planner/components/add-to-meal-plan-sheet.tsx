@@ -396,6 +396,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
             </Animated.View>
           ) : (
             <RecipeSelector
+              fillHeight
               onSelectRecipe={handleSelectRecipe}
               onCreateRecipe={handleCreateRecipe}
             />

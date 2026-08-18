@@ -115,7 +115,7 @@ export const RecipeSelector = ({
   }
 
   return (
-    <View className={cn(fillHeight ? 'flex-1 pb-6' : 'pb-6')}>
+    <View className={cn(fillHeight ? 'min-h-0 flex-1 pb-6' : 'pb-6')}>
       <RecipeFilters
         searchInputKey={searchInputKey}
         searchDefaultValue={searchDefaultValue}
@@ -148,7 +148,7 @@ export const RecipeSelector = ({
         </Animated.View>
       ) : (
         <FlatList
-          className={cn(fillHeight && 'flex-1')}
+          className={cn(fillHeight && 'min-h-0 flex-1')}
           contentInset={{ bottom: safeAreaBottom + 24 }}
           data={filteredRecipes}
           keyExtractor={item => item.id}
