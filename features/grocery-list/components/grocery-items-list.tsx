@@ -10,6 +10,12 @@ import { cn } from '../../../lib/utils';
 import { useCategoryOptions } from '../../categories/use-category-options';
 import { getCategoryColor } from '../../shared/category/categories';
 import {
+  createCheckedStateSnapshot,
+  getPresentedCheckedState,
+  hasCheckedStateTransition,
+  reconcilePresentedCheckedState,
+} from '../checked-state-presentation';
+import {
   GroceryListGroupBy,
   GroceryListItemWithRecipe,
   GroceryListSortBy,
@@ -65,6 +71,8 @@ type GroceryListRow =
       isLastInSection: boolean;
     };
 
+const CHECKED_SECTION_SETTLE_DELAY_MS = 1000;
+
 export const GroceryItemsList = ({
   items,
   totalItemCount,
@@ -86,9 +94,67 @@ export const GroceryItemsList = ({
   const [collapsedSectionsByGroup, setCollapsedSectionsByGroup] = useState<
     Record<GroceryItemsListProps['groupBy'], Set<string>>
   >(createInitialCollapsedSectionsByGroup);
+  const [presentedCheckedState, setPresentedCheckedState] = useState(() =>
+    createCheckedStateSnapshot(items)
+  );
+  const lastObservedCheckedStateRef = useRef(presentedCheckedState);
+  const latestCheckedStateRef = useRef(presentedCheckedState);
+  const checkedStateSettleTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const checkedStateReconcileTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
   const lastAppliedBulkActionId = useRef<number | null>(null);
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
+
+  useEffect(() => {
+    const nextCheckedState = createCheckedStateSnapshot(items);
+    const hasTransition = hasCheckedStateTransition(
+      lastObservedCheckedStateRef.current,
+      nextCheckedState
+    );
+
+    lastObservedCheckedStateRef.current = nextCheckedState;
+    latestCheckedStateRef.current = nextCheckedState;
+
+    if (checkedStateReconcileTimeoutRef.current) {
+      clearTimeout(checkedStateReconcileTimeoutRef.current);
+    }
+    // Reconcile membership on the next task so observing new props does not
+    // synchronously cascade another render.
+    checkedStateReconcileTimeoutRef.current = setTimeout(() => {
+      setPresentedCheckedState(previous =>
+        reconcilePresentedCheckedState(previous, nextCheckedState)
+      );
+      checkedStateReconcileTimeoutRef.current = null;
+    }, 0);
+
+    if (!hasTransition) {
+      return;
+    }
+
+    if (checkedStateSettleTimeoutRef.current) {
+      clearTimeout(checkedStateSettleTimeoutRef.current);
+    }
+
+    checkedStateSettleTimeoutRef.current = setTimeout(() => {
+      setPresentedCheckedState(new Map(latestCheckedStateRef.current));
+      checkedStateSettleTimeoutRef.current = null;
+    }, CHECKED_SECTION_SETTLE_DELAY_MS);
+  }, [items]);
+
+  useEffect(() => {
+    return () => {
+      if (checkedStateSettleTimeoutRef.current) {
+        clearTimeout(checkedStateSettleTimeoutRef.current);
+      }
+      if (checkedStateReconcileTimeoutRef.current) {
+        clearTimeout(checkedStateReconcileTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const toggleSection = useCallback(
     (sectionKey: string) => {
@@ -110,9 +176,13 @@ export const GroceryItemsList = ({
   );
 
   const { uncheckedItems, checkedItems } = useMemo(() => {
-    const nextUncheckedItems = items.filter(item => !item.isChecked);
+    const nextUncheckedItems = items.filter(
+      item => !getPresentedCheckedState(item, presentedCheckedState)
+    );
     const nextCheckedItems = sortItems(
-      items.filter(item => item.isChecked),
+      items.filter(item =>
+        getPresentedCheckedState(item, presentedCheckedState)
+      ),
       sortBy,
       categoryOptions
     );
@@ -121,7 +191,7 @@ export const GroceryItemsList = ({
       uncheckedItems: nextUncheckedItems,
       checkedItems: nextCheckedItems,
     };
-  }, [categoryOptions, items, sortBy]);
+  }, [categoryOptions, items, presentedCheckedState, sortBy]);
 
   // Group unchecked items based on selected grouping
   const groupedUncheckedItems = useMemo(
