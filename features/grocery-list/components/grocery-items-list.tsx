@@ -8,7 +8,6 @@ import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { cn } from '../../../lib/utils';
 import { useCategoryOptions } from '../../categories/use-category-options';
-import { getCategoryColor } from '../../shared/category/categories';
 import {
   createCheckedStateSnapshot,
   getPresentedCheckedState,
@@ -94,6 +93,13 @@ export const GroceryItemsList = ({
   const [collapsedSectionsByGroup, setCollapsedSectionsByGroup] = useState<
     Record<GroceryItemsListProps['groupBy'], Set<string>>
   >(createInitialCollapsedSectionsByGroup);
+  const [
+    appliedCollapsedSectionsResetKey,
+    setAppliedCollapsedSectionsResetKey,
+  ] = useState(collapsedSectionsResetKey);
+  const [appliedBulkActionId, setAppliedBulkActionId] = useState<number | null>(
+    null
+  );
   const [presentedCheckedState, setPresentedCheckedState] = useState(() =>
     createCheckedStateSnapshot(items)
   );
@@ -105,7 +111,12 @@ export const GroceryItemsList = ({
   const checkedStateReconcileTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
-  const lastAppliedBulkActionId = useRef<number | null>(null);
+
+  if (collapsedSectionsResetKey !== appliedCollapsedSectionsResetKey) {
+    setAppliedCollapsedSectionsResetKey(collapsedSectionsResetKey);
+    setCollapsedSectionsByGroup(createInitialCollapsedSectionsByGroup());
+    setAppliedBulkActionId(null);
+  }
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
 
@@ -239,20 +250,12 @@ export const GroceryItemsList = ({
     return keys;
   }, [checkedItems.length, groupedUncheckedItems, isBulkSelectionModeActive]);
 
-  useEffect(() => {
-    setCollapsedSectionsByGroup(createInitialCollapsedSectionsByGroup());
-    lastAppliedBulkActionId.current = null;
-  }, [collapsedSectionsResetKey]);
-
-  useEffect(() => {
-    if (!groupingBulkAction || groupBy === 'none') {
-      return;
-    }
-    if (lastAppliedBulkActionId.current === groupingBulkAction.id) {
-      return;
-    }
-    lastAppliedBulkActionId.current = groupingBulkAction.id;
-
+  if (
+    groupingBulkAction != null &&
+    groupBy !== 'none' &&
+    groupingBulkAction.id !== appliedBulkActionId
+  ) {
+    setAppliedBulkActionId(groupingBulkAction.id);
     setCollapsedSectionsByGroup(previous => {
       const nextByGroup = { ...previous };
       nextByGroup[groupBy] =
@@ -261,7 +264,7 @@ export const GroceryItemsList = ({
           : new Set(groupingSectionKeys);
       return nextByGroup;
     });
-  }, [groupBy, groupingBulkAction, groupingSectionKeys]);
+  }
 
   const listRows = useMemo(() => {
     const rows: GroceryListRow[] = [];
@@ -359,15 +362,10 @@ export const GroceryItemsList = ({
       const hasSectionItems = sectionIds.length > 0;
       const areAllSectionItemsSelected =
         hasSectionItems && sectionIds.every(id => selectedBulkItemIds.has(id));
-      const categoryColor = getCategoryColor(
-        categoryOptions,
-        row.categoryValue
-      );
 
       return (
         <CollapsibleSectionHeader
           title={row.title}
-          categoryColor={categoryColor}
           itemCount={row.itemCount}
           isExpanded={row.isExpanded}
           onToggle={() => toggleSection(row.sectionKey)}
@@ -392,7 +390,6 @@ export const GroceryItemsList = ({
     [
       handleDeselectSectionItems,
       handleSelectSectionItems,
-      categoryOptions,
       isBulkSelectionModeActive,
       sectionItemIds,
       selectedBulkItemIds,
