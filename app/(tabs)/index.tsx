@@ -165,7 +165,7 @@ export default function List() {
               activeView={activeView}
               onViewChange={handleViewChange}
               alternateContent={
-                activeListId ? (
+                activeView === 'meal-plan' && activeListId ? (
                   <MealPlanner
                     listId={activeListId}
                     showHeader={false}

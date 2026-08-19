@@ -9,7 +9,11 @@ import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { type ListView } from '../../grocery-list/components/list-view-tabs';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
-import { MealPlanItemWithStore } from '../types';
+import { MealPlanItemWithStore, MealPlanRecipeWithRecipe } from '../types';
+import {
+  groupMealPlanEntriesByDate,
+  isPageWithinActiveWindow,
+} from '../utils/meal-plan-pager';
 
 import { AddMealsToListButton } from './add-meals-to-list-button';
 import {
@@ -28,6 +32,8 @@ import { MealPlanDateView } from './meal-plan-date-view';
 import { MealPlanDropdownMenu } from './meal-plan-dropdown-menu';
 
 const DAYS_RANGE = 30; //  days before and after today
+const EMPTY_MEAL_PLAN_RECIPES: MealPlanRecipeWithRecipe[] = [];
+const EMPTY_MEAL_PLAN_ITEMS: MealPlanItemWithStore[] = [];
 
 type MealPlannerProps = {
   listId: string;
@@ -55,53 +61,49 @@ export const MealPlanner = ({
     recipes.filter(recipe => !recipe.addedToList).length +
     items.filter(item => !item.addedToList).length;
 
-  const { datesWithMeals, datesAllMealsAdded } = useMemo(() => {
-    const mealStatusByDate = new Map<
-      string,
-      { hasMeals: boolean; allMealsAdded: boolean }
-    >();
+  const { recipesByDate, itemsByDate, datesWithMeals, datesAllMealsAdded } =
+    useMemo(() => {
+      const groupedRecipes = groupMealPlanEntriesByDate(recipes);
+      const groupedItems = groupMealPlanEntriesByDate(items);
+      const withMeals = new Set([
+        ...groupedRecipes.keys(),
+        ...groupedItems.keys(),
+      ]);
+      const allAdded = new Set<string>();
 
-    const register = (date: string, addedToList: boolean) => {
-      const status = mealStatusByDate.get(date) ?? {
-        hasMeals: false,
-        allMealsAdded: true,
+      withMeals.forEach(date => {
+        const dateRecipes = groupedRecipes.get(date) ?? [];
+        const dateItems = groupedItems.get(date) ?? [];
+        if (
+          dateRecipes.every(recipe => recipe.addedToList) &&
+          dateItems.every(item => item.addedToList)
+        ) {
+          allAdded.add(date);
+        }
+      });
+
+      return {
+        recipesByDate: groupedRecipes,
+        itemsByDate: groupedItems,
+        datesWithMeals: withMeals,
+        datesAllMealsAdded: allAdded,
       };
-      status.hasMeals = true;
-      if (!addedToList) {
-        status.allMealsAdded = false;
-      }
-      mealStatusByDate.set(date, status);
-    };
-
-    recipes.forEach(recipe => register(recipe.date, recipe.addedToList));
-    items.forEach(item => register(item.date, item.addedToList));
-
-    const withMeals = new Set<string>();
-    const allAdded = new Set<string>();
-
-    mealStatusByDate.forEach((status, date) => {
-      if (!status.hasMeals) return;
-      withMeals.add(date);
-      if (status.allMealsAdded) {
-        allAdded.add(date);
-      }
-    });
-
-    return { datesWithMeals: withMeals, datesAllMealsAdded: allAdded };
-  }, [items, recipes]);
+    }, [items, recipes]);
 
   // Track when the date array was generated to detect day changes
   const [dateAnchor, setDateAnchor] = useState(() => startOfDay(new Date()));
 
   // Generate date range: 30 days before today to 30 days after
-  const daysOfPlan = useMemo(() => {
-    const dates = [];
+  const { daysOfPlan, dateKeysByPage } = useMemo(() => {
+    const dates: Date[] = [];
+    const dateKeys: string[] = [];
     for (let i = -DAYS_RANGE; i <= DAYS_RANGE; i++) {
-      dates.push(
-        i < 0 ? subDays(dateAnchor, Math.abs(i)) : addDays(dateAnchor, i)
-      );
+      const date =
+        i < 0 ? subDays(dateAnchor, Math.abs(i)) : addDays(dateAnchor, i);
+      dates.push(date);
+      dateKeys.push(format(date, 'yyyy-MM-dd'));
     }
-    return dates;
+    return { daysOfPlan: dates, dateKeysByPage: dateKeys };
   }, [dateAnchor]);
 
   // Initial page index is today (middle of the range)
@@ -129,16 +131,6 @@ export const MealPlanner = ({
 
   const currentDate =
     daysOfPlan[currentPageIndex] ?? daysOfPlan[initialPageIndex];
-
-  const getRecipesForDate = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return recipes.filter(recipe => recipe.date === dateStr);
-  };
-
-  const getItemsForDate = (date: Date): MealPlanItemWithStore[] => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return items.filter(item => item.date === dateStr);
-  };
 
   const handleDatePress = useCallback(
     (date: Date) => {
@@ -220,20 +212,32 @@ export const MealPlanner = ({
           initialPage={initialPageIndex}
           onPageSelected={handlePageSelected}
         >
-          {daysOfPlan.map(date => (
-            <View key={date.toISOString()} style={{ flex: 1 }}>
-              <MealPlanDateView
-                listId={listId}
-                recipes={getRecipesForDate(date)}
-                items={getItemsForDate(date)}
-                onMealPress={({ mealPlanRecipe, recipe }) => {
-                  editMealSheet.current?.open({ mealPlanRecipe, recipe });
-                }}
-                onItemPress={handleItemPress}
-                onViewChange={onViewChange}
-              />
-            </View>
-          ))}
+          {daysOfPlan.map((date, pageIndex) => {
+            const dateKey = dateKeysByPage[pageIndex];
+            const isPageActive = isPageWithinActiveWindow(
+              pageIndex,
+              currentPageIndex
+            );
+
+            return (
+              <View key={date.toISOString()} style={{ flex: 1 }}>
+                {isPageActive && dateKey ? (
+                  <MealPlanDateView
+                    listId={listId}
+                    recipes={
+                      recipesByDate.get(dateKey) ?? EMPTY_MEAL_PLAN_RECIPES
+                    }
+                    items={itemsByDate.get(dateKey) ?? EMPTY_MEAL_PLAN_ITEMS}
+                    onMealPress={({ mealPlanRecipe, recipe }) => {
+                      editMealSheet.current?.open({ mealPlanRecipe, recipe });
+                    }}
+                    onItemPress={handleItemPress}
+                    onViewChange={onViewChange}
+                  />
+                ) : null}
+              </View>
+            );
+          })}
         </PagerView>
       </View>
       <Button
