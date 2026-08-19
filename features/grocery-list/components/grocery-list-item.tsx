@@ -1,5 +1,6 @@
+import { useRecyclingState } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import { Platform, Pressable, View, type TextLayoutEvent } from 'react-native';
 import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -9,6 +10,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { toast } from 'sonner-native';
 
 import { CategoryTag } from '../../../components/category-tag';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
@@ -123,10 +125,9 @@ const GroceryListItemComponent = ({
   onToggleBulkSelection,
   onEnterBulkSelectionModeWithItem,
 }: GroceryListItemProps) => {
-  const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
-  const [strikethroughLines, setStrikethroughLines] = useState<
+  const [strikethroughLines, setStrikethroughLines] = useRecyclingState<
     StrikethroughLineMetrics[]
-  >([]);
+  >([], [item.id]);
   const notes = item.notes?.trim();
   const hasMountedRef = useRef(false);
   const swipeableRef = useRef<SwipeableMethods | null>(null);
@@ -142,11 +143,7 @@ const GroceryListItemComponent = ({
   const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
 
   useEffect(() => {
-    setInternalIsChecked(isChecked);
-  }, [isChecked, item.id]);
-
-  useEffect(() => {
-    const targetValue = internalIsChecked ? 1 : 0;
+    const targetValue = isChecked ? 1 : 0;
     if (!hasMountedRef.current) {
       hasMountedRef.current = true;
       strikethroughWidth.set(targetValue);
@@ -158,34 +155,37 @@ const GroceryListItemComponent = ({
         duration: 300 * Math.max(strikethroughLines.length, 1),
       })
     );
-  }, [internalIsChecked, strikethroughLines.length, strikethroughWidth]);
+  }, [isChecked, strikethroughLines.length, strikethroughWidth]);
 
-  const handleTextLayout = useCallback((event: TextLayoutEvent) => {
-    const nextLines = event.nativeEvent.lines.map(
-      ({ height, width, x, y }) => ({
-        height,
-        width,
-        x,
-        y,
-      })
-    );
+  const handleTextLayout = useCallback(
+    (event: TextLayoutEvent) => {
+      const nextLines = event.nativeEvent.lines.map(
+        ({ height, width, x, y }) => ({
+          height,
+          width,
+          x,
+          y,
+        })
+      );
 
-    setStrikethroughLines(previousLines => {
-      const linesAreUnchanged =
-        previousLines.length === nextLines.length &&
-        previousLines.every((line, index) => {
-          const nextLine = nextLines[index];
-          return (
-            line.height === nextLine.height &&
-            line.width === nextLine.width &&
-            line.x === nextLine.x &&
-            line.y === nextLine.y
-          );
-        });
+      setStrikethroughLines(previousLines => {
+        const linesAreUnchanged =
+          previousLines.length === nextLines.length &&
+          previousLines.every((line, index) => {
+            const nextLine = nextLines[index];
+            return (
+              line.height === nextLine.height &&
+              line.width === nextLine.width &&
+              line.x === nextLine.x &&
+              line.y === nextLine.y
+            );
+          });
 
-      return linesAreUnchanged ? previousLines : nextLines;
-    });
-  }, []);
+        return linesAreUnchanged ? previousLines : nextLines;
+      }, true);
+    },
+    [setStrikethroughLines]
+  );
 
   const onCheck = () => {
     swipeableRef.current?.close();
@@ -195,10 +195,11 @@ const GroceryListItemComponent = ({
       return;
     }
 
-    setInternalIsChecked(previousIsChecked => {
-      const nextIsChecked = !previousIsChecked;
-      checkListItem({ itemId: item.id, isChecked: nextIsChecked });
-      return nextIsChecked;
+    void checkListItem({
+      itemId: item.id,
+      isChecked: !isChecked,
+    }).catch(() => {
+      toast.error('Could not update item. Please try again.');
     });
   };
 
@@ -232,7 +233,7 @@ const GroceryListItemComponent = ({
 
   const checkboxChecked = isBulkSelectionModeActive
     ? isBulkSelected
-    : internalIsChecked;
+    : isChecked;
 
   const handleSwipeDeletePress = useCallback(() => {
     swipeableRef.current?.close();
@@ -262,7 +263,7 @@ const GroceryListItemComponent = ({
             <View className="flex-row items-center gap-2">
               <Text
                 variant="itemTitle"
-                className={cn(internalIsChecked && 'text-muted-foreground')}
+                className={cn(isChecked && 'text-muted-foreground')}
                 style={compactTextStyle}
                 onTextLayout={handleTextLayout}
               >
@@ -280,7 +281,7 @@ const GroceryListItemComponent = ({
               {strikethroughLines.map((line, index) => (
                 <StrikethroughLine
                   key={`${line.x}:${line.y}`}
-                  color={internalIsChecked ? theme.destructive : 'transparent'}
+                  color={isChecked ? theme.destructive : 'transparent'}
                   line={line}
                   lineIndex={index}
                   progress={strikethroughWidth}
@@ -301,7 +302,7 @@ const GroceryListItemComponent = ({
         {notes ? (
           <Text
             variant="itemDescription"
-            className={cn(internalIsChecked && 'opacity-80')}
+            className={cn(isChecked && 'opacity-80')}
             style={compactTextStyle}
           >
             {notes}

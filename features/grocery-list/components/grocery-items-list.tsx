@@ -65,9 +65,6 @@ type GroceryListRow =
       isLastInSection: boolean;
     };
 
-const MEASURED_HEADER_HEIGHT = 52;
-const MEASURED_ITEM_HEIGHT = 72;
-
 export const GroceryItemsList = ({
   items,
   totalItemCount,
@@ -334,21 +331,7 @@ export const GroceryItemsList = ({
   );
 
   const renderRow = useCallback(
-    ({ item, target }: ListRenderItemInfo<GroceryListRow>) => {
-      // FlashList may invoke measurement renders; keep them lightweight.
-      if (target === 'Measurement') {
-        return (
-          <View
-            style={{
-              height:
-                item.type === 'header'
-                  ? MEASURED_HEADER_HEIGHT
-                  : MEASURED_ITEM_HEIGHT,
-            }}
-          />
-        );
-      }
-
+    ({ item }: ListRenderItemInfo<GroceryListRow>) => {
       if (item.type === 'header') {
         return renderSectionHeader(item);
       }
@@ -427,7 +410,7 @@ export const GroceryItemsList = ({
           : `item-${item.item.id}`
       }
       getItemType={item => item.type}
-      drawDistance={150}
+      drawDistance={300}
       stickyHeaderIndices={listRows.stickyHeaderIndices}
       contentContainerClassName="pb-36"
       contentContainerStyle={{ flexGrow: 1 }}
@@ -435,8 +418,7 @@ export const GroceryItemsList = ({
       onScrollBeginDrag={onListInteraction}
       onTouchStart={onListInteraction}
       maintainVisibleContentPosition={{
-        disabled: false,
-        autoscrollToTopThreshold: 0,
+        disabled: true,
       }}
     />
   );
