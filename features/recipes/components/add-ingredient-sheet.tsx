@@ -95,6 +95,9 @@ const AddIngredientContents = () => {
       }
     >
       <BottomSheet.SheetView className={cn(isEditing ? undefined : 'pb-safe')}>
+        <BottomSheet.Header
+          title={isEditing ? 'Edit ingredient' : 'Add ingredient'}
+        />
         <ItemForm />
       </BottomSheet.SheetView>
     </BottomSheet>

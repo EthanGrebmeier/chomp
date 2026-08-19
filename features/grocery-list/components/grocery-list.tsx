@@ -1035,8 +1035,8 @@ export const GroceryList = ({
           ref={bulkMoveListSheetRef}
           selectedListId={listId}
           onSelectList={handleBulkMoveListSelect}
-          title="Move to List"
-          subtext={`Select a destination for ${bulkSelectionState.selectedItemIds.size} item${bulkSelectionState.selectedItemIds.size === 1 ? '' : 's'}.`}
+          title="Move items to another list"
+          description={`Select a destination for ${bulkSelectionState.selectedItemIds.size} item${bulkSelectionState.selectedItemIds.size === 1 ? '' : 's'}.`}
           showJoinByCode={false}
           showManageActions={false}
           disabledListIds={listId ? [listId] : []}

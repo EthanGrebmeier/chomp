@@ -86,7 +86,7 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
     >
       <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header
-          title={submitLabel === 'Update' ? 'Edit Store' : 'Add Store'}
+          title={submitLabel === 'Update' ? 'Rename store' : 'Add a store'}
         />
         <View>
           <Text className="mb-2 text-sm font-medium text-muted-foreground">

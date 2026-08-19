@@ -78,7 +78,7 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
       >
         <BottomSheet.SheetView className="pb-safe">
           <BottomSheet.Header
-            title="Edit Unit"
+            title="Enter a custom unit"
             dismissButton={<CloseButton onPress={handleCancel} />}
             className="mb-0"
           />

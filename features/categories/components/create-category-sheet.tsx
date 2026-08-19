@@ -165,7 +165,7 @@ export const CreateCategorySheet = forwardRef<
       >
         <BottomSheet.SheetView className="pb-safe">
           <BottomSheet.Header
-            title={isEditing ? 'Edit Category' : 'Add Category'}
+            title={isEditing ? 'Rename category' : 'Add a category'}
             dismissButton={
               showBackButton ? (
                 <BackButton onPress={() => sheetRef.current?.dismiss()} />

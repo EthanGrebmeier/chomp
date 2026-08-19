@@ -10,6 +10,7 @@ import { BottomSheet } from '../../../components/bottom-sheet';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
 import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
+import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
@@ -39,7 +40,6 @@ import {
 } from './meal-plan-item-context';
 import { MealPlanItemForm } from './meal-plan-item-form';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
-import { MealPlanRecipeTitle } from './meal-plan-recipe-title';
 import { MealTimeSheet } from './meal-time-sheet';
 
 type AddMode = 'item' | 'recipe';
@@ -362,6 +362,16 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       }}
       footer={footer}
     >
+      <BottomSheet.Header
+        className="px-4"
+        title={selectedRecipe ? 'Choose ingredients' : undefined}
+        description={selectedRecipe?.name}
+        dismissButton={
+          selectedRecipe ? (
+            <BackButton onPress={handleBackToRecipes} />
+          ) : undefined
+        }
+      />
       {!selectedRecipe && (
         <ModeToggle mode={mode} onModeChange={handleModeChange} />
       )}
@@ -386,12 +396,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
                 onToggleAll={handleToggleAllIngredients}
                 selectedIds={selectedIngredientIds}
                 onEditIngredient={handleEditIngredient}
-                headerTitle={
-                  <MealPlanRecipeTitle
-                    name={selectedRecipe.name}
-                    className="text-center"
-                  />
-                }
+                showHeader={false}
               />
             </Animated.View>
           ) : (

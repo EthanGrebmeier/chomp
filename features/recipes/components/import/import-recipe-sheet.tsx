@@ -363,13 +363,8 @@ export const ImportRecipeSheet = forwardRef<
         return (
           <>
             <BottomSheet.Header
-              subsection={
-                <BottomSheet.Subtext>
-                  Paste a recipe URL to import ingredients
-                </BottomSheet.Subtext>
-              }
               className="mb-0"
-              title="Import Recipe"
+              title="Paste a recipe link"
             />
             <UrlInput
               className="pb-20"
@@ -386,7 +381,7 @@ export const ImportRecipeSheet = forwardRef<
       case 'loading':
         return (
           <>
-            <BottomSheet.Header title="Importing Recipe" />
+            <BottomSheet.Header title="Importing recipe" />
             <View className="items-center justify-center py-12">
               <ActivityIndicator size="large" color={theme.primary} />
               <Text className="mt-4 text-base text-muted-foreground">
@@ -400,7 +395,7 @@ export const ImportRecipeSheet = forwardRef<
         return (
           <>
             <BottomSheet.Header
-              title="Import Failed"
+              title="Recipe import failed"
               dismissButton={<BackButton onPress={handleGoBack} />}
             />
             <ImportError error={state.error} />
@@ -413,7 +408,7 @@ export const ImportRecipeSheet = forwardRef<
         return (
           <View className="gap-4">
             <BottomSheet.Header
-              title="Review Recipe"
+              title="Review imported recipe"
               className="mb-0 px-4"
               dismissButton={<BackButton onPress={handleGoBack} />}
             />
@@ -478,7 +473,7 @@ export const ImportRecipeSheet = forwardRef<
       case 'saving':
         return (
           <>
-            <BottomSheet.Header title="Creating Recipe" />
+            <BottomSheet.Header title="Save imported recipe" />
             <View className="items-center justify-center py-12">
               <ActivityIndicator size="large" color={theme.primary} />
               <Text className="mt-4 text-base text-muted-foreground">
@@ -491,7 +486,7 @@ export const ImportRecipeSheet = forwardRef<
       case 'success':
         return (
           <>
-            <BottomSheet.Header title="Success" />
+            <BottomSheet.Header title="Recipe saved" />
             <View className="items-center justify-center py-8">
               <CheckCircleIcon size={48} color={theme.primary} />
               <Text className="mt-4 text-center text-base text-foreground">
@@ -651,7 +646,7 @@ export const ImportRecipeSheet = forwardRef<
         }
       >
         <BottomSheet.SheetView className="gap-4 pb-24">
-          <BottomSheet.Header title="Edit Recipe Name" />
+          <BottomSheet.Header title="Rename imported recipe" />
           <View className="gap-2">
             <View className="flex-row items-center justify-between">
               <Text variant="label" className="text-muted-foreground">

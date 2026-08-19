@@ -305,6 +305,7 @@ const EditItemSheetContainer = ({
       }
     >
       <BottomSheet.SheetView className="pb-safe">
+        <BottomSheet.Header title="Edit meal-plan item" />
         {itemToEdit && (
           <EditItemSheetContent
             itemToEdit={itemToEdit}

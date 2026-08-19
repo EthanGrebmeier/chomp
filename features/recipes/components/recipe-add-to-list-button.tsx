@@ -10,7 +10,9 @@ import {
   IngredientSelector,
   IngredientSelectorRef,
 } from '@/components/item-sheet/add-item/ingredient-selector';
+import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
+import { ExternalLinkButton } from '@/components/ui/external-link-button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { db } from '@/lib/instant';
@@ -152,6 +154,19 @@ export const RecipeAddToListButton = ({
           </View>
         }
       >
+        <BottomSheet.Header
+          className="px-4"
+          title="Choose ingredients"
+          description={recipe.name}
+          dismissButton={<BackButton onPress={handleIngredientSelectorBack} />}
+          button={
+            <ExternalLinkButton
+              onPress={() =>
+                ingredientSelectorRef.current?.openRecipeDetails()
+              }
+            />
+          }
+        />
         {selectedListIdForIngredients && (
           <IngredientSelector
             ref={ingredientSelectorRef}
@@ -165,6 +180,7 @@ export const RecipeAddToListButton = ({
             onToggleAll={handleToggleAllIngredients}
             onBusyStateChange={setIsSubmitting}
             showFooter={false}
+            showHeader={false}
           />
         )}
       </BottomSheet>

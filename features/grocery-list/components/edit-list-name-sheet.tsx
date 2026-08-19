@@ -79,7 +79,7 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
       >
         <BottomSheet.SheetView className="pb-safe">
           <BottomSheet.Header
-            title="Edit List Name"
+            title="Rename list"
             dismissButton={<CloseButton onPress={handleCancel} />}
           />
 

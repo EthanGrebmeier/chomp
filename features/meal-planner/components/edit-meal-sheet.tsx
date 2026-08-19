@@ -44,7 +44,6 @@ import {
   MealPlanIngredientOverrideSheet,
   MealPlanIngredientOverrideSheetRef,
 } from './meal-plan-ingredient-override-sheet';
-import { MealPlanRecipeTitle } from './meal-plan-recipe-title';
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 import { MealTimeSheet } from './meal-time-sheet';
 
@@ -413,7 +412,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
             <CalendarSheet
               name="edit-meal-calendar-sheet"
               ref={calendarSheetRef}
-              headerTitle="Select Date"
+              headerTitle="Choose a date"
               selectedDate={
                 selectedDate
                   ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
@@ -424,16 +423,12 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
               }}
             />
             <View className="min-h-0 flex-1">
-              {selectedRecipe && (
-                <BottomSheet.Header
-                  title={
-                    <MealPlanRecipeTitle
-                      name={selectedRecipe.name}
-                      className="text-center"
-                    />
-                  }
-                  className="mb-2"
-                  button={
+              <BottomSheet.Header
+                title="Edit meal"
+                description={selectedRecipe?.name}
+                className="mb-2"
+                button={
+                  selectedRecipe ? (
                     <MealSheetRecipeDropdown
                       recipeId={selectedRecipe.id}
                       recipeName={selectedRecipe.name}
@@ -449,9 +444,9 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                         changeRecipeSheetRef.current?.present();
                       }}
                     />
-                  }
-                />
-              )}
+                  ) : undefined
+                }
+              />
               {selectedRecipeWithIngredients ? (
                 <View className="-mx-4 min-h-0 flex-1">
                   <IngredientSelector
@@ -529,6 +524,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         >
           <View className="pb-safe flex-1">
             <View className="flex-1 gap-2">
+              <BottomSheet.Header title="Choose another recipe" />
               <RecipeSelector
                 onSelectRecipe={handleRecipeChange}
                 onCreateRecipe={handleCreateRecipe}

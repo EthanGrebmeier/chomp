@@ -208,7 +208,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
         >
           <BottomSheet.Header
             className="px-4"
-            title="Category"
+            title="Choose a category"
             dismissButton={
               showBackButton ? (
                 <BackButton onPress={() => sheetRef.current?.dismiss()} />

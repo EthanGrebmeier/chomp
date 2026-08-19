@@ -2,7 +2,7 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -28,7 +28,9 @@ import { useDefaultStore } from '../../../features/stores/instant/use-default-st
 import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
+import { BackButton } from '../../ui/back-button';
 import { Button } from '../../ui/button';
+import { ExternalLinkButton } from '../../ui/external-link-button';
 import { HapticPressable } from '../../ui/haptic-pressable';
 import { Icon } from '../../ui/icon';
 import { Text } from '../../ui/text';
@@ -36,7 +38,10 @@ import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 
-import { IngredientSelector } from './ingredient-selector';
+import {
+  IngredientSelector,
+  IngredientSelectorRef,
+} from './ingredient-selector';
 import { RecipeSelector } from './recipe-selector';
 
 type AddMode = 'item' | 'recipe' | 'recent';
@@ -148,6 +153,7 @@ const AddItemSheet = ({
     RecipeIngredientInput[] | null
   >(null);
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
+  const ingredientSelectorRef = useRef<IngredientSelectorRef>(null);
 
   useEffect(() => {
     triggerOpacity.set(
@@ -362,6 +368,23 @@ const AddItemSheet = ({
           ) : undefined
         }
       >
+        <BottomSheet.Header
+          className="px-4"
+          title={selectedRecipe ? 'Choose ingredients' : null}
+          description={selectedRecipe?.name}
+          dismissButton={
+            selectedRecipe ? <BackButton onPress={handleBackToRecipes} /> : null
+          }
+          button={
+            selectedRecipe ? (
+              <ExternalLinkButton
+                onPress={() =>
+                  ingredientSelectorRef.current?.openRecipeDetails()
+                }
+              />
+            ) : null
+          }
+        />
         <View className={selectedRecipe ? 'flex-1' : undefined}>
           {!selectedRecipe ? (
             <Animated.View
@@ -385,6 +408,7 @@ const AddItemSheet = ({
                   exiting={FadeOut.duration(300)}
                 >
                   <IngredientSelector
+                    ref={ingredientSelectorRef}
                     recipe={selectedRecipe}
                     onBack={handleBackToRecipes}
                     onDismiss={() => ref.current?.dismiss()}
@@ -393,6 +417,7 @@ const AddItemSheet = ({
                     onToggleIngredient={toggleIngredient}
                     onToggleAll={toggleAllIngredients}
                     showFooter={false}
+                    showHeader={false}
                   />
                 </Animated.View>
               ) : (

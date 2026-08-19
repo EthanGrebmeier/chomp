@@ -69,6 +69,7 @@ const EditItemContents = () => {
       onDismiss={onDismiss}
     >
       <BottomSheet.SheetView>
+        <BottomSheet.Header title="Edit item" />
         <ItemForm />
         <MetaBar />
       </BottomSheet.SheetView>

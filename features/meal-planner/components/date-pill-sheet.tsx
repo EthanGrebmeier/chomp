@@ -75,7 +75,7 @@ export const DatePillSheet = ({
       <CalendarSheet
         ref={sheetRef}
         onChange={handleSelect}
-        headerTitle="Select Date"
+        headerTitle="Choose a date"
         name="date-pill-sheet"
         selectedDate={
           date

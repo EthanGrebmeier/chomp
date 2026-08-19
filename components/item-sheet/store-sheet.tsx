@@ -239,7 +239,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
                 <BackButton onPress={() => sheetRef.current?.dismiss()} />
               ) : undefined
             }
-            title="Store"
+            title="Choose a store"
             button={
               <ConfirmButton
                 onPress={handleConfirm}
@@ -323,7 +323,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
           <BottomSheet.SheetView className="pb-safe">
             <BottomSheet.Header
               className="mb-0"
-              title="New Store"
+              title="Add a store"
               dismissButton={
                 showBackButton ? (
                   <BackButton

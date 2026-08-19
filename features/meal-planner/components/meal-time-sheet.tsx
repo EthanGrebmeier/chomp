@@ -133,7 +133,7 @@ export const MealTimeSheet = ({
               <BackButton onPress={() => sheetRef.current?.dismiss()} />
             )
           }
-          title="Meal Time"
+          title="Choose meal time"
           button={<ConfirmButton onPress={handleConfirm} />}
         />
         <View className="px-2">

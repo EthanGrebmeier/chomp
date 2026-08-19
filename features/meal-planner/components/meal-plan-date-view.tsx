@@ -489,12 +489,8 @@ export const MealPlanDateView = ({
       >
         <BottomSheet.SheetView className="pb-safe">
           <BottomSheet.Header
-            title={quickReviewMealPlanRecipe?.recipe.name ?? 'Review ingredients'}
-            subsection={
-              <BottomSheet.Subtext>
-                Review or edit this meal&apos;s ingredients before adding to your grocery list.
-              </BottomSheet.Subtext>
-            }
+            title="Review ingredients"
+            description={quickReviewMealPlanRecipe?.recipe.name}
           />
           {quickReviewRecipe ? (
             <View className="-mx-4 pb-20">

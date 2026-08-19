@@ -74,7 +74,7 @@ const EditSheetContents = ({
       onOpen={handleOpen}
     >
       <BottomSheet.SheetView>
-        <BottomSheet.Header title="Edit Ingredient" className="mb-4" />
+        <BottomSheet.Header title="Edit ingredient" className="mb-4" />
         <ItemForm />
         <MetaBar />
       </BottomSheet.SheetView>

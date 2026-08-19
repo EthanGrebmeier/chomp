@@ -101,8 +101,8 @@ const TextInput = forwardRef<
 });
 TextInput.displayName = 'TextInput';
 type HeaderProps = {
-  title: React.ReactNode;
-  subsection?: React.ReactNode;
+  title?: string;
+  description?: React.ReactNode;
   dismissButton?: React.ReactNode;
   button?: React.ReactNode;
   className?: string;
@@ -110,19 +110,19 @@ type HeaderProps = {
 
 const Header = ({
   title,
-  subsection,
+  description,
   dismissButton,
   button,
   className,
 }: HeaderProps) => {
   return (
-    <View>
-      <View className={cn('mb-6 flex-row items-center', className)}>
+    <View className={cn('mb-4 gap-2', className)}>
+      <View className="flex-row items-center">
         {(dismissButton ?? button) && (
           <View className="w-12 items-start">{dismissButton}</View>
         )}
         <View className="mx-2 flex-1">
-          {typeof title === 'string' ? (
+          {title && (
             <Text
               variant="h3"
               className="text-center"
@@ -131,30 +131,18 @@ const Header = ({
             >
               {title}
             </Text>
-          ) : (
-            title
           )}
         </View>
         {(dismissButton ?? button) && (
           <View className="w-12 items-end">{button}</View>
         )}
       </View>
-      {subsection ? <View className="mt-2">{subsection}</View> : null}
+      {description ? (
+        <Text variant="bodyMuted" className="text-center">
+          {description}
+        </Text>
+      ) : null}
     </View>
-  );
-};
-
-const Subtext = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  return (
-    <Text variant="bodyMuted" className={cn('text-center', className)}>
-      {children}
-    </Text>
   );
 };
 
@@ -169,7 +157,6 @@ const SheetView = ({
 };
 
 BottomSheet.Header = Header;
-BottomSheet.Subtext = Subtext;
 BottomSheet.BareTextInput = BareTextInput;
 BottomSheet.TextInput = TextInput;
 BottomSheet.SheetView = SheetView;

@@ -90,7 +90,7 @@ export const RecipeUrlSheet = ({
                 <BackButton onPress={() => sheetRef.current?.dismiss()} />
               )
             }
-            title="Recipe URL"
+            title="Link to original recipe"
           />
 
           <View className="gap-4 pb-4">

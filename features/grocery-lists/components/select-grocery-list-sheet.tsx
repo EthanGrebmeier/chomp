@@ -52,7 +52,7 @@ type SelectGroceryListSheetProps = {
   selectedListId: string | undefined;
   onSelectList: (listId: string) => void;
   title?: string;
-  subtext?: ReactNode;
+  description?: ReactNode;
   showJoinByCode?: boolean;
   showManageActions?: boolean;
   disabledListIds?: string[];
@@ -68,8 +68,8 @@ export const SelectGroceryListSheet = forwardRef<
       selectedListId,
       onSelectList,
       name = 'select-grocery-list-sheet',
-      title = 'Select List',
-      subtext,
+      title = 'Choose a list',
+      description,
       showJoinByCode = true,
       showManageActions = true,
       disabledListIds = [],
@@ -180,13 +180,9 @@ export const SelectGroceryListSheet = forwardRef<
           onStartClose={onStartClose}
         >
           <BottomSheet.Header
-            className="mb-0 px-4"
+            className="px-4"
             title={title}
-            subsection={
-              subtext ? (
-                <BottomSheet.Subtext>{subtext}</BottomSheet.Subtext>
-              ) : undefined
-            }
+            description={description}
             button={
               <DropdownMenuRoot
                 trigger={
@@ -233,7 +229,6 @@ export const SelectGroceryListSheet = forwardRef<
           <ScrollView
             nestedScrollEnabled
             showsVerticalScrollIndicator={false}
-            contentContainerClassName="mt-4"
             className="gap-1 px-4 pb-4"
           >
             {lists?.grocery_lists.map(list => {

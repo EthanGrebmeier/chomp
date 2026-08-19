@@ -146,7 +146,7 @@ export const UnitSheet = ({
       >
         <BottomSheet.Header
           className="px-4"
-          title="Quantity"
+          title="Set quantity"
           dismissButton={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
           }

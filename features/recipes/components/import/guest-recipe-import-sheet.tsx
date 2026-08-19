@@ -45,20 +45,11 @@ export const GuestRecipeImportSheet = forwardRef<GuestRecipeImportSheetRef>(
           </View>
         }
       >
-        <BottomSheet.SheetView className="gap-5 pb-24">
-          <BottomSheet.Header title="Create an Account" className="mb-0" />
-
-          <View className="items-center gap-4">
-            <View className="gap-2">
-              <Text className="text-center text-lg font-semibold text-foreground">
-                AI recipe import is for signed-in accounts
-              </Text>
-              <Text className="text-center text-base text-muted-foreground">
-                Create an account to import recipes from a URL and keep your
-                recipes synced across devices.
-              </Text>
-            </View>
-          </View>
+        <BottomSheet.SheetView className="pb-24">
+          <BottomSheet.Header
+            title="Create an account to import"
+            description="Import recipes from a URL and keep them synced across devices."
+          />
         </BottomSheet.SheetView>
       </BottomSheet>
     );

@@ -457,12 +457,8 @@ export function AddMealsToListConfirmation({
         <BottomSheet.SheetView className="min-h-0 flex-1 px-4">
           <BottomSheet.Header
             className="mb-1"
-            title="Add to Grocery List"
-            subsection={
-              <BottomSheet.Subtext className="px-4">
-                {summary}
-              </BottomSheet.Subtext>
-            }
+            title="Add planned meals to your list"
+            description={summary}
           />
 
           {isLoading ? (

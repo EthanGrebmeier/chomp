@@ -1,7 +1,6 @@
 import { PencilLineIcon } from 'lucide-react-native';
 import {
   forwardRef,
-  ReactNode,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -145,12 +144,12 @@ type IngredientSelectorProps = {
   onPersistSelection?: (selectedIds: Set<string>) => void;
   onEditIngredient?: (id: string) => void;
   showHeader?: boolean;
-  headerTitle?: ReactNode;
   bottomContentInset?: number;
 };
 
 export type IngredientSelectorRef = {
   submit: () => void;
+  openRecipeDetails: () => void;
 };
 
 type SelectedIngredientInput = {
@@ -185,7 +184,6 @@ export const IngredientSelector = forwardRef<
     onPersistSelection,
     onEditIngredient,
     showHeader = true,
-    headerTitle,
     bottomContentInset,
   }: IngredientSelectorProps,
   ref
@@ -234,9 +232,9 @@ export const IngredientSelector = forwardRef<
 
   const allSelected = effectiveSelectedIds.size === ingredients.length;
 
-  const handleGoToRecipe = () => {
+  const handleGoToRecipe = useCallback(() => {
     recipeDetailSheetRef.current?.present(recipe.id);
-  };
+  }, [recipe.id]);
 
   const handleToggleIngredient = (id: string) => {
     if (isControlled) {
@@ -391,8 +389,9 @@ export const IngredientSelector = forwardRef<
       submit: () => {
         void handleAdd();
       },
+      openRecipeDetails: handleGoToRecipe,
     }),
-    [handleAdd]
+    [handleAdd, handleGoToRecipe]
   );
 
   return (
@@ -401,7 +400,8 @@ export const IngredientSelector = forwardRef<
         {showHeader ? (
           <BottomSheet.Header
             className="px-4"
-            title={headerTitle ?? recipe.name}
+            title="Choose ingredients"
+            description={recipe.name}
             dismissButton={<BackButton onPress={onBack} />}
             button={
               mode === 'add-to-list' ? (
