@@ -26,6 +26,7 @@ import {
   type MigrationStatus,
 } from '@/providers/migration-provider';
 import { QueryClientProvider } from '@/providers/query-client-provider';
+import { RecipesSettingsBarHost } from '@/features/shared/components/recipes-settings-bar';
 
 import '../global.css';
 import { useAppFonts } from '../hooks/use-app-fonts';
@@ -58,11 +59,12 @@ function InitialLayout() {
 
   return (
     <View className="flex-1 bg-background">
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
+      <RecipesSettingsBarHost>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
@@ -155,6 +157,7 @@ function InitialLayout() {
           },
         }}
       />
+      </RecipesSettingsBarHost>
     </View>
   );
 }

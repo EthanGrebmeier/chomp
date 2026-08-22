@@ -66,9 +66,6 @@ export const GroceryListSkeleton = () => {
       </View>
 
       {/* Bottom actions */}
-      <View className="bottom-safe pointer-events-none absolute left-6 z-10">
-        <Skeleton className="h-10 w-36 rounded-full" />
-      </View>
       <View className="bottom-safe pointer-events-none absolute right-6 z-10">
         <SkeletonCircle size={52} />
       </View>

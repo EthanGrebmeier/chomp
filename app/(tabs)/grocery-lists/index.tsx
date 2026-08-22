@@ -37,7 +37,7 @@ import {
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
-import { RecipesSettingsBar } from '@/features/shared/components/recipes-settings-bar';
+import { useRecipesSettingsBar } from '@/features/shared/components/recipes-settings-bar';
 import { db } from '@/lib/instant';
 import { buildListUrl } from '@/lib/navigation';
 
@@ -60,6 +60,7 @@ export default function GroceryListsIndex() {
   const canDeleteList = useCanDeleteGroceryList();
   const trackListAccess = useTrackListAccess();
   const groceryLists = data?.grocery_lists ?? EMPTY_GROCERY_LISTS;
+  useRecipesSettingsBar({ listId: selectedListId });
 
   const handleSelectList = (listId: string) => {
     void trackListAccess(listId);
@@ -229,7 +230,6 @@ export default function GroceryListsIndex() {
         />
       )}
 
-      <RecipesSettingsBar listId={selectedListId} />
       <CreateGroceryListSheet
         ref={createSheetRef}
         onCreated={handleSelectList}

@@ -1,8 +1,22 @@
-import { Href, router } from 'expo-router';
+import { Href, router, useFocusEffect, useSegments } from 'expo-router';
 import { BookOpenIcon, SettingsIcon } from 'lucide-react-native';
-import { type ComponentProps, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
@@ -10,20 +24,78 @@ import { navigation } from '@/lib/navigation';
 
 const NAVIGATION_LOCK_DURATION_MS = 1500;
 
-type RecipesSettingsBarProps = {
+type RecipesSettingsBarState = {
   listId?: string;
-} & Pick<ComponentProps<typeof Animated.View>, 'style' | 'pointerEvents'>;
+  visible: boolean;
+};
 
-export function RecipesSettingsBar({
+type RecipesSettingsBarController = {
+  setBar: (state: RecipesSettingsBarState) => void;
+};
+
+const RecipesSettingsBarContext =
+  createContext<RecipesSettingsBarController | null>(null);
+
+export function RecipesSettingsBarHost({ children }: { children: ReactNode }) {
+  const segments = useSegments();
+  const isOnTabs = segments[0] === '(tabs)';
+  const [state, setState] = useState<RecipesSettingsBarState>({
+    visible: true,
+  });
+
+  const setBar = useCallback((next: RecipesSettingsBarState) => {
+    setState(current => {
+      if (current.visible === next.visible && current.listId === next.listId) {
+        return current;
+      }
+
+      return next;
+    });
+  }, []);
+
+  const controller = useMemo(() => ({ setBar }), [setBar]);
+
+  return (
+    <RecipesSettingsBarContext.Provider value={controller}>
+      {children}
+      <RecipesSettingsBar
+        listId={state.listId}
+        visible={state.visible && isOnTabs}
+      />
+    </RecipesSettingsBarContext.Provider>
+  );
+}
+
+export function useRecipesSettingsBar({
   listId,
-  style,
-  pointerEvents = 'auto',
-}: RecipesSettingsBarProps) {
+  visible = true,
+}: {
+  listId?: string;
+  visible?: boolean;
+}) {
+  const controller = useContext(RecipesSettingsBarContext);
+
+  useFocusEffect(
+    useCallback(() => {
+      controller?.setBar({ listId, visible });
+    }, [controller, listId, visible])
+  );
+}
+
+function RecipesSettingsBar({
+  listId,
+  visible,
+}: {
+  listId?: string;
+  visible: boolean;
+}) {
   const [isRoutePushPending, setIsRoutePushPending] = useState(false);
   const routePushLockRef = useRef(false);
   const routePushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
+  const reduceMotion = useReducedMotion();
+  const visibleProgress = useSharedValue(visible ? 1 : 0);
 
   const releaseRoutePushLock = () => {
     routePushLockRef.current = false;
@@ -60,11 +132,22 @@ export function RecipesSettingsBar({
     []
   );
 
+  useEffect(() => {
+    const target = visible ? 1 : 0;
+    visibleProgress.set(
+      reduceMotion ? target : withTiming(target, { duration: 200 })
+    );
+  }, [reduceMotion, visible, visibleProgress]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: visibleProgress.get(),
+  }));
+
   return (
     <Animated.View
-      className="bottom-safe absolute left-6 z-10"
-      style={style}
-      pointerEvents={pointerEvents}
+      className="bottom-safe absolute left-6 z-20"
+      style={animatedStyle}
+      pointerEvents={visible ? 'auto' : 'none'}
     >
       <View className="h-10 flex-row items-center gap-6 overflow-hidden rounded-full border border-border bg-accent/90 px-4 shadow-sm">
         <HapticPressable

@@ -47,7 +47,7 @@ import {
 } from '../../grocery-lists/components/select-grocery-list-sheet';
 import { MealPlanDropdownMenu } from '../../meal-planner/components/meal-plan-dropdown-menu';
 import { useUserMealPlanData } from '../../meal-planner/hooks/useUserMealPlanData';
-import { RecipesSettingsBar } from '../../shared/components/recipes-settings-bar';
+import { useRecipesSettingsBar } from '../../shared/components/recipes-settings-bar';
 import {
   clearBulkSelection,
   createBulkSelectionState,
@@ -165,7 +165,6 @@ export const GroceryList = ({
   const [bulkSelectionState, setBulkSelectionState] = useState(() =>
     createBulkSelectionState()
   );
-  const standardControlsOpacity = useSharedValue(1);
   const bulkToolbarOpacity = useSharedValue(0);
   const viewTransitionProgress = useSharedValue(
     activeView === 'meal-plan' ? 1 : 0
@@ -183,6 +182,10 @@ export const GroceryList = ({
   }, []);
 
   useFocusEffect(resetBulkSelectionMode);
+  useRecipesSettingsBar({
+    listId,
+    visible: activeView === 'grocery-list' && !bulkSelectionState.isActive,
+  });
 
   const deferredQuery = useDeferredValue(searchQuery.trim());
   const normalizedQuery = deferredQuery.toLowerCase();
@@ -242,14 +245,6 @@ export const GroceryList = ({
   ]);
 
   useEffect(() => {
-    standardControlsOpacity.set(
-      withTiming(
-        activeView === 'grocery-list' && !bulkSelectionState.isActive ? 1 : 0,
-        {
-          duration: 200,
-        }
-      )
-    );
     bulkToolbarOpacity.set(
       withTiming(
         activeView === 'grocery-list' && bulkSelectionState.isActive ? 1 : 0,
@@ -258,12 +253,7 @@ export const GroceryList = ({
         }
       )
     );
-  }, [
-    activeView,
-    bulkSelectionState.isActive,
-    bulkToolbarOpacity,
-    standardControlsOpacity,
-  ]);
+  }, [activeView, bulkSelectionState.isActive, bulkToolbarOpacity]);
 
   useEffect(() => {
     const target = activeView === 'meal-plan' ? 1 : 0;
@@ -285,10 +275,6 @@ export const GroceryList = ({
     transform: [
       { translateX: viewportWidth * (1 - viewTransitionProgress.get()) },
     ],
-  }));
-
-  const standardControlsAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: standardControlsOpacity.get(),
   }));
 
   const bulkToolbarAnimatedStyle = useAnimatedStyle(() => ({
@@ -993,15 +979,6 @@ export const GroceryList = ({
       </View>
 
       <>
-        <RecipesSettingsBar
-          listId={listId}
-          style={standardControlsAnimatedStyle}
-          pointerEvents={
-            activeView === 'grocery-list' && !bulkSelectionState.isActive
-              ? 'auto'
-              : 'none'
-          }
-        />
         <AddItemSheet
           groceryListId={listId ?? ''}
           isTriggerVisible={
