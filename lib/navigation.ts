@@ -41,7 +41,6 @@ export interface ListParams {
 
 export interface GroceryListsIndexParams {
   selectedListId?: string;
-  view?: 'meal-plan';
 }
 
 export interface ListMealPlanParams {
@@ -111,7 +110,6 @@ export function buildGroceryListsIndexUrl(
 ): Href {
   const query = buildQueryString({
     selectedListId: params?.selectedListId,
-    view: params?.view,
   });
   return `/grocery-lists${query}` as Href;
 }

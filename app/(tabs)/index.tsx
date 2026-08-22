@@ -126,10 +126,9 @@ export default function List() {
     router.dismissTo(
       buildGroceryListsIndexUrl({
         selectedListId: activeListId,
-        view: activeView === 'meal-plan' ? 'meal-plan' : undefined,
       })
     );
-  }, [activeListId, activeView]);
+  }, [activeListId]);
 
   return (
     <View className="flex-1 bg-background">

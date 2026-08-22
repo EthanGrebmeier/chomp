@@ -48,9 +48,8 @@ type GroceryList = NonNullable<
 const EMPTY_GROCERY_LISTS: GroceryList[] = [];
 
 export default function GroceryListsIndex() {
-  const { selectedListId, view } = useLocalSearchParams<{
+  const { selectedListId } = useLocalSearchParams<{
     selectedListId?: string;
-    view?: string;
   }>();
   const createSheetRef = useRef<CreateGroceryListSheetRef>(null);
   const joinSheetRef = useRef<JoinByCodeSheetRef>(null);
@@ -61,11 +60,10 @@ export default function GroceryListsIndex() {
   const canDeleteList = useCanDeleteGroceryList();
   const trackListAccess = useTrackListAccess();
   const groceryLists = data?.grocery_lists ?? EMPTY_GROCERY_LISTS;
-  const listView = view === 'meal-plan' ? 'meal-plan' : undefined;
 
   const handleSelectList = (listId: string) => {
     void trackListAccess(listId);
-    router.navigate(buildListUrl({ listId, view: listView }), {
+    router.navigate(buildListUrl({ listId }), {
       withAnchor: true,
     });
   };

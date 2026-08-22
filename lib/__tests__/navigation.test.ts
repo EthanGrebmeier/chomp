@@ -62,9 +62,8 @@ describe('list workspace navigation', () => {
     expect(
       buildGroceryListsIndexUrl({
         selectedListId: 'list-456',
-        view: 'meal-plan',
       })
-    ).toBe('/grocery-lists?selectedListId=list-456&view=meal-plan');
+    ).toBe('/grocery-lists?selectedListId=list-456');
   });
 
   it('builds the grocery lists index URL without optional context', () => {
@@ -89,12 +88,9 @@ describe('list workspace navigation', () => {
     );
   });
 
-  it('preserves the meal-plan view when returning from the list index', () => {
-    expect(
-      buildListUrl({
-        listId: 'list-789',
-        view: 'meal-plan',
-      })
-    ).toBe('/(tabs)?listId=list-789&view=meal-plan');
+  it('opens a list from the index without a view parameter', () => {
+    expect(buildListUrl({ listId: 'list-789' })).toBe(
+      '/(tabs)?listId=list-789'
+    );
   });
 });
