@@ -1,7 +1,6 @@
 import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { Href, router, useFocusEffect } from 'expo-router';
-import { BookOpenIcon, SettingsIcon } from 'lucide-react-native';
+import { useFocusEffect } from 'expo-router';
 import {
   type ReactNode,
   useCallback,
@@ -39,10 +38,7 @@ import {
   StoreSheet,
   StoreSheetRef,
 } from '../../../components/item-sheet/store-sheet';
-import { HapticPressable } from '../../../components/ui/haptic-pressable';
-import { Icon } from '../../../components/ui/icon';
 import { db } from '../../../lib/instant';
-import { navigation } from '../../../lib/navigation';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 import {
@@ -51,6 +47,7 @@ import {
 } from '../../grocery-lists/components/select-grocery-list-sheet';
 import { MealPlanDropdownMenu } from '../../meal-planner/components/meal-plan-dropdown-menu';
 import { useUserMealPlanData } from '../../meal-planner/hooks/useUserMealPlanData';
+import { RecipesSettingsBar } from '../../shared/components/recipes-settings-bar';
 import {
   clearBulkSelection,
   createBulkSelectionState,
@@ -122,7 +119,6 @@ type GroupingBulkAction = {
   id: number;
 };
 
-const NAVIGATION_LOCK_DURATION_MS = 1500;
 const VIEW_TRANSITION_EASING = Easing.bezier(0.2, 0, 0, 1);
 
 export const GroceryList = ({
@@ -169,17 +165,12 @@ export const GroceryList = ({
   const [bulkSelectionState, setBulkSelectionState] = useState(() =>
     createBulkSelectionState()
   );
-  const [isRoutePushPending, setIsRoutePushPending] = useState(false);
   const standardControlsOpacity = useSharedValue(1);
   const bulkToolbarOpacity = useSharedValue(0);
   const viewTransitionProgress = useSharedValue(
     activeView === 'meal-plan' ? 1 : 0
   );
   const reduceMotion = useReducedMotion();
-  const routePushLockRef = useRef(false);
-  const routePushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
 
   const resetBulkSelectionMode = useCallback(() => {
     setBulkSelectionState(currentState => {
@@ -195,41 +186,6 @@ export const GroceryList = ({
 
   const deferredQuery = useDeferredValue(searchQuery.trim());
   const normalizedQuery = deferredQuery.toLowerCase();
-
-  const releaseRoutePushLock = () => {
-    routePushLockRef.current = false;
-    setIsRoutePushPending(false);
-    if (routePushTimeoutRef.current) {
-      clearTimeout(routePushTimeoutRef.current);
-      routePushTimeoutRef.current = null;
-    }
-  };
-
-  const pushWithRouteLock = (href: Href) => {
-    if (routePushLockRef.current) return;
-
-    routePushLockRef.current = true;
-    setIsRoutePushPending(true);
-
-    if (routePushTimeoutRef.current) {
-      clearTimeout(routePushTimeoutRef.current);
-    }
-
-    routePushTimeoutRef.current = setTimeout(() => {
-      releaseRoutePushLock();
-    }, NAVIGATION_LOCK_DURATION_MS);
-
-    router.push(href);
-  };
-
-  useEffect(
-    () => () => {
-      if (routePushTimeoutRef.current) {
-        clearTimeout(routePushTimeoutRef.current);
-      }
-    },
-    []
-  );
 
   const filteredItems = useMemo(() => {
     if (!normalizedQuery) return items;
@@ -460,14 +416,6 @@ export const GroceryList = ({
     if (listId && listName) {
       editListNameSheetRef.current?.present(listId, listName);
     }
-  };
-
-  const handleOpenSettings = () => {
-    pushWithRouteLock('/settings');
-  };
-
-  const handleOpenRecipes = () => {
-    pushWithRouteLock(navigation.goToRecipes(listId));
   };
 
   const handleEnterBulkSelectionMode = () => {
@@ -1045,46 +993,15 @@ export const GroceryList = ({
       </View>
 
       <>
-        <Animated.View
-          className="bottom-safe absolute left-6 z-10"
+        <RecipesSettingsBar
+          listId={listId}
           style={standardControlsAnimatedStyle}
           pointerEvents={
             activeView === 'grocery-list' && !bulkSelectionState.isActive
               ? 'auto'
               : 'none'
           }
-        >
-          <View className="h-10 flex-row items-center gap-6 overflow-hidden rounded-full border border-border bg-accent/90 px-4 shadow-sm">
-            <HapticPressable
-              onPress={handleOpenRecipes}
-              disabled={isRoutePushPending}
-              className="gap-2 active:opacity-80"
-              hapticType="selection"
-              hitSlop={10}
-            >
-              <Icon
-                as={BookOpenIcon}
-                size={24}
-                strokeWidth={2}
-                className="mt-0.5 text-accent-foreground"
-              />
-            </HapticPressable>
-            <HapticPressable
-              onPress={handleOpenSettings}
-              disabled={isRoutePushPending}
-              className="gap-2 active:opacity-80"
-              hapticType="selection"
-              hitSlop={10}
-            >
-              <Icon
-                as={SettingsIcon}
-                size={24}
-                strokeWidth={2}
-                className="mt-0.5 text-accent-foreground"
-              />
-            </HapticPressable>
-          </View>
-        </Animated.View>
+        />
         <AddItemSheet
           groceryListId={listId ?? ''}
           isTriggerVisible={

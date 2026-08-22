@@ -37,6 +37,7 @@ import {
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
+import { RecipesSettingsBar } from '@/features/shared/components/recipes-settings-bar';
 import { db } from '@/lib/instant';
 import { buildListUrl } from '@/lib/navigation';
 
@@ -219,7 +220,7 @@ export default function GroceryListsIndex() {
           data={groceryLists}
           renderItem={renderList}
           keyExtractor={item => item.id}
-          contentContainerClassName="px-5 pb-8 pt-1"
+          contentContainerClassName="px-5 pb-24 pt-1"
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center px-4 py-16">
               <Text className="text-center text-muted-foreground">
@@ -230,6 +231,7 @@ export default function GroceryListsIndex() {
         />
       )}
 
+      <RecipesSettingsBar listId={selectedListId} />
       <CreateGroceryListSheet
         ref={createSheetRef}
         onCreated={handleSelectList}
