@@ -243,7 +243,7 @@ export const MealPlanner = ({
       <Button
         size="wide-small"
         onPress={handleAddPress}
-        className="absolute bottom-12 right-6 z-10"
+        className="absolute bottom-8 right-6 z-10"
       >
         <Icon
           as={PlusIcon}

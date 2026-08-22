@@ -20,7 +20,7 @@ export function AddMealsToListButton({
       size="iconLg"
       variant="secondary"
       className={cn(
-        'absolute bottom-12 left-6 z-10 h-10 w-24 transition-opacity',
+        'absolute bottom-8 left-6 z-10 h-10 w-24 transition-opacity',
         unaddedCount === 0 && 'opacity-50'
       )}
       onPress={onPress}
