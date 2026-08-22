@@ -22,7 +22,7 @@ import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { navigation } from '@/lib/navigation';
 
-const NAVIGATION_LOCK_DURATION_MS = 1500;
+const NAVIGATION_LOCK_DURATION_MS = 500;
 
 type RecipesSettingsBarState = {
   listId?: string;
@@ -30,28 +30,59 @@ type RecipesSettingsBarState = {
 };
 
 type RecipesSettingsBarController = {
-  setBar: (state: RecipesSettingsBarState) => void;
+  setBar: (owner: symbol, state: RecipesSettingsBarState | null) => void;
 };
 
 const RecipesSettingsBarContext =
   createContext<RecipesSettingsBarController | null>(null);
 
+type MutableValue<T> = {
+  current: T;
+};
+
+function releaseRoutePushLock(
+  lock: MutableValue<boolean>,
+  timeout: MutableValue<ReturnType<typeof setTimeout> | null>
+) {
+  lock.current = false;
+  if (timeout.current) {
+    clearTimeout(timeout.current);
+    timeout.current = null;
+  }
+}
+
 export function RecipesSettingsBarHost({ children }: { children: ReactNode }) {
   const segments = useSegments();
   const isOnTabs = segments[0] === '(tabs)';
-  const [state, setState] = useState<RecipesSettingsBarState>({
-    visible: true,
+  const [state, setState] = useState<
+    RecipesSettingsBarState & { owner: symbol | null }
+  >({
+    owner: null,
+    visible: false,
   });
 
-  const setBar = useCallback((next: RecipesSettingsBarState) => {
-    setState(current => {
-      if (current.visible === next.visible && current.listId === next.listId) {
-        return current;
-      }
+  const setBar = useCallback(
+    (owner: symbol, next: RecipesSettingsBarState | null) => {
+      setState(current => {
+        if (next === null) {
+          return current.owner === owner
+            ? { owner: null, visible: false }
+            : current;
+        }
 
-      return next;
-    });
-  }, []);
+        if (
+          current.owner === owner &&
+          current.visible === next.visible &&
+          current.listId === next.listId
+        ) {
+          return current;
+        }
+
+        return { ...next, owner };
+      });
+    },
+    []
+  );
 
   const controller = useMemo(() => ({ setBar }), [setBar]);
 
@@ -74,11 +105,16 @@ export function useRecipesSettingsBar({
   visible?: boolean;
 }) {
   const controller = useContext(RecipesSettingsBarContext);
+  const [owner] = useState(() => Symbol('recipes-settings-bar-owner'));
 
   useFocusEffect(
     useCallback(() => {
-      controller?.setBar({ listId, visible });
-    }, [controller, listId, visible])
+      controller?.setBar(owner, { listId, visible });
+
+      return () => {
+        controller?.setBar(owner, null);
+      };
+    }, [controller, listId, owner, visible])
   );
 }
 
@@ -89,7 +125,6 @@ function RecipesSettingsBar({
   listId?: string;
   visible: boolean;
 }) {
-  const [isRoutePushPending, setIsRoutePushPending] = useState(false);
   const routePushLockRef = useRef(false);
   const routePushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
@@ -97,40 +132,33 @@ function RecipesSettingsBar({
   const reduceMotion = useReducedMotion();
   const visibleProgress = useSharedValue(visible ? 1 : 0);
 
-  const releaseRoutePushLock = () => {
-    routePushLockRef.current = false;
-    setIsRoutePushPending(false);
-    if (routePushTimeoutRef.current) {
-      clearTimeout(routePushTimeoutRef.current);
-      routePushTimeoutRef.current = null;
-    }
-  };
-
   const pushWithRouteLock = (href: Href) => {
     if (routePushLockRef.current) return;
 
     routePushLockRef.current = true;
-    setIsRoutePushPending(true);
 
     if (routePushTimeoutRef.current) {
       clearTimeout(routePushTimeoutRef.current);
     }
 
     routePushTimeoutRef.current = setTimeout(() => {
-      releaseRoutePushLock();
+      releaseRoutePushLock(routePushLockRef, routePushTimeoutRef);
     }, NAVIGATION_LOCK_DURATION_MS);
 
     router.push(href);
   };
 
-  useEffect(
-    () => () => {
-      if (routePushTimeoutRef.current) {
-        clearTimeout(routePushTimeoutRef.current);
-      }
-    },
-    []
-  );
+  useEffect(() => {
+    if (!visible) {
+      releaseRoutePushLock(routePushLockRef, routePushTimeoutRef);
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    return () => {
+      releaseRoutePushLock(routePushLockRef, routePushTimeoutRef);
+    };
+  }, []);
 
   useEffect(() => {
     const target = visible ? 1 : 0;
@@ -152,7 +180,6 @@ function RecipesSettingsBar({
       <View className="h-10 flex-row items-center gap-6 overflow-hidden rounded-full border border-border bg-accent/90 px-4 shadow-sm">
         <HapticPressable
           onPress={() => pushWithRouteLock(navigation.goToRecipes(listId))}
-          disabled={isRoutePushPending}
           accessibilityRole="button"
           accessibilityLabel="Open recipes"
           className="gap-2 active:opacity-80"
@@ -168,7 +195,6 @@ function RecipesSettingsBar({
         </HapticPressable>
         <HapticPressable
           onPress={() => pushWithRouteLock('/settings')}
-          disabled={isRoutePushPending}
           accessibilityRole="button"
           accessibilityLabel="Open settings"
           className="gap-2 active:opacity-80"
