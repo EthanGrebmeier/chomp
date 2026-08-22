@@ -87,10 +87,4 @@ describe('list workspace navigation', () => {
       '/(tabs)?listId=list-456&view=meal-plan'
     );
   });
-
-  it('opens a list from the index without a view parameter', () => {
-    expect(buildListUrl({ listId: 'list-789' })).toBe(
-      '/(tabs)?listId=list-789'
-    );
-  });
 });

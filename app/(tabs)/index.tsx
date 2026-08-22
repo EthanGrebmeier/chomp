@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -37,9 +37,7 @@ export default function List() {
     selectedListId === null
       ? undefined
       : (selectedList?.id ?? parameterList?.id ?? lists?.grocery_lists[0]?.id);
-  const routeView: ListView =
-    viewParam === 'meal-plan' ? 'meal-plan' : 'grocery-list';
-  const [selectedView, setSelectedView] = useState<ListView>(routeView);
+  const [selectedView, setSelectedView] = useState<ListView>('grocery-list');
   const activeView: ListView =
     selectedView === 'meal-plan' && !activeListId && !listsLoading
       ? 'grocery-list'
@@ -66,12 +64,6 @@ export default function List() {
       trackListAccess(activeListId);
     }
   }, [activeListId, trackListAccess]);
-
-  useFocusEffect(
-    useCallback(() => {
-      setSelectedView(routeView);
-    }, [routeView])
-  );
 
   useEffect(() => {
     if (viewParam === 'meal-plan' && !activeListId && !listsLoading) {
