@@ -61,15 +61,11 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
               onPress={handleCopyCode}
               className="flex-row items-center gap-3 rounded-2xl bg-muted px-6 py-4 active:opacity-70"
             >
-              <Text className="font-mono text-2xl font-bold tracking-widest">
+              <Text className="font-mono text-4xl font-bold tracking-widest">
                 {joinCode}
               </Text>
               <Icon as={CopyIcon} size={20} className="text-muted-foreground" />
             </HapticPressable>
-
-            <Text className="text-center text-sm text-muted-foreground">
-              Tap to copy code
-            </Text>
 
             <View className="mt-4 w-full gap-3">
               <Button onPress={handleShareLink} className="w-full">
