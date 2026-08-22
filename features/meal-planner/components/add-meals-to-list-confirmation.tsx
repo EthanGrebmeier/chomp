@@ -318,7 +318,7 @@ export function AddMealsToListConfirmation({
         summary:
           summaryParts.length > 0
             ? `${summaryParts.join(' and ')} ready to add`
-            : 'No meal plan entries are waiting to be added.',
+            : 'Add meals to your plan to add them to your list.',
       };
     }, [items, recipes]);
 
@@ -425,6 +425,7 @@ export function AddMealsToListConfirmation({
 
   const selectedCount = Math.max(0, unaddedCount - deselectedIds.size);
   const skippedCount = unaddedCount - selectedCount;
+  const isEmpty = !isLoading && unaddedCount === 0;
   const actionLabel = isPending
     ? 'Adding…'
     : selectedCount > 0 && skippedCount > 0
@@ -438,25 +439,37 @@ export function AddMealsToListConfirmation({
       <BottomSheet
         name="add-meals-to-list-sheet"
         ref={sheetRef}
-        detents={[0.85, 1]}
-        scrollable
-        viewClassName="flex-1"
+        detents={isEmpty ? ['auto'] : [0.85, 1]}
+        scrollable={!isEmpty}
+        viewClassName={isEmpty ? undefined : 'flex-1'}
         onDismiss={resetSelection}
         footer={
           <View className="pb-safe bg-background px-4 pt-3">
-            <Button
-              size="xl"
-              onPress={handleAddToList}
-              disabled={isPending || unaddedCount === 0}
-            >
-              <Text>{actionLabel}</Text>
-            </Button>
+            {isEmpty ? (
+              <Button
+                size="xl"
+                variant="secondary"
+                onPress={() => sheetRef.current?.dismiss()}
+              >
+                <Text>Exit</Text>
+              </Button>
+            ) : (
+              <Button
+                size="xl"
+                onPress={handleAddToList}
+                disabled={isPending || unaddedCount === 0}
+              >
+                <Text>{actionLabel}</Text>
+              </Button>
+            )}
           </View>
         }
       >
-        <BottomSheet.SheetView className="min-h-0 flex-1 px-4">
+        <BottomSheet.SheetView
+          className={isEmpty ? 'px-4 pb-24' : 'min-h-0 flex-1 px-4'}
+        >
           <BottomSheet.Header
-            className="mb-1"
+            className={isEmpty ? undefined : 'mb-1'}
             title="Add planned meals to your list"
             description={summary}
           />
@@ -468,7 +481,7 @@ export function AddMealsToListConfirmation({
                 Loading meals…
               </Text>
             </View>
-          ) : (
+          ) : isEmpty ? null : (
             <SectionList
               className="flex-1"
               sections={sections}
@@ -479,16 +492,6 @@ export function AddMealsToListConfirmation({
               )}
               renderItem={renderEntry}
               keyExtractor={item => item.id}
-              ListEmptyComponent={
-                <View className="flex-1 items-center justify-center px-8 py-20">
-                  <Text className="text-center text-lg font-semibold text-foreground">
-                    Everything is already on your list
-                  </Text>
-                  <Text className="mt-2 text-center text-sm text-muted-foreground">
-                    Add another meal to your plan when you’re ready.
-                  </Text>
-                </View>
-              }
               contentContainerClassName="pb-28"
               contentInsetAdjustmentBehavior="automatic"
               stickySectionHeadersEnabled={false}
