@@ -17,6 +17,14 @@ type GetAuthReconciliationActionArgs = {
   clerkUserId: string | null;
   clerkEmail: string | null;
   instantAuth: AuthIdentity | null | undefined;
+  hasClerkSignOutGraceElapsed: boolean;
+};
+
+type ShouldStartClerkSignOutGracePeriodArgs = Pick<
+  GetAuthReconciliationActionArgs,
+  'isClerkLoaded' | 'isSignedIn'
+> & {
+  isOffline: boolean;
 };
 
 const normalizeEmail = (email: string | null | undefined) =>
@@ -48,12 +56,20 @@ export const doesInstantAuthMatchClerk = ({
   );
 };
 
+export const shouldStartClerkSignOutGracePeriod = ({
+  isClerkLoaded,
+  isSignedIn,
+  isOffline,
+}: ShouldStartClerkSignOutGracePeriodArgs) =>
+  isClerkLoaded && isSignedIn === false && !isOffline;
+
 export const getAuthReconciliationAction = ({
   isClerkLoaded,
   isSignedIn,
   clerkUserId,
   clerkEmail,
   instantAuth,
+  hasClerkSignOutGraceElapsed,
 }: GetAuthReconciliationActionArgs): AuthReconciliationAction => {
   if (!isClerkLoaded || isSignedIn === undefined || instantAuth === undefined) {
     return 'wait';
@@ -79,7 +95,7 @@ export const getAuthReconciliationAction = ({
   }
 
   if (instantAuth?.email) {
-    return 'clear-instant-session';
+    return hasClerkSignOutGraceElapsed ? 'clear-instant-session' : 'wait';
   }
 
   if (instantAuth) {
