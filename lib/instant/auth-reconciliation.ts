@@ -7,6 +7,7 @@ export type AuthReconciliationAction =
   | 'wait'
   | 'keep-email-session'
   | 'keep-guest-session'
+  | 'defer-instant-sign-out'
   | 'bridge-clerk-session'
   | 'clear-instant-session'
   | 'signed-out';
@@ -95,7 +96,9 @@ export const getAuthReconciliationAction = ({
   }
 
   if (instantAuth?.email) {
-    return hasClerkSignOutGraceElapsed ? 'clear-instant-session' : 'wait';
+    return hasClerkSignOutGraceElapsed
+      ? 'clear-instant-session'
+      : 'defer-instant-sign-out';
   }
 
   if (instantAuth) {

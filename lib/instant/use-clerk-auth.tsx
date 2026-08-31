@@ -432,8 +432,7 @@ export const InstantAuthHandler = ({
           clerkUserId: clerkUserId ?? null,
           clerkEmail,
           instantAuth: stableAuth,
-          hasClerkSignOutGraceElapsed:
-            hasClerkSignOutGraceElapsedRef.current,
+          hasClerkSignOutGraceElapsed: hasClerkSignOutGraceElapsedRef.current,
         });
 
         if (action === 'wait') {
@@ -443,7 +442,8 @@ export const InstantAuthHandler = ({
 
         if (
           action === 'keep-email-session' ||
-          action === 'keep-guest-session'
+          action === 'keep-guest-session' ||
+          action === 'defer-instant-sign-out'
         ) {
           nextResolvedInstantAuth = stableAuth;
           setBridgeRetryAttempt(0);

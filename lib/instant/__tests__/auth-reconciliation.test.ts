@@ -98,7 +98,7 @@ describe('auth reconciliation', () => {
         instantAuth: signedInInstantUser,
         hasClerkSignOutGraceElapsed: false,
       })
-    ).toBe('wait');
+    ).toBe('defer-instant-sign-out');
   });
 
   it('clears the stale Instant email session after the sign-out grace period', () => {
