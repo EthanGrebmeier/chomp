@@ -3,7 +3,15 @@ import { router } from 'expo-router';
 import { useImperativeHandle, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import PagerView from 'react-native-pager-view';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -42,7 +50,50 @@ import { MealPlanItemForm } from './meal-plan-item-form';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
 import { MealTimeSheet } from './meal-time-sheet';
 
-type AddMode = 'item' | 'recipe';
+const ADD_MODES = ['recipe', 'item'] as const;
+const FOOTER_FADE_DURATION = 200;
+
+type AddMode = (typeof ADD_MODES)[number];
+
+const ADD_MODE_INDEX: Record<AddMode, number> = {
+  recipe: 0,
+  item: 1,
+};
+
+const useFadingPresence = (initiallyVisible = false) => {
+  const opacity = useSharedValue(initiallyVisible ? 1 : 0);
+  const [isMounted, setIsMounted] = useState(initiallyVisible);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+  }));
+
+  const unmount = () => {
+    setIsMounted(false);
+  };
+
+  const show = () => {
+    setIsMounted(true);
+    opacity.set(withTiming(1, { duration: FOOTER_FADE_DURATION }));
+  };
+
+  const hide = () => {
+    opacity.set(
+      withTiming(0, { duration: FOOTER_FADE_DURATION }, finished => {
+        if (finished) {
+          scheduleOnRN(unmount);
+        }
+      })
+    );
+  };
+
+  const reset = (visible: boolean) => {
+    setIsMounted(visible);
+    opacity.set(visible ? 1 : 0);
+  };
+
+  return { animatedStyle, hide, isMounted, reset, show };
+};
 
 type ModeToggleProps = {
   mode: AddMode;
@@ -106,6 +157,7 @@ export type AddToMealPlanSheetRef = {
 
 const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const pagerRef = useRef<PagerView>(null);
   const itemInputRef = useRef<TextInput>(null);
   const {
     itemName,
@@ -137,6 +189,20 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const [recipeMealTag, setRecipeMealTag] = useState<string | undefined>(
     undefined
   );
+  const {
+    animatedStyle: itemFooterAnimatedStyle,
+    hide: hideItemFooter,
+    isMounted: isItemFooterMounted,
+    reset: resetItemFooter,
+    show: showItemFooter,
+  } = useFadingPresence();
+  const {
+    animatedStyle: recipeFooterAnimatedStyle,
+    hide: hideRecipeFooter,
+    isMounted: isRecipeFooterMounted,
+    reset: resetRecipeFooter,
+    show: showRecipeFooter,
+  } = useFadingPresence();
   const ingredientOverrideSheetRef =
     useRef<MealPlanIngredientOverrideSheetRef>(null);
 
@@ -160,15 +226,19 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
 
   const resetSheetState = () => {
     setMode('recipe');
+    pagerRef.current?.setPageWithoutAnimation(ADD_MODE_INDEX.recipe);
     setSelectedRecipe(null);
     setIngredientRows([]);
     setRecipeDate(undefined);
     setRecipeMealTag(undefined);
+    resetItemFooter(false);
+    resetRecipeFooter(false);
   };
 
   const handleSelectRecipe = (recipe: RecipeWithIngredients) => {
     setSelectedRecipe(recipe);
     setRecipeMealTag(recipe.mealTag ?? undefined);
+    showRecipeFooter();
     setIngredientRows(
       initializeMealPlanIngredientEditor(recipe.recipe_ingredients)
     );
@@ -182,6 +252,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const handleBackToRecipes = () => {
     setSelectedRecipe(null);
     setIngredientRows([]);
+    hideRecipeFooter();
   };
 
   const handleAddRecipe = () => {
@@ -209,13 +280,31 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     );
   };
 
-  const handleModeChange = (newMode: AddMode) => {
+  const activateMode = (newMode: AddMode) => {
     setMode(newMode);
     setSelectedRecipe(null);
     if (newMode === 'item') {
+      hideRecipeFooter();
+      showItemFooter();
       setTimeout(() => {
         itemInputRef.current?.focus();
       }, 10);
+    } else {
+      hideItemFooter();
+      hideRecipeFooter();
+      itemInputRef.current?.blur();
+    }
+  };
+
+  const handleModeChange = (newMode: AddMode) => {
+    activateMode(newMode);
+    pagerRef.current?.setPage(ADD_MODE_INDEX[newMode]);
+  };
+
+  const handlePageSelected = (event: { nativeEvent: { position: number } }) => {
+    const newMode = ADD_MODES[event.nativeEvent.position];
+    if (newMode) {
+      activateMode(newMode);
     }
   };
 
@@ -300,61 +389,65 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const isRecipeAddDisabled =
     !isRecipeModeValid || selectedIngredientIds.size === 0;
 
-  const footer =
-    mode === 'recipe' && selectedRecipe ? (
-      <View className="pb-safe gap-4 px-4">
-        <ScrollingMetaBar>
-          <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
-          <MealTimeSheet mealTime={recipeMealTag} onSelect={setRecipeMealTag} />
-        </ScrollingMetaBar>
-        <Button
-          size="lg"
-          onPress={handleAddRecipe}
-          disabled={isRecipeAddDisabled}
-        >
-          <Text>Add to Plan</Text>
-        </Button>
-      </View>
-    ) : mode === 'item' ? (
-      <View className="pb-safe gap-4 px-4">
-        <MealPlanMetaBar
-          date={selectedDate}
-          onDateChange={setSelectedDate}
-          mealTag={mealTag}
-          onMealTagChange={setMealTag}
-          quantity={quantity}
-          onQuantityChange={setQuantity}
-          unit={unit}
-          onUnitChange={setUnit}
-          category={category}
-          onCategoryChange={setCategory}
-          storeId={storeId}
-          onStoreIdChange={setStoreId}
-          onSubmit={handleAddItem}
-          isValid={isValid()}
-          showAction={false}
-          optionsDisabled={!hasItemTitle}
-        />
-        <Button
-          variant="default"
-          size="lg"
-          onPress={handleAddItem}
-          disabled={!isValid() || isAddingItem}
-        >
-          <Text className="text-primary-foreground">Add Item</Text>
-        </Button>
-      </View>
-    ) : (
-      <View />
-    );
+  const footer = (
+    <View className="pb-safe px-4" collapsable={false}>
+      {isRecipeFooterMounted ? (
+        <Animated.View className="gap-4" style={recipeFooterAnimatedStyle}>
+          <ScrollingMetaBar>
+            <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
+            <MealTimeSheet
+              mealTime={recipeMealTag}
+              onSelect={setRecipeMealTag}
+            />
+          </ScrollingMetaBar>
+          <Button
+            size="lg"
+            onPress={handleAddRecipe}
+            disabled={isRecipeAddDisabled}
+          >
+            <Text>Add to Plan</Text>
+          </Button>
+        </Animated.View>
+      ) : isItemFooterMounted ? (
+        <Animated.View className="gap-4" style={itemFooterAnimatedStyle}>
+          <MealPlanMetaBar
+            date={selectedDate}
+            onDateChange={setSelectedDate}
+            mealTag={mealTag}
+            onMealTagChange={setMealTag}
+            quantity={quantity}
+            onQuantityChange={setQuantity}
+            unit={unit}
+            onUnitChange={setUnit}
+            category={category}
+            onCategoryChange={setCategory}
+            storeId={storeId}
+            onStoreIdChange={setStoreId}
+            onSubmit={handleAddItem}
+            isValid={isValid()}
+            showAction={false}
+            optionsDisabled={!hasItemTitle}
+          />
+          <Button
+            variant="default"
+            size="lg"
+            onPress={handleAddItem}
+            disabled={!isValid() || isAddingItem}
+          >
+            <Text className="text-primary-foreground">Add Item</Text>
+          </Button>
+        </Animated.View>
+      ) : null}
+    </View>
+  );
 
   return (
     <BottomSheet
       name="add-to-meal-plan-sheet"
       ref={sheetRef}
       detents={[1]}
-      scrollable={mode === 'recipe'}
-      viewClassName={mode === 'recipe' ? 'flex-1' : undefined}
+      scrollable
+      viewClassName="flex-1"
       onStartClose={() => {
         KeyboardController.dismiss();
         resetMealPlanItemState();
@@ -372,49 +465,54 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           ) : undefined
         }
       />
-      {!selectedRecipe && (
-        <ModeToggle mode={mode} onModeChange={handleModeChange} />
-      )}
-
-      <View className={mode === 'recipe' ? 'min-h-0 flex-1' : undefined}>
-        {mode === 'recipe' ? (
-          selectedRecipe ? (
-            <Animated.View
-              entering={FadeIn.duration(150)}
-              exiting={FadeOut.duration(150)}
-              className="min-h-0 flex-1"
-            >
-              <IngredientSelector
-                recipe={selectedRecipe}
-                mode="meal-plan"
-                listId={listId}
-                bottomContentInset={180}
-                mealPlanIngredients={mealPlanIngredients}
-                onBack={handleBackToRecipes}
-                onDismiss={() => sheetRef.current?.dismiss()}
-                onToggleIngredient={handleToggleIngredient}
-                onToggleAll={handleToggleAllIngredients}
-                selectedIds={selectedIngredientIds}
-                onEditIngredient={handleEditIngredient}
-                showHeader={false}
-              />
-            </Animated.View>
-          ) : (
-            <RecipeSelector
-              fillHeight
-              onSelectRecipe={handleSelectRecipe}
-              onCreateRecipe={handleCreateRecipe}
+      <View className="min-h-0 flex-1">
+        {selectedRecipe ? (
+          <Animated.View
+            entering={FadeIn.duration(150)}
+            exiting={FadeOut.duration(150)}
+            className="min-h-0 flex-1"
+          >
+            <IngredientSelector
+              recipe={selectedRecipe}
+              mode="meal-plan"
+              listId={listId}
+              bottomContentInset={180}
+              mealPlanIngredients={mealPlanIngredients}
+              onBack={handleBackToRecipes}
+              onDismiss={() => sheetRef.current?.dismiss()}
+              onToggleIngredient={handleToggleIngredient}
+              onToggleAll={handleToggleAllIngredients}
+              selectedIds={selectedIngredientIds}
+              onEditIngredient={handleEditIngredient}
+              showHeader={false}
             />
-          )
+          </Animated.View>
         ) : (
-          <View className="px-4">
-            <MealPlanItemForm
-              onSubmit={handleAddItem}
-              showMetaBar={false}
-              inputRef={itemInputRef}
-              keepKeyboardOnSubmit
-            />
-          </View>
+          <>
+            <ModeToggle mode={mode} onModeChange={handleModeChange} />
+            <PagerView
+              ref={pagerRef}
+              style={{ flex: 1 }}
+              initialPage={ADD_MODE_INDEX.recipe}
+              onPageSelected={handlePageSelected}
+            >
+              <View key="recipe" className="min-h-0 flex-1">
+                <RecipeSelector
+                  fillHeight
+                  onSelectRecipe={handleSelectRecipe}
+                  onCreateRecipe={handleCreateRecipe}
+                />
+              </View>
+              <View key="item" className="flex-1 px-4">
+                <MealPlanItemForm
+                  onSubmit={handleAddItem}
+                  showMetaBar={false}
+                  inputRef={itemInputRef}
+                  keepKeyboardOnSubmit
+                />
+              </View>
+            </PagerView>
+          </>
         )}
       </View>
       <MealPlanIngredientOverrideSheet

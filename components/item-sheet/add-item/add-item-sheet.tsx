@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
+import PagerView from 'react-native-pager-view';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -10,6 +11,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { toast } from 'sonner-native';
 
 import { FrequentItemsScreen } from '../../../features/frequent-items/components/frequent-items-screen';
@@ -44,7 +46,15 @@ import {
 } from './ingredient-selector';
 import { RecipeSelector } from './recipe-selector';
 
-type AddMode = 'item' | 'recipe' | 'recent';
+const ADD_MODES = ['item', 'recipe', 'recent'] as const;
+
+type AddMode = (typeof ADD_MODES)[number];
+
+const ADD_MODE_INDEX: Record<AddMode, number> = {
+  item: 0,
+  recipe: 1,
+  recent: 2,
+};
 
 type ModeToggleProps = {
   mode: AddMode;
@@ -132,7 +142,10 @@ const AddItemSheet = ({
 }: AddItemSheetProps) => {
   const { height: windowHeight } = useWindowDimensions();
   const triggerOpacity = useSharedValue(isTriggerVisible ? 1 : 0);
+  const itemFooterOpacity = useSharedValue(1);
   const ref = useRef<TrueSheet>(null);
+  const pagerRef = useRef<PagerView>(null);
+  const isSheetOpenRef = useRef(false);
   const {
     reset,
     itemInputRef,
@@ -142,6 +155,7 @@ const AddItemSheet = ({
     mode: itemSheetMode,
   } = useItemSheet();
   const [mode, setMode] = useState<AddMode>('item');
+  const [isItemFooterMounted, setIsItemFooterMounted] = useState(true);
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<
@@ -167,26 +181,72 @@ const AddItemSheet = ({
     opacity: triggerOpacity.get(),
   }));
 
+  const itemFooterAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: itemFooterOpacity.get(),
+  }));
+
+  const unmountItemFooter = () => {
+    setIsItemFooterMounted(false);
+  };
+
+  const showItemFooter = () => {
+    setIsItemFooterMounted(true);
+    itemFooterOpacity.set(withTiming(1, { duration: 200 }));
+  };
+
+  const hideItemFooter = () => {
+    itemFooterOpacity.set(
+      withTiming(0, { duration: 200 }, finished => {
+        if (finished) {
+          scheduleOnRN(unmountItemFooter);
+        }
+      })
+    );
+  };
+
   const openSheet = () => {
     reset();
     ref.current?.present();
   };
 
   const handleClose = () => {
+    isSheetOpenRef.current = false;
+    itemInputRef.current?.blur();
     reset();
     onItemAddedFeedbackComplete();
     setMode('item');
+    setIsItemFooterMounted(true);
+    itemFooterOpacity.set(1);
+    pagerRef.current?.setPageWithoutAnimation(ADD_MODE_INDEX.item);
     setSelectedRecipe(null);
     setPendingConflictIngredients(null);
   };
 
-  const handleModeChange = (newMode: AddMode) => {
+  const activateMode = (newMode: AddMode) => {
     setMode(newMode);
     setSelectedRecipe(null);
     if (newMode === 'item') {
-      setTimeout(() => {
-        itemInputRef.current?.focus();
-      }, 10);
+      showItemFooter();
+      if (isSheetOpenRef.current) {
+        setTimeout(() => {
+          itemInputRef.current?.focus();
+        }, 10);
+      }
+    } else {
+      hideItemFooter();
+      itemInputRef.current?.blur();
+    }
+  };
+
+  const handleModeChange = (newMode: AddMode) => {
+    activateMode(newMode);
+    pagerRef.current?.setPage(ADD_MODE_INDEX[newMode]);
+  };
+
+  const handlePageSelected = (event: { nativeEvent: { position: number } }) => {
+    const newMode = ADD_MODES[event.nativeEvent.position];
+    if (newMode) {
+      activateMode(newMode);
     }
   };
 
@@ -326,51 +386,62 @@ const AddItemSheet = ({
         detents={[1]}
         name="add-item-sheet"
         ref={ref}
-        viewClassName={selectedRecipe ? 'flex-1' : undefined}
+        viewClassName="flex-1"
         onOpen={() => {
+          isSheetOpenRef.current = true;
           itemInputRef.current?.focus();
         }}
         onDismiss={handleClose}
         scrollable
         footer={
-          mode === 'item' ? (
-            <View className="pb-safe gap-4 px-4">
-              <MetaBar />
-              <Button
-                variant="default"
-                size="lg"
-                onPress={onSubmit}
-                disabled={!isValid || isSubmitting}
-                status={isItemAdded ? 'success' : 'idle'}
-                successLabel="Item Added"
-                onSuccessComplete={onItemAddedFeedbackComplete}
+          <View className="pb-safe px-4" collapsable={false}>
+            {isItemFooterMounted ? (
+              <Animated.View
+                key="item-footer"
+                className="gap-4"
+                style={itemFooterAnimatedStyle}
               >
-                <Text className="text-primary-foreground">
-                  {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
-                </Text>
-              </Button>
-            </View>
-          ) : mode === 'recipe' && selectedRecipe ? (
-            <View className="pb-safe px-4">
-              <Button
-                variant="default"
-                size="lg"
-                onPress={handleAddRecipeToList}
-                disabled={
-                  selectedIngredientIds.size === 0 ||
-                  isAddingRecipe ||
-                  isResolvingConflict
-                }
+                <MetaBar />
+                <Button
+                  variant="default"
+                  size="lg"
+                  onPress={onSubmit}
+                  disabled={!isValid || isSubmitting}
+                  status={isItemAdded ? 'success' : 'idle'}
+                  successLabel="Item Added"
+                  onSuccessComplete={onItemAddedFeedbackComplete}
+                >
+                  <Text className="text-primary-foreground">
+                    {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
+                  </Text>
+                </Button>
+              </Animated.View>
+            ) : mode === 'recipe' && selectedRecipe ? (
+              <Animated.View
+                key="recipe-footer"
+                entering={FadeIn.duration(200)}
+                exiting={FadeOut.duration(200)}
               >
-                <Text className="text-primary-foreground">Add to List</Text>
-              </Button>
-            </View>
-          ) : undefined
+                <Button
+                  variant="default"
+                  size="lg"
+                  onPress={handleAddRecipeToList}
+                  disabled={
+                    selectedIngredientIds.size === 0 ||
+                    isAddingRecipe ||
+                    isResolvingConflict
+                  }
+                >
+                  <Text className="text-primary-foreground">Add to List</Text>
+                </Button>
+              </Animated.View>
+            ) : null}
+          </View>
         }
       >
         <BottomSheet.Header
           className="px-4"
-          title={selectedRecipe ? 'Choose ingredients' : null}
+          title={selectedRecipe ? 'Choose ingredients' : undefined}
           description={selectedRecipe?.name}
           dismissButton={
             selectedRecipe ? <BackButton onPress={handleBackToRecipes} /> : null
@@ -385,61 +456,59 @@ const AddItemSheet = ({
             ) : null
           }
         />
-        <View className={selectedRecipe ? 'flex-1' : undefined}>
-          {!selectedRecipe ? (
+        <View className="flex-1">
+          {selectedRecipe ? (
             <Animated.View
+              key="ingredient-selector"
+              className="flex-1"
               entering={FadeIn.duration(300)}
               exiting={FadeOut.duration(300)}
             >
-              <ModeToggle mode={mode} onModeChange={handleModeChange} />
+              <IngredientSelector
+                ref={ingredientSelectorRef}
+                recipe={selectedRecipe}
+                onBack={handleBackToRecipes}
+                onDismiss={() => ref.current?.dismiss()}
+                listId={groceryListId}
+                selectedIds={selectedIngredientIds}
+                onToggleIngredient={toggleIngredient}
+                onToggleAll={toggleAllIngredients}
+                showFooter={false}
+                showHeader={false}
+              />
             </Animated.View>
-          ) : null}
-          {mode === 'item' ? (
-            <View className="px-4">
-              <ItemForm />
-            </View>
-          ) : mode === 'recipe' ? (
-            <View className={selectedRecipe ? 'flex-1' : undefined}>
-              {selectedRecipe ? (
-                <Animated.View
-                  key="ingredient-selector"
-                  className="flex-1"
-                  entering={FadeIn.duration(300)}
-                  exiting={FadeOut.duration(300)}
-                >
-                  <IngredientSelector
-                    ref={ingredientSelectorRef}
-                    recipe={selectedRecipe}
-                    onBack={handleBackToRecipes}
-                    onDismiss={() => ref.current?.dismiss()}
-                    listId={groceryListId}
-                    selectedIds={selectedIngredientIds}
-                    onToggleIngredient={toggleIngredient}
-                    onToggleAll={toggleAllIngredients}
-                    showFooter={false}
-                    showHeader={false}
-                  />
-                </Animated.View>
-              ) : (
-                <Animated.View
-                  key="recipe-selector"
-                  entering={FadeIn.duration(300)}
-                >
+          ) : (
+            <>
+              <Animated.View
+                entering={FadeIn.duration(300)}
+                exiting={FadeOut.duration(300)}
+              >
+                <ModeToggle mode={mode} onModeChange={handleModeChange} />
+              </Animated.View>
+              <PagerView
+                ref={pagerRef}
+                style={{ flex: 1 }}
+                initialPage={ADD_MODE_INDEX[mode]}
+                onPageSelected={handlePageSelected}
+              >
+                <View key="item" className="flex-1 px-4">
+                  <ItemForm />
+                </View>
+                <View key="recipe" className="flex-1">
                   <RecipeSelector
                     listHeight={Math.max(240, windowHeight - 250)}
                     onSelectRecipe={handleRecipeSelect}
                     onCreateRecipe={handleCreateRecipe}
                   />
-                </Animated.View>
-              )}
-            </View>
-          ) : (
-            <View>
-              <FrequentItemsScreen
-                listHeight={Math.max(320, windowHeight - 180)}
-                listId={groceryListId}
-              />
-            </View>
+                </View>
+                <View key="recent" className="flex-1">
+                  <FrequentItemsScreen
+                    listHeight={Math.max(320, windowHeight - 180)}
+                    listId={groceryListId}
+                  />
+                </View>
+              </PagerView>
+            </>
           )}
         </View>
       </BottomSheet>
