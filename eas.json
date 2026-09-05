@@ -5,15 +5,18 @@
   },
   "build": {
     "development": {
+      "pnpm": "11.9.0",
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development"
     },
     "preview": {
+      "pnpm": "11.9.0",
       "distribution": "internal",
       "channel": "preview"
     },
     "production": {
+      "pnpm": "11.9.0",
       "autoIncrement": true,
       "channel": "production"
     }
