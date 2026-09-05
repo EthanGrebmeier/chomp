@@ -1,4 +1,11 @@
-import { RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  RefObject,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { useDebounceCallback } from 'usehooks-ts';
 
 import { syncSavedItemFromGroceryItem } from '../../../features/grocery-list/instant/sync-saved-item-from-grocery-item';
@@ -130,7 +137,20 @@ export const useLiveItemSync = ({
     currentSavedItemStoreId,
     currentItemName,
   });
-  stateRef.current = {
+  useLayoutEffect(() => {
+    stateRef.current = {
+      selectedItemId,
+      category,
+      quantity,
+      unit,
+      storeId,
+      currentStoreId,
+      currentSavedItemId,
+      currentSavedItemOwnerId,
+      currentSavedItemStoreId,
+      currentItemName,
+    };
+  }, [
     selectedItemId,
     category,
     quantity,
@@ -141,7 +161,7 @@ export const useLiveItemSync = ({
     currentSavedItemOwnerId,
     currentSavedItemStoreId,
     currentItemName,
-  };
+  ]);
 
   const buildCurrent = useCallback((): ItemSnapshot => {
     const s = stateRef.current;

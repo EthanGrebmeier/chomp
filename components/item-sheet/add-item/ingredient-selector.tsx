@@ -221,9 +221,12 @@ export const IngredientSelector = forwardRef<
   const { data: defaultStore } = useDefaultStore();
 
   useEffect(() => {
-    if (!isControlled) {
+    if (isControlled) return;
+
+    const frame = requestAnimationFrame(() => {
       setInternalSelectedIds(new Set(ingredientIds));
-    }
+    });
+    return () => cancelAnimationFrame(frame);
   }, [ingredientIds, isControlled]);
 
   const effectiveSelectedIds = isControlled

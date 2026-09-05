@@ -2,10 +2,17 @@ import { ClerkProvider } from '@clerk/expo';
 import { resourceCache } from '@clerk/expo/resource-cache';
 import { tokenCache } from '@clerk/expo/token-cache';
 import { PortalHost } from '@rn-primitives/portal';
-import { Stack, useRootNavigationState, useSegments } from 'expo-router';
+import {
+  DarkTheme,
+  DefaultTheme,
+  Stack,
+  ThemeProvider,
+  useRootNavigationState,
+  useSegments,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { View, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -172,6 +179,7 @@ function RootLayoutContent({
     useInstantAuthState();
   const rootNavigationState = useRootNavigationState();
   const segments = useSegments();
+  const colorscheme = useColorScheme();
   const hasHiddenSplashRef = useRef(false);
   const [migrationStatus, setMigrationStatus] =
     useState<MigrationStatus | null>(null);
@@ -226,25 +234,27 @@ function RootLayoutContent({
   ]);
 
   return (
-    <ClerkProvider
-      __experimental_resourceCache={resourceCache}
-      tokenCache={tokenCache}
-      publishableKey={publishableKey}
-    >
-      <QueryClientProvider>
-        <KeyboardProvider>
-          <MigrationProvider onStatusChange={handleMigrationStatusChange}>
-            <SafeAreaProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <InitialLayout />
-                <InstantAuthHandler />
-                <PortalHost />
-              </GestureHandlerRootView>
-            </SafeAreaProvider>
-          </MigrationProvider>
-        </KeyboardProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
+    <ThemeProvider value={colorscheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ClerkProvider
+        __experimental_resourceCache={resourceCache}
+        tokenCache={tokenCache}
+        publishableKey={publishableKey}
+      >
+        <QueryClientProvider>
+          <KeyboardProvider>
+            <MigrationProvider onStatusChange={handleMigrationStatusChange}>
+              <SafeAreaProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <InitialLayout />
+                  <InstantAuthHandler />
+                  <PortalHost />
+                </GestureHandlerRootView>
+              </SafeAreaProvider>
+            </MigrationProvider>
+          </KeyboardProvider>
+        </QueryClientProvider>
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }
 

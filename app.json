@@ -10,10 +10,13 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.ethangrebmeier.chomp",
-      "associatedDomains": ["applinks:chompgrocery.com"],
+      "associatedDomains": [
+        "applinks:chompgrocery.com"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "appleTeamId": "K8MV5DQ32C"
     },
     "android": {
       "adaptiveIcon": {

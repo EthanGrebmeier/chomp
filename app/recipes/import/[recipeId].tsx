@@ -29,81 +29,85 @@ export default function ImportSharedRecipe() {
   const { mutate: createRecipe, isPending: isCreating } = useCreateRecipe();
 
   useEffect(() => {
-    if (!sourceRecipeId) {
-      setErrorMessage('Invalid recipe link.');
-      return;
-    }
-
-    if (authLoading || recipesLoading || sourceLoading) return;
-
-    if (connectionStatus === 'closed' || connectionStatus === 'errored') {
-      setErrorMessage(
-        'You are offline. Please check your internet connection and try again.'
-      );
-      return;
-    }
-
-    if (!user) {
-      setErrorMessage('Please sign in to import recipes.');
-      return;
-    }
-
-    if (connectionStatus !== 'authenticated') return;
-
-    const existingRecipe = ownedRecipes?.find(
-      recipe => recipe.sourceRecipeId === sourceRecipeId
-    );
-
-    if (existingRecipe) {
-      router.replace(navigation.goToRecipe(existingRecipe.id));
-      return;
-    }
-
-    if (sourceRecipe?.user?.id === user.id) {
-      router.replace(navigation.goToRecipe(sourceRecipeId));
-      return;
-    }
-
-    if (!sourceRecipe) {
-      setErrorMessage('Recipe not found or no longer available.');
-      return;
-    }
-
-    if (hasStartedImport || isCreating) return;
-
-    setHasStartedImport(true);
-    setErrorMessage(null);
-
-    createRecipe(
-      {
-        recipe: {
-          name: sourceRecipe.name,
-          description: sourceRecipe.description,
-          imageSrc: sourceRecipe.imageSrc,
-          visibility: 'private',
-          mealTag: sourceRecipe.mealTag ?? undefined,
-          sourceUrl: sourceRecipe.sourceUrl ?? undefined,
-          servings: sourceRecipe.servings ?? undefined,
-          sourceRecipeId: sourceRecipe.id,
-        },
-        ingredients: sourceRecipe.recipe_ingredients.map(ingredient => ({
-          name: ingredient.name,
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
-          notes: ingredient.notes ?? undefined,
-          category: ingredient.category ?? undefined,
-        })),
-      },
-      {
-        onSuccess: result => {
-          router.replace(navigation.goToRecipe(result.id));
-        },
-        onError: () => {
-          setHasStartedImport(false);
-          setErrorMessage('Unable to import recipe. Please try again.');
-        },
+    const frame = requestAnimationFrame(() => {
+      if (!sourceRecipeId) {
+        setErrorMessage('Invalid recipe link.');
+        return;
       }
-    );
+
+      if (authLoading || recipesLoading || sourceLoading) return;
+
+      if (connectionStatus === 'closed' || connectionStatus === 'errored') {
+        setErrorMessage(
+          'You are offline. Please check your internet connection and try again.'
+        );
+        return;
+      }
+
+      if (!user) {
+        setErrorMessage('Please sign in to import recipes.');
+        return;
+      }
+
+      if (connectionStatus !== 'authenticated') return;
+
+      const existingRecipe = ownedRecipes?.find(
+        recipe => recipe.sourceRecipeId === sourceRecipeId
+      );
+
+      if (existingRecipe) {
+        router.replace(navigation.goToRecipe(existingRecipe.id));
+        return;
+      }
+
+      if (sourceRecipe?.user?.id === user.id) {
+        router.replace(navigation.goToRecipe(sourceRecipeId));
+        return;
+      }
+
+      if (!sourceRecipe) {
+        setErrorMessage('Recipe not found or no longer available.');
+        return;
+      }
+
+      if (hasStartedImport || isCreating) return;
+
+      setHasStartedImport(true);
+      setErrorMessage(null);
+
+      createRecipe(
+        {
+          recipe: {
+            name: sourceRecipe.name,
+            description: sourceRecipe.description,
+            imageSrc: sourceRecipe.imageSrc,
+            visibility: 'private',
+            mealTag: sourceRecipe.mealTag ?? undefined,
+            sourceUrl: sourceRecipe.sourceUrl ?? undefined,
+            servings: sourceRecipe.servings ?? undefined,
+            sourceRecipeId: sourceRecipe.id,
+          },
+          ingredients: sourceRecipe.recipe_ingredients.map(ingredient => ({
+            name: ingredient.name,
+            quantity: ingredient.quantity,
+            unit: ingredient.unit,
+            notes: ingredient.notes ?? undefined,
+            category: ingredient.category ?? undefined,
+          })),
+        },
+        {
+          onSuccess: result => {
+            router.replace(navigation.goToRecipe(result.id));
+          },
+          onError: () => {
+            setHasStartedImport(false);
+            setErrorMessage('Unable to import recipe. Please try again.');
+          },
+        }
+      );
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, [
     sourceRecipeId,
     authLoading,

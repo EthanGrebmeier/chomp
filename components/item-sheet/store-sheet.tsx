@@ -137,7 +137,8 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       if (openRequestId === undefined) {
         return;
       }
-      openSheet();
+      const frame = requestAnimationFrame(openSheet);
+      return () => cancelAnimationFrame(frame);
     }, [openRequestId, openSheet]);
 
     useImperativeHandle(ref, () => ({
