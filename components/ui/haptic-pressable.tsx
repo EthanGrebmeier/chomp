@@ -1,10 +1,15 @@
 import * as Haptics from 'expo-haptics';
+import { cssInterop } from 'nativewind';
 import React from 'react';
 import { Pressable, PressableProps, View } from 'react-native';
 import {
   Pressable as GesturePressable,
   PressableProps as GesturePressableProps,
 } from 'react-native-gesture-handler';
+
+cssInterop(GesturePressable, {
+  className: 'style',
+});
 
 type HapticProps = {
   /**
