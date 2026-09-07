@@ -212,6 +212,8 @@ type ButtonProps = React.ComponentProps<typeof HapticPressable> &
     /**
      * Displays an acknowledged completion state. Keep this controlled so the
      * caller can transition to success only after its work has completed.
+     * Success remains pressable unless the caller explicitly disables the
+     * button.
      * @default 'idle'
      */
     status?: ButtonStatus;
@@ -310,7 +312,7 @@ function Button({
         role="button"
         haptic={haptic}
         hapticType={hapticType}
-        disabled={disabled === true || isSuccess}
+        disabled={disabled === true}
         style={style}
         {...props}
       >

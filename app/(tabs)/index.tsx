@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
+import { EmptyHeading } from '@/components/text/empty-heading';
+import { EmptySubtext } from '@/components/text/empty-subtext';
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
 import { GroceryListSkeleton } from '@/features/grocery-list/components/grocery-list-skeleton';
 import { type ListView } from '@/features/grocery-list/components/list-view-tabs';
@@ -26,7 +28,11 @@ export default function List() {
   const [selectedListId, setSelectedListId] = useState<
     string | null | undefined
   >(listIdParam);
-  const { data: lists, isLoading: listsLoading } = useGroceryLists();
+  const {
+    data: lists,
+    isLoading: listsLoading,
+    error: listsError,
+  } = useGroceryLists();
   const selectedList =
     selectedListId === null
       ? undefined
@@ -129,7 +135,15 @@ export default function List() {
   return (
     <View className="flex-1 bg-background">
       <View className="pt-safe flex-1">
-        {isLoading ? (
+        {listsError ? (
+          <View
+            accessibilityRole="alert"
+            className="flex-1 items-center justify-center gap-1 px-6"
+          >
+            <EmptyHeading>Couldn&apos;t load your grocery lists</EmptyHeading>
+            <EmptySubtext>Check your connection, then try again.</EmptySubtext>
+          </View>
+        ) : isLoading ? (
           <Animated.View
             key="skeleton"
             entering={FadeIn.duration(200)}

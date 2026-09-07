@@ -205,6 +205,11 @@ const AddItemSheet = ({
   };
 
   const openSheet = () => {
+    if (!groceryListId) {
+      toast.error('Grocery list unavailable. Please try again.');
+      return;
+    }
+
     reset();
     ref.current?.present();
   };
@@ -406,13 +411,17 @@ const AddItemSheet = ({
                   variant="default"
                   size="lg"
                   onPress={onSubmit}
-                  disabled={!isValid || isSubmitting}
+                  disabled={!groceryListId || !isValid || isSubmitting}
                   status={isItemAdded ? 'success' : 'idle'}
                   successLabel="Item Added"
                   onSuccessComplete={onItemAddedFeedbackComplete}
                 >
                   <Text className="text-primary-foreground">
-                    {itemSheetMode === 'add' ? 'Add Item' : 'Update Item'}
+                    {!groceryListId
+                      ? 'List Unavailable'
+                      : itemSheetMode === 'add'
+                        ? 'Add Item'
+                        : 'Update Item'}
                   </Text>
                 </Button>
               </Animated.View>
@@ -540,7 +549,7 @@ const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
   const { data: defaultStore } = useDefaultStore();
   const [isItemAdded, setIsItemAdded] = useState(false);
 
-  const onSubmit = async ({
+  const onSubmit = ({
     item,
     listId,
     selectedCloudSavedItemId,
@@ -553,15 +562,21 @@ const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
     selectedCloudSavedItemStoreId?: string;
     selectedLocalSavedItemId?: string;
   }) => {
-    if (!listId) return false;
+    if (!listId) {
+      toast.error('Grocery list unavailable. Please try again.');
+      return false;
+    }
 
     try {
-      await addGroceryListItem({
+      const transactionPromise = addGroceryListItem({
         listId,
         item,
         savedItemId: selectedCloudSavedItemId,
         selectedCloudSavedItemStoreId,
         selectedLocalSavedItemId,
+      });
+      void transactionPromise.catch(() => {
+        toast.error('Failed to add item');
       });
       setIsItemAdded(true);
       return true;
