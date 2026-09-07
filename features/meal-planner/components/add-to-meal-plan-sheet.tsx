@@ -1,7 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { useImperativeHandle, useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { TextInput, View, useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import PagerView from 'react-native-pager-view';
 import Animated, {
@@ -159,6 +159,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
   const pagerRef = useRef<PagerView>(null);
   const itemInputRef = useRef<TextInput>(null);
+  const { height: windowHeight } = useWindowDimensions();
   const {
     itemName,
     hasItemTitle,
@@ -496,14 +497,14 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               initialPage={ADD_MODE_INDEX.recipe}
               onPageSelected={handlePageSelected}
             >
-              <View key="recipe" className="min-h-0 flex-1">
+              <View key="recipe" style={{ flex: 1 }}>
                 <RecipeSelector
-                  fillHeight
+                  listHeight={Math.max(240, windowHeight - 250)}
                   onSelectRecipe={handleSelectRecipe}
                   onCreateRecipe={handleCreateRecipe}
                 />
               </View>
-              <View key="item" className="flex-1 px-4">
+              <View key="item" style={{ flex: 1 }} className="px-4">
                 <MealPlanItemForm
                   onSubmit={handleAddItem}
                   showMetaBar={false}
