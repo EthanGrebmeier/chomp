@@ -3,7 +3,6 @@ import { PlusIcon } from 'lucide-react-native';
 import {
   forwardRef,
   useCallback,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -25,6 +24,8 @@ import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
 import { Text } from '../ui/text';
 import { useUncontrolledTextInput } from '../use-uncontrolled-text-input';
+
+import { usePresentOnOpenRequest } from './present-on-open-request';
 
 type StoreOptionProps = {
   label: string;
@@ -133,13 +134,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       sheetRef.current?.present();
     }, [disabled, storeId]);
 
-    useEffect(() => {
-      if (openRequestId === undefined) {
-        return;
-      }
-      const frame = requestAnimationFrame(openSheet);
-      return () => cancelAnimationFrame(frame);
-    }, [openRequestId, openSheet]);
+    usePresentOnOpenRequest(openRequestId, openSheet);
 
     useImperativeHandle(ref, () => ({
       present: openSheet,

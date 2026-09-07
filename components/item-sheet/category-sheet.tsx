@@ -3,7 +3,6 @@ import { PlusIcon } from 'lucide-react-native';
 import {
   useCallback,
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -35,6 +34,8 @@ import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
 import { Text } from '../ui/text';
+
+import { usePresentOnOpenRequest } from './present-on-open-request';
 
 type CategoryOptionProps = {
   label: string;
@@ -136,13 +137,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
       sheetRef.current?.present();
     }, [category, disabled]);
 
-    useEffect(() => {
-      if (openRequestId === undefined) {
-        return;
-      }
-      const frame = requestAnimationFrame(openSheet);
-      return () => cancelAnimationFrame(frame);
-    }, [openRequestId, openSheet]);
+    usePresentOnOpenRequest(openRequestId, openSheet);
 
     useImperativeHandle(ref, () => ({
       present: openSheet,
