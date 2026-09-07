@@ -10,7 +10,7 @@ import { StoreTag } from '@/components/store-tag';
 import { EmptyHeading } from '@/components/text/empty-heading';
 import { EmptySubtext } from '@/components/text/empty-subtext';
 import { Heading } from '@/components/text/heading';
-import { HapticPressable } from '@/components/ui/haptic-pressable';
+import { GestureHapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
 import { Text } from '@/components/ui/text';
@@ -57,7 +57,7 @@ const FrequentItemRow = ({
         !isLast ? 'border-b border-dashed border-border' : undefined
       )}
     >
-      <HapticPressable
+      <GestureHapticPressable
         accessibilityRole="button"
         accessibilityLabel={`Add ${item.name} to grocery list`}
         className="mr-1 size-5 items-center justify-center rounded-md border border-border"
@@ -71,9 +71,9 @@ const FrequentItemRow = ({
           size={14}
           strokeWidth={2.5}
         />
-      </HapticPressable>
+      </GestureHapticPressable>
 
-      <HapticPressable
+      <GestureHapticPressable
         accessibilityRole="button"
         accessibilityLabel={`Add ${item.name} to grocery list`}
         className="flex-1 gap-1 py-1"
@@ -112,7 +112,7 @@ const FrequentItemRow = ({
             Added {item.count} times
           </Text>
         </View>
-      </HapticPressable>
+      </GestureHapticPressable>
     </ListItem>
   );
 };
