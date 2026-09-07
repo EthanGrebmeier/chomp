@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
 import { GroceryListSkeleton } from '@/features/grocery-list/components/grocery-list-skeleton';
 import { type ListView } from '@/features/grocery-list/components/list-view-tabs';
+import { useGroceryListItems } from '@/features/grocery-list/instant/useGroceryListItems';
 import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDeleteGroceryList';
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
@@ -74,7 +75,8 @@ export default function List() {
   const activeList = lists?.grocery_lists.find(
     list => list.id === activeListId
   );
-  const activeListItems = activeList?.grocery_items ?? [];
+  const { items: activeListItems, isLoading: itemsLoading } =
+    useGroceryListItems(activeListId);
 
   const handleDeleteOrLeave = async () => {
     if (!activeListId || !activeList) return;
@@ -98,6 +100,8 @@ export default function List() {
     }
   };
 
+  // Items load per list; keep <GroceryList> mounted across list switches and
+  // let it render a quiet list area instead of tearing down to the skeleton.
   const isLoading = listsLoading || settingsLoading;
 
   const handleViewChange = useCallback(
@@ -147,6 +151,7 @@ export default function List() {
               joinCode={activeList?.joinCode}
               ownerId={activeList?.ownerId}
               items={activeListItems}
+              isItemsLoading={itemsLoading}
               groupBy={settings.groupBy}
               sortBy={settings.sortBy}
               onBackPress={handleOpenListsIndex}

@@ -11,6 +11,7 @@ import {
 import { Icon } from '@/components/ui/icon';
 
 import { useClearMealPlan } from '../hooks/useClearMealPlan';
+import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
 
 type MealPlanEntity = {
   id: string;
@@ -73,4 +74,15 @@ export function MealPlanDropdownMenu({
       </DropdownMenuContent>
     </DropdownMenuRoot>
   );
+}
+
+/**
+ * `MealPlanDropdownMenu` wired to the meal plan for a list. Mount this only
+ * where the meal plan is already visible so its (deep) query is shared with
+ * the planner rather than kept alive by the grocery-list view.
+ */
+export function MealPlanDropdownMenuForList({ listId }: { listId: string }) {
+  const { recipes, items } = useUserMealPlanData(listId);
+
+  return <MealPlanDropdownMenu recipes={recipes} items={items} />;
 }

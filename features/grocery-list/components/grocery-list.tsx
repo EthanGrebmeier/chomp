@@ -45,8 +45,8 @@ import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
 } from '../../grocery-lists/components/select-grocery-list-sheet';
-import { MealPlanDropdownMenu } from '../../meal-planner/components/meal-plan-dropdown-menu';
-import { useUserMealPlanData } from '../../meal-planner/hooks/useUserMealPlanData';
+import { MealPlanDropdownMenuForList } from '../../meal-planner/components/meal-plan-dropdown-menu';
+import { useHasUnaddedMeals } from '../../meal-planner/hooks/useHasUnaddedMeals';
 import { useRecipesSettingsBar } from '../../shared/components/recipes-settings-bar';
 import {
   clearBulkSelection,
@@ -103,6 +103,7 @@ type GroceryListProps = {
   joinCode?: string;
   ownerId?: string;
   items: GroceryListItemWithRecipe[];
+  isItemsLoading?: boolean;
   groupBy: GroceryListGroupBy;
   sortBy: GroceryListSortBy;
   onBackPress: () => void;
@@ -127,6 +128,7 @@ export const GroceryList = ({
   joinCode,
   ownerId,
   items,
+  isItemsLoading = false,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
   onBackPress,
@@ -145,11 +147,7 @@ export const GroceryList = ({
   const activeItemIds = filterActiveItems(items);
   const { mutate: clearGroceryList, mutateAsync: clearGroceryListAsync } =
     useClearGroceryList();
-  const { recipes: mealPlanRecipes, items: mealPlanItems } =
-    useUserMealPlanData(listId);
-  const hasUnaddedMeals =
-    mealPlanRecipes.some(recipe => !recipe.addedToList) ||
-    mealPlanItems.some(item => !item.addedToList);
+  const hasUnaddedMeals = useHasUnaddedMeals(listId);
 
   const isOwner = user?.id === ownerId;
 
@@ -851,10 +849,7 @@ export const GroceryList = ({
                 onExitBulkSelectionMode={handleExitBulkSelectionMode}
               />
             ) : activeView === 'meal-plan' && listId ? (
-              <MealPlanDropdownMenu
-                recipes={mealPlanRecipes}
-                items={mealPlanItems}
-              />
+              <MealPlanDropdownMenuForList listId={listId} />
             ) : null
           }
         />
@@ -903,6 +898,7 @@ export const GroceryList = ({
                 <GroceryItemsList
                   items={filteredItems}
                   totalItemCount={items.length}
+                  isLoading={isItemsLoading}
                   groupBy={groupBy}
                   sortBy={sortBy}
                   collapsedSectionsResetKey={activeListChangeVersion}

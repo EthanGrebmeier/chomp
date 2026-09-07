@@ -27,6 +27,8 @@ import { GroceryListItem } from './grocery-list-item';
 type GroceryItemsListProps = {
   items: GroceryListItemWithRecipe[];
   totalItemCount: number;
+  /** True while the list's items are still being fetched. */
+  isLoading?: boolean;
   groupBy: GroceryListGroupBy;
   sortBy: GroceryListSortBy;
   collapsedSectionsResetKey?: string;
@@ -75,6 +77,7 @@ const CHECKED_SECTION_SETTLE_DELAY_MS = 1000;
 export const GroceryItemsList = ({
   items,
   totalItemCount,
+  isLoading = false,
   groupBy,
   sortBy,
   collapsedSectionsResetKey,
@@ -430,6 +433,11 @@ export const GroceryItemsList = ({
   );
 
   if (totalItemCount === 0) {
+    if (isLoading) {
+      // Items for this list haven't arrived yet; don't flash the empty state.
+      return <View className="flex-1" />;
+    }
+
     return (
       <View className="flex-1 items-center justify-center">
         <View className="-translate-y-12">

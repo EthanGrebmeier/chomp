@@ -1,60 +1,36 @@
 import { useMemo } from 'react';
 
 import { db } from '../../../lib/instant';
+import { sortGroceryListsByLastAccess } from '../utils/sort-grocery-lists-by-last-access';
 
+/**
+ * Light query for the list picker: every list the user can see plus its
+ * shares (needed for the "Shared" badge and last-access ordering).
+ *
+ * Items are intentionally NOT included here. Use `useGroceryListItems` for the
+ * active list so a collaborator's edit on one list does not re-emit every list
+ * on every device.
+ */
 export const useGroceryLists = () => {
   const { user } = db.useAuth();
 
-  const groceryListsQuery = db.useQuery(
-    {
-      grocery_lists: {
-        shares: {},
-        grocery_items: {
-          $: {
-            where: {
-              isDeleted: false,
-            },
-          },
-          recipe: {},
-          store: {},
-          saved_item: {
-            store: {},
-            user: {},
-          },
-        },
-      },
-    }
-  );
+  const groceryListsQuery = db.useQuery({
+    grocery_lists: {
+      shares: {},
+    },
+  });
 
-  // Sort grocery lists by lastAccessedAt (most recent first)
   const sortedData = useMemo(() => {
     if (!groceryListsQuery.data || !user) {
       return groceryListsQuery.data;
     }
 
-    const sortedLists = [...groceryListsQuery.data.grocery_lists].sort(
-      (a, b) => {
-        // Find the current user's share record for each list
-        const aShare = a.shares?.find(share => share.user_id === user.id);
-        const bShare = b.shares?.find(share => share.user_id === user.id);
-
-        // Get lastAccessedAt timestamps
-        const aTime = aShare?.lastAccessedAt;
-        const bTime = bShare?.lastAccessedAt;
-
-        // Lists without lastAccessedAt appear at the end
-        if (!aTime && !bTime) return 0;
-        if (!aTime) return 1;
-        if (!bTime) return -1;
-
-        // Sort by most recent first (descending)
-        return bTime.localeCompare(aTime);
-      }
-    );
-
     return {
       ...groceryListsQuery.data,
-      grocery_lists: sortedLists,
+      grocery_lists: sortGroceryListsByLastAccess(
+        groceryListsQuery.data.grocery_lists,
+        user.id
+      ),
     };
   }, [groceryListsQuery.data, user]);
 

@@ -1,25 +1,31 @@
+import { useCallback } from 'react';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export const useTrackListAccess = () => {
-  const trackListAccess = async (listId: string) => {
+  // Stable identity: callers put this in effect deps, so a fresh function on
+  // every render would turn write -> re-emit -> render into a loop.
+  const trackListAccess = useCallback(async (listId: string) => {
     try {
       const user = await db.getAuth();
       if (!user) {
         return;
       }
 
-      // Find the user's share for this list
+      // Only fetch the shares for this list, not every share the user can see.
       const result = await db.queryOnce({
-        grocery_list_shares: {},
+        grocery_list_shares: {
+          $: {
+            where: {
+              'grocery_list.id': listId,
+            },
+          },
+        },
       });
 
-      if (!result) {
-        return;
-      }
-
-      const userShare = result.data?.grocery_list_shares?.find(
-        share => share.user_id === user.id && share.grocery_list_id === listId
+      const userShare = result.data.grocery_list_shares.find(
+        share => share.user_id === user.id
       );
 
       if (!userShare) {
@@ -37,7 +43,7 @@ export const useTrackListAccess = () => {
     } catch (error) {
       console.error('Failed to track list access:', error);
     }
-  };
+  }, []);
 
   return trackListAccess;
 };

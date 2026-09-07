@@ -32,7 +32,7 @@ const _schema = i.schema({
       isChecked: i.boolean(),
       createdAt: i.string().indexed(),
       updatedAt: i.string(),
-      isDeleted: i.boolean(),
+      isDeleted: i.boolean().indexed(),
       deletedAt: i.string().optional(),
     }),
     grocery_item_add_events: i.entity({
@@ -83,7 +83,7 @@ const _schema = i.schema({
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string(),
       servings: i.number(),
-      addedToList: i.boolean(),
+      addedToList: i.boolean().indexed(),
       addedToListAt: i.string().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
@@ -96,7 +96,7 @@ const _schema = i.schema({
       category: i.string().optional(),
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string().indexed(),
-      addedToList: i.boolean(),
+      addedToList: i.boolean().indexed(),
       addedToListAt: i.string().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
