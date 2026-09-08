@@ -1,10 +1,11 @@
 import {
-  CalendarDays,
-  List as ListIcon,
+  ListChevronsUpDownIcon as ListIcon,
+  SquareKanban as MealPlanCalendarIcon,
   MoreHorizontal,
 } from 'lucide-react-native';
 import { Alert, View } from 'react-native';
 
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -12,7 +13,6 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 
 import { useClearMealPlan } from '../hooks/useClearMealPlan';
@@ -121,7 +121,7 @@ export function MealPlanHeaderActions({
         aria-label={accessibilityLabel}
       >
         <Icon
-          as={targetViewMode === 'day-list' ? ListIcon : CalendarDays}
+          as={targetViewMode === 'day-list' ? ListIcon : MealPlanCalendarIcon}
           size={22}
           className="text-foreground"
         />
