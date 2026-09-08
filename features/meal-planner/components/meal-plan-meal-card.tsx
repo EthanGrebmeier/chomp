@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { Checkbox } from '../../../components/ui/checkbox';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
-import { cn } from '../../../lib/utils';
 import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { Recipe } from '../../recipes/types';
 import { MealPlanRecipeWithRecipe } from '../types';
@@ -51,11 +50,7 @@ const MealPlanMealCard = ({
   };
 
   return (
-    <ListItem
-      className={cn(
-        !isLast ? 'border-b border-dashed border-border' : undefined
-      )}
-    >
+    <ListItem>
       <HapticPressable
         key={mealPlanRecipe.id}
         onPress={handleMealCardPress}

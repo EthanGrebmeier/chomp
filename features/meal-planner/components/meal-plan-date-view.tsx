@@ -2,9 +2,31 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { FlashList } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import {
+  createContext,
+  use,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import {
+  Alert,
+  FlatList,
+  StyleSheet,
+  View,
+  type ViewProps,
+} from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 import {
   Draggable,
   DropProvider,
@@ -95,19 +117,94 @@ type MealPlanEntry = MealPlanDayListEntry<
 >;
 
 const dragStyles = StyleSheet.create({
-  draggable: {
+  activeDraggable: {
     zIndex: 100,
   },
   activeDropTarget: {
+    position: 'absolute',
+    inset: 0,
     backgroundColor: 'rgba(37, 99, 235, 0.12)',
   },
 });
 
 const MEAL_PLAN_DRAG_LONG_PRESS_MS = 300;
+const DROP_HIGHLIGHT_ENTER_MS = 60;
+const DROP_HIGHLIGHT_EXIT_DELAY_MS = 50;
+const DROP_HIGHLIGHT_EXIT_MS = 100;
+
+const ActiveDragSectionContext = createContext<SharedValue<
+  number | null
+> | null>(null);
+
+type MealPlanDayCellProps = ViewProps & {
+  index: number;
+};
+
+const MealPlanDayCell = ({
+  index,
+  style,
+  children,
+  ...props
+}: MealPlanDayCellProps) => {
+  const activeSectionIndex = use(ActiveDragSectionContext);
+  const activeCellStyle = useAnimatedStyle(() => ({
+    zIndex: activeSectionIndex?.get() === index ? 100 : 0,
+  }));
+
+  return (
+    <Animated.View {...props} style={[style, activeCellStyle]}>
+      {children}
+    </Animated.View>
+  );
+};
 
 type MealPlanDragConfig = {
   resetKey: number;
   onDragStart: (entry: MealPlanEntryIdentity) => void;
+  onDragEnd: () => void;
+};
+
+type DraggableMealPlanEntryProps = {
+  entry: MealPlanEntryIdentity;
+  children: ReactNode;
+  onDragStart: MealPlanDragConfig['onDragStart'];
+  onDragEnd: MealPlanDragConfig['onDragEnd'];
+};
+
+const DraggableMealPlanEntry = ({
+  entry,
+  onDragStart,
+  onDragEnd,
+  children,
+}: DraggableMealPlanEntryProps) => {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragStart = (draggedEntry: MealPlanEntryIdentity) => {
+    setIsDragging(true);
+    onDragStart(draggedEntry);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    onDragEnd();
+  };
+
+  return (
+    <Draggable
+      data={entry}
+      draggableId={`${entry.type}:${entry.id}`}
+      dragAxis="y"
+      collisionAlgorithm="center"
+      preDragDelay={MEAL_PLAN_DRAG_LONG_PRESS_MS}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      style={isDragging ? dragStyles.activeDraggable : undefined}
+    >
+      <View className={isDragging ? 'bg-background/70' : undefined}>
+        {children}
+      </View>
+    </Draggable>
+  );
 };
 
 const groupEntriesByMealTime = (entries: readonly MealPlanEntry[]) => {
@@ -191,18 +288,14 @@ const MealPlanMealTimeGroup = ({
           };
 
           return (
-            <Draggable
+            <DraggableMealPlanEntry
               key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
-              data={entry}
-              draggableId={`${entry.type}:${entry.id}`}
-              dragAxis="y"
-              collisionAlgorithm="center"
-              preDragDelay={MEAL_PLAN_DRAG_LONG_PRESS_MS}
+              entry={entry}
               onDragStart={dragConfig.onDragStart}
-              style={dragStyles.draggable}
+              onDragEnd={dragConfig.onDragEnd}
             >
               {card}
-            </Draggable>
+            </DraggableMealPlanEntry>
           );
         })}
         {groupedItems[mealTime]?.map((mealPlanItem, index) => {
@@ -226,18 +319,14 @@ const MealPlanMealTimeGroup = ({
           };
 
           return (
-            <Draggable
+            <DraggableMealPlanEntry
               key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
-              data={entry}
-              draggableId={`${entry.type}:${entry.id}`}
-              dragAxis="y"
-              collisionAlgorithm="center"
-              preDragDelay={MEAL_PLAN_DRAG_LONG_PRESS_MS}
+              entry={entry}
               onDragStart={dragConfig.onDragStart}
-              style={dragStyles.draggable}
+              onDragEnd={dragConfig.onDragEnd}
             >
               {card}
-            </Draggable>
+            </DraggableMealPlanEntry>
           );
         })}
       </View>
@@ -301,18 +390,38 @@ const MealPlanDayListSectionView = ({
   onEntryDrop,
   dragConfig,
 }: MealPlanDayListSectionViewProps) => {
+  const dropHighlightProgress = useSharedValue(0);
+  const dropHighlightStyle = useAnimatedStyle(() => ({
+    opacity: dropHighlightProgress.get(),
+  }));
+
   const handleDrop = (entry: MealPlanEntryIdentity) => {
     onEntryDrop(entry, section.dateKey);
+  };
+
+  const handleActiveChange = (isActive: boolean) => {
+    dropHighlightProgress.set(
+      isActive
+        ? withTiming(1, { duration: DROP_HIGHLIGHT_ENTER_MS })
+        : withDelay(
+            DROP_HIGHLIGHT_EXIT_DELAY_MS,
+            withTiming(0, { duration: DROP_HIGHLIGHT_EXIT_MS })
+          )
+    );
   };
 
   return (
     <Droppable
       droppableId={`meal-plan-day:${section.dateKey}`}
       onDrop={handleDrop}
+      onActiveChange={handleActiveChange}
       capacity={Number.MAX_SAFE_INTEGER}
-      activeStyle={dragStyles.activeDropTarget}
     >
       <View className="min-h-14">
+        <Animated.View
+          pointerEvents="none"
+          style={[dragStyles.activeDropTarget, dropHighlightStyle]}
+        />
         <HapticPressable
           className="min-h-14 justify-center  px-4 py-3"
           onPress={() => onDayPress?.(section.dateKey)}
@@ -371,24 +480,37 @@ export const MealPlanDateView = ({
   const [quickReviewMealPlanRecipe, setQuickReviewMealPlanRecipe] =
     useState<MealPlanRecipeWithRecipe | null>(null);
   const [dragResetKey, setDragResetKey] = useState(0);
+  const activeDragSectionIndex = useSharedValue<number | null>(null);
   const queryClient = useQueryClient();
 
   const refreshDragDropPositions = () => {
     dropProviderRef.current?.requestPositionUpdate();
   };
 
-  const handleDragStart = () => {
+  const handleDragStart = (entry: MealPlanEntryIdentity) => {
+    const sectionIndex = dayListSections.findIndex(
+      section => section.dateKey === entry.date
+    );
+    activeDragSectionIndex.set(sectionIndex >= 0 ? sectionIndex : null);
     refreshDragDropPositions();
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const handleDragEnd = () => {
+    activeDragSectionIndex.set(null);
   };
 
   const handleEntryDrop = (
     entry: MealPlanEntryIdentity,
     targetDate: string
   ) => {
-    setDragResetKey(current => current + 1);
-    if (!onMoveEntry || entry.date === targetDate) return;
+    if (!onMoveEntry || entry.date === targetDate) {
+      setDragResetKey(current => current + 1);
+      return;
+    }
 
+    // The date change remounts only the moved draggable. Resetting here would
+    // remount every row before that update arrives, causing a visible flicker.
     void Promise.resolve(onMoveEntry(entry, targetDate))
       .then(() => {
         void Haptics.notificationAsync(
@@ -396,6 +518,7 @@ export const MealPlanDateView = ({
         );
       })
       .catch(() => {
+        setDragResetKey(current => current + 1);
         toast.error('Failed to move meal');
       });
   };
@@ -404,6 +527,7 @@ export const MealPlanDateView = ({
     ? {
         resetKey: dragResetKey,
         onDragStart: handleDragStart,
+        onDragEnd: handleDragEnd,
       }
     : undefined;
 
@@ -725,30 +849,33 @@ export const MealPlanDateView = ({
     <>
       {mode === 'day-list' ? (
         <DropProvider ref={dropProviderRef}>
-          <FlashList
-            data={dayListSections}
-            initialScrollIndex={MEAL_PLAN_DAY_LIST_PAST_DAYS}
-            keyExtractor={section => section.dateKey}
-            contentContainerClassName="pb-20"
-            drawDistance={300}
-            scrollsToTop={false}
-            onLayout={refreshDragDropPositions}
-            onContentSizeChange={refreshDragDropPositions}
-            onMomentumScrollEnd={refreshDragDropPositions}
-            onScrollEndDrag={refreshDragDropPositions}
-            renderItem={({ item: section }) => (
-              <MealPlanDayListSectionView
-                section={section}
-                onDayPress={onDayPress}
-                onMealPress={onMealPress}
-                onItemPress={onItemPress}
-                onRecipeIndicatorPress={handleRecipeIndicatorPress}
-                onItemIndicatorPress={handleItemIndicatorPress}
-                onEntryDrop={handleEntryDrop}
-                dragConfig={dragConfig}
-              />
-            )}
-          />
+          <ActiveDragSectionContext value={activeDragSectionIndex}>
+            <FlashList
+              data={dayListSections}
+              initialScrollIndex={MEAL_PLAN_DAY_LIST_PAST_DAYS}
+              keyExtractor={section => section.dateKey}
+              contentContainerClassName="pb-20"
+              drawDistance={300}
+              scrollsToTop={false}
+              CellRendererComponent={MealPlanDayCell}
+              onLayout={refreshDragDropPositions}
+              onContentSizeChange={refreshDragDropPositions}
+              onMomentumScrollEnd={refreshDragDropPositions}
+              onScrollEndDrag={refreshDragDropPositions}
+              renderItem={({ item: section }) => (
+                <MealPlanDayListSectionView
+                  section={section}
+                  onDayPress={onDayPress}
+                  onMealPress={onMealPress}
+                  onItemPress={onItemPress}
+                  onRecipeIndicatorPress={handleRecipeIndicatorPress}
+                  onItemIndicatorPress={handleItemIndicatorPress}
+                  onEntryDrop={handleEntryDrop}
+                  dragConfig={dragConfig}
+                />
+              )}
+            />
+          </ActiveDragSectionContext>
         </DropProvider>
       ) : (
         <FlatList
