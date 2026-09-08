@@ -1,8 +1,15 @@
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
 import { PlusIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, StyleSheet, View } from 'react-native';
+import { AppState, useWindowDimensions, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
@@ -48,6 +55,7 @@ import {
 const DAYS_RANGE = 30; //  days before and after today
 const EMPTY_MEAL_PLAN_RECIPES: MealPlanRecipeWithRecipe[] = [];
 const EMPTY_MEAL_PLAN_ITEMS: MealPlanItemWithStore[] = [];
+const VIEW_TRANSITION_EASING = Easing.bezier(0.2, 0, 0, 1);
 
 type MealPlannerProps = {
   listId: string;
@@ -68,12 +76,17 @@ export const MealPlanner = ({
   viewMode = 'calendar',
   onViewModeChange,
 }: MealPlannerProps) => {
+  const { width: viewportWidth } = useWindowDimensions();
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const addMealsToListSheet = useRef<AddMealsToListSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
   const pagerRef = useRef<PagerView>(null);
   const isProgrammaticNavigationRef = useRef(false);
+  const viewTransitionProgress = useSharedValue(
+    viewMode === 'day-list' ? 1 : 0
+  );
+  const reduceMotion = useReducedMotion();
   const { recipes, items } = useUserMealPlanData(listId);
   const { mutateAsync: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
   const { mutateAsync: updateMealPlanItem } = useUpdateMealPlanItem();
@@ -156,6 +169,28 @@ export const MealPlanner = ({
 
   const currentDate =
     daysOfPlan[currentPageIndex] ?? daysOfPlan[initialPageIndex];
+
+  useEffect(() => {
+    const target = viewMode === 'day-list' ? 1 : 0;
+    viewTransitionProgress.set(
+      reduceMotion
+        ? target
+        : withTiming(target, {
+            duration: 240,
+            easing: VIEW_TRANSITION_EASING,
+          })
+    );
+  }, [reduceMotion, viewMode, viewTransitionProgress]);
+
+  const calendarViewAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: -viewportWidth * viewTransitionProgress.get() }],
+  }));
+
+  const dayListViewAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: viewportWidth * (1 - viewTransitionProgress.get()) },
+    ],
+  }));
 
   const handleDatePress = useCallback(
     (date: Date) => {
@@ -252,13 +287,9 @@ export const MealPlanner = ({
       <EditMealSheet ref={editMealSheet} listId={listId} />
       <EditItemSheet ref={editItemSheet} />
       <View className="flex-1 overflow-hidden">
-        <View
+        <Animated.View
           className="absolute inset-0"
-          style={
-            viewMode === 'day-list'
-              ? styles.visibleContent
-              : styles.hiddenContent
-          }
+          style={dayListViewAnimatedStyle}
           pointerEvents={viewMode === 'day-list' ? 'auto' : 'none'}
           accessibilityElementsHidden={viewMode !== 'day-list'}
           importantForAccessibility={
@@ -280,14 +311,10 @@ export const MealPlanner = ({
             onItemPress={handleItemPress}
             onViewChange={onViewChange}
           />
-        </View>
-        <View
+        </Animated.View>
+        <Animated.View
           className="absolute inset-0"
-          style={
-            viewMode === 'calendar'
-              ? styles.visibleContent
-              : styles.hiddenContent
-          }
+          style={calendarViewAnimatedStyle}
           pointerEvents={viewMode === 'calendar' ? 'auto' : 'none'}
           accessibilityElementsHidden={viewMode !== 'calendar'}
           importantForAccessibility={
@@ -346,7 +373,7 @@ export const MealPlanner = ({
               })}
             </PagerView>
           </>
-        </View>
+        </Animated.View>
       </View>
       <Button
         size="wide-small"
@@ -363,12 +390,3 @@ export const MealPlanner = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  visibleContent: {
-    opacity: 1,
-  },
-  hiddenContent: {
-    opacity: 0,
-  },
-});

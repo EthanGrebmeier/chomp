@@ -180,7 +180,7 @@ export default function List() {
               mealPlanViewMode={mealPlanViewMode}
               onMealPlanViewModeChange={setMealPlanViewMode}
               alternateContent={
-                activeView === 'meal-plan' && activeListId ? (
+                activeListId ? (
                   <MealPlanner
                     listId={activeListId}
                     showHeader={false}

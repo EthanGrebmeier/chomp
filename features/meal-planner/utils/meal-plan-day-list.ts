@@ -1,6 +1,6 @@
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
 
-export const MEAL_PLAN_DAY_LIST_PAST_DAYS = 7;
+export const MEAL_PLAN_DAY_LIST_PAST_DAYS = 0;
 export const MEAL_PLAN_DAY_LIST_FUTURE_DAYS = 30;
 
 type DatedEntry = {

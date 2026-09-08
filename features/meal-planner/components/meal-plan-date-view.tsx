@@ -1,5 +1,4 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { FlashList } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import {
@@ -63,7 +62,6 @@ import {
   MealTag,
 } from '../types';
 import {
-  MEAL_PLAN_DAY_LIST_PAST_DAYS,
   MealPlanDayListEntry,
   MealPlanDayListSection,
   MealPlanEntryIdentity,
@@ -257,80 +255,75 @@ const MealPlanMealTimeGroup = ({
     <Text className="px-4 text-lg font-semibold capitalize text-muted-foreground">
       {mealTime === 'None' ? 'No Mealtime' : mealTime}
     </Text>
-    <Animated.View
-      entering={FadeIn.duration(140)}
-      exiting={FadeOut.duration(140)}
-    >
-      <View>
-        {groupedRecipes[mealTime]?.map((mealPlanRecipe, index) => {
-          const recipe = mealPlanRecipe.recipe;
-          if (!recipe) return null;
-          const recipesCount = groupedRecipes[mealTime]?.length ?? 0;
-          const itemsCount = groupedItems[mealTime]?.length ?? 0;
-          const isLast = index === recipesCount - 1 && itemsCount === 0;
-          const card = (
-            <MealPlanMealCard
-              key={mealPlanRecipe.id}
-              mealPlanRecipe={mealPlanRecipe}
-              recipe={recipe}
-              isLast={isLast}
-              onMealPress={onMealPress}
-              onIndicatorPress={onRecipeIndicatorPress}
-            />
-          );
+    <View>
+      {groupedRecipes[mealTime]?.map((mealPlanRecipe, index) => {
+        const recipe = mealPlanRecipe.recipe;
+        if (!recipe) return null;
+        const recipesCount = groupedRecipes[mealTime]?.length ?? 0;
+        const itemsCount = groupedItems[mealTime]?.length ?? 0;
+        const isLast = index === recipesCount - 1 && itemsCount === 0;
+        const card = (
+          <MealPlanMealCard
+            key={mealPlanRecipe.id}
+            mealPlanRecipe={mealPlanRecipe}
+            recipe={recipe}
+            isLast={isLast}
+            onMealPress={onMealPress}
+            onIndicatorPress={onRecipeIndicatorPress}
+          />
+        );
 
-          if (!dragConfig) return card;
+        if (!dragConfig) return card;
 
-          const entry: MealPlanEntryIdentity = {
-            type: 'recipe',
-            id: mealPlanRecipe.id,
-            date: mealPlanRecipe.date,
-          };
+        const entry: MealPlanEntryIdentity = {
+          type: 'recipe',
+          id: mealPlanRecipe.id,
+          date: mealPlanRecipe.date,
+        };
 
-          return (
-            <DraggableMealPlanEntry
-              key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
-              entry={entry}
-              onDragStart={dragConfig.onDragStart}
-              onDragEnd={dragConfig.onDragEnd}
-            >
-              {card}
-            </DraggableMealPlanEntry>
-          );
-        })}
-        {groupedItems[mealTime]?.map((mealPlanItem, index) => {
-          const card = (
-            <MealPlanItemCard
-              key={mealPlanItem.id}
-              mealPlanItem={mealPlanItem}
-              isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
-              contextMenuEnabled={!dragConfig}
-              onItemPress={onItemPress}
-              onIndicatorPress={onItemIndicatorPress}
-            />
-          );
+        return (
+          <DraggableMealPlanEntry
+            key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
+            entry={entry}
+            onDragStart={dragConfig.onDragStart}
+            onDragEnd={dragConfig.onDragEnd}
+          >
+            {card}
+          </DraggableMealPlanEntry>
+        );
+      })}
+      {groupedItems[mealTime]?.map((mealPlanItem, index) => {
+        const card = (
+          <MealPlanItemCard
+            key={mealPlanItem.id}
+            mealPlanItem={mealPlanItem}
+            isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
+            contextMenuEnabled={!dragConfig}
+            onItemPress={onItemPress}
+            onIndicatorPress={onItemIndicatorPress}
+          />
+        );
 
-          if (!dragConfig) return card;
+        if (!dragConfig) return card;
 
-          const entry: MealPlanEntryIdentity = {
-            type: 'item',
-            id: mealPlanItem.id,
-            date: mealPlanItem.date,
-          };
+        const entry: MealPlanEntryIdentity = {
+          type: 'item',
+          id: mealPlanItem.id,
+          date: mealPlanItem.date,
+        };
 
-          return (
-            <DraggableMealPlanEntry
-              key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
-              entry={entry}
-              onDragStart={dragConfig.onDragStart}
-              onDragEnd={dragConfig.onDragEnd}
-            >
-              {card}
-            </DraggableMealPlanEntry>
-          );
-        })}
-      </View>
-    </Animated.View>
+        return (
+          <DraggableMealPlanEntry
+            key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
+            entry={entry}
+            onDragStart={dragConfig.onDragStart}
+            onDragEnd={dragConfig.onDragEnd}
+          >
+            {card}
+          </DraggableMealPlanEntry>
+        );
+      })}
+    </View>
   </View>
 );
 
@@ -850,12 +843,12 @@ export const MealPlanDateView = ({
       {mode === 'day-list' ? (
         <DropProvider ref={dropProviderRef}>
           <ActiveDragSectionContext value={activeDragSectionIndex}>
-            <FlashList
+            <FlatList
               data={dayListSections}
-              initialScrollIndex={MEAL_PLAN_DAY_LIST_PAST_DAYS}
               keyExtractor={section => section.dateKey}
               contentContainerClassName="pb-20"
-              drawDistance={300}
+              initialNumToRender={8}
+              windowSize={5}
               scrollsToTop={false}
               CellRendererComponent={MealPlanDayCell}
               onLayout={refreshDragDropPositions}
