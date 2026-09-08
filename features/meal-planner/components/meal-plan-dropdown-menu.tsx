@@ -111,7 +111,7 @@ export function MealPlanHeaderActions({
   const accessibilityLabel = `Switch to ${targetViewLabel} view`;
 
   return (
-    <View className="flex-row items-center gap-1">
+    <View className="flex-row items-center gap-3">
       <Button
         variant="ghost"
         size="icon"
@@ -122,7 +122,7 @@ export function MealPlanHeaderActions({
       >
         <Icon
           as={targetViewMode === 'day-list' ? ListIcon : MealPlanCalendarIcon}
-          size={22}
+          size={24}
           className="text-foreground"
         />
       </Button>
