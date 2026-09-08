@@ -287,8 +287,8 @@ function Button({
   const renderAnimatedContents = (content: React.ReactNode) => (
     <Animated.View
       key={isSuccess ? 'success' : 'idle'}
-      entering={successTextEntering.duration(200)}
-      exiting={successTextExiting.duration(160)}
+      entering={isSuccess ? successTextEntering.duration(200) : undefined}
+      exiting={isSuccess ? successTextExiting.duration(160) : undefined}
       className={hasFloatingIcon ? 'w-full' : undefined}
     >
       {content}
