@@ -6,24 +6,27 @@ import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { groceries } from '../../grocery-list/consts/groceries';
 
 const APP_SETTINGS_ID = 'default';
+const INSERT_CHUNK_SIZE = 80;
 
 /**
- * Seed/reconcile the shared local saved item catalog with default grocery items.
- * This runs after migrations so legacy installs get canonical shared defaults
- * instead of carrying account-specific edits in default rows.
+ * Seed the shared local saved item catalog with default grocery items.
+ * Runs after migrations. Subsequent launches are a no-op once
+ * `hasSeededSavedItems` is set.
  */
 export const seedLocalSavedItems = async () => {
-  // Ensure app_settings row exists
   const settings = await db
-    .select()
+    .select({ hasSeededSavedItems: appSettingsTable.hasSeededSavedItems })
     .from(appSettingsTable)
     .where(eq(appSettingsTable.id, APP_SETTINGS_ID))
     .limit(1);
 
+  if (settings[0]?.hasSeededSavedItems) {
+    return 0;
+  }
+
   const now = new Date().toISOString();
 
   if (settings.length === 0) {
-    // Create the settings row if it doesn't exist
     await db.insert(appSettingsTable).values(
       trimStringFields({
         id: APP_SETTINGS_ID,
@@ -37,9 +40,8 @@ export const seedLocalSavedItems = async () => {
     );
   }
 
-  // Generate IDs using the item name as a stable key (prefixed with 'local-')
   const defaultItems = groceries.map((grocery, index) =>
-    ({
+    trimStringFields({
       id: `local-${index}`,
       name: grocery.name,
       category: grocery.category ?? null,
@@ -52,32 +54,12 @@ export const seedLocalSavedItems = async () => {
     })
   );
 
-  for (const item of defaultItems) {
-    const existing = await db
-      .select({ id: localSavedItemTable.id })
-      .from(localSavedItemTable)
-      .where(eq(localSavedItemTable.id, item.id))
-      .limit(1);
-
-    if (existing.length > 0) {
-      await db
-        .update(localSavedItemTable)
-        .set(
-          trimStringFields({
-            name: item.name,
-            category: item.category,
-            notes: item.notes,
-            storeId: item.storeId,
-            ownerId: item.ownerId,
-            isDefault: item.isDefault,
-            updatedAt: now,
-          })
-        )
-        .where(eq(localSavedItemTable.id, item.id));
-      continue;
-    }
-
-    await db.insert(localSavedItemTable).values(trimStringFields(item));
+  for (let offset = 0; offset < defaultItems.length; offset += INSERT_CHUNK_SIZE) {
+    const chunk = defaultItems.slice(offset, offset + INSERT_CHUNK_SIZE);
+    await db
+      .insert(localSavedItemTable)
+      .values(chunk)
+      .onConflictDoNothing();
   }
 
   await db
