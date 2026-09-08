@@ -1,7 +1,7 @@
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
 import { PlusIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
 import { Heading } from '../../../components/text/heading';
@@ -251,8 +251,20 @@ export const MealPlanner = ({
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} listId={listId} />
       <EditItemSheet ref={editItemSheet} />
-      <View className="flex-1">
-        {viewMode === 'day-list' ? (
+      <View className="flex-1 overflow-hidden">
+        <View
+          className="absolute inset-0"
+          style={
+            viewMode === 'day-list'
+              ? styles.visibleContent
+              : styles.hiddenContent
+          }
+          pointerEvents={viewMode === 'day-list' ? 'auto' : 'none'}
+          accessibilityElementsHidden={viewMode !== 'day-list'}
+          importantForAccessibility={
+            viewMode === 'day-list' ? 'auto' : 'no-hide-descendants'
+          }
+        >
           <MealPlanDateView
             key={dayListSections[MEAL_PLAN_DAY_LIST_PAST_DAYS]?.dateKey}
             mode="day-list"
@@ -268,7 +280,20 @@ export const MealPlanner = ({
             onItemPress={handleItemPress}
             onViewChange={onViewChange}
           />
-        ) : (
+        </View>
+        <View
+          className="absolute inset-0"
+          style={
+            viewMode === 'calendar'
+              ? styles.visibleContent
+              : styles.hiddenContent
+          }
+          pointerEvents={viewMode === 'calendar' ? 'auto' : 'none'}
+          accessibilityElementsHidden={viewMode !== 'calendar'}
+          importantForAccessibility={
+            viewMode === 'calendar' ? 'auto' : 'no-hide-descendants'
+          }
+        >
           <>
             <MealPlanDate
               currentDate={currentDate}
@@ -321,7 +346,7 @@ export const MealPlanner = ({
               })}
             </PagerView>
           </>
-        )}
+        </View>
       </View>
       <Button
         size="wide-small"
@@ -338,3 +363,12 @@ export const MealPlanner = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  visibleContent: {
+    opacity: 1,
+  },
+  hiddenContent: {
+    opacity: 0,
+  },
+});
