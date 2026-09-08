@@ -199,7 +199,7 @@ const GroceryListItemComponent = ({
       itemId: item.id,
       isChecked: !isChecked,
     }).catch(() => {
-      toast.error('Could not update item. Please try again.');
+      toast.error('Could not save item. Check your connection and try again.');
     });
   };
 
