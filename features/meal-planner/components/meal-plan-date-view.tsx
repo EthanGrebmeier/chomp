@@ -20,11 +20,11 @@ import {
 import Animated, {
   FadeIn,
   FadeOut,
-  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import {
   Draggable,
@@ -849,7 +849,6 @@ export const MealPlanDateView = ({
               contentContainerClassName="pb-20"
               initialNumToRender={8}
               windowSize={5}
-              scrollsToTop={false}
               CellRendererComponent={MealPlanDayCell}
               onLayout={refreshDragDropPositions}
               onContentSizeChange={refreshDragDropPositions}
