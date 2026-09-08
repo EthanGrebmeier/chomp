@@ -1,7 +1,7 @@
 import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
 import { PlusIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, useWindowDimensions, View } from 'react-native';
+import { AppState, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Animated, {
   Easing,
@@ -76,7 +76,6 @@ export const MealPlanner = ({
   viewMode = 'calendar',
   onViewModeChange,
 }: MealPlannerProps) => {
-  const { width: viewportWidth } = useWindowDimensions();
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const addMealsToListSheet = useRef<AddMealsToListSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
@@ -183,13 +182,11 @@ export const MealPlanner = ({
   }, [reduceMotion, viewMode, viewTransitionProgress]);
 
   const calendarViewAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: -viewportWidth * viewTransitionProgress.get() }],
+    opacity: 1 - viewTransitionProgress.get(),
   }));
 
   const dayListViewAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: viewportWidth * (1 - viewTransitionProgress.get()) },
-    ],
+    opacity: viewTransitionProgress.get(),
   }));
 
   const handleDatePress = useCallback(
