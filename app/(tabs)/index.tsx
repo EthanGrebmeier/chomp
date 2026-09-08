@@ -14,6 +14,7 @@ import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryList
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
 import { MealPlanner } from '@/features/meal-planner/components';
+import { useMealPlanViewMode } from '@/features/meal-planner/hooks/use-meal-plan-view-mode';
 import { db } from '@/lib/instant';
 import { buildGroceryListsIndexUrl } from '@/lib/navigation';
 
@@ -50,6 +51,8 @@ export default function List() {
       ? 'grocery-list'
       : selectedView;
   const { user } = db.useAuth();
+  const { viewMode: mealPlanViewMode, setViewMode: setMealPlanViewMode } =
+    useMealPlanViewMode(user?.id);
   const deleteGroceryList = useDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
   const trackListAccess = useTrackListAccess();
@@ -174,12 +177,16 @@ export default function List() {
               activeListChangeVersion={activeListId}
               activeView={activeView}
               onViewChange={handleViewChange}
+              mealPlanViewMode={mealPlanViewMode}
+              onMealPlanViewModeChange={setMealPlanViewMode}
               alternateContent={
                 activeView === 'meal-plan' && activeListId ? (
                   <MealPlanner
                     listId={activeListId}
                     showHeader={false}
                     onViewChange={handleViewChange}
+                    viewMode={mealPlanViewMode}
+                    onViewModeChange={setMealPlanViewMode}
                   />
                 ) : null
               }

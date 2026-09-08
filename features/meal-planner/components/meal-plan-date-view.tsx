@@ -1,4 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { FlashList } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, View } from 'react-native';
@@ -10,6 +11,7 @@ import { IngredientSelector } from '../../../components/item-sheet/add-item/ingr
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { Button } from '../../../components/ui/button';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
 import { type ListView } from '../../grocery-list/components/list-view-tabs';
@@ -31,6 +33,12 @@ import {
   MealPlanRecipeWithRecipe,
   MealTag,
 } from '../types';
+import {
+  createMealPlanDayEntries,
+  MEAL_PLAN_DAY_LIST_PAST_DAYS,
+  MealPlanDayListEntry,
+  MealPlanDayListSection,
+} from '../utils/meal-plan-day-list';
 
 import {
   MealPlanIngredientOverrideSheet,
@@ -39,10 +47,18 @@ import {
 import MealPlanItemCard from './meal-plan-item-card';
 import MealPlanMealCard from './meal-plan-meal-card';
 
+type DayListSection = MealPlanDayListSection<
+  MealPlanRecipeWithRecipe,
+  MealPlanItemWithStore
+>;
+
 type MealPlanDateViewProps = {
   listId: string;
   recipes: MealPlanRecipeWithRecipe[];
   items: MealPlanItemWithStore[];
+  mode?: 'calendar' | 'day-list';
+  dayListSections?: DayListSection[];
+  onDayPress?: (dateKey: string) => void;
   onMealPress: ({
     mealPlanRecipe,
     recipe,
@@ -63,10 +79,135 @@ const mealTimeOrder: MealTag[] = [
   'None',
 ];
 
+type MealPlanEntry = MealPlanDayListEntry<
+  MealPlanRecipeWithRecipe,
+  MealPlanItemWithStore
+>;
+
+const groupEntriesByMealTime = (entries: readonly MealPlanEntry[]) => {
+  const groupedRecipes = {} as Record<MealTag, MealPlanRecipeWithRecipe[]>;
+  const groupedItems = {} as Record<MealTag, MealPlanItemWithStore[]>;
+
+  entries.forEach(entry => {
+    const tag = (entry.value.mealTag as MealTag) || 'None';
+    if (entry.type === 'recipe') {
+      groupedRecipes[tag] = [...(groupedRecipes[tag] ?? []), entry.value];
+    } else {
+      groupedItems[tag] = [...(groupedItems[tag] ?? []), entry.value];
+    }
+  });
+
+  return {
+    groupedRecipes,
+    groupedItems,
+    mealTimesWithContent: mealTimeOrder.filter(
+      mealTime =>
+        (groupedRecipes[mealTime]?.length ?? 0) +
+          (groupedItems[mealTime]?.length ?? 0) >
+        0
+    ),
+  };
+};
+
+type MealPlanMealTimeGroupProps = {
+  mealTime: MealTag;
+  groupedRecipes: Record<MealTag, MealPlanRecipeWithRecipe[]>;
+  groupedItems: Record<MealTag, MealPlanItemWithStore[]>;
+  onMealPress: MealPlanDateViewProps['onMealPress'];
+  onItemPress: MealPlanDateViewProps['onItemPress'];
+  onRecipeIndicatorPress: (recipe: MealPlanRecipeWithRecipe) => void;
+  onItemIndicatorPress: (item: MealPlanItemWithStore) => void;
+};
+
+const MealPlanMealTimeGroup = ({
+  mealTime,
+  groupedRecipes,
+  groupedItems,
+  onMealPress,
+  onItemPress,
+  onRecipeIndicatorPress,
+  onItemIndicatorPress,
+}: MealPlanMealTimeGroupProps) => (
+  <View className="mb-5">
+    <Text className="px-4 text-lg font-semibold capitalize text-muted-foreground">
+      {mealTime}
+    </Text>
+    <Animated.View
+      entering={FadeIn.duration(140)}
+      exiting={FadeOut.duration(140)}
+    >
+      <View>
+        {groupedRecipes[mealTime]?.map((mealPlanRecipe, index) => {
+          const recipe = mealPlanRecipe.recipe;
+          if (!recipe) return null;
+          const recipesCount = groupedRecipes[mealTime]?.length ?? 0;
+          const itemsCount = groupedItems[mealTime]?.length ?? 0;
+          const isLast = index === recipesCount - 1 && itemsCount === 0;
+
+          return (
+            <MealPlanMealCard
+              key={mealPlanRecipe.id}
+              mealPlanRecipe={mealPlanRecipe}
+              recipe={recipe}
+              isLast={isLast}
+              onMealPress={onMealPress}
+              onIndicatorPress={onRecipeIndicatorPress}
+            />
+          );
+        })}
+        {groupedItems[mealTime]?.map((mealPlanItem, index) => (
+          <MealPlanItemCard
+            key={mealPlanItem.id}
+            mealPlanItem={mealPlanItem}
+            isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
+            onItemPress={onItemPress}
+            onIndicatorPress={onItemIndicatorPress}
+          />
+        ))}
+      </View>
+    </Animated.View>
+  </View>
+);
+
+type MealPlanDayContentProps = {
+  entries: readonly MealPlanEntry[];
+  onMealPress: MealPlanDateViewProps['onMealPress'];
+  onItemPress: MealPlanDateViewProps['onItemPress'];
+  onRecipeIndicatorPress: (recipe: MealPlanRecipeWithRecipe) => void;
+  onItemIndicatorPress: (item: MealPlanItemWithStore) => void;
+};
+
+const MealPlanDayContent = ({
+  entries,
+  onMealPress,
+  onItemPress,
+  onRecipeIndicatorPress,
+  onItemIndicatorPress,
+}: MealPlanDayContentProps) => {
+  const { groupedRecipes, groupedItems, mealTimesWithContent } =
+    groupEntriesByMealTime(entries);
+
+  return mealTimesWithContent.map(mealTime => (
+    <MealPlanMealTimeGroup
+      key={mealTime}
+      mealTime={mealTime}
+      groupedRecipes={groupedRecipes}
+      groupedItems={groupedItems}
+      onMealPress={onMealPress}
+      onItemPress={onItemPress}
+      onRecipeIndicatorPress={onRecipeIndicatorPress}
+      onItemIndicatorPress={onItemIndicatorPress}
+    />
+  ));
+};
+
 export const MealPlanDateView = ({
   listId,
   recipes,
   items,
+  mode = 'calendar',
+  dayListSections = [],
+  onDayPress,
   onMealPress,
   onItemPress,
   onViewChange,
@@ -83,7 +224,10 @@ export const MealPlanDateView = ({
 
   const quickReviewRecipe = quickReviewMealPlanRecipe?.recipe ?? null;
   const quickReviewQueryKey = useMemo(
-    () => ['meal-plan-quick-review-rows', quickReviewMealPlanRecipe?.id ?? null],
+    () => [
+      'meal-plan-quick-review-rows',
+      quickReviewMealPlanRecipe?.id ?? null,
+    ],
     [quickReviewMealPlanRecipe?.id]
   );
 
@@ -172,10 +316,13 @@ export const MealPlanDateView = ({
     ingredientOverrideSheetRef.current?.dismiss();
   }, []);
 
-  const handleOpenQuickReview = useCallback((mealPlanRecipe: MealPlanRecipeWithRecipe) => {
-    setQuickReviewMealPlanRecipe(mealPlanRecipe);
-    quickReviewSheetRef.current?.present();
-  }, []);
+  const handleOpenQuickReview = useCallback(
+    (mealPlanRecipe: MealPlanRecipeWithRecipe) => {
+      setQuickReviewMealPlanRecipe(mealPlanRecipe);
+      quickReviewSheetRef.current?.present();
+    },
+    []
+  );
 
   const handleToggleQuickReviewIngredientSelection = useCallback(
     async (sourceRecipeIngredientId: string) => {
@@ -214,34 +361,35 @@ export const MealPlanDateView = ({
     ]
   );
 
-  const handleToggleAllQuickReviewIngredientSelections = useCallback(async () => {
-    if (quickReviewIngredientRows.length === 0) return;
+  const handleToggleAllQuickReviewIngredientSelections =
+    useCallback(async () => {
+      if (quickReviewIngredientRows.length === 0) return;
 
-    const previousRows = quickReviewIngredientRows;
-    const nextRows = toggleAllMealPlanIngredientSelection(previousRows);
-    const nextIsSelected = nextRows[0]?.isSelected ?? true;
+      const previousRows = quickReviewIngredientRows;
+      const nextRows = toggleAllMealPlanIngredientSelection(previousRows);
+      const nextIsSelected = nextRows[0]?.isSelected ?? true;
 
-    setQuickReviewQueryRows(() => nextRows);
-    try {
-      await Promise.all(
-        previousRows
-          .filter(row => row.snapshotRowId)
-          .map(row =>
-            quickReviewSelectionMutation.mutateAsync({
-              snapshotRowId: row.snapshotRowId as string,
-              isSelected: nextIsSelected,
-            })
-          )
-      );
-    } catch {
-      setQuickReviewQueryRows(() => previousRows);
-      toast.error('Failed to save ingredient selections');
-    }
-  }, [
-    quickReviewIngredientRows,
-    quickReviewSelectionMutation,
-    setQuickReviewQueryRows,
-  ]);
+      setQuickReviewQueryRows(() => nextRows);
+      try {
+        await Promise.all(
+          previousRows
+            .filter(row => row.snapshotRowId)
+            .map(row =>
+              quickReviewSelectionMutation.mutateAsync({
+                snapshotRowId: row.snapshotRowId as string,
+                isSelected: nextIsSelected,
+              })
+            )
+        );
+      } catch {
+        setQuickReviewQueryRows(() => previousRows);
+        toast.error('Failed to save ingredient selections');
+      }
+    }, [
+      quickReviewIngredientRows,
+      quickReviewSelectionMutation,
+      setQuickReviewQueryRows,
+    ]);
 
   const handleEditQuickReviewIngredient = useCallback(
     (sourceRecipeIngredientId: string) => {
@@ -369,37 +517,11 @@ export const MealPlanDateView = ({
     [handleIndicatorPress]
   );
 
-  // Group recipes by meal time
-  const groupedRecipes = recipes.reduce(
-    (acc, recipe) => {
-      if (!recipe.recipe) return acc;
-      const tag = (recipe.mealTag as MealTag) || 'None'; // Default to None if no mealTag
-      acc[tag] = [...(acc[tag] || []), recipe];
-      return acc;
-    },
-    {} as Record<MealTag, MealPlanRecipeWithRecipe[]>
-  );
-
-  // Group items by meal time
-  const groupedItems = items.reduce(
-    (acc, item) => {
-      const tag = (item.mealTag as MealTag) || 'None'; // Default to None if no mealTag
-      acc[tag] = [...(acc[tag] ?? []), item];
-      return acc;
-    },
-    {} as Record<MealTag, MealPlanItemWithStore[]>
-  );
-
-  // Only include meal times that have recipes or items
-  const mealTimesWithContent = mealTimeOrder.filter(
-    mealTime =>
-      (groupedRecipes[mealTime]?.length ?? 0) +
-        (groupedItems[mealTime]?.length ?? 0) >
-      0
-  );
+  const calendarEntries = createMealPlanDayEntries(recipes, items);
+  const calendarGroups = groupEntriesByMealTime(calendarEntries);
 
   // Empty state when no meals or items
-  if (mealTimesWithContent.length === 0) {
+  if (mode === 'calendar' && calendarGroups.mealTimesWithContent.length === 0) {
     return (
       <Animated.View
         entering={FadeIn.duration(140)}
@@ -416,52 +538,67 @@ export const MealPlanDateView = ({
 
   return (
     <>
-      <FlatList
-        contentContainerClassName="pb-20"
-        data={mealTimesWithContent}
-        keyExtractor={item => item}
-        renderItem={({ item: mealTime }) => (
-          <View className="mb-5">
-            <Text className="px-4 text-lg font-semibold capitalize text-muted-foreground">
-              {mealTime}
-            </Text>
-            <Animated.View
-              entering={FadeIn.duration(140)}
-              exiting={FadeOut.duration(140)}
-            >
-              <View>
-                {groupedRecipes[mealTime]?.map((mealPlanRecipe, index) => {
-                  const recipe = mealPlanRecipe.recipe;
-                  if (!recipe) return null;
-                  const recipesCount = groupedRecipes[mealTime]?.length ?? 0;
-                  const itemsCount = groupedItems[mealTime]?.length ?? 0;
-                  const isLast = index === recipesCount - 1 && itemsCount === 0;
-
-                  return (
-                    <MealPlanMealCard
-                      key={mealPlanRecipe.id}
-                      mealPlanRecipe={mealPlanRecipe}
-                      recipe={recipe}
-                      isLast={isLast}
-                      onMealPress={onMealPress}
-                      onIndicatorPress={handleRecipeIndicatorPress}
-                    />
-                  );
-                })}
-                {groupedItems[mealTime]?.map((mealPlanItem, index) => (
-                  <MealPlanItemCard
-                    key={mealPlanItem.id}
-                    mealPlanItem={mealPlanItem}
-                    isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
+      {mode === 'day-list' ? (
+        <FlashList
+          data={dayListSections}
+          initialScrollIndex={MEAL_PLAN_DAY_LIST_PAST_DAYS}
+          keyExtractor={section => section.dateKey}
+          contentContainerClassName="pb-20"
+          drawDistance={300}
+          scrollsToTop={false}
+          renderItem={({ item: section }) => (
+            <View>
+              <HapticPressable
+                className="min-h-14 justify-center border-b border-border px-4 py-3"
+                onPress={() => onDayPress?.(section.dateKey)}
+                accessibilityRole="button"
+                accessibilityLabel={`Add to meal plan for ${section.label}`}
+              >
+                <View className="flex-row items-center justify-between gap-3">
+                  <Text className="text-lg font-semibold text-foreground">
+                    {section.label}
+                  </Text>
+                  {section.isToday ? (
+                    <View className="rounded-full bg-primary/15 px-2.5 py-1">
+                      <Text className="text-xs font-semibold text-primary">
+                        Today
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </HapticPressable>
+              {section.entries.length > 0 ? (
+                <View className="pt-4">
+                  <MealPlanDayContent
+                    entries={section.entries}
+                    onMealPress={onMealPress}
                     onItemPress={onItemPress}
-                    onIndicatorPress={handleItemIndicatorPress}
+                    onRecipeIndicatorPress={handleRecipeIndicatorPress}
+                    onItemIndicatorPress={handleItemIndicatorPress}
                   />
-                ))}
-              </View>
-            </Animated.View>
-          </View>
-        )}
-      />
+                </View>
+              ) : null}
+            </View>
+          )}
+        />
+      ) : (
+        <FlatList
+          contentContainerClassName="pb-20"
+          data={calendarGroups.mealTimesWithContent}
+          keyExtractor={item => item}
+          renderItem={({ item: mealTime }) => (
+            <MealPlanMealTimeGroup
+              mealTime={mealTime}
+              groupedRecipes={calendarGroups.groupedRecipes}
+              groupedItems={calendarGroups.groupedItems}
+              onMealPress={onMealPress}
+              onItemPress={onItemPress}
+              onRecipeIndicatorPress={handleRecipeIndicatorPress}
+              onItemIndicatorPress={handleItemIndicatorPress}
+            />
+          )}
+        />
+      )}
       <BottomSheet
         name="meal-plan-quick-review-sheet"
         ref={quickReviewSheetRef}
@@ -469,7 +606,7 @@ export const MealPlanDateView = ({
         scrollable
         onDismiss={handleQuickReviewDismiss}
         footer={
-          <BottomSheet.SheetView className="flex-row gap-2 px-4 pb-safe pt-3">
+          <BottomSheet.SheetView className="pb-safe flex-row gap-2 px-4 pt-3">
             <Button
               variant="secondary"
               className="flex-1"

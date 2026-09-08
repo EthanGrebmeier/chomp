@@ -36,6 +36,7 @@ type GroceryItemsListProps = {
     type: 'collapse' | 'expand';
     id: number;
   } | null;
+  scrollsToTop?: boolean;
   onListInteraction?: () => void;
   isBulkSelectionModeActive?: boolean;
   selectedBulkItemIds?: Set<string>;
@@ -82,6 +83,7 @@ export const GroceryItemsList = ({
   sortBy,
   collapsedSectionsResetKey,
   groupingBulkAction,
+  scrollsToTop = true,
   onListInteraction,
   isBulkSelectionModeActive = false,
   selectedBulkItemIds = new Set<string>(),
@@ -490,6 +492,7 @@ export const GroceryItemsList = ({
       contentContainerClassName="pb-36"
       contentContainerStyle={{ flexGrow: 1 }}
       showsVerticalScrollIndicator={false}
+      scrollsToTop={scrollsToTop}
       onScrollBeginDrag={onListInteraction}
       onTouchStart={onListInteraction}
       maintainVisibleContentPosition={{

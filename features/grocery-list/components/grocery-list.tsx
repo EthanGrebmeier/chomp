@@ -45,8 +45,9 @@ import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
 } from '../../grocery-lists/components/select-grocery-list-sheet';
-import { MealPlanDropdownMenuForList } from '../../meal-planner/components/meal-plan-dropdown-menu';
+import { MealPlanHeaderActionsForList } from '../../meal-planner/components/meal-plan-dropdown-menu';
 import { useHasUnaddedMeals } from '../../meal-planner/hooks/useHasUnaddedMeals';
+import { MealPlanViewMode } from '../../meal-planner/types';
 import { useRecipesSettingsBar } from '../../shared/components/recipes-settings-bar';
 import {
   clearBulkSelection,
@@ -112,6 +113,8 @@ type GroceryListProps = {
   activeListChangeVersion?: string;
   activeView?: ListView;
   onViewChange: (view: ListView) => void;
+  mealPlanViewMode: MealPlanViewMode;
+  onMealPlanViewModeChange: (viewMode: MealPlanViewMode) => void;
   alternateContent?: ReactNode;
 };
 
@@ -137,6 +140,8 @@ export const GroceryList = ({
   activeListChangeVersion,
   activeView = 'grocery-list',
   onViewChange,
+  mealPlanViewMode,
+  onMealPlanViewModeChange,
   alternateContent,
 }: GroceryListProps) => {
   const { width: viewportWidth } = useWindowDimensions();
@@ -849,7 +854,11 @@ export const GroceryList = ({
                 onExitBulkSelectionMode={handleExitBulkSelectionMode}
               />
             ) : activeView === 'meal-plan' && listId ? (
-              <MealPlanDropdownMenuForList listId={listId} />
+              <MealPlanHeaderActionsForList
+                listId={listId}
+                viewMode={mealPlanViewMode}
+                onViewModeChange={onMealPlanViewModeChange}
+              />
             ) : null
           }
         />
@@ -901,6 +910,7 @@ export const GroceryList = ({
                   isLoading={isItemsLoading}
                   groupBy={groupBy}
                   sortBy={sortBy}
+                  scrollsToTop={activeView === 'grocery-list'}
                   collapsedSectionsResetKey={activeListChangeVersion}
                   groupingBulkAction={groupingBulkAction}
                   onListInteraction={dismissSearch}

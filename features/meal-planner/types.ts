@@ -29,6 +29,8 @@ export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
   ingredient_snapshots?: MealPlanRecipeIngredientSnapshot[];
 };
 
+export type MealPlanViewMode = 'calendar' | 'day-list';
+
 export type AddRecipeToDateArgs = {
   listId: string;
   recipeId: string;

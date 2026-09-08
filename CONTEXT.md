@@ -105,8 +105,8 @@ The meal planner supports two top-level presentations of the same schedule data:
 _Avoid_: Separate datasets per view
 
 **Meal Plan Day List Window Rule**:
-Day List View uses the same rolling 61-day planning window as Calendar View (30 days before today through 30 days after today).
-_Avoid_: A shorter or different day range in list mode
+Day List View uses a rolling window from 7 days before today through 30 days after today.
+_Avoid_: Hiding the prior week or extending the list beyond the focused planning window
 
 **Meal Plan Day List Density Rule**:
 In Day List View, days with no meals render as compact tappable day rows rather than hidden or expanded sections.
@@ -166,7 +166,7 @@ _Avoid_: Showing the currently active mode icon on the toggle
 - **Bulk Success Feedback Rule** confirms completion with concise user feedback
 - **Toolbar Action Order Rule** places exit first and delete as the right-most action in the bulk toolbar
 - **Meal Plan View Mode** keeps Calendar View and Day List View as alternate renderings of the same meal plan data
-- **Meal Plan Day List Window Rule** keeps Day List View and Calendar View aligned to the same 61-day date window
+- **Meal Plan Day List Window Rule** keeps Day List View focused on the prior week and next 30 days
 - **Meal Plan Day List Density Rule** keeps empty days compact but tappable in Day List View
 - **Meal Plan Day List Section Stability Rule** keeps all day sections fully expanded and non-collapsible
 - **Meal Plan Day Tap Add Rule** lets any day header open Add to Meal Plan for that specific date
