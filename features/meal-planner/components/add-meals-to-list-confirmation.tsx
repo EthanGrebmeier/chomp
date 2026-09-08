@@ -466,11 +466,11 @@ export function AddMealsToListConfirmation({
         }
       >
         <BottomSheet.SheetView
-          className={isEmpty ? 'px-4 pb-24' : 'min-h-0 flex-1 px-4'}
+          className={isEmpty ? 'px-4 pb-16' : 'min-h-0 flex-1 px-4'}
         >
           <BottomSheet.Header
             className={isEmpty ? undefined : 'mb-1'}
-            title="Add planned meals to your list"
+            title={isEmpty ? 'No meals planned' : 'Meals to add to your list'}
             description={summary}
           />
 

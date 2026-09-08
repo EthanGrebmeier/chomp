@@ -19,10 +19,7 @@ export function AddMealsToListButton({
     <Button
       size="iconLg"
       variant="secondary"
-      className={cn(
-        'absolute bottom-8 left-6 z-10 h-10 w-24 transition-opacity',
-        unaddedCount === 0 && 'opacity-50'
-      )}
+      className={cn('absolute bottom-8 left-6 z-10 h-10 w-24')}
       onPress={onPress}
       accessibilityLabel={
         unaddedCount > 0

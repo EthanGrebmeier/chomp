@@ -161,9 +161,7 @@ export const RecipeAddToListButton = ({
           dismissButton={<BackButton onPress={handleIngredientSelectorBack} />}
           button={
             <ExternalLinkButton
-              onPress={() =>
-                ingredientSelectorRef.current?.openRecipeDetails()
-              }
+              onPress={() => ingredientSelectorRef.current?.openRecipeDetails()}
             />
           }
         />
