@@ -416,7 +416,7 @@ export const IngredientSelector = forwardRef<
 
         <View
           className={cn(
-            'flex-row items-center justify-between px-4',
+            'mb-2 flex-row items-center justify-between px-4',
             !showHeader && 'pt-4'
           )}
         >

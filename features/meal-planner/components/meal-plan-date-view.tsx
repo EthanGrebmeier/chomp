@@ -891,6 +891,7 @@ export const MealPlanDateView = ({
         name="meal-plan-quick-review-sheet"
         ref={quickReviewSheetRef}
         detents={[0.9]}
+        viewClassName="flex-1"
         scrollable
         onDismiss={handleQuickReviewDismiss}
         footer={
@@ -912,44 +913,52 @@ export const MealPlanDateView = ({
           </BottomSheet.SheetView>
         }
       >
-        <BottomSheet.SheetView className="pb-safe">
-          <BottomSheet.Header
-            title="Review ingredients"
-            description={quickReviewMealPlanRecipe?.recipe.name}
-          />
-          {quickReviewRecipe ? (
-            <View className="-mx-4 pb-20">
-              <IngredientSelector
-                recipe={quickReviewRecipe}
-                mode="meal-plan"
-                showHeader={false}
-                showFooter={false}
-                onBack={closeQuickReviewSheet}
-                onDismiss={closeQuickReviewSheet}
-                selectedIds={selectedQuickReviewIngredientIds}
-                onToggleIngredient={id => {
-                  void handleToggleQuickReviewIngredientSelection(id);
-                }}
-                onToggleAll={() => {
-                  void handleToggleAllQuickReviewIngredientSelections();
-                }}
-                onEditIngredient={handleEditQuickReviewIngredient}
-              />
-            </View>
-          ) : null}
-          {isLoadingQuickReviewIngredients ||
-          quickReviewSelectionMutation.isPending ||
-          quickReviewOverrideMutation.isPending ? (
-            <View className="px-4 pb-4">
-              <Pill hasValue>
-                {isLoadingQuickReviewIngredients
-                  ? 'Loading ingredient selections...'
-                  : quickReviewOverrideMutation.isPending
-                    ? 'Saving ingredient override...'
-                    : 'Saving ingredient selections...'}
-              </Pill>
-            </View>
-          ) : null}
+        <BottomSheet.SheetView className="pb-safe flex-1">
+          <View className="min-h-0 flex-1">
+            <BottomSheet.Header
+              className="mb-2"
+              title="Add meal to grocery list"
+              description={
+                quickReviewMealPlanRecipe
+                  ? `Confirm the ingredients from ${quickReviewMealPlanRecipe.recipe.name} to add to your grocery list`
+                  : undefined
+              }
+            />
+            {quickReviewRecipe ? (
+              <View className="-mx-4 min-h-0 flex-1">
+                <IngredientSelector
+                  recipe={quickReviewRecipe}
+                  mode="meal-plan"
+                  showHeader={false}
+                  showFooter={false}
+                  bottomContentInset={96}
+                  onBack={closeQuickReviewSheet}
+                  onDismiss={closeQuickReviewSheet}
+                  selectedIds={selectedQuickReviewIngredientIds}
+                  onToggleIngredient={id => {
+                    void handleToggleQuickReviewIngredientSelection(id);
+                  }}
+                  onToggleAll={() => {
+                    void handleToggleAllQuickReviewIngredientSelections();
+                  }}
+                  onEditIngredient={handleEditQuickReviewIngredient}
+                />
+              </View>
+            ) : null}
+            {isLoadingQuickReviewIngredients ||
+            quickReviewSelectionMutation.isPending ||
+            quickReviewOverrideMutation.isPending ? (
+              <View className="px-4 pb-4">
+                <Pill hasValue>
+                  {isLoadingQuickReviewIngredients
+                    ? 'Loading ingredient selections...'
+                    : quickReviewOverrideMutation.isPending
+                      ? 'Saving ingredient override...'
+                      : 'Saving ingredient selections...'}
+                </Pill>
+              </View>
+            ) : null}
+          </View>
         </BottomSheet.SheetView>
       </BottomSheet>
       <MealPlanIngredientOverrideSheet
