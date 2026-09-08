@@ -42,12 +42,7 @@ const parseTimestamp = (timestamp?: string | null) => {
 };
 
 const getListActivityTimestamp = (recipe: RecipeWithIngredients) => {
-  const timestamps = [
-    parseTimestamp(recipe.lastAddedToListAt),
-    ...(recipe.grocery_items ?? []).map(item => parseTimestamp(item.createdAt)),
-  ].filter((timestamp): timestamp is number => timestamp !== undefined);
-
-  return timestamps.length > 0 ? Math.max(...timestamps) : undefined;
+  return parseTimestamp(recipe.lastAddedToListAt);
 };
 
 const getCreatedTimestamp = (recipe: RecipeWithIngredients) => {

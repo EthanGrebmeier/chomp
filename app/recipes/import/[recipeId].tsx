@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useCreateRecipe } from '@/features/recipes/hooks/useCreateRecipe';
 import { useRecipe } from '@/features/recipes/hooks/useRecipe';
-import { useRecipes } from '@/features/recipes/hooks/useRecipes';
+import { useRecipeBySourceId } from '@/features/recipes/hooks/useRecipeBySourceId';
 import { db } from '@/lib/instant';
 import { navigation } from '@/lib/navigation';
 
@@ -15,7 +15,6 @@ export default function ImportSharedRecipe() {
   const router = useRouter();
   const { user, isLoading: authLoading } = db.useAuth();
   const connectionStatus = db.useConnectionStatus();
-  const { data: ownedRecipes, isLoading: recipesLoading } = useRecipes();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasStartedImport, setHasStartedImport] = useState(false);
 
@@ -24,6 +23,8 @@ export default function ImportSharedRecipe() {
     return Array.isArray(recipeId) ? recipeId[0] : recipeId;
   }, [recipeId]);
 
+  const { data: existingRecipe, isLoading: existingRecipeLoading } =
+    useRecipeBySourceId(sourceRecipeId);
   const { data: sourceRecipe, isLoading: sourceLoading } =
     useRecipe(sourceRecipeId);
   const { mutate: createRecipe, isPending: isCreating } = useCreateRecipe();
@@ -35,7 +36,7 @@ export default function ImportSharedRecipe() {
         return;
       }
 
-      if (authLoading || recipesLoading || sourceLoading) return;
+      if (authLoading || existingRecipeLoading || sourceLoading) return;
 
       if (connectionStatus === 'closed' || connectionStatus === 'errored') {
         setErrorMessage(
@@ -50,10 +51,6 @@ export default function ImportSharedRecipe() {
       }
 
       if (connectionStatus !== 'authenticated') return;
-
-      const existingRecipe = ownedRecipes?.find(
-        recipe => recipe.sourceRecipeId === sourceRecipeId
-      );
 
       if (existingRecipe) {
         router.replace(navigation.goToRecipe(existingRecipe.id));
@@ -111,11 +108,11 @@ export default function ImportSharedRecipe() {
   }, [
     sourceRecipeId,
     authLoading,
-    recipesLoading,
+    existingRecipeLoading,
     sourceLoading,
     connectionStatus,
     user,
-    ownedRecipes,
+    existingRecipe,
     sourceRecipe,
     hasStartedImport,
     isCreating,
@@ -123,7 +120,7 @@ export default function ImportSharedRecipe() {
     router,
   ]);
 
-  if (authLoading || recipesLoading || sourceLoading || isCreating) {
+  if (authLoading || existingRecipeLoading || sourceLoading || isCreating) {
     return (
       <View className="flex-1 items-center justify-center bg-background px-6">
         <ActivityIndicator size="large" />

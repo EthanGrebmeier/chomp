@@ -6,6 +6,7 @@ export { useDuplicateRecipe } from './useDuplicateRecipe';
 export { useImportRecipeState } from './useImportRecipeState';
 export { useParseRecipeUrl } from './useParseRecipeUrl';
 export { useRecipe } from './useRecipe';
+export { useRecipeBySourceId } from './useRecipeBySourceId';
 export { useRecipes } from './useRecipes';
 export { useRemoveRecipeIngredient } from './useRemoveRecipeIngredient';
 export { useUpdateRecipe } from './useUpdateRecipe';
