@@ -1,9 +1,16 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { FlashList } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import * as Haptics from 'expo-haptics';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import {
+  Draggable,
+  DropProvider,
+  Droppable,
+  type DropProviderRef,
+} from 'react-native-reanimated-dnd';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -17,16 +24,16 @@ import { Text } from '../../../components/ui/text';
 import { type ListView } from '../../grocery-list/components/list-view-tabs';
 import { Recipe } from '../../recipes/types';
 import { useAddMealsToGroceryList, useUnmarkMealAdded } from '../hooks';
+import { getReconciledMealPlanSnapshotRows } from '../instant/get-reconciled-meal-plan-snapshot-rows';
+import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
 import {
+  MealPlanIngredientEditorRow,
   applyMealPlanIngredientOverride,
   getSelectedSourceIngredientIds,
   hydrateMealPlanIngredientEditorFromSnapshot,
-  MealPlanIngredientEditorRow,
   toggleAllMealPlanIngredientSelection,
   toggleMealPlanIngredientSelection,
 } from '../meal-plan-recipe-ingredient-editor';
-import { getReconciledMealPlanSnapshotRows } from '../instant/get-reconciled-meal-plan-snapshot-rows';
-import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
 import {
   MealPlanItemWithStore,
   MealPlanRecipe,
@@ -34,10 +41,12 @@ import {
   MealTag,
 } from '../types';
 import {
-  createMealPlanDayEntries,
   MEAL_PLAN_DAY_LIST_PAST_DAYS,
   MealPlanDayListEntry,
   MealPlanDayListSection,
+  MealPlanEntryIdentity,
+  MoveMealPlanEntry,
+  createMealPlanDayEntries,
 } from '../utils/meal-plan-day-list';
 
 import {
@@ -67,6 +76,7 @@ type MealPlanDateViewProps = {
     recipe: Recipe;
   }) => void;
   onItemPress: (item: MealPlanItemWithStore) => void;
+  onMoveEntry?: MoveMealPlanEntry;
   onViewChange?: (view: ListView) => void;
 };
 
@@ -83,6 +93,22 @@ type MealPlanEntry = MealPlanDayListEntry<
   MealPlanRecipeWithRecipe,
   MealPlanItemWithStore
 >;
+
+const dragStyles = StyleSheet.create({
+  draggable: {
+    zIndex: 100,
+  },
+  activeDropTarget: {
+    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+  },
+});
+
+const MEAL_PLAN_DRAG_LONG_PRESS_MS = 300;
+
+type MealPlanDragConfig = {
+  resetKey: number;
+  onDragStart: (entry: MealPlanEntryIdentity) => void;
+};
 
 const groupEntriesByMealTime = (entries: readonly MealPlanEntry[]) => {
   const groupedRecipes = {} as Record<MealTag, MealPlanRecipeWithRecipe[]>;
@@ -117,6 +143,7 @@ type MealPlanMealTimeGroupProps = {
   onItemPress: MealPlanDateViewProps['onItemPress'];
   onRecipeIndicatorPress: (recipe: MealPlanRecipeWithRecipe) => void;
   onItemIndicatorPress: (item: MealPlanItemWithStore) => void;
+  dragConfig?: MealPlanDragConfig;
 };
 
 const MealPlanMealTimeGroup = ({
@@ -127,10 +154,11 @@ const MealPlanMealTimeGroup = ({
   onItemPress,
   onRecipeIndicatorPress,
   onItemIndicatorPress,
+  dragConfig,
 }: MealPlanMealTimeGroupProps) => (
-  <View className="mb-5">
+  <View className="mb-2">
     <Text className="px-4 text-lg font-semibold capitalize text-muted-foreground">
-      {mealTime}
+      {mealTime === 'None' ? 'No Mealtime' : mealTime}
     </Text>
     <Animated.View
       entering={FadeIn.duration(140)}
@@ -143,8 +171,7 @@ const MealPlanMealTimeGroup = ({
           const recipesCount = groupedRecipes[mealTime]?.length ?? 0;
           const itemsCount = groupedItems[mealTime]?.length ?? 0;
           const isLast = index === recipesCount - 1 && itemsCount === 0;
-
-          return (
+          const card = (
             <MealPlanMealCard
               key={mealPlanRecipe.id}
               mealPlanRecipe={mealPlanRecipe}
@@ -154,16 +181,65 @@ const MealPlanMealTimeGroup = ({
               onIndicatorPress={onRecipeIndicatorPress}
             />
           );
+
+          if (!dragConfig) return card;
+
+          const entry: MealPlanEntryIdentity = {
+            type: 'recipe',
+            id: mealPlanRecipe.id,
+            date: mealPlanRecipe.date,
+          };
+
+          return (
+            <Draggable
+              key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
+              data={entry}
+              draggableId={`${entry.type}:${entry.id}`}
+              dragAxis="y"
+              collisionAlgorithm="center"
+              preDragDelay={MEAL_PLAN_DRAG_LONG_PRESS_MS}
+              onDragStart={dragConfig.onDragStart}
+              style={dragStyles.draggable}
+            >
+              {card}
+            </Draggable>
+          );
         })}
-        {groupedItems[mealTime]?.map((mealPlanItem, index) => (
-          <MealPlanItemCard
-            key={mealPlanItem.id}
-            mealPlanItem={mealPlanItem}
-            isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
-            onItemPress={onItemPress}
-            onIndicatorPress={onItemIndicatorPress}
-          />
-        ))}
+        {groupedItems[mealTime]?.map((mealPlanItem, index) => {
+          const card = (
+            <MealPlanItemCard
+              key={mealPlanItem.id}
+              mealPlanItem={mealPlanItem}
+              isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
+              contextMenuEnabled={!dragConfig}
+              onItemPress={onItemPress}
+              onIndicatorPress={onItemIndicatorPress}
+            />
+          );
+
+          if (!dragConfig) return card;
+
+          const entry: MealPlanEntryIdentity = {
+            type: 'item',
+            id: mealPlanItem.id,
+            date: mealPlanItem.date,
+          };
+
+          return (
+            <Draggable
+              key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
+              data={entry}
+              draggableId={`${entry.type}:${entry.id}`}
+              dragAxis="y"
+              collisionAlgorithm="center"
+              preDragDelay={MEAL_PLAN_DRAG_LONG_PRESS_MS}
+              onDragStart={dragConfig.onDragStart}
+              style={dragStyles.draggable}
+            >
+              {card}
+            </Draggable>
+          );
+        })}
       </View>
     </Animated.View>
   </View>
@@ -175,6 +251,7 @@ type MealPlanDayContentProps = {
   onItemPress: MealPlanDateViewProps['onItemPress'];
   onRecipeIndicatorPress: (recipe: MealPlanRecipeWithRecipe) => void;
   onItemIndicatorPress: (item: MealPlanItemWithStore) => void;
+  dragConfig?: MealPlanDragConfig;
 };
 
 const MealPlanDayContent = ({
@@ -183,6 +260,7 @@ const MealPlanDayContent = ({
   onItemPress,
   onRecipeIndicatorPress,
   onItemIndicatorPress,
+  dragConfig,
 }: MealPlanDayContentProps) => {
   const { groupedRecipes, groupedItems, mealTimesWithContent } =
     groupEntriesByMealTime(entries);
@@ -197,8 +275,78 @@ const MealPlanDayContent = ({
       onItemPress={onItemPress}
       onRecipeIndicatorPress={onRecipeIndicatorPress}
       onItemIndicatorPress={onItemIndicatorPress}
+      dragConfig={dragConfig}
     />
   ));
+};
+
+type MealPlanDayListSectionViewProps = {
+  section: DayListSection;
+  onDayPress?: MealPlanDateViewProps['onDayPress'];
+  onMealPress: MealPlanDateViewProps['onMealPress'];
+  onItemPress: MealPlanDateViewProps['onItemPress'];
+  onRecipeIndicatorPress: (recipe: MealPlanRecipeWithRecipe) => void;
+  onItemIndicatorPress: (item: MealPlanItemWithStore) => void;
+  onEntryDrop: (entry: MealPlanEntryIdentity, targetDate: string) => void;
+  dragConfig?: MealPlanDragConfig;
+};
+
+const MealPlanDayListSectionView = ({
+  section,
+  onDayPress,
+  onMealPress,
+  onItemPress,
+  onRecipeIndicatorPress,
+  onItemIndicatorPress,
+  onEntryDrop,
+  dragConfig,
+}: MealPlanDayListSectionViewProps) => {
+  const handleDrop = (entry: MealPlanEntryIdentity) => {
+    onEntryDrop(entry, section.dateKey);
+  };
+
+  return (
+    <Droppable
+      droppableId={`meal-plan-day:${section.dateKey}`}
+      onDrop={handleDrop}
+      capacity={Number.MAX_SAFE_INTEGER}
+      activeStyle={dragStyles.activeDropTarget}
+    >
+      <View className="min-h-14">
+        <HapticPressable
+          className="min-h-14 justify-center  px-4 py-3"
+          onPress={() => onDayPress?.(section.dateKey)}
+          accessibilityRole="button"
+          accessibilityLabel={`Add to meal plan for ${section.label}`}
+        >
+          <View className="flex-row items-center justify-between gap-3">
+            <Text className="text-lg font-semibold text-foreground">
+              {section.label}
+            </Text>
+            {section.isToday ? (
+              <View className="rounded-full bg-primary/15 px-2.5 py-1">
+                <Text className="text-xs font-semibold text-primary">
+                  Today
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        </HapticPressable>
+        {section.entries.length > 0 ? (
+          <View className="border-b border-border">
+            <MealPlanDayContent
+              entries={section.entries}
+              onMealPress={onMealPress}
+              onItemPress={onItemPress}
+              onRecipeIndicatorPress={onRecipeIndicatorPress}
+              onItemIndicatorPress={onItemIndicatorPress}
+              dragConfig={dragConfig}
+            />
+          </View>
+        ) : null}
+      </View>
+    </Droppable>
+  );
 };
 
 export const MealPlanDateView = ({
@@ -210,6 +358,7 @@ export const MealPlanDateView = ({
   onDayPress,
   onMealPress,
   onItemPress,
+  onMoveEntry,
   onViewChange,
 }: MealPlanDateViewProps) => {
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
@@ -218,9 +367,45 @@ export const MealPlanDateView = ({
   const quickReviewSheetRef = useRef<TrueSheet>(null);
   const ingredientOverrideSheetRef =
     useRef<MealPlanIngredientOverrideSheetRef>(null);
+  const dropProviderRef = useRef<DropProviderRef>(null);
   const [quickReviewMealPlanRecipe, setQuickReviewMealPlanRecipe] =
     useState<MealPlanRecipeWithRecipe | null>(null);
+  const [dragResetKey, setDragResetKey] = useState(0);
   const queryClient = useQueryClient();
+
+  const refreshDragDropPositions = () => {
+    dropProviderRef.current?.requestPositionUpdate();
+  };
+
+  const handleDragStart = () => {
+    refreshDragDropPositions();
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const handleEntryDrop = (
+    entry: MealPlanEntryIdentity,
+    targetDate: string
+  ) => {
+    setDragResetKey(current => current + 1);
+    if (!onMoveEntry || entry.date === targetDate) return;
+
+    void Promise.resolve(onMoveEntry(entry, targetDate))
+      .then(() => {
+        void Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+      })
+      .catch(() => {
+        toast.error('Failed to move meal');
+      });
+  };
+
+  const dragConfig: MealPlanDragConfig | undefined = onMoveEntry
+    ? {
+        resetKey: dragResetKey,
+        onDragStart: handleDragStart,
+      }
+    : undefined;
 
   const quickReviewRecipe = quickReviewMealPlanRecipe?.recipe ?? null;
   const quickReviewQueryKey = useMemo(
@@ -539,48 +724,32 @@ export const MealPlanDateView = ({
   return (
     <>
       {mode === 'day-list' ? (
-        <FlashList
-          data={dayListSections}
-          initialScrollIndex={MEAL_PLAN_DAY_LIST_PAST_DAYS}
-          keyExtractor={section => section.dateKey}
-          contentContainerClassName="pb-20"
-          drawDistance={300}
-          scrollsToTop={false}
-          renderItem={({ item: section }) => (
-            <View>
-              <HapticPressable
-                className="min-h-14 justify-center border-b border-border px-4 py-3"
-                onPress={() => onDayPress?.(section.dateKey)}
-                accessibilityRole="button"
-                accessibilityLabel={`Add to meal plan for ${section.label}`}
-              >
-                <View className="flex-row items-center justify-between gap-3">
-                  <Text className="text-lg font-semibold text-foreground">
-                    {section.label}
-                  </Text>
-                  {section.isToday ? (
-                    <View className="rounded-full bg-primary/15 px-2.5 py-1">
-                      <Text className="text-xs font-semibold text-primary">
-                        Today
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-              </HapticPressable>
-              {section.entries.length > 0 ? (
-                <View className="pt-4">
-                  <MealPlanDayContent
-                    entries={section.entries}
-                    onMealPress={onMealPress}
-                    onItemPress={onItemPress}
-                    onRecipeIndicatorPress={handleRecipeIndicatorPress}
-                    onItemIndicatorPress={handleItemIndicatorPress}
-                  />
-                </View>
-              ) : null}
-            </View>
-          )}
-        />
+        <DropProvider ref={dropProviderRef}>
+          <FlashList
+            data={dayListSections}
+            initialScrollIndex={MEAL_PLAN_DAY_LIST_PAST_DAYS}
+            keyExtractor={section => section.dateKey}
+            contentContainerClassName="pb-20"
+            drawDistance={300}
+            scrollsToTop={false}
+            onLayout={refreshDragDropPositions}
+            onContentSizeChange={refreshDragDropPositions}
+            onMomentumScrollEnd={refreshDragDropPositions}
+            onScrollEndDrag={refreshDragDropPositions}
+            renderItem={({ item: section }) => (
+              <MealPlanDayListSectionView
+                section={section}
+                onDayPress={onDayPress}
+                onMealPress={onMealPress}
+                onItemPress={onItemPress}
+                onRecipeIndicatorPress={handleRecipeIndicatorPress}
+                onItemIndicatorPress={handleItemIndicatorPress}
+                onEntryDrop={handleEntryDrop}
+                dragConfig={dragConfig}
+              />
+            )}
+          />
+        </DropProvider>
       ) : (
         <FlatList
           contentContainerClassName="pb-20"

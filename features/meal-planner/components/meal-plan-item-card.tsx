@@ -16,6 +16,7 @@ import { MealPlanItem } from '../types';
 type MealPlanItemCardProps = {
   mealPlanItem: MealPlanItem;
   isLast: boolean;
+  contextMenuEnabled?: boolean;
   onItemPress: (item: MealPlanItem) => void;
   onIndicatorPress: (mealPlanItem: MealPlanItem) => void;
 };
@@ -23,6 +24,7 @@ type MealPlanItemCardProps = {
 const MealPlanItemCard = ({
   mealPlanItem,
   isLast,
+  contextMenuEnabled = true,
   onItemPress,
   onIndicatorPress,
 }: MealPlanItemCardProps) => {
@@ -44,37 +46,37 @@ const MealPlanItemCard = ({
     );
   };
 
-  return (
-    <ContextMenuRoot
-      trigger={
-        <ListItem
-          className={
-            !isLast ? 'border-b border-dashed border-border' : undefined
-          }
-        >
-          <HapticPressable
-            key={mealPlanItem.id}
-            onPress={() => onItemPress(mealPlanItem)}
-            className="flex-1"
-          >
-            <View className="w-full flex-row items-center gap-3 py-1">
-              <Checkbox
-                checked={!!mealPlanItem.addedToList}
-                onPress={() => onIndicatorPress(mealPlanItem)}
-              />
-              <View className="flex-1 flex-row items-center justify-between gap-3">
-                <Text className="flex-1 text-xl font-medium text-foreground">
-                  {mealPlanItem.name}
-                </Text>
-                <Text className="text-sm text-muted-foreground">
-                  {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
-                </Text>
-              </View>
-            </View>
-          </HapticPressable>
-        </ListItem>
-      }
+  const card = (
+    <ListItem
+      className={!isLast ? 'border-b border-dashed border-border' : undefined}
     >
+      <HapticPressable
+        key={mealPlanItem.id}
+        onPress={() => onItemPress(mealPlanItem)}
+        className="flex-1"
+      >
+        <View className="w-full flex-row items-center gap-3 py-1">
+          <Checkbox
+            checked={!!mealPlanItem.addedToList}
+            onPress={() => onIndicatorPress(mealPlanItem)}
+          />
+          <View className="flex-1 flex-row items-center justify-between gap-3">
+            <Text className="flex-1 text-xl font-medium text-foreground">
+              {mealPlanItem.name}
+            </Text>
+            <Text className="text-sm text-muted-foreground">
+              {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
+            </Text>
+          </View>
+        </View>
+      </HapticPressable>
+    </ListItem>
+  );
+
+  if (!contextMenuEnabled) return card;
+
+  return (
+    <ContextMenuRoot trigger={card}>
       <ContextMenuItem key="delete-item" destructive onSelect={handleDelete}>
         <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
       </ContextMenuItem>

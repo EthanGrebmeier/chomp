@@ -8,6 +8,8 @@ import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { type ListView } from '../../grocery-list/components/list-view-tabs';
+import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
+import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
 import {
   MealPlanItemWithStore,
@@ -17,6 +19,7 @@ import {
 import {
   buildMealPlanDayListSections,
   MEAL_PLAN_DAY_LIST_PAST_DAYS,
+  type MoveMealPlanEntry,
 } from '../utils/meal-plan-day-list';
 import {
   groupMealPlanEntriesByDate,
@@ -72,6 +75,8 @@ export const MealPlanner = ({
   const pagerRef = useRef<PagerView>(null);
   const isProgrammaticNavigationRef = useRef(false);
   const { recipes, items } = useUserMealPlanData(listId);
+  const { mutateAsync: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
+  const { mutateAsync: updateMealPlanItem } = useUpdateMealPlanItem();
   const unaddedCount =
     recipes.filter(recipe => !recipe.addedToList).length +
     items.filter(item => !item.addedToList).length;
@@ -172,6 +177,26 @@ export const MealPlanner = ({
     editItemSheet.current?.open(item);
   };
 
+  const handleMoveMealPlanEntry: MoveMealPlanEntry = async (
+    entry,
+    targetDate
+  ) => {
+    if (entry.date === targetDate) return;
+
+    if (entry.type === 'recipe') {
+      await updateMealPlanRecipe({
+        mealPlanRecipeId: entry.id,
+        updates: { date: targetDate },
+      });
+      return;
+    }
+
+    await updateMealPlanItem({
+      mealPlanItemId: entry.id,
+      updates: { date: targetDate },
+    });
+  };
+
   const openAddSheetForDate = (dateKey: string) => {
     addToMealPlanSheet.current?.present({ defaultDate: dateKey });
   };
@@ -236,6 +261,7 @@ export const MealPlanner = ({
             items={items}
             dayListSections={dayListSections}
             onDayPress={openAddSheetForDate}
+            onMoveEntry={handleMoveMealPlanEntry}
             onMealPress={({ mealPlanRecipe, recipe }) => {
               editMealSheet.current?.open({ mealPlanRecipe, recipe });
             }}

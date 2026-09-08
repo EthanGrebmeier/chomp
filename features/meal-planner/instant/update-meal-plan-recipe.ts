@@ -19,12 +19,16 @@ export const updateMealPlanRecipe = async ({
   updates,
 }: UpdateMealPlanRecipeArgs) => {
   const { recipeId, ...otherUpdates } = updates;
+  const mealTagUpdate =
+    otherUpdates.mealTag !== undefined
+      ? { mealTag: otherUpdates.mealTag || null }
+      : {};
 
   const transactions = [
     tx.meal_plan_recipes[mealPlanRecipeId].update(
       trimStringFields({
         ...otherUpdates,
-        mealTag: otherUpdates.mealTag ?? null,
+        ...mealTagUpdate,
         updatedAt: new Date().toISOString(),
       })
     ),

@@ -22,14 +22,23 @@ export const updateMealPlanItem = async ({
   updates,
 }: UpdateMealPlanItemArgs) => {
   const { storeId, ...otherUpdates } = updates;
+  const nullableUpdates = {
+    ...(otherUpdates.notes !== undefined
+      ? { notes: otherUpdates.notes || null }
+      : {}),
+    ...(otherUpdates.category !== undefined
+      ? { category: otherUpdates.category || null }
+      : {}),
+    ...(otherUpdates.mealTag !== undefined
+      ? { mealTag: otherUpdates.mealTag || null }
+      : {}),
+  };
 
   const transactions = [
     tx.meal_plan_items[mealPlanItemId].update(
       trimStringFields({
         ...otherUpdates,
-        notes: otherUpdates.notes ?? null,
-        category: otherUpdates.category ?? null,
-        mealTag: otherUpdates.mealTag ?? null,
+        ...nullableUpdates,
         updatedAt: new Date().toISOString(),
       })
     ),
@@ -55,6 +64,3 @@ export const updateMealPlanItem = async ({
 
   await db.transact(transactions);
 };
-
-
-
