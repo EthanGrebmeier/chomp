@@ -946,15 +946,12 @@ export const MealPlanDateView = ({
               </View>
             ) : null}
             {isLoadingQuickReviewIngredients ||
-            quickReviewSelectionMutation.isPending ||
             quickReviewOverrideMutation.isPending ? (
               <View className="px-4 pb-4">
                 <Pill hasValue>
                   {isLoadingQuickReviewIngredients
                     ? 'Loading ingredient selections...'
-                    : quickReviewOverrideMutation.isPending
-                      ? 'Saving ingredient override...'
-                      : 'Saving ingredient selections...'}
+                    : 'Saving ingredient override...'}
                 </Pill>
               </View>
             ) : null}
