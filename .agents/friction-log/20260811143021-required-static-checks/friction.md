@@ -1,6 +1,7 @@
 ---
 title: 'Required static checks fail before navigation validation'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#1'
 ---
 
 ### Expected Behavior
