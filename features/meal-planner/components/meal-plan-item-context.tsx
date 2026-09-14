@@ -37,6 +37,7 @@ type MealPlanItemContextValue = {
   // Helper methods
   resetState: (options?: {
     itemNameInputRef?: React.RefObject<TextInput | null>;
+    keepMealContext?: boolean;
   }) => void;
   populateFromItem: (item: BaseGroceryItem) => void;
   isValid: () => boolean;
@@ -114,6 +115,7 @@ export const MealPlanItemProvider = ({
 
   const resetState = (options?: {
     itemNameInputRef?: React.RefObject<TextInput | null>;
+    keepMealContext?: boolean;
   }) => {
     commitItemName.cancel();
     commitItemNotes.cancel();
@@ -134,8 +136,13 @@ export const MealPlanItemProvider = ({
     setUnit('each');
     setCategory(undefined);
     setStoreId(undefined);
-    setSelectedDate(undefined);
-    setMealTag(undefined);
+    // During continuous entry we keep the selected date and meal tag so the
+    // next item lands on the same day/meal. Clearing them would leave the
+    // form invalid (a date is required) and disable the Add button.
+    if (!options?.keepMealContext) {
+      setSelectedDate(undefined);
+      setMealTag(undefined);
+    }
     setShowMatchingItems(false);
   };
 

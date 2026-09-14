@@ -328,7 +328,10 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         onSuccess: () => {
           // Keep the sheet open for continuous entry. Clear the name field in
           // place (no remount) so it keeps focus and the keyboard stays up.
-          resetMealPlanItemState({ itemNameInputRef: itemInputRef });
+          resetMealPlanItemState({
+            itemNameInputRef: itemInputRef,
+            keepMealContext: true,
+          });
           itemInputRef.current?.focus();
         },
         onError: () => {
