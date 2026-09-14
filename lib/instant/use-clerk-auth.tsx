@@ -267,6 +267,7 @@ export const InstantAuthHandler = ({
   const hasClerkSignOutGraceElapsedRef = useRef(false);
   const transitionIdRef = useRef(0);
   const previousAppStateRef = useRef(AppState.currentState);
+  const hasShownExpiredToastRef = useRef(false);
   const [hasAuthLoadingTimedOut, setHasAuthLoadingTimedOut] = useState(false);
   const [isResolvingAuthState, setIsResolvingAuthState] = useState(true);
   const [didExpireSignedInSession, setDidExpireSignedInSession] =
@@ -567,6 +568,9 @@ export const InstantAuthHandler = ({
       instantAuthState.isSignedInWithClerk ||
       instantAuthState.bridgeStatus !== 'idle'
     ) {
+      // The user has (re)gained a valid session, so allow the next expiration
+      // to surface a fresh toast.
+      hasShownExpiredToastRef.current = false;
       return;
     }
 
@@ -579,7 +583,10 @@ export const InstantAuthHandler = ({
     const isOnAuthRoute = segments[0] === '(auth)';
 
     if (didExpireSignedInSession) {
-      toast.info('Your session expired. Please sign in again.');
+      if (!hasShownExpiredToastRef.current) {
+        hasShownExpiredToastRef.current = true;
+        toast.info('Your session expired. Please sign in again.');
+      }
       queueMicrotask(() => setDidExpireSignedInSession(false));
 
       redirectSignedOutAuth({
