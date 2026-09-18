@@ -30,12 +30,12 @@ export const CreateRecipeButton = ({ listId }: CreateRecipeButtonProps) => {
   return (
     <DropdownMenuRoot
       trigger={
-        <Button size="wide-small">
+        <Button size="circle">
           <Icon
             strokeWidth={3}
             className="text-primary-foreground"
             as={PlusIcon}
-            size={28}
+            size={16}
           />
         </Button>
       }
@@ -46,7 +46,10 @@ export const CreateRecipeButton = ({ listId }: CreateRecipeButtonProps) => {
             <DropdownMenuItemTitle>Create Recipe</DropdownMenuItemTitle>
             <DropdownMenuItemIcon ios={{ name: 'plus' }} />
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleImportFromUrl} key="import-from-url">
+          <DropdownMenuItem
+            onSelect={handleImportFromUrl}
+            key="import-from-url"
+          >
             <DropdownMenuItemTitle>Import from URL</DropdownMenuItemTitle>
             <DropdownMenuItemIcon ios={{ name: 'link' }} />
           </DropdownMenuItem>

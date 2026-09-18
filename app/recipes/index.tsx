@@ -78,6 +78,9 @@ export default function Recipes() {
       <View className="flex-row items-center gap-2 px-4">
         <BackButton onPress={() => router.back()} />
         <Heading>Recipe Book</Heading>
+        <View className="ml-auto">
+          <CreateRecipeButton listId={listId} />
+        </View>
       </View>
       <View className="mt-2">
         <RecipeFilters
@@ -97,9 +100,6 @@ export default function Recipes() {
           {searchQuery.trim() && ` matching "${searchQuery.trim()}"`}
           {mealTag && !searchQuery.trim() && ` in ${mealTag}`}
         </Text>
-      </View>
-      <View className="bottom-safe absolute right-6 z-10">
-        <CreateRecipeButton listId={listId} />
       </View>
       <View className="flex-1">
         {isLoading ? (
