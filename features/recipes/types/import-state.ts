@@ -12,12 +12,13 @@ import { ParsedIngredient, ParseRecipeUrlResponse } from '../api/types';
  */
 export type ImportState =
   | { status: 'idle' }
-  | { status: 'loading' }
+  | { status: 'loading'; url: string }
   | { status: 'error'; error: RecipeParseError }
   | {
       status: 'preview';
       data: ParseRecipeUrlResponse;
       editedName: string;
+      editedSourceUrl: string;
       ingredients: ParsedIngredient[];
       selectedIndices: Set<number>;
     }
@@ -32,6 +33,7 @@ export type ImportAction =
   | { type: 'PARSE_SUCCESS'; data: ParseRecipeUrlResponse }
   | { type: 'PARSE_ERROR'; error: RecipeParseError }
   | { type: 'EDIT_NAME'; name: string }
+  | { type: 'EDIT_SOURCE_URL'; url: string }
   | { type: 'TOGGLE_INGREDIENT'; index: number }
   | { type: 'TOGGLE_ALL_INGREDIENTS' }
   | { type: 'UPDATE_INGREDIENT'; index: number; ingredient: ParsedIngredient }

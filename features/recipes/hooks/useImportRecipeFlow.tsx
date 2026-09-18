@@ -24,6 +24,8 @@ export const useImportRecipeFlow = ({
 }: UseImportRecipeFlowProps = {}) => {
   const isMountedRef = useRef(true);
   const isConfirmingRef = useRef(false);
+  /** Controller for the in-flight parse request; null when idle. */
+  const parseAbortRef = useRef<AbortController | null>(null);
   const urlInput = useUncontrolledTextInput();
   const [urlHasValue, setUrlHasValue] = useState(false);
   const [validationError, setValidationError] = useState<string | undefined>();
@@ -33,6 +35,7 @@ export const useImportRecipeFlow = ({
     parseSuccess,
     parseError,
     editName,
+    editSourceUrl,
     toggleIngredientSelection,
     toggleAllIngredients,
     updateIngredient,
@@ -49,10 +52,13 @@ export const useImportRecipeFlow = ({
 
     return () => {
       isMountedRef.current = false;
+      parseAbortRef.current?.abort();
     };
   }, []);
 
   const handleReset = useCallback(() => {
+    parseAbortRef.current?.abort();
+    parseAbortRef.current = null;
     reset();
     urlInput.reset();
     setUrlHasValue(false);
@@ -71,50 +77,83 @@ export const useImportRecipeFlow = ({
     [urlInput, validationError]
   );
 
-  const handleSubmitUrl = useCallback(async () => {
-    const url = urlInput.getValue();
-    const validation = validateRecipeUrl(url);
+  const startParse = useCallback(
+    async (url: string) => {
+      const isOnline = await checkNetworkStatus();
+      if (!isOnline) {
+        parseError(new RecipeParseError('offline', 'No internet connection'));
+        return;
+      }
+
+      parseAbortRef.current?.abort();
+      const controller = new AbortController();
+      parseAbortRef.current = controller;
+
+      submitUrl(url);
+
+      parseRecipe.mutate(
+        { url, signal: controller.signal },
+        {
+          onSettled: () => {
+            if (parseAbortRef.current === controller) {
+              parseAbortRef.current = null;
+            }
+          },
+          onSuccess: data => {
+            if (!isMountedRef.current || controller.signal.aborted) return;
+            parseSuccess(data);
+          },
+          onError: error => {
+            if (!isMountedRef.current || controller.signal.aborted) return;
+
+            if (error instanceof RecipeParseError) {
+              parseError(error);
+              return;
+            }
+
+            parseError(
+              new RecipeParseError(
+                'server_error',
+                'An unexpected error occurred'
+              )
+            );
+          },
+        }
+      );
+    },
+    [parseError, parseRecipe, parseSuccess, submitUrl]
+  );
+
+  const handleSubmitUrl = useCallback(() => {
+    const validation = validateRecipeUrl(urlInput.getValue());
     if (!validation.valid) {
       setValidationError(validation.error);
       return;
     }
     setValidationError(undefined);
+    void startParse(validation.url);
+  }, [startParse, urlInput]);
 
-    const isOnline = await checkNetworkStatus();
-    if (!isOnline) {
-      parseError(
-        new RecipeParseError(
-          'fetch_timeout',
-          'No internet connection. Please check your connection and try again.'
-        )
-      );
-      return;
-    }
+  /**
+   * Fills the URL field with an already-validated URL and starts the import.
+   * Used by the clipboard shortcut.
+   */
+  const handleSubmitPastedUrl = useCallback(
+    (url: string) => {
+      urlInput.reset(url);
+      setUrlHasValue(true);
+      setValidationError(undefined);
+      void startParse(url);
+    },
+    [startParse, urlInput]
+  );
 
-    submitUrl(validation.url);
-
-    parseRecipe.mutate(
-      { url: validation.url },
-      {
-        onSuccess: data => {
-          if (!isMountedRef.current) return;
-          parseSuccess(data);
-        },
-        onError: error => {
-          if (!isMountedRef.current) return;
-
-          if (error instanceof RecipeParseError) {
-            parseError(error);
-            return;
-          }
-
-          parseError(
-            new RecipeParseError('server_error', 'An unexpected error occurred')
-          );
-        },
-      }
-    );
-  }, [parseError, parseRecipe, parseSuccess, submitUrl, urlInput]);
+  /** Aborts the in-flight parse and returns to the URL input, keeping the URL. */
+  const handleCancelImport = useCallback(() => {
+    parseAbortRef.current?.abort();
+    parseAbortRef.current = null;
+    goBack();
+  }, [goBack]);
 
   const handleConfirmImport = useCallback(async () => {
     if (state.status !== 'preview') return;
@@ -137,7 +176,12 @@ export const useImportRecipeFlow = ({
     );
 
     createRecipe(
-      transformParsedRecipe(state.data, state.editedName, selectedIngredients),
+      transformParsedRecipe(
+        state.data,
+        state.editedName,
+        selectedIngredients,
+        state.editedSourceUrl
+      ),
       {
         onSuccess: result => {
           isConfirmingRef.current = false;
@@ -156,7 +200,14 @@ export const useImportRecipeFlow = ({
         },
       }
     );
-  }, [confirmImport, createRecipe, goBack, onImportSuccess, saveSuccess, state]);
+  }, [
+    confirmImport,
+    createRecipe,
+    goBack,
+    onImportSuccess,
+    saveSuccess,
+    state,
+  ]);
 
   const handleRetry = useCallback(() => {
     goBack();
@@ -176,11 +227,14 @@ export const useImportRecipeFlow = ({
     validationError,
     handleUrlChange,
     handleSubmitUrl,
+    handleSubmitPastedUrl,
+    handleCancelImport,
     handleConfirmImport,
     handleRetry,
     handleGoBack: goBack,
     handleReset,
     editName,
+    editSourceUrl,
     toggleIngredientSelection,
     toggleAllIngredients,
     handleSaveIngredient,

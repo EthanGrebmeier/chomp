@@ -157,6 +157,13 @@ export function buildCreateRecipeImportUrl(
   return `/recipes/create/import${query}` as Href;
 }
 
+export function buildCreateRecipeImportIngredientsUrl(
+  params?: CreateRecipeImportParams
+): Href {
+  const query = buildQueryString({ listId: params?.listId });
+  return `/recipes/create/import/ingredients${query}` as Href;
+}
+
 export function buildEditRecipeUrl(params: EditRecipeParams) {
   const { recipeId, listId } = params;
   return {
@@ -207,6 +214,8 @@ export const navigation = {
     buildCreateRecipeManualUrl({ listId, name }),
   goToCreateRecipeImport: (listId?: string) =>
     buildCreateRecipeImportUrl({ listId }),
+  goToCreateRecipeImportIngredients: (listId?: string) =>
+    buildCreateRecipeImportIngredientsUrl({ listId }),
   goToEditRecipe: (recipeId: string, listId?: string) =>
     buildEditRecipeUrl({ recipeId, listId }),
 } as const;
@@ -264,6 +273,8 @@ export const navActions = {
     buildCreateRecipeManualUrl({ listId, name }),
   goToCreateRecipeImport: (listId?: string) =>
     buildCreateRecipeImportUrl({ listId }),
+  goToCreateRecipeImportIngredients: (listId?: string) =>
+    buildCreateRecipeImportIngredientsUrl({ listId }),
   goToEditRecipe: (recipeId: string, listId?: string) =>
     buildEditRecipeUrl({ recipeId, listId }),
 } as const;
@@ -291,6 +302,7 @@ export const ROUTES = {
     DETAIL: (recipeId: string) => `/recipes/${recipeId}`,
     CREATE_MANUAL: '/recipes/create/manual',
     CREATE_IMPORT: '/recipes/create/import',
+    CREATE_IMPORT_INGREDIENTS: '/recipes/create/import/ingredients',
     EDIT: (recipeId: string) => `/recipes/edit/${recipeId}`,
   },
 } as const;

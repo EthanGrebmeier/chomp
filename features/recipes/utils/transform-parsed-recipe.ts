@@ -8,16 +8,18 @@ import { CreateRecipeArgs } from '../instant/create-recipe';
 export const transformParsedRecipe = (
   data: ParseRecipeUrlResponse,
   editedName: string,
-  selectedIngredients: ParsedIngredient[]
+  selectedIngredients: ParsedIngredient[],
+  /** User-edited source URL; falls back to the URL that was parsed. */
+  sourceUrl?: string
 ): CreateRecipeArgs => {
   return {
     recipe: {
       name: editedName || data.recipeName || 'Imported Recipe',
       description: '',
-      sourceUrl: data.sourceUrl,
+      sourceUrl: sourceUrl?.trim() || data.sourceUrl,
       servings: data.servings ?? undefined,
     },
-    ingredients: selectedIngredients.map((ing) => ({
+    ingredients: selectedIngredients.map(ing => ({
       name: ing.name,
       quantity: ing.quantity ?? 1,
       unit: ing.unit ?? '',
