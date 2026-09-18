@@ -1,7 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
+import { FadeSwitch } from '@/components/animated/fade-switch';
+import { fadeInUp, STAGGER_MS } from '@/components/animated/transitions';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useCreateRecipe } from '@/features/recipes/hooks/useCreateRecipe';
@@ -120,39 +123,48 @@ export default function ImportSharedRecipe() {
     router,
   ]);
 
-  if (authLoading || existingRecipeLoading || sourceLoading || isCreating) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background px-6">
-        <ActivityIndicator size="large" />
-        <Text className="mt-4 text-center text-lg text-muted-foreground">
-          Importing recipe...
-        </Text>
-      </View>
-    );
-  }
-
-  if (errorMessage) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background px-6">
-        <Text className="mb-2 text-center text-2xl font-bold text-foreground">
-          Unable to Import Recipe
-        </Text>
-        <Text className="mb-8 text-center text-base text-muted-foreground">
-          {errorMessage}
-        </Text>
-        <Button
-          onPress={() => router.replace(navigation.goToRecipes())}
-          className="w-full max-w-sm"
-        >
-          <Text>Go to Recipes</Text>
-        </Button>
-      </View>
-    );
-  }
+  const isLoading =
+    authLoading || existingRecipeLoading || sourceLoading || isCreating;
+  const showError = !isLoading && !!errorMessage;
 
   return (
-    <View className="flex-1 items-center justify-center bg-background">
-      <ActivityIndicator size="large" />
+    <View className="flex-1 bg-background">
+      <FadeSwitch stateKey={showError ? 'error' : 'loading'}>
+        {showError ? (
+          <View className="flex-1 items-center justify-center px-6">
+            <Animated.View entering={fadeInUp()}>
+              <Text className="mb-2 text-center text-2xl font-bold text-foreground">
+                Unable to Import Recipe
+              </Text>
+              <Text className="mb-8 text-center text-base text-muted-foreground">
+                {errorMessage}
+              </Text>
+            </Animated.View>
+            <Animated.View
+              entering={fadeInUp(STAGGER_MS)}
+              className="w-full max-w-sm"
+            >
+              <Button
+                onPress={() => router.replace(navigation.goToRecipes())}
+                className="w-full"
+              >
+                <Text>Go to Recipes</Text>
+              </Button>
+            </Animated.View>
+          </View>
+        ) : (
+          <View className="flex-1 items-center justify-center px-6">
+            <ActivityIndicator size="large" />
+            {isLoading ? (
+              <Animated.View entering={fadeInUp(STAGGER_MS)}>
+                <Text className="mt-4 text-center text-lg text-muted-foreground">
+                  Importing recipe…
+                </Text>
+              </Animated.View>
+            ) : null}
+          </View>
+        )}
+      </FadeSwitch>
     </View>
   );
 }

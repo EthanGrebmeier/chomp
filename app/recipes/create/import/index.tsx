@@ -1,6 +1,8 @@
 import { router } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
+import { fadeIn } from '@/components/animated/transitions';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -62,6 +64,7 @@ const GuestImportPrompt = () => {
 export default function ImportRecipePage() {
   const { status } = useInstantAuthState();
   const flow = useImportRecipeFlowContext();
+  const title = getTitle(flow.state.status);
 
   if (status === 'loading') {
     return (
@@ -86,9 +89,10 @@ export default function ImportRecipePage() {
           <BackButton />
         </View>
         <View className="mx-2 flex-1">
-          <Text className="text-center text-2xl font-bold">
-            {getTitle(flow.state.status)}
-          </Text>
+          {/* Keyed so the new title fades in when the step changes. */}
+          <Animated.View key={title} entering={fadeIn()}>
+            <Text className="text-center text-2xl font-bold">{title}</Text>
+          </Animated.View>
         </View>
         <View className="w-12" />
       </View>

@@ -8,8 +8,15 @@ import {
   KeyboardAwareScrollView,
   KeyboardStickyView,
 } from 'react-native-keyboard-controller';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FadeSwitch } from '@/components/animated/fade-switch';
+import {
+  fadeInUp,
+  scaleIn,
+  STAGGER_MS,
+} from '@/components/animated/transitions';
 import { TextInput } from '@/components/text-input';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -218,13 +225,77 @@ const PreviewStep = ({ flow }: { flow: UseImportRecipeFlowReturn }) => {
   );
 };
 
-export const ImportRecipePageFlow = ({
+const ErrorStep = ({
   flow,
   onCancel,
-}: ImportRecipePageFlowProps) => {
+}: {
+  flow: UseImportRecipeFlowReturn;
+  onCancel: () => void;
+}) => {
+  if (flow.state.status !== 'error') return null;
+  const { retryable } = getImportErrorPresentation(flow.state.error.code);
+
+  return (
+    <ScrollView contentContainerClassName="gap-6 px-4 pb-10">
+      <Animated.View entering={fadeInUp()}>
+        <ImportError error={flow.state.error} />
+      </Animated.View>
+      <Animated.View entering={fadeInUp(STAGGER_MS)} className="gap-2">
+        {retryable ? (
+          <Button size="xl" onPress={flow.handleSubmitUrl}>
+            <Text>Try Again</Text>
+          </Button>
+        ) : null}
+        <Button
+          size="xl"
+          variant={retryable ? 'outline' : 'default'}
+          onPress={flow.handleRetry}
+        >
+          <Text>Edit URL</Text>
+        </Button>
+        <Button size="xl" variant="ghost" onPress={onCancel}>
+          <Text>Cancel</Text>
+        </Button>
+      </Animated.View>
+    </ScrollView>
+  );
+};
+
+const SavingStep = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
 
+  return (
+    <View className="flex-1 items-center justify-center pb-16">
+      <ActivityIndicator size="large" color={theme.primary} />
+      <Animated.View entering={fadeInUp(STAGGER_MS)}>
+        <Text className="mt-4 text-base text-muted-foreground">
+          Saving recipe…
+        </Text>
+      </Animated.View>
+    </View>
+  );
+};
+
+const SuccessStep = () => {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === 'dark' ? THEME.dark : THEME.light;
+
+  return (
+    <View className="flex-1 items-center justify-center pb-16">
+      <Animated.View entering={scaleIn()}>
+        <CheckCircleIcon size={48} color={theme.primary} />
+      </Animated.View>
+      <Animated.View entering={fadeInUp(STAGGER_MS)}>
+        <Text className="mt-4 text-center text-base text-foreground">
+          Recipe imported successfully!
+        </Text>
+      </Animated.View>
+    </View>
+  );
+};
+
+const FlowStep = ({ flow, onCancel }: ImportRecipePageFlowProps) => {
   switch (flow.state.status) {
     case 'idle':
       return <UrlStep flow={flow} />;
@@ -237,56 +308,32 @@ export const ImportRecipePageFlow = ({
         />
       );
 
-    case 'error': {
-      const { retryable } = getImportErrorPresentation(flow.state.error.code);
-      return (
-        <ScrollView contentContainerClassName="gap-6 px-4 pb-10">
-          <ImportError error={flow.state.error} />
-          <View className="gap-2">
-            {retryable ? (
-              <Button size="xl" onPress={flow.handleSubmitUrl}>
-                <Text>Try Again</Text>
-              </Button>
-            ) : null}
-            <Button
-              size="xl"
-              variant={retryable ? 'outline' : 'default'}
-              onPress={flow.handleRetry}
-            >
-              <Text>Edit URL</Text>
-            </Button>
-            <Button size="xl" variant="ghost" onPress={onCancel}>
-              <Text>Cancel</Text>
-            </Button>
-          </View>
-        </ScrollView>
-      );
-    }
+    case 'error':
+      return <ErrorStep flow={flow} onCancel={onCancel} />;
 
     case 'preview':
       return <PreviewStep flow={flow} />;
 
     case 'saving':
-      return (
-        <View className="items-center justify-center py-16">
-          <ActivityIndicator size="large" color={theme.primary} />
-          <Text className="mt-4 text-base text-muted-foreground">
-            Saving recipe…
-          </Text>
-        </View>
-      );
+      return <SavingStep />;
 
     case 'success':
-      return (
-        <View className="items-center justify-center py-12">
-          <CheckCircleIcon size={48} color={theme.primary} />
-          <Text className="mt-4 text-center text-base text-foreground">
-            Recipe imported successfully!
-          </Text>
-        </View>
-      );
+      return <SuccessStep />;
 
     default:
       return null;
   }
 };
+
+/**
+ * Renders the current import step and cross-fades when the status changes.
+ * `FadeSwitch` layers are absolutely positioned, so the wrapper must be
+ * `flex-1` to give them a size.
+ */
+export const ImportRecipePageFlow = (props: ImportRecipePageFlowProps) => (
+  <View className="flex-1">
+    <FadeSwitch stateKey={props.flow.state.status}>
+      <FlowStep {...props} />
+    </FadeSwitch>
+  </View>
+);
