@@ -5,8 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Animated, {
-  FadeIn,
-  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -31,7 +29,15 @@ import { upsertLocalSavedItem } from '../../../features/saved-items/local/upsert
 import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
 import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
-import { slideInRight, slideOutRight } from '../../animated/transitions';
+import {
+  EASE_OUT,
+  ENTER_MS,
+  EXIT_MS,
+  fadeIn,
+  fadeOut,
+  slideInRight,
+  slideOutRight,
+} from '../../animated/transitions';
 import { BottomSheet } from '../../bottom-sheet';
 import { Button } from '../../ui/button';
 import { HapticPressable } from '../../ui/haptic-pressable';
@@ -188,12 +194,14 @@ const AddItemSheet = ({
 
   const showItemFooter = () => {
     setIsItemFooterMounted(true);
-    itemFooterOpacity.set(withTiming(1, { duration: 200 }));
+    itemFooterOpacity.set(
+      withTiming(1, { duration: ENTER_MS, easing: EASE_OUT })
+    );
   };
 
   const hideItemFooter = () => {
     itemFooterOpacity.set(
-      withTiming(0, { duration: 200 }, finished => {
+      withTiming(0, { duration: EXIT_MS, easing: EASE_OUT }, finished => {
         if (finished) {
           scheduleOnRN(unmountItemFooter);
         }
@@ -425,8 +433,8 @@ const AddItemSheet = ({
             ) : mode === 'recipe' && selectedRecipe ? (
               <Animated.View
                 key="recipe-footer"
-                entering={FadeIn.duration(200)}
-                exiting={FadeOut.duration(200)}
+                entering={fadeIn()}
+                exiting={fadeOut}
               >
                 <Button
                   variant="default"

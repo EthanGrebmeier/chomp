@@ -1,7 +1,8 @@
-import { SearchIcon } from 'lucide-react-native';
+import { SearchIcon, XIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { TextInput } from '@/components/text-input';
+import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 
 import { RecipeSortOption } from '../utils/filter-recipes';
@@ -12,6 +13,7 @@ type RecipeFiltersProps = {
   searchDefaultValue: string;
   searchInputKey: number;
   onSearchChange: (value: string) => void;
+  onClose?: () => void;
   mealTag?: string;
   onMealTagChange: (value?: string) => void;
   sortBy?: RecipeSortOption;
@@ -22,6 +24,7 @@ export const RecipeFilters = ({
   searchDefaultValue,
   searchInputKey,
   onSearchChange,
+  onClose,
   mealTag,
   onMealTagChange,
   sortBy = 'recent',
@@ -46,6 +49,7 @@ export const RecipeFilters = ({
               defaultValue={searchDefaultValue}
               onChangeText={onSearchChange}
               autoCorrect={false}
+              autoFocus={!!onClose}
             />
           </View>
           <RecipeFilterDropdownMenu
@@ -54,6 +58,16 @@ export const RecipeFilters = ({
             onMealTagChange={onMealTagChange}
             onSortByChange={onSortByChange}
           />
+          {onClose ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              onPress={onClose}
+              hapticType="light"
+            >
+              <Icon className="text-foreground" as={XIcon} size={22} />
+            </Button>
+          ) : null}
         </View>
       </View>
     </View>
