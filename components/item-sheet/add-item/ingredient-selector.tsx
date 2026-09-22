@@ -1,4 +1,3 @@
-import { PencilLineIcon } from 'lucide-react-native';
 import {
   forwardRef,
   useCallback,
@@ -35,7 +34,6 @@ import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
 import { ExternalLinkButton } from '../../ui/external-link-button';
 import { HapticPressable } from '../../ui/haptic-pressable';
-import { Icon } from '../../ui/icon';
 import { ListItem } from '../../ui/list-item';
 import { Text } from '../../ui/text';
 import { formatQuantityUnit } from '../unit-utils';
@@ -66,7 +64,7 @@ const IngredientRow = ({
     <ListItem className={cn('py-1', className)}>
       <Checkbox checked={isSelected} onPress={onToggle} className="mr-1" />
       <HapticPressable
-        onPress={onToggle}
+        onPress={onEdit ?? onToggle}
         hapticType="selection"
         className="flex-1 gap-1 py-1"
       >
@@ -105,19 +103,6 @@ const IngredientRow = ({
           </Text>
         ) : null}
       </HapticPressable>
-      {onEdit ? (
-        <HapticPressable
-          onPress={onEdit}
-          hapticType="selection"
-          className="rounded-md p-2"
-        >
-          <Icon
-            as={PencilLineIcon}
-            size={16}
-            className="text-muted-foreground"
-          />
-        </HapticPressable>
-      ) : null}
     </ListItem>
   );
 };
