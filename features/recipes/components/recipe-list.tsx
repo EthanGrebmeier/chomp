@@ -1,4 +1,6 @@
-import { Alert, FlatList, View } from 'react-native';
+import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
+import { memo, useCallback } from 'react';
+import { Alert, View } from 'react-native';
 
 import {
   ContextMenuItem,
@@ -12,6 +14,51 @@ import { RecipeWithIngredients } from '../types';
 import { EmptyRecipePrompt } from './empty-recipe-prompt';
 import { RecipeCard } from './recipe-card';
 
+type RecipeRowProps = {
+  recipe: RecipeWithIngredients;
+  listId?: string;
+  onDelete: (recipeId: string) => void;
+};
+
+// Memoized so filter/sort changes only render rows whose recipe changed,
+// instead of re-rendering every native context menu and swipe gesture.
+const RecipeRow = memo(function RecipeRow({
+  recipe,
+  listId,
+  onDelete,
+}: RecipeRowProps) {
+  const handleDelete = () => onDelete(recipe.id);
+
+  const handleConfirmDelete = () => {
+    Alert.alert(
+      'Delete Recipe',
+      `Are you sure you want to delete "${recipe.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: handleDelete },
+      ]
+    );
+  };
+
+  return (
+    <ContextMenuRoot
+      trigger={
+        <ListItem onDelete={handleDelete}>
+          <RecipeCard recipe={recipe} listId={listId} />
+        </ListItem>
+      }
+    >
+      <ContextMenuItem
+        key={`delete-recipe-${recipe.id}`}
+        destructive
+        onSelect={handleConfirmDelete}
+      >
+        <ContextMenuItemTitle>Delete Recipe</ContextMenuItemTitle>
+      </ContextMenuItem>
+    </ContextMenuRoot>
+  );
+});
+
 type RecipeListProps = {
   recipes: RecipeWithIngredients[];
   listId?: string;
@@ -19,23 +66,13 @@ type RecipeListProps = {
 
 export const RecipeList = ({ recipes, listId }: RecipeListProps) => {
   const { mutate: deleteRecipe } = useDeleteRecipe();
-  const handleDelete = (recipeId: string) => {
-    deleteRecipe(recipeId);
-  };
-  const handleConfirmDelete = (recipe: RecipeWithIngredients) => {
-    Alert.alert(
-      'Delete Recipe',
-      `Are you sure you want to delete "${recipe.name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => handleDelete(recipe.id),
-        },
-      ]
-    );
-  };
+
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<RecipeWithIngredients>) => (
+      <RecipeRow recipe={item} listId={listId} onDelete={deleteRecipe} />
+    ),
+    [deleteRecipe, listId]
+  );
 
   if (recipes.length === 0) {
     return (
@@ -46,28 +83,13 @@ export const RecipeList = ({ recipes, listId }: RecipeListProps) => {
   }
 
   return (
-    <FlatList
+    <FlashList
       keyboardDismissMode="on-drag"
       contentContainerClassName="pb-24"
       data={recipes}
-      renderItem={({ item, index }) => (
-        <ContextMenuRoot
-          trigger={
-            <ListItem onDelete={() => handleDelete(item.id)}>
-              <RecipeCard className="w-full" recipe={item} listId={listId} />
-            </ListItem>
-          }
-        >
-          <ContextMenuItem
-            key={`delete-recipe-${item.id}`}
-            destructive
-            onSelect={() => handleConfirmDelete(item)}
-          >
-            <ContextMenuItemTitle>Delete Recipe</ContextMenuItemTitle>
-          </ContextMenuItem>
-        </ContextMenuRoot>
-      )}
+      renderItem={renderItem}
       keyExtractor={item => item.id}
+      drawDistance={300}
     />
   );
 };

@@ -1,4 +1,4 @@
-import { SearchIcon } from 'lucide-react-native';
+import { TextSearchIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { Button } from '../../../components/ui/button';
@@ -19,12 +19,12 @@ export const RecipeSearchButton = ({
         <Icon
           strokeWidth={3}
           className="text-secondary-foreground"
-          as={SearchIcon}
+          as={TextSearchIcon}
           size={16}
         />
       </Button>
       {hasActiveFilters ? (
-        <View className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border border-background bg-primary" />
+        <View className="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-background bg-primary" />
       ) : null}
     </View>
   );

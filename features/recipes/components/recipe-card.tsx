@@ -8,6 +8,8 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { RecipeWithIngredients } from '../types';
 
+import { MealTagBadge } from './meal-tag-badge';
+
 type RecipeCardContentProps = {
   name: string;
   ingredientCount?: number;
@@ -68,15 +70,16 @@ export const RecipeCardContent = ({
 export const RecipeCard = ({ recipe, className, listId }: RecipeCardProps) => {
   return (
     <HapticPressable
-      className="w-full "
+      className="w-full flex-row items-center gap-3"
       hapticType="selection"
       onPress={() => router.push(navigation.goToRecipe(recipe.id, listId))}
     >
       <RecipeCardContent
         name={recipe.name}
         ingredientCount={recipe.recipe_ingredients.length}
-        className={className}
+        className={cn('flex-1', className)}
       />
+      <MealTagBadge mealTag={recipe.mealTag} />
     </HapticPressable>
   );
 };

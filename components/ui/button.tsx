@@ -88,7 +88,7 @@ const buttonVariants = cva(
         'wide-small': cn('h-10 w-24'),
         icon: 'size-8',
         iconLg: 'size-14',
-        circle: 'rounded-full p-2',
+        circle: 'rounded-full p-2 size-10',
       },
     },
     defaultVariants: {

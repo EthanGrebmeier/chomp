@@ -1,10 +1,6 @@
 import { XIcon } from 'lucide-react-native';
 import { forwardRef, useCallback, useRef, useState } from 'react';
-import {
-  TextInput as RNTextInput,
-  TextInputProps,
-  View,
-} from 'react-native';
+import { TextInput as RNTextInput, TextInputProps, View } from 'react-native';
 
 import { cn } from '../lib/utils';
 
@@ -20,7 +16,15 @@ export type OpaqueTextInputProps = TextInputProps & {
    * Defaults to true for opaque inputs.
    */
   clearable?: boolean;
+  /**
+   * Icon-sized (size-8) accessory rendered inside the trailing edge of the
+   * field, after the clear button.
+   */
+  trailingAccessory?: React.ReactNode;
 };
+
+/** Right padding needed to keep text clear of N trailing size-8 accessories. */
+const trailingPaddingByCount = ['', 'pr-11', 'pr-20'] as const;
 
 export const TextDisplayInput = forwardRef<RNTextInput, TextInputProps>(
   ({ className, ...props }, ref) => {
@@ -55,6 +59,7 @@ export const TextInput = forwardRef<RNTextInput, OpaqueTextInputProps>(
       value,
       defaultValue,
       editable,
+      trailingAccessory,
       ...props
     },
     ref
@@ -68,6 +73,7 @@ export const TextInput = forwardRef<RNTextInput, OpaqueTextInputProps>(
       ? String(value).length > 0
       : uncontrolledHasValue;
     const showClear = clearable && hasValue && editable !== false;
+    const trailingCount = Number(showClear) + Number(!!trailingAccessory);
 
     const setRefs = useCallback(
       (node: RNTextInput | null) => {
@@ -104,7 +110,7 @@ export const TextInput = forwardRef<RNTextInput, OpaqueTextInputProps>(
           ref={setRefs}
           className={cn(
             'h-11 rounded-full bg-input px-4 text-base leading-5 text-foreground',
-            showClear && 'pr-11',
+            trailingPaddingByCount[trailingCount],
             className
           )}
           value={value}
@@ -113,21 +119,20 @@ export const TextInput = forwardRef<RNTextInput, OpaqueTextInputProps>(
           editable={editable}
           {...props}
         />
-        {showClear ? (
-          <View className="absolute right-1.5 top-0 bottom-0 items-center justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onPress={handleClear}
-              className="h-8 w-8"
-              accessibilityLabel="Clear text"
-            >
-              <Icon
-                as={XIcon}
-                size={18}
-                className="text-muted-foreground"
-              />
-            </Button>
+        {trailingCount > 0 ? (
+          <View className="absolute bottom-0 right-1.5 top-0 flex-row items-center">
+            {showClear ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onPress={handleClear}
+                className="h-8 w-8"
+                accessibilityLabel="Clear text"
+              >
+                <Icon as={XIcon} size={18} className="text-muted-foreground" />
+              </Button>
+            ) : null}
+            {trailingAccessory}
           </View>
         ) : null}
       </View>
