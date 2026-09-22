@@ -6,7 +6,6 @@ import {
   normalizeUnit,
 } from '@/components/item-sheet/unit-utils';
 import { DEFAULT_UNIT_VALUE } from '@/components/item-sheet/units';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { ListItem } from '@/components/ui/list-item';
@@ -62,11 +61,15 @@ export const IngredientListHeader = ({
           Ingredients ({selectedCount}/{totalCount})
         </Text>
       </View>
-      <Button variant="outline" onPress={onToggleAll}>
-        <Text className="text-sm">
+      <HapticPressable
+        onPress={onToggleAll}
+        hapticType="selection"
+        className="p-1"
+      >
+        <Text variant="caption" className="text-sm text-muted-foreground">
           {allSelected ? 'Deselect all' : 'Select all'}
         </Text>
-      </Button>
+      </HapticPressable>
     </View>
   );
 };
