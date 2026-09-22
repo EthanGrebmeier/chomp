@@ -7,7 +7,7 @@ import {
 } from '../meal-plan-day-list';
 
 describe('meal plan day list', () => {
-  it('builds the inclusive prior-week and next-30-day window', () => {
+  it('builds the inclusive prior-5-day and next-30-day window', () => {
     const sections = buildMealPlanDayListSections({
       anchorDate: new Date(2026, 8, 7, 15),
       recipes: [],
@@ -17,7 +17,7 @@ describe('meal plan day list', () => {
     expect(sections).toHaveLength(
       MEAL_PLAN_DAY_LIST_PAST_DAYS + MEAL_PLAN_DAY_LIST_FUTURE_DAYS + 1
     );
-    expect(sections[0]?.dateKey).toBe('2026-08-31');
+    expect(sections[0]?.dateKey).toBe('2026-09-02');
     expect(sections.at(-1)?.dateKey).toBe('2026-10-07');
     expect(sections[MEAL_PLAN_DAY_LIST_PAST_DAYS]).toMatchObject({
       dateKey: '2026-09-07',
@@ -33,7 +33,7 @@ describe('meal plan day list', () => {
       items: [],
     });
 
-    expect(sections[0]?.dateKey).toBe('2026-12-03');
+    expect(sections[0]?.dateKey).toBe('2026-12-05');
     expect(sections.at(-1)?.dateKey).toBe('2027-01-09');
     expect(sections.filter(section => section.isToday)).toHaveLength(1);
   });

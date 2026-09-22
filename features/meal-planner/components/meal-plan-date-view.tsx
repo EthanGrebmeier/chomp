@@ -470,6 +470,7 @@ export const MealPlanDateView = ({
   const ingredientOverrideSheetRef =
     useRef<MealPlanIngredientOverrideSheetRef>(null);
   const dropProviderRef = useRef<DropProviderRef>(null);
+  const dayListRef = useRef<FlatList<DayListSection>>(null);
   const [quickReviewMealPlanRecipe, setQuickReviewMealPlanRecipe] =
     useState<MealPlanRecipeWithRecipe | null>(null);
   const [dragResetKey, setDragResetKey] = useState(0);
@@ -819,6 +820,10 @@ export const MealPlanDateView = ({
     [handleIndicatorPress]
   );
 
+  const todaySectionIndex = dayListSections.findIndex(
+    section => section.isToday
+  );
+
   const calendarEntries = createMealPlanDayEntries(recipes, items);
   const calendarGroups = groupEntriesByMealTime(calendarEntries);
 
@@ -844,11 +849,23 @@ export const MealPlanDateView = ({
         <DropProvider ref={dropProviderRef}>
           <ActiveDragSectionContext value={activeDragSectionIndex}>
             <FlatList
+              ref={dayListRef}
               data={dayListSections}
               keyExtractor={section => section.dateKey}
               contentContainerClassName="pb-20"
               initialNumToRender={8}
               windowSize={5}
+              initialScrollIndex={
+                todaySectionIndex > 0 ? todaySectionIndex : undefined
+              }
+              onScrollToIndexFailed={info => {
+                requestAnimationFrame(() => {
+                  dayListRef.current?.scrollToIndex({
+                    index: info.index,
+                    animated: false,
+                  });
+                });
+              }}
               CellRendererComponent={MealPlanDayCell}
               onLayout={refreshDragDropPositions}
               onContentSizeChange={refreshDragDropPositions}
