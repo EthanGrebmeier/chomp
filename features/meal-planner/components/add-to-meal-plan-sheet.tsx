@@ -1,12 +1,15 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { useImperativeHandle, useRef, useState } from 'react';
-import { TextInput, View, useWindowDimensions } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import PagerView from 'react-native-pager-view';
 import Animated, {
-  FadeIn,
-  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -14,6 +17,10 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 import { toast } from 'sonner-native';
 
+import {
+  slideInRight,
+  slideOutRight,
+} from '../../../components/animated/transitions';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
@@ -450,22 +457,51 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       }}
       footer={footer}
     >
-      <BottomSheet.Header
-        className="px-4"
-        title={selectedRecipe ? 'Choose ingredients' : undefined}
-        dismissButton={
-          selectedRecipe ? (
-            <BackButton onPress={handleBackToRecipes} />
-          ) : undefined
-        }
-      />
       <View className="min-h-0 flex-1">
+        {/* The select view stays mounted underneath so returning to it
+            reveals the already-rendered list instead of re-mounting it. */}
+        <View className="min-h-0 flex-1">
+          <ModeToggle mode={mode} onModeChange={handleModeChange} />
+          <PagerView
+            ref={pagerRef}
+            style={{ flex: 1 }}
+            initialPage={ADD_MODE_INDEX.recipe}
+            onPageSelected={handlePageSelected}
+          >
+            <View key="recipe" style={{ flex: 1 }}>
+              <RecipeSelector
+                listHeight={Math.max(240, windowHeight - 250)}
+                onSelectRecipe={handleSelectRecipe}
+                onCreateRecipe={handleCreateRecipe}
+              />
+            </View>
+            <View key="item" style={{ flex: 1 }} className="px-4">
+              <MealPlanItemForm
+                onSubmit={handleAddItem}
+                showMetaBar={false}
+                inputRef={itemInputRef}
+                keepKeyboardOnSubmit
+              />
+            </View>
+          </PagerView>
+        </View>
+        {/* The whole ingredient screen — its own header included — slides in
+            over the list and back out again, so nothing pops or reflows in
+            the header while the body moves. Staying opaque avoids the
+            cross-fade overlap flash between the two views. */}
         {selectedRecipe ? (
           <Animated.View
-            entering={FadeIn.duration(150)}
-            exiting={FadeOut.duration(150)}
-            className="min-h-0 flex-1"
+            key="ingredient-selector"
+            className="bg-background"
+            style={StyleSheet.absoluteFill}
+            entering={slideInRight()}
+            exiting={slideOutRight()}
           >
+            <BottomSheet.Header
+              className="px-4"
+              title="Choose ingredients"
+              dismissButton={<BackButton onPress={handleBackToRecipes} />}
+            />
             <IngredientSelector
               recipe={selectedRecipe}
               mode="meal-plan"
@@ -490,33 +526,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               }
             />
           </Animated.View>
-        ) : (
-          <>
-            <ModeToggle mode={mode} onModeChange={handleModeChange} />
-            <PagerView
-              ref={pagerRef}
-              style={{ flex: 1 }}
-              initialPage={ADD_MODE_INDEX.recipe}
-              onPageSelected={handlePageSelected}
-            >
-              <View key="recipe" style={{ flex: 1 }}>
-                <RecipeSelector
-                  listHeight={Math.max(240, windowHeight - 250)}
-                  onSelectRecipe={handleSelectRecipe}
-                  onCreateRecipe={handleCreateRecipe}
-                />
-              </View>
-              <View key="item" style={{ flex: 1 }} className="px-4">
-                <MealPlanItemForm
-                  onSubmit={handleAddItem}
-                  showMetaBar={false}
-                  inputRef={itemInputRef}
-                  keepKeyboardOnSubmit
-                />
-              </View>
-            </PagerView>
-          </>
-        )}
+        ) : null}
       </View>
       <MealPlanIngredientOverrideSheet
         ref={ingredientOverrideSheetRef}
