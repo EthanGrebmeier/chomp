@@ -1,7 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { format, parseISO, startOfDay } from 'date-fns';
 import { router } from 'expo-router';
-import { CalendarIcon } from 'lucide-react-native';
 import {
   forwardRef,
   useCallback,
@@ -11,20 +9,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import {
-  CalendarSheet,
-  CalendarSheetRef,
-} from '../../../components/calendar-sheet';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
-import { MetaBarLayout } from '../../../components/meta-bar-layout';
-import { Icon } from '../../../components/ui/icon';
-import { Pill } from '../../../components/ui/pill';
 import { navigation } from '../../../lib/navigation';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
@@ -44,8 +35,8 @@ import {
   MealPlanIngredientOverrideSheet,
   MealPlanIngredientOverrideSheetRef,
 } from './meal-plan-ingredient-override-sheet';
+import { MealScheduleSentence } from './meal-schedule-sentence';
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
-import { MealTimeSheet } from './meal-time-sheet';
 
 type EditMealSheetProps = {
   listId: string;
@@ -79,7 +70,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 
     const sheetRef = useRef<TrueSheet>(null);
     const changeRecipeSheetRef = useRef<TrueSheet>(null);
-    const calendarSheetRef = useRef<CalendarSheetRef>(null);
     const ingredientOverrideSheetRef =
       useRef<MealPlanIngredientOverrideSheetRef>(null);
     const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
@@ -198,7 +188,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       onDismissRef.current = undefined;
       router.dismissTo(navigation.goToCreateRecipeManual(listId, initialName));
       sheetRef.current?.dismiss();
-      calendarSheetRef.current?.dismiss();
       changeRecipeSheetRef.current?.dismiss();
     };
 
@@ -362,28 +351,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       }
     };
 
-    const footerContent = mealPlanRecipeToEdit ? (
-      <View className="pb-safe border-t border-border bg-background px-4 pt-3">
-        <MetaBarLayout>
-          <View className="flex-row items-center gap-2">
-            <Pressable onPress={() => calendarSheetRef.current?.present()}>
-              <Pill
-                hasValue={!!selectedDate}
-                icon={<Icon as={CalendarIcon} size={16} />}
-              >
-                {selectedDate
-                  ? startOfDay(
-                      parseISO(selectedDate + 'T00:00:00')
-                    ).toLocaleDateString()
-                  : 'Select Date'}
-              </Pill>
-            </Pressable>
-            <MealTimeSheet onSelect={setMealTag} mealTime={mealTag} />
-          </View>
-        </MetaBarLayout>
-      </View>
-    ) : undefined;
-
     const handleEditIngredient = (sourceRecipeIngredientId: string) => {
       const row = ingredientRows.find(
         ingredientRow =>
@@ -406,26 +373,11 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
             flushAutoSave();
           }}
           onDismiss={handleSheetDismiss}
-          footer={footerContent}
         >
           <BottomSheet.SheetView className="pb-safe flex-1">
-            <CalendarSheet
-              name="edit-meal-calendar-sheet"
-              ref={calendarSheetRef}
-              headerTitle="Choose a date"
-              selectedDate={
-                selectedDate
-                  ? startOfDay(parseISO(selectedDate + 'T00:00:00'))
-                  : undefined
-              }
-              onChange={date => {
-                setSelectedDate(format(date, 'yyyy-MM-dd'));
-              }}
-            />
             <View className="min-h-0 flex-1">
               <BottomSheet.Header
                 title="Edit meal"
-                description={selectedRecipe?.name}
                 className="mb-2"
                 button={
                   selectedRecipe ? (
@@ -437,7 +389,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                         onDismissRef.current = undefined;
                         router.push(navigation.goToRecipe(selectedRecipe.id));
                         sheetRef.current?.dismiss();
-                        calendarSheetRef.current?.dismiss();
                         changeRecipeSheetRef.current?.dismiss();
                       }}
                       onChangeRecipe={() => {
@@ -453,8 +404,17 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                     recipe={selectedRecipeWithIngredients}
                     mode="meal-plan"
                     mealPlanIngredients={mealPlanIngredients}
-                    bottomContentInset={132}
+                    bottomContentInset={24}
                     showHeader={false}
+                    recipeNameHeading
+                    scheduleControl={
+                      <MealScheduleSentence
+                        date={selectedDate}
+                        onDateChange={setSelectedDate}
+                        mealTag={mealTag}
+                        onMealTagChange={setMealTag}
+                      />
+                    }
                     showFooter={false}
                     onBack={() => {}}
                     onDismiss={() => sheetRef.current?.dismiss()}

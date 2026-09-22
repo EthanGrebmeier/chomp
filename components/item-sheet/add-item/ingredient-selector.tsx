@@ -145,6 +145,8 @@ type IngredientSelectorProps = {
   onEditIngredient?: (id: string) => void;
   showHeader?: boolean;
   bottomContentInset?: number;
+  recipeNameHeading?: boolean;
+  scheduleControl?: React.ReactNode;
 };
 
 export type IngredientSelectorRef = {
@@ -185,6 +187,8 @@ export const IngredientSelector = forwardRef<
     onEditIngredient,
     showHeader = true,
     bottomContentInset,
+    recipeNameHeading = false,
+    scheduleControl,
   }: IngredientSelectorProps,
   ref
 ) {
@@ -414,10 +418,20 @@ export const IngredientSelector = forwardRef<
           />
         ) : null}
 
+        {recipeNameHeading ? (
+          <View className="gap-2 px-4 pt-4">
+            <Text variant="h4" className="text-left">
+              {recipe.name}
+            </Text>
+            {scheduleControl}
+          </View>
+        ) : null}
+
         <View
           className={cn(
             'mb-2 flex-row items-center justify-between px-4',
-            !showHeader && 'pt-4'
+            !showHeader && !recipeNameHeading && 'pt-4',
+            recipeNameHeading && 'pt-4'
           )}
         >
           <View>
@@ -428,11 +442,15 @@ export const IngredientSelector = forwardRef<
               {effectiveSelectedIds.size} of {ingredients.length} selected
             </Text>
           </View>
-          <Button variant="outline" onPress={handleToggleAll}>
-            <Text className="text-sm ">
+          <HapticPressable
+            onPress={handleToggleAll}
+            hapticType="selection"
+            className="p-1"
+          >
+            <Text variant="caption" className="text-sm text-muted-foreground">
               {allSelected ? 'Deselect all' : 'Select all'}
             </Text>
-          </Button>
+          </HapticPressable>
         </View>
 
         <ScrollView

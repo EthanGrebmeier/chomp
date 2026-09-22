@@ -17,7 +17,6 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
-import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
@@ -37,7 +36,6 @@ import {
   toggleMealPlanIngredientSelection,
 } from '../meal-plan-recipe-ingredient-editor';
 
-import { DatePillSheet } from './date-pill-sheet';
 import {
   MealPlanIngredientOverrideSheet,
   MealPlanIngredientOverrideSheetRef,
@@ -48,7 +46,7 @@ import {
 } from './meal-plan-item-context';
 import { MealPlanItemForm } from './meal-plan-item-form';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
-import { MealTimeSheet } from './meal-time-sheet';
+import { MealScheduleSentence } from './meal-schedule-sentence';
 
 const ADD_MODES = ['recipe', 'item'] as const;
 const FOOTER_FADE_DURATION = 200;
@@ -397,13 +395,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     <View className="pb-safe px-4" collapsable={false}>
       {isRecipeFooterMounted ? (
         <Animated.View className="gap-4" style={recipeFooterAnimatedStyle}>
-          <ScrollingMetaBar>
-            <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
-            <MealTimeSheet
-              mealTime={recipeMealTag}
-              onSelect={setRecipeMealTag}
-            />
-          </ScrollingMetaBar>
           <Button
             size="lg"
             onPress={handleAddRecipe}
@@ -462,7 +453,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       <BottomSheet.Header
         className="px-4"
         title={selectedRecipe ? 'Choose ingredients' : undefined}
-        description={selectedRecipe?.name}
         dismissButton={
           selectedRecipe ? (
             <BackButton onPress={handleBackToRecipes} />
@@ -480,7 +470,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               recipe={selectedRecipe}
               mode="meal-plan"
               listId={listId}
-              bottomContentInset={180}
+              bottomContentInset={96}
               mealPlanIngredients={mealPlanIngredients}
               onBack={handleBackToRecipes}
               onDismiss={() => sheetRef.current?.dismiss()}
@@ -489,6 +479,15 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               selectedIds={selectedIngredientIds}
               onEditIngredient={handleEditIngredient}
               showHeader={false}
+              recipeNameHeading
+              scheduleControl={
+                <MealScheduleSentence
+                  date={recipeDate}
+                  onDateChange={setRecipeDate}
+                  mealTag={recipeMealTag}
+                  onMealTagChange={setRecipeMealTag}
+                />
+              }
             />
           </Animated.View>
         ) : (

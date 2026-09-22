@@ -8,7 +8,7 @@ import {
   LucideIcon,
   SandwichIcon,
 } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { View } from 'react-native';
 
 import { WithLayoutTransition } from '../../../components/animated/with-layout-transition';
@@ -70,14 +70,18 @@ type MealTimeSheetProps = {
   onSelect: (mealTime?: string) => void;
   canGoBack?: boolean;
   disabled?: boolean;
+  hideTrigger?: boolean;
 };
 
-export const MealTimeSheet = ({
-  mealTime,
-  onSelect,
-  canGoBack = true,
-  disabled = false,
-}: MealTimeSheetProps) => {
+export type MealTimeSheetRef = {
+  present: () => void;
+};
+
+export const MealTimeSheet = forwardRef<MealTimeSheetRef, MealTimeSheetProps>(
+  function MealTimeSheet(
+    { mealTime, onSelect, canGoBack = true, disabled = false, hideTrigger = false },
+    ref
+  ) {
   const sheetRef = useRef<TrueSheet>(null);
   const [localMealTime, setLocalMealTime] = useState<string | undefined>(
     mealTime
@@ -91,6 +95,10 @@ export const MealTimeSheet = ({
     sheetRef.current?.present();
   };
 
+  useImperativeHandle(ref, () => ({
+    present: openSheet,
+  }));
+
   const handleConfirm = () => {
     onSelect(localMealTime);
     sheetRef.current?.dismiss();
@@ -98,6 +106,7 @@ export const MealTimeSheet = ({
 
   return (
     <>
+      {!hideTrigger ? (
       <WithLayoutTransition>
         <HapticPressable
           onPress={openSheet}
@@ -124,6 +133,7 @@ export const MealTimeSheet = ({
           </Pill>
         </HapticPressable>
       </WithLayoutTransition>
+      ) : null}
 
       <BottomSheet detents={['auto']} ref={sheetRef} name="meal-time-sheet">
         <BottomSheet.Header
@@ -155,4 +165,4 @@ export const MealTimeSheet = ({
       </BottomSheet>
     </>
   );
-};
+});
