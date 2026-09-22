@@ -104,7 +104,7 @@ const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
       <HapticPressable
         onPress={() => onModeChange('recipe')}
         className={cn(
-          'rounded-full px-4 py-2',
+          'rounded-full px-3 py-1',
           mode === 'recipe' ? 'bg-primary' : 'bg-muted'
         )}
         hapticType="light"
@@ -123,7 +123,7 @@ const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
       <HapticPressable
         onPress={() => onModeChange('item')}
         className={cn(
-          'rounded-full px-4 py-2',
+          'rounded-full px-3 py-1',
           mode === 'item' ? 'bg-primary' : 'bg-muted'
         )}
         hapticType="light"

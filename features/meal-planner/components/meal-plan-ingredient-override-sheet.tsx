@@ -83,11 +83,7 @@ const EditMealIngredientSheetContents = ({
       }
     >
       <BottomSheet.SheetView>
-        <BottomSheet.Header
-          title="Adjust ingredient"
-          description={editingRow?.name}
-          className="mb-4"
-        />
+        <BottomSheet.Header title="Adjust ingredient" className="mb-4" />
         <ItemForm />
       </BottomSheet.SheetView>
     </BottomSheet>

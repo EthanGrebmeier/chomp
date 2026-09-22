@@ -125,12 +125,6 @@ export const RecipeSelector = ({
         sortBy={sortBy}
         onSortByChange={setSortBy}
       />
-      <View className="px-4 pb-2">
-        <Text className="text-sm text-muted-foreground">
-          {filteredRecipes.length} recipe
-          {filteredRecipes.length === 1 ? '' : 's'}
-        </Text>
-      </View>
       {filteredRecipes.length === 0 ? (
         <Animated.View
           key="no-results"
