@@ -181,6 +181,22 @@ describe('addGroceryListItem', () => {
     localPersistence.resolve();
   });
 
+  it('skips local saved-item persistence when persistLocalSavedItem is false', () => {
+    transactMock.mockReturnValue(Promise.resolve());
+
+    addGroceryListItem({
+      listId: 'list-1',
+      item: {
+        name: 'Bananas',
+        quantity: 6,
+        unit: 'each',
+      },
+      persistLocalSavedItem: false,
+    });
+
+    expect(upsertLocalSavedItemMock).not.toHaveBeenCalled();
+  });
+
   it('reports local saved-item persistence failures independently', async () => {
     transactMock.mockReturnValue(Promise.resolve());
     upsertLocalSavedItemMock.mockRejectedValue(new Error('SQLite is locked'));

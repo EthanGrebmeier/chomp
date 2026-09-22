@@ -16,6 +16,7 @@ import {
   GroceryListItemWithRecipe,
 } from '../../features/grocery-list/types';
 import { Recipe } from '../../features/recipes/types';
+import { useSaveItemPreference } from '../../features/saved-items/hooks/use-save-item-preference';
 
 import { MatchingItem } from './use-matching-items';
 
@@ -60,6 +61,8 @@ const itemSheetContext = createContext<{
   isValid: boolean;
   disableAutocomplete: boolean;
   mode: ItemSheetMode;
+  saveItem: boolean;
+  setSaveItem: (saveItem: boolean) => void;
 } | null>(null);
 
 const TEXT_COMMIT_DEBOUNCE_MS = 150;
@@ -90,6 +93,7 @@ type ItemSheetProviderProps = {
     selectedCloudSavedItemId?: string;
     selectedCloudSavedItemStoreId?: string;
     selectedLocalSavedItemId?: string;
+    saveItem?: boolean;
   }) => void | boolean | Promise<void | boolean>;
   setFromItemRef?: React.RefObject<
     ((item: GroceryListItemWithRecipe | BaseGroceryItem) => void) | null
@@ -154,6 +158,7 @@ export const ItemSheetProvider = ({
   const notesInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { saveItem, setSaveItem } = useSaveItemPreference();
   const commitItemInputValue = useDebounceCallback(
     setItemInputValue,
     TEXT_COMMIT_DEBOUNCE_MS
@@ -286,6 +291,7 @@ export const ItemSheetProvider = ({
           selectedCloudSavedItemId,
           selectedCloudSavedItemStoreId,
           selectedLocalSavedItemId,
+          saveItem,
         })
       )
       .catch(() => false);
@@ -385,6 +391,8 @@ export const ItemSheetProvider = ({
         ),
         disableAutocomplete,
         mode,
+        saveItem,
+        setSaveItem,
       }}
     >
       {children}

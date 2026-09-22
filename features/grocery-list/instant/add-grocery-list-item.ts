@@ -13,12 +13,20 @@ export const addGroceryListItem = ({
   savedItemId,
   selectedCloudSavedItemStoreId,
   selectedLocalSavedItemId,
+  persistLocalSavedItem = true,
 }: {
   listId: string;
   item: BaseGroceryItem;
   savedItemId?: string;
   selectedCloudSavedItemStoreId?: string;
   selectedLocalSavedItemId?: string;
+  /**
+   * Whether to upsert a local saved-item history row for this add. Defaults
+   * to `true` for quick-add flows. The add item sheet passes `false` because
+   * its "Save item" toggle controls persistence explicitly (cloud-only when
+   * on, nothing when off).
+   */
+  persistLocalSavedItem?: boolean;
 }) => {
   const itemId = id();
   const now = new Date().toISOString();
@@ -96,7 +104,7 @@ export const addGroceryListItem = ({
 
   const transactionPromise = db.transact(transactions);
 
-  if (!savedItemId) {
+  if (!savedItemId && persistLocalSavedItem) {
     void upsertLocalSavedItem({
       item,
       selectedLocalSavedItemId,

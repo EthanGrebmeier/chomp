@@ -12,6 +12,11 @@ export type MatchingItem = BaseGroceryItem & {
    * Shared default local matches do not carry an ownerId.
    */
   ownerId?: string;
+  /**
+   * Whether a local match is part of the shared seeded grocery catalog. These
+   * rows are read-only, so they cannot be synced or deleted in place.
+   */
+  isDefault?: boolean;
 };
 
 export const useMatchingItems = (
@@ -57,6 +62,7 @@ export const useMatchingItems = (
           cloudSavedItemId: item.source === 'cloud' ? item.id : undefined,
           localSavedItemId: item.source === 'local' ? item.id : undefined,
           ownerId: item.ownerId,
+          isDefault: item.isDefault,
         })
       );
   }, [savedItems, value]);

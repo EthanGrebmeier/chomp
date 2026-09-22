@@ -26,6 +26,8 @@ import {
   addRecipeToList,
 } from '../../../features/recipes/instant/add-recipe-to-list';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
+import { addSavedItemIfNotExists } from '../../../features/saved-items/instant/add-saved-item-if-not-exists';
+import { upsertLocalSavedItem } from '../../../features/saved-items/local/upsert-local-saved-item';
 import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
 import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
@@ -555,12 +557,14 @@ const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
     selectedCloudSavedItemId,
     selectedCloudSavedItemStoreId,
     selectedLocalSavedItemId,
+    saveItem,
   }: {
     item: BaseGroceryItem;
     listId?: string;
     selectedCloudSavedItemId?: string;
     selectedCloudSavedItemStoreId?: string;
     selectedLocalSavedItemId?: string;
+    saveItem?: boolean;
   }) => {
     if (!listId) {
       toast.error('Grocery list unavailable. Please try again.');
@@ -568,16 +572,48 @@ const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
     }
 
     try {
+      // Saved-item persistence is driven solely by the toggle and only runs
+      // here, on Add. When on, a linked cloud item is synced (and linked)
+      // inside addGroceryListItem; local/new items are handled below. When
+      // off, nothing is written to saved items.
       const transactionPromise = addGroceryListItem({
         listId,
         item,
-        savedItemId: selectedCloudSavedItemId,
+        savedItemId: saveItem ? selectedCloudSavedItemId : undefined,
         selectedCloudSavedItemStoreId,
-        selectedLocalSavedItemId,
+        persistLocalSavedItem: false,
       });
       void transactionPromise.catch(() => {
         toast.error('Failed to add item');
       });
+
+      if (saveItem && !selectedCloudSavedItemId) {
+        if (selectedLocalSavedItemId) {
+          // Sync edits back to the linked local saved item (defaults are
+          // promoted to an owned copy by upsertLocalSavedItem).
+          void upsertLocalSavedItem({
+            item: {
+              name: item.name,
+              category: item.category,
+              notes: item.notes,
+              storeId: item.storeId,
+            },
+            selectedLocalSavedItemId,
+          }).catch(() => {
+            toast.error('Item added, but changes could not be synced');
+          });
+        } else {
+          // Save a brand new item to the user's cloud saved items.
+          void addSavedItemIfNotExists({
+            name: item.name,
+            category: item.category,
+            notes: item.notes,
+            storeId: item.storeId,
+          }).catch(() => {
+            toast.error('Item added, but could not be saved to your items');
+          });
+        }
+      }
       setIsItemAdded(true);
       return true;
     } catch {
