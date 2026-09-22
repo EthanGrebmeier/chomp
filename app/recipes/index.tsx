@@ -8,7 +8,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useDebounceCallback } from 'usehooks-ts';
 
-import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { RecipeFilters } from '@/features/recipes/components/recipe-filters';
 import { RecipeList } from '@/features/recipes/components/recipe-list';
@@ -114,14 +113,6 @@ export default function Recipes() {
           </View>
         </Animated.View>
       )}
-      <View className="px-4">
-        <Text variant="caption" tabularNumbers>
-          {filteredRecipes.length} recipe
-          {filteredRecipes.length !== 1 ? 's' : ''}
-          {searchQuery.trim() && ` matching "${searchQuery.trim()}"`}
-          {mealTag && !searchQuery.trim() && ` in ${mealTag}`}
-        </Text>
-      </View>
       <View className="flex-1">
         {isLoading ? (
           <Animated.View

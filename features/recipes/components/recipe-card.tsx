@@ -68,7 +68,7 @@ export const RecipeCardContent = ({
 export const RecipeCard = ({ recipe, className, listId }: RecipeCardProps) => {
   return (
     <HapticPressable
-      className="w-full py-1"
+      className="w-full "
       hapticType="selection"
       onPress={() => router.push(navigation.goToRecipe(recipe.id, listId))}
     >

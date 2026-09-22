@@ -6,7 +6,6 @@ import {
   ContextMenuRoot,
 } from '../../../components/ui/context-menu';
 import { ListItem } from '../../../components/ui/list-item';
-import { cn } from '../../../lib/utils';
 import { useDeleteRecipe } from '../hooks';
 import { RecipeWithIngredients } from '../types';
 
@@ -54,14 +53,7 @@ export const RecipeList = ({ recipes, listId }: RecipeListProps) => {
       renderItem={({ item, index }) => (
         <ContextMenuRoot
           trigger={
-            <ListItem
-              className={cn(
-                index !== (recipes.length ?? 0) - 1
-                  ? 'border-b border-dashed border-border'
-                  : ''
-              )}
-              onDelete={() => handleDelete(item.id)}
-            >
+            <ListItem onDelete={() => handleDelete(item.id)}>
               <RecipeCard className="w-full" recipe={item} listId={listId} />
             </ListItem>
           }
