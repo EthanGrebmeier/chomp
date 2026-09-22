@@ -1,9 +1,7 @@
 import { useRecyclingState } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
 import { memo, useCallback, useEffect, useRef } from 'react';
-import { Platform, Pressable, View, type TextLayoutEvent } from 'react-native';
-import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { Platform, View, type TextLayoutEvent } from 'react-native';
 import Animated, {
   SharedValue,
   useAnimatedStyle,
@@ -19,6 +17,10 @@ import { StoreTag } from '../../../components/store-tag';
 import { Checkbox } from '../../../components/ui/checkbox';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
+import {
+  SwipeToDelete,
+  type SwipeToDeleteHandle,
+} from '../../../components/ui/swipe-to-delete';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import { cn } from '../../../lib/utils';
@@ -39,13 +41,7 @@ type GroceryListItemProps = {
   onEnterBulkSelectionModeWithItem?: (itemId: string) => void;
 };
 
-const SWIPE_ACTION_WIDTH = 88;
 const LONG_PRESS_SUPPRESSION_MS = 750;
-
-type SwipeDeleteActionProps = {
-  drag: SharedValue<number>;
-  onPress: () => void;
-};
 
 type StrikethroughLineMetrics = {
   height: number;
@@ -97,23 +93,6 @@ const StrikethroughLine = ({
   );
 };
 
-const SwipeDeleteAction = ({ drag, onPress }: SwipeDeleteActionProps) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: drag.value + SWIPE_ACTION_WIDTH }],
-  }));
-
-  return (
-    <Animated.View style={[animatedStyle, { width: SWIPE_ACTION_WIDTH }]}>
-      <Pressable
-        className="h-full items-center justify-center bg-destructive"
-        onPress={onPress}
-      >
-        <Text className="text-sm font-semibold text-foreground">Delete</Text>
-      </Pressable>
-    </Animated.View>
-  );
-};
-
 const GroceryListItemComponent = ({
   item,
   categoryOptions,
@@ -130,7 +109,7 @@ const GroceryListItemComponent = ({
   >([], [item.id]);
   const notes = item.notes?.trim();
   const hasMountedRef = useRef(false);
-  const swipeableRef = useRef<SwipeableMethods | null>(null);
+  const swipeableRef = useRef<SwipeToDeleteHandle | null>(null);
   const lastLongPressAtRef = useRef(0);
 
   const theme = useTheme();
@@ -236,16 +215,8 @@ const GroceryListItemComponent = ({
     : isChecked;
 
   const handleSwipeDeletePress = useCallback(() => {
-    swipeableRef.current?.close();
     removeGroceryListItem({ itemId: item.id });
   }, [item.id]);
-
-  const renderRightActions = useCallback(
-    (_: SharedValue<number>, drag: SharedValue<number>) => (
-      <SwipeDeleteAction drag={drag} onPress={handleSwipeDeletePress} />
-    ),
-    [handleSwipeDeletePress]
-  );
 
   const itemContent = (
     <ListItem className={className}>
@@ -321,16 +292,9 @@ const GroceryListItemComponent = ({
   }
 
   return (
-    <ReanimatedSwipeable
-      ref={swipeableRef}
-      enableTrackpadTwoFingerGesture
-      friction={2}
-      rightThreshold={40}
-      overshootRight={false}
-      renderRightActions={renderRightActions}
-    >
+    <SwipeToDelete ref={swipeableRef} onDelete={handleSwipeDeletePress}>
       {itemContent}
-    </ReanimatedSwipeable>
+    </SwipeToDelete>
   );
 };
 
