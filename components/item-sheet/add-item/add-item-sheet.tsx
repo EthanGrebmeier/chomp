@@ -2,7 +2,7 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Animated, {
   FadeIn,
@@ -31,10 +31,9 @@ import { upsertLocalSavedItem } from '../../../features/saved-items/local/upsert
 import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
 import { navigation } from '../../../lib/navigation';
 import { cn } from '../../../lib/utils';
+import { slideInRight, slideOutRight } from '../../animated/transitions';
 import { BottomSheet } from '../../bottom-sheet';
-import { BackButton } from '../../ui/back-button';
 import { Button } from '../../ui/button';
-import { ExternalLinkButton } from '../../ui/external-link-button';
 import { HapticPressable } from '../../ui/haptic-pressable';
 import { Icon } from '../../ui/icon';
 import { Text } from '../../ui/text';
@@ -42,10 +41,7 @@ import { ItemForm } from '../item-form';
 import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 
-import {
-  IngredientSelector,
-  IngredientSelectorRef,
-} from './ingredient-selector';
+import { IngredientSelector } from './ingredient-selector';
 import { RecipeSelector } from './recipe-selector';
 
 const ADD_MODES = ['item', 'recipe', 'recent'] as const;
@@ -169,7 +165,6 @@ const AddItemSheet = ({
     RecipeIngredientInput[] | null
   >(null);
   const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
-  const ingredientSelectorRef = useRef<IngredientSelectorRef>(null);
 
   useEffect(() => {
     triggerOpacity.set(
@@ -450,33 +445,48 @@ const AddItemSheet = ({
           </View>
         }
       >
-        <BottomSheet.Header
-          className="px-4"
-          title={selectedRecipe ? 'Choose ingredients' : undefined}
-          description={selectedRecipe?.name}
-          dismissButton={
-            selectedRecipe ? <BackButton onPress={handleBackToRecipes} /> : null
-          }
-          button={
-            selectedRecipe ? (
-              <ExternalLinkButton
-                onPress={() =>
-                  ingredientSelectorRef.current?.openRecipeDetails()
-                }
-              />
-            ) : null
-          }
-        />
         <View className="flex-1">
+          {/* The select view stays mounted underneath so returning to it
+              reveals the already-rendered list instead of re-mounting it. */}
+          <View className="flex-1">
+            <ModeToggle mode={mode} onModeChange={handleModeChange} />
+            <PagerView
+              ref={pagerRef}
+              style={{ flex: 1 }}
+              initialPage={ADD_MODE_INDEX[mode]}
+              onPageSelected={handlePageSelected}
+            >
+              <View key="item" className="flex-1 px-4">
+                <ItemForm />
+              </View>
+              <View key="recipe" className="flex-1">
+                <RecipeSelector
+                  listHeight={Math.max(240, windowHeight - 250)}
+                  onSelectRecipe={handleRecipeSelect}
+                  onCreateRecipe={handleCreateRecipe}
+                />
+              </View>
+              <View key="recent" className="flex-1">
+                <FrequentItemsScreen
+                  listHeight={Math.max(320, windowHeight - 180)}
+                  listId={groceryListId}
+                />
+              </View>
+            </PagerView>
+          </View>
+          {/* The whole ingredient screen — its own header included — slides in
+              over the list and back out again, so nothing pops or reflows in
+              the header while the body moves. Staying opaque avoids the
+              cross-fade overlap flash between the two views. */}
           {selectedRecipe ? (
             <Animated.View
               key="ingredient-selector"
-              className="flex-1"
-              entering={FadeIn.duration(300)}
-              exiting={FadeOut.duration(300)}
+              className="bg-background"
+              style={StyleSheet.absoluteFill}
+              entering={slideInRight()}
+              exiting={slideOutRight()}
             >
               <IngredientSelector
-                ref={ingredientSelectorRef}
                 recipe={selectedRecipe}
                 onBack={handleBackToRecipes}
                 onDismiss={() => ref.current?.dismiss()}
@@ -485,42 +495,10 @@ const AddItemSheet = ({
                 onToggleIngredient={toggleIngredient}
                 onToggleAll={toggleAllIngredients}
                 showFooter={false}
-                showHeader={false}
+                showHeader
               />
             </Animated.View>
-          ) : (
-            <>
-              <Animated.View
-                entering={FadeIn.duration(300)}
-                exiting={FadeOut.duration(300)}
-              >
-                <ModeToggle mode={mode} onModeChange={handleModeChange} />
-              </Animated.View>
-              <PagerView
-                ref={pagerRef}
-                style={{ flex: 1 }}
-                initialPage={ADD_MODE_INDEX[mode]}
-                onPageSelected={handlePageSelected}
-              >
-                <View key="item" className="flex-1 px-4">
-                  <ItemForm />
-                </View>
-                <View key="recipe" className="flex-1">
-                  <RecipeSelector
-                    listHeight={Math.max(240, windowHeight - 250)}
-                    onSelectRecipe={handleRecipeSelect}
-                    onCreateRecipe={handleCreateRecipe}
-                  />
-                </View>
-                <View key="recent" className="flex-1">
-                  <FrequentItemsScreen
-                    listHeight={Math.max(320, windowHeight - 180)}
-                    listId={groceryListId}
-                  />
-                </View>
-              </PagerView>
-            </>
-          )}
+          ) : null}
         </View>
       </BottomSheet>
       <RecipeConflictSheet

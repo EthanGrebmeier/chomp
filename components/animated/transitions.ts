@@ -2,6 +2,7 @@ import {
   Easing,
   EntryAnimationsValues,
   EntryExitAnimationFunction,
+  ExitAnimationsValues,
   FadeIn,
   FadeOut,
   LinearTransition,
@@ -45,6 +46,53 @@ export const fadeInUp =
       animations: {
         opacity: withDelay(delay, withTiming(1, timing)),
         transform: [{ translateY: withDelay(delay, withTiming(0, timing)) }],
+      },
+    };
+  };
+
+/**
+ * Slides a panel in from the right edge, covering whatever is beneath it.
+ * Use for push-style navigation where the incoming content should stay opaque
+ * (no cross-fade overlap). Distance is the panel's own width.
+ */
+export const slideInRight =
+  (): EntryExitAnimationFunction =>
+  (values: EntryAnimationsValues) => {
+    'worklet';
+    return {
+      initialValues: { transform: [{ translateX: values.targetWidth }] },
+      animations: {
+        transform: [
+          {
+            translateX: withTiming(0, {
+              duration: ENTER_MS,
+              easing: EASE_OUT,
+            }),
+          },
+        ],
+      },
+    };
+  };
+
+/**
+ * Slides a panel back out to the right edge, revealing whatever is beneath it.
+ * Pairs with `slideInRight` for the reverse (back) direction.
+ */
+export const slideOutRight =
+  (): EntryExitAnimationFunction =>
+  (values: ExitAnimationsValues) => {
+    'worklet';
+    return {
+      initialValues: { transform: [{ translateX: 0 }] },
+      animations: {
+        transform: [
+          {
+            translateX: withTiming(values.currentWidth, {
+              duration: EXIT_MS,
+              easing: EASE_OUT,
+            }),
+          },
+        ],
       },
     };
   };
