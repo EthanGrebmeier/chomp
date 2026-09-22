@@ -15,6 +15,7 @@ import {
   FlatList,
   StyleSheet,
   View,
+  type LayoutChangeEvent,
   type ViewProps,
 } from 'react-native';
 import Animated, {
@@ -130,9 +131,18 @@ const DROP_HIGHLIGHT_ENTER_MS = 60;
 const DROP_HIGHLIGHT_EXIT_DELAY_MS = 50;
 const DROP_HIGHLIGHT_EXIT_MS = 100;
 
+// Days rendered below the fold on first paint, in addition to the past days.
+const DAY_LIST_INITIAL_FUTURE_DAYS_TO_RENDER = 8;
+
 const ActiveDragSectionContext = createContext<SharedValue<
   number | null
 > | null>(null);
+
+// Reports each cell's layout (relative to the list content) so the list can
+// scroll to today using measured positions instead of estimates.
+const DayCellLayoutContext = createContext<
+  ((index: number, event: LayoutChangeEvent) => void) | null
+>(null);
 
 type MealPlanDayCellProps = ViewProps & {
   index: number;
@@ -142,15 +152,26 @@ const MealPlanDayCell = ({
   index,
   style,
   children,
+  onLayout,
   ...props
 }: MealPlanDayCellProps) => {
   const activeSectionIndex = use(ActiveDragSectionContext);
+  const onDayCellLayout = use(DayCellLayoutContext);
   const activeCellStyle = useAnimatedStyle(() => ({
     zIndex: activeSectionIndex?.get() === index ? 100 : 0,
   }));
 
+  const handleLayout = (event: LayoutChangeEvent) => {
+    onLayout?.(event);
+    onDayCellLayout?.(index, event);
+  };
+
   return (
-    <Animated.View {...props} style={[style, activeCellStyle]}>
+    <Animated.View
+      {...props}
+      onLayout={handleLayout}
+      style={[style, activeCellStyle]}
+    >
       {children}
     </Animated.View>
   );
@@ -824,6 +845,21 @@ export const MealPlanDateView = ({
     section => section.isToday
   );
 
+  // Deliberately not using FlatList's `initialScrollIndex`: it skips rendering
+  // every row above that index (the past days) and mounts them only after the
+  // first scroll, so they visibly pop in. Instead, the past days render up
+  // front and we scroll to today once its real position is measured.
+  const hasScrolledToTodayRef = useRef(false);
+  const handleDayCellLayout = (index: number, event: LayoutChangeEvent) => {
+    if (hasScrolledToTodayRef.current || index !== todaySectionIndex) return;
+    hasScrolledToTodayRef.current = true;
+    if (index <= 0) return;
+    dayListRef.current?.scrollToOffset({
+      offset: event.nativeEvent.layout.y,
+      animated: false,
+    });
+  };
+
   const calendarEntries = createMealPlanDayEntries(recipes, items);
   const calendarGroups = groupEntriesByMealTime(calendarEntries);
 
@@ -848,42 +884,36 @@ export const MealPlanDateView = ({
       {mode === 'day-list' ? (
         <DropProvider ref={dropProviderRef}>
           <ActiveDragSectionContext value={activeDragSectionIndex}>
-            <FlatList
-              ref={dayListRef}
-              data={dayListSections}
-              keyExtractor={section => section.dateKey}
-              contentContainerClassName="pb-20"
-              initialNumToRender={8}
-              windowSize={5}
-              initialScrollIndex={
-                todaySectionIndex > 0 ? todaySectionIndex : undefined
-              }
-              onScrollToIndexFailed={info => {
-                requestAnimationFrame(() => {
-                  dayListRef.current?.scrollToIndex({
-                    index: info.index,
-                    animated: false,
-                  });
-                });
-              }}
-              CellRendererComponent={MealPlanDayCell}
-              onLayout={refreshDragDropPositions}
-              onContentSizeChange={refreshDragDropPositions}
-              onMomentumScrollEnd={refreshDragDropPositions}
-              onScrollEndDrag={refreshDragDropPositions}
-              renderItem={({ item: section }) => (
-                <MealPlanDayListSectionView
-                  section={section}
-                  onDayPress={onDayPress}
-                  onMealPress={onMealPress}
-                  onItemPress={onItemPress}
-                  onRecipeIndicatorPress={handleRecipeIndicatorPress}
-                  onItemIndicatorPress={handleItemIndicatorPress}
-                  onEntryDrop={handleEntryDrop}
-                  dragConfig={dragConfig}
-                />
-              )}
-            />
+            <DayCellLayoutContext value={handleDayCellLayout}>
+              <FlatList
+                ref={dayListRef}
+                data={dayListSections}
+                keyExtractor={section => section.dateKey}
+                contentContainerClassName="pb-20"
+                initialNumToRender={
+                  Math.max(todaySectionIndex, 0) +
+                  DAY_LIST_INITIAL_FUTURE_DAYS_TO_RENDER
+                }
+                windowSize={5}
+                CellRendererComponent={MealPlanDayCell}
+                onLayout={refreshDragDropPositions}
+                onContentSizeChange={refreshDragDropPositions}
+                onMomentumScrollEnd={refreshDragDropPositions}
+                onScrollEndDrag={refreshDragDropPositions}
+                renderItem={({ item: section }) => (
+                  <MealPlanDayListSectionView
+                    section={section}
+                    onDayPress={onDayPress}
+                    onMealPress={onMealPress}
+                    onItemPress={onItemPress}
+                    onRecipeIndicatorPress={handleRecipeIndicatorPress}
+                    onItemIndicatorPress={handleItemIndicatorPress}
+                    onEntryDrop={handleEntryDrop}
+                    dragConfig={dragConfig}
+                  />
+                )}
+              />
+            </DayCellLayoutContext>
           </ActiveDragSectionContext>
         </DropProvider>
       ) : (
