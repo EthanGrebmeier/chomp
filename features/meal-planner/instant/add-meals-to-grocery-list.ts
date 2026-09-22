@@ -1,4 +1,4 @@
-import { tx } from '@instantdb/react-native';
+import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
@@ -7,8 +7,54 @@ import {
   StackableIngredientInput,
 } from '../../recipes/instant/stack-recipe-ingredients';
 
-import { getReconciledMealPlanSnapshotRows } from './get-reconciled-meal-plan-snapshot-rows';
+import { isMealPlanEntryAddable } from '../utils/meal-plan-addable-window';
+
 import { projectMealPlanRecipeToListInputs } from './meal-plan-to-list-projection';
+import {
+  planMealPlanSnapshotReconciliation,
+  SnapshotRowToCreate,
+} from './plan-meal-plan-snapshot-reconciliation';
+
+type TransactionChunk = Extract<
+  Parameters<typeof db.transact>[0],
+  unknown[]
+>[number];
+
+const buildSnapshotReconciliationTransactions = (
+  mealPlanRecipeId: string,
+  { rowsToCreate, rowIdsToDelete }: ReturnType<typeof planMealPlanSnapshotReconciliation>
+): TransactionChunk[] => {
+  const transactions: TransactionChunk[] = [];
+
+  for (const rowId of rowIdsToDelete) {
+    transactions.push(
+      tx.meal_plan_recipe_ingredient_snapshots[rowId].delete()
+    );
+  }
+
+  for (const row of rowsToCreate) {
+    const snapshotId = id();
+    const { storeId, ...fields }: SnapshotRowToCreate = row;
+    transactions.push(
+      tx.meal_plan_recipe_ingredient_snapshots[snapshotId].update(
+        trimStringFields(fields)
+      ),
+      tx.meal_plan_recipe_ingredient_snapshots[snapshotId].link({
+        meal_plan_recipe: mealPlanRecipeId,
+      })
+    );
+
+    if (storeId) {
+      transactions.push(
+        tx.meal_plan_recipe_ingredient_snapshots[snapshotId].link({
+          store: storeId,
+        })
+      );
+    }
+  }
+
+  return transactions;
+};
 
 export type AddMealsToGroceryListArgs = {
   listId: string;
@@ -44,6 +90,9 @@ export const addMealsToGroceryList = async ({
           },
           user: {},
         },
+        ingredient_snapshots: {
+          store: {},
+        },
       },
       meal_plan_items: {
         store: {},
@@ -63,9 +112,12 @@ export const addMealsToGroceryList = async ({
   const updateTransactions: Parameters<typeof db.transact>[0] = [];
   const ingredientsToAdd: StackableIngredientInput[] = [];
 
-  // Filter for recipes that haven't been added to a list yet
+  // Filter for recipes that haven't been added to a list yet. Stale meals more
+  // than a few days old are disregarded so they can't be pushed to the list.
   const allUnaddedRecipes =
-    mealPlanData?.meal_plan_recipes?.filter(mpr => !mpr.addedToList) || [];
+    mealPlanData?.meal_plan_recipes?.filter(
+      mpr => !mpr.addedToList && isMealPlanEntryAddable(mpr.date)
+    ) || [];
 
   // Split into selected (add ingredients) and skipped (mark added only)
   const unaddedRecipes = selectedRecipeIds
@@ -95,17 +147,30 @@ export const addMealsToGroceryList = async ({
     if (!recipe) continue;
 
     const sourceIngredients = recipe.recipe_ingredients || [];
-    const projectionRows = await getReconciledMealPlanSnapshotRows(
-      mealPlanRecipe.id
-    );
+    const snapshotRows = mealPlanRecipe.ingredient_snapshots ?? [];
 
+    // Projection already falls back to source-ingredient defaults for any source
+    // ingredient missing a snapshot row and ignores orphaned rows, so the raw
+    // snapshot rows produce the same output as freshly reconciled rows.
     ingredientsToAdd.push(
       ...projectMealPlanRecipeToListInputs({
         recipeId: recipe.id,
         servings: mealPlanRecipe.servings || 1,
         sourceIngredients,
-        snapshotRows: projectionRows,
+        snapshotRows,
       })
+    );
+
+    // Keep the snapshot table consistent (legacy backfill + reconciliation)
+    // using in-memory data, batched into the single transaction below.
+    updateTransactions.push(
+      ...buildSnapshotReconciliationTransactions(
+        mealPlanRecipe.id,
+        planMealPlanSnapshotReconciliation({
+          sourceIngredients,
+          existingSnapshotRows: snapshotRows,
+        })
+      )
     );
 
     // Mark the meal plan recipe as added to list
@@ -128,9 +193,12 @@ export const addMealsToGroceryList = async ({
     }
   }
 
-  // Filter for items that haven't been added to a list yet
+  // Filter for items that haven't been added to a list yet. Stale meals more
+  // than a few days old are disregarded so they can't be pushed to the list.
   const allUnaddedItems =
-    mealPlanData?.meal_plan_items?.filter(mpi => !mpi.addedToList) || [];
+    mealPlanData?.meal_plan_items?.filter(
+      mpi => !mpi.addedToList && isMealPlanEntryAddable(mpi.date)
+    ) || [];
 
   // Split into selected (add to list) and skipped (mark added only)
   const unaddedItems = selectedItemIds

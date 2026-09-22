@@ -23,6 +23,7 @@ import {
   MealPlanRecipeWithRecipe,
   MealPlanViewMode,
 } from '../types';
+import { isMealPlanEntryAddable } from '../utils/meal-plan-addable-window';
 import {
   buildMealPlanDayListSections,
   MEAL_PLAN_DAY_LIST_PAST_DAYS,
@@ -90,8 +91,11 @@ export const MealPlanner = ({
   const { mutateAsync: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
   const { mutateAsync: updateMealPlanItem } = useUpdateMealPlanItem();
   const unaddedCount =
-    recipes.filter(recipe => !recipe.addedToList).length +
-    items.filter(item => !item.addedToList).length;
+    recipes.filter(
+      recipe => !recipe.addedToList && isMealPlanEntryAddable(recipe.date)
+    ).length +
+    items.filter(item => !item.addedToList && isMealPlanEntryAddable(item.date))
+      .length;
 
   const { recipesByDate, itemsByDate, datesWithMeals, datesAllMealsAdded } =
     useMemo(() => {

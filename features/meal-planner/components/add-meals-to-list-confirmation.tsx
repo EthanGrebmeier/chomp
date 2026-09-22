@@ -30,6 +30,7 @@ import {
   MealTag,
 } from '../types';
 import { getAddMealsToListSelection } from '../utils/add-meals-to-list-selection';
+import { isMealPlanEntryAddable } from '../utils/meal-plan-addable-window';
 
 import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
 
@@ -229,7 +230,7 @@ export function AddMealsToListConfirmation({
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const { recipes, items, isLoading } = useUserMealPlanData(listId);
-  const { mutate: addMealsToGroceryList, isPending } =
+  const { mutateAsync: addMealsToGroceryList, isPending } =
     useAddMealsToGroceryList();
 
   const resetSelection = useCallback(() => {
@@ -250,8 +251,12 @@ export function AddMealsToListConfirmation({
 
   const { sections, recipeIds, itemIds, unaddedCount, summary } =
     useMemo(() => {
-      const unaddedRecipes = recipes.filter(recipe => !recipe.addedToList);
-      const unaddedItems = items.filter(item => !item.addedToList);
+      const unaddedRecipes = recipes.filter(
+        recipe => !recipe.addedToList && isMealPlanEntryAddable(recipe.date)
+      );
+      const unaddedItems = items.filter(
+        item => !item.addedToList && isMealPlanEntryAddable(item.date)
+      );
       const entries: UnaddedEntry[] = [
         ...unaddedRecipes.map(
           (recipe): UnaddedRecipe => ({
@@ -348,27 +353,32 @@ export function AddMealsToListConfirmation({
       deselectedIds,
     });
 
-    addMealsToGroceryList(
-      {
+    const hasSelections =
+      selectedRecipeIds.length + selectedItemIds.length > 0;
+
+    // Optimistically close the sheet and jump to the list; the write completes
+    // in the background with a loading toast that resolves to success/error.
+    sheetRef.current?.dismiss();
+    if (hasSelections) {
+      onViewChange?.('grocery-list');
+    }
+
+    toast.promise(
+      addMealsToGroceryList({
         listId,
         selectedRecipeIds,
         skippedRecipeIds:
           skippedRecipeIds.length > 0 ? skippedRecipeIds : undefined,
         selectedItemIds,
         skippedItemIds: skippedItemIds.length > 0 ? skippedItemIds : undefined,
-      },
+      }),
       {
-        onSuccess: result => {
-          if (result.addedRecipes + result.addedItems === 0) {
-            toast.info('No new meals to add - all meals already added to list');
-          } else {
-            onViewChange?.('grocery-list');
-          }
-          sheetRef.current?.dismiss();
-        },
-        onError: () => {
-          toast.error('Failed to add meals to list');
-        },
+        loading: 'Adding meals to your list…',
+        success: result =>
+          result.addedRecipes + result.addedItems === 0
+            ? 'No new meals to add'
+            : 'Meals added to your list',
+        error: 'Failed to add meals to list',
       }
     );
   };
