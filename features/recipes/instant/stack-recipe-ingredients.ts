@@ -8,6 +8,7 @@ import {
   applyDefaultStoreToStackableIngredients,
   ConflictResolution,
   DefaultStoreForStacking,
+  ExistingIngredientForStacking,
   IngredientConflict,
   planIngredientStacking,
   StackableIngredientInput,
@@ -28,25 +29,19 @@ export {
   planIngredientStacking,
 } from './stack-recipe-ingredients-plan';
 
-type ExistingGroceryItem = {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-  category?: string | null;
-  notes?: string | null;
-  updatedAt?: string;
-  grocery_list?: { id: string } | null;
-  store?: { id: string; name: string } | null;
-  isChecked: boolean;
-  isDeleted?: boolean;
-};
+type TransactionChunk = Extract<
+  Parameters<typeof db.transact>[0],
+  unknown[]
+>[number];
 
-type AddIngredientsWithStackingArgs = {
+type BuildStackingTransactionsArgs = {
   listId: string;
   ingredients: StackableIngredientInput[];
+  /** Live, non-deleted items already on `listId`. */
+  existingItems: ExistingIngredientForStacking[];
   defaultStore?: DefaultStoreForStacking | null;
   conflictResolution?: ConflictResolution;
+  now?: string;
 };
 
 export type AddIngredientsWithStackingResult = {
@@ -56,53 +51,30 @@ export type AddIngredientsWithStackingResult = {
   createdCount: number;
 };
 
-export const addIngredientsWithStacking = async ({
+export type StackingTransactionsResult = AddIngredientsWithStackingResult & {
+  transactions: TransactionChunk[];
+};
+
+/**
+ * Plans an ingredient add against already-loaded list items and returns the
+ * transaction chunks without writing them, so callers can batch them with
+ * their own writes in a single `db.transact`.
+ */
+export const buildIngredientStackingTransactions = ({
   listId,
   ingredients,
+  existingItems,
   defaultStore,
   conflictResolution = 'prompt',
-}: AddIngredientsWithStackingArgs): Promise<AddIngredientsWithStackingResult> => {
+  now = new Date().toISOString(),
+}: BuildStackingTransactionsArgs): StackingTransactionsResult => {
   const ingredientsWithDefaultStore = applyDefaultStoreToStackableIngredients(
     ingredients,
     defaultStore
   );
 
-  if (ingredientsWithDefaultStore.length === 0) {
-    return {
-      requiresConflictResolution: false,
-      conflicts: [],
-      stackedCount: 0,
-      createdCount: 0,
-    };
-  }
-
-  const now = new Date().toISOString();
-  const result = await db.queryOnce({
-    grocery_items: {
-      grocery_list: {},
-      store: {},
-    },
-  });
-
-  const existingItems = (result.data.grocery_items || []).filter(
-    item =>
-      item.grocery_list?.id === listId &&
-      !item.isDeleted &&
-      typeof item.quantity === 'number'
-  ) as ExistingGroceryItem[];
-
   const { quantityUpdates, createEntries, conflicts } = planIngredientStacking({
-    existingItems: existingItems.map(item => ({
-      id: item.id,
-      name: item.name,
-      quantity: item.quantity,
-      unit: item.unit,
-      isChecked: item.isChecked,
-      category: item.category,
-      updatedAt: item.updatedAt,
-      storeName: item.store?.name,
-      storeId: item.store?.id,
-    })),
+    existingItems,
     ingredients: ingredientsWithDefaultStore,
     conflictResolution,
   });
@@ -113,13 +85,15 @@ export const addIngredientsWithStacking = async ({
       conflicts,
       stackedCount: quantityUpdates.size,
       createdCount: createEntries.length,
+      transactions: [],
     };
   }
 
-  const transactions: Parameters<typeof db.transact>[0] = [];
+  const transactions: TransactionChunk[] = [];
+  const existingItemsById = new Map(existingItems.map(item => [item.id, item]));
 
   for (const [itemId, quantityToAdd] of quantityUpdates.entries()) {
-    const existingItem = existingItems.find(item => item.id === itemId);
+    const existingItem = existingItemsById.get(itemId);
     if (!existingItem) continue;
 
     transactions.push(
@@ -186,14 +160,99 @@ export const addIngredientsWithStacking = async ({
     }
   }
 
-  if (transactions.length > 0) {
-    await db.transact(transactions);
-  }
-
   return {
     requiresConflictResolution: false,
     conflicts: [],
     stackedCount: quantityUpdates.size,
     createdCount: createEntries.length,
+    transactions,
   };
+};
+
+type StackableGroceryItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  isChecked: boolean;
+  category?: string | null;
+  updatedAt?: string;
+  store?: { id: string; name?: string | null } | null;
+};
+
+/** Maps live grocery items (e.g. from `useGroceryListItems`) into stacking input. */
+export const toExistingIngredientsForStacking = (
+  items: readonly StackableGroceryItem[]
+): ExistingIngredientForStacking[] =>
+  items
+    .filter(item => typeof item.quantity === 'number')
+    .map(item => ({
+      id: item.id,
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      isChecked: item.isChecked,
+      category: item.category,
+      updatedAt: item.updatedAt,
+      storeName: item.store?.name,
+      storeId: item.store?.id,
+    }));
+
+/**
+ * Fetches the live items on a single list for stacking. Scoped server-side so
+ * the payload does not grow with soft-deleted items or other lists.
+ */
+export const fetchExistingIngredientsForStacking = async (
+  listId: string
+): Promise<ExistingIngredientForStacking[]> => {
+  const result = await db.queryOnce({
+    grocery_items: {
+      $: {
+        where: {
+          'grocery_list.id': listId,
+          isDeleted: false,
+        },
+      },
+      store: {},
+    },
+  });
+
+  return toExistingIngredientsForStacking(result.data.grocery_items ?? []);
+};
+
+type AddIngredientsWithStackingArgs = {
+  listId: string;
+  ingredients: StackableIngredientInput[];
+  defaultStore?: DefaultStoreForStacking | null;
+  conflictResolution?: ConflictResolution;
+};
+
+export const addIngredientsWithStacking = async ({
+  listId,
+  ingredients,
+  defaultStore,
+  conflictResolution = 'prompt',
+}: AddIngredientsWithStackingArgs): Promise<AddIngredientsWithStackingResult> => {
+  if (ingredients.length === 0) {
+    return {
+      requiresConflictResolution: false,
+      conflicts: [],
+      stackedCount: 0,
+      createdCount: 0,
+    };
+  }
+
+  const { transactions, ...result } = buildIngredientStackingTransactions({
+    listId,
+    ingredients,
+    existingItems: await fetchExistingIngredientsForStacking(listId),
+    defaultStore,
+    conflictResolution,
+  });
+
+  if (transactions.length > 0) {
+    await db.transact(transactions);
+  }
+
+  return result;
 };

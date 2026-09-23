@@ -13,8 +13,11 @@ export const useMealPlanData = (listId?: string) => {
           recipe_ingredients: {
             store: {},
           },
+          user: {},
         },
-        ingredient_snapshots: {},
+        ingredient_snapshots: {
+          store: {},
+        },
       },
       meal_plan_items: {
         store: {},
@@ -22,4 +25,3 @@ export const useMealPlanData = (listId?: string) => {
     },
   });
 };
-

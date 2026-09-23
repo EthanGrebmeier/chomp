@@ -231,7 +231,7 @@ export function AddMealsToListConfirmation({
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const { recipes, items, isLoading } = useUserMealPlanData(listId);
   const { mutateAsync: addMealsToGroceryList, isPending } =
-    useAddMealsToGroceryList();
+    useAddMealsToGroceryList(listId);
 
   const resetSelection = useCallback(() => {
     setDeselectedIds(new Set());
@@ -365,7 +365,6 @@ export function AddMealsToListConfirmation({
 
     toast.promise(
       addMealsToGroceryList({
-        listId,
         selectedRecipeIds,
         skippedRecipeIds:
           skippedRecipeIds.length > 0 ? skippedRecipeIds : undefined,

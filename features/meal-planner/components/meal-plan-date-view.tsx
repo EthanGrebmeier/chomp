@@ -485,7 +485,7 @@ export const MealPlanDateView = ({
   onViewChange,
 }: MealPlanDateViewProps) => {
   const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
-    useAddMealsToGroceryList();
+    useAddMealsToGroceryList(listId);
   const { mutate: unmarkMealAdded } = useUnmarkMealAdded();
   const quickReviewSheetRef = useRef<TrueSheet>(null);
   const ingredientOverrideSheetRef =
@@ -730,20 +730,17 @@ export const MealPlanDateView = ({
   const handleConfirmQuickAdd = useCallback(() => {
     if (!quickReviewMealPlanRecipe || isAddingToList) return;
 
+    // Close and jump to the list right away; the write applies optimistically.
+    closeQuickReviewSheet();
+    onViewChange?.('grocery-list');
+
     addMealsToGroceryList(
-      {
-        listId,
-        selectedRecipeIds: [quickReviewMealPlanRecipe.id],
-      },
+      { selectedRecipeIds: [quickReviewMealPlanRecipe.id] },
       {
         onSuccess: result => {
-          const totalAdded = result.addedRecipes + result.addedItems;
-          if (totalAdded === 0) {
+          if (result.addedRecipes + result.addedItems === 0) {
             toast.info('Already added to list');
-          } else {
-            onViewChange?.('grocery-list');
           }
-          closeQuickReviewSheet();
         },
         onError: () => {
           toast.error('Failed to add to list');
@@ -754,7 +751,6 @@ export const MealPlanDateView = ({
     addMealsToGroceryList,
     closeQuickReviewSheet,
     isAddingToList,
-    listId,
     onViewChange,
     quickReviewMealPlanRecipe,
   ]);
@@ -791,26 +787,26 @@ export const MealPlanDateView = ({
           return;
         }
 
-        const args = { listId, selectedItemIds: [id] };
-
-        addMealsToGroceryList(args, {
-          onSuccess: result => {
-            const totalAdded = result.addedRecipes + result.addedItems;
-            if (totalAdded === 0) {
-              toast.info('Already added to list');
-            }
-          },
-          onError: () => {
-            toast.error('Failed to add to list');
-          },
-        });
+        addMealsToGroceryList(
+          { selectedItemIds: [id] },
+          {
+            onSuccess: result => {
+              const totalAdded = result.addedRecipes + result.addedItems;
+              if (totalAdded === 0) {
+                toast.info('Already added to list');
+              }
+            },
+            onError: () => {
+              toast.error('Failed to add to list');
+            },
+          }
+        );
       }
     },
     [
       addMealsToGroceryList,
       handleOpenQuickReview,
       isAddingToList,
-      listId,
       recipes,
       unmarkMealAdded,
     ]
