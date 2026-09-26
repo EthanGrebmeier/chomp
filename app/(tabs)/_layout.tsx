@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
+import { RecipesSettingsBarHost } from '@/features/shared/components/recipes-settings-bar';
 import { useTheme } from '@/hooks/use-theme';
 import { useInstantAuthState } from '@/lib/instant/use-clerk-auth';
 
@@ -21,8 +22,11 @@ export default function Layout() {
   const { hasAppAccess } = useInstantAuthState();
   const theme = useTheme();
 
+  // The recipes/settings bar is hosted here (not at the root) so it belongs to
+  // the signed-in screens: auth routes and root-level sheets/cards cover it
+  // naturally instead of it floating above them during transitions.
   return (
-    <>
+    <RecipesSettingsBarHost>
       {hasAppAccess ? <AuthenticatedQueryPreloader /> : null}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen
@@ -38,6 +42,6 @@ export default function Layout() {
         />
         <Stack.Screen name="index" />
       </Stack>
-    </>
+    </RecipesSettingsBarHost>
   );
 }

@@ -1,4 +1,4 @@
-import { Href, router, useFocusEffect, useSegments } from 'expo-router';
+import { Href, router, useFocusEffect } from 'expo-router';
 import { BookOpenIcon, SettingsIcon } from 'lucide-react-native';
 import {
   createContext,
@@ -51,9 +51,11 @@ function releaseRoutePushLock(
   }
 }
 
+/**
+ * Mount inside the `(tabs)` layout only, so the bar is part of the signed-in
+ * screens and never overlays auth routes.
+ */
 export function RecipesSettingsBarHost({ children }: { children: ReactNode }) {
-  const segments = useSegments();
-  const isOnTabs = segments[0] === '(tabs)';
   const [state, setState] = useState<
     RecipesSettingsBarState & { owner: symbol | null }
   >({
@@ -89,10 +91,7 @@ export function RecipesSettingsBarHost({ children }: { children: ReactNode }) {
   return (
     <RecipesSettingsBarContext.Provider value={controller}>
       {children}
-      <RecipesSettingsBar
-        listId={state.listId}
-        visible={state.visible && isOnTabs}
-      />
+      <RecipesSettingsBar listId={state.listId} visible={state.visible} />
     </RecipesSettingsBarContext.Provider>
   );
 }

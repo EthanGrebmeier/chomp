@@ -23,7 +23,6 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
-import { RecipesSettingsBarHost } from '@/features/shared/components/recipes-settings-bar';
 import {
   InstantAuthHandler,
   useInstantAuthState,
@@ -66,105 +65,103 @@ function InitialLayout() {
 
   return (
     <View className="flex-1 bg-background">
-      <RecipesSettingsBarHost>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen
-            name="meal-plan"
-            options={{
-              presentation: 'formSheet',
-              sheetAllowedDetents: [1],
-              sheetInitialDetentIndex: 0,
-              contentStyle: {
-                height: '100%',
-                backgroundColor: theme.background,
-              },
-            }}
-          />
-          <Stack.Screen
-            name="recipes"
-            options={{
-              presentation: 'card',
-              sheetAllowedDetents: [1],
-              sheetInitialDetentIndex: 0,
-              contentStyle: {
-                height: '100%',
-                backgroundColor: theme.background,
-              },
-            }}
-          />
-          <Stack.Screen
-            name="settings"
-            options={{
-              presentation: 'formSheet',
-              sheetAllowedDetents: 'fitToContents',
-              sheetInitialDetentIndex: 0,
-              contentStyle: {
-                backgroundColor: theme.background,
-              },
-            }}
-          />
-          <Stack.Screen
-            name="saved-items"
-            options={{
-              presentation: 'formSheet',
-              sheetAllowedDetents: [1],
-              sheetInitialDetentIndex: 0,
-              contentStyle: {
-                backgroundColor: theme.background,
-              },
-            }}
-          />
-          <Stack.Screen
-            name="stores"
-            options={{
-              presentation: 'formSheet',
-              sheetAllowedDetents: [1],
-              sheetInitialDetentIndex: 0,
-              contentStyle: {
-                backgroundColor: theme.background,
-              },
-            }}
-          />
-          <Stack.Screen
-            name="categories"
-            options={{
-              presentation: 'formSheet',
-              sheetAllowedDetents: [1],
-              sheetInitialDetentIndex: 0,
-              contentStyle: {
-                backgroundColor: theme.background,
-              },
-            }}
-          />
-          <Stack.Screen
-            name="account"
-            options={{
-              presentation: 'formSheet',
-              sheetAllowedDetents: 'fitToContents',
-              sheetInitialDetentIndex: 0,
-              contentStyle: {
-                backgroundColor: theme.background,
-              },
-            }}
-          />
-        </Stack>
-        <Toaster
-          position="top-center"
-          duration={2000}
-          toastOptions={{
-            style: {
-              borderRadius: 100,
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen
+          name="meal-plan"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              height: '100%',
+              backgroundColor: theme.background,
             },
           }}
         />
-      </RecipesSettingsBarHost>
+        <Stack.Screen
+          name="recipes"
+          options={{
+            presentation: 'card',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              height: '100%',
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: 'fitToContents',
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="saved-items"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="stores"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="categories"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: [1],
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="account"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: 'fitToContents',
+            sheetInitialDetentIndex: 0,
+            contentStyle: {
+              backgroundColor: theme.background,
+            },
+          }}
+        />
+      </Stack>
+      <Toaster
+        position="top-center"
+        duration={2000}
+        toastOptions={{
+          style: {
+            borderRadius: 100,
+          },
+        }}
+      />
     </View>
   );
 }
