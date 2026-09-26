@@ -19,6 +19,10 @@ import { Icon } from './icon';
 
 // Width the row rests at once opened, revealing the trash action.
 const SWIPE_REST_WIDTH = 88;
+// Horizontal travel required before the row claims the touch.
+const ACTIVATION_DISTANCE = 10;
+// Vertical travel that hands the touch back to the list for scrolling.
+const VERTICAL_FAIL_DISTANCE = 12;
 // Fraction of the screen the row must pass for a release to commit a delete.
 const FULL_SWIPE_FRACTION = 0.45;
 // How much of the drag beyond the commit threshold is tracked (rubber-banding).
@@ -58,6 +62,9 @@ export type SwipeToDeleteProps = {
  * icon; swiping past ~45% of the screen and releasing commits the delete by
  * sweeping the row (and its red backdrop) off-screen. A medium haptic fires
  * when crossing the commit threshold.
+ *
+ * Rightward swipes on a closed row are left alone, so the navigation
+ * swipe-back gesture still works when it starts on top of the row.
  */
 export const SwipeToDelete = forwardRef<
   SwipeToDeleteHandle,
@@ -73,6 +80,9 @@ export const SwipeToDelete = forwardRef<
   // Tracks whether the full-swipe threshold is currently crossed so the
   // haptic only fires on the transition into it.
   const isPastThreshold = useSharedValue(false);
+  // Where the touch went down, used to decide whether the row should claim it.
+  const touchStartX = useSharedValue(0);
+  const touchStartY = useSharedValue(0);
 
   const close = useCallback(() => {
     translateX.value = withTiming(0, SETTLE_TIMING);
@@ -81,9 +91,45 @@ export const SwipeToDelete = forwardRef<
 
   useImperativeHandle(ref, () => ({ close }), [close]);
 
+  // Activation is decided manually so a rightward drag on a closed row fails
+  // immediately. That leaves it free for the native stack's swipe-back gesture
+  // instead of the row swallowing it. Rightward drags are only claimed when the
+  // row is open, so it can still be swiped closed.
   const panGesture = Gesture.Pan()
-    .activeOffsetX([-10, 10])
-    .failOffsetY([-12, 12])
+    .manualActivation(true)
+    .onTouchesDown(event => {
+      const touch = event.changedTouches[0];
+      if (!touch) {
+        return;
+      }
+      touchStartX.value = touch.absoluteX;
+      touchStartY.value = touch.absoluteY;
+    })
+    .onTouchesMove((event, stateManager) => {
+      const touch = event.changedTouches[0];
+      if (!touch) {
+        return;
+      }
+      const dx = touch.absoluteX - touchStartX.value;
+      const dy = touch.absoluteY - touchStartY.value;
+
+      if (Math.abs(dy) >= VERTICAL_FAIL_DISTANCE) {
+        stateManager.fail();
+        return;
+      }
+      if (dx <= -ACTIVATION_DISTANCE) {
+        stateManager.activate();
+        return;
+      }
+      if (dx >= ACTIVATION_DISTANCE) {
+        const isOpen = translateX.value < 0;
+        if (isOpen) {
+          stateManager.activate();
+        } else {
+          stateManager.fail();
+        }
+      }
+    })
     .onStart(() => {
       startX.value = translateX.value;
     })
