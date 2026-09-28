@@ -1,81 +1,43 @@
-import { Alert, FlatList, View } from 'react-native';
-import { toast } from 'sonner-native';
+import { FlatList, View } from 'react-native';
 
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
-import {
-  ContextMenuItem,
-  ContextMenuItemTitle,
-  ContextMenuRoot,
-} from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import { deleteStore } from '../instant/delete-store';
 import { Store } from '../types';
 
 type StoreRowProps = {
   store: Store;
   isLast: boolean;
-  onDelete: () => void;
   onPress: () => void;
 };
 
-const StoreRow = ({ store, isLast, onDelete, onPress }: StoreRowProps) => {
-  const handleConfirmDelete = () => {
-    Alert.alert(
-      'Delete Store',
-      `Are you sure you want to delete "${store.name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: onDelete },
-      ]
-    );
-  };
-
-  return (
-    <ContextMenuRoot
-      trigger={
-        <ListItem
-          className={cn(!isLast && 'border-b border-dashed border-border')}
-          onDelete={onDelete}
-        >
-          <HapticPressable
-            onPress={onPress}
-            hapticType="light"
-            className="flex-1 flex-row items-center justify-between py-1"
-          >
-            <View className="flex-1 flex-row items-center gap-2">
-              <Text
-                className="flex-1 text-base font-medium text-foreground"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {store.name}
-              </Text>
-              {store.isDefault ? (
-                <View className="rounded-full bg-primary/10 px-2 py-0.5">
-                  <Text className="text-xs font-semibold text-primary">
-                    Default
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          </HapticPressable>
-        </ListItem>
-      }
+const StoreRow = ({ store, isLast, onPress }: StoreRowProps) => (
+  <ListItem className={cn(!isLast && 'border-b border-dashed border-border')}>
+    <HapticPressable
+      onPress={onPress}
+      hapticType="light"
+      className="flex-1 flex-row items-center justify-between py-1"
     >
-      <ContextMenuItem
-        key={`delete-store-${store.id}`}
-        destructive
-        onSelect={handleConfirmDelete}
-      >
-        <ContextMenuItemTitle>Delete Store</ContextMenuItemTitle>
-      </ContextMenuItem>
-    </ContextMenuRoot>
-  );
-};
+      <View className="flex-1 flex-row items-center gap-2">
+        <Text
+          className="flex-1 text-base font-medium text-foreground"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {store.name}
+        </Text>
+        {store.isDefault ? (
+          <View className="rounded-full bg-primary/10 px-2 py-0.5">
+            <Text className="text-xs font-semibold text-primary">Default</Text>
+          </View>
+        ) : null}
+      </View>
+    </HapticPressable>
+  </ListItem>
+);
 
 type StoresListProps = {
   stores: Store[];
@@ -83,14 +45,6 @@ type StoresListProps = {
 };
 
 export const StoresList = ({ stores, onEditStore }: StoresListProps) => {
-  const handleDelete = async (store: Store) => {
-    try {
-      await deleteStore({ storeId: store.id });
-    } catch {
-      toast.error('Failed to delete store');
-    }
-  };
-
   if (stores.length === 0) {
     return (
       <View className="-mt-32 flex-1 items-center justify-center px-4">
@@ -116,7 +70,6 @@ export const StoresList = ({ stores, onEditStore }: StoresListProps) => {
         <StoreRow
           store={item}
           isLast={index === sortedStores.length - 1}
-          onDelete={() => handleDelete(item)}
           onPress={() => onEditStore(item)}
         />
       )}
