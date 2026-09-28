@@ -1,13 +1,16 @@
 import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
 
-const STARTUP_UPDATE_TIMEOUT_MS = 5000;
+// Total time the splash screen may wait on the network for an OTA update,
+// shared across the check and fetch stages so a weak signal can't stack
+// timeouts. A fetch that runs past the budget keeps downloading in the
+// background and is applied on the next cold launch.
+const STARTUP_UPDATE_NETWORK_BUDGET_MS = 5000;
+const STARTUP_UPDATE_RELOAD_TIMEOUT_MS = 5000;
 
 class StartupUpdateTimeoutError extends Error {
-  constructor(stage: string) {
-    super(
-      `Startup update stage "${stage}" timed out after ${STARTUP_UPDATE_TIMEOUT_MS}ms`
-    );
+  constructor(stage: string, timeoutMs: number) {
+    super(`Startup update stage "${stage}" timed out after ${timeoutMs}ms`);
     this.name = 'StartupUpdateTimeoutError';
   }
 }
@@ -28,17 +31,22 @@ const logStartupUpdate = (message: string, payload?: unknown) => {
 
 const withStartupUpdateTimeout = async <T,>(
   stage: string,
+  timeoutMs: number,
   task: () => Promise<T>
 ): Promise<T> => {
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+
+  if (timeoutMs <= 0) {
+    throw new StartupUpdateTimeoutError(stage, timeoutMs);
+  }
 
   try {
     return await Promise.race([
       task(),
       new Promise<never>((_resolve, reject) => {
         timeoutHandle = setTimeout(() => {
-          reject(new StartupUpdateTimeoutError(stage));
-        }, STARTUP_UPDATE_TIMEOUT_MS);
+          reject(new StartupUpdateTimeoutError(stage, timeoutMs));
+        }, timeoutMs);
       }),
     ]);
   } finally {
@@ -60,12 +68,15 @@ export const useStartupEasUpdate = () => {
 
     const checkForStartupUpdate = async () => {
       let shouldStartApp = true;
+      const networkDeadline = Date.now() + STARTUP_UPDATE_NETWORK_BUDGET_MS;
+      const getRemainingNetworkBudget = () => networkDeadline - Date.now();
 
       try {
         logStartupUpdate('checking for update');
 
         const update = await withStartupUpdateTimeout(
           'checkForUpdateAsync',
+          getRemainingNetworkBudget(),
           () => Updates.checkForUpdateAsync()
         );
 
@@ -82,6 +93,7 @@ export const useStartupEasUpdate = () => {
 
         const fetchResult = await withStartupUpdateTimeout(
           'fetchUpdateAsync',
+          getRemainingNetworkBudget(),
           () => Updates.fetchUpdateAsync()
         );
 
@@ -93,8 +105,10 @@ export const useStartupEasUpdate = () => {
         if (fetchResult.isNew || fetchResult.isRollBackToEmbedded) {
           shouldStartApp = false;
           logStartupUpdate('reloading for fetched update');
-          await withStartupUpdateTimeout('reloadAsync', () =>
-            Updates.reloadAsync()
+          await withStartupUpdateTimeout(
+            'reloadAsync',
+            STARTUP_UPDATE_RELOAD_TIMEOUT_MS,
+            () => Updates.reloadAsync()
           );
         }
       } catch (error) {
