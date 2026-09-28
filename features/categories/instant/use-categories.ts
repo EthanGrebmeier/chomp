@@ -1,7 +1,9 @@
 import { db } from '../../../lib/instant';
-import { isCategoryColor } from '../../shared/category/category-colors';
-import { CustomCategory } from '../types';
+import { CategoryRecord } from '../types';
 
+import { toCategoryRecord } from './category-query';
+
+/** The signed-in user's persisted category records (custom + overrides). */
 export const useCategories = () => {
   const { user } = db.useAuth();
 
@@ -12,17 +14,10 @@ export const useCategories = () => {
   });
 
   const categories = result.data?.categories;
-  const myCategories = (categories ?? []).reduce<CustomCategory[]>(
+  const myCategories = (categories ?? []).reduce<CategoryRecord[]>(
     (ownedCategories, category) => {
       if (category.user?.id === user?.id) {
-        ownedCategories.push({
-          id: category.id,
-          name: category.name,
-          value: category.value,
-          color: isCategoryColor(category.color) ? category.color : undefined,
-          createdAt: category.createdAt,
-          updatedAt: category.updatedAt,
-        });
+        ownedCategories.push(toCategoryRecord(category));
       }
       return ownedCategories;
     },
