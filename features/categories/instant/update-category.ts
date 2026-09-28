@@ -1,6 +1,13 @@
+import { id, tx } from '@instantdb/react-native';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { normalizeCategoryName } from '../../shared/category/categories';
+import {
+  CategoryOption,
+  isBuiltInCategoryValue,
+  mergeCategoryOptions,
+  normalizeCategoryName,
+} from '../../shared/category/categories';
 import {
   CategoryColor,
   isCategoryColor,
@@ -9,16 +16,24 @@ import { findDuplicateCategoryName } from '../category-values';
 
 import { queryMyCategories } from './category-query';
 
-export type UpdateCategoryArgs = {
-  categoryId: string;
-  updates: {
-    name?: string;
-    color?: CategoryColor;
-  };
+export type CategoryUpdates = {
+  name?: string;
+  color?: CategoryColor;
+  isHidden?: boolean;
 };
 
+type UpdateCategoryArgs = {
+  category: Pick<CategoryOption, 'value' | 'label' | 'color'>;
+  updates: CategoryUpdates;
+};
+
+/**
+ * Updates a category. Custom categories are updated in place; built-in
+ * categories are customized through an override record keyed by their value,
+ * which is created on first edit.
+ */
 export const updateCategory = async ({
-  categoryId,
+  category,
   updates,
 }: UpdateCategoryArgs) => {
   const user = await db.getAuth();
@@ -29,20 +44,17 @@ export const updateCategory = async ({
     throw new Error('Invalid category color');
   }
 
-  const normalizedUpdates = {
-    ...updates,
-    name:
-      updates.name === undefined
-        ? undefined
-        : normalizeCategoryName(updates.name),
-  };
+  const records = await queryMyCategories(user.id);
+  const name =
+    updates.name === undefined
+      ? undefined
+      : normalizeCategoryName(updates.name);
 
-  if (normalizedUpdates.name !== undefined) {
-    const existingCategories = await queryMyCategories(user.id);
+  if (name !== undefined) {
     const duplicateError = findDuplicateCategoryName({
-      name: normalizedUpdates.name,
-      existingCategories,
-      excludingCategoryId: categoryId,
+      name,
+      options: mergeCategoryOptions(records),
+      excludingValue: category.value,
     });
 
     if (duplicateError) {
@@ -50,12 +62,36 @@ export const updateCategory = async ({
     }
   }
 
+  const now = new Date().toISOString();
+  const existingRecord = records.find(
+    record => record.value === category.value
+  );
+
+  if (existingRecord) {
+    await db.transact([
+      tx.categories[existingRecord.id].update(
+        trimStringFields({ ...updates, name, updatedAt: now })
+      ),
+    ]);
+    return;
+  }
+
+  if (!isBuiltInCategoryValue(category.value)) {
+    throw new Error('Category not found');
+  }
+
+  const overrideId = id();
   await db.transact([
-    db.tx.categories[categoryId].update(
+    tx.categories[overrideId].update(
       trimStringFields({
-        ...normalizedUpdates,
-        updatedAt: new Date().toISOString(),
+        name: name ?? category.label,
+        value: category.value,
+        color: updates.color ?? category.color,
+        isHidden: updates.isHidden ?? false,
+        createdAt: now,
+        updatedAt: now,
       })
     ),
+    tx.categories[overrideId].link({ user: user.id }),
   ]);
 };
