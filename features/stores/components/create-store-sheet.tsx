@@ -1,13 +1,15 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { createContext, useContext, useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { Alert, TextInput, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Button } from '../../../components/ui/button';
+import { DeleteButton } from '../../../components/ui/delete-button';
 import { Text } from '../../../components/ui/text';
 import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
 import { createStore } from '../instant/create-store';
+import { deleteStore } from '../instant/delete-store';
 import { updateStore } from '../instant/update-store';
 import { Store } from '../types';
 
@@ -39,6 +41,8 @@ type StoreSheetInternalContextType = {
   onDefaultChange: () => void;
   reset: () => void;
   onSubmit: () => void;
+  /** Present only when editing an existing store. */
+  onDelete?: () => void;
 };
 
 const StoreSheetInternalContext =
@@ -65,6 +69,7 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
     onNameChange,
     onDefaultChange,
     onSubmit,
+    onDelete,
     sheetRef,
   } = useStoreSheetInternal();
 
@@ -87,6 +92,14 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
       <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header
           title={submitLabel === 'Update' ? 'Rename store' : 'Add a store'}
+          button={
+            onDelete ? (
+              <DeleteButton
+                accessibilityLabel="Delete store"
+                onPress={onDelete}
+              />
+            ) : undefined
+          }
         />
         <View>
           <Text className="mb-2 text-sm font-medium text-muted-foreground">
@@ -159,6 +172,33 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
     }
   };
 
+  const deleteEditingStore = async (store: Store) => {
+    try {
+      await deleteStore({ storeId: store.id });
+      sheetRef.current?.dismiss();
+      reset();
+    } catch {
+      toast.error('Failed to delete store');
+    }
+  };
+
+  const onDelete = editingStore
+    ? () => {
+        Alert.alert(
+          'Delete Store',
+          `Are you sure you want to delete "${editingStore.name}"?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: () => void deleteEditingStore(editingStore),
+            },
+          ]
+        );
+      }
+    : undefined;
+
   const onNameChange = (name: string) => {
     nameInput.handleChangeText(name);
     setCanSubmit(name.trim().length > 0);
@@ -193,6 +233,7 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
           onDefaultChange: () => setIsDefault(current => !current),
           reset,
           onSubmit,
+          onDelete,
         }}
       >
         <StoreSheetContents submitLabel={isEditing ? 'Update' : 'Create'} />
