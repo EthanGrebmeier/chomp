@@ -8,31 +8,32 @@ import {
   useRef,
   useState,
 } from 'react';
-import { TextInput, View } from 'react-native';
+import { Alert, TextInput, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { CategoryLabel } from '../../../components/category-label';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
+import { DeleteButton } from '../../../components/ui/delete-button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
 import { cn } from '../../../lib/utils';
-import { normalizeCategoryName } from '../../shared/category/categories';
+import {
+  CategoryOption,
+  normalizeCategoryName,
+} from '../../shared/category/categories';
 import {
   CategoryColor,
   categoryColorOptions,
   getCategoryBackgroundClassName,
-  resolveCategoryColor,
 } from '../../shared/category/category-colors';
 import { createCategory } from '../instant/create-category';
+import { deleteCategory } from '../instant/delete-category';
 import { updateCategory } from '../instant/update-category';
-import { CustomCategory } from '../types';
 
 type SavedCategoryPayload = {
-  id: string;
   value: string;
 };
 
@@ -43,7 +44,7 @@ type CreateCategorySheetProps = {
 };
 
 export type CreateCategorySheetRef = {
-  present: (category?: CustomCategory) => void;
+  present: (category?: CategoryOption) => void;
   dismiss: () => void;
 };
 
@@ -56,11 +57,10 @@ export const CreateCategorySheet = forwardRef<
     ref
   ) => {
     const [editingCategory, setEditingCategory] =
-      useState<CustomCategory | null>(null);
+      useState<CategoryOption | null>(null);
     const [canSubmit, setCanSubmit] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedColor, setSelectedColor] = useState<CategoryColor>('green');
-    const [previewLabel, setPreviewLabel] = useState('Category label');
     const nameInput = useUncontrolledTextInput();
     const nameInputRef = useRef<TextInput>(null);
     const sheetRef = useRef<TrueSheet>(null);
@@ -72,22 +72,19 @@ export const CreateCategorySheet = forwardRef<
       setCanSubmit(false);
       setIsSubmitting(false);
       setSelectedColor('green');
-      setPreviewLabel('Category label');
     };
 
-    const present = (category?: CustomCategory) => {
+    const present = (category?: CategoryOption) => {
       if (category) {
         setEditingCategory(category);
-        nameInput.reset(category.name);
-        setCanSubmit(category.name.trim().length > 0);
-        setSelectedColor(resolveCategoryColor(category.value, category.color));
-        setPreviewLabel(category.name);
+        nameInput.reset(category.label);
+        setCanSubmit(category.label.trim().length > 0);
+        setSelectedColor(category.color);
       } else {
         setEditingCategory(null);
         nameInput.reset();
         setCanSubmit(false);
         setSelectedColor('green');
-        setPreviewLabel('Category label');
       }
       sheetRef.current?.present();
     };
@@ -101,7 +98,6 @@ export const CreateCategorySheet = forwardRef<
       nameInput.handleChangeText(name);
       const normalizedName = normalizeCategoryName(name);
       setCanSubmit(normalizedName.length > 0);
-      setPreviewLabel(normalizedName || 'Category label');
     };
 
     const handleSubmit = async () => {
@@ -115,10 +111,10 @@ export const CreateCategorySheet = forwardRef<
       try {
         if (isEditing && editingCategory) {
           await updateCategory({
-            categoryId: editingCategory.id,
+            category: editingCategory,
             updates: { name, color: selectedColor },
           });
-          onSaved?.({ id: editingCategory.id, value: editingCategory.value });
+          onSaved?.({ value: editingCategory.value });
         } else {
           const category = await createCategory({
             name,
@@ -139,6 +135,35 @@ export const CreateCategorySheet = forwardRef<
       } finally {
         setIsSubmitting(false);
       }
+    };
+
+    const handleDelete = async (category: CategoryOption) => {
+      setIsSubmitting(true);
+      try {
+        await deleteCategory({ category });
+        sheetRef.current?.dismiss();
+        reset();
+      } catch {
+        toast.error('Failed to delete category');
+        setIsSubmitting(false);
+      }
+    };
+
+    const handleConfirmDelete = () => {
+      if (!editingCategory) return;
+      const category = editingCategory;
+      Alert.alert(
+        'Delete Category',
+        `Are you sure you want to delete "${category.label}"? Existing items will keep their category label.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => void handleDelete(category),
+          },
+        ]
+      );
     };
 
     const submitLabel = isEditing ? 'Update' : 'Create';
@@ -165,10 +190,19 @@ export const CreateCategorySheet = forwardRef<
       >
         <BottomSheet.SheetView className="pb-safe">
           <BottomSheet.Header
-            title={isEditing ? 'Rename category' : 'Add a category'}
+            title={isEditing ? 'Edit category' : 'Add a category'}
             dismissButton={
               showBackButton ? (
                 <BackButton onPress={() => sheetRef.current?.dismiss()} />
+              ) : undefined
+            }
+            button={
+              isEditing ? (
+                <DeleteButton
+                  accessibilityLabel="Delete category"
+                  onPress={handleConfirmDelete}
+                  disabled={isSubmitting}
+                />
               ) : undefined
             }
           />
@@ -234,17 +268,6 @@ export const CreateCategorySheet = forwardRef<
                   );
                 })}
               </View>
-              <View className="flex-row items-center gap-2">
-                <Text variant="caption">Preview</Text>
-                <CategoryLabel
-                  color={selectedColor}
-                  containerClassName="self-center"
-                  variant="caption"
-                  className="font-medium"
-                >
-                  {previewLabel}
-                </CategoryLabel>
-              </View>
             </View>
           </View>
         </BottomSheet.SheetView>
@@ -256,7 +279,7 @@ export const CreateCategorySheet = forwardRef<
 CreateCategorySheet.displayName = 'CreateCategorySheet';
 
 type CategorySheetContextType = {
-  present: (category?: CustomCategory) => void;
+  present: (category?: CategoryOption) => void;
 };
 
 const CategorySheetContext = createContext<CategorySheetContextType | null>(
