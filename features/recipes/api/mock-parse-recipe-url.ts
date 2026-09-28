@@ -18,6 +18,8 @@
  *
  * Any URL that doesn't match a scenario falls through to `success`.
  */
+import { normalizeIngredientCategory } from '../utils/recipe-import-categories';
+
 import {
   parseRecipeUrl,
   ParseRecipeUrlOptions,
@@ -142,13 +144,20 @@ const MOCK_INGREDIENTS: ParseRecipeUrlResponse['ingredients'] = [
 ];
 
 const buildSuccess = (
-  url: string,
+  request: ParseRecipeUrlRequest,
   overrides: Partial<ParseRecipeUrlResponse> = {}
 ): ParseRecipeUrlResponse => ({
-  sourceUrl: url,
+  sourceUrl: request.url,
   recipeName: 'Creamy Garlic Chicken Pasta',
   servings: '4',
-  ingredients: MOCK_INGREDIENTS,
+  // Like the real server, only return categories the client offered.
+  ingredients: MOCK_INGREDIENTS.map(ingredient => ({
+    ...ingredient,
+    category: normalizeIngredientCategory(
+      ingredient.category,
+      request.categories
+    ),
+  })),
   ...overrides,
 });
 
@@ -197,10 +206,10 @@ export const mockParseRecipeUrl: typeof parseRecipeUrl = async (
 
   switch (scenario) {
     case 'empty':
-      return buildSuccess(request.url, { ingredients: [] });
+      return buildSuccess(request, { ingredients: [] });
     case 'no-name':
-      return buildSuccess(request.url, { recipeName: null });
+      return buildSuccess(request, { recipeName: null });
     default:
-      return buildSuccess(request.url);
+      return buildSuccess(request);
   }
 };
