@@ -107,10 +107,13 @@ const _schema = i.schema({
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
+    // Rows are either user-created categories or overrides of a built-in
+    // category (matched by `value`). Overrides may rename, recolor, or hide it.
     categories: i.entity({
       name: i.string(),
       value: i.string().indexed(),
       color: i.string().optional(),
+      isHidden: i.boolean().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
