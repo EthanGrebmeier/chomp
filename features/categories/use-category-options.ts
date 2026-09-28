@@ -4,16 +4,16 @@ import { mergeCategoryOptions } from '../shared/category/categories';
 
 import { useCategories } from './instant/use-categories';
 
+/** Every category the user can pick, built-in and custom, in display order. */
 export const useCategoryOptions = () => {
-  const { data: categories, isLoading, error } = useCategories();
+  const { data: records, isLoading, error } = useCategories();
   const categoryOptions = useMemo(
-    () => mergeCategoryOptions(categories),
-    [categories]
+    () => mergeCategoryOptions(records),
+    [records]
   );
 
   return {
     data: categoryOptions,
-    customCategories: categories,
     isLoading,
     error,
   };
