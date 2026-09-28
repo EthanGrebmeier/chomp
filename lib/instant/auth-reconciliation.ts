@@ -8,6 +8,7 @@ export type AuthReconciliationAction =
   | 'keep-email-session'
   | 'keep-guest-session'
   | 'defer-instant-sign-out'
+  | 'use-cached-instant-session'
   | 'bridge-clerk-session'
   | 'clear-instant-session'
   | 'signed-out';
@@ -19,6 +20,12 @@ type GetAuthReconciliationActionArgs = {
   clerkEmail: string | null;
   instantAuth: AuthIdentity | null | undefined;
   hasClerkSignOutGraceElapsed: boolean;
+  /**
+   * Clerk restores its session over the network. On a weak connection that
+   * request can hang for a long time, so once this is true we stop waiting and
+   * trust the locally persisted Instant session until Clerk catches up.
+   */
+  hasClerkRestoreTimedOut: boolean;
 };
 
 type ShouldStartClerkSignOutGracePeriodArgs = Pick<
@@ -71,9 +78,14 @@ export const getAuthReconciliationAction = ({
   clerkEmail,
   instantAuth,
   hasClerkSignOutGraceElapsed,
+  hasClerkRestoreTimedOut,
 }: GetAuthReconciliationActionArgs): AuthReconciliationAction => {
-  if (!isClerkLoaded || isSignedIn === undefined || instantAuth === undefined) {
+  if (instantAuth === undefined) {
     return 'wait';
+  }
+
+  if (!isClerkLoaded || isSignedIn === undefined) {
+    return hasClerkRestoreTimedOut ? 'use-cached-instant-session' : 'wait';
   }
 
   if (isSignedIn) {

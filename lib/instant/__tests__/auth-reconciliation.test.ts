@@ -21,6 +21,55 @@ describe('auth reconciliation', () => {
         clerkEmail: null,
         instantAuth: undefined,
         hasClerkSignOutGraceElapsed: false,
+        hasClerkRestoreTimedOut: false,
+      })
+    ).toBe('wait');
+  });
+
+  it('falls back to the cached Instant session once Clerk restore times out', () => {
+    const baseArgs = {
+      isClerkLoaded: false,
+      isSignedIn: undefined,
+      clerkUserId: null,
+      clerkEmail: null,
+      hasClerkSignOutGraceElapsed: false,
+      hasClerkRestoreTimedOut: true,
+    };
+
+    expect(
+      getAuthReconciliationAction({
+        ...baseArgs,
+        instantAuth: signedInInstantUser,
+      })
+    ).toBe('use-cached-instant-session');
+    expect(
+      getAuthReconciliationAction({
+        ...baseArgs,
+        instantAuth: { id: 'guest-user' },
+      })
+    ).toBe('use-cached-instant-session');
+    expect(
+      getAuthReconciliationAction({ ...baseArgs, instantAuth: null })
+    ).toBe('use-cached-instant-session');
+    expect(
+      getAuthReconciliationAction({
+        ...baseArgs,
+        isClerkLoaded: true,
+        instantAuth: signedInInstantUser,
+      })
+    ).toBe('use-cached-instant-session');
+  });
+
+  it('still waits for Instant storage even after Clerk restore times out', () => {
+    expect(
+      getAuthReconciliationAction({
+        isClerkLoaded: false,
+        isSignedIn: undefined,
+        clerkUserId: null,
+        clerkEmail: null,
+        instantAuth: undefined,
+        hasClerkSignOutGraceElapsed: false,
+        hasClerkRestoreTimedOut: true,
       })
     ).toBe('wait');
   });
@@ -34,6 +83,7 @@ describe('auth reconciliation', () => {
         clerkEmail: null,
         instantAuth: signedInInstantUser,
         hasClerkSignOutGraceElapsed: false,
+        hasClerkRestoreTimedOut: false,
       })
     ).toBe('wait');
   });
@@ -47,6 +97,7 @@ describe('auth reconciliation', () => {
         clerkEmail: 'PERSON@example.com',
         instantAuth: signedInInstantUser,
         hasClerkSignOutGraceElapsed: false,
+        hasClerkRestoreTimedOut: false,
       })
     ).toBe('keep-email-session');
   });
@@ -70,6 +121,7 @@ describe('auth reconciliation', () => {
         clerkEmail: 'person@example.com',
         instantAuth: null,
         hasClerkSignOutGraceElapsed: false,
+        hasClerkRestoreTimedOut: false,
       })
     ).toBe('bridge-clerk-session');
 
@@ -84,6 +136,7 @@ describe('auth reconciliation', () => {
           email: 'other@example.com',
         },
         hasClerkSignOutGraceElapsed: false,
+        hasClerkRestoreTimedOut: false,
       })
     ).toBe('bridge-clerk-session');
   });
@@ -97,6 +150,7 @@ describe('auth reconciliation', () => {
         clerkEmail: null,
         instantAuth: signedInInstantUser,
         hasClerkSignOutGraceElapsed: false,
+        hasClerkRestoreTimedOut: false,
       })
     ).toBe('defer-instant-sign-out');
   });
@@ -110,6 +164,7 @@ describe('auth reconciliation', () => {
         clerkEmail: null,
         instantAuth: signedInInstantUser,
         hasClerkSignOutGraceElapsed: true,
+        hasClerkRestoreTimedOut: false,
       })
     ).toBe('clear-instant-session');
   });
@@ -141,6 +196,7 @@ describe('auth reconciliation', () => {
         clerkEmail: null,
         instantAuth: { id: 'guest-user' },
         hasClerkSignOutGraceElapsed: false,
+        hasClerkRestoreTimedOut: false,
       })
     ).toBe('keep-guest-session');
 
@@ -152,6 +208,7 @@ describe('auth reconciliation', () => {
         clerkEmail: null,
         instantAuth: null,
         hasClerkSignOutGraceElapsed: false,
+        hasClerkRestoreTimedOut: false,
       })
     ).toBe('signed-out');
   });
