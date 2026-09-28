@@ -1,39 +1,19 @@
 import { useAuth } from '@clerk/expo';
 import { useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
-import { categoryOptions } from '@/features/shared/category/categories';
+import { useCategoryOptions } from '@/features/categories/use-category-options';
 
 import {
   isMockRecipeImportEnabled,
   mockParseRecipeUrl,
 } from '../api/mock-parse-recipe-url';
 import { parseRecipeUrl, RecipeParseError } from '../api/parse-recipe-url';
-import { IngredientCategory, ParseRecipeUrlResponse } from '../api/types';
-
-/**
- * Normalize a category value to match the expected lowercase format.
- * Returns the matching category value or 'other' as fallback.
- */
-function normalizeCategory(category: string): IngredientCategory {
-  const lowerCategory = category.toLowerCase();
-  const match = categoryOptions.find(opt => opt.value === lowerCategory);
-  return match?.value ?? 'other';
-}
-
-/**
- * Normalize all ingredient categories in the API response.
- */
-function normalizeResponse(
-  response: ParseRecipeUrlResponse
-): ParseRecipeUrlResponse {
-  return {
-    ...response,
-    ingredients: response.ingredients.map(ingredient => ({
-      ...ingredient,
-      category: normalizeCategory(ingredient.category),
-    })),
-  };
-}
+import { ParseRecipeUrlResponse } from '../api/types';
+import {
+  normalizeParsedRecipeCategories,
+  toRecipeImportCategories,
+} from '../utils/recipe-import-categories';
 
 type ParseRecipeUrlVariables = {
   url: string;
@@ -43,6 +23,13 @@ type ParseRecipeUrlVariables = {
 
 export const useParseRecipeUrl = () => {
   const { getToken } = useAuth();
+  // Offer the model exactly the categories the user can currently pick,
+  // including custom ones and excluding hidden built-ins.
+  const { data: categoryOptions } = useCategoryOptions();
+  const categories = useMemo(
+    () => toRecipeImportCategories(categoryOptions),
+    [categoryOptions]
+  );
 
   return useMutation<
     ParseRecipeUrlResponse,
@@ -60,8 +47,8 @@ export const useParseRecipeUrl = () => {
         throw new RecipeParseError('unauthorized', 'Not authenticated');
       }
 
-      const response = await parse({ url }, token, { signal });
-      return normalizeResponse(response);
+      const response = await parse({ url, categories }, token, { signal });
+      return normalizeParsedRecipeCategories(response, categories);
     },
   });
 };
