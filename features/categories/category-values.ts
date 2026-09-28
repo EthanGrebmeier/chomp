@@ -1,21 +1,26 @@
 import {
+  builtInCategoryOptions,
+  CategoryOption,
   createCategoryValueFromName,
   getCategoryNameKey,
-  isBuiltInCategoryName,
   isBuiltInCategoryValue,
   normalizeCategoryName,
 } from '../shared/category/categories';
 
-import { CustomCategory } from './types';
+import { CategoryRecord } from './types';
 
-type ExistingCategory = Pick<CustomCategory, 'id' | 'name' | 'value'>;
+type ExistingRecord = Pick<CategoryRecord, 'value'>;
+type HiddenCandidateRecord = Pick<
+  CategoryRecord,
+  'name' | 'value' | 'isHidden'
+>;
 
 export const getUniqueCategoryValue = (
   name: string,
-  existingCategories: ExistingCategory[]
+  existingRecords: ExistingRecord[]
 ) => {
   const baseValue = createCategoryValueFromName(name);
-  const existingValues = new Set(existingCategories.map(category => category.value));
+  const existingValues = new Set(existingRecords.map(record => record.value));
   let value = baseValue;
   let suffix = 2;
 
@@ -27,34 +32,58 @@ export const getUniqueCategoryValue = (
   return value;
 };
 
+/**
+ * Validates a category name against the categories the user currently sees
+ * (built-in and custom alike). Returns an error message or null.
+ */
 export const findDuplicateCategoryName = ({
   name,
-  existingCategories,
-  excludingCategoryId,
+  options,
+  excludingValue,
 }: {
   name: string;
-  existingCategories: ExistingCategory[];
-  excludingCategoryId?: string;
+  options: Pick<CategoryOption, 'label' | 'value'>[];
+  excludingValue?: string;
 }) => {
   const normalizedName = normalizeCategoryName(name);
-  const nameKey = getCategoryNameKey(normalizedName);
 
   if (!normalizedName) {
     return 'Category name cannot be empty';
   }
 
-  const matchesBuiltInCategory =
-    isBuiltInCategoryName(normalizedName) ||
-    isBuiltInCategoryValue(createCategoryValueFromName(normalizedName));
-  const matchesCustomCategory = existingCategories.some(
-    category =>
-      category.id !== excludingCategoryId &&
-      getCategoryNameKey(category.name) === nameKey
+  const nameKey = getCategoryNameKey(normalizedName);
+  const isDuplicate = options.some(
+    option =>
+      option.value !== excludingValue &&
+      getCategoryNameKey(option.label) === nameKey
   );
 
-  if (matchesBuiltInCategory || matchesCustomCategory) {
-    return 'A category with this name already exists';
-  }
+  return isDuplicate ? 'A category with this name already exists' : null;
+};
 
-  return null;
+/**
+ * Finds a hidden built-in category matching `name` (by its default label or
+ * its customized name) so re-creating it restores the built-in instead of
+ * creating a look-alike custom category.
+ */
+export const findHiddenBuiltInCategoryByName = <
+  T extends HiddenCandidateRecord,
+>(
+  name: string,
+  records: T[]
+) => {
+  const nameKey = getCategoryNameKey(name);
+
+  return records.find(record => {
+    if (!record.isHidden || !isBuiltInCategoryValue(record.value)) {
+      return false;
+    }
+    const builtIn = builtInCategoryOptions.find(
+      option => option.value === record.value
+    );
+    return (
+      getCategoryNameKey(record.name) === nameKey ||
+      (builtIn !== undefined && getCategoryNameKey(builtIn.label) === nameKey)
+    );
+  });
 };
