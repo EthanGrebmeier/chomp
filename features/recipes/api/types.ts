@@ -1,8 +1,18 @@
 export type IngredientCategory = string;
 
+/** A category the model may assign to parsed ingredients. */
+export type RecipeImportCategory = {
+  /** Stable identifier the server must echo back in `ParsedIngredient.category`. */
+  value: IngredientCategory;
+  /** User-facing name; gives the model semantic context for custom categories. */
+  label: string;
+};
+
 // Request
 export type ParseRecipeUrlRequest = {
   url: string;
+  /** The user's visible categories (built-in and custom), in display order. */
+  categories: RecipeImportCategory[];
 };
 
 // Response
