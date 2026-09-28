@@ -21,8 +21,16 @@ Requires Clerk authentication. Include the session token as a Bearer token in th
 ```typescript
 {
   url: string  // Required. Must be http:// or https://
+  categories?: Array<{   // The user's visible categories, in display order
+    value: string        // Stable id; echoed back in ingredients[].category
+    label: string        // User-facing name, e.g. "Spices" or a renamed "Fruit & Veg"
+  }>
 }
 ```
+
+`categories` includes custom categories and renamed built-ins, and excludes
+hidden built-ins. When omitted (older app builds), the server uses the default
+built-in list below.
 
 ---
 
@@ -40,24 +48,17 @@ Requires Clerk authentication. Include the session token as a Bearer token in th
     quantity: number | null  // e.g., 2
     unit: string | null      // e.g., "cups", "lbs"
     notes: string | null     // e.g., "diced", "room temperature"
-    category: IngredientCategory  // Auto-categorized ingredient category
+    category: string         // A `value` from request.categories, or 'other'
   }>
 }
 
-// IngredientCategory is one of:
-type IngredientCategory = 
-  | 'produce'
-  | 'deli'
-  | 'dairy'
-  | 'bakery'
-  | 'frozen'
-  | 'pantry'
-  | 'beverages'
-  | 'snacks'
-  | 'health-beauty'
-  | 'household'
-  | 'other'
+// Default categories when request.categories is omitted:
+// produce, deli, dairy, bakery, frozen, beverages, snacks,
+// health-beauty, household, other
 ```
+
+The client also normalizes defensively: an unrecognized category is matched
+case-insensitively against offered values and labels, else becomes `'other'`.
 
 ---
 
