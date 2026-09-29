@@ -83,8 +83,6 @@ const _schema = i.schema({
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string(),
       servings: i.number(),
-      addedToList: i.boolean().indexed(),
-      addedToListAt: i.string().optional(),
       // "Meal plan only": when true, the entry has no linked grocery items.
       // A missing value is treated as false.
       ignoredByGroceryList: i.boolean().indexed().optional(),
@@ -99,8 +97,6 @@ const _schema = i.schema({
       category: i.string().optional(),
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string().indexed(),
-      addedToList: i.boolean().indexed(),
-      addedToListAt: i.string().optional(),
       // "Meal plan only": when true, the entry has no linked grocery item.
       // A missing value is treated as false.
       ignoredByGroceryList: i.boolean().indexed().optional(),

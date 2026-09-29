@@ -53,10 +53,6 @@ export const addItemToDate = async ({
         mealTag,
         date,
         ignoredByGroceryList: false,
-        // TODO(MPS-16): remove with the legacy addedToList / addedToListAt
-        // attributes; the schema still requires addedToList.
-        addedToList: true,
-        addedToListAt: now,
         createdAt: now,
         updatedAt: now,
       })
