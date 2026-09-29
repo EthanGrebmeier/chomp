@@ -16,7 +16,6 @@ type MealPlanDateSelectorDateProps = {
   isDateToday: boolean;
   isSelected: boolean;
   hasMeals: boolean;
-  allMealsAdded: boolean;
   onPress: (date: Date) => void;
   width: number;
 };

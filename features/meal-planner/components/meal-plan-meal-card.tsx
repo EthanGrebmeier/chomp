@@ -1,6 +1,5 @@
 import { View } from 'react-native';
 
-import { Checkbox } from '../../../components/ui/checkbox';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { RecipeCardContent } from '../../recipes/components/recipe-card';
@@ -18,7 +17,6 @@ type MealPlanMealCardProps = {
     mealPlanRecipe: MealPlanRecipeWithRecipe;
     recipe: Recipe;
   }) => void;
-  onIndicatorPress: (mealPlanRecipe: MealPlanRecipeWithRecipe) => void;
 };
 
 const MealPlanMealCard = ({
@@ -26,7 +24,6 @@ const MealPlanMealCard = ({
   recipe,
   isLast,
   onMealPress,
-  onIndicatorPress,
 }: MealPlanMealCardProps) => {
   const recipeWithIngredients = recipe as unknown as {
     recipe_ingredients?: unknown[];
@@ -57,10 +54,6 @@ const MealPlanMealCard = ({
         className="flex-1"
       >
         <View className="w-full flex-row items-center gap-3 py-1">
-          <Checkbox
-            checked={!!mealPlanRecipe.addedToList}
-            onPress={() => onIndicatorPress(mealPlanRecipe)}
-          />
           <RecipeCardContent
             name={recipe.name}
             ingredientCount={ingredientCount}

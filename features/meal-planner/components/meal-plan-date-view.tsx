@@ -1,17 +1,6 @@
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
+import { createContext, use, useRef, useState, type ReactNode } from 'react';
 import {
-  createContext,
-  use,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
-import {
-  Alert,
   FlatList,
   StyleSheet,
   View,
@@ -35,28 +24,11 @@ import {
 } from 'react-native-reanimated-dnd';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '../../../components/bottom-sheet';
-import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
-import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
-import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
-import { type ListView } from '../../grocery-list/components/list-view-tabs';
 import { Recipe } from '../../recipes/types';
-import { useDefaultStore } from '../../stores/instant/use-default-store';
-import { useAddMealsToGroceryList, useUnmarkMealAdded } from '../hooks';
-import { getReconciledMealPlanSnapshotRows } from '../instant/get-reconciled-meal-plan-snapshot-rows';
-import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
-import {
-  MealPlanIngredientEditorRow,
-  applyMealPlanIngredientOverride,
-  getSelectedSourceIngredientIds,
-  hydrateMealPlanIngredientEditorFromSnapshot,
-  toggleAllMealPlanIngredientSelection,
-  toggleMealPlanIngredientSelection,
-} from '../meal-plan-recipe-ingredient-editor';
 import {
   MealPlanItemWithStore,
   MealPlanRecipe,
@@ -71,10 +43,6 @@ import {
   createMealPlanDayEntries,
 } from '../utils/meal-plan-day-list';
 
-import {
-  MealPlanIngredientOverrideSheet,
-  MealPlanIngredientOverrideSheetRef,
-} from './meal-plan-ingredient-override-sheet';
 import MealPlanItemCard from './meal-plan-item-card';
 import MealPlanMealCard from './meal-plan-meal-card';
 
@@ -84,7 +52,6 @@ type DayListSection = MealPlanDayListSection<
 >;
 
 type MealPlanDateViewProps = {
-  listId: string;
   recipes: MealPlanRecipeWithRecipe[];
   items: MealPlanItemWithStore[];
   mode?: 'calendar' | 'day-list';
@@ -99,7 +66,6 @@ type MealPlanDateViewProps = {
   }) => void;
   onItemPress: (item: MealPlanItemWithStore) => void;
   onMoveEntry?: MoveMealPlanEntry;
-  onViewChange?: (view: ListView) => void;
 };
 
 const mealTimeOrder: MealTag[] = [
@@ -258,8 +224,6 @@ type MealPlanMealTimeGroupProps = {
   groupedItems: Record<MealTag, MealPlanItemWithStore[]>;
   onMealPress: MealPlanDateViewProps['onMealPress'];
   onItemPress: MealPlanDateViewProps['onItemPress'];
-  onRecipeIndicatorPress: (recipe: MealPlanRecipeWithRecipe) => void;
-  onItemIndicatorPress: (item: MealPlanItemWithStore) => void;
   dragConfig?: MealPlanDragConfig;
 };
 
@@ -269,8 +233,6 @@ const MealPlanMealTimeGroup = ({
   groupedItems,
   onMealPress,
   onItemPress,
-  onRecipeIndicatorPress,
-  onItemIndicatorPress,
   dragConfig,
 }: MealPlanMealTimeGroupProps) => (
   <View className="mb-2">
@@ -291,7 +253,6 @@ const MealPlanMealTimeGroup = ({
             recipe={recipe}
             isLast={isLast}
             onMealPress={onMealPress}
-            onIndicatorPress={onRecipeIndicatorPress}
           />
         );
 
@@ -322,7 +283,6 @@ const MealPlanMealTimeGroup = ({
             isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
             contextMenuEnabled={!dragConfig}
             onItemPress={onItemPress}
-            onIndicatorPress={onItemIndicatorPress}
           />
         );
 
@@ -353,8 +313,6 @@ type MealPlanDayContentProps = {
   entries: readonly MealPlanEntry[];
   onMealPress: MealPlanDateViewProps['onMealPress'];
   onItemPress: MealPlanDateViewProps['onItemPress'];
-  onRecipeIndicatorPress: (recipe: MealPlanRecipeWithRecipe) => void;
-  onItemIndicatorPress: (item: MealPlanItemWithStore) => void;
   dragConfig?: MealPlanDragConfig;
 };
 
@@ -362,8 +320,6 @@ const MealPlanDayContent = ({
   entries,
   onMealPress,
   onItemPress,
-  onRecipeIndicatorPress,
-  onItemIndicatorPress,
   dragConfig,
 }: MealPlanDayContentProps) => {
   const { groupedRecipes, groupedItems, mealTimesWithContent } =
@@ -377,8 +333,6 @@ const MealPlanDayContent = ({
       groupedItems={groupedItems}
       onMealPress={onMealPress}
       onItemPress={onItemPress}
-      onRecipeIndicatorPress={onRecipeIndicatorPress}
-      onItemIndicatorPress={onItemIndicatorPress}
       dragConfig={dragConfig}
     />
   ));
@@ -389,8 +343,6 @@ type MealPlanDayListSectionViewProps = {
   onDayPress?: MealPlanDateViewProps['onDayPress'];
   onMealPress: MealPlanDateViewProps['onMealPress'];
   onItemPress: MealPlanDateViewProps['onItemPress'];
-  onRecipeIndicatorPress: (recipe: MealPlanRecipeWithRecipe) => void;
-  onItemIndicatorPress: (item: MealPlanItemWithStore) => void;
   onEntryDrop: (entry: MealPlanEntryIdentity, targetDate: string) => void;
   dragConfig?: MealPlanDragConfig;
 };
@@ -400,8 +352,6 @@ const MealPlanDayListSectionView = ({
   onDayPress,
   onMealPress,
   onItemPress,
-  onRecipeIndicatorPress,
-  onItemIndicatorPress,
   onEntryDrop,
   dragConfig,
 }: MealPlanDayListSectionViewProps) => {
@@ -462,8 +412,6 @@ const MealPlanDayListSectionView = ({
               entries={section.entries}
               onMealPress={onMealPress}
               onItemPress={onItemPress}
-              onRecipeIndicatorPress={onRecipeIndicatorPress}
-              onItemIndicatorPress={onItemIndicatorPress}
               dragConfig={dragConfig}
             />
           </View>
@@ -474,7 +422,6 @@ const MealPlanDayListSectionView = ({
 };
 
 export const MealPlanDateView = ({
-  listId,
   recipes,
   items,
   mode = 'calendar',
@@ -483,22 +430,11 @@ export const MealPlanDateView = ({
   onMealPress,
   onItemPress,
   onMoveEntry,
-  onViewChange,
 }: MealPlanDateViewProps) => {
-  const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
-    useAddMealsToGroceryList(listId);
-  const { mutate: unmarkMealAdded } = useUnmarkMealAdded();
-  const quickReviewSheetRef = useRef<TrueSheet>(null);
-  const ingredientOverrideSheetRef =
-    useRef<MealPlanIngredientOverrideSheetRef>(null);
   const dropProviderRef = useRef<DropProviderRef>(null);
   const dayListRef = useRef<FlatList<DayListSection>>(null);
-  const [quickReviewMealPlanRecipe, setQuickReviewMealPlanRecipe] =
-    useState<MealPlanRecipeWithRecipe | null>(null);
   const [dragResetKey, setDragResetKey] = useState(0);
   const activeDragSectionIndex = useSharedValue<number | null>(null);
-  const queryClient = useQueryClient();
-  const { data: defaultStore } = useDefaultStore();
 
   const refreshDragDropPositions = () => {
     dropProviderRef.current?.requestPositionUpdate();
@@ -548,305 +484,6 @@ export const MealPlanDateView = ({
       }
     : undefined;
 
-  const quickReviewRecipe = quickReviewMealPlanRecipe?.recipe ?? null;
-  const quickReviewQueryKey = useMemo(
-    () => [
-      'meal-plan-quick-review-rows',
-      quickReviewMealPlanRecipe?.id ?? null,
-    ],
-    [quickReviewMealPlanRecipe?.id]
-  );
-
-  const {
-    data: quickReviewIngredientRows = [],
-    isPending: isLoadingQuickReviewIngredients,
-  } = useQuery<MealPlanIngredientEditorRow[]>({
-    queryKey: quickReviewQueryKey,
-    enabled: Boolean(quickReviewMealPlanRecipe && quickReviewRecipe),
-    queryFn: async () => {
-      if (!quickReviewMealPlanRecipe || !quickReviewRecipe) {
-        return [];
-      }
-      const snapshotRows = await getReconciledMealPlanSnapshotRows(
-        quickReviewMealPlanRecipe.id
-      );
-
-      return hydrateMealPlanIngredientEditorFromSnapshot({
-        sourceIngredients: quickReviewRecipe.recipe_ingredients ?? [],
-        snapshotRows,
-      });
-    },
-  });
-
-  const setQuickReviewQueryRows = useCallback(
-    (
-      updater: (
-        rows: MealPlanIngredientEditorRow[]
-      ) => MealPlanIngredientEditorRow[]
-    ) => {
-      queryClient.setQueryData<MealPlanIngredientEditorRow[]>(
-        quickReviewQueryKey,
-        prev => updater(prev ?? [])
-      );
-    },
-    [queryClient, quickReviewQueryKey]
-  );
-
-  const quickReviewSelectionMutation = useMutation({
-    mutationFn: ({
-      snapshotRowId,
-      isSelected,
-    }: {
-      snapshotRowId: string;
-      isSelected: boolean;
-    }) =>
-      MealPlanIngredientSnapshotStore.updateRowSelection({
-        snapshotRowId,
-        isSelected,
-        defaultStore,
-      }),
-  });
-
-  const quickReviewOverrideMutation = useMutation({
-    mutationFn: ({
-      snapshotRowId,
-      updates,
-    }: {
-      snapshotRowId: string;
-      updates: {
-        name: string;
-        quantity: number;
-        unit: string;
-        notes?: string | null;
-        category?: string | null;
-        storeId?: string;
-        isQuantityOverridden: boolean;
-      };
-    }) =>
-      MealPlanIngredientSnapshotStore.updateRowOverrides({
-        snapshotRowId,
-        updates,
-        defaultStore,
-      }),
-  });
-
-  const selectedQuickReviewIngredientIds = useMemo(
-    () => getSelectedSourceIngredientIds(quickReviewIngredientRows),
-    [quickReviewIngredientRows]
-  );
-
-  const closeQuickReviewSheet = useCallback(() => {
-    quickReviewSheetRef.current?.dismiss();
-  }, []);
-
-  const handleQuickReviewDismiss = useCallback(() => {
-    setQuickReviewMealPlanRecipe(null);
-    ingredientOverrideSheetRef.current?.dismiss();
-  }, []);
-
-  const handleOpenQuickReview = useCallback(
-    (mealPlanRecipe: MealPlanRecipeWithRecipe) => {
-      setQuickReviewMealPlanRecipe(mealPlanRecipe);
-      quickReviewSheetRef.current?.present();
-    },
-    []
-  );
-
-  const handleToggleQuickReviewIngredientSelection = useCallback(
-    async (sourceRecipeIngredientId: string) => {
-      const currentRow = quickReviewIngredientRows.find(
-        row => row.sourceRecipeIngredientId === sourceRecipeIngredientId
-      );
-      if (!currentRow?.snapshotRowId) return;
-
-      const previousIsSelected = currentRow.isSelected;
-      const nextIsSelected = !previousIsSelected;
-
-      setQuickReviewQueryRows(rows =>
-        toggleMealPlanIngredientSelection(rows, sourceRecipeIngredientId)
-      );
-
-      try {
-        await quickReviewSelectionMutation.mutateAsync({
-          snapshotRowId: currentRow.snapshotRowId,
-          isSelected: nextIsSelected,
-        });
-      } catch {
-        setQuickReviewQueryRows(rows =>
-          rows.map(row =>
-            row.sourceRecipeIngredientId === sourceRecipeIngredientId
-              ? { ...row, isSelected: previousIsSelected }
-              : row
-          )
-        );
-        toast.error('Failed to save ingredient selection');
-      }
-    },
-    [
-      quickReviewIngredientRows,
-      quickReviewSelectionMutation,
-      setQuickReviewQueryRows,
-    ]
-  );
-
-  const handleToggleAllQuickReviewIngredientSelections =
-    useCallback(async () => {
-      if (quickReviewIngredientRows.length === 0 || !quickReviewMealPlanRecipe)
-        return;
-
-      const previousRows = quickReviewIngredientRows;
-      const nextRows = toggleAllMealPlanIngredientSelection(previousRows);
-      const nextIsSelected = nextRows[0]?.isSelected ?? true;
-
-      setQuickReviewQueryRows(() => nextRows);
-      try {
-        await MealPlanIngredientSnapshotStore.updateRowsSelection({
-          mealPlanRecipeId: quickReviewMealPlanRecipe.id,
-          selections: previousRows.flatMap(row =>
-            row.snapshotRowId
-              ? [
-                  {
-                    snapshotRowId: row.snapshotRowId,
-                    isSelected: nextIsSelected,
-                  },
-                ]
-              : []
-          ),
-          defaultStore,
-        });
-      } catch {
-        setQuickReviewQueryRows(() => previousRows);
-        toast.error('Failed to save ingredient selections');
-      }
-    }, [
-      defaultStore,
-      quickReviewIngredientRows,
-      quickReviewMealPlanRecipe,
-      setQuickReviewQueryRows,
-    ]);
-
-  const handleEditQuickReviewIngredient = useCallback(
-    (sourceRecipeIngredientId: string) => {
-      const row = quickReviewIngredientRows.find(
-        ingredientRow =>
-          ingredientRow.sourceRecipeIngredientId === sourceRecipeIngredientId
-      );
-      if (!row) return;
-      ingredientOverrideSheetRef.current?.present(row);
-    },
-    [quickReviewIngredientRows]
-  );
-
-  const handleConfirmQuickAdd = useCallback(() => {
-    if (!quickReviewMealPlanRecipe || isAddingToList) return;
-
-    // Close and jump to the list right away; the write applies optimistically.
-    closeQuickReviewSheet();
-    onViewChange?.('grocery-list');
-
-    addMealsToGroceryList(
-      { selectedRecipeIds: [quickReviewMealPlanRecipe.id] },
-      {
-        onSuccess: result => {
-          if (result.addedRecipes + result.addedItems === 0) {
-            toast.info('Already added to list');
-          }
-        },
-        onError: () => {
-          toast.error('Failed to add to list');
-        },
-      }
-    );
-  }, [
-    addMealsToGroceryList,
-    closeQuickReviewSheet,
-    isAddingToList,
-    onViewChange,
-    quickReviewMealPlanRecipe,
-  ]);
-
-  const handleIndicatorPress = useCallback(
-    (
-      type: 'recipe' | 'item',
-      id: string,
-      name: string,
-      addedToList: boolean
-    ) => {
-      if (isAddingToList) return;
-
-      if (addedToList) {
-        Alert.alert(
-          'Already Added',
-          `"${name}" has already been added to a grocery list. Would you like to mark it as unadded?`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Mark as Unadded',
-              onPress: () => unmarkMealAdded({ type, id }),
-            },
-          ]
-        );
-      } else {
-        if (type === 'recipe') {
-          const mealPlanRecipe = recipes.find(recipe => recipe.id === id);
-          if (!mealPlanRecipe) {
-            toast.error('Recipe not found');
-            return;
-          }
-          handleOpenQuickReview(mealPlanRecipe);
-          return;
-        }
-
-        addMealsToGroceryList(
-          { selectedItemIds: [id] },
-          {
-            onSuccess: result => {
-              const totalAdded = result.addedRecipes + result.addedItems;
-              if (totalAdded === 0) {
-                toast.info('Already added to list');
-              }
-            },
-            onError: () => {
-              toast.error('Failed to add to list');
-            },
-          }
-        );
-      }
-    },
-    [
-      addMealsToGroceryList,
-      handleOpenQuickReview,
-      isAddingToList,
-      recipes,
-      unmarkMealAdded,
-    ]
-  );
-
-  const handleRecipeIndicatorPress = useCallback(
-    (mealPlanRecipe: MealPlanRecipeWithRecipe) => {
-      const name = mealPlanRecipe.recipe.name;
-      handleIndicatorPress(
-        'recipe',
-        mealPlanRecipe.id,
-        name,
-        !!mealPlanRecipe.addedToList
-      );
-    },
-    [recipes, handleIndicatorPress]
-  );
-
-  const handleItemIndicatorPress = useCallback(
-    (mealPlanItem: MealPlanItemWithStore) => {
-      handleIndicatorPress(
-        'item',
-        mealPlanItem.id,
-        mealPlanItem.name,
-        !!mealPlanItem.addedToList
-      );
-    },
-    [handleIndicatorPress]
-  );
-
   const todaySectionIndex = dayListSections.findIndex(
     section => section.isToday
   );
@@ -885,166 +522,53 @@ export const MealPlanDateView = ({
     );
   }
 
-  return (
-    <>
-      {mode === 'day-list' ? (
-        <DropProvider ref={dropProviderRef}>
-          <ActiveDragSectionContext value={activeDragSectionIndex}>
-            <DayCellLayoutContext value={handleDayCellLayout}>
-              <FlatList
-                ref={dayListRef}
-                data={dayListSections}
-                keyExtractor={section => section.dateKey}
-                contentContainerClassName="pb-20"
-                initialNumToRender={
-                  Math.max(todaySectionIndex, 0) +
-                  DAY_LIST_INITIAL_FUTURE_DAYS_TO_RENDER
-                }
-                windowSize={5}
-                CellRendererComponent={MealPlanDayCell}
-                onLayout={refreshDragDropPositions}
-                onContentSizeChange={refreshDragDropPositions}
-                onMomentumScrollEnd={refreshDragDropPositions}
-                onScrollEndDrag={refreshDragDropPositions}
-                renderItem={({ item: section }) => (
-                  <MealPlanDayListSectionView
-                    section={section}
-                    onDayPress={onDayPress}
-                    onMealPress={onMealPress}
-                    onItemPress={onItemPress}
-                    onRecipeIndicatorPress={handleRecipeIndicatorPress}
-                    onItemIndicatorPress={handleItemIndicatorPress}
-                    onEntryDrop={handleEntryDrop}
-                    dragConfig={dragConfig}
-                  />
-                )}
+  return mode === 'day-list' ? (
+    <DropProvider ref={dropProviderRef}>
+      <ActiveDragSectionContext value={activeDragSectionIndex}>
+        <DayCellLayoutContext value={handleDayCellLayout}>
+          <FlatList
+            ref={dayListRef}
+            data={dayListSections}
+            keyExtractor={section => section.dateKey}
+            contentContainerClassName="pb-20"
+            initialNumToRender={
+              Math.max(todaySectionIndex, 0) +
+              DAY_LIST_INITIAL_FUTURE_DAYS_TO_RENDER
+            }
+            windowSize={5}
+            CellRendererComponent={MealPlanDayCell}
+            onLayout={refreshDragDropPositions}
+            onContentSizeChange={refreshDragDropPositions}
+            onMomentumScrollEnd={refreshDragDropPositions}
+            onScrollEndDrag={refreshDragDropPositions}
+            renderItem={({ item: section }) => (
+              <MealPlanDayListSectionView
+                section={section}
+                onDayPress={onDayPress}
+                onMealPress={onMealPress}
+                onItemPress={onItemPress}
+                onEntryDrop={handleEntryDrop}
+                dragConfig={dragConfig}
               />
-            </DayCellLayoutContext>
-          </ActiveDragSectionContext>
-        </DropProvider>
-      ) : (
-        <FlatList
-          contentContainerClassName="pb-20"
-          data={calendarGroups.mealTimesWithContent}
-          keyExtractor={item => item}
-          renderItem={({ item: mealTime }) => (
-            <MealPlanMealTimeGroup
-              mealTime={mealTime}
-              groupedRecipes={calendarGroups.groupedRecipes}
-              groupedItems={calendarGroups.groupedItems}
-              onMealPress={onMealPress}
-              onItemPress={onItemPress}
-              onRecipeIndicatorPress={handleRecipeIndicatorPress}
-              onItemIndicatorPress={handleItemIndicatorPress}
-            />
-          )}
+            )}
+          />
+        </DayCellLayoutContext>
+      </ActiveDragSectionContext>
+    </DropProvider>
+  ) : (
+    <FlatList
+      contentContainerClassName="pb-20"
+      data={calendarGroups.mealTimesWithContent}
+      keyExtractor={item => item}
+      renderItem={({ item: mealTime }) => (
+        <MealPlanMealTimeGroup
+          mealTime={mealTime}
+          groupedRecipes={calendarGroups.groupedRecipes}
+          groupedItems={calendarGroups.groupedItems}
+          onMealPress={onMealPress}
+          onItemPress={onItemPress}
         />
       )}
-      <BottomSheet
-        name="meal-plan-quick-review-sheet"
-        ref={quickReviewSheetRef}
-        detents={[0.9]}
-        viewClassName="flex-1"
-        scrollable
-        onDismiss={handleQuickReviewDismiss}
-        footer={
-          <BottomSheet.SheetView className="pb-safe flex-row gap-2 px-4 pt-3">
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onPress={closeQuickReviewSheet}
-            >
-              <Text>Cancel</Text>
-            </Button>
-            <Button
-              className="flex-1"
-              onPress={handleConfirmQuickAdd}
-              disabled={isAddingToList}
-            >
-              <Text>{isAddingToList ? 'Adding...' : 'Add Meal to List'}</Text>
-            </Button>
-          </BottomSheet.SheetView>
-        }
-      >
-        <BottomSheet.SheetView className="pb-safe flex-1">
-          <View className="min-h-0 flex-1">
-            <BottomSheet.Header
-              className="mb-2"
-              title="Add meal to grocery list"
-              description={
-                quickReviewMealPlanRecipe
-                  ? `Confirm the ingredients from ${quickReviewMealPlanRecipe.recipe.name} to add to your grocery list`
-                  : undefined
-              }
-            />
-            {quickReviewRecipe ? (
-              <View className="-mx-4 min-h-0 flex-1">
-                <IngredientSelector
-                  recipe={quickReviewRecipe}
-                  mode="meal-plan"
-                  showHeader={false}
-                  showFooter={false}
-                  bottomContentInset={96}
-                  onBack={closeQuickReviewSheet}
-                  onDismiss={closeQuickReviewSheet}
-                  selectedIds={selectedQuickReviewIngredientIds}
-                  onToggleIngredient={id => {
-                    void handleToggleQuickReviewIngredientSelection(id);
-                  }}
-                  onToggleAll={() => {
-                    void handleToggleAllQuickReviewIngredientSelections();
-                  }}
-                  onEditIngredient={handleEditQuickReviewIngredient}
-                />
-              </View>
-            ) : null}
-            {isLoadingQuickReviewIngredients ||
-            quickReviewOverrideMutation.isPending ? (
-              <View className="px-4 pb-4">
-                <Pill hasValue>
-                  {isLoadingQuickReviewIngredients
-                    ? 'Loading ingredient selections...'
-                    : 'Saving ingredient override...'}
-                </Pill>
-              </View>
-            ) : null}
-          </View>
-        </BottomSheet.SheetView>
-      </BottomSheet>
-      <MealPlanIngredientOverrideSheet
-        ref={ingredientOverrideSheetRef}
-        onSave={async ({ sourceRecipeIngredientId, updates }) => {
-          const currentRow = quickReviewIngredientRows.find(
-            row => row.sourceRecipeIngredientId === sourceRecipeIngredientId
-          );
-          if (!currentRow?.snapshotRowId) {
-            throw new Error('Snapshot row not found');
-          }
-
-          setQuickReviewQueryRows(rows =>
-            rows.map(row =>
-              row.sourceRecipeIngredientId === sourceRecipeIngredientId
-                ? applyMealPlanIngredientOverride({ row, updates })
-                : row
-            )
-          );
-          try {
-            await quickReviewOverrideMutation.mutateAsync({
-              snapshotRowId: currentRow.snapshotRowId,
-              updates,
-            });
-          } catch (error) {
-            setQuickReviewQueryRows(rows =>
-              rows.map(row =>
-                row.sourceRecipeIngredientId === sourceRecipeIngredientId
-                  ? currentRow
-                  : row
-              )
-            );
-            throw error;
-          }
-        }}
-      />
-    </>
+    />
   );
 };

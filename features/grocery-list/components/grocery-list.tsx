@@ -46,7 +46,6 @@ import {
   SelectGroceryListSheetRef,
 } from '../../grocery-lists/components/select-grocery-list-sheet';
 import { MealPlanHeaderActionsForList } from '../../meal-planner/components/meal-plan-dropdown-menu';
-import { useHasUnaddedMeals } from '../../meal-planner/hooks/useHasUnaddedMeals';
 import { MealPlanViewMode } from '../../meal-planner/types';
 import { useRecipesSettingsBar } from '../../shared/components/recipes-settings-bar';
 import {
@@ -152,7 +151,6 @@ export const GroceryList = ({
   const activeItemIds = filterActiveItems(items);
   const { mutate: clearGroceryList, mutateAsync: clearGroceryListAsync } =
     useClearGroceryList();
-  const hasUnaddedMeals = useHasUnaddedMeals(listId);
 
   const isOwner = user?.id === ownerId;
 
@@ -187,7 +185,7 @@ export const GroceryList = ({
   useFocusEffect(resetBulkSelectionMode);
   useRecipesSettingsBar({
     listId,
-    visible: activeView === 'grocery-list' && !bulkSelectionState.isActive,
+    visible: !bulkSelectionState.isActive,
   });
 
   const deferredQuery = useDeferredValue(searchQuery.trim());
@@ -887,7 +885,6 @@ export const GroceryList = ({
                 activeView={activeView}
                 onViewChange={onViewChange}
                 isMealPlanDisabled={!listId}
-                hasUnaddedMeals={hasUnaddedMeals}
               />
             </Animated.View>
           )}

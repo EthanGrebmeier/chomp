@@ -18,7 +18,6 @@ type MealPlanDateSelectorProps = {
   onDatePress: (date: Date) => void;
   isProgrammaticNavigationRef: MutableRefObject<boolean>;
   datesWithMeals: Set<string>;
-  datesAllMealsAdded: Set<string>;
 };
 
 // Generate weeks from a range of -30 to +30 weeks
@@ -50,7 +49,6 @@ const MealPlanDateSelector = ({
   onDatePress,
   isProgrammaticNavigationRef,
   datesWithMeals,
-  datesAllMealsAdded,
 }: MealPlanDateSelectorProps) => {
   const pagerRef = useRef<PagerView>(null);
   const { width } = useWindowDimensions();
@@ -228,7 +226,6 @@ const MealPlanDateSelector = ({
                     isDateToday={isDateToday}
                     isSelected={isSameDay(date, currentDate)}
                     hasMeals={datesWithMeals.has(dateKey)}
-                    allMealsAdded={datesAllMealsAdded.has(dateKey)}
                     onPress={onDatePress}
                     width={dateWidth}
                   />

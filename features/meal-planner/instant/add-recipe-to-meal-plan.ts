@@ -56,8 +56,8 @@ export const addRecipeToDate = async ({
         date: date,
         servings: servings,
         ignoredByGroceryList: false,
-        // TODO(MPS-06): remove once the manual add-to-list flow is gone. Marks
-        // the entry as added so that flow skips it and nothing is added twice.
+        // TODO(MPS-16): remove with the legacy addedToList / addedToListAt
+        // attributes; the schema still requires addedToList.
         addedToList: true,
         addedToListAt: now,
         createdAt: now,

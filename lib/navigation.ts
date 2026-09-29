@@ -121,14 +121,6 @@ export function buildMealPlanUrl(params: ListMealPlanParams): Href {
   });
 }
 
-export function buildMealPlanAddToListUrl(params: ListMealPlanParams): Href {
-  const { listId } = params;
-  return {
-    pathname: '/meal-plan/[listId]/add-to-list',
-    params: { listId },
-  } as unknown as Href;
-}
-
 /**
  * Builds a URL for a recipe detail page
  */
@@ -204,8 +196,6 @@ export const navigation = {
 
   // Meal plan view navigation
   goToMealPlan: (listId: string) => buildMealPlanUrl({ listId }),
-  goToMealPlanAddToList: (listId: string) =>
-    buildMealPlanAddToListUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -234,8 +224,6 @@ export function useNavigation() {
 
     // Meal plan view navigation
     goToMealPlan: (listId: string) => navigation.goToMealPlan(listId),
-    goToMealPlanAddToList: (listId: string) =>
-      navigation.goToMealPlanAddToList(listId),
 
     // Recipe navigation
     goToRecipe: (recipeId: string, listId?: string) =>
@@ -263,8 +251,6 @@ export const navActions = {
 
   // Meal plan view navigation
   goToMealPlan: (listId: string) => buildMealPlanUrl({ listId }),
-  goToMealPlanAddToList: (listId: string) =>
-    buildMealPlanAddToListUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -295,7 +281,6 @@ export const ROUTES = {
     VIEW: (listId: string) =>
       `/(tabs)?listId=${encodeURIComponent(listId)}&view=meal-plan`,
     LEGACY: (listId: string) => `/meal-plan/${listId}`,
-    ADD_TO_LIST: (listId: string) => `/meal-plan/${listId}/add-to-list`,
   },
   RECIPES: {
     INDEX: '/recipes',

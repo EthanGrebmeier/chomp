@@ -1,7 +1,6 @@
 import { Alert, View } from 'react-native';
 
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
-import { Checkbox } from '../../../components/ui/checkbox';
 import {
   ContextMenuItem,
   ContextMenuItemTitle,
@@ -18,7 +17,6 @@ type MealPlanItemCardProps = {
   isLast: boolean;
   contextMenuEnabled?: boolean;
   onItemPress: (item: MealPlanItem) => void;
-  onIndicatorPress: (mealPlanItem: MealPlanItem) => void;
 };
 
 const MealPlanItemCard = ({
@@ -26,7 +24,6 @@ const MealPlanItemCard = ({
   isLast,
   contextMenuEnabled = true,
   onItemPress,
-  onIndicatorPress,
 }: MealPlanItemCardProps) => {
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
 
@@ -56,10 +53,6 @@ const MealPlanItemCard = ({
         className="flex-1"
       >
         <View className="w-full flex-row items-center gap-3 py-1">
-          <Checkbox
-            checked={!!mealPlanItem.addedToList}
-            onPress={() => onIndicatorPress(mealPlanItem)}
-          />
           <View className="flex-1 flex-row items-center justify-between gap-3">
             <Text className="flex-1 text-xl font-medium text-foreground">
               {mealPlanItem.name}

@@ -184,7 +184,6 @@ export default function List() {
                   <MealPlanner
                     listId={activeListId}
                     showHeader={false}
-                    onViewChange={handleViewChange}
                     viewMode={mealPlanViewMode}
                     onViewModeChange={setMealPlanViewMode}
                   />

@@ -14,7 +14,6 @@ import Animated, {
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
-import { type ListView } from '../../grocery-list/components/list-view-tabs';
 import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
@@ -23,7 +22,6 @@ import {
   MealPlanRecipeWithRecipe,
   MealPlanViewMode,
 } from '../types';
-import { isMealPlanEntryAddable } from '../utils/meal-plan-addable-window';
 import {
   buildMealPlanDayListSections,
   MEAL_PLAN_DAY_LIST_PAST_DAYS,
@@ -34,11 +32,6 @@ import {
   isPageWithinActiveWindow,
 } from '../utils/meal-plan-pager';
 
-import { AddMealsToListButton } from './add-meals-to-list-button';
-import {
-  AddMealsToListConfirmation,
-  AddMealsToListSheetRef,
-} from './add-meals-to-list-confirmation';
 import {
   AddToMealPlanSheet,
   AddToMealPlanSheetRef,
@@ -63,7 +56,6 @@ type MealPlannerProps = {
   listName?: string;
   onViewListsPress?: () => void;
   showHeader?: boolean;
-  onViewChange?: (view: ListView) => void;
   viewMode?: MealPlanViewMode;
   onViewModeChange?: (viewMode: MealPlanViewMode) => void;
 };
@@ -73,12 +65,10 @@ export const MealPlanner = ({
   listName,
   onViewListsPress,
   showHeader = true,
-  onViewChange,
   viewMode = 'calendar',
   onViewModeChange,
 }: MealPlannerProps) => {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
-  const addMealsToListSheet = useRef<AddMealsToListSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
   const pagerRef = useRef<PagerView>(null);
@@ -90,41 +80,19 @@ export const MealPlanner = ({
   const { recipes, items } = useUserMealPlanData(listId);
   const { mutateAsync: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
   const { mutateAsync: updateMealPlanItem } = useUpdateMealPlanItem();
-  const unaddedCount =
-    recipes.filter(
-      recipe => !recipe.addedToList && isMealPlanEntryAddable(recipe.date)
-    ).length +
-    items.filter(item => !item.addedToList && isMealPlanEntryAddable(item.date))
-      .length;
+  const { recipesByDate, itemsByDate, datesWithMeals } = useMemo(() => {
+    const groupedRecipes = groupMealPlanEntriesByDate(recipes);
+    const groupedItems = groupMealPlanEntriesByDate(items);
 
-  const { recipesByDate, itemsByDate, datesWithMeals, datesAllMealsAdded } =
-    useMemo(() => {
-      const groupedRecipes = groupMealPlanEntriesByDate(recipes);
-      const groupedItems = groupMealPlanEntriesByDate(items);
-      const withMeals = new Set([
+    return {
+      recipesByDate: groupedRecipes,
+      itemsByDate: groupedItems,
+      datesWithMeals: new Set([
         ...groupedRecipes.keys(),
         ...groupedItems.keys(),
-      ]);
-      const allAdded = new Set<string>();
-
-      withMeals.forEach(date => {
-        const dateRecipes = groupedRecipes.get(date) ?? [];
-        const dateItems = groupedItems.get(date) ?? [];
-        if (
-          dateRecipes.every(recipe => recipe.addedToList) &&
-          dateItems.every(item => item.addedToList)
-        ) {
-          allAdded.add(date);
-        }
-      });
-
-      return {
-        recipesByDate: groupedRecipes,
-        itemsByDate: groupedItems,
-        datesWithMeals: withMeals,
-        datesAllMealsAdded: allAdded,
-      };
-    }, [items, recipes]);
+      ]),
+    };
+  }, [items, recipes]);
 
   // Track when the date array was generated to detect day changes
   const [dateAnchor, setDateAnchor] = useState(() => startOfDay(new Date()));
@@ -275,15 +243,6 @@ export const MealPlanner = ({
           </View>
         </View>
       ) : null}
-      <AddMealsToListButton
-        unaddedCount={unaddedCount}
-        onPress={() => addMealsToListSheet.current?.present()}
-      />
-      <AddMealsToListConfirmation
-        ref={addMealsToListSheet}
-        listId={listId}
-        onViewChange={onViewChange}
-      />
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} listId={listId} />
       <EditItemSheet ref={editItemSheet} />
@@ -300,7 +259,6 @@ export const MealPlanner = ({
           <MealPlanDateView
             key={dayListSections[MEAL_PLAN_DAY_LIST_PAST_DAYS]?.dateKey}
             mode="day-list"
-            listId={listId}
             recipes={recipes}
             items={items}
             dayListSections={dayListSections}
@@ -310,7 +268,6 @@ export const MealPlanner = ({
               editMealSheet.current?.open({ mealPlanRecipe, recipe });
             }}
             onItemPress={handleItemPress}
-            onViewChange={onViewChange}
           />
         </Animated.View>
         <Animated.View
@@ -333,7 +290,6 @@ export const MealPlanner = ({
               onDatePress={handleDatePress}
               isProgrammaticNavigationRef={isProgrammaticNavigationRef}
               datesWithMeals={datesWithMeals}
-              datesAllMealsAdded={datesAllMealsAdded}
             />
             <PagerView
               ref={pagerRef}
@@ -352,7 +308,6 @@ export const MealPlanner = ({
                   <View key={date.toISOString()} style={{ flex: 1 }}>
                     {isPageActive && dateKey ? (
                       <MealPlanDateView
-                        listId={listId}
                         recipes={
                           recipesByDate.get(dateKey) ?? EMPTY_MEAL_PLAN_RECIPES
                         }
@@ -366,7 +321,6 @@ export const MealPlanner = ({
                           });
                         }}
                         onItemPress={handleItemPress}
-                        onViewChange={onViewChange}
                       />
                     ) : null}
                   </View>
