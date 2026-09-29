@@ -47,6 +47,32 @@ vi.mock('@/lib/instant', () => ({
   },
 }));
 
+vi.mock('@instantdb/react-native', () => ({
+  tx: new Proxy(
+    {},
+    {
+      get: (_, namespace: string) =>
+        new Proxy(
+          {},
+          {
+            get: (_target, entityId: string) =>
+              Object.fromEntries(
+                ['update', 'link', 'unlink'].map(type => [
+                  type,
+                  (payload: unknown) => ({
+                    type,
+                    namespace,
+                    entityId,
+                    payload,
+                  }),
+                ])
+              ),
+          }
+        ),
+    }
+  ),
+}));
+
 vi.mock('../../instant/sync-saved-item-from-grocery-item', () => ({
   syncSavedItemFromGroceryItem: syncSavedItemFromGroceryItemMock,
 }));
@@ -82,13 +108,13 @@ describe('store and category bulk payload builders', () => {
     const payload = buildBulkStoreSelectionPayload({
       selectedItemIds: new Set(['item-1', 'item-3']),
       storeId: 'store-5',
-      storeName: 'Trader Joe\'s',
+      storeName: "Trader Joe's",
     });
 
     expect(payload).toEqual({
       selectedItemIds: ['item-1', 'item-3'],
       storeId: 'store-5',
-      storeName: 'Trader Joe\'s',
+      storeName: "Trader Joe's",
     });
   });
 
@@ -181,5 +207,126 @@ describe('bulk store/category write adapters', () => {
       skippedItemCount: 1,
       failedSavedItemSyncCount: 0,
     });
+  });
+});
+
+describe('bulk store/category meal plan write-back', () => {
+  it('writes a bulk store change back to linked sources in the same transaction', async () => {
+    dbTransactMock.mockResolvedValue(undefined);
+
+    await runBulkStoreUpdate({
+      selectedItemIds: ['item-1', 'item-2', 'item-3'],
+      selectedItems: [
+        {
+          id: 'item-1',
+          name: 'Basil',
+          unit: 'bunch',
+          recipe: { id: 'recipe-1' },
+          store: { id: 'store-default' },
+          meal_plan_ingredient_snapshot: { id: 'snapshot-1', store: null },
+        },
+        {
+          id: 'item-2',
+          name: 'Milk',
+          unit: 'gallon',
+          store: { id: 'store-old' },
+          meal_plan_item: {
+            id: 'meal-plan-item-1',
+            store: { id: 'store-old' },
+          },
+        },
+        {
+          id: 'item-3',
+          name: 'Eggs',
+          unit: 'each',
+        },
+      ],
+      storeId: 'store-new',
+    });
+
+    expect(dbTransactMock).toHaveBeenCalledTimes(1);
+    const [transactions] = dbTransactMock.mock.calls[0];
+    expect(transactions).toEqual(
+      expect.arrayContaining([
+        {
+          type: 'link',
+          namespace: 'meal_plan_recipe_ingredient_snapshots',
+          entityId: 'snapshot-1',
+          payload: { store: 'store-new' },
+        },
+        {
+          type: 'update',
+          namespace: 'meal_plan_items',
+          entityId: 'meal-plan-item-1',
+          payload: { updatedAt: expect.any(String) },
+        },
+        {
+          type: 'unlink',
+          namespace: 'meal_plan_items',
+          entityId: 'meal-plan-item-1',
+          payload: { store: 'store-old' },
+        },
+        {
+          type: 'link',
+          namespace: 'meal_plan_items',
+          entityId: 'meal-plan-item-1',
+          payload: { store: 'store-new' },
+        },
+      ])
+    );
+    expect(
+      transactions.filter(
+        (transaction: { namespace?: string }) => transaction.namespace
+      )
+    ).toHaveLength(4);
+  });
+
+  it('writes a bulk category change back to linked sources', async () => {
+    dbTransactMock.mockResolvedValue(undefined);
+
+    await runBulkCategoryUpdate({
+      selectedItemIds: ['item-1', 'item-2'],
+      selectedItems: [
+        {
+          id: 'item-1',
+          name: 'Basil',
+          unit: 'bunch',
+          meal_plan_ingredient_snapshot: { id: 'snapshot-1' },
+        },
+        {
+          id: 'item-2',
+          name: 'Eggs',
+          unit: 'each',
+        },
+      ],
+      category: undefined,
+    });
+
+    expect(dbTransactMock).toHaveBeenCalledTimes(1);
+    const [transactions] = dbTransactMock.mock.calls[0];
+    expect(transactions).toEqual([
+      { type: 'update', itemId: 'item-1', payload: { category: null } },
+      { type: 'update', itemId: 'item-2', payload: { category: null } },
+      {
+        type: 'update',
+        namespace: 'meal_plan_recipe_ingredient_snapshots',
+        entityId: 'snapshot-1',
+        payload: { category: null },
+      },
+    ]);
+  });
+
+  it('leaves unlinked items writing only grocery items', async () => {
+    dbTransactMock.mockResolvedValue(undefined);
+
+    await runBulkCategoryUpdate({
+      selectedItemIds: ['item-1'],
+      selectedItems: [{ id: 'item-1', name: 'Eggs', unit: 'each' }],
+      category: 'dairy',
+    });
+
+    expect(dbTransactMock).toHaveBeenCalledWith([
+      { type: 'update', itemId: 'item-1', payload: { category: 'dairy' } },
+    ]);
   });
 });

@@ -23,13 +23,14 @@ export type GroceryListLinkedSavedItem = InstaQLEntity<
 export type GroceryListLinkedMealPlanIngredientSnapshot = InstaQLEntity<
   typeof schema,
   'meal_plan_recipe_ingredient_snapshots',
-  { meal_plan_recipe: {} }
+  { meal_plan_recipe: {}; store: {} }
 >;
 
 /** Standalone meal plan item a linked grocery item was created from. */
 export type GroceryListLinkedMealPlanItem = InstaQLEntity<
   typeof schema,
-  'meal_plan_items'
+  'meal_plan_items',
+  { store: {} }
 >;
 
 export type AppSettings = typeof appSettingsTable.$inferSelect;

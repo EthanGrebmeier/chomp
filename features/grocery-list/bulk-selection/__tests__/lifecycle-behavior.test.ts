@@ -42,6 +42,9 @@ vi.mock('@/lib/instant', () => ({
   },
 }));
 
+// Meal plan write-back builders import `tx`; these items aren't linked.
+vi.mock('@instantdb/react-native', () => ({ tx: {} }));
+
 vi.mock('../../instant/update-grocery-item-only', () => ({
   updateGroceryItemOnly: updateGroceryItemOnlyMock,
 }));

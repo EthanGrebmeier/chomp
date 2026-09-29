@@ -2,7 +2,10 @@ import { db } from '../../../lib/instant';
 import { GroceryListItem } from '../types';
 
 import { syncSavedItemFromGroceryItem } from './sync-saved-item-from-grocery-item';
-import { updateGroceryItemOnly } from './update-grocery-item-only';
+import {
+  type UpdateGroceryItemOnlyArgs,
+  updateGroceryItemOnly,
+} from './update-grocery-item-only';
 
 /**
  * Thin wrapper that composes the two extracted writers. Preserves the
@@ -21,6 +24,7 @@ export const updateGroceryListItem = async ({
   selectedSavedItemStoreId,
   selectedLocalSavedItemId,
   currentItemName,
+  mealPlanWriteBack,
 }: {
   itemId: string;
   item: Partial<GroceryListItem> & { storeId?: string };
@@ -32,6 +36,7 @@ export const updateGroceryListItem = async ({
   selectedSavedItemStoreId?: string;
   selectedLocalSavedItemId?: string;
   currentItemName?: string;
+  mealPlanWriteBack?: UpdateGroceryItemOnlyArgs['mealPlanWriteBack'];
 }) => {
   await updateGroceryItemOnly({
     itemId,
@@ -40,11 +45,12 @@ export const updateGroceryListItem = async ({
     currentSavedItemId,
     selectedSavedItemId,
     selectedLocalSavedItemId,
+    mealPlanWriteBack,
   });
 
   const nextSavedItemId = selectedLocalSavedItemId
     ? undefined
-    : selectedSavedItemId ?? currentSavedItemId;
+    : (selectedSavedItemId ?? currentSavedItemId);
 
   // Preserve the legacy "assume owner on pick" shortcut: when the caller
   // supplies a freshly selected cloud saved item, the old writer treated the

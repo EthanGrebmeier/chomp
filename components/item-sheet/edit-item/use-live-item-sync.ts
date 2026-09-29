@@ -11,7 +11,16 @@ import { useDebounceCallback } from 'usehooks-ts';
 import { syncSavedItemFromGroceryItem } from '../../../features/grocery-list/instant/sync-saved-item-from-grocery-item';
 import { updateGroceryItemOnly } from '../../../features/grocery-list/instant/update-grocery-item-only';
 import { GroceryListItemWithRecipe } from '../../../features/grocery-list/types';
-import { ItemSnapshot, diffItemSnapshot } from '../diff-item-snapshot';
+import {
+  type MealPlanWriteBackSource,
+  applyPatchToMealPlanWriteBackSource,
+  resolveMealPlanWriteBackSource,
+} from '../../../features/meal-planner/instant/plan-list-to-meal-plan-write-back';
+import {
+  ItemSnapshot,
+  ItemSnapshotDiff,
+  diffItemSnapshot,
+} from '../diff-item-snapshot';
 import { useItemSheet } from '../use-item-sheet';
 import { MatchingItem } from '../use-matching-items';
 
@@ -95,6 +104,9 @@ type PostPickContext = {
  *     debounce, commit immediately (with relink), and rebase the baseline.
  *   - Exposes flushAndSyncOnClose so the sheet can flush the pending
  *     debounce and commit the close-time saved-item sync on dismissal.
+ *   - For items linked to the meal plan, writes each change back to the
+ *     meal plan source (snapshot row or meal plan item) in the same
+ *     transaction as the grocery item write.
  *
  * The hook deliberately stays side-effect-only and returns an imperative
  * handle; it never triggers re-renders of its host.
@@ -120,6 +132,14 @@ export const useLiveItemSync = ({
   } = useItemSheet();
 
   const snapshotRef = useRef<ItemSnapshot | null>(null);
+  // Field values as last written to the grocery item. Live writes diff
+  // against this (not the present-time snapshot) so an edit that returns a
+  // field to its original value is still written, and so the meal plan
+  // write-back only carries the fields that changed since the last write.
+  const lastCommittedRef = useRef<ItemSnapshot | null>(null);
+  // Meal plan source of the presented item (null when unlinked), kept in
+  // step with store links written back during this session.
+  const mealPlanSourceRef = useRef<MealPlanWriteBackSource | null>(null);
   const postPickContextRef = useRef<PostPickContext | null>(null);
 
   // Mirror the latest props/state into a ref so the stable callbacks below
@@ -192,9 +212,25 @@ export const useLiveItemSync = ({
     return stateRef.current.currentSavedItemId;
   }, []);
 
+  // Builds the meal plan write-back for a grocery item write of `diff`, and
+  // records the written state for the next diff.
+  const takeMealPlanWriteBack = useCallback(
+    (diff: ItemSnapshotDiff, committed: ItemSnapshot) => {
+      lastCommittedRef.current = committed;
+      const source = mealPlanSourceRef.current;
+      if (!source) return undefined;
+      mealPlanSourceRef.current = applyPatchToMealPlanWriteBackSource(
+        source,
+        diff
+      );
+      return { source, patch: diff };
+    },
+    []
+  );
+
   const commitGroceryItemLive = useCallback(() => {
-    const snapshot = snapshotRef.current;
-    if (!snapshot) return;
+    const lastCommitted = lastCommittedRef.current;
+    if (!lastCommitted) return;
     const state = stateRef.current;
     if (!state.selectedItemId) return;
     // Treat a temporarily-cleared name as "don't touch it yet"; the user is
@@ -202,7 +238,7 @@ export const useLiveItemSync = ({
     if (!itemInputValueRef.current.trim()) return;
 
     const current = buildCurrent();
-    const diff = diffItemSnapshot({ snapshot, current });
+    const diff = diffItemSnapshot({ snapshot: lastCommitted, current });
     if (Object.keys(diff).length === 0) return;
 
     // Writers expect the full current field payload (they reconcile against
@@ -220,12 +256,14 @@ export const useLiveItemSync = ({
       },
       currentStoreId: resolveLinkedStoreId(),
       currentSavedItemId: resolveLinkedSavedItemId(),
+      mealPlanWriteBack: takeMealPlanWriteBack(diff, current),
     });
   }, [
     buildCurrent,
     itemInputValueRef,
     resolveLinkedStoreId,
     resolveLinkedSavedItemId,
+    takeMealPlanWriteBack,
   ]);
 
   const debouncedCommit = useDebounceCallback(
@@ -248,7 +286,7 @@ export const useLiveItemSync = ({
   }, [itemInputValue, notesInputValue, debouncedCommit]);
 
   const captureSnapshot = useCallback((item: GroceryListItemWithRecipe) => {
-    snapshotRef.current = {
+    const snapshot: ItemSnapshot = {
       name: item.name,
       category: item.category,
       notes: item.notes,
@@ -258,6 +296,9 @@ export const useLiveItemSync = ({
       // form state the provider pushes in alongside this call.
       storeId: item.store?.id ?? item.saved_item?.store?.id,
     };
+    snapshotRef.current = snapshot;
+    lastCommittedRef.current = snapshot;
+    mealPlanSourceRef.current = resolveMealPlanWriteBackSource(item);
     // Fresh present: drop any lingering pick context so resolvers fall back
     // to the initial-present props until a pick happens in this session.
     postPickContextRef.current = null;
@@ -265,6 +306,8 @@ export const useLiveItemSync = ({
 
   const clearSnapshot = useCallback(() => {
     snapshotRef.current = null;
+    lastCommittedRef.current = null;
+    mealPlanSourceRef.current = null;
     postPickContextRef.current = null;
     debouncedCommit.cancel();
   }, [debouncedCommit]);
@@ -294,7 +337,7 @@ export const useLiveItemSync = ({
     // non-saved-item fields changed (e.g. quantity). This keeps the cloud
     // saved_items row untouched for edits the sync has no business propagating.
     const hasSavedItemRelevantDiff = SAVED_ITEM_RELEVANT_FIELDS.some(
-      (field) => field in diff
+      field => field in diff
     );
     if (!hasSavedItemRelevantDiff) return;
 
@@ -348,35 +391,32 @@ export const useLiveItemSync = ({
       // Quantity and unit aren't surfaced by autocomplete matches; preserve
       // whatever the user already has in the form so the pick doesn't
       // clobber an in-progress quantity/unit edit.
-      const preservedQuantity = state.quantity;
-      const preservedUnit = state.unit;
+      const picked: ItemSnapshot = {
+        name: match.name,
+        category: match.category,
+        notes: match.notes,
+        quantity: state.quantity,
+        unit: state.unit,
+        storeId: match.storeId,
+      };
+      const lastCommitted = lastCommittedRef.current;
+      const diff = lastCommitted
+        ? diffItemSnapshot({ snapshot: lastCommitted, current: picked })
+        : picked;
 
       updateGroceryItemOnly({
         itemId: state.selectedItemId,
-        item: {
-          name: match.name,
-          category: match.category,
-          notes: match.notes,
-          quantity: preservedQuantity,
-          unit: preservedUnit,
-          storeId: match.storeId,
-        },
+        item: picked,
         currentStoreId: resolveLinkedStoreId(),
         currentSavedItemId: resolveLinkedSavedItemId(),
         selectedSavedItemId,
         selectedLocalSavedItemId,
+        mealPlanWriteBack: takeMealPlanWriteBack(diff, picked),
       });
 
       // Rebase the diff baseline to the picked target so post-pick edits
       // diff against the committed state, not the initial-present state.
-      snapshotRef.current = {
-        name: match.name,
-        category: match.category,
-        notes: match.notes,
-        quantity: preservedQuantity,
-        unit: preservedUnit,
-        storeId: match.storeId,
-      };
+      snapshotRef.current = picked;
       // Carry the picked saved_item's ownership and store baseline forward
       // so the close-time sync's owner gate and saved_items↔stores reconcile
       // operate against the picked target.
@@ -389,7 +429,12 @@ export const useLiveItemSync = ({
         linkedSavedItemStoreId: match.storeId,
       };
     },
-    [debouncedCommit, resolveLinkedStoreId, resolveLinkedSavedItemId]
+    [
+      debouncedCommit,
+      resolveLinkedStoreId,
+      resolveLinkedSavedItemId,
+      takeMealPlanWriteBack,
+    ]
   );
 
   const handle = useMemo<UseLiveItemSyncHandle>(

@@ -16,7 +16,8 @@ const EMPTY_ITEMS: GroceryListItemWithRecipe[] = [];
  * re-emit this subscription. The linked relations are the ones the item row,
  * edit sheet, and bulk actions read (`recipe`, `store`, `saved_item` + its
  * `store`/`user`, and the meal plan source: `meal_plan_ingredient_snapshot`
- * + its `meal_plan_recipe`, or `meal_plan_item`).
+ * + its `meal_plan_recipe`, or `meal_plan_item`, each with its own `store`
+ * for write-back).
  *
  * `isChecked` reflects any in-flight toggle from `checkListItem`, so a
  * write the InstantDB client has timed out (and is being retried) does not
@@ -44,8 +45,11 @@ export const useGroceryListItems = (listId: string | undefined) => {
             },
             meal_plan_ingredient_snapshot: {
               meal_plan_recipe: {},
+              store: {},
             },
-            meal_plan_item: {},
+            meal_plan_item: {
+              store: {},
+            },
           },
         }
       : null
