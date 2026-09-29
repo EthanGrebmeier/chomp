@@ -9,6 +9,7 @@ import {
   toSnapshotCreateInputs,
 } from '../meal-plan-recipe-ingredient-editor';
 
+import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
 import { buildMealPlanListSyncTransactions } from './build-meal-plan-list-sync-transactions';
 import { toNewMealPlanRecipeEntryForSync } from './new-meal-plan-entry-for-sync';
 import {
@@ -74,34 +75,12 @@ export const addRecipeToDate = async ({
     id: id(),
   }));
 
-  for (const snapshot of snapshotRows) {
-    const snapshotId = snapshot.id;
-    transactions.push(
-      tx.meal_plan_recipe_ingredient_snapshots[snapshotId].update(
-        trimStringFields({
-          sourceRecipeIngredientId: snapshot.sourceRecipeIngredientId,
-          name: snapshot.name,
-          quantity: snapshot.quantity,
-          unit: snapshot.unit,
-          notes: snapshot.notes ?? null,
-          category: snapshot.category ?? null,
-          isSelected: snapshot.isSelected,
-          isQuantityOverridden: snapshot.isQuantityOverridden,
-        })
-      ),
-      tx.meal_plan_recipe_ingredient_snapshots[snapshotId].link({
-        meal_plan_recipe: mealPlanRecipeId,
-      })
-    );
-
-    if (snapshot.storeId) {
-      transactions.push(
-        tx.meal_plan_recipe_ingredient_snapshots[snapshotId].link({
-          store: snapshot.storeId,
-        })
-      );
-    }
-  }
+  transactions.push(
+    ...buildSnapshotRowCreateTransactions({
+      mealPlanRecipeId,
+      rows: snapshotRows,
+    })
+  );
 
   const syncPlan = planMealPlanListSync({
     entry: toNewMealPlanRecipeEntryForSync({

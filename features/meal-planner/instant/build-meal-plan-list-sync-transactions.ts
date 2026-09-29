@@ -1,10 +1,14 @@
 import { id, tx } from '@instantdb/react-native';
 
 import type { TransactionChunk } from '../../../lib/instant';
+import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
 
-import type {
-  MealPlanListSyncPlan,
-  MealPlanListSyncSource,
+import type { MealPlanEntrySyncContext } from './meal-plan-entry-sync-context';
+import {
+  type MealPlanEntryForSync,
+  type MealPlanListSyncPlan,
+  type MealPlanListSyncSource,
+  planMealPlanListSync,
 } from './plan-meal-plan-list-sync';
 
 type BuildMealPlanListSyncTransactionsArgs = {
@@ -89,3 +93,33 @@ export const buildMealPlanListSyncTransactions = ({
 
   return transactions;
 };
+
+export type BuildMealPlanEntrySyncTransactionsArgs = {
+  context: MealPlanEntrySyncContext<MealPlanEntryForSync>;
+  /** True when the entry (or, for a recipe swap, its old snapshots) goes away. */
+  isRemoved?: boolean;
+  /** List default store, applied to linked items without a store. */
+  defaultStore: DefaultStoreForStacking | null | undefined;
+  now?: string;
+};
+
+/**
+ * Plans and builds the grocery item writes that bring one meal plan entry's
+ * linked items in line with its (already updated, in-memory) state, so callers
+ * can append them to the `db.transact` of their meal plan mutation.
+ */
+export const buildMealPlanEntrySyncTransactions = ({
+  context,
+  isRemoved,
+  defaultStore,
+  now,
+}: BuildMealPlanEntrySyncTransactionsArgs): TransactionChunk[] =>
+  buildMealPlanListSyncTransactions({
+    listId: context.listId,
+    plan: planMealPlanListSync({
+      entry: context.entry,
+      isRemoved,
+      defaultStore,
+    }),
+    now,
+  });

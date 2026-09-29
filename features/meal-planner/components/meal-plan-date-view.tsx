@@ -45,6 +45,7 @@ import { Pill } from '../../../components/ui/pill';
 import { Text } from '../../../components/ui/text';
 import { type ListView } from '../../grocery-list/components/list-view-tabs';
 import { Recipe } from '../../recipes/types';
+import { useDefaultStore } from '../../stores/instant/use-default-store';
 import { useAddMealsToGroceryList, useUnmarkMealAdded } from '../hooks';
 import { getReconciledMealPlanSnapshotRows } from '../instant/get-reconciled-meal-plan-snapshot-rows';
 import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
@@ -497,6 +498,7 @@ export const MealPlanDateView = ({
   const [dragResetKey, setDragResetKey] = useState(0);
   const activeDragSectionIndex = useSharedValue<number | null>(null);
   const queryClient = useQueryClient();
+  const { data: defaultStore } = useDefaultStore();
 
   const refreshDragDropPositions = () => {
     dropProviderRef.current?.requestPositionUpdate();
@@ -601,6 +603,7 @@ export const MealPlanDateView = ({
       MealPlanIngredientSnapshotStore.updateRowSelection({
         snapshotRowId,
         isSelected,
+        defaultStore,
       }),
   });
 
@@ -623,6 +626,7 @@ export const MealPlanDateView = ({
       MealPlanIngredientSnapshotStore.updateRowOverrides({
         snapshotRowId,
         updates,
+        defaultStore,
       }),
   });
 
@@ -687,7 +691,8 @@ export const MealPlanDateView = ({
 
   const handleToggleAllQuickReviewIngredientSelections =
     useCallback(async () => {
-      if (quickReviewIngredientRows.length === 0) return;
+      if (quickReviewIngredientRows.length === 0 || !quickReviewMealPlanRecipe)
+        return;
 
       const previousRows = quickReviewIngredientRows;
       const nextRows = toggleAllMealPlanIngredientSelection(previousRows);
@@ -695,23 +700,28 @@ export const MealPlanDateView = ({
 
       setQuickReviewQueryRows(() => nextRows);
       try {
-        await Promise.all(
-          previousRows
-            .filter(row => row.snapshotRowId)
-            .map(row =>
-              quickReviewSelectionMutation.mutateAsync({
-                snapshotRowId: row.snapshotRowId as string,
-                isSelected: nextIsSelected,
-              })
-            )
-        );
+        await MealPlanIngredientSnapshotStore.updateRowsSelection({
+          mealPlanRecipeId: quickReviewMealPlanRecipe.id,
+          selections: previousRows.flatMap(row =>
+            row.snapshotRowId
+              ? [
+                  {
+                    snapshotRowId: row.snapshotRowId,
+                    isSelected: nextIsSelected,
+                  },
+                ]
+              : []
+          ),
+          defaultStore,
+        });
       } catch {
         setQuickReviewQueryRows(() => previousRows);
         toast.error('Failed to save ingredient selections');
       }
     }, [
+      defaultStore,
       quickReviewIngredientRows,
-      quickReviewSelectionMutation,
+      quickReviewMealPlanRecipe,
       setQuickReviewQueryRows,
     ]);
 

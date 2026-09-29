@@ -18,6 +18,7 @@ import { IngredientSelector } from '../../../components/item-sheet/add-item/ingr
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
 import { navigation } from '../../../lib/navigation';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
+import { useDefaultStore } from '../../stores/instant/use-default-store';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
@@ -26,6 +27,7 @@ import {
   applyMealPlanIngredientOverride,
   getSelectedSourceIngredientIds,
   hydrateMealPlanIngredientEditorFromSnapshot,
+  initializeMealPlanIngredientEditor,
   toggleAllMealPlanIngredientSelection,
   toggleMealPlanIngredientSelection,
 } from '../meal-plan-recipe-ingredient-editor';
@@ -67,12 +69,18 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const [, setIsPersistingIngredientOverride] = useState(false);
     const [mealPlanRecipeToEdit, setMealPlanRecipeToEdit] =
       useState<MealPlanRecipe | null>(null);
+    // Recipe the entry is linked to in the database. Swapping recipes replaces
+    // the ingredient snapshots once saved, so rows load only after that.
+    const [persistedRecipeId, setPersistedRecipeId] = useState<string | null>(
+      null
+    );
 
     const sheetRef = useRef<TrueSheet>(null);
     const changeRecipeSheetRef = useRef<TrueSheet>(null);
     const ingredientOverrideSheetRef =
       useRef<MealPlanIngredientOverrideSheetRef>(null);
     const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
+    const { data: defaultStore } = useDefaultStore();
     const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
     const lastSyncedSnapshotRef = useRef<string | null>(null);
     const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -107,6 +115,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         {
           onSuccess: () => {
             lastSyncedSnapshotRef.current = snapshot;
+            setPersistedRecipeId(selectedRecipe.id);
           },
           onError: () => {
             toast.error('Failed to update meal');
@@ -135,6 +144,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         setSelectedDate(mealPlanRecipe.date);
         setSelectedRecipe(recipe);
         setMealPlanRecipeToEdit(mealPlanRecipe);
+        setPersistedRecipeId(recipe.id);
         setMealTag(mealPlanRecipe.mealTag ?? undefined);
         onDismissRef.current = onDismiss;
         lastSyncedSnapshotRef.current = getSnapshot(
@@ -153,6 +163,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       setSelectedDate(undefined);
       setMealTag(undefined);
       setMealPlanRecipeToEdit(null);
+      setPersistedRecipeId(null);
       lastSyncedSnapshotRef.current = null;
       changeRecipeSheetRef.current?.dismiss();
       if (updateTimeoutRef.current) {
@@ -262,6 +273,17 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         return;
       }
 
+      if (persistedRecipeId !== selectedRecipeWithIngredients.id) {
+        // Until the swap is saved, show the new recipe as it will be planned:
+        // every ingredient selected, as-is.
+        setIngredientRows(
+          initializeMealPlanIngredientEditor(
+            selectedRecipeWithIngredients.recipe_ingredients
+          )
+        );
+        return;
+      }
+
       let isCancelled = false;
 
       const loadRows = async () => {
@@ -291,7 +313,11 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       return () => {
         isCancelled = true;
       };
-    }, [mealPlanRecipeToEdit, selectedRecipeWithIngredients]);
+    }, [
+      mealPlanRecipeToEdit,
+      persistedRecipeId,
+      selectedRecipeWithIngredients,
+    ]);
 
     const handleToggleIngredientSelection = async (
       sourceRecipeIngredientId: string
@@ -312,6 +338,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         await MealPlanIngredientSnapshotStore.updateRowSelection({
           snapshotRowId: currentRow.snapshotRowId,
           isSelected: nextIsSelected,
+          defaultStore,
         });
       } catch {
         setIngredientRows(prev =>
@@ -327,7 +354,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     };
 
     const handleToggleAllIngredientSelections = async () => {
-      if (ingredientRows.length === 0) return;
+      if (ingredientRows.length === 0 || !mealPlanRecipeToEdit) return;
 
       const previousRows = ingredientRows;
       const nextRows = toggleAllMealPlanIngredientSelection(previousRows);
@@ -335,16 +362,20 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 
       setIngredientRows(nextRows);
       try {
-        await Promise.all(
-          previousRows
-            .filter(row => row.snapshotRowId)
-            .map(row =>
-              MealPlanIngredientSnapshotStore.updateRowSelection({
-                snapshotRowId: row.snapshotRowId as string,
-                isSelected: nextIsSelected,
-              })
-            )
-        );
+        await MealPlanIngredientSnapshotStore.updateRowsSelection({
+          mealPlanRecipeId: mealPlanRecipeToEdit.id,
+          selections: previousRows.flatMap(row =>
+            row.snapshotRowId
+              ? [
+                  {
+                    snapshotRowId: row.snapshotRowId,
+                    isSelected: nextIsSelected,
+                  },
+                ]
+              : []
+          ),
+          defaultStore,
+        });
       } catch {
         setIngredientRows(previousRows);
         toast.error('Failed to save ingredient selections');
@@ -456,6 +487,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
               await MealPlanIngredientSnapshotStore.updateRowOverrides({
                 snapshotRowId: currentRow.snapshotRowId,
                 updates,
+                defaultStore,
               });
             } catch (error) {
               setIngredientRows(prev =>
