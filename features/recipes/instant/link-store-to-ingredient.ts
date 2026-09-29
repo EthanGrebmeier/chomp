@@ -1,48 +1,36 @@
-import { db } from '../../../lib/instant';
+import { tx } from '@instantdb/react-native';
 
-export type LinkStoreToIngredientArgs = {
+import type { TransactionChunk } from '../../../lib/instant';
+
+export type IngredientStoreLinkArgs = {
   ingredientId: string;
   storeId?: string;
   currentStoreId?: string;
 };
 
-export const linkStoreToIngredient = async ({
+/**
+ * Builds the writes that move a recipe ingredient's store link from
+ * `currentStoreId` to `storeId` (unlinking when `storeId` is undefined).
+ */
+export const buildIngredientStoreLinkTransactions = ({
   ingredientId,
   storeId,
   currentStoreId,
-}: LinkStoreToIngredientArgs) => {
-  const transactions = [];
+}: IngredientStoreLinkArgs): TransactionChunk[] => {
+  if (storeId === currentStoreId) {
+    return [];
+  }
 
-  // If storeId is undefined and we have a current store, unlink it
-  if (storeId === undefined && currentStoreId) {
+  const transactions: TransactionChunk[] = [];
+  if (currentStoreId) {
     transactions.push(
-      db.tx.recipe_ingredients[ingredientId].unlink({
-        store: currentStoreId,
-      })
+      tx.recipe_ingredients[ingredientId].unlink({ store: currentStoreId })
     );
   }
-  // If storeId is different from current, handle the change
-  else if (storeId !== currentStoreId) {
-    // Unlink current store if it exists
-    if (currentStoreId) {
-      transactions.push(
-        db.tx.recipe_ingredients[ingredientId].unlink({
-          store: currentStoreId,
-        })
-      );
-    }
-    // Link new store if provided
-    if (storeId) {
-      transactions.push(
-        db.tx.recipe_ingredients[ingredientId].link({
-          store: storeId,
-        })
-      );
-    }
+  if (storeId) {
+    transactions.push(
+      tx.recipe_ingredients[ingredientId].link({ store: storeId })
+    );
   }
-
-  if (transactions.length > 0) {
-    await db.transact(transactions);
-  }
+  return transactions;
 };
-

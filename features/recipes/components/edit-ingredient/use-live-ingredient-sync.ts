@@ -3,6 +3,7 @@ import { useDebounceCallback } from 'usehooks-ts';
 
 import { useItemSheet } from '../../../../components/item-sheet/use-item-sheet';
 import { MatchingItem } from '../../../../components/item-sheet/use-matching-items';
+import { useDefaultStore } from '../../../stores/instant/use-default-store';
 import { updateRecipeIngredient } from '../../instant/update-recipe-ingredient';
 import { RecipeIngredient } from '../../types';
 
@@ -88,6 +89,11 @@ export const useLiveIngredientSync = ({
     isValid,
   } = useItemSheet();
 
+  const { data: defaultStore } = useDefaultStore();
+  // Read through a ref so the stable callbacks below use the latest value.
+  const defaultStoreRef = useRef(defaultStore);
+  defaultStoreRef.current = defaultStore;
+
   const snapshotRef = useRef<IngredientSnapshot | null>(null);
   // Tracks the store the ingredient is currently linked to. Seeded from the
   // ingredient on captureSnapshot and updated after any successful live
@@ -161,6 +167,7 @@ export const useLiveIngredientSync = ({
         storeId: current.storeId,
       },
       currentStoreId: currentStoreIdRef.current,
+      defaultStore: defaultStoreRef.current,
     }).then(() => {
       // Rebase the diff baseline to the just-written values so subsequent
       // edits compare against the committed state. Roll the store baseline
@@ -246,6 +253,7 @@ export const useLiveIngredientSync = ({
         ingredientId: state.selectedIngredientId,
         updates: nextFields,
         currentStoreId: currentStoreIdRef.current,
+        defaultStore: defaultStoreRef.current,
       });
 
       // Rebase the diff baseline to the picked target so post-pick edits

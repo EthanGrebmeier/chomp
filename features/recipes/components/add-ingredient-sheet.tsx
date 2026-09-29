@@ -21,7 +21,7 @@ import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
 import { BaseGroceryItem } from '../../grocery-list/types';
-import { addRecipeIngredient } from '../instant/add-recipe-ingredient';
+import { useAddRecipeIngredient } from '../hooks/useAddRecipeIngredient';
 import { RecipeIngredient } from '../types';
 
 import {
@@ -141,6 +141,7 @@ export const AddIngredientProvider = ({
   const liveSyncRef = useRef<LiveIngredientSyncHandle | null>(null);
   const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
 
+  const { mutate: addRecipeIngredient } = useAddRecipeIngredient();
   const isEditing = !!editingIngredient;
 
   // In edit mode the Update Ingredient button is gone; all persistence

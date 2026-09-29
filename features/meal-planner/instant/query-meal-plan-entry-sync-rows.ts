@@ -5,10 +5,15 @@ import type {
   MealPlanRecipeSyncRow,
 } from './meal-plan-entry-sync-context';
 
+type MemberRecipeWhere = {
+  'grocery_list.shares.user_id': string;
+} & ({ 'recipe.id': string } | { 'recipe.recipe_ingredients.id': string });
+
 const queryMealPlanRecipeSyncRowsWhere = async (
   where:
     | { id: string | { $in: string[] } }
     | { 'ingredient_snapshots.id': string }
+    | MemberRecipeWhere
 ): Promise<MealPlanRecipeSyncRow[]> => {
   const result = await db.queryOnce({
     meal_plan_recipes: {
@@ -90,6 +95,25 @@ export const queryMealPlanEntrySyncRows = async ({
 
   return { recipeRows, itemRows };
 };
+
+/**
+ * Loads, in sync shape, every meal plan recipe that uses a recipe (looked up
+ * by the recipe's id or one of its ingredients' ids) on lists the user is a
+ * member of. Lists the user has left or never joined are never returned.
+ */
+export const queryMemberMealPlanRecipeSyncRows = async ({
+  userId,
+  lookup,
+}: {
+  userId: string;
+  lookup: { recipeId: string } | { recipeIngredientId: string };
+}): Promise<MealPlanRecipeSyncRow[]> =>
+  queryMealPlanRecipeSyncRowsWhere({
+    'grocery_list.shares.user_id': userId,
+    ...('recipeId' in lookup
+      ? { 'recipe.id': lookup.recipeId }
+      : { 'recipe.recipe_ingredients.id': lookup.recipeIngredientId }),
+  });
 
 /**
  * Loads a standalone meal plan item with its store and linked grocery item.
