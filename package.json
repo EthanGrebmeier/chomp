@@ -7,6 +7,7 @@
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "sync:theme-colors": "node ./scripts/sync-theme-colors.mjs",
+    "implement-sub-issues": "./scripts/implement-sub-issues.sh",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
