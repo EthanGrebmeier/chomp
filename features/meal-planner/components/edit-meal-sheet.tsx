@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
@@ -21,6 +21,7 @@ import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useDefaultStore } from '../../stores/instant/use-default-store';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
+import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
 import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
 import {
   MealPlanIngredientEditorRow,
@@ -32,6 +33,10 @@ import {
   toggleMealPlanIngredientSelection,
 } from '../meal-plan-recipe-ingredient-editor';
 import { MealPlanRecipe } from '../types';
+import {
+  countUncheckedLinkedGroceryItems,
+  withUncheckedLinkedGroceryItemsNotice,
+} from '../utils/unchecked-linked-grocery-items';
 
 import {
   MealPlanIngredientOverrideSheet,
@@ -82,6 +87,8 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
     const { data: defaultStore } = useDefaultStore();
     const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
+    // Shared with the planner view, so the entry's linked items stay live.
+    const { recipes: mealPlanRecipes } = useUserMealPlanData(listId);
     const lastSyncedSnapshotRef = useRef<string | null>(null);
     const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onDismissRef = useRef<(() => void) | undefined>(undefined);
@@ -181,13 +188,41 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 
     const handleRemoveMeal = () => {
       if (!mealPlanRecipeToEdit) return;
+      const mealPlanRecipeId = mealPlanRecipeToEdit.id;
+      const liveMealPlanRecipe = mealPlanRecipes.find(
+        recipe => recipe.id === mealPlanRecipeId
+      );
+      const recipeName = selectedRecipe?.name ?? 'this meal';
 
-      removeRecipeFromMealPlan({
-        mealPlanRecipeId: mealPlanRecipeToEdit.id,
-      });
+      Alert.alert(
+        'Delete Meal',
+        withUncheckedLinkedGroceryItemsNotice(
+          `Are you sure you want to delete "${recipeName}" from your meal plan?`,
+          countUncheckedLinkedGroceryItems({
+            recipes: liveMealPlanRecipe ? [liveMealPlanRecipe] : [],
+          })
+        ),
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              removeRecipeFromMealPlan(
+                { mealPlanRecipeId },
+                {
+                  onError: () => {
+                    toast.error('Failed to delete meal');
+                  },
+                }
+              );
 
-      resetState();
-      sheetRef.current?.dismiss();
+              resetState();
+              sheetRef.current?.dismiss();
+            },
+          },
+        ]
+      );
     };
 
     const handleRecipeChange = (recipe: RecipeWithIngredients) => {

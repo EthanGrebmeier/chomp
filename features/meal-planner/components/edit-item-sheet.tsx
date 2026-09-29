@@ -1,5 +1,11 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { Alert, TextInput, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
@@ -9,6 +15,10 @@ import { ItemInput } from '../../../components/item-sheet/item-input';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
 import { MealPlanItemWithStore } from '../types';
+import {
+  countUncheckedLinkedGroceryItems,
+  withUncheckedLinkedGroceryItemsNotice,
+} from '../utils/unchecked-linked-grocery-items';
 
 import { MealItemDropdownMenu } from './meal-item-dropdown-menu';
 import {
@@ -52,7 +62,10 @@ const EditItemSheetContent = ({
 
     Alert.alert(
       'Delete Item',
-      `Are you sure you want to delete "${currentItemName}" from your meal plan?`,
+      withUncheckedLinkedGroceryItemsNotice(
+        `Are you sure you want to delete "${currentItemName}" from your meal plan?`,
+        countUncheckedLinkedGroceryItems({ items: [itemToEdit] })
+      ),
       [
         {
           text: 'Cancel',
@@ -281,7 +294,7 @@ const EditItemSheetContainer = ({
       }}
       footer={
         itemToEdit ? (
-          <View className="px-4 pb-safe">
+          <View className="pb-safe px-4">
             <MealPlanMetaBar
               date={selectedDate}
               onDateChange={setSelectedDate}
@@ -307,10 +320,7 @@ const EditItemSheetContainer = ({
       <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header title="Edit meal-plan item" />
         {itemToEdit && (
-          <EditItemSheetContent
-            itemToEdit={itemToEdit}
-            onClose={onClose}
-          />
+          <EditItemSheetContent itemToEdit={itemToEdit} onClose={onClose} />
         )}
       </BottomSheet.SheetView>
     </BottomSheet>

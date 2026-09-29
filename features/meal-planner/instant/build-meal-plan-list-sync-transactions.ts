@@ -81,18 +81,27 @@ export const buildMealPlanListSyncTransactions = ({
     }
   }
 
-  for (const { groceryItemId } of plan.deletes) {
-    transactions.push(tx.grocery_items[groceryItemId].delete());
-  }
-
-  for (const { source, groceryItemId } of plan.unlinks) {
-    transactions.push(
-      tx.grocery_items[groceryItemId].unlink(sourceLink(source))
-    );
-  }
+  transactions.push(...buildLinkedItemDetachTransactions(plan));
 
   return transactions;
 };
+
+/**
+ * Builds only the `deletes` and `unlinks` of a sync plan: the writes that
+ * detach linked items from sources that are going away. Needs no list, since
+ * nothing is created.
+ */
+export const buildLinkedItemDetachTransactions = ({
+  deletes,
+  unlinks,
+}: Pick<MealPlanListSyncPlan, 'deletes' | 'unlinks'>): TransactionChunk[] => [
+  ...deletes.map(({ groceryItemId }) =>
+    tx.grocery_items[groceryItemId].delete()
+  ),
+  ...unlinks.map(({ source, groceryItemId }) =>
+    tx.grocery_items[groceryItemId].unlink(sourceLink(source))
+  ),
+];
 
 export type BuildMealPlanEntrySyncTransactionsArgs = {
   context: MealPlanEntrySyncContext<MealPlanEntryForSync>;

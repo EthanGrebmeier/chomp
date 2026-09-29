@@ -17,15 +17,19 @@ import { Icon } from '@/components/ui/icon';
 
 import { useClearMealPlan } from '../hooks/useClearMealPlan';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
-import { MealPlanViewMode } from '../types';
-
-type MealPlanEntity = {
-  id: string;
-};
+import {
+  MealPlanItemWithStore,
+  MealPlanRecipeWithRecipe,
+  MealPlanViewMode,
+} from '../types';
+import {
+  countUncheckedLinkedGroceryItems,
+  withUncheckedLinkedGroceryItemsNotice,
+} from '../utils/unchecked-linked-grocery-items';
 
 type MealPlanDropdownMenuProps = {
-  recipes: MealPlanEntity[];
-  items: MealPlanEntity[];
+  recipes: MealPlanRecipeWithRecipe[];
+  items: MealPlanItemWithStore[];
 };
 
 export function MealPlanDropdownMenu({
@@ -40,7 +44,10 @@ export function MealPlanDropdownMenu({
 
     Alert.alert(
       'Clear Meal Plan',
-      'Are you sure you want to remove all meals and items from your meal plan?',
+      withUncheckedLinkedGroceryItemsNotice(
+        'Are you sure you want to remove all meals and items from your meal plan?',
+        countUncheckedLinkedGroceryItems({ recipes, items })
+      ),
       [
         { text: 'Cancel', style: 'cancel' },
         {

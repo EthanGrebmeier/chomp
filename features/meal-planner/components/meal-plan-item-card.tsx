@@ -10,13 +10,17 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
-import { MealPlanItem } from '../types';
+import { MealPlanItemWithStore } from '../types';
+import {
+  countUncheckedLinkedGroceryItems,
+  withUncheckedLinkedGroceryItemsNotice,
+} from '../utils/unchecked-linked-grocery-items';
 
 type MealPlanItemCardProps = {
-  mealPlanItem: MealPlanItem;
+  mealPlanItem: MealPlanItemWithStore;
   isLast: boolean;
   contextMenuEnabled?: boolean;
-  onItemPress: (item: MealPlanItem) => void;
+  onItemPress: (item: MealPlanItemWithStore) => void;
 };
 
 const MealPlanItemCard = ({
@@ -30,7 +34,10 @@ const MealPlanItemCard = ({
   const handleDelete = () => {
     Alert.alert(
       'Delete Item',
-      `Are you sure you want to delete "${mealPlanItem.name}" from your meal plan?`,
+      withUncheckedLinkedGroceryItemsNotice(
+        `Are you sure you want to delete "${mealPlanItem.name}" from your meal plan?`,
+        countUncheckedLinkedGroceryItems({ items: [mealPlanItem] })
+      ),
       [
         { text: 'Cancel', style: 'cancel' },
         {

@@ -1,12 +1,17 @@
-import { tx } from '@instantdb/react-native';
-
 import { db } from '../../../lib/instant';
+
+import { buildMealPlanEntryRemovalTransactions } from './build-meal-plan-entry-removal-transactions';
+import { queryMealPlanEntrySyncRows } from './query-meal-plan-entry-sync-rows';
 
 export type ClearMealPlanArgs = {
   mealPlanRecipeIds: string[];
   mealPlanItemIds: string[];
 };
 
+/**
+ * Deletes the given meal plan entries and, in the same transaction, removes
+ * their unchecked linked grocery items and unlinks their checked ones.
+ */
 export const clearMealPlan = async ({
   mealPlanRecipeIds,
   mealPlanItemIds,
@@ -15,12 +20,10 @@ export const clearMealPlan = async ({
     return;
   }
 
-  const deleteRecipes = mealPlanRecipeIds.map(mealPlanRecipeId =>
-    tx.meal_plan_recipes[mealPlanRecipeId].delete()
-  );
-  const deleteItems = mealPlanItemIds.map(mealPlanItemId =>
-    tx.meal_plan_items[mealPlanItemId].delete()
-  );
+  const rows = await queryMealPlanEntrySyncRows({
+    mealPlanRecipeIds,
+    mealPlanItemIds,
+  });
 
-  await db.transact([...deleteRecipes, ...deleteItems]);
+  await db.transact(buildMealPlanEntryRemovalTransactions(rows));
 };
