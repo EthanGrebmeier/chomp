@@ -86,9 +86,8 @@ const buttonVariants = cva(
           Platform.select({ web: 'has-[>svg]:px-6' })
         ),
         'wide-small': cn('h-10 w-24'),
-        icon: 'size-8',
+        icon: 'size-9',
         iconLg: 'size-14',
-        circle: 'rounded-full p-2 size-10',
       },
     },
     defaultVariants: {
@@ -129,7 +128,6 @@ const buttonTextVariants = cva(
         'wide-small': '',
         icon: '',
         iconLg: '',
-        circle: '',
       },
     },
     defaultVariants: {
@@ -174,10 +172,6 @@ const floatingIconOffsets: Record<
   iconLg: {
     left: 'left-4',
     right: 'right-4',
-  },
-  circle: {
-    left: 'left-2',
-    right: 'right-2',
   },
 };
 

@@ -1,11 +1,9 @@
-import { PlusIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { Heading } from '@/components/text/heading';
+import { AddButton } from '@/components/ui/add-button';
 import { BackButton } from '@/components/ui/back-button';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useCategoryOptions } from '@/features/categories/use-category-options';
 import { SavedItemsListSkeleton } from '@/features/saved-items/components/saved-items-list-skeleton';
@@ -40,18 +38,10 @@ function CategoriesContent({ onBack }: CategoriesScreenProps) {
           </Text>
         </View>
         {canEditCategories ? (
-          <Button
-            size="icon"
+          <AddButton
             accessibilityLabel="Add category"
             onPress={() => present()}
-          >
-            <Icon
-              as={PlusIcon}
-              size={24}
-              strokeWidth={3}
-              className="text-primary-foreground"
-            />
-          </Button>
+          />
         ) : null}
       </View>
 

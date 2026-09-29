@@ -8,11 +8,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useDebounceCallback } from 'usehooks-ts';
 
+import { SearchButton } from '@/components/ui/search-button';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { RecipeFilters } from '@/features/recipes/components/recipe-filters';
 import { RecipeList } from '@/features/recipes/components/recipe-list';
 import { RecipeListSkeleton } from '@/features/recipes/components/recipe-list-skeleton';
-import { RecipeSearchButton } from '@/features/recipes/components/recipe-search-button';
 import { useRecipes } from '@/features/recipes/hooks';
 import {
   filterRecipes,
@@ -104,7 +104,8 @@ export default function Recipes() {
             <BackButton onPress={() => router.back()} />
             <Heading>Recipe Book</Heading>
             <View className="ml-auto flex-row items-center gap-2">
-              <RecipeSearchButton
+              <SearchButton
+                accessibilityLabel="Search recipes"
                 onPress={() => setSearchMode(true)}
                 hasActiveFilters={hasActiveFilters}
               />

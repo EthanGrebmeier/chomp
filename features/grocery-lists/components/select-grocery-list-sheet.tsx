@@ -10,7 +10,7 @@ import {
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { Button } from '../../../components/ui/button';
+import { AddButton } from '../../../components/ui/add-button';
 import {
   ContextMenuItem,
   ContextMenuItemIcon,
@@ -185,16 +185,7 @@ export const SelectGroceryListSheet = forwardRef<
             description={description}
             button={
               <DropdownMenuRoot
-                trigger={
-                  <Button size="icon">
-                    <Icon
-                      as={PlusIcon}
-                      size={24}
-                      strokeWidth={3}
-                      className="text-primary-foreground"
-                    />
-                  </Button>
-                }
+                trigger={<AddButton accessibilityLabel="Add grocery list" />}
               >
                 <DropdownMenuContent>
                   <DropdownMenuItem
@@ -241,7 +232,10 @@ export const SelectGroceryListSheet = forwardRef<
                 <Pressable
                   onPress={() => handleSelectList(list.id)}
                   disabled={isDisabled}
-                  accessibilityState={{ disabled: isDisabled, selected: isSelected }}
+                  accessibilityState={{
+                    disabled: isDisabled,
+                    selected: isSelected,
+                  }}
                   className={cn(
                     'flex-row items-center justify-center rounded-xl px-4 py-3',
                     isSelected && 'bg-muted',

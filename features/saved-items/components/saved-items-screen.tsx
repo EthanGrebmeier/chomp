@@ -1,14 +1,12 @@
-import { PlusIcon, SearchIcon } from 'lucide-react-native';
 import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { Keyboard, Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useDebounceCallback } from 'usehooks-ts';
 
-import { TextInput } from '@/components/text-input';
 import { Heading } from '@/components/text/heading';
+import { AddButton } from '@/components/ui/add-button';
 import { BackButton } from '@/components/ui/back-button';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
+import { SearchButton } from '@/components/ui/search-button';
 import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { useSettings } from '@/features/grocery-list/hooks/useSettings';
@@ -19,10 +17,8 @@ import {
   SavedItemSheetProvider,
   useSavedItemSheet,
 } from './add-saved-item-sheet';
-import {
-  SavedItemsFilterDropdownMenu,
-  type SavedItemsSortOption,
-} from './saved-items-filter-dropdown-menu';
+import { type SavedItemsSortOption } from './saved-items-filter-dropdown-menu';
+import { SavedItemsFilters } from './saved-items-filters';
 import { SavedItemsList } from './saved-items-list';
 import { SavedItemsListSkeleton } from './saved-items-list-skeleton';
 
@@ -37,6 +33,7 @@ function SavedItemsContent({ onBack }: SavedItemsScreenProps) {
   const { data: settings } = useSettings();
   const { mutate: updateSettings } = useUpdateSettings();
   const { present } = useSavedItemSheet();
+  const [searchMode, setSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const {
     inputKey: searchInputKey,
@@ -94,51 +91,53 @@ function SavedItemsContent({ onBack }: SavedItemsScreenProps) {
     return items;
   }, [savedItems, deferredFilterCategory, deferredSearchQuery]);
 
+  const hasActiveFilters =
+    !!searchQuery.trim() || !!filterCategory || sortBy !== 'name';
+
   return (
     <Pressable
       className="flex-1 bg-background pt-6"
       accessible={false}
       onPress={dismissSearch}
     >
-      <View className="flex-row items-center gap-3 px-4">
-        <BackButton onPress={onBack} href="/settings" />
-        <Heading className="flex-1">My Saved Items</Heading>
-        <Button size="icon" onPress={() => present()}>
-          <Icon
-            as={PlusIcon}
-            size={28}
-            strokeWidth={3}
-            className="text-primary-foreground"
-          />
-        </Button>
-      </View>
-
-      <View className="mt-4 px-4">
-        <View className="flex-row items-center gap-4">
-          <View className="relative flex-1">
-            <View className="pointer-events-none absolute left-3 top-0 z-10 h-full justify-center">
-              <Icon
-                as={SearchIcon}
-                size={18}
-                className="text-muted-foreground"
-              />
-            </View>
-            <TextInput
-              key={searchInputKey}
-              className="pl-10"
-              placeholder="Search items..."
-              defaultValue={searchDefaultValue}
-              onChangeText={handleSearchChange}
-              autoCorrect={false}
+      <View className="h-11 justify-center px-4">
+        {searchMode ? (
+          <Animated.View
+            key="search-header"
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+          >
+            <SavedItemsFilters
+              searchInputKey={searchInputKey}
+              searchDefaultValue={searchDefaultValue}
+              onSearchChange={handleSearchChange}
+              onClose={() => setSearchMode(false)}
+              category={filterCategory}
+              onCategoryChange={handleFilterCategoryChange}
+              sortBy={sortBy}
+              onSortByChange={handleSortByChange}
             />
-          </View>
-          <SavedItemsFilterDropdownMenu
-            category={filterCategory}
-            sortBy={sortBy}
-            onCategoryChange={handleFilterCategoryChange}
-            onSortByChange={handleSortByChange}
-          />
-        </View>
+          </Animated.View>
+        ) : (
+          <Animated.View
+            key="default-header"
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+            className="flex-row items-center gap-2"
+          >
+            <BackButton onPress={onBack} href="/settings" />
+            <Heading className="flex-1">My Saved Items</Heading>
+            <SearchButton
+              accessibilityLabel="Search saved items"
+              onPress={() => setSearchMode(true)}
+              hasActiveFilters={hasActiveFilters}
+            />
+            <AddButton
+              accessibilityLabel="Add saved item"
+              onPress={() => present()}
+            />
+          </Animated.View>
+        )}
       </View>
 
       <View className="mt-3 px-4">

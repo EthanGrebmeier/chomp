@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { ActivityIndicator, Alert, View } from 'react-native';
 
 import { Heading } from '@/components/text/heading';
-import { Button } from '@/components/ui/button';
+import { AddButton } from '@/components/ui/add-button';
 import {
   ContextMenuItem,
   ContextMenuItemIcon,
@@ -176,16 +176,7 @@ export default function GroceryListsIndex() {
       <View className="flex-row items-center justify-between px-5 pb-4 pt-2">
         <Heading size="lg">Grocery Lists</Heading>
         <DropdownMenuRoot
-          trigger={
-            <Button size="icon" accessibilityLabel="Add grocery list">
-              <Icon
-                as={PlusIcon}
-                size={24}
-                strokeWidth={3}
-                className="text-primary-foreground"
-              />
-            </Button>
-          }
+          trigger={<AddButton accessibilityLabel="Add grocery list" />}
         >
           <DropdownMenuContent>
             <DropdownMenuItem

@@ -1,21 +1,29 @@
 import { TextSearchIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
-import { Button } from '../../../components/ui/button';
-import { Icon } from '../../../components/ui/icon';
+import { Button } from './button';
+import { Icon } from './icon';
 
-type RecipeSearchButtonProps = {
+type SearchButtonProps = {
   onPress: () => void;
+  /** Shows an indicator dot when search or filters are applied. */
   hasActiveFilters?: boolean;
+  accessibilityLabel?: string;
 };
 
-export const RecipeSearchButton = ({
+export const SearchButton = ({
   onPress,
   hasActiveFilters = false,
-}: RecipeSearchButtonProps) => {
+  accessibilityLabel = 'Search',
+}: SearchButtonProps) => {
   return (
     <View className="relative">
-      <Button size="circle" variant="secondary" onPress={onPress}>
+      <Button
+        size="icon"
+        variant="secondary"
+        onPress={onPress}
+        accessibilityLabel={accessibilityLabel}
+      >
         <Icon
           strokeWidth={3}
           className="text-secondary-foreground"

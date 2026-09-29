@@ -60,7 +60,7 @@ export const RecipeFilters = ({
       </View>
       {onClose ? (
         <Button
-          size="circle"
+          size="icon"
           variant="secondary"
           onPress={onClose}
           hapticType="light"

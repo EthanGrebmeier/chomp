@@ -230,7 +230,7 @@ export function AddMealsToListConfirmation({
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const { recipes, items, isLoading } = useUserMealPlanData(listId);
-  const { mutateAsync: addMealsToGroceryList, isPending } =
+  const { mutate: addMealsToGroceryList, isPending } =
     useAddMealsToGroceryList(listId);
 
   const resetSelection = useCallback(() => {
@@ -353,31 +353,28 @@ export function AddMealsToListConfirmation({
       deselectedIds,
     });
 
-    const hasSelections =
-      selectedRecipeIds.length + selectedItemIds.length > 0;
-
-    // Optimistically close the sheet and jump to the list; the write completes
-    // in the background with a loading toast that resolves to success/error.
-    sheetRef.current?.dismiss();
-    if (hasSelections) {
-      onViewChange?.('grocery-list');
-    }
-
-    toast.promise(
-      addMealsToGroceryList({
+    // Keep the sheet open (button shows a pending state) until the write
+    // lands, then close it and jump to the list.
+    addMealsToGroceryList(
+      {
         selectedRecipeIds,
         skippedRecipeIds:
           skippedRecipeIds.length > 0 ? skippedRecipeIds : undefined,
         selectedItemIds,
         skippedItemIds: skippedItemIds.length > 0 ? skippedItemIds : undefined,
-      }),
+      },
       {
-        loading: 'Adding meals to your list…',
-        success: result =>
-          result.addedRecipes + result.addedItems === 0
-            ? 'No new meals to add'
-            : 'Meals added to your list',
-        error: 'Failed to add meals to list',
+        onSuccess: result => {
+          if (result.addedRecipes + result.addedItems > 0) {
+            onViewChange?.('grocery-list');
+          } else if (selectedRecipeIds.length + selectedItemIds.length > 0) {
+            toast.info('No new meals to add');
+          }
+          sheetRef.current?.dismiss();
+        },
+        onError: () => {
+          toast.error('Failed to add meals to list');
+        },
       }
     );
   };
