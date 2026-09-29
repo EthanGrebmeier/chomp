@@ -17,6 +17,8 @@ export type MealPlanRecipeSyncRow = {
   recipe?: {
     id: string;
     recipe_ingredients?: MealPlanRecipeEntryForSync['sourceIngredients'];
+    /** The recipe's owner; only loaded by `queryLeaverMealPlanRecipeSyncRows`. */
+    user?: { id: string } | null;
   } | null;
   ingredient_snapshots?: (Omit<
     MealPlanSnapshotRowForSync,

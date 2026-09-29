@@ -9,11 +9,18 @@ type MemberRecipeWhere = {
   'grocery_list.shares.user_id': string;
 } & ({ 'recipe.id': string } | { 'recipe.recipe_ingredients.id': string });
 
+type LeaverRecipeWhere = {
+  'grocery_list.id': string;
+  'recipe.user.id': string;
+};
+
 const queryMealPlanRecipeSyncRowsWhere = async (
   where:
     | { id: string | { $in: string[] } }
     | { 'ingredient_snapshots.id': string }
     | MemberRecipeWhere
+    | LeaverRecipeWhere,
+  { withRecipeOwner = false }: { withRecipeOwner?: boolean } = {}
 ): Promise<MealPlanRecipeSyncRow[]> => {
   const result = await db.queryOnce({
     meal_plan_recipes: {
@@ -23,6 +30,7 @@ const queryMealPlanRecipeSyncRowsWhere = async (
         recipe_ingredients: {
           store: {},
         },
+        ...(withRecipeOwner ? { user: {} } : {}),
       },
       ingredient_snapshots: {
         store: {},
@@ -114,6 +122,23 @@ export const queryMemberMealPlanRecipeSyncRows = async ({
       ? { 'recipe.id': lookup.recipeId }
       : { 'recipe.recipe_ingredients.id': lookup.recipeIngredientId }),
   });
+
+/**
+ * Loads, in sync shape and with each recipe's owner, the meal plan recipes on
+ * a list that use recipes owned by the user. Used to clean up before the user
+ * leaves the list, while permissions still let them see and delete the rows.
+ */
+export const queryLeaverMealPlanRecipeSyncRows = async ({
+  userId,
+  listId,
+}: {
+  userId: string;
+  listId: string;
+}): Promise<MealPlanRecipeSyncRow[]> =>
+  queryMealPlanRecipeSyncRowsWhere(
+    { 'grocery_list.id': listId, 'recipe.user.id': userId },
+    { withRecipeOwner: true }
+  );
 
 /**
  * Loads a standalone meal plan item with its store and linked grocery item.

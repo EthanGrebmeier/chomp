@@ -33,7 +33,10 @@ import {
   useDeleteGroceryList,
 } from '../instant/useDeleteGroceryList';
 import { useGroceryLists } from '../instant/useGroceryLists';
-import { useLeaveGroceryList } from '../instant/useLeaveGroceryList';
+import {
+  LEAVE_LIST_MEAL_PLAN_WARNING,
+  useLeaveGroceryList,
+} from '../instant/useLeaveGroceryList';
 import { useTrackListAccess } from '../instant/useTrackListAccess';
 
 import {
@@ -147,7 +150,7 @@ export const SelectGroceryListSheet = forwardRef<
     const handleLeaveList = (listId: string, listName: string) => {
       Alert.alert(
         'Leave List',
-        `Are you sure you want to leave "${listName}"?`,
+        `Are you sure you want to leave "${listName}"? ${LEAVE_LIST_MEAL_PLAN_WARNING}`,
         [
           { text: 'Cancel', style: 'cancel' },
           {

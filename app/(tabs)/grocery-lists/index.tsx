@@ -35,7 +35,10 @@ import {
   useDeleteGroceryList,
 } from '@/features/grocery-lists/instant/useDeleteGroceryList';
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
-import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
+import {
+  LEAVE_LIST_MEAL_PLAN_WARNING,
+  useLeaveGroceryList,
+} from '@/features/grocery-lists/instant/useLeaveGroceryList';
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
 import { useRecipesSettingsBar } from '@/features/shared/components/recipes-settings-bar';
 import { db } from '@/lib/instant';
@@ -101,7 +104,7 @@ export default function GroceryListsIndex() {
   const handleLeaveList = (list: GroceryList) => {
     Alert.alert(
       'Leave List',
-      `Are you sure you want to leave "${list.name}"?`,
+      `Are you sure you want to leave "${list.name}"? ${LEAVE_LIST_MEAL_PLAN_WARNING}`,
       [
         { text: 'Cancel', style: 'cancel' },
         {

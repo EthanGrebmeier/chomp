@@ -34,6 +34,7 @@ import {
   CategorySheetRef,
 } from '../../../components/item-sheet/category-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
+import { LEAVE_LIST_MEAL_PLAN_WARNING } from '../../grocery-lists/instant/useLeaveGroceryList';
 import {
   StoreSheet,
   StoreSheetRef,
@@ -390,7 +391,7 @@ export const GroceryList = ({
     const title = isOwner ? 'Delete List' : 'Leave List';
     const description = isOwner
       ? 'Are you sure you want to delete this list? All items will be permanently removed and this action cannot be undone.'
-      : 'Are you sure you want to leave this list? You will no longer have access to it.';
+      : `Are you sure you want to leave this list? You will no longer have access to it. ${LEAVE_LIST_MEAL_PLAN_WARNING}`;
     const confirmText = isOwner ? 'Delete List' : 'Leave List';
 
     Alert.alert(title, description, [
