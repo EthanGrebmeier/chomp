@@ -7,7 +7,7 @@ import { useItemSheet } from './use-item-sheet';
 type ItemFormProps = {
   /**
    * Rendered between the name and notes inputs; the Edit sheet uses it to
-   * show where the item came from (recipe tag or meal plan link).
+   * show where the item came from (recipe or meal plan link).
    */
   source?: ReactNode;
 };

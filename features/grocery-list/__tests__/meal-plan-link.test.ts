@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildMealPlanLinkSentence,
+  buildRecipeLinkSentence,
   resolveGroceryItemMealPlanLink,
 } from '../meal-plan-link';
 
@@ -81,6 +82,15 @@ describe('buildMealPlanLinkSentence', () => {
     ).toEqual([
       { type: 'text', text: 'Planned for ' },
       { type: 'date', text: 'Jan 1', date: '2027-01-01' },
+    ]);
+  });
+});
+
+describe('buildRecipeLinkSentence', () => {
+  it('formats a plain recipe source as "An ingredient of {recipe}"', () => {
+    expect(buildRecipeLinkSentence(recipe)).toEqual([
+      { type: 'text', text: 'An ingredient of ' },
+      { type: 'recipe', text: 'Chili', recipeId: 'recipe-1' },
     ]);
   });
 });

@@ -9,16 +9,19 @@ import {
 
 import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
 import { useGroceryItemMealPlanLink } from '../../../features/grocery-list/instant/use-grocery-item-meal-plan-link';
-import { GroceryItemMealPlanLink } from '../../../features/grocery-list/meal-plan-link';
+import {
+  buildMealPlanLinkSentence,
+  buildRecipeLinkSentence,
+  GroceryItemMealPlanLink,
+} from '../../../features/grocery-list/meal-plan-link';
 import {
   BaseGroceryItem,
   GroceryListItemWithRecipe,
 } from '../../../features/grocery-list/types';
 import { BottomSheet } from '../../bottom-sheet';
 import { ItemForm } from '../item-form';
-import { MealPlanLinkSentence } from '../meal-plan-link-sentence';
+import { ItemSourceSentence } from '../item-source-sentence';
 import { MetaBar } from '../meta-bar';
-import { RecipeTag } from '../recipe-tag';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 import { MatchingItem } from '../use-matching-items';
 
@@ -29,7 +32,7 @@ type EditItemContextType = {
   dismiss: () => void;
   /**
    * Immediately unlink the recipe association from the currently-presented
-   * grocery item. RecipeTag calls this from its X-button so the detach
+   * grocery item. The source sentence calls this from its X-button so the detach
    * lands as soon as the user taps it, rather than waiting for sheet close
    * like the pre-live-updates submit path did.
    */
@@ -52,17 +55,17 @@ export const useEditItemSheet = () => {
 };
 
 // Where the presented item came from: the meal plan link sentence for
-// linked items, otherwise the recipe tag (with its unlink X) for items that
-// were added from a recipe.
+// meal plan items, otherwise a recipe sentence (with an unlink X) for items
+// that were added from a recipe.
 const EditItemSource = () => {
-  const { recipe, listId } = useItemSheet();
-  const { mealPlanLink, dismiss } = useEditItemSheet();
+  const { recipe, setRecipe, listId } = useItemSheet();
+  const { mealPlanLink, dismiss, clearRecipe } = useEditItemSheet();
   const { onOpenMealPlanDate } = useEditItemSheetInternal();
 
   if (mealPlanLink) {
     return (
-      <MealPlanLinkSentence
-        link={mealPlanLink}
+      <ItemSourceSentence
+        parts={buildMealPlanLinkSentence(mealPlanLink)}
         listId={listId}
         onOpenMealPlanDate={onOpenMealPlanDate}
         onNavigate={dismiss}
@@ -70,7 +73,24 @@ const EditItemSource = () => {
     );
   }
 
-  return recipe ? <RecipeTag /> : null;
+  if (!recipe) return null;
+
+  // Fire the cloud unlink immediately alongside the local form-state clear
+  // so the grocery item's recipe association detaches right away instead of
+  // waiting for sheet dismissal.
+  const handleUnlink = () => {
+    clearRecipe(recipe.id);
+    setRecipe(null);
+  };
+
+  return (
+    <ItemSourceSentence
+      parts={buildRecipeLinkSentence(recipe)}
+      listId={listId}
+      onNavigate={dismiss}
+      onUnlink={handleUnlink}
+    />
+  );
 };
 
 const EditItemContents = () => {
@@ -225,7 +245,7 @@ const EditItemProvider = ({
   // deferring it to sheet close. The old submit path used to collect a
   // `clearedRecipeId` and flush it alongside the grocery-item write; that
   // path is gone (P3-T2), so we commit directly here. No-op when no item
-  // is currently presented (defensive — RecipeTag only renders when there
+  // is currently presented (defensive — the unlink X only renders when there
   // is one).
   const clearRecipe = useCallback(
     (recipeId: string) => {

@@ -65,6 +65,18 @@ export type MealPlanLinkSentencePart =
   | { type: 'date'; text: string; date: string };
 
 /**
+ * Sentence parts for an item linked to a recipe outside the meal plan:
+ * "An ingredient of {recipe}".
+ */
+export const buildRecipeLinkSentence = (recipe: {
+  id: string;
+  name: string;
+}): MealPlanLinkSentencePart[] => [
+  { type: 'text', text: 'An ingredient of ' },
+  { type: 'recipe', text: recipe.name, recipeId: recipe.id },
+];
+
+/**
  * Splits the link into sentence parts so the UI can make the recipe and date
  * tappable: "An ingredient of {recipe} for {date}" or "Planned for {date}".
  */
@@ -79,8 +91,10 @@ export const buildMealPlanLinkSentence = (
 
   if (link.kind === 'recipe') {
     return [
-      { type: 'text', text: 'An ingredient of ' },
-      { type: 'recipe', text: link.recipeName, recipeId: link.recipeId },
+      ...buildRecipeLinkSentence({
+        id: link.recipeId,
+        name: link.recipeName,
+      }),
       { type: 'text', text: ' for ' },
       datePart,
     ];
