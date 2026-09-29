@@ -115,6 +115,8 @@ type GroceryListProps = {
   mealPlanViewMode: MealPlanViewMode;
   onMealPlanViewModeChange: (viewMode: MealPlanViewMode) => void;
   alternateContent?: ReactNode;
+  /** Opens the meal plan view on `date` (`yyyy-MM-dd`). */
+  onOpenMealPlanDate?: (date: string) => void;
 };
 
 type GroupingBulkAction = {
@@ -142,6 +144,7 @@ export const GroceryList = ({
   mealPlanViewMode,
   onMealPlanViewModeChange,
   alternateContent,
+  onOpenMealPlanDate,
 }: GroceryListProps) => {
   const { width: viewportWidth } = useWindowDimensions();
   const shareListSheetRef = useRef<ShareListSheetRef>(null);
@@ -899,7 +902,10 @@ export const GroceryList = ({
               activeView === 'grocery-list' ? 'auto' : 'no-hide-descendants'
             }
           >
-            <EditItemProvider groceryListId={listId ?? ''}>
+            <EditItemProvider
+              groceryListId={listId ?? ''}
+              onOpenMealPlanDate={onOpenMealPlanDate}
+            >
               <View className="flex-1">
                 <GroceryItemsList
                   items={filteredItems}

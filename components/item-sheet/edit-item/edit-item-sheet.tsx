@@ -8,13 +8,17 @@ import {
 } from 'react';
 
 import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
+import { useGroceryItemMealPlanLink } from '../../../features/grocery-list/instant/use-grocery-item-meal-plan-link';
+import { GroceryItemMealPlanLink } from '../../../features/grocery-list/meal-plan-link';
 import {
   BaseGroceryItem,
   GroceryListItemWithRecipe,
 } from '../../../features/grocery-list/types';
 import { BottomSheet } from '../../bottom-sheet';
 import { ItemForm } from '../item-form';
+import { MealPlanLinkSentence } from '../meal-plan-link-sentence';
 import { MetaBar } from '../meta-bar';
+import { RecipeTag } from '../recipe-tag';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 import { MatchingItem } from '../use-matching-items';
 
@@ -30,6 +34,11 @@ type EditItemContextType = {
    * like the pre-live-updates submit path did.
    */
   clearRecipe: (recipeId: string) => void;
+  /**
+   * Meal plan source of the presented item, or `null` for unlinked items
+   * (including checked items whose meal plan entry was deleted).
+   */
+  mealPlanLink: GroceryItemMealPlanLink | null;
 };
 
 const EditItemContext = createContext<EditItemContextType | null>(null);
@@ -40,6 +49,28 @@ export const useEditItemSheet = () => {
     throw new Error('useEditItemSheet must be used within an EditItemProvider');
   }
   return context;
+};
+
+// Where the presented item came from: the meal plan link sentence for
+// linked items, otherwise the recipe tag (with its unlink X) for items that
+// were added from a recipe.
+const EditItemSource = () => {
+  const { recipe, listId } = useItemSheet();
+  const { mealPlanLink, dismiss } = useEditItemSheet();
+  const { onOpenMealPlanDate } = useEditItemSheetInternal();
+
+  if (mealPlanLink) {
+    return (
+      <MealPlanLinkSentence
+        link={mealPlanLink}
+        listId={listId}
+        onOpenMealPlanDate={onOpenMealPlanDate}
+        onNavigate={dismiss}
+      />
+    );
+  }
+
+  return recipe ? <RecipeTag /> : null;
 };
 
 const EditItemContents = () => {
@@ -70,7 +101,7 @@ const EditItemContents = () => {
     >
       <BottomSheet.SheetView>
         <BottomSheet.Header title="Edit item" />
-        <ItemForm />
+        <ItemForm source={<EditItemSource />} />
         <MetaBar />
       </BottomSheet.SheetView>
     </BottomSheet>
@@ -100,6 +131,7 @@ const EditItemLiveSync = (props: EditItemLiveSyncProps) => {
 type EditItemInternalContextType = {
   sheetRef: React.RefObject<TrueSheet | null>;
   liveSyncRef: React.RefObject<UseLiveItemSyncHandle | null>;
+  onOpenMealPlanDate?: (date: string) => void;
 };
 
 const EditItemInternalContext =
@@ -117,11 +149,20 @@ const useEditItemSheetInternal = () => {
 
 type EditItemProps = {
   groceryListId: string;
+  /** Opens the meal plan view on `date` (`yyyy-MM-dd`). */
+  onOpenMealPlanDate?: (date: string) => void;
   children: React.ReactNode;
 };
 
-const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
+const EditItemProvider = ({
+  groceryListId,
+  onOpenMealPlanDate,
+  children,
+}: EditItemProps) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [presentedItem, setPresentedItem] =
+    useState<GroceryListItemWithRecipe | null>(null);
+  const mealPlanLink = useGroceryItemMealPlanLink(presentedItem);
   const [currentItemName, setCurrentItemName] = useState<string | undefined>(
     undefined
   );
@@ -163,6 +204,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   const present = (item: GroceryListItemWithRecipe) => {
     setFromItemRef.current?.(item);
     setSelectedItemId(item.id);
+    setPresentedItem(item);
     setCurrentItemName(item.name);
     setCurrentStoreId(item.store?.id);
     setCurrentSavedItemId(item.saved_item?.id);
@@ -194,8 +236,12 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   );
 
   return (
-    <EditItemContext.Provider value={{ present, dismiss, clearRecipe }}>
-      <EditItemInternalContext.Provider value={{ sheetRef, liveSyncRef }}>
+    <EditItemContext.Provider
+      value={{ present, dismiss, clearRecipe, mealPlanLink }}
+    >
+      <EditItemInternalContext.Provider
+        value={{ sheetRef, liveSyncRef, onOpenMealPlanDate }}
+      >
         <ItemSheetProvider
           mode="update"
           listId={groceryListId}

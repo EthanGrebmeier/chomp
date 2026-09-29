@@ -47,6 +47,16 @@ export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
 
 export type MealPlanViewMode = 'calendar' | 'day-list';
 
+/**
+ * A request to show one day in the meal plan (e.g. from a linked grocery
+ * item). `id` distinguishes repeated requests for the same date.
+ */
+export type MealPlanFocusRequest = {
+  id: number;
+  /** `yyyy-MM-dd` */
+  date: string;
+};
+
 export type AddRecipeToDateArgs = {
   listId: string;
   recipeId: string;

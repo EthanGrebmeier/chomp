@@ -1,11 +1,19 @@
+import { ReactNode } from 'react';
+
 import { ItemInput } from './item-input';
 import { NotesInput } from './notes-input';
-import { RecipeTag } from './recipe-tag';
 import { useItemSheet } from './use-item-sheet';
 
-export const ItemForm = () => {
+type ItemFormProps = {
+  /**
+   * Rendered between the name and notes inputs; the Edit sheet uses it to
+   * show where the item came from (recipe tag or meal plan link).
+   */
+  source?: ReactNode;
+};
+
+export const ItemForm = ({ source }: ItemFormProps) => {
   const {
-    recipe,
     itemInputValue,
     itemInputKey,
     itemInputDefaultValue,
@@ -42,7 +50,7 @@ export const ItemForm = () => {
         disableAutocomplete={disableAutocomplete}
         keepKeyboardOnSubmit={mode === 'add'}
       />
-      {recipe && <RecipeTag />}
+      {source}
       <NotesInput />
     </>
   );

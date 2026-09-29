@@ -15,6 +15,7 @@ import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGr
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
 import { MealPlanner } from '@/features/meal-planner/components';
 import { useMealPlanViewMode } from '@/features/meal-planner/hooks/use-meal-plan-view-mode';
+import { type MealPlanFocusRequest } from '@/features/meal-planner/types';
 import { db } from '@/lib/instant';
 import { buildGroceryListsIndexUrl } from '@/lib/navigation';
 
@@ -53,6 +54,10 @@ export default function List() {
   const { user } = db.useAuth();
   const { viewMode: mealPlanViewMode, setViewMode: setMealPlanViewMode } =
     useMealPlanViewMode(user?.id);
+  // Set when a linked grocery item's date is tapped; cleared on list switch
+  // so a remounted meal planner doesn't jump to a stale date.
+  const [mealPlanFocusRequest, setMealPlanFocusRequest] =
+    useState<MealPlanFocusRequest | null>(null);
   const deleteGroceryList = useDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
   const trackListAccess = useTrackListAccess();
@@ -64,6 +69,7 @@ export default function List() {
       }
 
       setSelectedListId(nextListId ?? null);
+      setMealPlanFocusRequest(null);
       router.setParams({ listId: nextListId });
     },
     [activeListId]
@@ -127,6 +133,17 @@ export default function List() {
     [activeListId]
   );
 
+  const handleOpenMealPlanDate = useCallback(
+    (date: string) => {
+      handleViewChange('meal-plan');
+      setMealPlanFocusRequest(current => ({
+        id: (current?.id ?? 0) + 1,
+        date,
+      }));
+    },
+    [handleViewChange]
+  );
+
   const handleOpenListsIndex = useCallback(() => {
     router.dismissTo(
       buildGroceryListsIndexUrl({
@@ -179,6 +196,7 @@ export default function List() {
               onViewChange={handleViewChange}
               mealPlanViewMode={mealPlanViewMode}
               onMealPlanViewModeChange={setMealPlanViewMode}
+              onOpenMealPlanDate={handleOpenMealPlanDate}
               alternateContent={
                 activeListId ? (
                   <MealPlanner
@@ -186,6 +204,7 @@ export default function List() {
                     showHeader={false}
                     viewMode={mealPlanViewMode}
                     onViewModeChange={setMealPlanViewMode}
+                    focusRequest={mealPlanFocusRequest}
                   />
                 ) : null
               }

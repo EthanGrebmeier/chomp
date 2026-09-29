@@ -18,6 +18,7 @@ import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
 import {
+  MealPlanFocusRequest,
   MealPlanItemWithStore,
   MealPlanRecipeWithRecipe,
   MealPlanViewMode,
@@ -27,6 +28,7 @@ import {
   MEAL_PLAN_DAY_LIST_PAST_DAYS,
   type MoveMealPlanEntry,
 } from '../utils/meal-plan-day-list';
+import { parseMealPlanDate } from '../utils/meal-plan-date-format';
 import {
   groupMealPlanEntriesByDate,
   isPageWithinActiveWindow,
@@ -58,6 +60,8 @@ type MealPlannerProps = {
   showHeader?: boolean;
   viewMode?: MealPlanViewMode;
   onViewModeChange?: (viewMode: MealPlanViewMode) => void;
+  /** Shows the requested day in both the Calendar and Day List views. */
+  focusRequest?: MealPlanFocusRequest | null;
 };
 
 export const MealPlanner = ({
@@ -67,6 +71,7 @@ export const MealPlanner = ({
   showHeader = true,
   viewMode = 'calendar',
   onViewModeChange,
+  focusRequest,
 }: MealPlannerProps) => {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
@@ -173,6 +178,16 @@ export const MealPlanner = ({
     [daysOfPlan]
   );
 
+  // Calendar View half of a focus request; the Day List half is handled by
+  // MealPlanDateView. Dates outside the pager's range leave the page as is.
+  const handledFocusRequestIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!focusRequest) return;
+    if (handledFocusRequestIdRef.current === focusRequest.id) return;
+    handledFocusRequestIdRef.current = focusRequest.id;
+    handleDatePress(parseMealPlanDate(focusRequest.date));
+  }, [focusRequest, handleDatePress]);
+
   const handlePageSelected = (e: { nativeEvent: { position: number } }) => {
     setCurrentPageIndex(e.nativeEvent.position);
   };
@@ -268,6 +283,7 @@ export const MealPlanner = ({
               editMealSheet.current?.open({ mealPlanRecipe, recipe });
             }}
             onItemPress={handleItemPress}
+            focusRequest={focusRequest}
           />
         </Animated.View>
         <Animated.View

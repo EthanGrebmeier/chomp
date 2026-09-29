@@ -1,5 +1,12 @@
 import * as Haptics from 'expo-haptics';
-import { createContext, use, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  use,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -30,6 +37,7 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { Recipe } from '../../recipes/types';
 import {
+  MealPlanFocusRequest,
   MealPlanItemWithStore,
   MealPlanRecipe,
   MealPlanRecipeWithRecipe,
@@ -66,6 +74,8 @@ type MealPlanDateViewProps = {
   }) => void;
   onItemPress: (item: MealPlanItemWithStore) => void;
   onMoveEntry?: MoveMealPlanEntry;
+  /** Day List only: scrolls the requested day to the top. */
+  focusRequest?: MealPlanFocusRequest | null;
 };
 
 const mealTimeOrder: MealTag[] = [
@@ -431,6 +441,7 @@ export const MealPlanDateView = ({
   onMealPress,
   onItemPress,
   onMoveEntry,
+  focusRequest,
 }: MealPlanDateViewProps) => {
   const dropProviderRef = useRef<DropProviderRef>(null);
   const dayListRef = useRef<FlatList<DayListSection>>(null);
@@ -504,6 +515,45 @@ export const MealPlanDateView = ({
     });
   };
 
+  // Scroll to a requested day (from a linked grocery item). Days outside the
+  // Day List window leave the scroll position alone.
+  const handledFocusRequestIdRef = useRef<number | null>(null);
+  const focusSectionIndex = focusRequest
+    ? dayListSections.findIndex(
+        section => section.dateKey === focusRequest.date
+      )
+    : -1;
+  useEffect(() => {
+    if (mode !== 'day-list' || !focusRequest) return;
+    if (handledFocusRequestIdRef.current === focusRequest.id) return;
+    handledFocusRequestIdRef.current = focusRequest.id;
+    if (focusSectionIndex < 0) return;
+    // The requested day wins over the initial scroll to today.
+    hasScrolledToTodayRef.current = true;
+    dayListRef.current?.scrollToIndex({
+      index: focusSectionIndex,
+      animated: false,
+    });
+  }, [focusRequest, focusSectionIndex, mode]);
+
+  // Rows outside the render window have no measured offset yet: jump to an
+  // estimate so they render, then retry the exact scroll.
+  const handleScrollToIndexFailed = ({
+    index,
+    averageItemLength,
+  }: {
+    index: number;
+    averageItemLength: number;
+  }) => {
+    dayListRef.current?.scrollToOffset({
+      offset: averageItemLength * index,
+      animated: false,
+    });
+    requestAnimationFrame(() => {
+      dayListRef.current?.scrollToIndex({ index, animated: false });
+    });
+  };
+
   const calendarEntries = createMealPlanDayEntries(recipes, items);
   const calendarGroups = groupEntriesByMealTime(calendarEntries);
 
@@ -542,6 +592,7 @@ export const MealPlanDateView = ({
             onContentSizeChange={refreshDragDropPositions}
             onMomentumScrollEnd={refreshDragDropPositions}
             onScrollEndDrag={refreshDragDropPositions}
+            onScrollToIndexFailed={handleScrollToIndexFailed}
             renderItem={({ item: section }) => (
               <MealPlanDayListSectionView
                 section={section}

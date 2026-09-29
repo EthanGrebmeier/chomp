@@ -8,6 +8,10 @@ import {
 } from '../../../components/calendar-sheet';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
+import {
+  formatMealPlanDate,
+  parseMealPlanDate,
+} from '../utils/meal-plan-date-format';
 
 import { MealTimeSheet, MealTimeSheetRef } from './meal-time-sheet';
 
@@ -17,20 +21,6 @@ type MealScheduleSentenceProps = {
   mealTag?: string;
   onMealTagChange: (mealTag?: string) => void;
   disabled?: boolean;
-};
-
-const parseLocalDate = (dateStr: string) => {
-  const [datePart] = dateStr.split('T');
-  const [year, month, day] = datePart.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const formatDisplayDate = (dateStr: string) => {
-  try {
-    return format(parseLocalDate(dateStr), 'MMM d');
-  } catch {
-    return 'Date';
-  }
 };
 
 export const MealScheduleSentence = ({
@@ -57,7 +47,9 @@ export const MealScheduleSentence = ({
         Planned for{' '}
         <Text
           className={spanClassName(!!mealTag)}
-          onPress={disabled ? undefined : () => mealTimeSheetRef.current?.present()}
+          onPress={
+            disabled ? undefined : () => mealTimeSheetRef.current?.present()
+          }
         >
           {mealTag ?? 'a meal time'}
         </Text>{' '}
@@ -68,7 +60,7 @@ export const MealScheduleSentence = ({
             disabled ? undefined : () => calendarSheetRef.current?.present()
           }
         >
-          {date ? formatDisplayDate(date) : 'a date'}
+          {date ? formatMealPlanDate(date) : 'a date'}
         </Text>
       </Text>
 
@@ -76,7 +68,7 @@ export const MealScheduleSentence = ({
         ref={calendarSheetRef}
         name="meal-schedule-calendar-sheet"
         headerTitle="Choose a date"
-        selectedDate={date ? parseLocalDate(date) : undefined}
+        selectedDate={date ? parseMealPlanDate(date) : undefined}
         onChange={selectedDate => {
           onDateChange(format(selectedDate, 'yyyy-MM-dd'));
         }}
