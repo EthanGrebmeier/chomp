@@ -12,8 +12,18 @@ export type MealPlanRecipeIngredientSnapshot = InstaQLEntity<
   'meal_plan_recipe_ingredient_snapshots'
 >;
 
+/**
+ * Grocery item linked one-to-one to a meal plan source (a recipe ingredient
+ * snapshot or a standalone meal plan item).
+ */
+export type MealPlanLinkedGroceryItem = InstaQLEntity<
+  typeof schema,
+  'grocery_items'
+>;
+
 export type MealPlanItemWithStore = MealPlanItem & {
   store?: Store;
+  grocery_item?: MealPlanLinkedGroceryItem | null;
 };
 
 export type MealTag =
@@ -27,6 +37,7 @@ export type MealTag =
 export type MealPlanRecipeIngredientSnapshotWithStore =
   MealPlanRecipeIngredientSnapshot & {
     store?: Store;
+    grocery_item?: MealPlanLinkedGroceryItem | null;
   };
 
 export type MealPlanRecipeWithRecipe = MealPlanRecipe & {

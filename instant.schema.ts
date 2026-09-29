@@ -85,6 +85,9 @@ const _schema = i.schema({
       servings: i.number(),
       addedToList: i.boolean().indexed(),
       addedToListAt: i.string().optional(),
+      // "Meal plan only": when true, the entry has no linked grocery items.
+      // A missing value is treated as false.
+      ignoredByGroceryList: i.boolean().indexed().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
@@ -98,6 +101,9 @@ const _schema = i.schema({
       date: i.string().indexed(),
       addedToList: i.boolean().indexed(),
       addedToListAt: i.string().optional(),
+      // "Meal plan only": when true, the entry has no linked grocery item.
+      // A missing value is treated as false.
+      ignoredByGroceryList: i.boolean().indexed().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
@@ -168,6 +174,33 @@ const _schema = i.schema({
         on: 'recipes',
         has: 'many',
         label: 'grocery_items',
+      },
+    },
+    // One-to-one links from a grocery item to the meal plan source it was
+    // created from. Deliberately not cascaded: deleting a meal plan source
+    // must never delete a (possibly checked) grocery item.
+    grocery_items_meal_plan_ingredient_snapshots: {
+      forward: {
+        on: 'grocery_items',
+        has: 'one',
+        label: 'meal_plan_ingredient_snapshot',
+      },
+      reverse: {
+        on: 'meal_plan_recipe_ingredient_snapshots',
+        has: 'one',
+        label: 'grocery_item',
+      },
+    },
+    grocery_items_meal_plan_items: {
+      forward: {
+        on: 'grocery_items',
+        has: 'one',
+        label: 'meal_plan_item',
+      },
+      reverse: {
+        on: 'meal_plan_items',
+        has: 'one',
+        label: 'grocery_item',
       },
     },
     grocery_list_shares_grocery_lists: {

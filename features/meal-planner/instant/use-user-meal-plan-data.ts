@@ -17,10 +17,12 @@ export const useMealPlanData = (listId?: string) => {
         },
         ingredient_snapshots: {
           store: {},
+          grocery_item: {},
         },
       },
       meal_plan_items: {
         store: {},
+        grocery_item: {},
       },
     },
   });
