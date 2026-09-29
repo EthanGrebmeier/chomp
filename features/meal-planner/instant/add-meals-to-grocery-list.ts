@@ -1,6 +1,6 @@
 import { id, tx } from '@instantdb/react-native';
 
-import { db } from '../../../lib/instant';
+import { db, type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import {
   buildIngredientStackingTransactions,
@@ -19,11 +19,6 @@ import {
   MealPlanSnapshotReconciliationPlan,
   SnapshotRowToCreate,
 } from './plan-meal-plan-snapshot-reconciliation';
-
-type TransactionChunk = Extract<
-  Parameters<typeof db.transact>[0],
-  unknown[]
->[number];
 
 const buildSnapshotReconciliationTransactions = (
   mealPlanRecipeId: string,

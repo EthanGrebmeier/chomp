@@ -1,6 +1,6 @@
 import { id, tx } from '@instantdb/react-native';
 
-import { db } from '../../../lib/instant';
+import { db, type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 
@@ -28,11 +28,6 @@ export {
   applyDefaultStoreToStackableIngredients,
   planIngredientStacking,
 } from './stack-recipe-ingredients-plan';
-
-type TransactionChunk = Extract<
-  Parameters<typeof db.transact>[0],
-  unknown[]
->[number];
 
 type BuildStackingTransactionsArgs = {
   listId: string;
