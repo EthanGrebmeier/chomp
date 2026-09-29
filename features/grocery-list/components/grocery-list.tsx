@@ -76,6 +76,7 @@ import { BulkToolbarActionId } from '../bulk-selection/toolbar';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
+import { removeMovedGroceryItems } from '../instant/delete-grocery-items';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
 import {
   BaseGroceryItem,
@@ -796,22 +797,10 @@ export const GroceryList = ({
           }
         },
         removeSourceItems: async itemIds => {
-          if (itemIds.length === 0) {
-            return;
-          }
-
-          const now = new Date().toISOString();
-          const transactions = itemIds.map(itemId =>
-            tx.grocery_items[itemId].update(
-              trimStringFields({
-                isDeleted: true,
-                deletedAt: now,
-                updatedAt: now,
-              })
-            )
-          );
-
-          await db.transact(transactions);
+          const movedItemIds = new Set(itemIds);
+          await removeMovedGroceryItems({
+            items: selectedItems.filter(item => movedItemIds.has(item.id)),
+          });
         },
         onMoveSuccess: () => {
           setBulkSelectionState(currentState =>

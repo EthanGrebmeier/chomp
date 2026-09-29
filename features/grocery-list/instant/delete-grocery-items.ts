@@ -1,4 +1,5 @@
 import { db } from '../../../lib/instant';
+import { planBulkMoveSourceRemoval } from '../bulk-selection/move-orchestrator';
 import { buildLinkedGroceryItemDeletionTransactions } from '../../meal-planner/instant/build-linked-grocery-item-deletion-transactions';
 import {
   type GroceryItemForDeletion,
@@ -23,6 +24,25 @@ export const deleteGroceryItems = async ({
 }) => {
   const transactions = buildLinkedGroceryItemDeletionTransactions(
     planLinkedGroceryItemDeletion(items)
+  );
+
+  if (transactions.length > 0) {
+    await db.transact(transactions);
+  }
+};
+
+/**
+ * Removes bulk-moved items from their source list and, in the same
+ * transaction, unlinks them from the meal plan and deselects their source
+ * ingredient (see `planBulkMoveSourceRemoval`).
+ */
+export const removeMovedGroceryItems = async ({
+  items,
+}: {
+  items: GroceryItemForDeletion[];
+}) => {
+  const transactions = buildLinkedGroceryItemDeletionTransactions(
+    planBulkMoveSourceRemoval(items)
   );
 
   if (transactions.length > 0) {

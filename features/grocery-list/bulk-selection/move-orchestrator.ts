@@ -1,3 +1,9 @@
+import {
+  type GroceryItemForDeletion,
+  type LinkedGroceryItemDeletionPlan,
+  planLinkedGroceryItemDeletion,
+} from '../../meal-planner/instant/plan-linked-grocery-item-deletion';
+
 type BuildBulkMoveSelectionPayloadInput = {
   selectedItemIds: Set<string>;
   sourceListId?: string;
@@ -56,7 +62,9 @@ export type RunBulkMoveResult = 'noop' | 'moved';
 type RunBulkMoveArgs = {
   moveSelectionPayload: BulkMoveSelectionPayload;
   selectedItems: BulkMoveSourceItem[];
-  fetchDestinationItems: (destinationListId: string) => Promise<BulkMoveItemForPlanning[]>;
+  fetchDestinationItems: (
+    destinationListId: string
+  ) => Promise<BulkMoveItemForPlanning[]>;
   applyDestinationPlan: (
     plan: BulkMovePlan,
     destinationListId: string,
@@ -69,10 +77,7 @@ type RunBulkMoveArgs = {
 type ExistingByMatchKey = Map<string, BulkMoveItemForPlanning>;
 
 const normalizeToken = (value?: string | null): string =>
-  (value ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, ' ');
+  (value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
 
 const buildMoveMatchKey = ({
   name,
@@ -216,6 +221,27 @@ export const buildBulkMovePlan = ({
     skippedItemCount,
   };
 };
+
+/**
+ * Plans how moved items leave the source list, including the write-back to
+ * the meal plan for items linked to it.
+ *
+ * The destination only ever gets ordinary items (see `buildBulkMovePlan`),
+ * so moving a linked item always ends its meal plan link: the source row is
+ * hard deleted (so reselecting or un-ignoring can re-create it) and its source
+ * ingredient is deselected, or the entry becomes "meal plan only" when it was
+ * its last selected ingredient. Unlinked items are soft deleted as before.
+ *
+ * Unlike a plain delete, moving is never "history": a checked linked item
+ * that is moved is unlinked and deselected too. (Bulk selection only offers
+ * unchecked items today.)
+ */
+export const planBulkMoveSourceRemoval = (
+  movedItems: GroceryItemForDeletion[]
+): LinkedGroceryItemDeletionPlan =>
+  planLinkedGroceryItemDeletion(
+    movedItems.map(item => ({ ...item, isChecked: false }))
+  );
 
 export const runBulkMove = async ({
   moveSelectionPayload,

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildBulkMovePlan,
   buildBulkMoveSelectionPayload,
+  planBulkMoveSourceRemoval,
   runBulkMove,
 } from '../move-orchestrator';
 
@@ -53,7 +54,7 @@ describe('bulk move planning', () => {
           quantity: 2,
           unit: 'each',
           category: 'produce',
-          store: { id: 'store-1', name: 'Trader Joe\'s' },
+          store: { id: 'store-1', name: "Trader Joe's" },
           notes: 'ripe',
           isChecked: false,
         },
@@ -63,7 +64,7 @@ describe('bulk move planning', () => {
           quantity: 1,
           unit: 'each',
           category: 'produce',
-          store: { id: 'store-1', name: 'Trader Joe\'s' },
+          store: { id: 'store-1', name: "Trader Joe's" },
           notes: 'yellow',
           isChecked: false,
         },
@@ -75,7 +76,7 @@ describe('bulk move planning', () => {
           quantity: 4,
           unit: 'each',
           category: 'produce',
-          store: { id: 'store-1', name: 'Trader Joe\'s' },
+          store: { id: 'store-1', name: "Trader Joe's" },
           updatedAt: '2026-05-12T01:00:00.000Z',
         },
       ],
@@ -161,5 +162,125 @@ describe('bulk move execution', () => {
 
     expect(result).toBe('moved');
     expect(callOrder).toEqual(['fetch', 'apply', 'remove', 'success']);
+  });
+});
+
+describe('bulk move of meal plan linked items', () => {
+  const linkedRecipeItem = (
+    id: string,
+    snapshotId: string,
+    snapshots: { id: string; isSelected: boolean }[]
+  ) => ({
+    id,
+    name: 'Onion',
+    quantity: 1,
+    unit: 'each',
+    category: 'produce',
+    isChecked: false,
+    isDeleted: false,
+    meal_plan_ingredient_snapshot: {
+      id: snapshotId,
+      meal_plan_recipe: {
+        id: 'meal-1',
+        ignoredByGroceryList: false,
+        ingredient_snapshots: snapshots,
+      },
+    },
+  });
+
+  it('creates an ordinary destination item with no meal plan link', () => {
+    const plan = buildBulkMovePlan({
+      selectedItemIds: ['linked-1'],
+      selectedItems: [
+        linkedRecipeItem('linked-1', 'snap-1', [
+          { id: 'snap-1', isSelected: true },
+        ]),
+      ],
+      destinationItems: [],
+    });
+
+    expect(plan.createEntries).toEqual([
+      {
+        name: 'Onion',
+        quantity: 1,
+        unit: 'each',
+        category: 'produce',
+        notes: undefined,
+        isChecked: false,
+        storeId: undefined,
+      },
+    ]);
+    expect(plan.sourceItemIdsToRemove).toEqual(['linked-1']);
+  });
+
+  it('removes the linked source item and deselects its ingredient', () => {
+    const plan = planBulkMoveSourceRemoval([
+      linkedRecipeItem('linked-1', 'snap-1', [
+        { id: 'snap-1', isSelected: true },
+        { id: 'snap-2', isSelected: true },
+      ]),
+    ]);
+
+    expect(plan).toEqual({
+      groceryItemIdsToSoftDelete: [],
+      groceryItemIdsToRemove: ['linked-1'],
+      snapshotRowIdsToDeselect: ['snap-1'],
+      entriesToIgnore: [],
+    });
+  });
+
+  it('ignores the meal when its last selected ingredient is moved', () => {
+    const plan = planBulkMoveSourceRemoval([
+      linkedRecipeItem('linked-1', 'snap-1', [
+        { id: 'snap-1', isSelected: true },
+        { id: 'snap-2', isSelected: false },
+      ]),
+    ]);
+
+    expect(plan.groceryItemIdsToRemove).toEqual(['linked-1']);
+    expect(plan.snapshotRowIdsToDeselect).toEqual([]);
+    expect(plan.entriesToIgnore).toEqual([{ type: 'recipe', id: 'meal-1' }]);
+  });
+
+  it('ignores a standalone planned item that is moved', () => {
+    const plan = planBulkMoveSourceRemoval([
+      {
+        id: 'linked-item',
+        isChecked: false,
+        meal_plan_item: { id: 'plan-item-1', ignoredByGroceryList: false },
+      },
+    ]);
+
+    expect(plan.groceryItemIdsToRemove).toEqual(['linked-item']);
+    expect(plan.entriesToIgnore).toEqual([{ type: 'item', id: 'plan-item-1' }]);
+  });
+
+  it('unlinks and deselects a moved linked item even when it is checked', () => {
+    const plan = planBulkMoveSourceRemoval([
+      {
+        ...linkedRecipeItem('linked-1', 'snap-1', [
+          { id: 'snap-1', isSelected: true },
+          { id: 'snap-2', isSelected: true },
+        ]),
+        isChecked: true,
+      },
+    ]);
+
+    expect(plan.groceryItemIdsToRemove).toEqual(['linked-1']);
+    expect(plan.groceryItemIdsToSoftDelete).toEqual([]);
+    expect(plan.snapshotRowIdsToDeselect).toEqual(['snap-1']);
+  });
+
+  it('soft deletes unlinked moved items without touching the meal plan', () => {
+    const plan = planBulkMoveSourceRemoval([
+      { id: 'plain-1', isChecked: false },
+    ]);
+
+    expect(plan).toEqual({
+      groceryItemIdsToSoftDelete: ['plain-1'],
+      groceryItemIdsToRemove: [],
+      snapshotRowIdsToDeselect: [],
+      entriesToIgnore: [],
+    });
   });
 });
