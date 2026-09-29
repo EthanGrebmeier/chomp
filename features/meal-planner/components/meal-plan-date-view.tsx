@@ -252,6 +252,7 @@ const MealPlanMealTimeGroup = ({
             mealPlanRecipe={mealPlanRecipe}
             recipe={recipe}
             isLast={isLast}
+            contextMenuEnabled={!dragConfig}
             onMealPress={onMealPress}
           />
         );

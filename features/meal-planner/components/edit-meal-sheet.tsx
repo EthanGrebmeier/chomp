@@ -19,9 +19,11 @@ import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-s
 import { navigation } from '../../../lib/navigation';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useDefaultStore } from '../../stores/instant/use-default-store';
+import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
+import { isMealPlanOnly } from '../instant/meal-plan-entry';
 import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
 import {
   MealPlanIngredientEditorRow,
@@ -42,6 +44,7 @@ import {
   MealPlanIngredientOverrideSheet,
   MealPlanIngredientOverrideSheetRef,
 } from './meal-plan-ingredient-override-sheet';
+import { AddToGroceryListSwitch } from './meal-plan-only';
 import { MealScheduleSentence } from './meal-schedule-sentence';
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 
@@ -89,6 +92,21 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
     // Shared with the planner view, so the entry's linked items stay live.
     const { recipes: mealPlanRecipes } = useUserMealPlanData(listId);
+    const liveMealPlanRecipe = mealPlanRecipeToEdit
+      ? mealPlanRecipes.find(recipe => recipe.id === mealPlanRecipeToEdit.id)
+      : undefined;
+    // Bumped to reload the ingredient rows after a change made outside the
+    // editor, e.g. turning "meal plan only" off can select every ingredient.
+    const [ingredientRowsVersion, setIngredientRowsVersion] = useState(0);
+    const { isMealPlanOnly: mealPlanOnly, setMealPlanOnly } =
+      useMealPlanOnlyToggle({
+        entry: mealPlanRecipeToEdit
+          ? { type: 'recipe', id: mealPlanRecipeToEdit.id }
+          : null,
+        isMealPlanOnly: isMealPlanOnly(
+          liveMealPlanRecipe ?? mealPlanRecipeToEdit ?? {}
+        ),
+      });
     const lastSyncedSnapshotRef = useRef<string | null>(null);
     const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onDismissRef = useRef<(() => void) | undefined>(undefined);
@@ -189,9 +207,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const handleRemoveMeal = () => {
       if (!mealPlanRecipeToEdit) return;
       const mealPlanRecipeId = mealPlanRecipeToEdit.id;
-      const liveMealPlanRecipe = mealPlanRecipes.find(
-        recipe => recipe.id === mealPlanRecipeId
-      );
       const recipeName = selectedRecipe?.name ?? 'this meal';
 
       Alert.alert(
@@ -349,10 +364,17 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         isCancelled = true;
       };
     }, [
+      ingredientRowsVersion,
       mealPlanRecipeToEdit,
       persistedRecipeId,
       selectedRecipeWithIngredients,
     ]);
+
+    const handleMealPlanOnlyChange = (nextMealPlanOnly: boolean) => {
+      setMealPlanOnly(nextMealPlanOnly, {
+        onSuccess: () => setIngredientRowsVersion(version => version + 1),
+      });
+    };
 
     const handleToggleIngredientSelection = async (
       sourceRecipeIngredientId: string
@@ -474,12 +496,18 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                     showHeader={false}
                     recipeNameHeading
                     scheduleControl={
-                      <MealScheduleSentence
-                        date={selectedDate}
-                        onDateChange={setSelectedDate}
-                        mealTag={mealTag}
-                        onMealTagChange={setMealTag}
-                      />
+                      <View className="gap-3">
+                        <MealScheduleSentence
+                          date={selectedDate}
+                          onDateChange={setSelectedDate}
+                          mealTag={mealTag}
+                          onMealTagChange={setMealTag}
+                        />
+                        <AddToGroceryListSwitch
+                          isMealPlanOnly={mealPlanOnly}
+                          onMealPlanOnlyChange={handleMealPlanOnlyChange}
+                        />
+                      </View>
                     }
                     showFooter={false}
                     onBack={() => {}}

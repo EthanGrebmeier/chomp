@@ -245,7 +245,7 @@ export const MealPlanner = ({
       ) : null}
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} listId={listId} />
-      <EditItemSheet ref={editItemSheet} />
+      <EditItemSheet ref={editItemSheet} listId={listId} />
       <View className="flex-1 overflow-hidden">
         <Animated.View
           className="absolute inset-0"

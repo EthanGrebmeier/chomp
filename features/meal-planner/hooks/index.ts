@@ -7,3 +7,4 @@ export { useUpdateMealPlanRecipe } from './useUpdateMealPlanRecipe';
 export { useUpdateMealPlanItem } from './useUpdateMealPlanItem';
 export { useClearMealPlan } from './useClearMealPlan';
 export { useSetMealPlanEntryIgnored } from './useSetMealPlanEntryIgnored';
+export { useMealPlanOnlyToggle } from './useMealPlanOnlyToggle';

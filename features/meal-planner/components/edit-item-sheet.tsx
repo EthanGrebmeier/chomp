@@ -12,8 +12,11 @@ import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { ItemInput } from '../../../components/item-sheet/item-input';
+import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
+import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
+import { isMealPlanOnly } from '../instant/meal-plan-entry';
 import { MealPlanItemWithStore } from '../types';
 import {
   countUncheckedLinkedGroceryItems,
@@ -27,16 +30,22 @@ import {
   useMealPlanItem,
 } from './meal-plan-item-context';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
+import { AddToGroceryListSwitch } from './meal-plan-only';
 
 export type EditItemSheetRef = {
   open: (item: MealPlanItemWithStore) => void;
 };
 
+type EditItemSheetProps = {
+  listId: string;
+};
+
 const EditItemSheetContent = ({
+  listId,
   itemToEdit,
   onClose,
-}: {
-  itemToEdit: MealPlanItemWithStore | null;
+}: EditItemSheetProps & {
+  itemToEdit: MealPlanItemWithStore;
   onClose: () => void;
 }) => {
   const {
@@ -55,9 +64,17 @@ const EditItemSheetContent = ({
 
   const itemInputRef = useRef<TextInput>(null);
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
+  // Shared with the planner view, so "meal plan only" stays live.
+  const { items: mealPlanItems } = useUserMealPlanData(listId);
+  const liveItem =
+    mealPlanItems.find(item => item.id === itemToEdit.id) ?? itemToEdit;
+  const { isMealPlanOnly: mealPlanOnly, setMealPlanOnly } =
+    useMealPlanOnlyToggle({
+      entry: { type: 'item', id: itemToEdit.id },
+      isMealPlanOnly: isMealPlanOnly(liveItem),
+    });
 
   const handleRemoveItem = () => {
-    if (!itemToEdit) return;
     const currentItemName = getItemName();
 
     Alert.alert(
@@ -130,17 +147,22 @@ const EditItemSheetContent = ({
           multiline
           textAlignVertical="top"
         />
+        <AddToGroceryListSwitch
+          isMealPlanOnly={mealPlanOnly}
+          onMealPlanOnlyChange={setMealPlanOnly}
+        />
       </View>
     </View>
   );
 };
 
 const EditItemSheetContainer = ({
+  listId,
   sheetRef,
   itemToEdit,
   onClose,
   onReset,
-}: {
+}: EditItemSheetProps & {
   sheetRef: React.RefObject<TrueSheet | null>;
   itemToEdit: MealPlanItemWithStore | null;
   onClose: () => void;
@@ -320,72 +342,79 @@ const EditItemSheetContainer = ({
       <BottomSheet.SheetView className="pb-safe">
         <BottomSheet.Header title="Edit meal-plan item" />
         {itemToEdit && (
-          <EditItemSheetContent itemToEdit={itemToEdit} onClose={onClose} />
+          <EditItemSheetContent
+            listId={listId}
+            itemToEdit={itemToEdit}
+            onClose={onClose}
+          />
         )}
       </BottomSheet.SheetView>
     </BottomSheet>
   );
 };
 
-export const EditItemSheet = forwardRef<EditItemSheetRef>((_, ref) => {
-  const [itemToEdit, setItemToEdit] = useState<MealPlanItemWithStore | null>(
-    null
-  );
-  const [initialValues, setInitialValues] = useState<
-    MealPlanItemInitialValues | undefined
-  >(undefined);
-  const [shouldPresent, setShouldPresent] = useState(false);
+export const EditItemSheet = forwardRef<EditItemSheetRef, EditItemSheetProps>(
+  ({ listId }, ref) => {
+    const [itemToEdit, setItemToEdit] = useState<MealPlanItemWithStore | null>(
+      null
+    );
+    const [initialValues, setInitialValues] = useState<
+      MealPlanItemInitialValues | undefined
+    >(undefined);
+    const [shouldPresent, setShouldPresent] = useState(false);
 
-  const sheetRef = useRef<TrueSheet>(null);
+    const sheetRef = useRef<TrueSheet>(null);
 
-  useImperativeHandle(ref, () => ({
-    open: (item: MealPlanItemWithStore) => {
-      setItemToEdit(item);
-      setInitialValues({
-        itemName: item.name,
-        itemNotes: item.notes ?? '',
-        quantity: item.quantity,
-        unit: item.unit,
-        category: item.category ?? undefined,
-        storeId: item.store?.id ?? undefined,
-        selectedDate: item.date,
-        mealTag: item.mealTag ?? undefined,
-      });
-      setShouldPresent(true);
-    },
-  }));
+    useImperativeHandle(ref, () => ({
+      open: (item: MealPlanItemWithStore) => {
+        setItemToEdit(item);
+        setInitialValues({
+          itemName: item.name,
+          itemNotes: item.notes ?? '',
+          quantity: item.quantity,
+          unit: item.unit,
+          category: item.category ?? undefined,
+          storeId: item.store?.id ?? undefined,
+          selectedDate: item.date,
+          mealTag: item.mealTag ?? undefined,
+        });
+        setShouldPresent(true);
+      },
+    }));
 
-  // Present the sheet after state has committed and the provider has remounted
-  // with the correct initial values (mirroring EditMealSheet's forwardRef pattern).
-  useEffect(() => {
-    if (shouldPresent) {
-      sheetRef.current?.present();
-      setShouldPresent(false);
-    }
-  }, [shouldPresent]);
+    // Present the sheet after state has committed and the provider has remounted
+    // with the correct initial values (mirroring EditMealSheet's forwardRef pattern).
+    useEffect(() => {
+      if (shouldPresent) {
+        sheetRef.current?.present();
+        setShouldPresent(false);
+      }
+    }, [shouldPresent]);
 
-  const handleClose = () => {
-    sheetRef.current?.dismiss();
-  };
+    const handleClose = () => {
+      sheetRef.current?.dismiss();
+    };
 
-  const handleReset = () => {
-    setItemToEdit(null);
-    setInitialValues(undefined);
-  };
+    const handleReset = () => {
+      setItemToEdit(null);
+      setInitialValues(undefined);
+    };
 
-  return (
-    <MealPlanItemProvider
-      key={itemToEdit?.id ?? 'meal-plan-item'}
-      initialValues={initialValues}
-    >
-      <EditItemSheetContainer
-        sheetRef={sheetRef}
-        itemToEdit={itemToEdit}
-        onClose={handleClose}
-        onReset={handleReset}
-      />
-    </MealPlanItemProvider>
-  );
-});
+    return (
+      <MealPlanItemProvider
+        key={itemToEdit?.id ?? 'meal-plan-item'}
+        initialValues={initialValues}
+      >
+        <EditItemSheetContainer
+          listId={listId}
+          sheetRef={sheetRef}
+          itemToEdit={itemToEdit}
+          onClose={handleClose}
+          onReset={handleReset}
+        />
+      </MealPlanItemProvider>
+    );
+  }
+);
 
 EditItemSheet.displayName = 'EditItemSheet';
