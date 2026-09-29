@@ -1,12 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { useImperativeHandle, useRef, useState } from 'react';
-import {
-  StyleSheet,
-  TextInput,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import PagerView from 'react-native-pager-view';
 import Animated, {
@@ -272,6 +267,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         date: recipeDate,
         mealTag: recipeMealTag,
         servings: 1,
+        sourceIngredients: selectedRecipe.recipe_ingredients,
         ingredientSnapshots: toSnapshotCreateInputs(ingredientRows),
       },
       {
