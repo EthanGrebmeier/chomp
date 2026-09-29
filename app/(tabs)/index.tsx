@@ -14,6 +14,7 @@ import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryList
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
 import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
 import { MealPlanner } from '@/features/meal-planner/components';
+import { useMealPlanListReconciler } from '@/features/meal-planner/hooks';
 import { useMealPlanViewMode } from '@/features/meal-planner/hooks/use-meal-plan-view-mode';
 import { type MealPlanFocusRequest } from '@/features/meal-planner/types';
 import { db } from '@/lib/instant';
@@ -92,6 +93,12 @@ export default function List() {
   );
   const { items: activeListItems, isLoading: itemsLoading } =
     useGroceryListItems(activeListId);
+  // Repairs meal plan ↔ grocery list drift once per list load; this screen
+  // hosts both the grocery list and the meal plan.
+  useMealPlanListReconciler({
+    listId: activeListId,
+    isGroceryListReady: !itemsLoading,
+  });
 
   const handleDeleteOrLeave = async () => {
     if (!activeListId || !activeList) return;
