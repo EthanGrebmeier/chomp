@@ -32,7 +32,7 @@ const RecipeRow = memo(function RecipeRow({
   const handleConfirmDelete = () => {
     Alert.alert(
       'Delete Recipe',
-      `Are you sure you want to delete "${recipe.name}"?`,
+      `Are you sure you want to delete "${recipe.name}"? This also removes its planned meals and their unchecked grocery items.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: handleDelete },

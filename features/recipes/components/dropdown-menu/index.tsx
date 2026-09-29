@@ -81,7 +81,7 @@ export const RecipeDropdownMenu = ({
   const handleConfirmDelete = () => {
     Alert.alert(
       'Delete Recipe',
-      `Are you sure you want to delete "${recipe.name}"? This action cannot be undone.`,
+      `Are you sure you want to delete "${recipe.name}"? This also removes its planned meals and their unchecked grocery items. This action cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: handleDelete },
