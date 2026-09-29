@@ -6,3 +6,4 @@ export { useRemoveItemFromMealPlan } from './useRemoveItemFromMealPlan';
 export { useUpdateMealPlanRecipe } from './useUpdateMealPlanRecipe';
 export { useUpdateMealPlanItem } from './useUpdateMealPlanItem';
 export { useClearMealPlan } from './useClearMealPlan';
+export { useSetMealPlanEntryIgnored } from './useSetMealPlanEntryIgnored';
