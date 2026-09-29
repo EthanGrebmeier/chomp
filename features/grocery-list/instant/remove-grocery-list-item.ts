@@ -1,13 +1,13 @@
-import { db } from '../../../lib/instant';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import type { GroceryItemForDeletion } from '../../meal-planner/instant/plan-linked-grocery-item-deletion';
 
-export const removeGroceryListItem = async ({ itemId }: { itemId: string }) => {
-  return db.transact([
-    db.tx.grocery_items[itemId].update(
-      trimStringFields({
-        isDeleted: true,
-        deletedAt: new Date().toISOString(),
-      })
-    ),
-  ]);
-};
+import { deleteGroceryItems } from './delete-grocery-items';
+
+/**
+ * Deletes one grocery item (swipe to delete). A linked item's delete is
+ * written back to the meal plan; see `deleteGroceryItems`.
+ */
+export const removeGroceryListItem = async ({
+  item,
+}: {
+  item: GroceryItemForDeletion;
+}) => deleteGroceryItems({ items: [item] });

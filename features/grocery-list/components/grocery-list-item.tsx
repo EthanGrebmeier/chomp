@@ -215,8 +215,12 @@ const GroceryListItemComponent = ({
     : isChecked;
 
   const handleSwipeDeletePress = useCallback(() => {
-    removeGroceryListItem({ itemId: item.id });
-  }, [item.id]);
+    removeGroceryListItem({ item }).catch(() => {
+      toast.error(
+        'Could not delete item. Check your connection and try again.'
+      );
+    });
+  }, [item]);
 
   const itemContent = (
     <ListItem className={className}>

@@ -39,4 +39,21 @@ describe('bulk delete orchestrator', () => {
     expect(deleteItems).not.toHaveBeenCalled();
     expect(onDeleteSuccess).not.toHaveBeenCalled();
   });
+
+  it('does not run the success lifecycle when the delete write fails', async () => {
+    const deleteItems = vi.fn().mockRejectedValue(new Error('offline'));
+    const onDeleteSuccess = vi.fn();
+
+    await expect(
+      runBulkDelete({
+        selectedItemIds: new Set(['meal-1-item', 'meal-2-item']),
+        confirmDelete: vi.fn().mockResolvedValue(true),
+        deleteItems,
+        onDeleteSuccess,
+      })
+    ).rejects.toThrow('offline');
+
+    expect(deleteItems).toHaveBeenCalledWith(['meal-1-item', 'meal-2-item']);
+    expect(onDeleteSuccess).not.toHaveBeenCalled();
+  });
 });

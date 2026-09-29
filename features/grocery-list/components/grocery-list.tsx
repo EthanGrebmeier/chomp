@@ -151,7 +151,7 @@ export const GroceryList = ({
   const editListNameSheetRef = useRef<EditListNameSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
   const { user } = db.useAuth();
-  const activeItemIds = filterActiveItems(items);
+  const activeItems = filterActiveItems(items);
   const { mutate: clearGroceryList, mutateAsync: clearGroceryListAsync } =
     useClearGroceryList();
 
@@ -373,7 +373,7 @@ export const GroceryList = ({
         {
           text: 'Clear List',
           style: 'destructive',
-          onPress: () => clearGroceryList({ itemIds: activeItemIds }),
+          onPress: () => clearGroceryList({ items: activeItems }),
         },
       ]
     );
@@ -605,7 +605,10 @@ export const GroceryList = ({
         selectedItemIds: bulkSelectionState.selectedItemIds,
         confirmDelete: confirmBulkDelete,
         deleteItems: async itemIds => {
-          await clearGroceryListAsync({ itemIds });
+          const selectedIds = new Set(itemIds);
+          await clearGroceryListAsync({
+            items: items.filter(item => selectedIds.has(item.id)),
+          });
         },
         onDeleteSuccess: () => {
           setBulkSelectionState(currentState =>
