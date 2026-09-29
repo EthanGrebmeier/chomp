@@ -113,8 +113,9 @@ issue_closed() { # <n>
 }
 
 # A ticket is committed when a commit on the branch carries "Refs #N".
+# Let git match: piping `git log` into `grep -q` SIGPIPEs git under pipefail.
 committed_on_branch() { # <n>
-  git log --format=%B "$BASE_REF..$BRANCH" 2>/dev/null | grep -Eq "^Refs #$1\$"
+  [ -n "$(git log -1 --format=%h -E --grep="^Refs #$1\$" "$BASE_REF..$BRANCH" 2>/dev/null)" ]
 }
 
 ticket_done() { committed_on_branch "$1" || issue_closed "$1"; }
