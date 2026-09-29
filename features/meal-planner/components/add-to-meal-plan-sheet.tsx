@@ -174,7 +174,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     setStoreId,
     setSelectedDate,
     mealTag,
-    setMealTag,
     itemNotes,
     resetState: resetMealPlanItemState,
     isValid,
@@ -409,10 +408,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       ) : isItemFooterMounted ? (
         <Animated.View className="gap-4" style={itemFooterAnimatedStyle}>
           <MealPlanMetaBar
-            date={selectedDate}
-            onDateChange={setSelectedDate}
-            mealTag={mealTag}
-            onMealTagChange={setMealTag}
             quantity={quantity}
             onQuantityChange={setQuantity}
             unit={unit}

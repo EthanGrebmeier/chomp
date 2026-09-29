@@ -6,14 +6,7 @@ import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { Button } from '../../../components/ui/button';
 import { Text } from '../../../components/ui/text';
 
-import { DatePillSheet } from './date-pill-sheet';
-import { MealTimeSheet } from './meal-time-sheet';
-
 type MealPlanMetaBarProps = {
-  date?: string;
-  onDateChange: (date: string) => void;
-  mealTag?: string;
-  onMealTagChange: (mealTag?: string) => void;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
   unit: string;
@@ -30,10 +23,6 @@ type MealPlanMetaBarProps = {
 };
 
 export const MealPlanMetaBar = ({
-  date,
-  onDateChange,
-  mealTag,
-  onMealTagChange,
   quantity,
   onQuantityChange,
   unit,
@@ -59,18 +48,6 @@ export const MealPlanMetaBar = ({
       }
     >
       <ScrollingMetaBar>
-        <DatePillSheet
-          date={date}
-          onSelect={onDateChange}
-          disabled={optionsDisabled}
-        />
-        <MealTimeSheet
-          mealTime={mealTag}
-          onSelect={onMealTagChange}
-          disabled={optionsDisabled}
-        />
-      </ScrollingMetaBar>
-      <ScrollingMetaBar className="mt-2">
         <UnitSheet
           quantity={quantity}
           unit={unit}

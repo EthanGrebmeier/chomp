@@ -31,6 +31,7 @@ import {
 } from './meal-plan-item-context';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
 import { AddToGroceryListSwitch } from './meal-plan-only';
+import { MealScheduleSentence } from './meal-schedule-sentence';
 
 export type EditItemSheetRef = {
   open: (item: MealPlanItemWithStore) => void;
@@ -60,6 +61,11 @@ const EditItemSheetContent = ({
     showMatchingItems,
     setShowMatchingItems,
     populateFromItem,
+    hasItemTitle,
+    selectedDate,
+    setSelectedDate,
+    mealTag,
+    setMealTag,
   } = useMealPlanItem();
 
   const itemInputRef = useRef<TextInput>(null);
@@ -112,7 +118,7 @@ const EditItemSheetContent = ({
   };
 
   return (
-    <View className="gap-4">
+    <View className="gap-4 pb-12">
       <View className="w-full flex-row items-center justify-between gap-2">
         <View className="flex-1">
           <ItemInput
@@ -136,6 +142,14 @@ const EditItemSheetContent = ({
         </View>
         <MealItemDropdownMenu itemName={itemName} onRemove={handleRemoveItem} />
       </View>
+
+      <MealScheduleSentence
+        date={selectedDate}
+        onDateChange={setSelectedDate}
+        mealTag={mealTag}
+        onMealTagChange={setMealTag}
+        disabled={!hasItemTitle}
+      />
 
       <View className="gap-4">
         <BottomSheet.BareTextInput
@@ -318,10 +332,6 @@ const EditItemSheetContainer = ({
         itemToEdit ? (
           <View className="pb-safe px-4">
             <MealPlanMetaBar
-              date={selectedDate}
-              onDateChange={setSelectedDate}
-              mealTag={mealTag}
-              onMealTagChange={setMealTag}
               quantity={quantity}
               onQuantityChange={setQuantity}
               unit={unit}

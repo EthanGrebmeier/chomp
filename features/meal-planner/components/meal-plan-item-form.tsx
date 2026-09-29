@@ -7,6 +7,7 @@ import { BaseGroceryItem } from '../../grocery-list/types';
 
 import { useMealPlanItem } from './meal-plan-item-context';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
+import { MealScheduleSentence } from './meal-schedule-sentence';
 
 type MealPlanItemFormProps = {
   onSubmit: () => void;
@@ -93,6 +94,13 @@ export const MealPlanItemForm = ({
         inputRef={itemInputRef}
         keepKeyboardOnSubmit={keepKeyboardOnSubmit}
       />
+      <MealScheduleSentence
+        date={selectedDate}
+        onDateChange={setSelectedDate}
+        mealTag={mealTag}
+        onMealTagChange={setMealTag}
+        disabled={!hasItemTitle}
+      />
       <BottomSheet.BareTextInput
         key={itemNotesInputKey}
         defaultValue={itemNotesDefaultValue}
@@ -104,10 +112,6 @@ export const MealPlanItemForm = ({
       />
       {showMetaBar ? (
         <MealPlanMetaBar
-          date={selectedDate}
-          onDateChange={setSelectedDate}
-          mealTag={mealTag}
-          onMealTagChange={setMealTag}
           quantity={quantity}
           onQuantityChange={setQuantity}
           unit={unit}
