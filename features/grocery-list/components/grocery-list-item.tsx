@@ -227,7 +227,7 @@ const GroceryListItemComponent = ({
       <Checkbox checked={checkboxChecked} onPress={onCheck} className="mr-1" />
 
       <HapticPressable
-        className="flex-1 gap-1 py-1"
+        className="flex-1 gap-0.5 py-1"
         onPress={handleRowPress}
         onLongPress={handleRowLongPress}
         delayLongPress={200}
@@ -277,7 +277,7 @@ const GroceryListItemComponent = ({
         {notes ? (
           <Text
             variant="itemDescription"
-            className={cn(isChecked && 'opacity-80')}
+            className={cn("-my-0.5", isChecked && 'opacity-80')}
             style={compactTextStyle}
           >
             {notes}

@@ -9,6 +9,7 @@ import {
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
+import { MealTagBadge } from '../../recipes/components/meal-tag-badge';
 import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { MealPlanItemWithStore } from '../types';
@@ -76,6 +77,7 @@ const MealPlanItemCard = ({
             <Text className="text-sm text-muted-foreground">
               {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
             </Text>
+            <MealTagBadge mealTag={mealPlanItem.mealTag} />
           </View>
           {shoppingState.allPurchased ? (
             <Text className="text-sm text-muted-foreground" numberOfLines={1}>

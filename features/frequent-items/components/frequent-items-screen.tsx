@@ -28,7 +28,6 @@ import {
 
 type FrequentItemsScreenProps = {
   listId: string;
-  listHeight?: number;
 };
 
 type FrequentItemRowProps = {
@@ -118,10 +117,7 @@ const FrequentItemsSkeleton = () => (
   </View>
 );
 
-export const FrequentItemsScreen = ({
-  listId,
-  listHeight,
-}: FrequentItemsScreenProps) => {
+export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { frequentItems, isLoading, error } = useFrequentItems(listId);
   const { data: stores } = useStores();
@@ -187,7 +183,7 @@ export const FrequentItemsScreen = ({
   };
 
   return (
-    <View className="pb-6">
+    <View className="min-h-0 flex-1 pb-6">
       <View className="gap-1 px-4 pb-3">
         <View className="flex-row items-center gap-2">
           <Heading>Frequent Items</Heading>
@@ -220,6 +216,7 @@ export const FrequentItemsScreen = ({
         </View>
       ) : (
         <FlatList
+          className="min-h-0 flex-1"
           contentInset={{ bottom: safeAreaBottom + 24 }}
           data={visibleItems}
           keyExtractor={item => item.normalizedName}
@@ -232,7 +229,6 @@ export const FrequentItemsScreen = ({
           )}
           scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
           showsVerticalScrollIndicator={false}
-          style={listHeight ? { height: listHeight } : undefined}
         />
       )}
     </View>

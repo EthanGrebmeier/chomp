@@ -25,9 +25,6 @@ type RecipeCardProps = {
   listId?: string;
 };
 
-const getIngredientLabel = (ingredientCount: number) =>
-  `${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}`;
-
 export const RecipeCardContent = ({
   name,
   ingredientCount,
@@ -36,11 +33,6 @@ export const RecipeCardContent = ({
   titleClassName,
   subtitleClassName,
 }: RecipeCardContentProps) => {
-  const resolvedSubtitle =
-    subtitle ??
-    (typeof ingredientCount === 'number'
-      ? getIngredientLabel(ingredientCount)
-      : undefined);
 
   return (
     <View className={className}>
@@ -55,14 +47,6 @@ export const RecipeCardContent = ({
           {name}
         </Text>
       </View>
-      {resolvedSubtitle ? (
-        <Text
-          className={cn('text-sm text-muted-foreground', subtitleClassName)}
-          numberOfLines={1}
-        >
-          {resolvedSubtitle}
-        </Text>
-      ) : null}
     </View>
   );
 };

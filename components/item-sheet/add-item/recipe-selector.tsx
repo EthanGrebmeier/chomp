@@ -26,14 +26,12 @@ type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
   onCreateRecipe: (initialName?: string) => void;
   fillHeight?: boolean;
-  listHeight?: number;
 };
 
 export const RecipeSelector = ({
   onSelectRecipe,
   onCreateRecipe,
   fillHeight = false,
-  listHeight,
 }: RecipeSelectorProps) => {
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { data: recipes, isLoading } = useRecipes();
@@ -145,7 +143,6 @@ export const RecipeSelector = ({
           renderItem={renderRecipeItem}
           scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
           showsVerticalScrollIndicator={false}
-          style={listHeight ? { height: listHeight } : undefined}
         />
       )}
     </View>

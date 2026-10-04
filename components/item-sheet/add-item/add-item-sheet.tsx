@@ -2,7 +2,7 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
 import { PlusIcon } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Animated, {
   useAnimatedStyle,
@@ -144,7 +144,6 @@ const AddItemSheet = ({
   isItemAdded,
   onItemAddedFeedbackComplete,
 }: AddItemSheetProps) => {
-  const { height: windowHeight } = useWindowDimensions();
   const triggerOpacity = useSharedValue(isTriggerVisible ? 1 : 0);
   const itemFooterOpacity = useSharedValue(1);
   const ref = useRef<TrueSheet>(null);
@@ -469,16 +468,13 @@ const AddItemSheet = ({
               </View>
               <View key="recipe" className="flex-1">
                 <RecipeSelector
-                  listHeight={Math.max(240, windowHeight - 250)}
+                  fillHeight
                   onSelectRecipe={handleRecipeSelect}
                   onCreateRecipe={handleCreateRecipe}
                 />
               </View>
               <View key="recent" className="flex-1">
-                <FrequentItemsScreen
-                  listHeight={Math.max(320, windowHeight - 180)}
-                  listId={groceryListId}
-                />
+                <FrequentItemsScreen listId={groceryListId} />
               </View>
             </PagerView>
           </View>

@@ -1,4 +1,6 @@
 import * as Haptics from 'expo-haptics';
+
+import { cn } from '@/lib/utils';
 import {
   createContext,
   use,
@@ -203,117 +205,83 @@ const DraggableMealPlanEntry = ({
   );
 };
 
-const groupEntriesByMealTime = (entries: readonly MealPlanEntry[]) => {
-  const groupedRecipes = {} as Record<MealTag, MealPlanRecipeWithRecipe[]>;
-  const groupedItems = {} as Record<MealTag, MealPlanItemWithStore[]>;
-
-  entries.forEach(entry => {
-    const tag = (entry.value.mealTag as MealTag) || 'None';
-    if (entry.type === 'recipe') {
-      groupedRecipes[tag] = [...(groupedRecipes[tag] ?? []), entry.value];
-    } else {
-      groupedItems[tag] = [...(groupedItems[tag] ?? []), entry.value];
-    }
-  });
-
-  return {
-    groupedRecipes,
-    groupedItems,
-    mealTimesWithContent: mealTimeOrder.filter(
-      mealTime =>
-        (groupedRecipes[mealTime]?.length ?? 0) +
-          (groupedItems[mealTime]?.length ?? 0) >
-        0
-    ),
-  };
+const entryTypeOrder: Record<MealPlanEntry['type'], number> = {
+  recipe: 0,
+  item: 1,
 };
 
-type MealPlanMealTimeGroupProps = {
-  mealTime: MealTag;
-  groupedRecipes: Record<MealTag, MealPlanRecipeWithRecipe[]>;
-  groupedItems: Record<MealTag, MealPlanItemWithStore[]>;
+const getMealTimeRank = (entry: MealPlanEntry) =>
+  mealTimeOrder.indexOf((entry.value.mealTag as MealTag | undefined) ?? 'None');
+
+/**
+ * Keeps entries that share a meal time together (in meal time order, recipes
+ * before items) without rendering a heading per group; each card shows its
+ * own meal time badge instead.
+ */
+const sortEntriesByMealTime = (entries: readonly MealPlanEntry[]) =>
+  [...entries].sort(
+    (a, b) =>
+      getMealTimeRank(a) - getMealTimeRank(b) ||
+      entryTypeOrder[a.type] - entryTypeOrder[b.type]
+  );
+
+const getEntryKey = (entry: MealPlanEntry) => `${entry.type}:${entry.id}`;
+
+type MealPlanEntryRowProps = {
+  entry: MealPlanEntry;
   onMealPress: MealPlanDateViewProps['onMealPress'];
   onItemPress: MealPlanDateViewProps['onItemPress'];
   dragConfig?: MealPlanDragConfig;
 };
 
-const MealPlanMealTimeGroup = ({
-  mealTime,
-  groupedRecipes,
-  groupedItems,
+const MealPlanEntryRow = ({
+  entry,
   onMealPress,
   onItemPress,
   dragConfig,
-}: MealPlanMealTimeGroupProps) => (
-  <View className="mb-2">
-    <Text className="px-4 text-lg font-semibold capitalize text-muted-foreground">
-      {mealTime === 'None' ? 'No Mealtime' : mealTime}
-    </Text>
-    <View>
-      {groupedRecipes[mealTime]?.map((mealPlanRecipe, index) => {
-        const recipe = mealPlanRecipe.recipe;
-        if (!recipe) return null;
-        const card = (
-          <MealPlanMealCard
-            key={mealPlanRecipe.id}
-            mealPlanRecipe={mealPlanRecipe}
-            recipe={recipe}
-            contextMenuEnabled={!dragConfig}
-            onMealPress={onMealPress}
-          />
-        );
+}: MealPlanEntryRowProps) => {
+  let card: ReactNode;
+  if (entry.type === 'recipe') {
+    const recipe = entry.value.recipe;
+    if (!recipe) return null;
+    card = (
+      <MealPlanMealCard
+        mealPlanRecipe={entry.value}
+        recipe={recipe}
+        contextMenuEnabled={!dragConfig}
+        onMealPress={onMealPress}
+      />
+    );
+  } else {
+    card = (
+      <MealPlanItemCard
+        mealPlanItem={entry.value}
+        contextMenuEnabled={!dragConfig}
+        onItemPress={onItemPress}
+      />
+    );
+  }
 
-        if (!dragConfig) return card;
+  if (!dragConfig) return card;
 
-        const entry: MealPlanEntryIdentity = {
-          type: 'recipe',
-          id: mealPlanRecipe.id,
-          date: mealPlanRecipe.date,
-        };
+  const identity: MealPlanEntryIdentity = {
+    type: entry.type,
+    id: entry.id,
+    date: entry.date,
+  };
 
-        return (
-          <DraggableMealPlanEntry
-            key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
-            entry={entry}
-            onDragStart={dragConfig.onDragStart}
-            onDragEnd={dragConfig.onDragEnd}
-          >
-            {card}
-          </DraggableMealPlanEntry>
-        );
-      })}
-      {groupedItems[mealTime]?.map((mealPlanItem, index) => {
-        const card = (
-          <MealPlanItemCard
-            key={mealPlanItem.id}
-            mealPlanItem={mealPlanItem}
-            contextMenuEnabled={!dragConfig}
-            onItemPress={onItemPress}
-          />
-        );
-
-        if (!dragConfig) return card;
-
-        const entry: MealPlanEntryIdentity = {
-          type: 'item',
-          id: mealPlanItem.id,
-          date: mealPlanItem.date,
-        };
-
-        return (
-          <DraggableMealPlanEntry
-            key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
-            entry={entry}
-            onDragStart={dragConfig.onDragStart}
-            onDragEnd={dragConfig.onDragEnd}
-          >
-            {card}
-          </DraggableMealPlanEntry>
-        );
-      })}
-    </View>
-  </View>
-);
+  return (
+    <DraggableMealPlanEntry
+      // Remount when the date or reset key changes so the draggable snaps back.
+      key={`${identity.date}:${dragConfig.resetKey}`}
+      entry={identity}
+      onDragStart={dragConfig.onDragStart}
+      onDragEnd={dragConfig.onDragEnd}
+    >
+      {card}
+    </DraggableMealPlanEntry>
+  );
+};
 
 type MealPlanDayContentProps = {
   entries: readonly MealPlanEntry[];
@@ -327,22 +295,16 @@ const MealPlanDayContent = ({
   onMealPress,
   onItemPress,
   dragConfig,
-}: MealPlanDayContentProps) => {
-  const { groupedRecipes, groupedItems, mealTimesWithContent } =
-    groupEntriesByMealTime(entries);
-
-  return mealTimesWithContent.map(mealTime => (
-    <MealPlanMealTimeGroup
-      key={mealTime}
-      mealTime={mealTime}
-      groupedRecipes={groupedRecipes}
-      groupedItems={groupedItems}
+}: MealPlanDayContentProps) =>
+  sortEntriesByMealTime(entries).map(entry => (
+    <MealPlanEntryRow
+      key={getEntryKey(entry)}
+      entry={entry}
       onMealPress={onMealPress}
       onItemPress={onItemPress}
       dragConfig={dragConfig}
     />
   ));
-};
 
 type MealPlanDayListSectionViewProps = {
   section: DayListSection;
@@ -394,7 +356,10 @@ const MealPlanDayListSectionView = ({
           style={[dragStyles.activeDropTarget, dropHighlightStyle]}
         />
         <HapticPressable
-          className="min-h-14 justify-center  px-4 py-3"
+          className={cn(
+            'min-h-14 justify-center px-4 py-3',
+            section.entries.length > 0 && 'min-h-0 pb-1'
+          )}
           onPress={() => onDayPress?.(section.dateKey)}
           accessibilityRole="button"
           accessibilityLabel={`Add to meal plan for ${section.label}`}
@@ -413,7 +378,7 @@ const MealPlanDayListSectionView = ({
           </View>
         </HapticPressable>
         {section.entries.length > 0 ? (
-          <View className="border-b border-border">
+          <View className='border-b border-border'>
             <MealPlanDayContent
               entries={section.entries}
               onMealPress={onMealPress}
@@ -549,11 +514,12 @@ export const MealPlanDateView = ({
     });
   };
 
-  const calendarEntries = createMealPlanDayEntries(recipes, items);
-  const calendarGroups = groupEntriesByMealTime(calendarEntries);
+  const calendarEntries = sortEntriesByMealTime(
+    createMealPlanDayEntries(recipes, items)
+  );
 
   // Empty state when no meals or items
-  if (mode === 'calendar' && calendarGroups.mealTimesWithContent.length === 0) {
+  if (mode === 'calendar' && calendarEntries.length === 0) {
     return (
       <Animated.View
         entering={FadeIn.duration(140)}
@@ -605,13 +571,11 @@ export const MealPlanDateView = ({
   ) : (
     <FlatList
       contentContainerClassName="pb-20"
-      data={calendarGroups.mealTimesWithContent}
-      keyExtractor={item => item}
-      renderItem={({ item: mealTime }) => (
-        <MealPlanMealTimeGroup
-          mealTime={mealTime}
-          groupedRecipes={calendarGroups.groupedRecipes}
-          groupedItems={calendarGroups.groupedItems}
+      data={calendarEntries}
+      keyExtractor={getEntryKey}
+      renderItem={({ item: entry }) => (
+        <MealPlanEntryRow
+          entry={entry}
           onMealPress={onMealPress}
           onItemPress={onItemPress}
         />

@@ -8,6 +8,7 @@ import {
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
+import { MealTagBadge } from '../../recipes/components/meal-tag-badge';
 import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { Recipe } from '../../recipes/types';
 import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
@@ -63,27 +64,30 @@ const MealPlanMealCard = ({
         onPress={handleMealCardPress}
         className="flex-1"
       >
-        <View className="w-full py-1">
-          <RecipeCardContent
-            name={recipe.name}
-            ingredientCount={ingredientCount}
-          />
-          {shoppingState.allPurchased ? (
-            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
-              All ingredients purchased
-            </Text>
-          ) : shoppingState.purchasedCount > 0 ? (
-            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
-              {shoppingState.purchasedCount} of {shoppingState.includedCount}{' '}
-              purchased
-            </Text>
-          ) : mealPlanRecipe.ignoredByGroceryList ? (
-            <MealPlanOnlyLabel />
-          ) : !shoppingState.isShownOnGroceryList ? (
-            <Text className="text-sm text-muted-foreground">
-              Not on grocery list
-            </Text>
-          ) : null}
+        <View className="w-full flex-row items-center gap-3 py-1">
+          <View className="flex-1">
+            <RecipeCardContent
+              name={recipe.name}
+              ingredientCount={ingredientCount}
+            />
+            {shoppingState.allPurchased ? (
+              <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+                All ingredients purchased
+              </Text>
+            ) : shoppingState.purchasedCount > 0 ? (
+              <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+                {shoppingState.purchasedCount} of {shoppingState.includedCount}{' '}
+                purchased
+              </Text>
+            ) : mealPlanRecipe.ignoredByGroceryList ? (
+              <MealPlanOnlyLabel />
+            ) : !shoppingState.isShownOnGroceryList ? (
+              <Text className="text-sm text-muted-foreground">
+                Not on grocery list
+              </Text>
+            ) : null}
+          </View>
+          <MealTagBadge mealTag={mealPlanRecipe.mealTag} />
         </View>
       </HapticPressable>
     </ListItem>
