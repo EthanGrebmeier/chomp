@@ -253,15 +253,11 @@ const MealPlanMealTimeGroup = ({
       {groupedRecipes[mealTime]?.map((mealPlanRecipe, index) => {
         const recipe = mealPlanRecipe.recipe;
         if (!recipe) return null;
-        const recipesCount = groupedRecipes[mealTime]?.length ?? 0;
-        const itemsCount = groupedItems[mealTime]?.length ?? 0;
-        const isLast = index === recipesCount - 1 && itemsCount === 0;
         const card = (
           <MealPlanMealCard
             key={mealPlanRecipe.id}
             mealPlanRecipe={mealPlanRecipe}
             recipe={recipe}
-            isLast={isLast}
             contextMenuEnabled={!dragConfig}
             onMealPress={onMealPress}
           />
@@ -291,7 +287,6 @@ const MealPlanMealTimeGroup = ({
           <MealPlanItemCard
             key={mealPlanItem.id}
             mealPlanItem={mealPlanItem}
-            isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
             contextMenuEnabled={!dragConfig}
             onItemPress={onItemPress}
           />

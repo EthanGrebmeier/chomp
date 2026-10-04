@@ -38,11 +38,7 @@ export const SaveItemToggle = ({
         disabled={disabled}
       >
         <Pill
-          className={cn(
-            !value && 'border-dashed',
-            value && 'bg-primary',
-            disabled && 'opacity-50'
-          )}
+          className={cn(value && 'bg-primary', disabled && 'opacity-50')}
           icon={
             <Icon
               as={iconComponent}

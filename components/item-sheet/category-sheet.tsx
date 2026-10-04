@@ -175,10 +175,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
               disabled={disabled}
             >
               <Pill
-                className={cn(
-                  !selectedCategoryLabel && 'border-dashed',
-                  disabled && 'opacity-50'
-                )}
+                className={cn(disabled && 'opacity-50')}
                 textClassName={
                   selectedCategoryColor
                     ? getCategoryTextClassName(selectedCategoryColor)

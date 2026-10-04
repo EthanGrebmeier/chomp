@@ -19,7 +19,6 @@ import { MealPlanOnlyLabel } from './meal-plan-only';
 type MealPlanMealCardProps = {
   mealPlanRecipe: MealPlanRecipeWithRecipe;
   recipe: Recipe;
-  isLast: boolean;
   contextMenuEnabled?: boolean;
   onMealPress: ({
     mealPlanRecipe,
@@ -33,7 +32,6 @@ type MealPlanMealCardProps = {
 const MealPlanMealCard = ({
   mealPlanRecipe,
   recipe,
-  isLast,
   contextMenuEnabled = true,
   onMealPress,
 }: MealPlanMealCardProps) => {

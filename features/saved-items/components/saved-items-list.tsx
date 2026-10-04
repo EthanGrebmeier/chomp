@@ -14,7 +14,6 @@ import {
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
-import { cn } from '../../../lib/utils';
 import { useCategoryOptions } from '../../categories/use-category-options';
 import { CategoryOption } from '../../shared/category/categories';
 import { UnifiedSavedItem } from '../types';
@@ -23,7 +22,6 @@ import { deleteSavedItem } from '../unified/delete-saved-item';
 type SavedItemRowProps = {
   item: UnifiedSavedItem;
   categoryOptions: CategoryOption[];
-  isLast: boolean;
   onDelete: (item: UnifiedSavedItem) => void;
   onPress: (item: UnifiedSavedItem) => void;
 };
@@ -36,7 +34,6 @@ const compactTextStyle = Platform.select({
 const SavedItemRow = memo(function SavedItemRow({
   item,
   categoryOptions,
-  isLast,
   onDelete,
   onPress,
 }: SavedItemRowProps) {
@@ -58,10 +55,7 @@ const SavedItemRow = memo(function SavedItemRow({
   return (
     <ContextMenuRoot
       trigger={
-        <ListItem
-          className={cn(!isLast && 'border-b border-dashed border-border')}
-          onDelete={handleDelete}
-        >
+        <ListItem onDelete={handleDelete}>
           <HapticPressable
             onPress={handlePress}
             hapticType="light"
@@ -170,7 +164,6 @@ export const SavedItemsList = ({
       <SavedItemRow
         item={item}
         categoryOptions={categoryOptions}
-        isLast={index === sortedItems.length - 1}
         onDelete={handleDelete}
         onPress={onEditItem}
       />

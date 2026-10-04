@@ -11,7 +11,6 @@ import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { db } from '../../../lib/instant';
-import { cn } from '../../../lib/utils';
 import { useCategoryOptions } from '../../categories/use-category-options';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
 
@@ -116,10 +115,6 @@ const RecipeDetailContent = ({
             data={recipe.recipe_ingredients}
             renderItem={({ item, index }) => (
               <RecipeIngredientItem
-                className={cn(
-                  index < recipe.recipe_ingredients.length - 1 &&
-                    'border-b border-dashed border-border'
-                )}
                 key={item.id}
                 ingredient={item}
                 categoryOptions={categoryOptions}

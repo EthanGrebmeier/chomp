@@ -44,9 +44,9 @@ export const GroceryListSkeleton = () => {
 
       {/* List items */}
       <View>
-        <GroceryItemSkeleton showBorder showNotes />
-        <GroceryItemSkeleton showBorder />
-        <GroceryItemSkeleton showBorder showTags={false} />
+        <GroceryItemSkeleton showNotes />
+        <GroceryItemSkeleton />
+        <GroceryItemSkeleton showTags={false} />
       </View>
 
       {/* Checked section */}
@@ -61,8 +61,8 @@ export const GroceryListSkeleton = () => {
       </View>
 
       <View>
-        <GroceryItemSkeleton showBorder />
-        <GroceryItemSkeleton showBorder={false} />
+        <GroceryItemSkeleton />
+        <GroceryItemSkeleton />
       </View>
 
       {/* Bottom actions */}

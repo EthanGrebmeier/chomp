@@ -22,14 +22,12 @@ import { MealPlanOnlyLabel } from './meal-plan-only';
 
 type MealPlanItemCardProps = {
   mealPlanItem: MealPlanItemWithStore;
-  isLast: boolean;
   contextMenuEnabled?: boolean;
   onItemPress: (item: MealPlanItemWithStore) => void;
 };
 
 const MealPlanItemCard = ({
   mealPlanItem,
-  isLast,
   contextMenuEnabled = true,
   onItemPress,
 }: MealPlanItemCardProps) => {
@@ -64,9 +62,7 @@ const MealPlanItemCard = ({
   };
 
   const card = (
-    <ListItem
-      className={!isLast ? 'border-b border-dashed border-border' : undefined}
-    >
+    <ListItem>
       <HapticPressable
         key={mealPlanItem.id}
         onPress={() => onItemPress(mealPlanItem)}

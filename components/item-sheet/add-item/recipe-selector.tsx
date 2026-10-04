@@ -67,14 +67,10 @@ export const RecipeSelector = ({
   }, [mealTag, recipes, searchQuery, sortBy]);
 
   const renderRecipeItem = useCallback(
-    ({ item, index }: ListRenderItemInfo<RecipeWithIngredients>) => (
+    ({ item }: ListRenderItemInfo<RecipeWithIngredients>) => (
       <HapticPressable
         onPress={() => onSelectRecipe(item)}
-        className={cn(
-          'w-full px-4 py-1',
-          index < filteredRecipes.length - 1 &&
-            'border-b border-dashed border-border'
-        )}
+        className="w-full px-4 py-1"
         hapticType="light"
       >
         <RecipeCardContent
@@ -84,7 +80,7 @@ export const RecipeSelector = ({
         />
       </HapticPressable>
     ),
-    [filteredRecipes.length, onSelectRecipe]
+    [onSelectRecipe]
   );
 
   if (isLoading) {

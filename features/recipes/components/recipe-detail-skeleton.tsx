@@ -1,6 +1,10 @@
 import { View } from 'react-native';
 
-import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/ui/skeleton';
+import {
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
+} from '@/components/ui/skeleton';
 
 import { RecipeIngredientSkeleton } from './recipe-ingredient-skeleton';
 
@@ -37,7 +41,7 @@ export const RecipeDetailSkeleton = () => {
           <RecipeIngredientSkeleton />
           <RecipeIngredientSkeleton showTag={false} />
           <RecipeIngredientSkeleton />
-          <RecipeIngredientSkeleton showBorder={false} />
+          <RecipeIngredientSkeleton />
         </View>
       </View>
 

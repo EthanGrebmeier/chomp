@@ -209,10 +209,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
               disabled={disabled}
             >
               <Pill
-                className={cn(
-                  !localStoreId && 'border-dashed',
-                  disabled && 'opacity-50'
-                )}
+                className={cn(disabled && 'opacity-50')}
                 textClassName={cn(
                   'font-semibold',
                   hasSelectedStore && !disabled

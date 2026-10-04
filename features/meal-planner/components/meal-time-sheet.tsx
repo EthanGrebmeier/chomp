@@ -114,10 +114,7 @@ export const MealTimeSheet = forwardRef<MealTimeSheetRef, MealTimeSheetProps>(
           disabled={disabled}
         >
           <Pill
-            className={cn(
-              !mealTime && 'border-dashed',
-              disabled && 'opacity-50'
-            )}
+            className={cn(disabled && 'opacity-50')}
             textClassName={cn(disabled && 'text-muted-foreground')}
             icon={
               <Icon

@@ -503,10 +503,6 @@ export const IngredientSelector = forwardRef<
               ingredient.sourceRecipeIngredientId ?? ingredient.id;
             return (
               <IngredientRow
-                className={cn(
-                  index < ingredients.length - 1 &&
-                    'border-b border-dashed border-border'
-                )}
                 key={ingredient.id}
                 ingredient={ingredient}
                 categoryOptions={categoryOptions}

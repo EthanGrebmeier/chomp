@@ -6,7 +6,6 @@ import { View } from 'react-native';
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
-import { cn } from '../../../lib/utils';
 import { useCategoryOptions } from '../../categories/use-category-options';
 import {
   createCheckedStateSnapshot,
@@ -70,7 +69,6 @@ type GroceryListRow =
       sectionKey: string;
       sectionTitle: string;
       item: GroceryListItemWithRecipe;
-      isLastInSection: boolean;
     };
 
 const CHECKED_SECTION_SETTLE_DELAY_MS = 1000;
@@ -311,7 +309,6 @@ export const GroceryItemsList = ({
           sectionKey,
           sectionTitle,
           item,
-          isLastInSection: index === data.length - 1,
         });
       });
     };
@@ -408,13 +405,11 @@ export const GroceryItemsList = ({
         return renderSectionHeader(item);
       }
 
-      const showBorder = !item.isLastInSection;
       return (
         <GroceryListItem
           item={item.item}
           categoryOptions={categoryOptions}
           isChecked={Boolean(item.item.isChecked)}
-          className={cn(showBorder && 'border-b border-dashed border-border')}
           onEdit={presentEditSheet}
           isBulkSelectionModeActive={isBulkSelectionModeActive}
           isBulkSelected={selectedBulkItemIds.has(item.item.id)}

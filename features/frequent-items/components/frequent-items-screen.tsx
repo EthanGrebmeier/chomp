@@ -17,7 +17,6 @@ import { Text } from '@/components/ui/text';
 import { useCategoryOptions } from '@/features/categories/use-category-options';
 import type { CategoryOption } from '@/features/shared/category/categories';
 import { ListItemSkeleton } from '@/features/shared/components/list-item-skeleton';
-import { cn } from '@/lib/utils';
 
 import { addGroceryListItem } from '../../grocery-list/instant/add-grocery-list-item';
 import { useStores } from '../../stores/instant/use-stores';
@@ -35,14 +34,12 @@ type FrequentItemsScreenProps = {
 type FrequentItemRowProps = {
   item: FrequentItem;
   categoryOptions: CategoryOption[];
-  isLast: boolean;
   onAdd: (item: FrequentItem) => void;
 };
 
 const FrequentItemRow = ({
   item,
   categoryOptions,
-  isLast,
   onAdd,
 }: FrequentItemRowProps) => {
   const notes = item.notes?.trim();
@@ -52,11 +49,7 @@ const FrequentItemRow = ({
   });
 
   return (
-    <ListItem
-      className={cn(
-        !isLast ? 'border-b border-dashed border-border' : undefined
-      )}
-    >
+    <ListItem>
       <GestureHapticPressable
         accessibilityRole="button"
         accessibilityLabel={`Add ${item.name} to grocery list`}
@@ -120,7 +113,7 @@ const FrequentItemRow = ({
 const FrequentItemsSkeleton = () => (
   <View style={{ minHeight: 500 }}>
     {Array.from({ length: 8 }, (_, index) => (
-      <ListItemSkeleton key={index} showBorder={index !== 7} />
+      <ListItemSkeleton key={index} />
     ))}
   </View>
 );
@@ -234,7 +227,6 @@ export const FrequentItemsScreen = ({
             <FrequentItemRow
               item={item}
               categoryOptions={categoryOptions}
-              isLast={index === visibleItems.length - 1}
               onAdd={handleAdd}
             />
           )}
