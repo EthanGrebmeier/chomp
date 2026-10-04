@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "packageManager": "pnpm@11.9.0",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "sync:theme-colors": "node ./scripts/sync-theme-colors.mjs",
     "implement-sub-issues": "./scripts/implement-sub-issues.sh",
     "android": "expo run:android",
@@ -19,7 +19,8 @@
     "format:check": "prettier --check .",
     "format:staged": "prettier --write --ignore-unknown",
     "push-perms": "npx instant-cli@latest push perms",
-    "push-schema": "npx instant-cli@latest push schema"
+    "push-schema": "npx instant-cli@latest push schema",
+    "check-instant": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-instant-drift.mjs"
   },
   "dependencies": {
     "@clerk/expo": "3.7.8",

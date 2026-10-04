@@ -12,14 +12,14 @@ Scope: Permission behavior, saved-item linkage behavior, and non-bulk regression
 
 ## Scenario Matrix
 
-| Scenario | Expected Result | Evidence | Status |
-| --- | --- | --- | --- |
-| Bulk delete action path (confirm/cancel lifecycle) | Confirm executes selected-item soft-delete flow and exits mode; cancel keeps state unchanged | `features/grocery-list/bulk-selection/__tests__/delete-orchestrator.test.ts`, `features/grocery-list/bulk-selection/__tests__/lifecycle-behavior.test.ts` | PASS |
-| Bulk store update with mixed saved-item outcomes | Grocery item updates succeed even when one or more saved-item sync attempts fail (best-effort) | `features/grocery-list/bulk-selection/__tests__/store-category-orchestrator.test.ts` | PASS |
-| Bulk category update with mixed linkage | Unlinked selected items still update; saved-item sync only runs when linkage exists | `features/grocery-list/bulk-selection/__tests__/store-category-orchestrator.test.ts` | PASS |
-| Bulk move with deterministic merge/create/remove | Destination plan applied before source removals; merge and create semantics preserved | `features/grocery-list/bulk-selection/__tests__/move-orchestrator.test.ts`, `features/grocery-list/bulk-selection/__tests__/lifecycle-behavior.test.ts` | PASS |
-| Action availability and selection lifecycle | Zero-selection disables all toolbar actions; successful bulk actions exit mode and clear selection | `features/grocery-list/bulk-selection/__tests__/toolbar.test.ts`, `features/grocery-list/bulk-selection/__tests__/lifecycle-behavior.test.ts` | PASS |
-| Non-bulk behavior regression safety | Existing list behavior remains type- and lint-clean after bulk-mode completion | `pnpm tsc --noEmit`, `pnpm lint` | PASS |
+| Scenario                                           | Expected Result                                                                                    | Evidence                                                                                                                                                  | Status |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Bulk delete action path (confirm/cancel lifecycle) | Confirm executes selected-item soft-delete flow and exits mode; cancel keeps state unchanged       | `features/grocery-list/bulk-selection/__tests__/delete-orchestrator.test.ts`, `features/grocery-list/bulk-selection/__tests__/lifecycle-behavior.test.ts` | PASS   |
+| Bulk store update with mixed saved-item outcomes   | Grocery item updates succeed even when one or more saved-item sync attempts fail (best-effort)     | `features/grocery-list/bulk-selection/__tests__/store-category-orchestrator.test.ts`                                                                      | PASS   |
+| Bulk category update with mixed linkage            | Unlinked selected items still update; saved-item sync only runs when linkage exists                | `features/grocery-list/bulk-selection/__tests__/store-category-orchestrator.test.ts`                                                                      | PASS   |
+| Bulk move with deterministic merge/create/remove   | Destination plan applied before source removals; merge and create semantics preserved              | `features/grocery-list/bulk-selection/__tests__/move-orchestrator.test.ts`, `features/grocery-list/bulk-selection/__tests__/lifecycle-behavior.test.ts`   | PASS   |
+| Action availability and selection lifecycle        | Zero-selection disables all toolbar actions; successful bulk actions exit mode and clear selection | `features/grocery-list/bulk-selection/__tests__/toolbar.test.ts`, `features/grocery-list/bulk-selection/__tests__/lifecycle-behavior.test.ts`             | PASS   |
+| Non-bulk behavior regression safety                | Existing list behavior remains type- and lint-clean after bulk-mode completion                     | `pnpm tsc --noEmit`, `pnpm lint`                                                                                                                          | PASS   |
 
 ## Acceptance Criteria Mapping
 

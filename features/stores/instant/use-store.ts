@@ -20,4 +20,3 @@ export const useStore = (storeId: string | null) => {
     data: result.data?.stores?.[0] ?? null,
   };
 };
-

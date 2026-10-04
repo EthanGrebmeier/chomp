@@ -23,5 +23,4 @@ export const diffIngredientSnapshot = ({
 }: {
   snapshot: IngredientSnapshot;
   current: IngredientSnapshot;
-}): IngredientSnapshotDiff =>
-  diffItemSnapshot({ snapshot, current });
+}): IngredientSnapshotDiff => diffItemSnapshot({ snapshot, current });

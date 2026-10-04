@@ -17,9 +17,7 @@ export const isLocalSavedItemVisibleForOwner = (
   return item.isDefault || item.ownerId === normalizedOwnerId;
 };
 
-export const dedupeLocalSavedItemsForOwner = <
-  T extends LocalSavedItemScopeRow,
->(
+export const dedupeLocalSavedItemsForOwner = <T extends LocalSavedItemScopeRow>(
   items: T[],
   ownerId: string | null | undefined
 ) => {

@@ -1,0 +1,14 @@
+#!/bin/sh
+# Keeps the codebase prettier-clean. Enabled by `pnpm install` (see the
+# `prepare` script). Check-only so partially staged files are never rewritten;
+# fix failures with `pnpm format:staged <files>` and re-stage.
+if [ -z "$(git diff --cached --name-only --diff-filter=ACMR)" ]; then
+  exit 0
+fi
+
+git diff --cached --name-only --diff-filter=ACMR -z |
+  xargs -0 pnpm -s prettier --check --ignore-unknown --no-error-on-unmatched-pattern ||
+  {
+    printf '\nRun: pnpm format:staged <files> && git add <files>\n' >&2
+    exit 1
+  }

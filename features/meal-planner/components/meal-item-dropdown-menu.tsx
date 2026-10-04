@@ -23,7 +23,9 @@ export const MealItemDropdownMenu = ({
 
   return (
     <DropdownMenuRoot
-      trigger={<Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />}
+      trigger={
+        <Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />
+      }
     >
       <DropdownMenuContent>
         <DropdownMenuItem onSelect={onRemove} destructive key="remove-item">
@@ -34,8 +36,3 @@ export const MealItemDropdownMenu = ({
     </DropdownMenuRoot>
   );
 };
-
-
-
-
-

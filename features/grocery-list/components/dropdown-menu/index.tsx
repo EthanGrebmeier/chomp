@@ -82,9 +82,7 @@ export const GroceryListDropdownMenu = ({
             }
           >
             <DropdownMenuItemTitle>
-              {isBulkSelectionModeActive
-                ? 'Exit Bulk Select'
-                : 'Select Items'}
+              {isBulkSelectionModeActive ? 'Exit Bulk Select' : 'Select Items'}
             </DropdownMenuItemTitle>
             <DropdownMenuItemIcon
               ios={{

@@ -123,9 +123,7 @@ const SavedItemSheetContents = ({ isEditing }: { isEditing: boolean }) => {
         )
       }
     >
-      <BottomSheet.SheetView
-        className={isEditing ? 'pb-20' : 'pb-safe gap-4'}
-      >
+      <BottomSheet.SheetView className={isEditing ? 'pb-20' : 'pb-safe gap-4'}>
         <BottomSheet.Header
           title={isEditing ? 'Edit saved item' : 'Save item for later'}
         />

@@ -157,7 +157,9 @@ export const MealPlanItemProvider = ({
   };
 
   const isValid = () => {
-    return itemNameInput.getValue().trim().length > 0 && selectedDate !== undefined;
+    return (
+      itemNameInput.getValue().trim().length > 0 && selectedDate !== undefined
+    );
   };
 
   const value: MealPlanItemContextValue = {

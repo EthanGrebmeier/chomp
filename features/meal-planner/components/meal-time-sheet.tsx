@@ -79,87 +79,96 @@ export type MealTimeSheetRef = {
 
 export const MealTimeSheet = forwardRef<MealTimeSheetRef, MealTimeSheetProps>(
   function MealTimeSheet(
-    { mealTime, onSelect, canGoBack = true, disabled = false, hideTrigger = false },
+    {
+      mealTime,
+      onSelect,
+      canGoBack = true,
+      disabled = false,
+      hideTrigger = false,
+    },
     ref
   ) {
-  const sheetRef = useRef<TrueSheet>(null);
-  const [localMealTime, setLocalMealTime] = useState<string | undefined>(
-    mealTime
-  );
+    const sheetRef = useRef<TrueSheet>(null);
+    const [localMealTime, setLocalMealTime] = useState<string | undefined>(
+      mealTime
+    );
 
-  const selectedMealTime = mealTimeOptions.find(opt => opt.value === mealTime);
+    const selectedMealTime = mealTimeOptions.find(
+      opt => opt.value === mealTime
+    );
 
-  const openSheet = () => {
-    if (disabled) return;
-    setLocalMealTime(mealTime);
-    sheetRef.current?.present();
-  };
+    const openSheet = () => {
+      if (disabled) return;
+      setLocalMealTime(mealTime);
+      sheetRef.current?.present();
+    };
 
-  useImperativeHandle(ref, () => ({
-    present: openSheet,
-  }));
+    useImperativeHandle(ref, () => ({
+      present: openSheet,
+    }));
 
-  const handleConfirm = () => {
-    onSelect(localMealTime);
-    sheetRef.current?.dismiss();
-  };
+    const handleConfirm = () => {
+      onSelect(localMealTime);
+      sheetRef.current?.dismiss();
+    };
 
-  return (
-    <>
-      {!hideTrigger ? (
-      <WithLayoutTransition>
-        <HapticPressable
-          onPress={openSheet}
-          hapticType="light"
-          disabled={disabled}
-        >
-          <Pill
-            className={cn(disabled && 'opacity-50')}
-            textClassName={cn(disabled && 'text-muted-foreground')}
-            icon={
-              <Icon
-                className="text-muted-foreground"
-                as={selectedMealTime?.icon ?? ClockIcon}
-                size={16}
-              />
+    return (
+      <>
+        {!hideTrigger ? (
+          <WithLayoutTransition>
+            <HapticPressable
+              onPress={openSheet}
+              hapticType="light"
+              disabled={disabled}
+            >
+              <Pill
+                className={cn(disabled && 'opacity-50')}
+                textClassName={cn(disabled && 'text-muted-foreground')}
+                icon={
+                  <Icon
+                    className="text-muted-foreground"
+                    as={selectedMealTime?.icon ?? ClockIcon}
+                    size={16}
+                  />
+                }
+                hasValue={!!selectedMealTime}
+                onClear={disabled ? undefined : () => onSelect(undefined)}
+              >
+                {selectedMealTime ? selectedMealTime.label : 'Meal Time'}
+              </Pill>
+            </HapticPressable>
+          </WithLayoutTransition>
+        ) : null}
+
+        <BottomSheet detents={['auto']} ref={sheetRef} name="meal-time-sheet">
+          <BottomSheet.Header
+            className="px-4"
+            dismissButton={
+              canGoBack && (
+                <BackButton onPress={() => sheetRef.current?.dismiss()} />
+              )
             }
-            hasValue={!!selectedMealTime}
-            onClear={disabled ? undefined : () => onSelect(undefined)}
-          >
-            {selectedMealTime ? selectedMealTime.label : 'Meal Time'}
-          </Pill>
-        </HapticPressable>
-      </WithLayoutTransition>
-      ) : null}
-
-      <BottomSheet detents={['auto']} ref={sheetRef} name="meal-time-sheet">
-        <BottomSheet.Header
-          className="px-4"
-          dismissButton={
-            canGoBack && (
-              <BackButton onPress={() => sheetRef.current?.dismiss()} />
-            )
-          }
-          title="Choose meal time"
-          button={<ConfirmButton onPress={handleConfirm} />}
-        />
-        <View className="px-2">
-          <MealTimeOption
-            label="None"
-            isSelected={!localMealTime}
-            onPress={() => setLocalMealTime(undefined)}
+            title="Choose meal time"
+            button={<ConfirmButton onPress={handleConfirm} />}
           />
-
-          {mealTimeOptions.map(option => (
+          <View className="px-2">
             <MealTimeOption
-              key={option.value}
-              label={option.label}
-              isSelected={localMealTime === option.value}
-              onPress={() => setLocalMealTime(option.value)}
+              label="None"
+              isSelected={!localMealTime}
+              onPress={() => setLocalMealTime(undefined)}
             />
-          ))}
-        </View>
-      </BottomSheet>
-    </>
-  );
-});
+
+            {mealTimeOptions.map(option => (
+              <MealTimeOption
+                key={option.value}
+                label={option.label}
+                isSelected={localMealTime === option.value}
+                onPress={() => setLocalMealTime(option.value)}
+              />
+            ))}
+          </View>
+        </BottomSheet>
+      </>
+    );
+  }
+);

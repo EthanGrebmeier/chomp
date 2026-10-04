@@ -8,8 +8,7 @@ const DEFAULT_LIST_NAME = 'Shopping List';
 const DEFAULT_LIST_VISIBILITY_RETRY_COUNT = 30;
 const DEFAULT_LIST_VISIBILITY_RETRY_DELAY_MS = 200;
 
-const sleep = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const logDefaultListInitialization = (message: string, data?: unknown) => {
   console.info(`[default-list-initialization] ${message}`, data ?? '');
@@ -32,12 +31,12 @@ const waitForDefaultGroceryList = async (listId: string) => {
       listId,
       userCount: data?.$users?.length ?? 0,
       visibleListIds:
-        data?.$users?.[0]?.grocery_lists?.map((groceryList) => groceryList.id) ??
+        data?.$users?.[0]?.grocery_lists?.map(groceryList => groceryList.id) ??
         [],
     });
 
     const hasList = data?.$users?.[0]?.grocery_lists?.some(
-      (groceryList) => groceryList.id === listId
+      groceryList => groceryList.id === listId
     );
 
     if (hasList) {
@@ -77,7 +76,7 @@ export const initializeDefaultGroceryList = async () => {
     hasCurrentUser: Boolean(currentUser),
     existingListCount,
     existingListIds:
-      currentUser?.grocery_lists?.map((groceryList) => groceryList.id) ?? [],
+      currentUser?.grocery_lists?.map(groceryList => groceryList.id) ?? [],
     hasInitializedGroceryList: currentUser?.hasInitializedGroceryList,
   });
 

@@ -12,10 +12,7 @@ import {
 } from './types';
 
 const normalizeGroupToken = (value?: string | null): string =>
-  (value ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, ' ');
+  (value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
 
 const compareOptionalLabels = (
   aValue: string | null | undefined,

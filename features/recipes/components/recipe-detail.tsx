@@ -102,9 +102,7 @@ const RecipeDetailContent = ({
         {/* Ingredients */}
         <View className="gap-1">
           <View className="h-9 flex-row items-center justify-between px-4">
-            <Text variant="overline">
-              Ingredients
-            </Text>
+            <Text variant="overline">Ingredients</Text>
             {isOwner ? (
               <Button
                 variant="ghost"

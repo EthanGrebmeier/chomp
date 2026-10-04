@@ -9,9 +9,11 @@ export type SavedItemSnapshotDiff = Partial<SavedItemSnapshot>;
 const normalizeString = (value: string | undefined | null): string =>
   (value ?? '').trim();
 
-const STRING_FIELDS = ['name', 'category', 'storeId'] as const satisfies readonly (
-  keyof SavedItemSnapshot
-)[];
+const STRING_FIELDS = [
+  'name',
+  'category',
+  'storeId',
+] as const satisfies readonly (keyof SavedItemSnapshot)[];
 
 export const diffSavedItemSnapshot = ({
   snapshot,

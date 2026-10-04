@@ -466,9 +466,7 @@ export const IngredientSelector = forwardRef<
           )}
         >
           <View>
-            <Text variant="overline">
-              Ingredients
-            </Text>
+            <Text variant="overline">Ingredients</Text>
             <Text variant="caption" tabularNumbers>
               {purchasedCount > 0
                 ? `${purchasedCount} purchased · ${unpurchasedSelectedCount} selected`

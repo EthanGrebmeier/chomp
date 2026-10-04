@@ -277,7 +277,7 @@ const GroceryListItemComponent = ({
         {notes ? (
           <Text
             variant="itemDescription"
-            className={cn("-my-0.5", isChecked && 'opacity-80')}
+            className={cn('-my-0.5', isChecked && 'opacity-80')}
             style={compactTextStyle}
           >
             {notes}

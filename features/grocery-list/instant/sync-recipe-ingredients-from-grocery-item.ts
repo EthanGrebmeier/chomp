@@ -67,7 +67,9 @@ export const syncRecipeIngredientsFromGroceryItem = async ({
 
     if (Object.keys(updatePatch).length > 0) {
       transactions.push(
-        db.tx.recipe_ingredients[ingredient.id].update(trimStringFields(updatePatch))
+        db.tx.recipe_ingredients[ingredient.id].update(
+          trimStringFields(updatePatch)
+        )
       );
     }
 

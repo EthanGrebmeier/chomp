@@ -69,7 +69,7 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
         }}
         onDismiss={handleDismiss}
         footer={
-          <View className="px-10 pb-safe">
+          <View className="pb-safe px-10">
             <Button onPress={handleSave} disabled={!canSave}>
               <Text>Save</Text>
             </Button>

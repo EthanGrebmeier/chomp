@@ -28,9 +28,8 @@ export const fadeIn = (delay = 0) =>
 export const fadeOut = FadeOut.duration(EXIT_MS);
 
 /** Layout transition for siblings that shift when content appears. */
-export const layoutTransition = LinearTransition.duration(ENTER_MS).easing(
-  EASE_OUT
-);
+export const layoutTransition =
+  LinearTransition.duration(ENTER_MS).easing(EASE_OUT);
 
 /**
  * Fade in while rising 12px. Subtler than reanimated's built-in `FadeInUp`
@@ -56,8 +55,7 @@ export const fadeInUp =
  * (no cross-fade overlap). Distance is the panel's own width.
  */
 export const slideInRight =
-  (): EntryExitAnimationFunction =>
-  (values: EntryAnimationsValues) => {
+  (): EntryExitAnimationFunction => (values: EntryAnimationsValues) => {
     'worklet';
     return {
       initialValues: { transform: [{ translateX: values.targetWidth }] },
@@ -79,8 +77,7 @@ export const slideInRight =
  * Pairs with `slideInRight` for the reverse (back) direction.
  */
 export const slideOutRight =
-  (): EntryExitAnimationFunction =>
-  (values: ExitAnimationsValues) => {
+  (): EntryExitAnimationFunction => (values: ExitAnimationsValues) => {
     'worklet';
     return {
       initialValues: { transform: [{ translateX: 0 }] },

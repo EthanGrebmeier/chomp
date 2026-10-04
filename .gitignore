@@ -38,6 +38,9 @@ yarn-error.*
 # local env files
 .env*.local
 
+# scratch output from local scripts (e.g. pnpm check-instant)
+/tmp/
+
 # typescript
 *.tsbuildinfo
 

@@ -39,7 +39,10 @@ const BasicListItem = ({
   return (
     <View className="overflow-hidden">
       <View
-        className={cn('z-10 flex-row items-center gap-2 px-4 py-0.5 ', className)}
+        className={cn(
+          'z-10 flex-row items-center gap-2 px-4 py-0.5 ',
+          className
+        )}
       >
         {children}
       </View>

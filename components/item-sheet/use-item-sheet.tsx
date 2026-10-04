@@ -119,9 +119,7 @@ export const ItemSheetProvider = ({
   mode,
   onPickMatch,
 }: ItemSheetProviderProps) => {
-  const [selectedItem, setSelectedItem] = useState<MatchingItem | null>(
-    null
-  );
+  const [selectedItem, setSelectedItem] = useState<MatchingItem | null>(null);
   const itemInput = useUncontrolledTextInput();
   const notesInput = useUncontrolledTextInput();
   const {
@@ -321,10 +319,10 @@ export const ItemSheetProvider = ({
     setCategory(item.category);
     resetNotesInput(item.notes ?? '');
     setNotesInputValue(item.notes ?? '');
-      const defaultStoreId = mode === 'add' ? defaultStore?.id : undefined;
-      const defaultStoreName = mode === 'add' ? defaultStore?.name : undefined;
-      setStoreId(item.storeId ?? defaultStoreId);
-      setStoreName(item.storeId ? undefined : defaultStoreName);
+    const defaultStoreId = mode === 'add' ? defaultStore?.id : undefined;
+    const defaultStoreName = mode === 'add' ? defaultStore?.name : undefined;
+    setStoreId(item.storeId ?? defaultStoreId);
+    setStoreName(item.storeId ? undefined : defaultStoreName);
     setShowMatchingItems(false);
     // Notify observers (e.g. useLiveItemSync in the Edit flow) on the next
     // macrotask so React can commit the state updates above first. This keeps

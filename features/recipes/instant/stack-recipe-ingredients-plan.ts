@@ -55,10 +55,7 @@ type PlannedIngredientStacking = {
 };
 
 const normalizeToken = (value?: string | null): string =>
-  (value ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, ' ');
+  (value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
 
 export const buildIngredientNameKey = (name: string): string =>
   normalizeToken(name);
@@ -167,7 +164,9 @@ export const planIngredientStacking = ({
       category: ingredient.category,
       storeName: ingredient.storeName,
       storeId: ingredient.storeId,
-      recipeIds: ingredient.recipeId ? new Set([ingredient.recipeId]) : new Set(),
+      recipeIds: ingredient.recipeId
+        ? new Set([ingredient.recipeId])
+        : new Set(),
     });
   }
 
@@ -182,14 +181,16 @@ export const planIngredientStacking = ({
     if (exactMatch) {
       quantityUpdates.set(
         exactMatch.id,
-        (quantityUpdates.get(exactMatch.id) ?? 0) + aggregatedIngredient.quantity
+        (quantityUpdates.get(exactMatch.id) ?? 0) +
+          aggregatedIngredient.quantity
       );
       continue;
     }
 
     const nameMatches =
-      existingByNameKey.get(buildIngredientNameKey(aggregatedIngredient.name)) ??
-      [];
+      existingByNameKey.get(
+        buildIngredientNameKey(aggregatedIngredient.name)
+      ) ?? [];
 
     if (nameMatches.length > 0) {
       conflicts.push({

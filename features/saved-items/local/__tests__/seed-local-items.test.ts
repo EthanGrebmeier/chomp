@@ -17,7 +17,7 @@ vi.mock('../../../../db/local', () => ({
     }),
     insert: () => ({
       values: (values: unknown) => {
-        insertValuesMock(values)
+        insertValuesMock(values);
         const result = Promise.resolve() as Promise<void> & {
           onConflictDoNothing: () => Promise<void>;
         };

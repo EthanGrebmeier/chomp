@@ -29,7 +29,9 @@ export const MealSheetRecipeDropdown = ({
 
   return (
     <DropdownMenuRoot
-      trigger={<Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />}
+      trigger={
+        <Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />
+      }
     >
       <DropdownMenuContent>
         <DropdownMenuItem onSelect={onViewRecipe} key="view-recipe">

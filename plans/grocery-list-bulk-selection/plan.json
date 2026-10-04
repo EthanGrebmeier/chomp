@@ -64,9 +64,7 @@
             "Run `pnpm test -- --run`.",
             "Run `pnpm tsc --noEmit`."
           ],
-          "outOfScope": [
-            "Bulk action execution logic"
-          ]
+          "outOfScope": ["Bulk action execution logic"]
         },
         {
           "id": "P1-T2",
@@ -80,9 +78,7 @@
             "Row press and checkbox both toggle selection in bulk mode.",
             "Item edit entry points and section-level clear controls are unavailable in bulk mode."
           ],
-          "dependencies": [
-            "P1-T1"
-          ],
+          "dependencies": ["P1-T1"],
           "testPlan": [
             "Add integration tests for entering/exiting mode and selection interactions.",
             "Manual check: verify checked rows disappear and editing does not open while mode is active.",
@@ -114,16 +110,12 @@
             "Exiting bulk mode restores standard controls with the reverse transition.",
             "Layout does not jump during transition on common device sizes."
           ],
-          "dependencies": [
-            "P1-T2"
-          ],
+          "dependencies": ["P1-T2"],
           "testPlan": [
             "Manual check on iOS and Android simulators for transition smoothness and alignment.",
             "Run `pnpm lint` and `pnpm tsc --noEmit`."
           ],
-          "outOfScope": [
-            "Action handler implementations for toolbar buttons"
-          ]
+          "outOfScope": ["Action handler implementations for toolbar buttons"]
         },
         {
           "id": "P2-T2",
@@ -135,9 +127,7 @@
             "Toolbar actions use designated icons and destructive affordance on delete.",
             "All actions are disabled when no items are selected and enabled otherwise."
           ],
-          "dependencies": [
-            "P2-T1"
-          ],
+          "dependencies": ["P2-T1"],
           "testPlan": [
             "Add UI test assertions for button order and zero-selection disabled state.",
             "Manual check: destructive action appears as the right-most action.",
@@ -171,17 +161,13 @@
             "Successful delete exits bulk mode and clears selection without showing a success toast.",
             "Canceling delete performs no writes and keeps current mode state."
           ],
-          "dependencies": [
-            "P2-T2"
-          ],
+          "dependencies": ["P2-T2"],
           "testPlan": [
             "Add unit tests for delete orchestrator success and cancel paths.",
             "Manual check: collaboration scenario still enforces permission boundaries.",
             "Run `pnpm lint` and `pnpm tsc --noEmit`."
           ],
-          "outOfScope": [
-            "Undo or action history"
-          ]
+          "outOfScope": ["Undo or action history"]
         }
       ]
     },
@@ -206,17 +192,13 @@
             "Set Category action opens existing category picker surface and returns selected category or None.",
             "Submitting either action targets currently selected items only."
           ],
-          "dependencies": [
-            "P2-T2"
-          ],
+          "dependencies": ["P2-T2"],
           "testPlan": [
             "Add integration tests ensuring both actions open reused sheets and receive values.",
             "Manual check: selecting None clears values intent for all selected items.",
             "Run `pnpm lint` and `pnpm tsc --noEmit`."
           ],
-          "outOfScope": [
-            "Custom new picker UX"
-          ]
+          "outOfScope": ["Custom new picker UX"]
         },
         {
           "id": "P4-T2",
@@ -229,17 +211,13 @@
             "Saved-item sync attempts occur where linkage permits, and skipped/failed syncs do not fail grocery-item updates.",
             "Successful action exits bulk mode and clears selection without showing a success toast."
           ],
-          "dependencies": [
-            "P4-T1"
-          ],
+          "dependencies": ["P4-T1"],
           "testPlan": [
             "Add unit tests for best-effort sync behavior including partial failure scenarios.",
             "Manual check with mixed linked/unlinked items to confirm grocery updates still succeed.",
             "Run `pnpm lint` and `pnpm tsc --noEmit`."
           ],
-          "outOfScope": [
-            "Detailed per-item sync result UI"
-          ]
+          "outOfScope": ["Detailed per-item sync result UI"]
         }
       ]
     },
@@ -265,17 +243,13 @@
             "Current list is visible but not selectable as destination.",
             "Move confirmation is blocked until a valid destination list is selected."
           ],
-          "dependencies": [
-            "P2-T2"
-          ],
+          "dependencies": ["P2-T2"],
           "testPlan": [
             "Add integration tests for destination picker behavior and same-list disable rule.",
             "Manual check: current list remains visible in picker context.",
             "Run `pnpm lint` and `pnpm tsc --noEmit`."
           ],
-          "outOfScope": [
-            "Custom move destination UI"
-          ]
+          "outOfScope": ["Custom move destination UI"]
         },
         {
           "id": "P5-T2",
@@ -288,17 +262,13 @@
             "Source selected items are removed only after successful destination application.",
             "Successful action exits bulk mode and clears selection without showing a success toast."
           ],
-          "dependencies": [
-            "P5-T1"
-          ],
+          "dependencies": ["P5-T1"],
           "testPlan": [
             "Add unit tests for move planning outputs: merge, create, and source removal steps.",
             "Manual check with mixed conflict/non-conflict selections across two lists.",
             "Run `pnpm lint` and `pnpm tsc --noEmit`."
           ],
-          "outOfScope": [
-            "Per-item conflict-resolution prompts"
-          ]
+          "outOfScope": ["Per-item conflict-resolution prompts"]
         }
       ]
     },
@@ -321,19 +291,13 @@
             "Automated tests cover checked-row hiding and action disabled state with zero selection.",
             "Automated tests confirm success paths exit mode and clear selection for each bulk action type."
           ],
-          "dependencies": [
-            "P3-T1",
-            "P4-T2",
-            "P5-T2"
-          ],
+          "dependencies": ["P3-T1", "P4-T2", "P5-T2"],
           "testPlan": [
             "Run targeted integration test suite for grocery list bulk mode.",
             "Run `pnpm test -- --run`.",
             "Run `pnpm lint` and `pnpm tsc --noEmit`."
           ],
-          "outOfScope": [
-            "Visual snapshot baselines for all animation frames"
-          ]
+          "outOfScope": ["Visual snapshot baselines for all animation frames"]
         },
         {
           "id": "P6-T2",
@@ -345,17 +309,13 @@
             "Manual checklist validates best-effort sync behavior for mixed linked and unlinked items.",
             "Manual checklist validates no regression in standard non-bulk grocery list editing."
           ],
-          "dependencies": [
-            "P6-T1"
-          ],
+          "dependencies": ["P6-T1"],
           "testPlan": [
             "Document and execute manual scenarios derived from PRD testing decisions.",
             "Capture pass/fail notes for permission and linkage edge cases.",
             "Run `pnpm lint` and `pnpm tsc --noEmit` before final merge readiness."
           ],
-          "outOfScope": [
-            "Feature-flag rollout strategy"
-          ]
+          "outOfScope": ["Feature-flag rollout strategy"]
         }
       ]
     }

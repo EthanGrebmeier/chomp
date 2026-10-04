@@ -78,12 +78,8 @@
             "Hook supports local->cloud promotion by updating active editing target state when updateSavedItem returns promoted id"
           ],
           "dependencies": [],
-          "testPlan": [
-            "pnpm tsc --noEmit"
-          ],
-          "outOfScope": [
-            "Add mode wiring"
-          ]
+          "testPlan": ["pnpm tsc --noEmit"],
+          "outOfScope": ["Add mode wiring"]
         },
         {
           "id": "P1-T2",
@@ -99,9 +95,7 @@
             "Add mode footer/button/toast behavior remains unchanged",
             "Edit mode success toast is removed"
           ],
-          "dependencies": [
-            "P1-T1"
-          ],
+          "dependencies": ["P1-T1"],
           "testPlan": [
             "pnpm lint",
             "pnpm tsc --noEmit",
@@ -111,9 +105,7 @@
             "Manual: verify edit mode has no footer button or extra footer space",
             "Manual: verify add mode remains unchanged"
           ],
-          "outOfScope": [
-            "Autocomplete work"
-          ]
+          "outOfScope": ["Autocomplete work"]
         }
       ]
     }
