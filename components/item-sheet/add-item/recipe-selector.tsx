@@ -71,11 +71,7 @@ export const RecipeSelector = ({
         className="w-full px-4 py-1"
         hapticType="light"
       >
-        <RecipeCardContent
-          name={item.name}
-          ingredientCount={item.recipe_ingredients.length}
-          className="w-full"
-        />
+        <RecipeCardContent name={item.name} className="w-full" />
       </HapticPressable>
     ),
     [onSelectRecipe]

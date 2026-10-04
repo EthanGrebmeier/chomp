@@ -466,7 +466,7 @@ export const IngredientSelector = forwardRef<
           )}
         >
           <View>
-            <Text className="text-lg font-medium text-foreground">
+            <Text variant="overline">
               Ingredients
             </Text>
             <Text variant="caption" tabularNumbers>

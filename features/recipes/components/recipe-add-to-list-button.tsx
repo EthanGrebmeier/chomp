@@ -121,21 +121,19 @@ export const RecipeAddToListButton = ({
 
   return (
     <>
-      <View className="bottom-safe absolute left-6 z-20">
-        <Button
-          variant="secondary"
-          size="wide-small"
-          onPress={handleAddToList}
-          disabled={!targetListId}
-        >
-          <Icon
-            as={ShoppingCartIcon}
-            size={24}
-            strokeWidth={3}
-            className="text-secondary-foreground"
-          />
-        </Button>
-      </View>
+      <Button
+        className="w-full"
+        onPress={handleAddToList}
+        disabled={!targetListId}
+      >
+        <Icon
+          as={ShoppingCartIcon}
+          size={18}
+          strokeWidth={2.5}
+          className="text-primary-foreground"
+        />
+        <Text>Add to list</Text>
+      </Button>
       <BottomSheet
         detents={['auto']}
         name="recipe-ingredient-selector-sheet"

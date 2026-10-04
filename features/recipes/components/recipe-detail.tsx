@@ -3,7 +3,7 @@ import {
   MoreHorizontal,
   PlusIcon,
 } from 'lucide-react-native';
-import { Animated, Linking, View } from 'react-native';
+import { Linking, ScrollView, View } from 'react-native';
 
 import { Heading } from '../../../components/text/heading';
 import { BackButton } from '../../../components/ui/back-button';
@@ -11,6 +11,7 @@ import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { db } from '../../../lib/instant';
+import { cn } from '../../../lib/utils';
 import { useCategoryOptions } from '../../categories/use-category-options';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
 
@@ -19,6 +20,7 @@ import {
   useAddIngredientSheet,
 } from './add-ingredient-sheet';
 import { RecipeDropdownMenu } from './dropdown-menu';
+import { MealTagBadge } from './meal-tag-badge';
 import { RecipeAddToListButton } from './recipe-add-to-list-button';
 import { RecipeIngredientItem } from './recipe-ingredient-item';
 
@@ -37,107 +39,115 @@ const RecipeDetailContent = ({
   const { present } = useAddIngredientSheet();
   const { data: categoryOptions } = useCategoryOptions();
 
-  // Check if current user owns the recipe
   const isOwner = recipe.user?.id === user?.id;
+  const ingredients = recipe.recipe_ingredients;
 
   const handleEditIngredient = (ingredient: RecipeIngredient) => {
     present(ingredient);
   };
 
   return (
-    <View className="flex-1 gap-4">
-      <View className="relative min-h-10 px-4">
-        <View className="absolute left-4 top-0 z-10">
-          <BackButton onPress={onClose} />
-        </View>
-        <Heading className="px-14 text-center">{recipe.name}</Heading>
-        <View className="absolute right-4 top-0">
-          <RecipeDropdownMenu
-            trigger={
-              <View className="z-10 size-8 items-center justify-center rounded-full bg-background">
-                <Icon as={MoreHorizontal} size={24} />
-              </View>
-            }
-            recipe={recipe}
-            listId={listId}
-            onClose={onClose}
-          />
-        </View>
+    <View className="flex-1">
+      {/* Fixed navigation bar; the title lives in the scrolling content. */}
+      <View className="h-11 flex-row items-center justify-between px-4">
+        <BackButton onPress={onClose} />
+        <RecipeDropdownMenu
+          trigger={
+            <View className="size-8 items-center justify-center rounded-full bg-background">
+              <Icon as={MoreHorizontal} size={24} />
+            </View>
+          }
+          recipe={recipe}
+          listId={listId}
+          onClose={onClose}
+        />
       </View>
-      {/* Header */}
-      <View className="w-full gap-2 px-4">
-        <View className="flex-row gap-4">
-          <View>
-            {recipe.mealTag ? (
-              <Text variant="caption">{recipe.mealTag}</Text>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName={cn(
+          'gap-6 pt-2',
+          // Clear the pinned Add to list button so the last row stays reachable.
+          isOwner ? 'pb-safe-offset-20' : 'pb-safe-offset-6'
+        )}
+        keyboardDismissMode="on-drag"
+      >
+        {/* Overview */}
+        <View className="gap-3 px-4">
+          <View className="items-start gap-2">
+            <Heading size="lg">{recipe.name}</Heading>
+            <MealTagBadge mealTag={recipe.mealTag} />
+          </View>
+          {recipe.description ? (
+            <Text variant="lead">{recipe.description}</Text>
+          ) : null}
+          {recipe.sourceUrl ? (
+            <View className="items-start">
+              <Button
+                variant="ghost"
+                className="h-auto px-0 py-0"
+                onPress={() => Linking.openURL(recipe.sourceUrl!)}
+              >
+                <Text className="text-muted-foreground">Recipe source</Text>
+                <Icon
+                  as={ExternalLinkIcon}
+                  size={16}
+                  className="text-muted-foreground"
+                />
+              </Button>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Ingredients */}
+        <View className="gap-1">
+          <View className="h-9 flex-row items-center justify-between px-4">
+            <Text variant="overline">
+              Ingredients
+            </Text>
+            {isOwner ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="-mr-3"
+                onPress={() => present()}
+              >
+                <Icon
+                  as={PlusIcon}
+                  size={16}
+                  strokeWidth={3}
+                  className="text-foreground"
+                />
+                <Text>Add</Text>
+              </Button>
             ) : null}
           </View>
-        </View>
-      </View>
-      {recipe.description ? (
-        <View className="px-4">
-          <Text variant="lead">{recipe.description}</Text>
-        </View>
-      ) : null}
-      {recipe.sourceUrl ? (
-        <View className="items-start px-4">
-          <Button
-            variant="ghost"
-            className="px-0"
-            onPress={() => Linking.openURL(recipe.sourceUrl!)}
-          >
-            <Text>Recipe Source</Text>
-            <Icon
-              as={ExternalLinkIcon}
-              size={16}
-              className="text-muted-foreground"
-            />
-          </Button>
-        </View>
-      ) : null}
-
-      {/* Ingredients */}
-      <View className="flex-1 ">
-        <View className="flex-row items-center justify-between px-4">
-          <Text variant="overline">Ingredients</Text>
-        </View>
-        {recipe.recipe_ingredients.length === 0 ? (
-          <View className=" flex-1 items-center justify-center">
-            <Text variant="bodyMuted">No ingredients found</Text>
-            <Text variant="bodyMuted">
-              Press the + button to add ingredients
-            </Text>
-          </View>
-        ) : (
-          <Animated.FlatList
-            className="gap-2"
-            contentContainerClassName="pb-16"
-            data={recipe.recipe_ingredients}
-            renderItem={({ item, index }) => (
+          {ingredients.length === 0 ? (
+            <View className="items-center gap-1 px-4 py-8">
+              <Text variant="bodyMuted">No ingredients yet</Text>
+              {isOwner ? (
+                <Text variant="caption">Tap Add to add ingredients</Text>
+              ) : null}
+            </View>
+          ) : (
+            ingredients.map(ingredient => (
               <RecipeIngredientItem
-                key={item.id}
-                ingredient={item}
+                key={ingredient.id}
+                ingredient={ingredient}
                 categoryOptions={categoryOptions}
                 onEdit={isOwner ? handleEditIngredient : undefined}
                 canDelete={isOwner}
               />
-            )}
-          />
-        )}
-      </View>
-      {isOwner && <RecipeAddToListButton recipe={recipe} listId={listId} />}
-      {isOwner && (
-        <View className="bottom-safe absolute right-6 z-20">
-          <Button size="wide-small" onPress={() => present()}>
-            <Icon
-              as={PlusIcon}
-              size={28}
-              strokeWidth={3}
-              className="text-primary-foreground"
-            />
-          </Button>
+            ))
+          )}
         </View>
-      )}
+      </ScrollView>
+
+      {isOwner ? (
+        <View className="bottom-safe absolute inset-x-4 z-20">
+          <RecipeAddToListButton recipe={recipe} listId={listId} />
+        </View>
+      ) : null}
     </View>
   );
 };

@@ -45,9 +45,7 @@ export default function RecipeDetailPage() {
           exiting={FadeOut.duration(200)}
           className="flex-1"
         >
-          <View className="flex-1 gap-2">
-            <RecipeDetail recipe={recipe} listId={listId} />
-          </View>
+          <RecipeDetail recipe={recipe} listId={listId} />
         </Animated.View>
       )}
     </View>
