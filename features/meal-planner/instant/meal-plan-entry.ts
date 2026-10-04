@@ -71,8 +71,9 @@ const querySyncContext = async ({
 /**
  * Turns "meal plan only" on or off for a meal plan entry and, in the same
  * transaction, brings its linked grocery items in line (see
- * `planMealPlanEntryIgnored`): ignoring removes the unchecked ones, and
- * un-ignoring restores the selection the entry had before.
+ * `planMealPlanEntryIgnored`): hiding removes pending rows and hides purchases;
+ * showing restores the saved selection while keeping purchases checked, even
+ * when the persisted ignored flag was already false.
  */
 export const setMealPlanEntryIgnored = async ({
   type,
@@ -120,7 +121,21 @@ export const setMealPlanEntryIgnored = async ({
         listId: context.listId,
         plan: plan.listSync,
         now,
-      })
+      }),
+      ...plan.softDeletes.map(({ groceryItemId }) =>
+        tx.grocery_items[groceryItemId].update({
+          isDeleted: true,
+          deletedAt: now,
+          updatedAt: now,
+        })
+      ),
+      ...plan.softRestores.map(({ groceryItemId }) =>
+        tx.grocery_items[groceryItemId].update({
+          isDeleted: false,
+          deletedAt: null,
+          updatedAt: now,
+        })
+      )
     );
   }
 

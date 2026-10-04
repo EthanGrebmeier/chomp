@@ -16,8 +16,8 @@ import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
-import { isMealPlanOnly } from '../instant/meal-plan-entry';
 import { MealPlanItemWithStore } from '../types';
+import { getMealPlanShoppingState } from '../utils/shopping-state';
 import {
   countUncheckedLinkedGroceryItems,
   withUncheckedLinkedGroceryItemsNotice,
@@ -71,14 +71,24 @@ const EditItemSheetContent = ({
   const itemInputRef = useRef<TextInput>(null);
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
   // Shared with the planner view, so "meal plan only" stays live.
-  const { items: mealPlanItems } = useUserMealPlanData(listId);
+  const { items: mealPlanItems, isLoading } = useUserMealPlanData(listId);
   const liveItem =
     mealPlanItems.find(item => item.id === itemToEdit.id) ?? itemToEdit;
-  const { isMealPlanOnly: mealPlanOnly, setMealPlanOnly } =
-    useMealPlanOnlyToggle({
-      entry: { type: 'item', id: itemToEdit.id },
-      isMealPlanOnly: isMealPlanOnly(liveItem),
-    });
+  const shoppingState = getMealPlanShoppingState(liveItem);
+  const {
+    isMealPlanOnly: mealPlanOnly,
+    setMealPlanOnly,
+    isPending,
+  } = useMealPlanOnlyToggle({
+    entry: { type: 'item', id: itemToEdit.id },
+    isMealPlanOnly: !shoppingState.isShownOnGroceryList,
+  });
+
+  const switchDescription = shoppingState.allPurchased
+    ? mealPlanOnly
+      ? 'Purchased. Turning this on adds this item again.'
+      : 'Purchased. Turning this off hides the item and keeps purchase history.'
+    : undefined;
 
   const handleRemoveItem = () => {
     const currentItemName = getItemName();
@@ -164,6 +174,8 @@ const EditItemSheetContent = ({
         <AddToGroceryListSwitch
           isMealPlanOnly={mealPlanOnly}
           onMealPlanOnlyChange={setMealPlanOnly}
+          disabled={isPending || isLoading}
+          description={switchDescription}
         />
       </View>
     </View>

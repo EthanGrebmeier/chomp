@@ -13,6 +13,8 @@ type CheckboxProps = {
   onPress: () => void;
   hitSlop?: number;
   className?: string;
+  disabled?: boolean;
+  accessibilityLabel?: string;
 };
 
 const checkedKeyframe = new Keyframe({
@@ -44,6 +46,8 @@ export const Checkbox = ({
   onPress,
   hitSlop = 10,
   className,
+  disabled = false,
+  accessibilityLabel,
 }: CheckboxProps) => {
   return (
     <HapticPressable
@@ -53,6 +57,10 @@ export const Checkbox = ({
         className
       )}
       onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="checkbox"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ checked, disabled }}
       hapticType="selection"
     >
       <LayoutAnimationConfig skipEntering={!checked} skipExiting={checked}>

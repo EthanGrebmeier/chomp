@@ -38,7 +38,9 @@ export const buildMealPlanListSyncTransactions = ({
   plan,
   now = new Date().toISOString(),
 }: BuildMealPlanListSyncTransactionsArgs): TransactionChunk[] => {
-  const transactions: TransactionChunk[] = [];
+  // Release one-to-one source links before linking replacement shopping rows.
+  const transactions: TransactionChunk[] =
+    buildLinkedItemDetachTransactions(plan);
 
   for (const { source, fields, recipeId } of plan.creates) {
     const itemId = id();
@@ -80,8 +82,6 @@ export const buildMealPlanListSyncTransactions = ({
       }
     }
   }
-
-  transactions.push(...buildLinkedItemDetachTransactions(plan));
 
   return transactions;
 };

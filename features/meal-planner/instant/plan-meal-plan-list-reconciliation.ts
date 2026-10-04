@@ -56,6 +56,8 @@ export type SnapshotRowsToCreateForEntry = {
 export type MealPlanListReconciliationPlan = {
   /** Snapshot rows backfilled for recipe ingredients that have none yet. */
   snapshotRowsToCreate: SnapshotRowsToCreateForEntry[];
+  /** Checked rows left visible by older clients on intentionally hidden meals. */
+  groceryItemIdsToSoftDelete?: string[];
   /** Snapshot rows whose recipe ingredient no longer exists. */
   snapshotRowIdsToDelete: string[];
   /**
@@ -148,7 +150,8 @@ const resolveLinkedItems = (
  * - Missing linked items are created; extra live ones are deleted, and extra
  *   checked or soft-deleted ones are unlinked.
  * - Ignored entries get nothing created (and no snapshot backfill, which
- *   un-ignoring does itself); leftover unchecked items are removed.
+ *   un-ignoring does itself); leftover pending items are removed and visible
+ *   purchases are hidden without resetting their history.
  * - Snapshot rows are backfilled for new recipe ingredients and deleted for
  *   removed ones.
  * - Grocery items linked to a source that isn't on this list's meal plan
@@ -202,6 +205,17 @@ export const planMealPlanListReconciliation = ({
   const addSync = (
     entry: MealPlanRecipeEntryForSync | MealPlanItemEntryForSync
   ) => {
+    if (entry.ignoredByGroceryList) {
+      const linkedItems =
+        entry.kind === 'recipe'
+          ? entry.snapshotRows.map(snapshot => snapshot.grocery_item)
+          : [entry.grocery_item];
+      for (const item of linkedItems) {
+        if (item?.isChecked && !item.isDeleted) {
+          (plan.groceryItemIdsToSoftDelete ??= []).push(item.id);
+        }
+      }
+    }
     const { creates, deletes, unlinks } = planMealPlanListSync({
       entry,
       defaultStore,
@@ -300,8 +314,10 @@ export const planMealPlanListReconciliation = ({
 export const isMealPlanListReconciliationPlanEmpty = ({
   snapshotRowsToCreate,
   snapshotRowIdsToDelete,
+  groceryItemIdsToSoftDelete,
   listSync,
 }: MealPlanListReconciliationPlan): boolean =>
+  (groceryItemIdsToSoftDelete?.length ?? 0) === 0 &&
   snapshotRowsToCreate.length === 0 &&
   snapshotRowIdsToDelete.length === 0 &&
   listSync.creates.length === 0 &&

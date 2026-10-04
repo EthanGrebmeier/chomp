@@ -125,6 +125,77 @@ const plan = (overrides: Partial<PlanMealPlanListReconciliationArgs> = {}) => {
 };
 
 describe('planMealPlanListReconciliation', () => {
+  it('hides visible checked rows on intentionally ignored entries and then converges', () => {
+    const checked = linkedItem('checked', { isChecked: true });
+    const hiddenRecipe = recipeRow({
+      ignoredByGroceryList: true,
+      ingredient_snapshots: [snapshot('rice', checked)],
+    });
+    const hiddenItem = itemRow({
+      ignoredByGroceryList: true,
+      grocery_item: linkedItem('checked-item', { isChecked: true }),
+    });
+    const result = plan({ recipeRows: [hiddenRecipe], itemRows: [hiddenItem] });
+    expect(result.groceryItemIdsToSoftDelete).toEqual([
+      'checked',
+      'checked-item',
+    ]);
+    expect(result.listSync).toEqual({ creates: [], deletes: [], unlinks: [] });
+    expect(isMealPlanListReconciliationPlanEmpty(result)).toBe(false);
+    const transactions = buildMealPlanListReconciliationTransactions({
+      listId: 'list',
+      plan: result,
+      now: '2026-01-01',
+    });
+    expect(transactions).toContainEqual({
+      operation: 'update',
+      namespace: 'grocery_items',
+      entityId: 'checked',
+      payload: {
+        isDeleted: true,
+        deletedAt: '2026-01-01',
+        updatedAt: '2026-01-01',
+      },
+    });
+    const repaired = plan({
+      recipeRows: [
+        {
+          ...hiddenRecipe,
+          ingredient_snapshots: [
+            snapshot('rice', { ...checked, isDeleted: true }),
+          ],
+        },
+      ],
+      itemRows: [
+        {
+          ...hiddenItem,
+          grocery_item: { ...hiddenItem.grocery_item!, isDeleted: true },
+        },
+      ],
+    });
+    expect(isMealPlanListReconciliationPlanEmpty(repaired)).toBe(true);
+  });
+
+  it('does not reset cleared purchases on active entries', () => {
+    const result = plan({
+      recipeRows: [
+        recipeRow({
+          ingredient_snapshots: [
+            snapshot(
+              'rice',
+              linkedItem('bought-rice', { isChecked: true, isDeleted: true })
+            ),
+            snapshot(
+              'beans',
+              linkedItem('bought-beans', { isChecked: true, isDeleted: true })
+            ),
+          ],
+        }),
+      ],
+    });
+    expect(isMealPlanListReconciliationPlanEmpty(result)).toBe(true);
+  });
+
   it('plans nothing when every selected source has its linked item', () => {
     const result = plan({
       recipeRows: [recipeRow()],

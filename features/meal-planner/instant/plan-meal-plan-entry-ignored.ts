@@ -1,12 +1,16 @@
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
+import { getCanonicalSnapshots, isHistory } from '../utils/shopping-state';
 
 import {
   planMealPlanSnapshotReconciliation,
   type SnapshotRowToCreate,
 } from './plan-meal-plan-snapshot-reconciliation';
 import {
+  type LinkedGroceryItemForSync,
   type MealPlanEntryForSync,
+  type MealPlanListSyncLinkedItemChange,
   type MealPlanListSyncPlan,
+  type MealPlanListSyncSource,
   type MealPlanRecipeEntryForSync,
   planMealPlanListSync,
 } from './plan-meal-plan-list-sync';
@@ -14,52 +18,43 @@ import {
 export type SnapshotRowToCreateWithId = SnapshotRowToCreate & { id: string };
 
 export type MealPlanEntryIgnoredPlan = {
-  /** Snapshot rows to mark selected before the entry goes back on the list. */
   snapshotRowIdsToSelect: string[];
-  /**
-   * Snapshot rows to backfill for source ingredients that have none yet (e.g.
-   * legacy entries), so un-ignoring can put every ingredient on the list.
-   */
+  /** Missing ingredient snapshots, backfilled before restoring shopping. */
   snapshotRowsToCreate: SnapshotRowToCreateWithId[];
-  /** Linked grocery item changes for the entry's new state. */
   listSync: MealPlanListSyncPlan;
+  /** Hide checked history without losing its purchase state or source link. */
+  softDeletes: Array<{ groceryItemId: string }>;
+  /** Show selected purchases again, keeping them checked. */
+  softRestores: Array<{ groceryItemId: string }>;
 };
 
 export type PlanMealPlanEntryIgnoredArgs = {
   entry: MealPlanEntryForSync;
   ignored: boolean;
-  /** List default store, applied to linked items without a store. */
   defaultStore?: DefaultStoreForStacking | null;
-  /** Id factory for backfilled snapshot rows. */
   createId: () => string;
 };
 
 type RecipeRestore = Pick<
   MealPlanEntryIgnoredPlan,
   'snapshotRowIdsToSelect' | 'snapshotRowsToCreate'
-> & { entry: MealPlanRecipeEntryForSync };
+> & {
+  entry: MealPlanRecipeEntryForSync;
+};
 
-/**
- * Works out how a recipe entry's selection comes back when it is un-ignored:
- * the selection it had is kept as is, missing snapshot rows are backfilled
- * (selected), and when nothing was selected every ingredient is selected.
- */
+/** Keep the saved selection, selecting all only when nothing is selected. */
 const planRecipeRestore = (
   entry: MealPlanRecipeEntryForSync,
   createId: () => string
 ): RecipeRestore => {
-  const sourceIngredientIds = new Set(
-    entry.sourceIngredients.map(source => source.id)
+  const currentRows = getCanonicalSnapshots(
+    entry.sourceIngredients,
+    entry.snapshotRows
   );
-  const currentRows = entry.snapshotRows.filter(row =>
-    sourceIngredientIds.has(row.sourceRecipeIngredientId)
-  );
-  const hasSelection = currentRows.some(row => row.isSelected);
-  const snapshotRowIdsToSelect = hasSelection
+  const snapshotRowIdsToSelect = currentRows.some(row => row.isSelected)
     ? []
     : currentRows.map(row => row.id);
   const idsToSelect = new Set(snapshotRowIdsToSelect);
-
   const snapshotRowsToCreate = planMealPlanSnapshotReconciliation({
     sourceIngredients: entry.sourceIngredients,
     existingSnapshotRows: entry.snapshotRows,
@@ -85,16 +80,9 @@ const planRecipeRestore = (
 };
 
 /**
- * Plans turning "meal plan only" on or off for one meal plan entry, the same
- * way for recipes and standalone items.
- *
- * - Ignoring removes the entry's unchecked linked grocery items. Checked
- *   items are history and stay as they are, and the snapshot selection is
- *   left alone so it can be restored.
- * - Un-ignoring creates linked items for the current selection. A recipe
- *   entry with nothing selected gets every ingredient selected first.
- *
- * Pure and tx-free; see `setMealPlanEntryIgnored` for the writes.
+ * Showing restores the saved selection and reveals its purchases without
+ * buying them again. Removed, unchecked rows may be replaced with pending rows.
+ * Hiding removes pending rows and hides purchases without losing history.
  */
 export const planMealPlanEntryIgnored = ({
   entry,
@@ -102,19 +90,82 @@ export const planMealPlanEntryIgnored = ({
   defaultStore,
   createId,
 }: PlanMealPlanEntryIgnoredArgs): MealPlanEntryIgnoredPlan => {
-  const restore: Omit<RecipeRestore, 'entry'> & {
-    entry: MealPlanEntryForSync;
-  } =
+  const restore =
     !ignored && entry.kind === 'recipe'
       ? planRecipeRestore(entry, createId)
       : { snapshotRowIdsToSelect: [], snapshotRowsToCreate: [], entry };
+  const historyUnlinks: MealPlanListSyncLinkedItemChange[] = [];
+  const softDeleteIds = new Set<string>();
+  const softRestoreIds = new Set<string>();
 
+  const hidePurchase = (item: LinkedGroceryItemForSync | null | undefined) => {
+    if (item?.isChecked && !item.isDeleted) softDeleteIds.add(item.id);
+  };
+  const replaceHistory = (
+    source: MealPlanListSyncSource,
+    item: LinkedGroceryItemForSync | null | undefined
+  ) => {
+    if (!item || !isHistory(item)) return item;
+    if (item.isChecked) {
+      if (item.isDeleted) softRestoreIds.add(item.id);
+      return item;
+    }
+    historyUnlinks.push({ source, groceryItemId: item.id });
+    return null;
+  };
+
+  let entryForSync = restore.entry;
+  if (ignored) {
+    const items =
+      entry.kind === 'recipe'
+        ? entry.snapshotRows.map(row => row.grocery_item)
+        : [entry.grocery_item];
+    items.forEach(hidePurchase);
+  } else if (entryForSync.kind === 'recipe') {
+    const selectedIds = new Set(
+      getCanonicalSnapshots(
+        entryForSync.sourceIngredients,
+        entryForSync.snapshotRows
+      )
+        .filter(row => row.isSelected)
+        .map(row => row.id)
+    );
+    entryForSync = {
+      ...entryForSync,
+      snapshotRows: entryForSync.snapshotRows.map(row =>
+        selectedIds.has(row.id)
+          ? {
+              ...row,
+              grocery_item: replaceHistory(
+                { type: 'snapshot', snapshotId: row.id },
+                row.grocery_item
+              ),
+            }
+          : row
+      ),
+    };
+  } else {
+    entryForSync = {
+      ...entryForSync,
+      grocery_item: replaceHistory(
+        { type: 'item', mealPlanItemId: entryForSync.id },
+        entryForSync.grocery_item
+      ),
+    };
+  }
+
+  const listSync = planMealPlanListSync({
+    entry: { ...entryForSync, ignoredByGroceryList: ignored },
+    defaultStore,
+  });
   return {
     snapshotRowIdsToSelect: restore.snapshotRowIdsToSelect,
     snapshotRowsToCreate: restore.snapshotRowsToCreate,
-    listSync: planMealPlanListSync({
-      entry: { ...restore.entry, ignoredByGroceryList: ignored },
-      defaultStore,
-    }),
+    listSync: {
+      ...listSync,
+      unlinks: [...listSync.unlinks, ...historyUnlinks],
+    },
+    softDeletes: [...softDeleteIds].map(groceryItemId => ({ groceryItemId })),
+    softRestores: [...softRestoreIds].map(groceryItemId => ({ groceryItemId })),
   };
 };

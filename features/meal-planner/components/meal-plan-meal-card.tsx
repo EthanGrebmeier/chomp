@@ -7,13 +7,14 @@ import {
 } from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
+import { Text } from '../../../components/ui/text';
 import { RecipeCardContent } from '../../recipes/components/recipe-card';
 import { Recipe } from '../../recipes/types';
 import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
-import { isMealPlanOnly } from '../instant/meal-plan-entry';
 import { MealPlanRecipeWithRecipe } from '../types';
+import { getMealPlanShoppingState } from '../utils/shopping-state';
 
-import { MEAL_PLAN_ONLY_LABEL, MealPlanOnlyLabel } from './meal-plan-only';
+import { MealPlanOnlyLabel } from './meal-plan-only';
 
 type MealPlanMealCardProps = {
   mealPlanRecipe: MealPlanRecipeWithRecipe;
@@ -36,24 +37,19 @@ const MealPlanMealCard = ({
   contextMenuEnabled = true,
   onMealPress,
 }: MealPlanMealCardProps) => {
-  const { isMealPlanOnly: mealPlanOnly, setMealPlanOnly } =
-    useMealPlanOnlyToggle({
-      entry: { type: 'recipe', id: mealPlanRecipe.id },
-      isMealPlanOnly: isMealPlanOnly(mealPlanRecipe),
-    });
-  const recipeWithIngredients = recipe as unknown as {
-    recipe_ingredients?: unknown[];
-  };
-  const selectedIngredientCount = mealPlanRecipe.ingredient_snapshots?.filter(
-    snapshot => snapshot.isSelected
-  ).length;
+  const shoppingState = getMealPlanShoppingState(mealPlanRecipe);
+  const {
+    isMealPlanOnly: mealPlanOnly,
+    setMealPlanOnly,
+    isPending,
+  } = useMealPlanOnlyToggle({
+    entry: { type: 'recipe', id: mealPlanRecipe.id },
+    isMealPlanOnly: !shoppingState.isShownOnGroceryList,
+  });
   const ingredientCount =
-    typeof selectedIngredientCount === 'number' &&
     (mealPlanRecipe.ingredient_snapshots?.length ?? 0) > 0
-      ? selectedIngredientCount
-      : Array.isArray(recipeWithIngredients.recipe_ingredients)
-        ? recipeWithIngredients.recipe_ingredients.length
-        : undefined;
+      ? shoppingState.includedCount
+      : mealPlanRecipe.recipe.recipe_ingredients?.length;
 
   const handleMealCardPress = () => {
     onMealPress({
@@ -74,7 +70,22 @@ const MealPlanMealCard = ({
             name={recipe.name}
             ingredientCount={ingredientCount}
           />
-          {mealPlanOnly ? <MealPlanOnlyLabel /> : null}
+          {shoppingState.allPurchased ? (
+            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+              All ingredients purchased
+            </Text>
+          ) : shoppingState.purchasedCount > 0 ? (
+            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+              {shoppingState.purchasedCount} of {shoppingState.includedCount}{' '}
+              purchased
+            </Text>
+          ) : mealPlanRecipe.ignoredByGroceryList ? (
+            <MealPlanOnlyLabel />
+          ) : !shoppingState.isShownOnGroceryList ? (
+            <Text className="text-sm text-muted-foreground">
+              Not on grocery list
+            </Text>
+          ) : null}
         </View>
       </HapticPressable>
     </ListItem>
@@ -86,10 +97,20 @@ const MealPlanMealCard = ({
     <ContextMenuRoot trigger={card}>
       <ContextMenuItem
         key="toggle-meal-plan-only"
-        onSelect={() => setMealPlanOnly(!mealPlanOnly)}
+        disabled={
+          isPending ||
+          (mealPlanRecipe.recipe.recipe_ingredients?.length ?? 0) === 0
+        }
+        onSelect={() => {
+          if (
+            !isPending &&
+            (mealPlanRecipe.recipe.recipe_ingredients?.length ?? 0) > 0
+          )
+            setMealPlanOnly(!mealPlanOnly);
+        }}
       >
         <ContextMenuItemTitle>
-          {mealPlanOnly ? 'Add to list' : MEAL_PLAN_ONLY_LABEL}
+          {mealPlanOnly ? 'Add to list' : 'Hide from list'}
         </ContextMenuItemTitle>
       </ContextMenuItem>
     </ContextMenuRoot>

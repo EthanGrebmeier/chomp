@@ -11,14 +11,14 @@ import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
 import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
-import { isMealPlanOnly } from '../instant/meal-plan-entry';
 import { MealPlanItemWithStore } from '../types';
+import { getMealPlanShoppingState } from '../utils/shopping-state';
 import {
   countUncheckedLinkedGroceryItems,
   withUncheckedLinkedGroceryItemsNotice,
 } from '../utils/unchecked-linked-grocery-items';
 
-import { MEAL_PLAN_ONLY_LABEL, MealPlanOnlyLabel } from './meal-plan-only';
+import { MealPlanOnlyLabel } from './meal-plan-only';
 
 type MealPlanItemCardProps = {
   mealPlanItem: MealPlanItemWithStore;
@@ -34,11 +34,15 @@ const MealPlanItemCard = ({
   onItemPress,
 }: MealPlanItemCardProps) => {
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
-  const { isMealPlanOnly: mealPlanOnly, setMealPlanOnly } =
-    useMealPlanOnlyToggle({
-      entry: { type: 'item', id: mealPlanItem.id },
-      isMealPlanOnly: isMealPlanOnly(mealPlanItem),
-    });
+  const shoppingState = getMealPlanShoppingState(mealPlanItem);
+  const {
+    isMealPlanOnly: mealPlanOnly,
+    setMealPlanOnly,
+    isPending,
+  } = useMealPlanOnlyToggle({
+    entry: { type: 'item', id: mealPlanItem.id },
+    isMealPlanOnly: !shoppingState.isShownOnGroceryList,
+  });
 
   const handleDelete = () => {
     Alert.alert(
@@ -77,7 +81,17 @@ const MealPlanItemCard = ({
               {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
             </Text>
           </View>
-          {mealPlanOnly ? <MealPlanOnlyLabel /> : null}
+          {shoppingState.allPurchased ? (
+            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+              Purchased
+            </Text>
+          ) : mealPlanItem.ignoredByGroceryList ? (
+            <MealPlanOnlyLabel />
+          ) : !shoppingState.isShownOnGroceryList ? (
+            <Text className="text-sm text-muted-foreground">
+              Not on grocery list
+            </Text>
+          ) : null}
         </View>
       </HapticPressable>
     </ListItem>
@@ -89,10 +103,11 @@ const MealPlanItemCard = ({
     <ContextMenuRoot trigger={card}>
       <ContextMenuItem
         key="toggle-meal-plan-only"
+        disabled={isPending}
         onSelect={() => setMealPlanOnly(!mealPlanOnly)}
       >
         <ContextMenuItemTitle>
-          {mealPlanOnly ? 'Add to list' : MEAL_PLAN_ONLY_LABEL}
+          {mealPlanOnly ? 'Add to list' : 'Hide from list'}
         </ContextMenuItemTitle>
       </ContextMenuItem>
       <ContextMenuItem key="delete-item" destructive onSelect={handleDelete}>
