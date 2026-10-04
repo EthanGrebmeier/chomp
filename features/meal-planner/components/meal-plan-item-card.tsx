@@ -1,4 +1,4 @@
-import { Alert, View } from 'react-native';
+import { Alert } from 'react-native';
 
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import {
@@ -8,8 +8,6 @@ import {
 } from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
-import { Text } from '../../../components/ui/text';
-import { MealTagBadge } from '../../recipes/components/meal-tag-badge';
 import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { MealPlanItemWithStore } from '../types';
@@ -19,7 +17,8 @@ import {
   withUncheckedLinkedGroceryItemsNotice,
 } from '../utils/unchecked-linked-grocery-items';
 
-import { MealPlanOnlyLabel } from './meal-plan-only';
+import { MealPlanCardContent } from './meal-plan-card-content';
+import { MEAL_PLAN_ONLY_LABEL } from './meal-plan-only';
 
 type MealPlanItemCardProps = {
   mealPlanItem: MealPlanItemWithStore;
@@ -42,6 +41,14 @@ const MealPlanItemCard = ({
     entry: { type: 'item', id: mealPlanItem.id },
     isMealPlanOnly: !shoppingState.isShownOnGroceryList,
   });
+
+  const statusLabel = shoppingState.allPurchased
+    ? 'Purchased'
+    : mealPlanItem.ignoredByGroceryList
+      ? MEAL_PLAN_ONLY_LABEL
+      : !shoppingState.isShownOnGroceryList
+        ? 'Not on grocery list'
+        : null;
 
   const handleDelete = () => {
     Alert.alert(
@@ -69,28 +76,14 @@ const MealPlanItemCard = ({
         onPress={() => onItemPress(mealPlanItem)}
         className="flex-1"
       >
-        <View className="w-full py-1">
-          <View className="flex-row items-center justify-between gap-3">
-            <Text className="flex-1 text-xl font-medium text-foreground">
-              {mealPlanItem.name}
-            </Text>
-            <Text className="text-sm text-muted-foreground">
-              {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
-            </Text>
-            <MealTagBadge mealTag={mealPlanItem.mealTag} />
-          </View>
-          {shoppingState.allPurchased ? (
-            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
-              Purchased
-            </Text>
-          ) : mealPlanItem.ignoredByGroceryList ? (
-            <MealPlanOnlyLabel />
-          ) : !shoppingState.isShownOnGroceryList ? (
-            <Text className="text-sm text-muted-foreground">
-              Not on grocery list
-            </Text>
-          ) : null}
-        </View>
+        <MealPlanCardContent
+          title={mealPlanItem.name}
+          meta={[
+            formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit),
+            statusLabel,
+          ]}
+          mealTag={mealPlanItem.mealTag}
+        />
       </HapticPressable>
     </ListItem>
   );

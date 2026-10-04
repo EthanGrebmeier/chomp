@@ -365,7 +365,7 @@ const MealPlanDayListSectionView = ({
           accessibilityLabel={`Add to meal plan for ${section.label}`}
         >
           <View className="flex-row items-center justify-between gap-3">
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-xl font-semibold tracking-tight text-foreground">
               {section.label}
             </Text>
             {section.isToday ? (
@@ -378,7 +378,7 @@ const MealPlanDayListSectionView = ({
           </View>
         </HapticPressable>
         {section.entries.length > 0 ? (
-          <View className='border-b border-border'>
+          <View className="border-b border-border">
             <MealPlanDayContent
               entries={section.entries}
               onMealPress={onMealPress}

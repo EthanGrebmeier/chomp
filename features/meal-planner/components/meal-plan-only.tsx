@@ -5,16 +5,6 @@ import { cn } from '../../../lib/utils';
 
 export const MEAL_PLAN_ONLY_LABEL = 'Meal plan only';
 
-/** Muted marker on meal plan cards whose entry is kept off the grocery list. */
-export const MealPlanOnlyLabel = ({ className }: { className?: string }) => (
-  <Text
-    className={cn('text-sm text-muted-foreground', className)}
-    numberOfLines={1}
-  >
-    {MEAL_PLAN_ONLY_LABEL}
-  </Text>
-);
-
 type AddToGroceryListSwitchProps = {
   isMealPlanOnly: boolean;
   onMealPlanOnlyChange: (isMealPlanOnly: boolean) => void;
