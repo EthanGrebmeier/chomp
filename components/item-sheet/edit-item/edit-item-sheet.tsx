@@ -3,6 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -211,7 +212,7 @@ const EditItemProvider = ({
   // no-op satisfies ItemSheetProvider's onSubmit contract (shared with the
   // Add flow) without duplicating writes. Return-key in the name input
   // still routes here until P3-T3 swaps it for a blur.
-  const onSubmit = () => {};
+  const onSubmit = useCallback(() => {}, []);
 
   // Autocomplete pick in the Edit flow: after ItemSheetProvider.onSelect
   // populates the shared form state, route the pick into useLiveItemSync
@@ -221,7 +222,7 @@ const EditItemProvider = ({
     liveSyncRef.current?.onPickCloudMatch(match, match.ownerId);
   }, []);
 
-  const present = (item: GroceryListItemWithRecipe) => {
+  const present = useCallback((item: GroceryListItemWithRecipe) => {
     setFromItemRef.current?.(item);
     setSelectedItemId(item.id);
     setPresentedItem(item);
@@ -235,11 +236,11 @@ const EditItemProvider = ({
     // the item's values into the shared form state.
     liveSyncRef.current?.captureSnapshot(item);
     sheetRef.current?.present();
-  };
+  }, []);
 
-  const dismiss = () => {
+  const dismiss = useCallback(() => {
     sheetRef.current?.dismiss();
-  };
+  }, []);
 
   // Fire the unlink the moment the user clears the recipe tag rather than
   // deferring it to sheet close. The old submit path used to collect a
@@ -255,13 +256,18 @@ const EditItemProvider = ({
     [selectedItemId]
   );
 
+  const contextValue = useMemo(
+    () => ({ present, dismiss, clearRecipe, mealPlanLink }),
+    [present, dismiss, clearRecipe, mealPlanLink]
+  );
+  const internalContextValue = useMemo(
+    () => ({ sheetRef, liveSyncRef, onOpenMealPlanDate }),
+    [onOpenMealPlanDate]
+  );
+
   return (
-    <EditItemContext.Provider
-      value={{ present, dismiss, clearRecipe, mealPlanLink }}
-    >
-      <EditItemInternalContext.Provider
-        value={{ sheetRef, liveSyncRef, onOpenMealPlanDate }}
-      >
+    <EditItemContext.Provider value={contextValue}>
+      <EditItemInternalContext.Provider value={internalContextValue}>
         <ItemSheetProvider
           mode="update"
           listId={groceryListId}

@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { db } from '../../../lib/instant';
 import {
   GroceryItemMealPlanLink,
@@ -37,7 +39,11 @@ export const useGroceryItemMealPlanLink = (
 
   // Ignore a result still held over from the previously presented item.
   const queriedItem = data?.grocery_items[0];
-  return resolveGroceryItemMealPlanLink(
-    data && (!queriedItem || queriedItem.id === itemId) ? queriedItem : item
+  return useMemo(
+    () =>
+      resolveGroceryItemMealPlanLink(
+        data && (!queriedItem || queriedItem.id === itemId) ? queriedItem : item
+      ),
+    [data, queriedItem, itemId, item]
   );
 };

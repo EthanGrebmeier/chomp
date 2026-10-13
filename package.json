@@ -109,5 +109,11 @@
     "typescript": "~6.0.3",
     "vitest": "^4.0.18"
   },
+  "reanimated": {
+    "staticFeatureFlags": {
+      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
+      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true
+    }
+  },
   "private": true
 }
