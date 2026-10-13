@@ -1,8 +1,9 @@
 import { useRecyclingState } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { memo, useCallback, useLayoutEffect, useRef } from 'react';
 import { Platform, View, type TextLayoutEvent } from 'react-native';
 import Animated, {
+  Easing,
   SharedValue,
   useAnimatedStyle,
   useSharedValue,
@@ -108,7 +109,8 @@ const GroceryListItemComponent = ({
     StrikethroughLineMetrics[]
   >([], [item.id]);
   const notes = item.notes?.trim();
-  const hasMountedRef = useRef(false);
+  const animationTargetRef = useRef({ itemId: item.id, isChecked });
+  const checkAttemptRef = useRef(0);
   const swipeableRef = useRef<SwipeToDeleteHandle | null>(null);
   const lastLongPressAtRef = useRef(0);
 
@@ -121,20 +123,31 @@ const GroceryListItemComponent = ({
   // Animated value for strikethrough
   const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
 
-  useEffect(() => {
-    const targetValue = isChecked ? 1 : 0;
-    if (!hasMountedRef.current) {
-      hasMountedRef.current = true;
-      strikethroughWidth.set(targetValue);
-      return;
-    }
+  const animateCheckedState = useCallback(
+    (checked: boolean) => {
+      animationTargetRef.current = { itemId: item.id, isChecked: checked };
+      strikethroughWidth.set(
+        withTiming(checked ? 1 : 0, {
+          duration: 300 * Math.max(strikethroughLines.length, 1),
+          easing: Easing.out(Easing.cubic),
+        })
+      );
+    },
+    [item.id, strikethroughLines.length, strikethroughWidth]
+  );
 
-    strikethroughWidth.set(
-      withTiming(targetValue, {
-        duration: 300 * Math.max(strikethroughLines.length, 1),
-      })
-    );
-  }, [isChecked, strikethroughLines.length, strikethroughWidth]);
+  useLayoutEffect(() => {
+    const previousTarget = animationTargetRef.current;
+    if (previousTarget.itemId !== item.id) {
+      // FlashList can recycle this row for an entirely different item.
+      checkAttemptRef.current += 1;
+      animationTargetRef.current = { itemId: item.id, isChecked };
+      strikethroughWidth.set(isChecked ? 1 : 0);
+    } else if (previousTarget.isChecked !== isChecked) {
+      // Sync remote changes and rollbacks without restarting a local tap.
+      animateCheckedState(isChecked);
+    }
+  }, [animateCheckedState, isChecked, item.id, strikethroughWidth]);
 
   const handleTextLayout = useCallback(
     (event: TextLayoutEvent) => {
@@ -174,10 +187,18 @@ const GroceryListItemComponent = ({
       return;
     }
 
+    const nextChecked = !animationTargetRef.current.isChecked;
+    const attempt = ++checkAttemptRef.current;
+    // Start on the UI runtime before publishing intent and updating the list.
+    animateCheckedState(nextChecked);
+
     void checkListItem({
       itemId: item.id,
-      isChecked: !isChecked,
+      isChecked: nextChecked,
     }).catch(() => {
+      if (checkAttemptRef.current === attempt) {
+        animateCheckedState(isChecked);
+      }
       toast.error('Could not save item. Check your connection and try again.');
     });
   };
@@ -256,7 +277,7 @@ const GroceryListItemComponent = ({
               {strikethroughLines.map((line, index) => (
                 <StrikethroughLine
                   key={`${line.x}:${line.y}`}
-                  color={isChecked ? theme.destructive : 'transparent'}
+                  color={theme.destructive}
                   line={line}
                   lineIndex={index}
                   progress={strikethroughWidth}

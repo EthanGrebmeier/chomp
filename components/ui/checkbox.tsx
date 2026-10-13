@@ -1,7 +1,10 @@
 import Animated, {
   Easing,
-  Keyframe,
-  LayoutAnimationConfig,
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 
 import { cn } from '../../lib/utils';
@@ -10,6 +13,8 @@ import { HapticPressable } from './haptic-pressable';
 
 type CheckboxProps = {
   checked: boolean;
+  /** Optional UI-runtime state for feedback before the controlled prop updates. */
+  animatedChecked?: SharedValue<boolean>;
   onPress: () => void;
   hitSlop?: number;
   className?: string;
@@ -17,38 +22,38 @@ type CheckboxProps = {
   accessibilityLabel?: string;
 };
 
-const checkedKeyframe = new Keyframe({
-  0: {
-    opacity: 0,
-    transform: [{ scale: 0 }],
-  },
-  100: {
-    opacity: 1,
-    transform: [{ scale: 1 }],
-    easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-  },
-});
-
-const uncheckedKeyframe = new Keyframe({
-  0: {
-    opacity: 1,
-    transform: [{ scale: 1 }],
-  },
-  100: {
-    opacity: 0,
-    transform: [{ scale: 0 }],
-    easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-  },
-});
-
 export const Checkbox = ({
   checked,
+  animatedChecked,
   onPress,
   hitSlop = 10,
   className,
   disabled = false,
   accessibilityLabel,
 }: CheckboxProps) => {
+  const progress = useSharedValue(checked ? 1 : 0);
+
+  useAnimatedReaction(
+    () => animatedChecked?.get() ?? checked,
+    (nextChecked, previousChecked) => {
+      if (nextChecked === previousChecked) {
+        return;
+      }
+
+      progress.set(
+        withTiming(nextChecked ? 1 : 0, {
+          duration: nextChecked ? 100 : 150,
+          easing: Easing.out(Easing.cubic),
+        })
+      );
+    }
+  );
+
+  const fillStyle = useAnimatedStyle(() => ({
+    opacity: progress.get(),
+    transform: [{ scale: 0.95 + 0.05 * progress.get() }],
+  }));
+
   return (
     <HapticPressable
       hitSlop={hitSlop}
@@ -63,15 +68,11 @@ export const Checkbox = ({
       accessibilityState={{ checked, disabled }}
       hapticType="selection"
     >
-      <LayoutAnimationConfig skipEntering={!checked} skipExiting={checked}>
-        {checked && (
-          <Animated.View
-            entering={checkedKeyframe.duration(100)}
-            exiting={uncheckedKeyframe.duration(150)}
-            className={cn('h-full w-full rounded-sm bg-accent-foreground')}
-          />
-        )}
-      </LayoutAnimationConfig>
+      <Animated.View
+        pointerEvents="none"
+        style={fillStyle}
+        className="h-full w-full rounded-sm bg-accent-foreground"
+      />
     </HapticPressable>
   );
 };
