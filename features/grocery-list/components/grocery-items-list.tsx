@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 
+import { FadeSwitch } from '../../../components/animated/fade-switch';
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
@@ -429,70 +430,95 @@ export const GroceryItemsList = ({
     ]
   );
 
-  if (totalItemCount === 0) {
-    if (isLoading) {
-      // Items for this list haven't arrived yet; don't flash the empty state.
-      return <View className="flex-1" />;
-    }
+  const contentState = getContentState({
+    isLoading,
+    totalItemCount,
+    visibleItemCount: items.length,
+  });
 
-    return (
-      <View className="flex-1 items-center justify-center">
-        <View className="-translate-y-12">
-          <View className="w-64">
-            <Image
-              source={require('../../../assets/images/FruitBasket.png')}
-              style={{
-                width: 'auto',
-                height: 180,
-              }}
-              contentFit="contain"
-            />
-          </View>
-          <View className="mt-4">
-            <EmptyHeading className="px-4">
-              Your grocery list is empty
-            </EmptyHeading>
-            <EmptySubtext className="px-4">
-              Add some items to get started!
-            </EmptySubtext>
-          </View>
-        </View>
-      </View>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <View className="flex-1 items-center justify-center px-6">
-        <EmptyHeading className="px-4">No matches found</EmptyHeading>
-        <EmptySubtext className="px-4">
-          Try a different search or clear the filter.
-        </EmptySubtext>
-      </View>
-    );
-  }
-
+  // Cross-fade between loading/empty/list states instead of popping, e.g.
+  // when items arrive after the skeleton or the last item is removed.
   return (
-    <FlashList
-      data={listRows.rows}
-      renderItem={renderRow}
-      keyExtractor={item =>
-        item.type === 'header'
-          ? `header-${item.sectionKey}`
-          : `item-${item.item.id}`
-      }
-      getItemType={item => item.type}
-      drawDistance={300}
-      stickyHeaderIndices={listRows.stickyHeaderIndices}
-      contentContainerClassName="pb-36"
-      contentContainerStyle={{ flexGrow: 1 }}
-      showsVerticalScrollIndicator={false}
-      scrollsToTop={scrollsToTop}
-      onScrollBeginDrag={onListInteraction}
-      onTouchStart={onListInteraction}
-      maintainVisibleContentPosition={{
-        disabled: true,
-      }}
-    />
+    <View className="flex-1">
+      <FadeSwitch stateKey={contentState}>
+        {contentState === 'loading' ? null : contentState === 'empty' ? (
+          <EmptyListState />
+        ) : contentState === 'no-matches' ? (
+          <NoMatchesState />
+        ) : (
+          <FlashList
+            data={listRows.rows}
+            renderItem={renderRow}
+            keyExtractor={item =>
+              item.type === 'header'
+                ? `header-${item.sectionKey}`
+                : `item-${item.item.id}`
+            }
+            getItemType={item => item.type}
+            drawDistance={300}
+            stickyHeaderIndices={listRows.stickyHeaderIndices}
+            contentContainerClassName="pb-36"
+            contentContainerStyle={{ flexGrow: 1 }}
+            showsVerticalScrollIndicator={false}
+            scrollsToTop={scrollsToTop}
+            onScrollBeginDrag={onListInteraction}
+            onTouchStart={onListInteraction}
+            maintainVisibleContentPosition={{
+              disabled: true,
+            }}
+          />
+        )}
+      </FadeSwitch>
+    </View>
   );
 };
+
+type GroceryItemsListContentState = 'loading' | 'empty' | 'no-matches' | 'list';
+
+const getContentState = ({
+  isLoading,
+  totalItemCount,
+  visibleItemCount,
+}: {
+  isLoading: boolean;
+  totalItemCount: number;
+  visibleItemCount: number;
+}): GroceryItemsListContentState => {
+  if (totalItemCount === 0) {
+    // Items for this list haven't arrived yet; don't flash the empty state.
+    return isLoading ? 'loading' : 'empty';
+  }
+  return visibleItemCount === 0 ? 'no-matches' : 'list';
+};
+
+const EmptyListState = () => (
+  <View className="flex-1 items-center justify-center">
+    <View className="-translate-y-12">
+      <View className="w-64">
+        <Image
+          source={require('../../../assets/images/FruitBasket.png')}
+          style={{
+            width: 'auto',
+            height: 180,
+          }}
+          contentFit="contain"
+        />
+      </View>
+      <View className="mt-4">
+        <EmptyHeading className="px-4">Your grocery list is empty</EmptyHeading>
+        <EmptySubtext className="px-4">
+          Add some items to get started!
+        </EmptySubtext>
+      </View>
+    </View>
+  </View>
+);
+
+const NoMatchesState = () => (
+  <View className="flex-1 items-center justify-center px-6">
+    <EmptyHeading className="px-4">No matches found</EmptyHeading>
+    <EmptySubtext className="px-4">
+      Try a different search or clear the filter.
+    </EmptySubtext>
+  </View>
+);
