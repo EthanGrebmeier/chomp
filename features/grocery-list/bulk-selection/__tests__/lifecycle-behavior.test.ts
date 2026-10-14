@@ -100,14 +100,14 @@ describe('bulk mode lifecycle behavior', () => {
     expect(exited.selectedItemIds.size).toBe(0);
   });
 
-  it('resets mode state after successful bulk delete', async () => {
+  it('resets mode state once bulk delete is confirmed', async () => {
     let state = buildActiveSelectionState();
 
     const result = await runBulkDelete({
       selectedItemIds: state.selectedItemIds,
       confirmDelete: vi.fn().mockResolvedValue(true),
       deleteItems: vi.fn().mockResolvedValue(undefined),
-      onDeleteSuccess: () => {
+      onDeleteConfirmed: () => {
         state = exitBulkSelectionMode(state);
       },
     });

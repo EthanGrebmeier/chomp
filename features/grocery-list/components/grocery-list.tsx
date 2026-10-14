@@ -171,7 +171,6 @@ export const GroceryList = ({
   const [bulkSelectionState, setBulkSelectionState] = useState(() =>
     createBulkSelectionState()
   );
-  const bulkToolbarOpacity = useSharedValue(0);
   const viewTransitionProgress = useSharedValue(
     activeView === 'meal-plan' ? 1 : 0
   );
@@ -251,17 +250,6 @@ export const GroceryList = ({
   ]);
 
   useEffect(() => {
-    bulkToolbarOpacity.set(
-      withTiming(
-        activeView === 'grocery-list' && bulkSelectionState.isActive ? 1 : 0,
-        {
-          duration: 200,
-        }
-      )
-    );
-  }, [activeView, bulkSelectionState.isActive, bulkToolbarOpacity]);
-
-  useEffect(() => {
     const target = activeView === 'meal-plan' ? 1 : 0;
     viewTransitionProgress.set(
       reduceMotion
@@ -281,10 +269,6 @@ export const GroceryList = ({
     transform: [
       { translateX: viewportWidth * (1 - viewTransitionProgress.get()) },
     ],
-  }));
-
-  const bulkToolbarAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: bulkToolbarOpacity.get(),
   }));
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
@@ -307,6 +291,9 @@ export const GroceryList = ({
   const [bulkCategoryOpenRequestId, setBulkCategoryOpenRequestId] = useState<
     number | undefined
   >(undefined);
+  // Captured on present: bulk mode exits as soon as a destination is picked,
+  // so the live selection would read 0 while the sheet dismisses.
+  const [bulkMoveItemCount, setBulkMoveItemCount] = useState(0);
 
   const dismissSearch = () => {
     searchInputRef.current?.blur();
@@ -594,6 +581,7 @@ export const GroceryList = ({
     }
 
     if (actionId === 'move') {
+      setBulkMoveItemCount(bulkSelectionState.selectedItemIds.size);
       bulkMoveListSheetRef.current?.present();
       return;
     }
@@ -612,11 +600,7 @@ export const GroceryList = ({
             items: items.filter(item => selectedIds.has(item.id)),
           });
         },
-        onDeleteSuccess: () => {
-          setBulkSelectionState(currentState =>
-            exitBulkSelectionMode(currentState)
-          );
-        },
+        onDeleteConfirmed: handleExitBulkSelectionMode,
       });
     } catch {
       toast.error('Failed to delete selected items');
@@ -640,15 +624,13 @@ export const GroceryList = ({
     const selectedItems = filteredItems.filter(item =>
       payload.selectedItemIds.includes(item.id)
     );
+    handleExitBulkSelectionMode();
     try {
       await runBulkStoreUpdate({
         selectedItemIds: payload.selectedItemIds,
         selectedItems,
         storeId: payload.storeId,
       });
-      setBulkSelectionState(currentState =>
-        exitBulkSelectionMode(currentState)
-      );
     } catch {
       toast.error('Failed to update store for selected items');
     }
@@ -667,15 +649,13 @@ export const GroceryList = ({
     const selectedItems = filteredItems.filter(item =>
       payload.selectedItemIds.includes(item.id)
     );
+    handleExitBulkSelectionMode();
     try {
       await runBulkCategoryUpdate({
         selectedItemIds: payload.selectedItemIds,
         selectedItems,
         category: payload.category,
       });
-      setBulkSelectionState(currentState =>
-        exitBulkSelectionMode(currentState)
-      );
     } catch {
       toast.error('Failed to update category for selected items');
     }
@@ -695,6 +675,7 @@ export const GroceryList = ({
     const selectedItems = filteredItems.filter(item =>
       moveSelectionPayload.selectedItemIds.includes(item.id)
     );
+    handleExitBulkSelectionMode();
     const fetchDestinationItems = async (
       destinationListIdToUse: string
     ): Promise<BulkMoveItemForPlanning[]> => {
@@ -804,9 +785,6 @@ export const GroceryList = ({
           });
         },
         onMoveSuccess: () => {
-          setBulkSelectionState(currentState =>
-            exitBulkSelectionMode(currentState)
-          );
           onActiveListChange?.(moveSelectionPayload.destinationListId);
         },
       });
@@ -972,7 +950,7 @@ export const GroceryList = ({
           selectedListId={listId}
           onSelectList={handleBulkMoveListSelect}
           title="Move items to another list"
-          description={`Select a destination for ${bulkSelectionState.selectedItemIds.size} item${bulkSelectionState.selectedItemIds.size === 1 ? '' : 's'}.`}
+          description={`Select a destination for ${bulkMoveItemCount} item${bulkMoveItemCount === 1 ? '' : 's'}.`}
           showJoinByCode={false}
           showManageActions={false}
           disabledListIds={listId ? [listId] : []}
@@ -987,20 +965,22 @@ export const GroceryList = ({
             activeView === 'grocery-list' && !bulkSelectionState.isActive
           }
         />
-        <Animated.View
-          className="bottom-safe absolute inset-x-0 z-10 items-center"
-          style={bulkToolbarAnimatedStyle}
-          pointerEvents={
-            activeView === 'grocery-list' && bulkSelectionState.isActive
-              ? 'auto'
-              : 'none'
-          }
-        >
-          <BulkSelectionToolbar
-            selectedItemCount={bulkSelectionState.selectedItemIds.size}
-            onActionPress={handleBulkToolbarActionPress}
-          />
-        </Animated.View>
+        {/* Mounted only while bulk mode is active so visibility always follows
+            React state; a persistent view driven by an opacity shared value
+            could end up invisible while selection was active. */}
+        {activeView === 'grocery-list' && bulkSelectionState.isActive ? (
+          <Animated.View
+            key="bulk-selection-toolbar"
+            entering={FadeIn.duration(180)}
+            exiting={FadeOut.duration(120)}
+            className="bottom-safe absolute inset-x-0 z-10 items-center"
+          >
+            <BulkSelectionToolbar
+              selectedItemCount={bulkSelectionState.selectedItemIds.size}
+              onActionPress={handleBulkToolbarActionPress}
+            />
+          </Animated.View>
+        ) : null}
       </>
     </>
   );
