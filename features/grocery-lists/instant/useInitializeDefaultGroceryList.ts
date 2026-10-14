@@ -115,7 +115,6 @@ export const initializeDefaultGroceryList = async () => {
         trimStringFields({
           grocery_list_id: listId,
           user_id: authUser.id,
-          lastAccessedAt: now,
         })
       )
       .link({

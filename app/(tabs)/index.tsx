@@ -12,7 +12,7 @@ import { useGroceryListItems } from '@/features/grocery-list/instant/useGroceryL
 import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDeleteGroceryList';
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
-import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
+import { useTrackListAccess } from '@/features/grocery-lists/local/use-track-list-access';
 import { MealPlanner } from '@/features/meal-planner/components';
 import { useMealPlanListReconciler } from '@/features/meal-planner/hooks';
 import { useMealPlanViewMode } from '@/features/meal-planner/hooks/use-meal-plan-view-mode';

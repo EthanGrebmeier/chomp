@@ -47,6 +47,8 @@ const _schema = i.schema({
     grocery_list_shares: i.entity({
       grocery_list_id: i.string(),
       user_id: i.string(),
+      // Deprecated: list access order is device-local now
+      // (features/grocery-lists/local). Kept so older clients can still write.
       lastAccessedAt: i.string().optional(),
     }),
     recipes: i.entity({
