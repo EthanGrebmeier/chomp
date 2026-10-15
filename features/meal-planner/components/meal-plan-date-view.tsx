@@ -17,8 +17,6 @@ import {
   type ViewProps,
 } from 'react-native';
 import Animated, {
-  FadeIn,
-  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -33,8 +31,6 @@ import {
 } from 'react-native-reanimated-dnd';
 import { toast } from 'sonner-native';
 
-import { EmptyHeading } from '../../../components/text/empty-heading';
-import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { Recipe } from '../../recipes/types';
@@ -50,7 +46,6 @@ import {
   MealPlanDayListSection,
   MealPlanEntryIdentity,
   MoveMealPlanEntry,
-  createMealPlanDayEntries,
 } from '../utils/meal-plan-day-list';
 
 import MealPlanItemCard from './meal-plan-item-card';
@@ -62,10 +57,7 @@ type DayListSection = MealPlanDayListSection<
 >;
 
 type MealPlanDateViewProps = {
-  recipes: MealPlanRecipeWithRecipe[];
-  items: MealPlanItemWithStore[];
-  mode?: 'calendar' | 'day-list';
-  dayListSections?: DayListSection[];
+  dayListSections: DayListSection[];
   onDayPress?: (dateKey: string) => void;
   onMealPress: ({
     mealPlanRecipe,
@@ -76,7 +68,7 @@ type MealPlanDateViewProps = {
   }) => void;
   onItemPress: (item: MealPlanItemWithStore) => void;
   onMoveEntry?: MoveMealPlanEntry;
-  /** Day List only: scrolls the requested day to the top. */
+  /** Scrolls the requested day to the top. */
   focusRequest?: MealPlanFocusRequest | null;
 };
 
@@ -393,10 +385,7 @@ const MealPlanDayListSectionView = ({
 };
 
 export const MealPlanDateView = ({
-  recipes,
-  items,
-  mode = 'calendar',
-  dayListSections = [],
+  dayListSections,
   onDayPress,
   onMealPress,
   onItemPress,
@@ -484,7 +473,7 @@ export const MealPlanDateView = ({
       )
     : -1;
   useEffect(() => {
-    if (mode !== 'day-list' || !focusRequest) return;
+    if (!focusRequest) return;
     if (handledFocusRequestIdRef.current === focusRequest.id) return;
     handledFocusRequestIdRef.current = focusRequest.id;
     if (focusSectionIndex < 0) return;
@@ -494,7 +483,7 @@ export const MealPlanDateView = ({
       index: focusSectionIndex,
       animated: false,
     });
-  }, [focusRequest, focusSectionIndex, mode]);
+  }, [focusRequest, focusSectionIndex]);
 
   // Rows outside the render window have no measured offset yet: jump to an
   // estimate so they render, then retry the exact scroll.
@@ -514,27 +503,7 @@ export const MealPlanDateView = ({
     });
   };
 
-  const calendarEntries = sortEntriesByMealTime(
-    createMealPlanDayEntries(recipes, items)
-  );
-
-  // Empty state when no meals or items
-  if (mode === 'calendar' && calendarEntries.length === 0) {
-    return (
-      <Animated.View
-        entering={FadeIn.duration(140)}
-        exiting={FadeOut.duration(140)}
-        className="flex-1 items-center justify-center px-4"
-      >
-        <View className="-mt-24">
-          <EmptyHeading className="mt-4">No meals planned</EmptyHeading>
-          <EmptySubtext>Tap the + button to add a meal</EmptySubtext>
-        </View>
-      </Animated.View>
-    );
-  }
-
-  return mode === 'day-list' ? (
+  return (
     <DropProvider ref={dropProviderRef}>
       <ActiveDragSectionContext value={activeDragSectionIndex}>
         <DayCellLayoutContext value={handleDayCellLayout}>
@@ -568,18 +537,5 @@ export const MealPlanDateView = ({
         </DayCellLayoutContext>
       </ActiveDragSectionContext>
     </DropProvider>
-  ) : (
-    <FlatList
-      contentContainerClassName="pb-20"
-      data={calendarEntries}
-      keyExtractor={getEntryKey}
-      renderItem={({ item: entry }) => (
-        <MealPlanEntryRow
-          entry={entry}
-          onMealPress={onMealPress}
-          onItemPress={onItemPress}
-        />
-      )}
-    />
   );
 };

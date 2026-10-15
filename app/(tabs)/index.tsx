@@ -15,7 +15,6 @@ import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGr
 import { useTrackListAccess } from '@/features/grocery-lists/local/use-track-list-access';
 import { MealPlanner } from '@/features/meal-planner/components';
 import { useMealPlanListReconciler } from '@/features/meal-planner/hooks';
-import { useMealPlanViewMode } from '@/features/meal-planner/hooks/use-meal-plan-view-mode';
 import { type MealPlanFocusRequest } from '@/features/meal-planner/types';
 import { db } from '@/lib/instant';
 import { buildGroceryListsIndexUrl } from '@/lib/navigation';
@@ -53,8 +52,6 @@ export default function List() {
       ? 'grocery-list'
       : selectedView;
   const { user } = db.useAuth();
-  const { viewMode: mealPlanViewMode, setViewMode: setMealPlanViewMode } =
-    useMealPlanViewMode(user?.id);
   // Set when a linked grocery item's date is tapped; cleared on list switch
   // so a remounted meal planner doesn't jump to a stale date.
   const [mealPlanFocusRequest, setMealPlanFocusRequest] =
@@ -201,16 +198,12 @@ export default function List() {
               activeListChangeVersion={activeListId}
               activeView={activeView}
               onViewChange={handleViewChange}
-              mealPlanViewMode={mealPlanViewMode}
-              onMealPlanViewModeChange={setMealPlanViewMode}
               onOpenMealPlanDate={handleOpenMealPlanDate}
               alternateContent={
                 activeListId ? (
                   <MealPlanner
                     listId={activeListId}
                     showHeader={false}
-                    viewMode={mealPlanViewMode}
-                    onViewModeChange={setMealPlanViewMode}
                     focusRequest={mealPlanFocusRequest}
                   />
                 ) : null

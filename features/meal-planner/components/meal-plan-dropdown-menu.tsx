@@ -1,11 +1,5 @@
-import {
-  ListChevronsUpDownIcon as ListIcon,
-  SquareKanban as MealPlanCalendarIcon,
-  MoreHorizontal,
-} from 'lucide-react-native';
-import { Alert, View } from 'react-native';
-
-import { Button } from '@/components/ui/button';
+import { MoreHorizontal } from 'lucide-react-native';
+import { Alert } from 'react-native';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -17,11 +11,7 @@ import { Icon } from '@/components/ui/icon';
 
 import { useClearMealPlan } from '../hooks/useClearMealPlan';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
-import {
-  MealPlanItemWithStore,
-  MealPlanRecipeWithRecipe,
-  MealPlanViewMode,
-} from '../types';
+import { MealPlanItemWithStore, MealPlanRecipeWithRecipe } from '../types';
 import {
   countUncheckedLinkedGroceryItems,
   withUncheckedLinkedGroceryItemsNotice,
@@ -98,63 +88,4 @@ export function MealPlanDropdownMenuForList({ listId }: { listId: string }) {
   const { recipes, items } = useUserMealPlanData(listId);
 
   return <MealPlanDropdownMenu recipes={recipes} items={items} />;
-}
-
-type MealPlanHeaderActionsProps = MealPlanDropdownMenuProps & {
-  viewMode: MealPlanViewMode;
-  onViewModeChange: (viewMode: MealPlanViewMode) => void;
-};
-
-export function MealPlanHeaderActions({
-  recipes,
-  items,
-  viewMode,
-  onViewModeChange,
-}: MealPlanHeaderActionsProps) {
-  const targetViewMode: MealPlanViewMode =
-    viewMode === 'calendar' ? 'day-list' : 'calendar';
-  const targetViewLabel =
-    targetViewMode === 'day-list' ? 'Day List' : 'Calendar';
-  const accessibilityLabel = `Switch to ${targetViewLabel} view`;
-
-  return (
-    <View className="flex-row items-center gap-3">
-      <Button
-        variant="ghost"
-        size="icon"
-        onPress={() => onViewModeChange(targetViewMode)}
-        hitSlop={8}
-        accessibilityLabel={accessibilityLabel}
-        aria-label={accessibilityLabel}
-      >
-        <Icon
-          as={targetViewMode === 'day-list' ? ListIcon : MealPlanCalendarIcon}
-          size={24}
-          className="text-foreground"
-        />
-      </Button>
-      <MealPlanDropdownMenu recipes={recipes} items={items} />
-    </View>
-  );
-}
-
-export function MealPlanHeaderActionsForList({
-  listId,
-  viewMode,
-  onViewModeChange,
-}: {
-  listId: string;
-  viewMode: MealPlanViewMode;
-  onViewModeChange: (viewMode: MealPlanViewMode) => void;
-}) {
-  const { recipes, items } = useUserMealPlanData(listId);
-
-  return (
-    <MealPlanHeaderActions
-      recipes={recipes}
-      items={items}
-      viewMode={viewMode}
-      onViewModeChange={onViewModeChange}
-    />
-  );
 }

@@ -46,8 +46,7 @@ import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
 } from '../../grocery-lists/components/select-grocery-list-sheet';
-import { MealPlanHeaderActionsForList } from '../../meal-planner/components/meal-plan-dropdown-menu';
-import { MealPlanViewMode } from '../../meal-planner/types';
+import { MealPlanDropdownMenuForList } from '../../meal-planner/components/meal-plan-dropdown-menu';
 import { useRecipesSettingsBar } from '../../shared/components/recipes-settings-bar';
 import {
   clearBulkSelection,
@@ -114,8 +113,6 @@ type GroceryListProps = {
   activeListChangeVersion?: string;
   activeView?: ListView;
   onViewChange: (view: ListView) => void;
-  mealPlanViewMode: MealPlanViewMode;
-  onMealPlanViewModeChange: (viewMode: MealPlanViewMode) => void;
   alternateContent?: ReactNode;
   /** Opens the meal plan view on `date` (`yyyy-MM-dd`). */
   onOpenMealPlanDate?: (date: string) => void;
@@ -143,8 +140,6 @@ export const GroceryList = ({
   activeListChangeVersion,
   activeView = 'grocery-list',
   onViewChange,
-  mealPlanViewMode,
-  onMealPlanViewModeChange,
   alternateContent,
   onOpenMealPlanDate,
 }: GroceryListProps) => {
@@ -826,11 +821,7 @@ export const GroceryList = ({
                 onExitBulkSelectionMode={handleExitBulkSelectionMode}
               />
             ) : activeView === 'meal-plan' && listId ? (
-              <MealPlanHeaderActionsForList
-                listId={listId}
-                viewMode={mealPlanViewMode}
-                onViewModeChange={onMealPlanViewModeChange}
-              />
+              <MealPlanDropdownMenuForList listId={listId} />
             ) : null
           }
         />

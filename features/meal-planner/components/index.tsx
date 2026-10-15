@@ -1,15 +1,7 @@
-import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
+import { format, isSameDay, startOfDay } from 'date-fns';
 import { PlusIcon } from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, View } from 'react-native';
-import PagerView from 'react-native-pager-view';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
@@ -17,217 +9,97 @@ import { Icon } from '../../../components/ui/icon';
 import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
-import {
-  MealPlanFocusRequest,
-  MealPlanItemWithStore,
-  MealPlanRecipeWithRecipe,
-  MealPlanViewMode,
-} from '../types';
+import { MealPlanFocusRequest, MealPlanItemWithStore } from '../types';
 import {
   buildMealPlanDayListSections,
   MEAL_PLAN_DAY_LIST_PAST_DAYS,
   type MoveMealPlanEntry,
 } from '../utils/meal-plan-day-list';
-import { parseMealPlanDate } from '../utils/meal-plan-date-format';
-import {
-  groupMealPlanEntriesByDate,
-  isPageWithinActiveWindow,
-} from '../utils/meal-plan-pager';
 
 import {
   AddToMealPlanSheet,
   AddToMealPlanSheetRef,
 } from './add-to-meal-plan-sheet';
-import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
 import { EditItemSheet, EditItemSheetRef } from './edit-item-sheet';
 import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
-import { MealPlanDate } from './meal-plan-date';
 import { MealPlanDateView } from './meal-plan-date-view';
-import {
-  MealPlanDropdownMenu,
-  MealPlanHeaderActions,
-} from './meal-plan-dropdown-menu';
-
-const DAYS_RANGE = 30; //  days before and after today
-const EMPTY_MEAL_PLAN_RECIPES: MealPlanRecipeWithRecipe[] = [];
-const EMPTY_MEAL_PLAN_ITEMS: MealPlanItemWithStore[] = [];
-const VIEW_TRANSITION_EASING = Easing.bezier(0.2, 0, 0, 1);
+import { MealPlanDropdownMenu } from './meal-plan-dropdown-menu';
 
 type MealPlannerProps = {
   listId: string;
   listName?: string;
   onViewListsPress?: () => void;
   showHeader?: boolean;
-  viewMode?: MealPlanViewMode;
-  onViewModeChange?: (viewMode: MealPlanViewMode) => void;
-  /** Shows the requested day in both the Calendar and Day List views. */
+  /** Scrolls the requested day into view. */
   focusRequest?: MealPlanFocusRequest | null;
 };
 
-export const MealPlanner = ({
+export const MealPlanner = memo(function MealPlanner({
   listId,
   listName,
   onViewListsPress,
   showHeader = true,
-  viewMode = 'calendar',
-  onViewModeChange,
   focusRequest,
-}: MealPlannerProps) => {
+}: MealPlannerProps) {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
-  const pagerRef = useRef<PagerView>(null);
-  const isProgrammaticNavigationRef = useRef(false);
-  const viewTransitionProgress = useSharedValue(
-    viewMode === 'day-list' ? 1 : 0
-  );
-  const reduceMotion = useReducedMotion();
   const { recipes, items } = useUserMealPlanData(listId);
   const { mutateAsync: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
   const { mutateAsync: updateMealPlanItem } = useUpdateMealPlanItem();
-  const { recipesByDate, itemsByDate, datesWithMeals } = useMemo(() => {
-    const groupedRecipes = groupMealPlanEntriesByDate(recipes);
-    const groupedItems = groupMealPlanEntriesByDate(items);
-
-    return {
-      recipesByDate: groupedRecipes,
-      itemsByDate: groupedItems,
-      datesWithMeals: new Set([
-        ...groupedRecipes.keys(),
-        ...groupedItems.keys(),
-      ]),
-    };
-  }, [items, recipes]);
-
-  // Track when the date array was generated to detect day changes
   const [dateAnchor, setDateAnchor] = useState(() => startOfDay(new Date()));
-  const dayListSections = buildMealPlanDayListSections({
-    anchorDate: dateAnchor,
-    recipes,
-    items,
-  });
+  const dayListSections = useMemo(
+    () =>
+      buildMealPlanDayListSections({ anchorDate: dateAnchor, recipes, items }),
+    [dateAnchor, recipes, items]
+  );
 
-  // Generate date range: 30 days before today to 30 days after
-  const { daysOfPlan, dateKeysByPage } = useMemo(() => {
-    const dates: Date[] = [];
-    const dateKeys: string[] = [];
-    for (let i = -DAYS_RANGE; i <= DAYS_RANGE; i++) {
-      const date =
-        i < 0 ? subDays(dateAnchor, Math.abs(i)) : addDays(dateAnchor, i);
-      dates.push(date);
-      dateKeys.push(format(date, 'yyyy-MM-dd'));
-    }
-    return { daysOfPlan: dates, dateKeysByPage: dateKeys };
-  }, [dateAnchor]);
-
-  // Initial page index is today (middle of the range)
-  const initialPageIndex = DAYS_RANGE;
-
-  const [currentPageIndex, setCurrentPageIndex] =
-    useState<number>(initialPageIndex);
-
-  // When app becomes active, check if the day has changed and navigate to today
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
       if (nextState === 'active') {
-        const realToday = startOfDay(new Date());
-        if (!isSameDay(realToday, dateAnchor)) {
-          // Day has changed - update the date anchor and navigate to today
-          setDateAnchor(realToday);
-          isProgrammaticNavigationRef.current = true;
-          pagerRef.current?.setPageWithoutAnimation(initialPageIndex);
-          setCurrentPageIndex(initialPageIndex);
-        }
+        const today = startOfDay(new Date());
+        setDateAnchor(current => (isSameDay(current, today) ? current : today));
       }
     });
     return () => subscription.remove();
-  }, [dateAnchor, initialPageIndex]);
+  }, []);
 
-  const currentDate =
-    daysOfPlan[currentPageIndex] ?? daysOfPlan[initialPageIndex];
-
-  useEffect(() => {
-    const target = viewMode === 'day-list' ? 1 : 0;
-    viewTransitionProgress.set(
-      reduceMotion
-        ? target
-        : withTiming(target, {
-            duration: 240,
-            easing: VIEW_TRANSITION_EASING,
-          })
-    );
-  }, [reduceMotion, viewMode, viewTransitionProgress]);
-
-  const calendarViewAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: 1 - viewTransitionProgress.get(),
-  }));
-
-  const dayListViewAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: viewTransitionProgress.get(),
-  }));
-
-  const handleDatePress = useCallback(
-    (date: Date) => {
-      const index = daysOfPlan.findIndex(d => isSameDay(d, date));
-      if (index !== -1) {
-        isProgrammaticNavigationRef.current = true;
-        pagerRef.current?.setPageWithoutAnimation(index);
-        setCurrentPageIndex(index);
-      }
-    },
-    [daysOfPlan]
-  );
-
-  // Calendar View half of a focus request; the Day List half is handled by
-  // MealPlanDateView. Dates outside the pager's range leave the page as is.
-  const handledFocusRequestIdRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!focusRequest) return;
-    if (handledFocusRequestIdRef.current === focusRequest.id) return;
-    handledFocusRequestIdRef.current = focusRequest.id;
-    handleDatePress(parseMealPlanDate(focusRequest.date));
-  }, [focusRequest, handleDatePress]);
-
-  const handlePageSelected = (e: { nativeEvent: { position: number } }) => {
-    setCurrentPageIndex(e.nativeEvent.position);
-  };
-
-  const handleItemPress = (item: MealPlanItemWithStore) => {
+  const handleItemPress = useCallback((item: MealPlanItemWithStore) => {
     editItemSheet.current?.open(item);
-  };
+  }, []);
 
-  const handleMoveMealPlanEntry: MoveMealPlanEntry = async (
-    entry,
-    targetDate
-  ) => {
-    if (entry.date === targetDate) return;
+  const handleMealPress = useCallback<
+    React.ComponentProps<typeof MealPlanDateView>['onMealPress']
+  >(({ mealPlanRecipe, recipe }) => {
+    editMealSheet.current?.open({ mealPlanRecipe, recipe });
+  }, []);
 
-    if (entry.type === 'recipe') {
-      await updateMealPlanRecipe({
-        mealPlanRecipeId: entry.id,
+  const handleMoveMealPlanEntry = useCallback<MoveMealPlanEntry>(
+    async (entry, targetDate) => {
+      if (entry.date === targetDate) return;
+
+      if (entry.type === 'recipe') {
+        await updateMealPlanRecipe({
+          mealPlanRecipeId: entry.id,
+          updates: { date: targetDate },
+        });
+        return;
+      }
+
+      await updateMealPlanItem({
+        mealPlanItemId: entry.id,
         updates: { date: targetDate },
       });
-      return;
-    }
+    },
+    [updateMealPlanRecipe, updateMealPlanItem]
+  );
 
-    await updateMealPlanItem({
-      mealPlanItemId: entry.id,
-      updates: { date: targetDate },
-    });
-  };
-
-  const openAddSheetForDate = (dateKey: string) => {
+  const openAddSheetForDate = useCallback((dateKey: string) => {
     addToMealPlanSheet.current?.present({ defaultDate: dateKey });
-  };
+  }, []);
 
   const handleAddPress = () => {
-    const defaultDate = viewMode === 'day-list' ? dateAnchor : currentDate;
-    openAddSheetForDate(format(defaultDate, 'yyyy-MM-dd'));
-  };
-
-  const handleTodayPress = () => {
-    const today = startOfDay(new Date());
-    handleDatePress(today);
+    openAddSheetForDate(format(dateAnchor, 'yyyy-MM-dd'));
   };
 
   return (
@@ -244,108 +116,21 @@ export const MealPlanner = ({
               <Heading>{listName ?? 'Meal Plan'}</Heading>
             </Button>
           </View>
-          <View className="flex-row items-center gap-1">
-            {onViewModeChange ? (
-              <MealPlanHeaderActions
-                recipes={recipes}
-                items={items}
-                viewMode={viewMode}
-                onViewModeChange={onViewModeChange}
-              />
-            ) : (
-              <MealPlanDropdownMenu recipes={recipes} items={items} />
-            )}
-          </View>
+          <MealPlanDropdownMenu recipes={recipes} items={items} />
         </View>
       ) : null}
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} listId={listId} />
       <EditItemSheet ref={editItemSheet} listId={listId} />
-      <View className="flex-1 overflow-hidden">
-        <Animated.View
-          className="absolute inset-0"
-          style={dayListViewAnimatedStyle}
-          pointerEvents={viewMode === 'day-list' ? 'auto' : 'none'}
-          accessibilityElementsHidden={viewMode !== 'day-list'}
-          importantForAccessibility={
-            viewMode === 'day-list' ? 'auto' : 'no-hide-descendants'
-          }
-        >
-          <MealPlanDateView
-            key={dayListSections[MEAL_PLAN_DAY_LIST_PAST_DAYS]?.dateKey}
-            mode="day-list"
-            recipes={recipes}
-            items={items}
-            dayListSections={dayListSections}
-            onDayPress={openAddSheetForDate}
-            onMoveEntry={handleMoveMealPlanEntry}
-            onMealPress={({ mealPlanRecipe, recipe }) => {
-              editMealSheet.current?.open({ mealPlanRecipe, recipe });
-            }}
-            onItemPress={handleItemPress}
-            focusRequest={focusRequest}
-          />
-        </Animated.View>
-        <Animated.View
-          className="absolute inset-0"
-          style={calendarViewAnimatedStyle}
-          pointerEvents={viewMode === 'calendar' ? 'auto' : 'none'}
-          accessibilityElementsHidden={viewMode !== 'calendar'}
-          importantForAccessibility={
-            viewMode === 'calendar' ? 'auto' : 'no-hide-descendants'
-          }
-        >
-          <>
-            <MealPlanDate
-              currentDate={currentDate}
-              onTodayPress={handleTodayPress}
-            />
-            <MealPlanDateSelector
-              dates={daysOfPlan}
-              currentDate={currentDate}
-              onDatePress={handleDatePress}
-              isProgrammaticNavigationRef={isProgrammaticNavigationRef}
-              datesWithMeals={datesWithMeals}
-            />
-            <PagerView
-              ref={pagerRef}
-              style={{ flex: 1 }}
-              initialPage={initialPageIndex}
-              onPageSelected={handlePageSelected}
-            >
-              {daysOfPlan.map((date, pageIndex) => {
-                const dateKey = dateKeysByPage[pageIndex];
-                const isPageActive = isPageWithinActiveWindow(
-                  pageIndex,
-                  currentPageIndex
-                );
-
-                return (
-                  <View key={date.toISOString()} style={{ flex: 1 }}>
-                    {isPageActive && dateKey ? (
-                      <MealPlanDateView
-                        recipes={
-                          recipesByDate.get(dateKey) ?? EMPTY_MEAL_PLAN_RECIPES
-                        }
-                        items={
-                          itemsByDate.get(dateKey) ?? EMPTY_MEAL_PLAN_ITEMS
-                        }
-                        onMealPress={({ mealPlanRecipe, recipe }) => {
-                          editMealSheet.current?.open({
-                            mealPlanRecipe,
-                            recipe,
-                          });
-                        }}
-                        onItemPress={handleItemPress}
-                      />
-                    ) : null}
-                  </View>
-                );
-              })}
-            </PagerView>
-          </>
-        </Animated.View>
-      </View>
+      <MealPlanDateView
+        key={dayListSections[MEAL_PLAN_DAY_LIST_PAST_DAYS]?.dateKey}
+        dayListSections={dayListSections}
+        onDayPress={openAddSheetForDate}
+        onMoveEntry={handleMoveMealPlanEntry}
+        onMealPress={handleMealPress}
+        onItemPress={handleItemPress}
+        focusRequest={focusRequest}
+      />
       <Button
         size="wide-small"
         onPress={handleAddPress}
@@ -360,4 +145,4 @@ export const MealPlanner = ({
       </Button>
     </View>
   );
-};
+});

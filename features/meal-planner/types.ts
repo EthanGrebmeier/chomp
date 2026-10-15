@@ -45,8 +45,6 @@ export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
   ingredient_snapshots?: MealPlanRecipeIngredientSnapshotWithStore[];
 };
 
-export type MealPlanViewMode = 'calendar' | 'day-list';
-
 /**
  * A request to show one day in the meal plan (e.g. from a linked grocery
  * item). `id` distinguishes repeated requests for the same date.
