@@ -3,8 +3,9 @@ import { db } from '../../../lib/instant';
 /**
  * Recipe-book query scoped to the signed-in owner.
  *
- * Only ingredients are included because list consumers need their names and
- * counts. Recipe details and grocery-list activity have dedicated fields/hooks.
+ * Include ingredient stores so recipe selection preserves store attribution
+ * when creating meal-plan snapshots or grocery items. Recipe details and
+ * grocery-list activity have dedicated fields/hooks.
  */
 export const useRecipes = () => {
   const { user } = db.useAuth();
@@ -18,7 +19,9 @@ export const useRecipes = () => {
                 'user.id': user.id,
               },
             },
-            recipe_ingredients: {},
+            recipe_ingredients: {
+              store: {},
+            },
           },
         }
       : null
