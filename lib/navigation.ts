@@ -164,23 +164,22 @@ export function buildEditRecipeUrl(params: EditRecipeParams) {
   } as unknown as Href;
 }
 
+const getPublicBaseUrl = () =>
+  trimTrailingSlash(process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_PUBLIC_BASE_URL);
+
 /**
  * Builds a deep link URL for sharing a grocery list by join code
  */
 export function buildListURL(joinCode: string): string {
-  const baseUrl = trimTrailingSlash(
-    process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_PUBLIC_BASE_URL
-  );
-  return `${baseUrl}/join-list/${encodeURIComponent(joinCode)}`;
+  return `${getPublicBaseUrl()}/join-list/${encodeURIComponent(joinCode)}`;
 }
 
 /**
- * Builds a share URL for a recipe via the API redirect
+ * Builds a share URL for a recipe. The website serves a preview page and the
+ * path is registered as a universal link, so installed apps open it directly.
  */
-export function buildRecipeShareURL(recipeId: string): string | null {
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (!apiUrl) return null;
-  return `${apiUrl}/recipes/share/${recipeId}`;
+export function buildRecipeShareURL(recipeId: string): string {
+  return `${getPublicBaseUrl()}/recipes/share/${encodeURIComponent(recipeId)}`;
 }
 
 /**

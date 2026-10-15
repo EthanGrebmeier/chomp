@@ -6,6 +6,7 @@ import {
   buildListUrl,
   buildListURL,
   buildMealPlanUrl,
+  buildRecipeShareURL,
   navigation,
 } from '../navigation';
 
@@ -29,6 +30,28 @@ describe('buildListURL', () => {
 
     expect(buildListURL('ABC123')).toBe(
       'https://api.example.com/join-list/ABC123'
+    );
+  });
+});
+
+describe('buildRecipeShareURL', () => {
+  afterEach(() => {
+    process.env.EXPO_PUBLIC_API_URL = originalApiUrl;
+  });
+
+  it('uses the public app URL when the API URL is not configured', () => {
+    delete process.env.EXPO_PUBLIC_API_URL;
+
+    expect(buildRecipeShareURL('recipe-123')).toBe(
+      'https://chompgrocery.com/recipes/share/recipe-123'
+    );
+  });
+
+  it('uses the configured API URL without duplicating slashes', () => {
+    process.env.EXPO_PUBLIC_API_URL = 'https://api.example.com/';
+
+    expect(buildRecipeShareURL('recipe-123')).toBe(
+      'https://api.example.com/recipes/share/recipe-123'
     );
   });
 });

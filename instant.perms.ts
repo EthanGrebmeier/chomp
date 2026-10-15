@@ -35,9 +35,13 @@ const rules = {
       "auth.id in data.ref('user.id')",
       'canViewViaGroceryList',
       "auth.id in data.ref('grocery_items.grocery_list.shares.user_id')",
+      // Share links carry the recipe id; the import screen passes it back as a
+      // rule param, so knowing the id (from the link) is what grants read access.
+      'isOpenedFromShareLink',
+      'ruleParams.sharedRecipeId == data.id',
     ],
     allow: {
-      view: 'isOwner || data.visibility == "public" || canViewViaGroceryList',
+      view: 'isOwner || data.visibility == "public" || canViewViaGroceryList || isOpenedFromShareLink',
       create: 'auth.id != null',
       delete: 'isOwner',
       update: 'isOwner',
