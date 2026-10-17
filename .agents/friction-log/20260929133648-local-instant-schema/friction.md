@@ -1,6 +1,7 @@
 ---
 title: 'Local instant.schema.ts can drift from the deployed Instant schema with no check'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#31'
 ---
 
 ### Expected Behavior

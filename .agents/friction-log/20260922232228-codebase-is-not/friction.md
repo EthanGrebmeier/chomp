@@ -1,6 +1,7 @@
 ---
 title: 'Codebase is not prettier-clean; formatting a directory rewrites unrelated files'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#29'
 ---
 
 ## Expected Behavior

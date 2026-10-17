@@ -1,6 +1,7 @@
 ---
 title: 'No .env.example documenting EXPO_PUBLIC_* variables'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#9'
 ---
 
 ### Expected Behavior

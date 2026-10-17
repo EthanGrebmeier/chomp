@@ -1,6 +1,7 @@
 ---
 title: 'No dev Instant app configured for validating data migrations'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#30'
 ---
 
 ### Expected Behavior
