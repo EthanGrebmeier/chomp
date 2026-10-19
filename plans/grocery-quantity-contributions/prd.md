@@ -52,7 +52,7 @@ The rollout must prove a supported policy before contribution authority or merge
 4. A client-side flag, recent device heartbeat, app-version string, or lack of recent old traffic is not proof that offline old writers cannot return.
 5. If seamless old-client editing of upgraded lists is mandatory and cannot be implemented safely with deployed infrastructure, activation is blocked. Do not silently reinterpret legacy total writes as manual entries or claim the requirement is satisfied by dual writes.
 
-See `plan.md` for rollout gates, session-sized tasks, tests, and unresolved compatibility decisions.
+Planning reset: the previous ticket breakdown and execution ledger were set aside, not carried into this branch. They remain recoverable at checkpoint `36752a9` on `implementation/grocery-quantity-contributions`. No implementation tickets or automatic runner are active for this branch; revisit the approach before creating a new plan.
 
 ## Non-goals for first release
 
