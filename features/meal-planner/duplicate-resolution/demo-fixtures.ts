@@ -130,6 +130,29 @@ export const DUPLICATE_DEMO_SCENARIOS: DuplicateDemoScenario[] = [
     existingItems: mixedExisting,
   },
   {
+    id: 'conflict-states',
+    label: 'Every conflict type',
+    description:
+      'Matching pairs, different quantities, stores, units, both units and stores, and an unassigned store.',
+    mealName: 'Conflict review sampler',
+    incoming: [
+      incoming('same', 'Carrots', 1, 'kg'),
+      incoming('quantity', 'Potatoes', 0.5, 'kg'),
+      incoming('store', 'Apples', 1, 'kg', { storeId: 'produce' }),
+      incoming('unit', 'Rice', 1, 'cup'),
+      incoming('unit-store', 'Flour', 2, 'cup', { storeId: 'produce' }),
+      incoming('no-store', 'Milk', 1, 'bottle', { storeId: null }),
+    ],
+    existingItems: [
+      existing('same', 'Carrots', 1, 'kg'),
+      existing('quantity', 'Potatoes', 2, 'kg'),
+      existing('store', 'Apples', 2, 'kg'),
+      existing('unit', 'Rice', 0.5, 'kg'),
+      existing('unit-store', 'Flour', 1, 'kg'),
+      existing('no-store', 'Milk', 2, 'bottle'),
+    ],
+  },
+  {
     id: 'many',
     label: '20 duplicates',
     description:
@@ -151,7 +174,7 @@ export const DUPLICATE_DEMO_SCENARIOS: DuplicateDemoScenario[] = [
       existing(
         `existing-${index}`,
         `Weeknight ingredient ${index + 1}`,
-        1.5,
+        index % 3 === 0 ? 0.5 : 1.5,
         index % 7 === 0 ? 'g' : 'cup',
         {
           storeId: index % 9 === 0 ? 'produce' : 'market',

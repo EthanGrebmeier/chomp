@@ -45,6 +45,55 @@ Creates retain incoming metadata; increments contain only a target ID, quantity
 delta, and every contributing incoming source. Existing target metadata is not
 overwritten. Several sources can contribute to the same proposed increment.
 
+## Outcome-card UI exploration
+
+The scenario sheet opens on an overview of every duplicate, each pre-filled with
+a default choice, so the batch can be confirmed without visiting any item.
+Pairs with different stores, units, or quantities appear first, with compact
+amber icon badges at the top right of each row: a store for store differences and a scale for
+quantity or unit differences. Icons share the item-name line rather than adding
+height; the row's accessibility label names the differences explicitly. Matching pairs follow; source order is preserved within each
+group, and previous/next navigation follows the overview order. Quantities are
+only compared when units match. The 20-item fixture includes both easy and harder
+pairs. This presentation priority does not change planner compatibility or defaults.
+Defaults combine only compatible items; store or unit differences default to
+separate so nothing moves between stores implicitly. Tapping an item opens a
+detail page with the comparison and outcome cards describing the resulting
+quantity and store before selection; selections apply
+immediately, and previous/next arrows step between items. Each overview card
+shows the quantity comparison followed by a plain selected-choice label aligned
+with the item name, without a checkmark, "Selected:" prefix, or result sentence.
+Invalid custom totals show "Needs an amount" instead. Full quantity/store outcome
+descriptions remain in the detail options and the overview accessibility label;
+they describe that incoming item's outcome, not an aggregate of other incoming
+ingredients that happen to share a target. Choices and custom
+amounts remain keyed by source ID, including repeated ingredient names. Returning
+to the overview or stepping between items resets the scroll position to the top.
+The overview footer reports when the batch is ready or how many amounts still
+need attention; one invalid amount blocks confirmation without blocking review
+of the other items. Compatible items offer
+combine/separate; same-unit store conflicts offer separate, combine at the
+existing store, or combine at the incoming store. Matching units always use
+automatic addition, regardless of whether the quantities or stores differ; they
+never offer a manual-total choice. Different units can't be added automatically,
+so they offer separate or "Set a combined total": the user types the total
+(prefilled with the list quantity) in either item's unit. When both units and
+stores differ, the selected card also offers both stores (including no store),
+defaulting to the existing store. Store selection is independent of unit selection
+and is reflected in the overview. Confirmation is blocked while any entered total
+is invalid. There is no automatic unit conversion, including between different
+units of the same dimension. The "Every conflict type" fixture covers identical
+pairs, quantity-only, store-only, unit-only, unit-and-store, and unassigned-store
+conflicts. A single duplicate skips the overview and opens straight to its
+detail page with an Add to list action. Confirmation closes the sheet without
+writes.
+
+`demo-choices.ts` owns these presentation-only choices, their defaults, and
+relative store preferences. The comparison uses the planner's
+compatible target when present, otherwise the newest same-unit candidate, then
+the newest same-name candidate. These UI choices do not extend the planner's
+`DuplicateResolutionChoice` or represent executable store changes.
+
 ## Persistence boundary — do not skip
 
 The current schema links each grocery item one-to-one with a meal-plan ingredient

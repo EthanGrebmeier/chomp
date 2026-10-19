@@ -35,8 +35,9 @@ function DuplicateDemoLauncher() {
             Duplicate resolution demo
           </Text>
           <Text className="text-muted-foreground">
-            Compare two ways to decide whether meal ingredients should increment
-            an existing grocery item or stay separate.
+            Duplicate ingredients start with a default choice. Confirm from the
+            overview, or open an item to combine, pick a store, or keep it
+            separate.
           </Text>
           <Text className="text-sm font-semibold">
             Development only · All data is local · Nothing is saved
@@ -56,8 +57,8 @@ function DuplicateDemoLauncher() {
             >
               <Text className="text-center">
                 {item === 'compact'
-                  ? 'Compact bottom-sheet stepper'
-                  : 'Detailed comparison stepper'}
+                  ? 'Compact bottom sheet'
+                  : 'Detailed comparison'}
               </Text>
             </Button>
           ))}
