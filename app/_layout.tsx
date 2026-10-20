@@ -23,6 +23,7 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
+import { QuantityAppProvider } from '@/features/quantity/app/provider';
 import {
   InstantAuthHandler,
   useInstantAuthState,
@@ -242,7 +243,9 @@ function RootLayoutContent({
             <MigrationProvider onStatusChange={handleMigrationStatusChange}>
               <SafeAreaProvider>
                 <GestureHandlerRootView style={{ flex: 1 }}>
-                  <InitialLayout />
+                  <QuantityAppProvider>
+                    <InitialLayout />
+                  </QuantityAppProvider>
                   <InstantAuthHandler />
                   <PortalHost />
                 </GestureHandlerRootView>

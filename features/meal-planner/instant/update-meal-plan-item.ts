@@ -1,5 +1,7 @@
 import { tx } from '@instantdb/react-native';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db, type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
@@ -36,6 +38,12 @@ export const updateMealPlanItem = async ({
   updates,
   defaultStore,
 }: UpdateMealPlanItemArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { updateQuantityItem } =
+      await import('@/features/quantity/app/meal-actions');
+    return updateQuantityItem({ mealPlanItemId, updates, defaultStore });
+  }
+
   const { storeId, ...otherUpdates } = updates;
   const nullableUpdates = {
     ...(otherUpdates.notes !== undefined

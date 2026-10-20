@@ -74,6 +74,7 @@ export function addEntryToRow(
       category: item.category,
       store: destination.store ?? item.store,
       status: 'active',
+      createdAt: new Date().toISOString(),
     });
   }
   const entryId = newId();

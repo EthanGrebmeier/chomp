@@ -16,6 +16,7 @@ import { useTrackListAccess } from '@/features/grocery-lists/local/use-track-lis
 import { MealPlanner } from '@/features/meal-planner/components';
 import { useMealPlanListReconciler } from '@/features/meal-planner/hooks';
 import { type MealPlanFocusRequest } from '@/features/meal-planner/types';
+import { QuantityListStatus } from '@/features/quantity/app/status';
 import { db } from '@/lib/instant';
 import { buildGroceryListsIndexUrl } from '@/lib/navigation';
 
@@ -138,11 +139,13 @@ export default function List() {
   );
 
   const handleOpenMealPlanDate = useCallback(
-    (date: string) => {
+    (date: string, mealId?: string, sourceId?: string) => {
       handleViewChange('meal-plan');
       setMealPlanFocusRequest(current => ({
         id: (current?.id ?? 0) + 1,
         date,
+        mealId,
+        sourceId,
       }));
     },
     [handleViewChange]
@@ -183,6 +186,7 @@ export default function List() {
             exiting={FadeOut.duration(200)}
             className="flex-1"
           >
+            <QuantityListStatus listId={activeListId} />
             <GroceryList
               listId={activeListId}
               listName={activeList?.name}

@@ -47,7 +47,11 @@ export function useQuantityWorkspaces() {
 }
 
 /** Durable app outbox plus the SDK queue; stable operation IDs make retries safe. */
-export function useQuantityWorkspace(workspaceId: string, userId: string) {
+export function useQuantityWorkspace(
+  workspaceId: string,
+  userId: string,
+  afterConfirm?: (operation: Operation, workspaceId: string) => Promise<void>
+) {
   const query = db.useQuery(workspaceQuery(workspaceId));
   const connection = db.useConnectionStatus();
   const [verified, setVerified] = useState(false);
@@ -136,10 +140,19 @@ export function useQuantityWorkspace(workspaceId: string, userId: string) {
       getPending: () => pendingRef.current,
       changePending,
       confirm: operation => setConfirmed(values => [...values, operation]),
+      afterConfirm: operation =>
+        afterConfirm?.(operation, workspaceId) ?? Promise.resolve(),
     }).finally(() => {
       sending.current = false;
     });
-  }, [changePending, connection, outboxLoaded, userId, workspaceId]);
+  }, [
+    afterConfirm,
+    changePending,
+    connection,
+    outboxLoaded,
+    userId,
+    workspaceId,
+  ]);
 
   useEffect(() => {
     if (connection === 'authenticated') void refresh();

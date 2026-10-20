@@ -30,7 +30,15 @@ export function assertDocument(value: unknown): asserts value is Document {
     case 'row':
       valid =
         identity(value.listId) &&
-        fields(value, ['name', 'unit', 'notes', 'category', 'store', 'status']);
+        fields(value, [
+          'name',
+          'unit',
+          'notes',
+          'category',
+          'store',
+          'status',
+        ]) &&
+        (value.savedItemId === undefined || identity(value.savedItemId));
       break;
     case 'entry':
       valid =
@@ -83,7 +91,9 @@ export function assertOperation(value: unknown): asserts value is Operation {
     !strings(value.parents) ||
     !strings(value.resolves) ||
     !Array.isArray(value.changes) ||
-    !Array.isArray(value.guards)
+    !Array.isArray(value.guards) ||
+    (value.syncSavedItems !== undefined &&
+      typeof value.syncSavedItems !== 'boolean')
   )
     throw new Error('Invalid saved operation');
   for (const change of value.changes) {

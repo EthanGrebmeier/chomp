@@ -1,10 +1,12 @@
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db } from '../../../lib/instant';
-import { planBulkMoveSourceRemoval } from '../bulk-selection/move-orchestrator';
 import { buildLinkedGroceryItemDeletionTransactions } from '../../meal-planner/instant/build-linked-grocery-item-deletion-transactions';
 import {
   type GroceryItemForDeletion,
   planLinkedGroceryItemDeletion,
 } from '../../meal-planner/instant/plan-linked-grocery-item-deletion';
+import { planBulkMoveSourceRemoval } from '../bulk-selection/move-orchestrator';
 
 /**
  * Deletes grocery items the user removed from the list (swipe, bulk delete,
@@ -22,6 +24,11 @@ export const deleteGroceryItems = async ({
 }: {
   items: GroceryItemForDeletion[];
 }) => {
+  if (quantityWorkspaceAvailable()) {
+    const { deleteQuantityRows } =
+      await import('@/features/quantity/app/grocery-actions');
+    return deleteQuantityRows(items.map(item => item.id));
+  }
   const transactions = buildLinkedGroceryItemDeletionTransactions(
     planLinkedGroceryItemDeletion(items)
   );
@@ -41,6 +48,11 @@ export const removeMovedGroceryItems = async ({
 }: {
   items: GroceryItemForDeletion[];
 }) => {
+  if (quantityWorkspaceAvailable()) {
+    const { deleteQuantityRows } =
+      await import('@/features/quantity/app/grocery-actions');
+    return deleteQuantityRows(items.map(item => item.id));
+  }
   const transactions = buildLinkedGroceryItemDeletionTransactions(
     planBulkMoveSourceRemoval(items)
   );

@@ -7,6 +7,9 @@ import {
   useState,
 } from 'react';
 
+import { AppQuantityItemSheet } from '@/features/quantity/app/item-sheet';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
 import { useGroceryItemMealPlanLink } from '../../../features/grocery-list/instant/use-grocery-item-meal-plan-link';
 import {
@@ -151,7 +154,11 @@ const EditItemLiveSync = (props: EditItemLiveSyncProps) => {
 type EditItemInternalContextType = {
   sheetRef: React.RefObject<TrueSheet | null>;
   liveSyncRef: React.RefObject<UseLiveItemSyncHandle | null>;
-  onOpenMealPlanDate?: (date: string) => void;
+  onOpenMealPlanDate?: (
+    date: string,
+    mealId?: string,
+    sourceId?: string
+  ) => void;
 };
 
 const EditItemInternalContext =
@@ -170,7 +177,11 @@ const useEditItemSheetInternal = () => {
 type EditItemProps = {
   groceryListId: string;
   /** Opens the meal plan view on `date` (`yyyy-MM-dd`). */
-  onOpenMealPlanDate?: (date: string) => void;
+  onOpenMealPlanDate?: (
+    date: string,
+    mealId?: string,
+    sourceId?: string
+  ) => void;
   children: React.ReactNode;
 };
 
@@ -285,4 +296,38 @@ const EditItemProvider = ({
   );
 };
 
-export default EditItemProvider;
+function QuantityEditItemProvider({
+  groceryListId,
+  onOpenMealPlanDate,
+  children,
+}: EditItemProps) {
+  const [itemId, setItemId] = useState<string | null>(null);
+  return (
+    <EditItemContext.Provider
+      value={{
+        present: item => setItemId(item.id),
+        dismiss: () => setItemId(null),
+        clearRecipe: () => {},
+        mealPlanLink: null,
+      }}
+    >
+      {children}
+      {itemId ? (
+        <AppQuantityItemSheet
+          key={`${groceryListId}:${itemId}`}
+          listId={groceryListId}
+          rowId={itemId}
+          onDismiss={() => setItemId(null)}
+          onOpenMealPlanDate={onOpenMealPlanDate}
+        />
+      ) : null}
+    </EditItemContext.Provider>
+  );
+}
+export default function IntegratedEditItemProvider(props: EditItemProps) {
+  return quantityWorkspaceAvailable() ? (
+    <QuantityEditItemProvider {...props} />
+  ) : (
+    <EditItemProvider {...props} />
+  );
+}

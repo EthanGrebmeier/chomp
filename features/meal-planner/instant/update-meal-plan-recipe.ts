@@ -1,5 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db, type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
@@ -8,12 +10,12 @@ import {
   toSnapshotCreateInputs,
 } from '../meal-plan-recipe-ingredient-editor';
 
-import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
 import { buildMealPlanEntrySyncTransactions } from './build-meal-plan-list-sync-transactions';
+import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
 import { toMealPlanRecipeSyncContext } from './meal-plan-entry-sync-context';
-import { queryMealPlanRecipeSyncRow } from './query-meal-plan-entry-sync-rows';
 import { toNewMealPlanRecipeEntryForSync } from './new-meal-plan-entry-for-sync';
 import type { MealPlanRecipeEntryForSync } from './plan-meal-plan-list-sync';
+import { queryMealPlanRecipeSyncRow } from './query-meal-plan-entry-sync-rows';
 
 export type UpdateMealPlanRecipeArgs = {
   mealPlanRecipeId: string;
@@ -63,6 +65,12 @@ export const updateMealPlanRecipe = async ({
   updates,
   defaultStore,
 }: UpdateMealPlanRecipeArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { updateQuantityMeal } =
+      await import('@/features/quantity/app/meal-actions');
+    return updateQuantityMeal({ mealPlanRecipeId, updates, defaultStore });
+  }
+
   const { recipeId, ...otherUpdates } = updates;
   const mealTagUpdate =
     otherUpdates.mealTag !== undefined

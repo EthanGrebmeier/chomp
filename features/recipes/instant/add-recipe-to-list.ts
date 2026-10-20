@@ -1,3 +1,5 @@
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db } from '../../../lib/instant';
 
 import {
@@ -32,6 +34,17 @@ export const addRecipeToList = async ({
   defaultStore,
   conflictResolution = 'prompt',
 }: AddRecipeToListArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { addQuantityRecipe } =
+      await import('@/features/quantity/app/recipe-actions');
+    return addQuantityRecipe({
+      recipeId,
+      listId,
+      ingredients,
+      defaultStore,
+      conflictResolution,
+    });
+  }
   const result = await addIngredientsWithStacking({
     listId,
     conflictResolution,

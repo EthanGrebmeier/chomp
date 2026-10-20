@@ -1,24 +1,26 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db, type TransactionChunk } from '../../../lib/instant';
-import {
-  getCanonicalSnapshots,
-  isHistory,
-  isVisible,
-} from '../utils/shopping-state';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
 import {
   initializeMealPlanIngredientEditor,
   toSnapshotCreateInputs,
 } from '../meal-plan-recipe-ingredient-editor';
+import {
+  getCanonicalSnapshots,
+  isHistory,
+  isVisible,
+} from '../utils/shopping-state';
 
 import {
   applySnapshotRowEdits,
   type SnapshotRowEdit,
 } from './apply-meal-plan-entry-edits';
-import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
 import { buildMealPlanEntrySyncTransactions } from './build-meal-plan-list-sync-transactions';
+import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
 import {
   type MealPlanRecipeSyncRow,
   toMealPlanRecipeSyncContext,
@@ -130,6 +132,12 @@ const toNewSnapshotRows = (sourceIngredients: RecipeIngredientWithStore[]) =>
   ).map(snapshot => ({ ...snapshot, id: id() }));
 
 const initializeSnapshot = async (mealPlanRecipeId: string) => {
+  if (quantityWorkspaceAvailable()) {
+    const { quantitySnapshots } =
+      await import('@/features/quantity/app/meal-actions');
+    return quantitySnapshots(mealPlanRecipeId);
+  }
+
   const context = await getSnapshotContext(mealPlanRecipeId);
   if (!context) {
     throw new Error('Meal plan recipe not found');
@@ -158,6 +166,12 @@ const initializeSnapshot = async (mealPlanRecipeId: string) => {
 };
 
 const readSnapshot = async (mealPlanRecipeId: string) => {
+  if (quantityWorkspaceAvailable()) {
+    const { quantitySnapshots } =
+      await import('@/features/quantity/app/meal-actions');
+    return quantitySnapshots(mealPlanRecipeId);
+  }
+
   const context = await getSnapshotContext(mealPlanRecipeId);
   if (!context) {
     throw new Error('Meal plan recipe not found');
@@ -170,6 +184,12 @@ const readSnapshot = async (mealPlanRecipeId: string) => {
 };
 
 const ensureBackfilledSnapshot = async (mealPlanRecipeId: string) => {
+  if (quantityWorkspaceAvailable()) {
+    const { quantitySnapshots } =
+      await import('@/features/quantity/app/meal-actions');
+    return quantitySnapshots(mealPlanRecipeId);
+  }
+
   const context = await getSnapshotContext(mealPlanRecipeId);
   if (!context) {
     throw new Error('Meal plan recipe not found');
@@ -288,6 +308,11 @@ const updateRowsSelection = async ({
   selections: SnapshotRowSelection[];
   defaultStore: DefaultStoreForStacking | null | undefined;
 }) => {
+  if (quantityWorkspaceAvailable()) {
+    const { selectQuantityIngredients } =
+      await import('@/features/quantity/app/meal-actions');
+    return selectQuantityIngredients(mealPlanRecipeId, selections);
+  }
   if (selections.length === 0) return;
 
   await transactSnapshotRowEdits({
@@ -309,6 +334,11 @@ const updateRowSelection = async ({
 }: SnapshotRowSelection & {
   defaultStore: DefaultStoreForStacking | null | undefined;
 }) => {
+  if (quantityWorkspaceAvailable()) {
+    const { selectQuantityIngredient } =
+      await import('@/features/quantity/app/meal-actions');
+    return selectQuantityIngredient(snapshotRowId, isSelected);
+  }
   await transactSnapshotRowEdits({
     lookup: { snapshotRowId },
     planEdits: row => planSelectionEdits(row, [{ snapshotRowId, isSelected }]),
@@ -325,6 +355,11 @@ const updateRowOverrides = async ({
   updates,
   defaultStore,
 }: UpdateSnapshotRowOverridesArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { overrideQuantityIngredient } =
+      await import('@/features/quantity/app/meal-actions');
+    return overrideQuantityIngredient({ snapshotRowId, updates, defaultStore });
+  }
   await transactSnapshotRowEdits({
     lookup: { snapshotRowId },
     planEdits: row => {
@@ -381,6 +416,12 @@ const updateRowOverrides = async ({
 };
 
 const reconcileSnapshot = async (mealPlanRecipeId: string) => {
+  if (quantityWorkspaceAvailable()) {
+    const { quantitySnapshots } =
+      await import('@/features/quantity/app/meal-actions');
+    return quantitySnapshots(mealPlanRecipeId);
+  }
+
   const context = await getSnapshotContext(mealPlanRecipeId);
   if (!context) {
     throw new Error('Meal plan recipe not found');

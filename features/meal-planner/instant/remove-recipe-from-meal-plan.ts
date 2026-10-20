@@ -1,3 +1,5 @@
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db } from '../../../lib/instant';
 
 import { buildMealPlanEntryRemovalTransactions } from './build-meal-plan-entry-removal-transactions';
@@ -14,6 +16,12 @@ export type RemoveRecipeFromMealPlanArgs = {
 export const removeRecipeFromMealPlan = async ({
   mealPlanRecipeId,
 }: RemoveRecipeFromMealPlanArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { removeQuantityMeals } =
+      await import('@/features/quantity/app/meal-actions');
+    return removeQuantityMeals([mealPlanRecipeId]);
+  }
+
   const row = await queryMealPlanRecipeSyncRow({ mealPlanRecipeId });
   if (!row) {
     return;

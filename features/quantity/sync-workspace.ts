@@ -22,12 +22,14 @@ export async function flushOutbox({
   getPending,
   changePending,
   confirm,
+  afterConfirm,
 }: {
   workspaceId: string;
   userId: string;
   getPending: () => Pending[];
   changePending: (change: (values: Pending[]) => Pending[]) => Promise<void>;
   confirm: (operation: Operation) => void;
+  afterConfirm?: (operation: Operation) => Promise<void>;
 }) {
   let item: Pending | undefined;
   while ((item = getPending().find(p => !p.error))) {
@@ -46,6 +48,7 @@ export async function flushOutbox({
         )
           throw new Error('Operation identity collision');
         confirm(pendingItem.operation);
+        await afterConfirm?.(pendingItem.operation);
         await changePending(values =>
           values.filter(p => p.operation.id !== pendingItem.operation.id)
         );
@@ -56,6 +59,7 @@ export async function flushOutbox({
       );
       if (result.status === 'synced') {
         confirm(pendingItem.operation);
+        await afterConfirm?.(pendingItem.operation);
         await changePending(values =>
           values.filter(p => p.operation.id !== pendingItem.operation.id)
         );

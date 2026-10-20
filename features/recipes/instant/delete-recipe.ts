@@ -1,3 +1,5 @@
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db } from '../../../lib/instant';
 import { buildRecipeDeleteCascadeTransactions } from '../../meal-planner/instant/build-recipe-delete-cascade-transactions';
 import { queryMemberMealPlanRecipeSyncRows } from '../../meal-planner/instant/query-meal-plan-entry-sync-rows';
@@ -11,6 +13,11 @@ import { queryMemberMealPlanRecipeSyncRows } from '../../meal-planner/instant/qu
  * fails too rather than leaving recipe-less planned meals behind.
  */
 export const deleteRecipe = async (recipeId: string) => {
+  if (quantityWorkspaceAvailable()) {
+    const { deleteQuantityRecipe } =
+      await import('@/features/quantity/app/recipe-actions');
+    return deleteQuantityRecipe(recipeId);
+  }
   const user = await db.getAuth();
   const recipeRows = user
     ? await queryMemberMealPlanRecipeSyncRows({

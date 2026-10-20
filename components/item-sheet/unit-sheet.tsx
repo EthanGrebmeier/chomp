@@ -3,6 +3,8 @@ import { ScaleIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 
+import { parseQuantity } from '@/features/quantity/model';
+
 import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
@@ -83,14 +85,14 @@ export const UnitSheet = ({
     if (disabled) return;
     const nextQuantity = quantity.toString();
     quantityInput.reset(nextQuantity);
-    setQuantityIsValid(parseInt(nextQuantity, 10) > 0);
+    setQuantityIsValid((parseQuantity(nextQuantity) ?? 0) > 0);
     setLocalUnit(normalizeUnit(unit));
     sheetRef.current?.present();
   };
 
   const handleQuantityChange = (text: string) => {
     quantityInput.handleChangeText(text);
-    setQuantityIsValid(!!text.length && parseInt(text, 10) > 0);
+    setQuantityIsValid((parseQuantity(text) ?? 0) > 0);
   };
 
   const handleUnitSelect = (value: string) => {
@@ -103,7 +105,8 @@ export const UnitSheet = ({
 
   const handleConfirm = () => {
     if (!isValid) return;
-    const parsed = parseInt(quantityInput.getValue(), 10);
+    const parsed = parseQuantity(quantityInput.getValue());
+    if (parsed === null || parsed <= 0) return;
     onQuantityChange(parsed);
     onUnitChange(normalizedLocalUnit);
     sheetRef.current?.dismiss();
@@ -161,7 +164,7 @@ export const UnitSheet = ({
                 ref={quantityInputRef}
                 defaultValue={quantityInput.defaultValue}
                 onChangeText={handleQuantityChange}
-                keyboardType="number-pad"
+                keyboardType="decimal-pad"
                 className="flex-1 text-2xl font-bold leading-7 text-foreground"
                 placeholder="1"
                 placeholderTextColor="#9ca3af"

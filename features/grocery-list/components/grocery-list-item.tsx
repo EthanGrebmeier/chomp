@@ -28,6 +28,7 @@ import { CategoryOption } from '../../shared/category/categories';
 import { checkListItem } from '../instant/check-list-item';
 import { removeGroceryListItem } from '../instant/remove-grocery-list-item';
 import { GroceryListItemWithRecipe } from '../types';
+import { groceryItemSourceLabel } from '../util';
 
 type GroceryListItemProps = {
   item: GroceryListItemWithRecipe;
@@ -108,6 +109,7 @@ const GroceryListItemComponent = ({
     StrikethroughLineMetrics[]
   >([], [item.id]);
   const notes = item.notes?.trim();
+  const sourceLabel = groceryItemSourceLabel(item);
   const hasMountedRef = useRef(false);
   const swipeableRef = useRef<SwipeToDeleteHandle | null>(null);
   const lastLongPressAtRef = useRef(0);
@@ -285,7 +287,7 @@ const GroceryListItemComponent = ({
         ) : null}
         <View className="flex-row items-center gap-2">
           {item.store?.name && <StoreTag name={item.store.name} />}
-          {item.recipe?.name && <RecipeTag name={item.recipe.name} />}
+          {sourceLabel ? <RecipeTag name={sourceLabel} /> : null}
         </View>
       </HapticPressable>
     </ListItem>

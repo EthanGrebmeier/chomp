@@ -49,7 +49,7 @@ export function saveRecipe(state: QuantityState, newId: NewId, recipe: Recipe) {
               id: newId(),
               recipeIngredientId: source.id,
               quantity: source.quantity * meal.servings,
-              selected: true,
+              selected: meal.ingredients.some(i => i.selected),
               overridden: false,
             }))
         ),
@@ -129,7 +129,7 @@ export function scheduleMeal(
 }
 
 /** Exact source-instance identity replaces the old source-to-row reconciler. */
-function syncMeal(
+export function syncMeal(
   tx: QuantityTransaction,
   newId: NewId,
   meal: Meal,

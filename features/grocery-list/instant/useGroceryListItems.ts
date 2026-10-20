@@ -1,5 +1,9 @@
 import { useMemo } from 'react';
 
+import { groceryProjection } from '@/features/quantity/app/projection';
+import { useQuantityList } from '@/features/quantity/app/session';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db } from '../../../lib/instant';
 import {
   applyPendingCheckedState,
@@ -27,8 +31,15 @@ const EMPTY_ITEMS: GroceryListItemWithRecipe[] = [];
  * Passing `undefined` skips the query.
  */
 export const useGroceryListItems = (listId: string | undefined) => {
+  const quantity = useQuantityList(listId);
+  const enabled = quantityWorkspaceAvailable();
+  const stores = db.useQuery(enabled ? { stores: {} } : null);
+  const projected = useMemo(
+    () => groceryProjection(quantity.state, stores.data?.stores),
+    [quantity.state, stores.data]
+  );
   const query = db.useQuery(
-    listId
+    listId && !enabled
       ? {
           grocery_items: {
             $: {
@@ -66,8 +77,12 @@ export const useGroceryListItems = (listId: string | undefined) => {
   );
 
   return {
-    items,
-    isLoading: listId ? query.isLoading : false,
-    error: query.error,
+    items: enabled ? projected : items,
+    isLoading: enabled ? quantity.loading : listId ? query.isLoading : false,
+    error: enabled
+      ? quantity.error
+        ? { message: quantity.error }
+        : null
+      : query.error,
   };
 };

@@ -28,13 +28,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
+import { moveQuantityRows } from '@/features/quantity/app/grocery-actions';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import {
   CategorySheet,
   CategorySheetRef,
 } from '../../../components/item-sheet/category-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
-import { LEAVE_LIST_MEAL_PLAN_WARNING } from '../../grocery-lists/instant/useLeaveGroceryList';
 import {
   StoreSheet,
   StoreSheetRef,
@@ -46,6 +48,7 @@ import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
 } from '../../grocery-lists/components/select-grocery-list-sheet';
+import { LEAVE_LIST_MEAL_PLAN_WARNING } from '../../grocery-lists/instant/useLeaveGroceryList';
 import { MealPlanDropdownMenuForList } from '../../meal-planner/components/meal-plan-dropdown-menu';
 import { useRecipesSettingsBar } from '../../shared/components/recipes-settings-bar';
 import {
@@ -84,6 +87,7 @@ import {
   GroceryListItemWithRecipe,
   GroceryListSortBy,
 } from '../types';
+import { groceryItemSourceLabel } from '../util';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { BulkSelectionControls } from './bulk-selection-controls';
@@ -115,7 +119,11 @@ type GroceryListProps = {
   onViewChange: (view: ListView) => void;
   alternateContent?: ReactNode;
   /** Opens the meal plan view on `date` (`yyyy-MM-dd`). */
-  onOpenMealPlanDate?: (date: string) => void;
+  onOpenMealPlanDate?: (
+    date: string,
+    mealId?: string,
+    sourceId?: string
+  ) => void;
 };
 
 type GroupingBulkAction = {
@@ -197,7 +205,7 @@ export const GroceryList = ({
       const name = item.name.toLowerCase();
       const category = item.category?.toLowerCase() ?? '';
       const notes = item.notes?.toLowerCase() ?? '';
-      const recipeName = item.recipe?.name?.toLowerCase() ?? '';
+      const recipeName = groceryItemSourceLabel(item)?.toLowerCase() ?? '';
       const storeName = item.store?.name?.toLowerCase() ?? '';
 
       return (
@@ -671,6 +679,20 @@ export const GroceryList = ({
       moveSelectionPayload.selectedItemIds.includes(item.id)
     );
     handleExitBulkSelectionMode();
+    if (quantityWorkspaceAvailable()) {
+      try {
+        await moveQuantityRows(
+          selectedItems.map(item => item.id),
+          destinationListId
+        );
+        onActiveListChange?.(destinationListId);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : 'Could not move items'
+        );
+      }
+      return;
+    }
     const fetchDestinationItems = async (
       destinationListIdToUse: string
     ): Promise<BulkMoveItemForPlanning[]> => {

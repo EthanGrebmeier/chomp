@@ -50,6 +50,8 @@ export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
  * item). `id` distinguishes repeated requests for the same date.
  */
 export type MealPlanFocusRequest = {
+  mealId?: string;
+  sourceId?: string;
   id: number;
   /** `yyyy-MM-dd` */
   date: string;

@@ -19,7 +19,9 @@ export function MetadataBar({
   stores,
   disabled,
   onChange,
+  children,
 }: {
+  children?: React.ReactNode;
   category: string;
   store: string;
   stores: string[];
@@ -51,6 +53,7 @@ export function MetadataBar({
           >
             <Pill hasValue={!!store}>{store || 'Store'}</Pill>
           </HapticPressable>
+          {children}
         </ScrollingMetaBar>
       </MetaBarLayout>
       {picker ? (

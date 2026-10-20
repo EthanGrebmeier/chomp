@@ -1,5 +1,7 @@
 import { id } from '@instantdb/react-native';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db, type TransactionChunk } from '../../../lib/instant';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
 
@@ -25,6 +27,7 @@ export type RecipeIngredientEditLookup =
 export const queryRecipeIngredientEditTargets = async (
   lookup: RecipeIngredientEditLookup
 ): Promise<MealPlanRecipeSyncRow[]> => {
+  if (quantityWorkspaceAvailable()) return [];
   const user = await db.getAuth();
   if (!user) {
     return [];

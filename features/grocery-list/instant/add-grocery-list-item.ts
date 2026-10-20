@@ -1,6 +1,8 @@
 import { id } from '@instantdb/react-native';
 import { toast } from 'sonner-native';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
@@ -30,6 +32,29 @@ export const addGroceryListItem = ({
 }) => {
   const itemId = id();
   const now = new Date().toISOString();
+  if (quantityWorkspaceAvailable()) {
+    return import('@/features/quantity/app/grocery-actions').then(
+      async ({ addManualQuantity }) => {
+        await addManualQuantity(listId, item, savedItemId);
+        try {
+          await db.transact(
+            buildAddEventTransactions({
+              eventId: itemId,
+              listId,
+              item,
+              addedAt: now,
+            })
+          );
+          if (!savedItemId && persistLocalSavedItem)
+            await upsertLocalSavedItem({ item, selectedLocalSavedItemId });
+        } catch {
+          toast.error(
+            'Quantity saved, but recent-item history could not be updated'
+          );
+        }
+      }
+    );
+  }
 
   const transactions: Parameters<typeof db.transact>[0] = [
     db.tx.grocery_items[itemId].create(

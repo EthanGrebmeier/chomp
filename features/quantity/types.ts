@@ -10,6 +10,8 @@ export type ShoppingRow = {
   category: string;
   store: string;
   status: 'active' | 'checked' | 'deleted';
+  createdAt?: string;
+  savedItemId?: string;
 };
 export type Ingredient = {
   id: string;
@@ -80,6 +82,8 @@ export type Operation = {
   changes: Change[];
   guards: Guard[];
   resolves: string[];
+  /** App-authored shopping metadata edits also update the owner's saved item. */
+  syncSavedItems?: boolean;
 };
 export type Conflict = { operation: Operation; reason: string };
 export type QuantityState = {

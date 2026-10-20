@@ -59,17 +59,25 @@ export const upsertLocalSavedItem = async ({
   const ownerPredicate = ownerId
     ? eq(localSavedItemTable.ownerId, ownerId)
     : isNull(localSavedItemTable.ownerId);
-  const existing = await db
-    .select({ id: localSavedItemTable.id })
-    .from(localSavedItemTable)
-    .where(
-      and(
-        eq(localSavedItemTable.isDefault, false),
-        ownerPredicate,
-        sql`lower(${localSavedItemTable.name}) = ${nameToMatch}`
+  const findByName = (normalizedName: string) =>
+    db
+      .select({ id: localSavedItemTable.id })
+      .from(localSavedItemTable)
+      .where(
+        and(
+          eq(localSavedItemTable.isDefault, false),
+          ownerPredicate,
+          sql`lower(${localSavedItemTable.name}) = ${normalizedName}`
+        )
       )
-    )
-    .limit(1);
+      .limit(1);
+  let existing = await findByName(nameToMatch);
+  // A durable sync retry may arrive after a rename already succeeded. Find the
+  // new name too, rather than inserting a second history item on every retry.
+  const nextName = item.name.trim().toLowerCase();
+  if (!existing.length && nameToMatch !== nextName) {
+    existing = await findByName(nextName);
+  }
 
   if (existing.length > 0) {
     await db

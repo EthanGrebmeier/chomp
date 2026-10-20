@@ -64,6 +64,23 @@ export const MealPlanner = memo(function MealPlanner({
     return () => subscription.remove();
   }, []);
 
+  const lastFocusedRequest = useRef<number | null>(null);
+  useEffect(() => {
+    if (!focusRequest?.mealId || lastFocusedRequest.current === focusRequest.id)
+      return;
+    const meal = recipes.find(m => m.id === focusRequest.mealId);
+    const item = items.find(i => i.id === focusRequest.mealId);
+    if (!meal && !item) return;
+    lastFocusedRequest.current = focusRequest.id;
+    if (meal)
+      editMealSheet.current?.open({
+        mealPlanRecipe: meal,
+        recipe: meal.recipe,
+        focusSourceId: focusRequest.sourceId,
+      });
+    else if (item) editItemSheet.current?.open(item);
+  }, [focusRequest, recipes, items]);
+
   const handleItemPress = useCallback((item: MealPlanItemWithStore) => {
     editItemSheet.current?.open(item);
   }, []);

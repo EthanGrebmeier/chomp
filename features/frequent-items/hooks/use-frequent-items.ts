@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useGroceryListItems } from '@/features/grocery-list/instant/useGroceryListItems';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 import { db } from '@/lib/instant';
 
 import { buildAddEventTransactions } from '../instant/build-add-event-transactions';
@@ -17,6 +19,10 @@ import {
 const BACKFILL_BATCH_SIZE = 100;
 
 export const useFrequentItems = (listId: string) => {
+  const quantityEnabled = quantityWorkspaceAvailable();
+  const { items: quantityItems } = useGroceryListItems(
+    quantityEnabled ? listId : undefined
+  );
   const { user } = db.useAuth();
   const cacheKey = user ? `${user.id}:${listId}` : null;
   const cachedFrequentItems = useCachedFrequentItems(cacheKey);
@@ -129,9 +135,9 @@ export const useFrequentItems = (listId: string) => {
 
     return buildFrequentItems({
       events: list.grocery_item_add_events,
-      currentItems: list.grocery_items,
+      currentItems: quantityEnabled ? quantityItems : list.grocery_items,
     });
-  }, [list]);
+  }, [list, quantityEnabled, quantityItems]);
   const isBackfilling = itemsToBackfill.length > 0 && !backfillError;
 
   useEffect(() => {

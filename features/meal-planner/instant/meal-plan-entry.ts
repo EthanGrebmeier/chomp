@@ -1,5 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db, type TransactionChunk } from '../../../lib/instant';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
 
@@ -81,6 +83,12 @@ export const setMealPlanEntryIgnored = async ({
   ignored,
   defaultStore,
 }: SetMealPlanEntryIgnoredArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { setQuantityMealIgnored } =
+      await import('@/features/quantity/app/meal-actions');
+    return setQuantityMealIgnored(entryId, ignored);
+  }
+
   const { found, context } = await querySyncContext({ type, id: entryId });
   if (!found) {
     throw new Error(

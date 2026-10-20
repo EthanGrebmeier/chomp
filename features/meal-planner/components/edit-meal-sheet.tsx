@@ -14,6 +14,7 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
+import { BackButton } from '../../../components/ui/back-button';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
 import { navigation } from '../../../lib/navigation';
@@ -23,11 +24,6 @@ import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
-import {
-  getCanonicalSnapshots,
-  getIngredientShoppingStatus,
-  getMealPlanShoppingState,
-} from '../utils/shopping-state';
 import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
 import {
   MealPlanIngredientEditorRow,
@@ -36,6 +32,11 @@ import {
   initializeMealPlanIngredientEditor,
 } from '../meal-plan-recipe-ingredient-editor';
 import { MealPlanRecipe } from '../types';
+import {
+  getCanonicalSnapshots,
+  getIngredientShoppingStatus,
+  getMealPlanShoppingState,
+} from '../utils/shopping-state';
 import {
   countUncheckedLinkedGroceryItems,
   withUncheckedLinkedGroceryItemsNotice,
@@ -62,6 +63,7 @@ export type EditMealSheetRef = {
     mealPlanRecipe: MealPlanRecipe;
     recipe: Recipe;
     onDismiss?: () => void;
+    focusSourceId?: string;
   }) => void;
 };
 
@@ -87,6 +89,10 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       null
     );
 
+    const [focusedSourceId, setFocusedSourceId] = useState<
+      string | undefined
+    >();
+    const [sheetOpen, setSheetOpen] = useState(false);
     const sheetRef = useRef<TrueSheet>(null);
     const changeRecipeSheetRef = useRef<TrueSheet>(null);
     const ingredientOverrideSheetRef =
@@ -166,11 +172,15 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         mealPlanRecipe,
         recipe,
         onDismiss,
+        focusSourceId,
       }: {
         mealPlanRecipe: MealPlanRecipe;
         recipe: Recipe;
         onDismiss?: () => void;
+        focusSourceId?: string;
       }) => {
+        setFocusedSourceId(focusSourceId);
+        setSheetOpen(false);
         editorSessionRef.current += 1;
         selectionInFlightRef.current = false;
         setPendingSelections({});
@@ -326,6 +336,13 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       persistedRecipeId,
       selectedRecipeWithIngredients,
     ]);
+    useEffect(() => {
+      if (!focusedSourceId || !sheetOpen || isSnapshotLoading) return;
+      const row = ingredientRows.find(i => i.snapshotRowId === focusedSourceId);
+      if (!row) return;
+      ingredientOverrideSheetRef.current?.present(row);
+      setFocusedSourceId(undefined);
+    }, [focusedSourceId, sheetOpen, isSnapshotLoading, ingredientRows]);
     const shoppingStatusBySource = new Map(
       getCanonicalSnapshots(
         selectedRecipeWithIngredients?.recipe_ingredients ?? [],
@@ -495,6 +512,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       <>
         <BottomSheet
           name="edit-meal-sheet"
+          onOpen={() => setSheetOpen(true)}
           ref={sheetRef}
           detents={[1]}
           viewClassName="flex-1"
@@ -509,6 +527,9 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
             <View className="min-h-0 flex-1">
               <BottomSheet.Header
                 title="Edit meal"
+                dismissButton={
+                  <BackButton onPress={() => sheetRef.current?.dismiss()} />
+                }
                 className="mb-2"
                 button={
                   selectedRecipe ? (

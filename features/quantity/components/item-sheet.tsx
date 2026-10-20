@@ -1,6 +1,11 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { ArrowUpRight, ChevronRight, Plus } from 'lucide-react-native';
-import { useEffect, useRef, useState } from 'react';
+import {
+  ArrowUpRight,
+  ChevronRight,
+  MoreHorizontal,
+  Plus,
+} from 'lucide-react-native';
+import { useEffect, useRef, useState, type ComponentType } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -10,8 +15,16 @@ import {
   ItemNotesField,
 } from '@/components/item-sheet/item-fields';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuItemIcon,
+  DropdownMenuItemTitle,
+  DropdownMenuRoot,
+} from '@/components/ui/dropdown-menu';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
+import { Pill } from '@/components/ui/pill';
 import { Text } from '@/components/ui/text';
 
 import {
@@ -32,6 +45,7 @@ import type { Operation, QuantityEntry, QuantityState } from '../types';
 
 import { AmountSheet } from './amount-sheet';
 import { MetadataBar } from './metadata-bar';
+import { MoveItemSheet } from './move-item-sheet';
 
 function sourceDetail(entry: QuantityEntry) {
   if (entry.sourceId)
@@ -50,7 +64,17 @@ export function ItemSheet({
   onDismiss,
   onOpenMeal,
   onMove,
+  MetadataComponent,
+  lists,
 }: {
+  lists?: { id: string; name: string }[];
+  MetadataComponent?: ComponentType<{
+    children?: React.ReactNode;
+    row: import('../types').ShoppingRow;
+    onChange: (
+      details: Parameters<typeof editShoppingDetails>[3]
+    ) => Promise<void>;
+  }>;
   state: QuantityState;
   rowId: string;
   newId: NewId;
@@ -60,7 +84,10 @@ export function ItemSheet({
   onMove: (rowId: string, listId: string) => void;
 }) {
   const row = record(state, rowId, 'row');
+  const availableLists = lists ?? records(state, 'list');
+  const currentList = availableLists.find(list => list.id === row.listId);
   const ref = useRef<TrueSheet>(null);
+  const [choosingList, setChoosingList] = useState(false);
   const [editor, setEditor] = useState<{
     id?: string;
     snapshot: QuantityState;
@@ -136,9 +163,41 @@ export function ItemSheet({
         },
       ]
     );
+  const listPill = (
+    <HapticPressable
+      accessibilityRole="button"
+      accessibilityLabel={`Choose shopping list, current list: ${currentList?.name ?? 'Shopping list'}`}
+      className="min-h-11 justify-center"
+      onPress={() => setChoosingList(true)}
+    >
+      <Pill hasValue>{currentList?.name ?? 'Shopping list'}</Pill>
+    </HapticPressable>
+  );
   const content = (
     <View className="px-6 pb-5">
-      <BottomSheet.Header title="Edit item" />
+      <BottomSheet.Header
+        title="Edit item"
+        button={
+          <DropdownMenuRoot
+            trigger={
+              <View
+                accessibilityRole="button"
+                accessibilityLabel="Item actions"
+                className="size-11 items-center justify-center"
+              >
+                <Icon as={MoreHorizontal} size={24} />
+              </View>
+            }
+          >
+            <DropdownMenuContent>
+              <DropdownMenuItem key="delete-item" destructive onSelect={remove}>
+                <DropdownMenuItemTitle>Delete item</DropdownMenuItemTitle>
+                <DropdownMenuItemIcon ios={{ name: 'trash' }} />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenuRoot>
+        }
+      />
       <ItemNameField
         accessibilityLabel="Item name"
         value={name}
@@ -200,14 +259,18 @@ export function ItemSheet({
           >
             <View className="flex-1 gap-1">
               <Text className="font-medium">
-                {entry.sourceName || 'Quantity'}
+                {entry.origin === 'manual'
+                  ? 'Added Manually'
+                  : entry.sourceName || 'Quantity'}
               </Text>
-              {entry.sourceNotes ? (
+              {entry.origin !== 'manual' && entry.sourceNotes ? (
                 <Text className="text-sm">{entry.sourceNotes}</Text>
               ) : null}
-              <Text className="text-sm text-muted-foreground">
-                {sourceDetail(entry)}
-              </Text>
+              {entry.origin !== 'manual' ? (
+                <Text className="text-sm text-muted-foreground">
+                  {sourceDetail(entry)}
+                </Text>
+              ) : null}
             </View>
             <Text
               className="font-medium"
@@ -227,30 +290,24 @@ export function ItemSheet({
       </View>
       {!history ? (
         <View className="gap-3 pt-2">
-          <MetadataBar
-            category={row.category}
-            store={row.store}
-            stores={records(state, 'row').map(r => r.store)}
-            disabled={history}
-            onChange={(field, value) => saveDetails({ [field]: value })}
-          />
-          {records(state, 'list')
-            .filter(l => l.id !== row.listId)
-            .map(list => (
-              <Button
-                key={list.id}
-                variant="outline"
-                onPress={() => leave(() => onMove(rowId, list.id))}
-              >
-                <Text>Move to {list.name}</Text>
-              </Button>
-            ))}
+          {MetadataComponent ? (
+            <MetadataComponent row={row} onChange={saveDetails}>
+              {listPill}
+            </MetadataComponent>
+          ) : (
+            <MetadataBar
+              category={row.category}
+              store={row.store}
+              stores={records(state, 'row').map(r => r.store)}
+              disabled={history}
+              onChange={(field, value) => saveDetails({ [field]: value })}
+            >
+              {listPill}
+            </MetadataBar>
+          )}
         </View>
       ) : null}
       {error ? <Text className="pt-3 text-destructive">{error}</Text> : null}
-      <Button className="mt-4" variant="ghost" onPress={remove}>
-        <Text className="text-destructive">Delete item</Text>
-      </Button>
     </View>
   );
   return (
@@ -291,6 +348,14 @@ export function ItemSheet({
               : undefined
           }
           onDismiss={() => setEditor(null)}
+        />
+      ) : null}
+      {choosingList ? (
+        <MoveItemSheet
+          lists={availableLists}
+          selectedListId={row.listId}
+          onSelect={listId => leave(() => onMove(rowId, listId))}
+          onDismiss={() => setChoosingList(false)}
         />
       ) : null}
     </BottomSheet>

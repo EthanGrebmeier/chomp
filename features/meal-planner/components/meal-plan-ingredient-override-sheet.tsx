@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Keyboard } from 'react-native';
+import { Keyboard, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -54,7 +54,7 @@ const EditMealIngredientSheetContents = ({
   editingRow: MealPlanIngredientEditorRow | null;
   onDismiss: () => void;
 }) => {
-  const { reset, itemInputRef, onSubmit, isValid } = useItemSheet();
+  const { reset, onSubmit, isValid } = useItemSheet();
 
   const handleClose = useCallback(() => {
     Keyboard.dismiss();
@@ -62,29 +62,22 @@ const EditMealIngredientSheetContents = ({
     onDismiss();
   }, [onDismiss, reset]);
 
-  const handleOpen = useCallback(() => {
-    itemInputRef.current?.focus();
-  }, [itemInputRef]);
-
   return (
     <BottomSheet
       viewClassName="pb-safe"
       name="meal-plan-ingredient-override-sheet"
       ref={sheetRef}
       onStartClose={handleClose}
-      onOpen={handleOpen}
-      footer={
-        <BottomSheet.SheetView className="pb-safe gap-4 px-4 pt-3">
-          <MetaBar />
-          <Button onPress={onSubmit} disabled={!isValid}>
-            <Text>Save ingredient</Text>
-          </Button>
-        </BottomSheet.SheetView>
-      }
     >
       <BottomSheet.SheetView>
         <BottomSheet.Header title="Adjust ingredient" className="mb-4" />
         <ItemForm />
+        <View className="gap-4 pb-5 pt-4">
+          <MetaBar />
+          <Button onPress={onSubmit} disabled={!isValid}>
+            <Text>Save ingredient</Text>
+          </Button>
+        </View>
       </BottomSheet.SheetView>
     </BottomSheet>
   );
