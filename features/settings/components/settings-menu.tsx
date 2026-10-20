@@ -96,6 +96,22 @@ export function SettingsMenu({ onSelect, onCreateAccount }: SettingsMenuProps) {
               />
             </HapticPressable>
           ) : null}
+          {__DEV__ ? (
+            <HapticPressable
+              onPress={() => onSelect('quantity-contributions-demo')}
+              accessibilityRole="button"
+              className="min-h-12 flex-row items-center justify-between gap-3 border-t border-border pt-4 active:opacity-70"
+            >
+              <Text className="flex-1 font-medium">
+                Quantity contributions demo
+              </Text>
+              <Icon
+                as={ChevronRightIcon}
+                size={20}
+                className="text-muted-foreground"
+              />
+            </HapticPressable>
+          ) : null}
           {hasInstantEmailSession ? (
             <HapticPressable
               onPress={() => onSelect('account')}

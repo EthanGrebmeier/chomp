@@ -3,10 +3,10 @@ import { TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { cn } from '../../lib/utils';
-import { BottomSheet } from '../bottom-sheet';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Text } from '../ui/text';
 
+import { ItemNameField } from './item-fields';
 import { MatchingItem, useMatchingItems } from './use-matching-items';
 
 type ItemInputProps = {
@@ -96,16 +96,13 @@ export const ItemInput = ({
 
   return (
     <View className="w-full">
-      <BottomSheet.BareTextInput
+      <ItemNameField
         key={inputKey}
         ref={inputRef}
-        className="text-2xl font-bold text-foreground"
         placeholder={placeholder}
         defaultValue={defaultValue}
         onChangeText={handleChangeText}
         onBlur={handleInputBlur}
-        autoCorrect={false}
-        autoCapitalize="words"
         onSubmitEditing={onSubmit}
         submitBehavior={keepKeyboardOnSubmit ? 'submit' : 'blurAndSubmit'}
       />

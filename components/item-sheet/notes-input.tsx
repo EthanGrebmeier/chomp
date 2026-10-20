@@ -1,5 +1,4 @@
-import { BottomSheet } from '../bottom-sheet';
-
+import { ItemNotesField } from './item-fields';
 import { useItemSheet } from './use-item-sheet';
 
 export const NotesInput = () => {
@@ -11,15 +10,11 @@ export const NotesInput = () => {
   } = useItemSheet();
 
   return (
-    <BottomSheet.BareTextInput
+    <ItemNotesField
       key={notesInputKey}
       ref={notesInputRef}
       defaultValue={notesInputDefaultValue}
       onChangeText={onChangeNotesText}
-      placeholder="Notes"
-      multiline
-      style={{ textAlignVertical: 'top' }}
-      className="min-h-40  text-start text-lg font-medium text-muted-foreground"
     />
   );
 };
