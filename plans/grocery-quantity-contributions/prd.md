@@ -2,6 +2,8 @@
 
 Status: planning; no production enablement authorized by this document.
 
+**Simulator implementation:** A persistent development-only [Quantity workspace](../../features/quantity/README.md) now exercises the confirmed behavior with immutable operations, derived totals, visible conflicts, and a durable outbox. Its [SDK evidence](evidence/quantity-workspace-sdk.json) is separate from the prior failed protocol. This is an isolated simulator-testing milestone; the existing app writers, production migration, actual old-binary fence, and cutover gates below remain outstanding.
+
 ## Goal
 
 Represent a grocery row as a shopping item containing independently identified quantity entries. A row may contain quantities from multiple scheduled meals, direct recipe additions, and manual additions. Keep the grocery list compact while making its quantity explainable in the edit sheet. Manual/direct-recipe quantities are edited there; planned quantities link to their specific item in the meal plan for editing.

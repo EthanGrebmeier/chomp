@@ -3,5 +3,6 @@ export type SettingsSubmenu =
   | 'stores'
   | 'categories'
   | 'account'
+  | 'quantity-workspace'
   | 'duplicate-resolution-demo'
   | 'quantity-contributions-demo';

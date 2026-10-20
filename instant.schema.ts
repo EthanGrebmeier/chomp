@@ -4,6 +4,18 @@ import { i } from '@instantdb/react-native';
 
 const _schema = i.schema({
   entities: {
+    // Isolated quantity workspace. Deploy only with scripts/setup-quantity-workspace.mjs.
+    // No links to existing application entities or source lifecycle writers.
+    gqc_workspaces_v1: i.entity({
+      name: i.string(),
+      ownerId: i.string(),
+      memberIds: i.json<string[]>(),
+    }),
+    gqc_operations_v1: i.entity({
+      workspaceId: i.string().indexed(),
+      authorId: i.string(),
+      body: i.string(),
+    }),
     $users: i.entity({
       email: i.string().unique().indexed().optional(),
       hasInitializedSavedItems: i.boolean().optional(),
@@ -123,6 +135,10 @@ const _schema = i.schema({
     }),
   },
   links: {
+    gqc_workspace_operations_v1: {
+      forward: { on: 'gqc_operations_v1', has: 'one', label: 'workspace' },
+      reverse: { on: 'gqc_workspaces_v1', has: 'many', label: 'operations' },
+    },
     grocery_listsGrocery_items: {
       forward: {
         on: 'grocery_lists',

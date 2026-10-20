@@ -3,6 +3,10 @@
 import type { InstantRules } from '@instantdb/react-native';
 
 const rules = {
+  // The simulator workspace has an explicit allowlisted setup script. A normal
+  // permissions deployment must never enable these development-only writers.
+  gqc_workspaces_v1: { allow: { $default: 'false' } },
+  gqc_operations_v1: { allow: { $default: 'false' } },
   grocery_items: {
     bind: ['isOwner', "auth.id in data.ref('grocery_list.shares.user_id')"],
     allow: {
