@@ -3,12 +3,16 @@ import { id } from '@instantdb/react-native';
 import type { AddRecipeToListArgs } from '@/features/recipes/instant/add-recipe-to-list';
 import { db } from '@/lib/instant';
 
+import { commitOperations, decodeHistory } from '../commits';
+import { quantityCommitStore } from '../instant-commit-store';
+import { materialize } from '../model';
+import { deleteRecipeContributions } from '../recipe-deletion';
 import { addEntryToRow } from '../shopping';
 import { QuantityTransaction } from '../transaction';
 
 import { chooseDestinations } from './destinations';
-import { ingredientFromApp } from './initialize';
-import { listSession } from './session';
+import { ingredientFromApp, ensureQuantityList } from './initialize';
+import { listSession, allListSessions } from './session';
 
 export async function addQuantityRecipe({
   listId,
@@ -57,45 +61,44 @@ export async function addQuantityRecipe({
 }
 
 export async function deleteQuantityRecipe(recipeId: string) {
-  const { allListSessions } = await import('./session');
-  const { records, record } = await import('../model');
-  const { operationChunk } = await import('../sync-workspace');
-  const sessions = allListSessions().filter(
-    ([, session]) => session.state.documents[recipeId]
-  );
   const user = await db.getAuth();
   if (!user) throw new Error('Sign in first');
-  const operations = sessions.map(([listId, session]) => {
-    if (
-      !session.canEdit ||
-      session.connection !== 'authenticated' ||
-      session.pending.length
-    )
+  // Loaded screens are not an inventory: include every accessible list, even
+  // one whose provider has not initialized yet.
+  const { data } = await db.queryOnce(
+    {
+      grocery_lists: {},
+      recipes: { $: { where: { id: recipeId } } },
+    },
+    { ruleParams: { quantityDelete: id() } }
+  );
+  const recipe = data.recipes[0];
+  if (!recipe) return;
+  for (const [, session] of allListSessions()) {
+    if (session.pending.length || session.connection !== 'authenticated')
       throw new Error(
         'Let your list changes finish syncing before deleting this recipe'
       );
-    const tx = new QuantityTransaction(session.state);
-    const mealIds = new Set(
-      records(session.state, 'meal')
-        .filter(m => m.recipeId === recipeId)
-        .map(m => m.id)
-    );
-    for (const entry of records(session.state, 'entry').filter(
-      e => e.mealId && mealIds.has(e.mealId)
-    )) {
-      const row = record(session.state, entry.rowId, 'row');
-      tx.require(row);
-      if (row.status === 'active') tx.remove(entry.id);
-      else tx.put({ ...entry, sourceId: null, mealId: null });
-    }
-    for (const mealId of mealIds) tx.remove(mealId);
-    tx.remove(recipeId);
-    return operationChunk(
-      tx.build(id(), 'Delete recipe and planned meals'),
-      listId,
-      user.id
-    );
-  });
-  await db.transact([...operations, db.tx.recipes[recipeId].delete()]);
-  await Promise.all(sessions.map(([, session]) => session.refresh()));
+  }
+  const store = quantityCommitStore(user.id, [
+    db.tx.recipes[recipeId].delete(),
+  ]);
+  const plans = await Promise.all(
+    data.grocery_lists.map(async list => {
+      await ensureQuantityList(list.id, user.id);
+      const history = decodeHistory(await store.read(list.id));
+      return {
+        workspaceId: list.id,
+        operation: deleteRecipeContributions(
+          materialize(history),
+          id,
+          recipeId,
+          recipe.name
+        ),
+      };
+    })
+  );
+  if (plans.length) await commitOperations(store, plans, user.id, true);
+  else await db.transact(db.tx.recipes[recipeId].delete());
+  await Promise.all(allListSessions().map(([, session]) => session.refresh()));
 }

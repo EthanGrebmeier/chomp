@@ -49,7 +49,7 @@ export const workspaceRules = {
       $default: 'false',
       view: "size(data.ref('workspace.appListId')) == 1 ? auth.id in data.ref('workspace.groceryList.shares.user_id') : auth.id in data.ref('workspace.memberIds')[0]",
       create:
-        "auth.id == data.authorId && size(data.ref('workspace.id')) == 1 && data.workspaceId in data.ref('workspace.id') && (size(data.ref('workspace.appListId')) == 1 ? auth.id in data.ref('workspace.groceryList.shares.user_id') : auth.id in data.ref('workspace.memberIds')[0]) && size(data.body) < 200000",
+        "auth.id == data.authorId && size(data.ref('workspace.id')) == 1 && data.workspaceId in data.ref('workspace.id') && (data.serialKey == null || data.serialKey.startsWith(data.workspaceId + ':')) && (size(data.ref('workspace.appListId')) == 1 ? (data.serialKey != null && auth.id in data.ref('workspace.groceryList.shares.user_id')) : auth.id in data.ref('workspace.memberIds')[0]) && size(data.body) < 200000",
       // Intents are create-only, including their permission links. modifiedFields
       // does not fence unlink operations. The outbox recognizes exact retries by
       // reading the existing author/scope/body instead of rewriting the record.
@@ -62,7 +62,7 @@ export function workspaceAttrs() {
   const attrs = [];
   for (const [entity, fields] of [
     [names.workspaces, ['id', 'name', 'ownerId', 'memberIds', 'appListId']],
-    [names.operations, ['id', 'workspaceId', 'authorId', 'body']],
+    [names.operations, ['id', 'workspaceId', 'authorId', 'body', 'serialKey']],
   ]) {
     for (const field of fields)
       attrs.push({
@@ -70,7 +70,7 @@ export function workspaceAttrs() {
         'forward-identity': [randomUUID(), entity, field],
         'value-type': 'blob',
         cardinality: 'one',
-        'unique?': field === 'id',
+        'unique?': field === 'id' || field === 'serialKey',
         'index?': field === 'workspaceId',
       });
   }

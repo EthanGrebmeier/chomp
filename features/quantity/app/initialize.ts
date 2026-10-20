@@ -2,6 +2,8 @@ import { id } from '@instantdb/react-native';
 
 import { db } from '@/lib/instant';
 
+import { commitOperations } from '../commits';
+import { quantityCommitStore } from '../instant-commit-store';
 import { materialize, normalize } from '../model';
 import { operationChunk } from '../sync-workspace';
 import { QuantityTransaction } from '../transaction';
@@ -172,7 +174,10 @@ async function initialize(listId: string, userId: string) {
       ingredients,
     });
   }
-  const operation = tx.build(id(), 'Initialize list quantities');
+  const operation = {
+    ...tx.build(id(), 'Initialize list quantities'),
+    commit: { sequence: 1, parents: [] },
+  };
   try {
     await db.transact([
       db.tx.gqc_workspaces_v1[listId]
@@ -216,7 +221,15 @@ async function restoreSavedItemLinks(listId: string, userId: string) {
     }
   }
   if (changed)
-    await db.transact(
-      operationChunk(tx.build(id(), 'Restore saved-item links'), listId, userId)
+    await commitOperations(
+      quantityCommitStore(userId),
+      [
+        {
+          workspaceId: listId,
+          operation: tx.build(id(), 'Restore saved-item links'),
+        },
+      ],
+      userId,
+      true
     );
 }

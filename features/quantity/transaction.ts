@@ -1,4 +1,4 @@
-import { entryVersions, validateDocuments } from './model';
+import { entryVersions, recipeMealVersions, validateDocuments } from './model';
 import type {
   Change,
   Document,
@@ -32,6 +32,13 @@ export class QuantityTransaction {
       id: value.id,
       before: this.state.documents[value.id]?.version ?? null,
       value: document as Document,
+    });
+  }
+  requireRecipeMeals(recipeId: string) {
+    this.guards.push({
+      kind: 'recipeMeals',
+      recipeId,
+      versions: recipeMealVersions(this.state, recipeId),
     });
   }
   remove(id: string) {

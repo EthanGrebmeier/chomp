@@ -2,7 +2,7 @@
 
 Status: implemented in the development app; production enablement remains pending.
 
-**Current implementation:** Normal grocery, recipe and meal-plan screens now use the contribution model in the allowlisted development app, including saved-item metadata sync. The optional Quantity workspace remains a demo. The [SDK evidence](evidence/quantity-workspace-sdk.json) concerns the replacement immutable-operation protocol, not the prior failed candidate. See the [implementation status](status.md) for the reduced remaining backlog: cross-list correctness (#49), focused release QA (#51), and one production rollout checklist (#53). The detailed rollout discussion below remains background; it does not require separate projects for every checkpoint or authorize production activation.
+**Current implementation:** Normal grocery, recipe and meal-plan screens now use the contribution model in the allowlisted development app, including saved-item metadata sync. The optional Quantity workspace remains a demo. The [SDK evidence](evidence/quantity-workspace-sdk.json) concerns the replacement immutable-operation protocol, not the prior failed candidate. See the [implementation status](status.md) for the reduced remaining backlog: focused release QA (#51) and one production rollout checklist (#53); cross-list correctness (#49) is implemented with serialized atomic commits and two-client SDK evidence. The detailed rollout discussion below remains background; it does not require separate projects for every checkpoint or authorize production activation.
 
 ## Goal
 

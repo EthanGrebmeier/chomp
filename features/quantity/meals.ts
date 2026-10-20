@@ -10,6 +10,9 @@ import type {
 } from './types';
 
 export function saveRecipe(state: QuantityState, newId: NewId, recipe: Recipe) {
+  const existing = state.documents[recipe.id];
+  if (existing?.kind === 'recipe' && existing.deleted)
+    throw new Error('This recipe has been deleted');
   const tx = new QuantityTransaction(state);
   tx.put(recipe);
   // Scheduled snapshots track unoverridden recipe quantities; direct adds never do.

@@ -1,20 +1,10 @@
-import { id } from '@instantdb/react-native';
-
-import { db } from '@/lib/instant';
-
+import { commitOperations } from './commits';
+import { quantityCommitStore } from './instant-commit-store';
 import { materialize } from './model';
 import type { Operation } from './types';
 
+export { operationChunk } from './operation-chunk';
 export type Pending = { operation: Operation; error?: string };
-
-export const operationChunk = (
-  operation: Operation,
-  workspaceId: string,
-  authorId: string
-) =>
-  db.tx.gqc_operations_v1[operation.id]
-    .update({ workspaceId, authorId, body: JSON.stringify(operation) })
-    .link({ workspace: workspaceId });
 
 export async function flushOutbox({
   workspaceId,
@@ -35,35 +25,16 @@ export async function flushOutbox({
   while ((item = getPending().find(p => !p.error))) {
     const pendingItem = item;
     try {
-      const existing = await db.queryOnce(
-        { gqc_operations_v1: { $: { where: { id: item.operation.id } } } },
-        { ruleParams: { quantityRetry: id() } }
+      const [committed] = await commitOperations(
+        quantityCommitStore(userId),
+        [{ workspaceId, operation: pendingItem.operation }],
+        userId
       );
-      const saved = existing.data.gqc_operations_v1[0];
-      if (saved) {
-        if (
-          saved.workspaceId !== workspaceId ||
-          saved.authorId !== userId ||
-          saved.body !== JSON.stringify(item.operation)
-        )
-          throw new Error('Operation identity collision');
-        confirm(pendingItem.operation);
-        await afterConfirm?.(pendingItem.operation);
-        await changePending(values =>
-          values.filter(p => p.operation.id !== pendingItem.operation.id)
-        );
-        continue;
-      }
-      const result = await db.transact(
-        operationChunk(item.operation, workspaceId, userId)
+      confirm(committed.operation);
+      await afterConfirm?.(committed.operation);
+      await changePending(values =>
+        values.filter(p => p.operation.id !== pendingItem.operation.id)
       );
-      if (result.status === 'synced') {
-        confirm(pendingItem.operation);
-        await afterConfirm?.(pendingItem.operation);
-        await changePending(values =>
-          values.filter(p => p.operation.id !== pendingItem.operation.id)
-        );
-      } else break;
     } catch {
       await changePending(values =>
         values.map(p =>
@@ -97,9 +68,23 @@ export function readWorkspaceState(
         throw new Error('Invalid operation identity');
       operations.push(operation);
     }
-    for (const item of pending.filter(p => !p.error))
-      operations.push(item.operation);
-    return materialize(operations);
+    const savedIds = new Set(operations.map(op => op.id));
+    const optimisticIds = new Set<string>();
+    // Optimistic intents follow the server-confirmed prefix, even when authored
+    // offline against older heads. Their original version guards stay intact.
+    let optimistic = materialize(operations);
+    for (const item of pending.filter(
+      p => !p.error && !savedIds.has(p.operation.id)
+    )) {
+      const operation = {
+        ...item.operation,
+        parents: [...new Set([...item.operation.parents, ...optimistic.heads])],
+      };
+      operations.push(operation);
+      optimisticIds.add(operation.id);
+      optimistic = materialize(operations, optimisticIds);
+    }
+    return optimistic;
   } catch {
     return {
       ...materialize([]),

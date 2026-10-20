@@ -146,9 +146,23 @@ it('restores saved-item links in an earlier development import by row ID', async
         gqc_operations_v1: [{ body: JSON.stringify(operation) }],
         grocery_items: [{ id: 'row', saved_item: { id: 'saved-milk' } }],
       },
+    })
+    .mockResolvedValueOnce({
+      data: {
+        gqc_workspaces_v1: [{ id: 'list' }],
+        gqc_operations_v1: [
+          {
+            id: operation.id,
+            workspaceId: 'list',
+            authorId: 'guest',
+            body: JSON.stringify(operation),
+          },
+        ],
+      },
     });
+  mocks.transact.mockResolvedValueOnce({ status: 'synced' });
   await ensureQuantityList('list', 'guest');
-  const repaired = JSON.parse(mocks.transact.mock.calls[0][0].value.body);
+  const repaired = JSON.parse(mocks.transact.mock.calls[0][0][0].value.body);
   expect(records(materialize([operation, repaired]), 'row')[0]).toMatchObject({
     savedItemId: 'saved-milk',
     name: 'Milk',

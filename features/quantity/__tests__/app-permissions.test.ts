@@ -5,6 +5,7 @@ import { testApp } from '../../../scripts/quantity/test-app.mjs';
 import { materialize, totalFor } from '../model';
 import { manualAdd, extraQuantity } from '../shopping';
 import { QuantityTransaction } from '../transaction';
+import type { Operation } from '../types';
 
 describe('real grocery-list quantity permissions', () => {
   it.skipIf(process.env.RUN_QUANTITY_SDK !== '1')(
@@ -55,15 +56,25 @@ describe('real grocery-list quantity permissions', () => {
         ]);
         const tx = new QuantityTransaction(materialize([]));
         tx.put({ kind: 'list', id: listId, name: 'SDK real guest list' });
-        const genesis = tx.build(randomUUID(), 'Initialize guest list');
-        const chunk = (client: typeof guest, operation: typeof genesis) =>
-          client.client.tx.gqc_operations_v1[operation.id]
+        const genesis: Operation = tx.build(
+          randomUUID(),
+          'Initialize guest list'
+        );
+        let sequence = 0;
+        const chunk = (client: typeof guest, operation: typeof genesis) => {
+          operation.commit = {
+            sequence: ++sequence,
+            parents: operation.parents,
+          };
+          return client.client.tx.gqc_operations_v1[operation.id]
             .update({
               workspaceId: listId,
               authorId: client === guest ? users[0] : users[1],
+              serialKey: `${listId}:${operation.commit.sequence}`,
               body: JSON.stringify(operation),
             })
             .link({ workspace: listId });
+        };
         stage = 'initialize list quantity scope';
         expect(
           (

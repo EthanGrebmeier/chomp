@@ -32,7 +32,8 @@ if (installed) {
               attr['forward-identity'][2] === field
           )
         : schema.blobs[entity]?.[field];
-    if (!actual && ['groceryList', 'appListId'].includes(field)) continue;
+    if (!actual && ['groceryList', 'appListId', 'serialKey'].includes(field))
+      continue;
     if (
       !actual ||
       ['value-type', 'cardinality', 'unique?', 'index?'].some(
@@ -92,6 +93,13 @@ if (installed && !schema.blobs[names.workspaces]?.appListId) {
   await api('/admin/transact', 'POST', {
     steps: workspaceAttrs()
       .filter(attr => attr['forward-identity'][2] === 'appListId')
+      .map(attr => ['add-attr', attr]),
+  });
+}
+if (installed && !schema.blobs[names.operations]?.serialKey) {
+  await api('/admin/transact', 'POST', {
+    steps: workspaceAttrs()
+      .filter(attr => attr['forward-identity'][2] === 'serialKey')
       .map(attr => ['add-attr', attr]),
   });
 }

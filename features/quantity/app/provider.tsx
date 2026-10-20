@@ -31,7 +31,7 @@ function Session({ listId, userId }: { listId: string; userId: string }) {
       const existing = records(session.state, 'recipe').find(
         r => r.id === source.id
       );
-      if (!existing) continue;
+      if (!existing || existing.deleted) continue;
       const recipe = recipeFromApp(source);
       const { version: _version, ...document } = existing;
       if (JSON.stringify(document) === JSON.stringify(recipe)) continue;

@@ -39,6 +39,15 @@ export const entryVersions = (state: QuantityState, rowId: string) =>
   entriesFor(state, rowId)
     .map(e => `${e.id}:${e.version}`)
     .sort();
+export const recipeMealVersions = (state: QuantityState, recipeId: string) =>
+  records(state, 'meal')
+    .filter(m => m.recipeId === recipeId)
+    .map(m => `${m.id}:${m.version}`)
+    .sort();
+export const operationParents = (operation: Operation) =>
+  operation.commit
+    ? [...new Set([...operation.parents, ...operation.commit.parents])]
+    : operation.parents;
 export const totalFor = (state: QuantityState, rowId: string) =>
   state.complete
     ? Math.round(
@@ -83,6 +92,9 @@ export function validateDocuments(documents: QuantityState['documents']) {
       }
     }
     if (value.kind === 'meal') {
+      const source = value.recipeId ? documents[value.recipeId] : undefined;
+      if (source?.kind === 'recipe' && source.deleted)
+        throw new Error('This recipe has been deleted');
       if (
         documents[value.listId]?.kind !== 'list' ||
         !validQuantity(value.servings) ||
@@ -119,7 +131,10 @@ export function validateDocuments(documents: QuantityState['documents']) {
  * never silently overwritten. A move/source update is one indivisible operation.
  * Missing ancestors or malformed records fail closed, including cached reads.
  */
-export function materialize(operations: readonly Operation[]): QuantityState {
+export function materialize(
+  operations: readonly Operation[],
+  optimisticIds: ReadonlySet<string> = new Set()
+): QuantityState {
   let state: QuantityState = {
     documents: {},
     heads: [],
@@ -137,11 +152,37 @@ export function materialize(operations: readonly Operation[]): QuantityState {
       if (existing && JSON.stringify(existing) !== JSON.stringify(op))
         throw new Error('An operation identity was reused');
       pending.set(op.id, op);
-      op.parents.forEach(id => referenced.add(id));
+      operationParents(op).forEach(id => referenced.add(id));
+    }
+    const committed = [...pending.values()]
+      .filter(op => op.commit)
+      .sort((a, b) => a.commit!.sequence - b.commit!.sequence);
+    committed.forEach((op, index) => {
+      if (
+        op.commit!.sequence !== index + 1 ||
+        (index > 0 && !op.commit!.parents.includes(committed[index - 1].id))
+      )
+        throw new Error('Waiting for the complete committed history');
+    });
+    if (committed.length) {
+      const ancestors = new Set<string>();
+      const visit = (id: string) => {
+        if (ancestors.has(id)) return;
+        ancestors.add(id);
+        const op = pending.get(id);
+        if (op) operationParents(op).forEach(visit);
+      };
+      operationParents(committed[0]).forEach(visit);
+      for (const op of pending.values()) {
+        if (!op.commit && !ancestors.has(op.id) && !optimisticIds.has(op.id))
+          throw new Error(
+            'An unsupported writer changed this list. Reconnect with the updated app.'
+          );
+      }
     }
     while (pending.size) {
       const ready = [...pending.values()]
-        .filter(op => op.parents.every(id => applied.has(id)))
+        .filter(op => operationParents(op).every(id => applied.has(id)))
         .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
       if (!ready.length)
         throw new Error('Waiting for missing operation history');
@@ -157,14 +198,24 @@ export function materialize(operations: readonly Operation[]): QuantityState {
                   'This item changed on another device. Review and try again.'
                 );
             } else if (
-              JSON.stringify(entryVersions(state, guard.rowId)) !==
-              JSON.stringify(guard.versions)
+              JSON.stringify(
+                guard.kind === 'entries'
+                  ? entryVersions(state, guard.rowId)
+                  : recipeMealVersions(state, guard.recipeId)
+              ) !== JSON.stringify(guard.versions)
             )
               throw new Error(
                 'The quantities changed before this action completed. Review the current total.'
               );
           }
           for (const change of op.changes) {
+            const previous = state.documents[change.id];
+            if (
+              previous?.kind === 'recipe' &&
+              previous.deleted &&
+              (change.value?.kind !== 'recipe' || !change.value.deleted)
+            )
+              throw new Error('This recipe has been deleted');
             if (
               ids.has(change.id) ||
               (change.value && change.value.id !== change.id)

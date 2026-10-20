@@ -124,6 +124,10 @@ const documents = [
 const operation = {
   id: uuid(),
   parents: [history[0].id],
+  commit: {
+    sequence: (history[0].commit?.sequence ?? 0) + 1,
+    parents: [history[0].id],
+  },
   label: 'Add Apples quantity example',
   guards: [{ kind: 'version', id: list.id, version: history[0].id }],
   resolves: [],
@@ -149,6 +153,7 @@ await db.transact([
     .update({
       workspaceId: list.id,
       authorId: list.ownerId,
+      serialKey: `${list.id}:${operation.commit.sequence}`,
       body: JSON.stringify(operation),
     })
     .link({ workspace: list.id }),

@@ -27,6 +27,7 @@ export type Recipe = {
   id: string;
   name: string;
   ingredients: Ingredient[];
+  deleted?: boolean;
 };
 export type PlannedIngredient = Ingredient & {
   recipeIngredientId: string | null;
@@ -74,7 +75,8 @@ export type Change = {
 };
 export type Guard =
   | { kind: 'version'; id: string; version: string }
-  | { kind: 'entries'; rowId: string; versions: string[] };
+  | { kind: 'entries'; rowId: string; versions: string[] }
+  | { kind: 'recipeMeals'; recipeId: string; versions: string[] };
 export type Operation = {
   id: string;
   parents: string[];
@@ -84,6 +86,8 @@ export type Operation = {
   resolves: string[];
   /** App-authored shopping metadata edits also update the owner's saved item. */
   syncSavedItems?: boolean;
+  /** Server-unique list slot; parents are the complete preceding committed head. */
+  commit?: { sequence: number; parents: string[] };
 };
 export type Conflict = { operation: Operation; reason: string };
 export type QuantityState = {

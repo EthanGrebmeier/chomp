@@ -44,7 +44,9 @@ it('retains failed saved-item sync and retries without duplicating the quantity 
     confirm: vi.fn(),
     afterConfirm,
   };
-  mocks.query.mockResolvedValueOnce({ data: { gqc_operations_v1: [] } });
+  mocks.query.mockResolvedValueOnce({
+    data: { gqc_workspaces_v1: [{ id: 'list' }], gqc_operations_v1: [] },
+  });
   mocks.transact.mockResolvedValue({ status: 'synced' });
   await flushOutbox(options);
   expect(pending).toHaveLength(1);
@@ -52,11 +54,17 @@ it('retains failed saved-item sync and retries without duplicating the quantity 
   pending = [{ operation }];
   mocks.query.mockResolvedValue({
     data: {
+      gqc_workspaces_v1: [{ id: 'list' }],
       gqc_operations_v1: [
         {
+          id: operation.id,
+          serialKey: 'list:1',
           workspaceId: 'list',
           authorId: 'owner',
-          body: JSON.stringify(operation),
+          body: JSON.stringify({
+            ...operation,
+            commit: { sequence: 1, parents: [] },
+          }),
         },
       ],
     },

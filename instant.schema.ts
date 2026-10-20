@@ -13,6 +13,7 @@ const _schema = i.schema({
       appListId: i.string().optional(),
     }),
     gqc_operations_v1: i.entity({
+      serialKey: i.string().unique().optional(),
       workspaceId: i.string().indexed(),
       authorId: i.string(),
       body: i.string(),

@@ -1,5 +1,5 @@
 {
-  "time": "2026-10-20T05:17:24.488Z",
+  "time": "2026-10-20T15:45:27.321Z",
   "findings": [
     "owner creates workspace and initial operation graph atomically",
     "owner shares workspace",
@@ -22,8 +22,8 @@
     "owner edit retained",
     "member concurrent same-entry edit retained",
     "unpaginated member read matches full admin operation set and derived state",
-    "manual add survives source sync",
     "source edit is atomic",
+    "manual add survives source sync",
     "offline operation queues once, survives reconnect and is server-persisted",
     "purchase freezes complete quantity set",
     "source edit after purchase",

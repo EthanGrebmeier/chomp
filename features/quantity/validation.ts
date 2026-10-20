@@ -65,6 +65,10 @@ export function assertDocument(value: unknown): asserts value is Document {
         text(value.name) &&
         Array.isArray(value.ingredients) &&
         value.ingredients.every(ingredient);
+      if (value.kind === 'recipe')
+        valid =
+          valid &&
+          (value.deleted === undefined || typeof value.deleted === 'boolean');
       if (value.kind === 'meal')
         valid =
           valid &&
@@ -96,6 +100,14 @@ export function assertOperation(value: unknown): asserts value is Operation {
       typeof value.syncSavedItems !== 'boolean')
   )
     throw new Error('Invalid saved operation');
+  if (
+    value.commit !== undefined &&
+    (!object(value.commit) ||
+      !Number.isSafeInteger(value.commit.sequence) ||
+      (value.commit.sequence as number) < 1 ||
+      !strings(value.commit.parents))
+  )
+    throw new Error('Invalid committed sequence');
   for (const change of value.changes) {
     if (!object(change) || !identity(change.id) || !nullableId(change.before))
       throw new Error('Invalid saved change');
@@ -106,8 +118,8 @@ export function assertOperation(value: unknown): asserts value is Operation {
       !object(guard) ||
       !(guard.kind === 'version'
         ? identity(guard.id) && identity(guard.version)
-        : guard.kind === 'entries' &&
-          identity(guard.rowId) &&
+        : ((guard.kind === 'entries' && identity(guard.rowId)) ||
+            (guard.kind === 'recipeMeals' && identity(guard.recipeId))) &&
           strings(guard.versions))
     )
       throw new Error('Invalid saved precondition');

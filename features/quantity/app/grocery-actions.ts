@@ -6,6 +6,9 @@ import type {
 } from '@/features/grocery-list/types';
 import { db } from '@/lib/instant';
 
+import { commitOperations } from '../commits';
+import { buildCrossListMove } from '../cross-list-move';
+import { quantityCommitStore } from '../instant-commit-store';
 import { entriesFor, normalize, record, records } from '../model';
 import {
   activeRow,
@@ -14,7 +17,6 @@ import {
   extraQuantity,
   manualAdd,
 } from '../shopping';
-import { operationChunk } from '../sync-workspace';
 import { QuantityTransaction } from '../transaction';
 import type { ShoppingRow } from '../types';
 
@@ -152,7 +154,7 @@ export async function bulkQuantityMetadata(
   });
 }
 
-/** Two independent list histories are committed together by InstantDB. */
+/** Both list operations claim their next server-unique slot in one transaction. */
 export async function moveQuantityRows(
   itemIds: string[],
   destinationListId: string
@@ -168,49 +170,16 @@ export async function moveQuantityRows(
     target.pending.length
   )
     throw new Error('Let your changes finish syncing before moving items');
-  const tx = new QuantityTransaction(target.state);
-  const removal = new QuantityTransaction(source.state);
-  const deletion = deleteRows(source.state, id, itemIds);
-  for (const change of deletion.changes)
-    if (change.value) removal.put(change.value);
-  for (const itemId of itemIds) {
-    removal.requireEntries(itemId);
-    for (const entry of entriesFor(source.state, itemId)) {
-      if (entry.sourceId)
-        removal.put({ ...entry, sourceId: null, mealId: null });
-    }
-  }
-  const remove = removal.build(id(), 'Move items out of list');
-  for (const itemId of itemIds) {
-    const row = record(source.state, itemId, 'row');
-    if (row.status !== 'active')
-      throw new Error('Only unchecked items can move');
-    const rowId = id();
-    tx.put({ ...row, id: rowId, listId: destinationListId });
-    for (const entry of entriesFor(source.state, row.id))
-      tx.put({
-        ...entry,
-        id: id(),
-        rowId,
-        ...(entry.sourceId
-          ? {
-              sourceId: null,
-              mealId: null,
-              origin: 'manual',
-              sourceName: '',
-              sourceDate: '',
-              mealTag: '',
-            }
-          : {}),
-      });
-  }
-  const add = tx.build(id(), 'Move shopping quantities');
+  const plans = buildCrossListMove(
+    source.state,
+    target.state,
+    itemIds,
+    destinationListId,
+    id
+  );
   const user = await db.getAuth();
   if (!user) throw new Error('Sign in first');
-  await db.transact([
-    operationChunk(remove, source.listId, user.id),
-    operationChunk(add, destinationListId, user.id),
-  ]);
+  await commitOperations(quantityCommitStore(user.id), plans, user.id, true);
   await Promise.all([source.refresh(), target.refresh()]);
 }
 export function quantityRowsInList(listId: string) {
