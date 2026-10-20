@@ -8,6 +8,10 @@ The product contract in [the PRD](prd.md) requires independent manual, direct-re
 
 The archived QTY-02 experiment at checkpoint `36752a9` exercised **real authenticated InstantDB clients** against a dev app: two concurrently acknowledged independent adds left two entries summing to 3 but a writable row projection of 2. An entry-only update could also omit the projection. Its revision-permission proposal is _rejected_, not a compare-and-swap primitive. Those observations motivate removing the writable total; they do not prove the replacement below.
 
+## Related GQC-04 boundary evidence
+
+The [GQC-04 investigation](gqc-04-write-fence.md) now demonstrates a bounded disjoint-namespace permission fence with real SDK clients, including rejection of queued legacy transactions and authorization of updated shared-member flows. A row-only freeze was insufficient. Actual pre-feature-build, native restart/replay and full application dependency-closure validation remain outstanding, so #44 stays open. These boundary results do **not** resolve this document's same-entry conflict, immutable retry, complete-read or source-lifecycle blockers; #45 must not treat the probe's permissive entry writes as a proven production protocol.
+
 ## Smallest candidate
 
 - Row owns shopping metadata, list/store, normalized unit and checked/deleted state; **no authoritative scalar quantity**. An entry owns immutable ID, row/list association, quantity, source kind and immutable display provenance; a scheduled entry has a stable source-generation identity. Direct recipe adds use a distinct operation/ingredient ID for every intentional addition; retries reuse that ID. Never use name as identity.
