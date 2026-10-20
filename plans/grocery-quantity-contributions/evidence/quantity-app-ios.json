@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-19",
+  "workspace": "/Users/ethan/dev/personal/grocery",
+  "device": "iPhone 17 Pro simulator, iOS 26.5",
+  "database": "development InstantDB 5df33e29-252b-4e1c-a111-53787beccba3",
+  "account": "guest, confirmed in Settings",
+  "route": "normal Grocery Lists / Quantity test / Edit item",
+  "observations": [
+    "Original Shopping List imported Hamburger Buns quantity 2; normal item edit changed it to 3, then restored 2.",
+    "Quantity test shows Apples 5 each and a separate Apples 500 g row.",
+    "Normal grocery item sheet shows Apple pie 2, Apple butter 1 and manual 2.",
+    "Tapping the Apple pie contribution opens the exact ingredient in the normal meal editor.",
+    "Changing the planned amount from 2 to 3 changes the grocery total from 5 to 6; direct and manual amounts remain 1 and 2.",
+    "Restoring the planned amount to 2 restores the total to 5.",
+    "Expo reload reopens the app without quantity initialization errors; guest status and both real lists persist.",
+    "Final simulator screen is the normal Apples quantity breakdown, captured in quantity-app-ios.png."
+  ],
+  "automatedValidation": {
+    "lint": "passed",
+    "typescript": "passed",
+    "quantityLint": "passed",
+    "unitTests": "527 passed; 2 opt-in SDK tests skipped in ordinary run",
+    "liveSDKTests": "2 passed, including actual guest list membership and scope permissions",
+    "reactDoctor": "No errors; two warnings about effect-driven focus state and item-sheet complexity"
+  },
+  "limits": [
+    "This is development simulator evidence, not production migration or old-binary cutover evidence.",
+    "Android, physical-device QA, process death with pending offline edits and cross-list concurrency remain release gates."
+  ]
+}

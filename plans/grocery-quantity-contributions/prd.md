@@ -1,8 +1,8 @@
 # Grocery quantity contributions
 
-Status: planning; no production enablement authorized by this document.
+Status: implemented in the development app; production enablement remains pending.
 
-**Simulator implementation:** A persistent development-only [Quantity workspace](../../features/quantity/README.md) now exercises the confirmed behavior with immutable operations, derived totals, visible conflicts, and a durable outbox. Its [SDK evidence](evidence/quantity-workspace-sdk.json) is separate from the prior failed protocol. This is an isolated simulator-testing milestone; the existing app writers, production migration, actual old-binary fence, and cutover gates below remain outstanding.
+**Current implementation:** Normal grocery, recipe and meal-plan screens now use the contribution model in the allowlisted development app, including saved-item metadata sync. The optional Quantity workspace remains a demo. The [SDK evidence](evidence/quantity-workspace-sdk.json) concerns the replacement immutable-operation protocol, not the prior failed candidate. See the [implementation status](status.md) for the reduced remaining backlog: cross-list correctness (#49), focused release QA (#51), and one production rollout checklist (#53). The detailed rollout discussion below remains background; it does not require separate projects for every checkpoint or authorize production activation.
 
 ## Goal
 
