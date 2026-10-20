@@ -19,6 +19,9 @@ export default function Settings() {
       case 'account':
         router.push('/account');
         break;
+      case 'quantity-contributions-demo':
+        if (__DEV__) router.push('/demos/quantity-contributions' as Href);
+        break;
       case 'duplicate-resolution-demo':
         if (__DEV__) router.push('/demos/meal-plan-duplicates' as Href);
         break;
