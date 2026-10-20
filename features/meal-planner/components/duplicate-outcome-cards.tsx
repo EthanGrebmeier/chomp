@@ -5,22 +5,21 @@ import { View } from 'react-native';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import type { DemoChoice } from '@/features/meal-planner/duplicate-resolution/demo-choices';
 import { cn } from '@/lib/utils';
 
-export function DuplicateOutcomeCards({
+export function DuplicateOutcomeCards<Choice extends string>({
   options,
   choice,
   disabled,
   onSelect,
   renderSelectedDetail,
 }: {
-  options: { id: DemoChoice; label: string; description: string }[];
-  choice: DemoChoice;
+  options: { id: Choice; label: string; description: string }[];
+  choice: Choice;
   disabled: boolean;
-  onSelect: (choice: DemoChoice) => void;
+  onSelect: (choice: Choice) => void;
   /** Extra controls shown inside the selected card, below its label. */
-  renderSelectedDetail?: (choice: DemoChoice) => ReactNode;
+  renderSelectedDetail?: (choice: Choice) => ReactNode;
 }) {
   return (
     <View

@@ -12,13 +12,13 @@ import { record, records } from '../model';
 import { QuantityTransaction } from '../transaction';
 import type { Meal, PlannedIngredient } from '../types';
 
-import { chooseDestinations } from './destinations';
 import { ingredientFromApp, recipeFromApp } from './initialize';
 import { snapshotProjection } from './projection';
 import { changeDocument, documentSession, listSession } from './session';
+import { chooseItemDestinations } from './store-review';
 
 export async function planQuantityRecipe(args: AddRecipeToDateArgs) {
-  const session = listSession(args.listId);
+  listSession(args.listId);
   const result = await db.queryOnce({
     recipes: {
       $: { where: { id: args.recipeId } },
@@ -47,11 +47,11 @@ export async function planQuantityRecipe(args: AddRecipeToDateArgs) {
     quantity: i.isQuantityOverridden ? i.quantity : i.quantity * servings,
     store: i.storeId ?? args.defaultStore?.id ?? '',
   }));
-  const destinations = await chooseDestinations(
-    session.state,
+  const destinations = await chooseItemDestinations(
     args.listId,
     ingredients.filter(i => i.selected)
   );
+  const session = listSession(args.listId);
   const meal: Meal = {
     kind: 'meal',
     id: id(),
@@ -71,7 +71,7 @@ export async function planQuantityRecipe(args: AddRecipeToDateArgs) {
   return { id: meal.id };
 }
 export async function planQuantityItem(args: AddItemToDateArgs) {
-  const session = listSession(args.listId);
+  listSession(args.listId);
   const ingredient: PlannedIngredient = {
     ...ingredientFromApp(args),
     store: args.storeId ?? args.defaultStore?.id ?? '',
@@ -79,9 +79,8 @@ export async function planQuantityItem(args: AddItemToDateArgs) {
     overridden: false,
     recipeIngredientId: null,
   };
-  const destinations = await chooseDestinations(session.state, args.listId, [
-    ingredient,
-  ]);
+  const destinations = await chooseItemDestinations(args.listId, [ingredient]);
+  const session = listSession(args.listId);
   const meal: Meal = {
     kind: 'meal',
     id: id(),
@@ -131,7 +130,7 @@ export async function updateQuantityMeal({
   mealPlanRecipeId,
   updates,
 }: UpdateMealPlanRecipeArgs) {
-  const session = documentSession(mealPlanRecipeId);
+  let session = documentSession(mealPlanRecipeId);
   const meal = record(session.state, mealPlanRecipeId, 'meal');
   if (updates.recipeId && updates.recipeId !== meal.recipeId) {
     const result = await db.queryOnce({
@@ -160,12 +159,13 @@ export async function updateQuantityMeal({
         selected: meal.ingredients.some(old => old.selected),
       })),
     };
-    const choices = await chooseDestinations(
-      session.state,
+    const choices = await chooseItemDestinations(
       session.listId,
       replacement.ingredients.filter(i => i.selected)
     );
+    session = documentSession(mealPlanRecipeId);
     const tx = new QuantityTransaction(session.state);
+    tx.require(meal);
     for (const entry of records(session.state, 'entry').filter(
       e => e.mealId === meal.id
     )) {
@@ -218,7 +218,7 @@ export async function selectQuantityIngredients(
   mealId: string,
   selections: { snapshotRowId: string; isSelected: boolean }[]
 ) {
-  const session = documentSession(mealId);
+  let session = documentSession(mealId);
   const meal = record(session.state, mealId, 'meal');
   const updated = {
     ...meal,
@@ -232,12 +232,10 @@ export async function selectQuantityIngredients(
   const newlySelected = updated.ingredients.filter(
     i => i.selected && !meal.ingredients.find(old => old.id === i.id)?.selected
   );
-  const choices = await chooseDestinations(
-    session.state,
-    session.listId,
-    newlySelected
-  );
+  const choices = await chooseItemDestinations(session.listId, newlySelected);
+  session = documentSession(mealId);
   const tx = new QuantityTransaction(session.state);
+  tx.require(meal);
   tx.put(updated);
   syncMeal(tx, id, updated, choices);
   await session.send(tx.build(id(), `Select ingredients for ${meal.name}`));

@@ -13,6 +13,7 @@ import {
 import {
   planQuantityRecipe,
   planQuantityItem,
+  removeQuantityMeals,
   overrideQuantityIngredient,
   updateQuantityItem,
   selectQuantityIngredients,
@@ -257,5 +258,219 @@ describe('actual app quantity adapters', () => {
     ).toBe(true);
     expect(records(state(), 'entry')).toEqual([]);
     expect(state().conflicts).toEqual([]);
+  });
+});
+
+describe('recipe store review integration', () => {
+  it('waits for review, keeps source quantities, and moves the combined row to the chosen store', async () => {
+    const { registerStoreReviewer } = await import('../app/store-review');
+    await addManualQuantity('list', {
+      name: 'Apples',
+      quantity: 3,
+      unit: 'each',
+      storeId: 'a',
+    });
+    const before = history.length;
+    const review = vi.fn(async request => {
+      expect(history).toHaveLength(before);
+      expect(request.conflicts).toHaveLength(1);
+      const conflict = request.conflicts[0];
+      return {
+        [conflict.item.id]: { rowId: conflict.rows[0].row.id, store: '' },
+      };
+    });
+    const unregister = registerStoreReviewer(review);
+    try {
+      await addQuantityRecipe({
+        listId: 'list',
+        recipeId: 'recipe',
+        ingredients: [{ name: 'Apples', quantity: 2, unit: 'each' }],
+      });
+      const rows = records(state(), 'row');
+      expect(rows).toHaveLength(1);
+      expect(rows[0].store).toBe('');
+      expect(totalFor(state(), rows[0].id)).toBe(5);
+      expect(records(state(), 'entry')).toHaveLength(2);
+      expect(review).toHaveBeenCalledOnce();
+    } finally {
+      unregister();
+    }
+  });
+  it('cancels the whole recipe, including items without conflicts', async () => {
+    const { registerStoreReviewer } = await import('../app/store-review');
+    await addManualQuantity('list', {
+      name: 'Apples',
+      quantity: 3,
+      unit: 'each',
+      storeId: 'a',
+    });
+    const before = history.length;
+    const unregister = registerStoreReviewer(async () => {
+      throw new Error('Addition cancelled');
+    });
+    try {
+      await expect(
+        addQuantityRecipe({
+          listId: 'list',
+          recipeId: 'recipe',
+          ingredients: [
+            { name: 'Apples', quantity: 2, unit: 'each' },
+            { name: 'Milk', quantity: 1, unit: 'l' },
+          ],
+        })
+      ).rejects.toThrow('cancelled');
+      expect(history).toHaveLength(before);
+    } finally {
+      unregister();
+    }
+  });
+  it('refreshes review when quantities change while the sheet is open', async () => {
+    const { registerStoreReviewer } = await import('../app/store-review');
+    await addManualQuantity('list', {
+      name: 'Apples',
+      quantity: 3,
+      unit: 'each',
+      storeId: 'a',
+    });
+    const row = records(state(), 'row')[0];
+    const review = vi.fn(async request => {
+      if (!request.changed)
+        await send(extraQuantity(state(), () => `id-${++mocks.id}`, row.id, 1));
+      else expect(request.conflicts[0].rows[0].quantity).toBe(4);
+      return { [request.conflicts[0].item.id]: {} };
+    });
+    const unregister = registerStoreReviewer(review);
+    try {
+      await addQuantityRecipe({
+        listId: 'list',
+        recipeId: 'recipe',
+        ingredients: [{ name: 'Apples', quantity: 2, unit: 'each' }],
+      });
+      expect(review).toHaveBeenCalledTimes(2);
+      expect(records(state(), 'row')).toHaveLength(2);
+      expect(state().conflicts).toEqual([]);
+    } finally {
+      unregister();
+    }
+  });
+});
+
+it('keeps manual quantity when a meal combined across stores is removed', async () => {
+  const { registerStoreReviewer } = await import('../app/store-review');
+  await addManualQuantity('list', {
+    name: 'Apples',
+    quantity: 3,
+    unit: 'each',
+    storeId: 'a',
+  });
+  const review = vi.fn(async request => ({
+    [request.conflicts[0].item.id]: {
+      rowId: request.conflicts[0].rows[0].row.id,
+      store: 'a',
+    },
+  }));
+  const unregister = registerStoreReviewer(review);
+  try {
+    const meal = await planQuantityRecipe({
+      listId: 'list',
+      recipeId: recipe.id,
+      date: '2026-10-20',
+      sourceIngredients: recipe.recipe_ingredients,
+    });
+    const row = records(state(), 'row')[0];
+    expect(totalFor(state(), row.id)).toBe(5);
+    expect(review).toHaveBeenCalledOnce();
+    await removeQuantityMeals([meal.id]);
+    expect(totalFor(state(), row.id)).toBe(3);
+    expect(state().conflicts).toEqual([]);
+  } finally {
+    unregister();
+  }
+});
+
+describe('direct item store review', () => {
+  it('automatically combines matching stores and keeps different units separate', async () => {
+    const item = { name: 'Apples', quantity: 2, unit: 'each', storeId: 'a' };
+    await addManualQuantity('list', item);
+    await addManualQuantity('list', { ...item, quantity: 3 });
+    await addManualQuantity('list', { ...item, unit: 'kg' });
+    expect(records(state(), 'row')).toHaveLength(2);
+    const row = records(state(), 'row').find(row => row.unit === 'each')!;
+    expect(totalFor(state(), row.id)).toBe(5);
+    expect(records(state(), 'entry')).toHaveLength(3);
+    expect(mocks.alert).not.toHaveBeenCalled();
+  });
+
+  it.each(['separate', 'existing', 'incoming'] as const)(
+    'reviews different stores and applies %s',
+    async choice => {
+      const { registerStoreReviewer } = await import('../app/store-review');
+      await addManualQuantity(
+        'list',
+        { name: 'Apples', quantity: 3, unit: 'each', storeId: 'a' },
+        'saved-apples'
+      );
+      const rowId = records(state(), 'row')[0].id;
+      const review = vi.fn(async request => {
+        expect(request.conflicts).toHaveLength(1);
+        const conflict = request.conflicts[0];
+        expect(conflict.item.store).toBe('b');
+        return {
+          [conflict.item.id]:
+            choice === 'separate'
+              ? {}
+              : { rowId, store: choice === 'existing' ? 'a' : 'b' },
+        };
+      });
+      const unregister = registerStoreReviewer(review);
+      try {
+        await addManualQuantity(
+          'list',
+          { name: 'Apples', quantity: 2, unit: 'each', storeId: 'b' },
+          'other-saved-apples'
+        );
+        expect(review).toHaveBeenCalledOnce();
+        expect(records(state(), 'row')).toHaveLength(
+          choice === 'separate' ? 2 : 1
+        );
+        expect(totalFor(state(), rowId)).toBe(choice === 'separate' ? 3 : 5);
+        expect(state().documents[rowId]).toMatchObject({
+          store: choice === 'incoming' ? 'b' : 'a',
+          savedItemId: 'saved-apples',
+        });
+        expect(records(state(), 'entry')).toHaveLength(2);
+        expect(state().conflicts).toEqual([]);
+        expect(mocks.alert).not.toHaveBeenCalled();
+      } finally {
+        unregister();
+      }
+    }
+  );
+
+  it('does not add an item when store review is cancelled', async () => {
+    const { registerStoreReviewer } = await import('../app/store-review');
+    await addManualQuantity('list', {
+      name: 'Apples',
+      quantity: 3,
+      unit: 'each',
+      storeId: 'a',
+    });
+    const before = history.length;
+    const unregister = registerStoreReviewer(async () => {
+      throw new Error('Addition cancelled');
+    });
+    try {
+      await expect(
+        addManualQuantity('list', {
+          name: 'Apples',
+          quantity: 2,
+          unit: 'each',
+          storeId: 'b',
+        })
+      ).rejects.toThrow('cancelled');
+      expect(history).toHaveLength(before);
+    } finally {
+      unregister();
+    }
   });
 });

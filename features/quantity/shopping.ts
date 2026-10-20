@@ -8,7 +8,11 @@ import type {
 } from './types';
 
 export type NewId = () => string;
-export type Destination = { rowId?: string; store?: string };
+export type Destination = {
+  rowId?: string;
+  store?: string;
+  newRow?: ShoppingRow;
+};
 
 export function matchingRows(
   state: QuantityState,
@@ -62,6 +66,19 @@ export function addEntryToRow(
     if (destination.store !== undefined && destination.store !== row.store)
       tx.put({ ...row, store: destination.store });
     rowId = row.id;
+  } else if (destination.newRow) {
+    const row = destination.newRow;
+    if (
+      tx.state.documents[row.id] ||
+      row.listId !== listId ||
+      row.status !== 'active' ||
+      normalize(row.name) !== normalize(item.name) ||
+      row.unit !== normalize(item.unit) ||
+      row.store !== item.store
+    )
+      throw new Error('Invalid new shopping row');
+    rowId = row.id;
+    tx.put(row);
   } else {
     rowId = newId();
     tx.put({

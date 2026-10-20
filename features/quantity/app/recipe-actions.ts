@@ -10,9 +10,9 @@ import { deleteRecipeContributions } from '../recipe-deletion';
 import { addEntryToRow } from '../shopping';
 import { QuantityTransaction } from '../transaction';
 
-import { chooseDestinations } from './destinations';
 import { ingredientFromApp, ensureQuantityList } from './initialize';
 import { listSession, allListSessions } from './session';
+import { chooseItemDestinations } from './store-review';
 
 export async function addQuantityRecipe({
   listId,
@@ -20,7 +20,7 @@ export async function addQuantityRecipe({
   ingredients,
   defaultStore,
 }: AddRecipeToListArgs) {
-  const session = listSession(listId);
+  listSession(listId);
   const result = await db.queryOnce({
     recipes: { $: { where: { id: recipeId } } },
   });
@@ -29,7 +29,8 @@ export async function addQuantityRecipe({
   const incoming = ingredients.map(i =>
     ingredientFromApp({ ...i, storeId: i.storeId ?? defaultStore?.id })
   );
-  const choices = await chooseDestinations(session.state, listId, incoming);
+  const choices = await chooseItemDestinations(listId, incoming);
+  const session = listSession(listId);
   const tx = new QuantityTransaction(session.state);
   for (const item of incoming)
     addEntryToRow(

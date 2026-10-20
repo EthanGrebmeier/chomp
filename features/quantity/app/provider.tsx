@@ -12,6 +12,7 @@ import { useQuantityWorkspace } from '../use-quantity-workspace';
 import { recipeFromApp, ensureQuantityList } from './initialize';
 import { syncQuantitySavedItems } from './saved-items';
 import { publishListSession, emptyListSession } from './session';
+import { StoreReviewHost } from './store-review-sheet';
 
 function Session({ listId, userId }: { listId: string; userId: string }) {
   const session = useQuantityWorkspace(listId, userId, syncQuantitySavedItems);
@@ -102,6 +103,7 @@ export function QuantityAppProvider({ children }: { children: ReactNode }) {
           ))
         : null}
       {children}
+      {enabled && user ? <StoreReviewHost key={user.id} /> : null}
     </>
   );
 }

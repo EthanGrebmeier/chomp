@@ -244,7 +244,7 @@ export function ItemSheet({
             No quantities. Add one to put this item on your shopping list.
           </Text>
         ) : null}
-        {entries.map(entry => (
+        {entries.map((entry, index) => (
           <HapticPressable
             key={entry.id}
             disabled={history}
@@ -255,7 +255,8 @@ export function ItemSheet({
                 ? leave(() => onOpenMeal(entry.mealId!, entry.sourceId!))
                 : setEditor({ id: entry.id, snapshot: state })
             }
-            className="min-h-16 flex-row items-center gap-3 border-b border-border py-3"
+            className="min-h-16 flex-row items-center gap-3 border-border py-3"
+            style={{ borderBottomWidth: index === entries.length - 1 ? 0 : 1 }}
           >
             <View className="flex-1 gap-1">
               <Text className="font-medium">

@@ -20,20 +20,18 @@ import {
 import { QuantityTransaction } from '../transaction';
 import type { ShoppingRow } from '../types';
 
-import { chooseDestinations } from './destinations';
 import { ingredientFromApp } from './initialize';
 import { changeDocument, documentSession, listSession } from './session';
+import { chooseItemDestinations } from './store-review';
 
 export async function addManualQuantity(
   listId: string,
   item: BaseGroceryItem,
   savedItemId?: string
 ) {
-  const session = listSession(listId);
   const ingredient = ingredientFromApp(item);
-  const destinations = await chooseDestinations(session.state, listId, [
-    ingredient,
-  ]);
+  const destinations = await chooseItemDestinations(listId, [ingredient]);
+  const session = listSession(listId);
   const operation = manualAdd(
     session.state,
     id,
