@@ -1,4 +1,4 @@
-// Installs only the two isolated namespaces. Existing app rules/schema/data are preserved.
+// Installs development quantity namespaces and their list-scope link. Unrelated rules/data are preserved.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import {
   testApp,
@@ -32,6 +32,7 @@ if (installed) {
               attr['forward-identity'][2] === field
           )
         : schema.blobs[entity]?.[field];
+    if (!actual && ['groceryList', 'appListId'].includes(field)) continue;
     if (
       !actual ||
       ['value-type', 'cardinality', 'unique?', 'index?'].some(
@@ -52,7 +53,7 @@ if (installed) {
       Object.values(names).includes(attr['forward-identity'][1]) ||
       Object.values(names).includes(attr['reverse-identity'][1])
   );
-  if (related.length !== 1)
+  if (related.length < 1 || related.length > 2)
     throw new Error('Unexpected links into the quantity namespaces');
 }
 if (!installed) {
@@ -73,6 +74,46 @@ if (!installed) {
     steps: workspaceAttrs().map(attr => ['add-attr', attr]),
   });
 }
+if (
+  installed &&
+  !Object.values(schema.refs).some(
+    attr =>
+      attr['forward-identity'][1] === names.workspaces &&
+      attr['forward-identity'][2] === 'groceryList'
+  )
+) {
+  await api('/admin/transact', 'POST', {
+    steps: workspaceAttrs()
+      .filter(attr => attr['forward-identity'][2] === 'groceryList')
+      .map(attr => ['add-attr', attr]),
+  });
+}
+if (installed && !schema.blobs[names.workspaces]?.appListId) {
+  await api('/admin/transact', 'POST', {
+    steps: workspaceAttrs()
+      .filter(attr => attr['forward-identity'][2] === 'appListId')
+      .map(attr => ['add-attr', attr]),
+  });
+}
+{
+  const { db } = testApp();
+  const existing = await db.query({ [names.workspaces]: { groceryList: {} } });
+  const appLists = existing[names.workspaces].filter(
+    workspace =>
+      !workspace.appListId &&
+      (Array.isArray(workspace.groceryList)
+        ? workspace.groceryList[0]?.id
+        : workspace.groceryList?.id) === workspace.id
+  );
+  if (appLists.length)
+    await db.transact(
+      appLists.map(workspace =>
+        db.tx[names.workspaces][workspace.id].update({
+          appListId: workspace.id,
+        })
+      )
+    );
+}
 const currentRules = (await api(`/dash/apps/${TEST_APP}/perms/pull`)).perms;
 for (const key of Object.keys(originalRules).filter(
   key => !Object.values(names).includes(key)
@@ -84,5 +125,5 @@ await api(`/dash/apps/${TEST_APP}/rules`, 'POST', {
   code: { ...currentRules, ...workspaceRules },
 });
 console.log(
-  'Isolated quantity workspace installed. Existing application records and rules preserved.'
+  'Quantity model installed for development app lists and the example workspace. Existing application records and rules preserved.'
 );

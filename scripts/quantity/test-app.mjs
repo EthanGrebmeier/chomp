@@ -37,19 +37,19 @@ export const workspaceRules = {
   [names.workspaces]: {
     allow: {
       $default: 'false',
-      view: 'auth.id in data.memberIds',
+      view: "data.appListId != null ? auth.id in data.ref('groceryList.shares.user_id') : auth.id in data.memberIds",
       create:
-        'auth.id != null && data.ownerId == auth.id && auth.id in data.memberIds',
+        "auth.id != null && data.ownerId == auth.id && auth.id in data.memberIds && (data.appListId != null ? (data.appListId == data.id && data.id in data.ref('groceryList.id') && auth.id in data.ref('groceryList.shares.user_id')) : size(data.ref('groceryList.id')) == 0)",
       update:
-        'data.ownerId == auth.id && newData.ownerId == data.ownerId && auth.id in newData.memberIds',
+        "size(data.ref('groceryList.id')) == 0 && data.appListId == null && newData.appListId == null && data.ownerId == auth.id && newData.ownerId == data.ownerId && auth.id in newData.memberIds",
     },
   },
   [names.operations]: {
     allow: {
       $default: 'false',
-      view: "auth.id in data.ref('workspace.memberIds')[0]",
+      view: "size(data.ref('workspace.appListId')) == 1 ? auth.id in data.ref('workspace.groceryList.shares.user_id') : auth.id in data.ref('workspace.memberIds')[0]",
       create:
-        "auth.id == data.authorId && size(data.ref('workspace.id')) == 1 && data.workspaceId in data.ref('workspace.id') && auth.id in data.ref('workspace.memberIds')[0] && size(data.body) < 200000",
+        "auth.id == data.authorId && size(data.ref('workspace.id')) == 1 && data.workspaceId in data.ref('workspace.id') && (size(data.ref('workspace.appListId')) == 1 ? auth.id in data.ref('workspace.groceryList.shares.user_id') : auth.id in data.ref('workspace.memberIds')[0]) && size(data.body) < 200000",
       // Intents are create-only, including their permission links. modifiedFields
       // does not fence unlink operations. The outbox recognizes exact retries by
       // reading the existing author/scope/body instead of rewriting the record.
@@ -61,7 +61,7 @@ export const workspaceRules = {
 export function workspaceAttrs() {
   const attrs = [];
   for (const [entity, fields] of [
-    [names.workspaces, ['id', 'name', 'ownerId', 'memberIds']],
+    [names.workspaces, ['id', 'name', 'ownerId', 'memberIds', 'appListId']],
     [names.operations, ['id', 'workspaceId', 'authorId', 'body']],
   ]) {
     for (const field of fields)
@@ -81,6 +81,15 @@ export function workspaceAttrs() {
     'value-type': 'ref',
     cardinality: 'one',
     'unique?': false,
+    'index?': false,
+  });
+  attrs.push({
+    id: randomUUID(),
+    'forward-identity': [randomUUID(), names.workspaces, 'groceryList'],
+    'reverse-identity': [randomUUID(), 'grocery_lists', 'quantityWorkspace'],
+    'value-type': 'ref',
+    cardinality: 'one',
+    'unique?': true,
     'index?': false,
   });
   return attrs;
