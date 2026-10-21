@@ -11,7 +11,6 @@ import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { db } from '../../../lib/instant';
-import { cn } from '../../../lib/utils';
 import { useCategoryOptions } from '../../categories/use-category-options';
 import { RecipeIngredient, RecipeWithIngredients } from '../types';
 
@@ -65,11 +64,7 @@ const RecipeDetailContent = ({
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName={cn(
-          'gap-6 pt-2',
-          // Clear the pinned Add to list button so the last row stays reachable.
-          isOwner ? 'pb-safe-offset-20' : 'pb-safe-offset-6'
-        )}
+        contentContainerClassName="gap-6 pb-safe-offset-6 pt-2"
         keyboardDismissMode="on-drag"
       >
         {/* Overview */}
@@ -95,6 +90,11 @@ const RecipeDetailContent = ({
                   className="text-muted-foreground"
                 />
               </Button>
+            </View>
+          ) : null}
+          {isOwner ? (
+            <View className="items-start pt-1">
+              <RecipeAddToListButton recipe={recipe} listId={listId} />
             </View>
           ) : null}
         </View>
@@ -140,12 +140,6 @@ const RecipeDetailContent = ({
           )}
         </View>
       </ScrollView>
-
-      {isOwner ? (
-        <View className="bottom-safe absolute inset-x-4 z-20">
-          <RecipeAddToListButton recipe={recipe} listId={listId} />
-        </View>
-      ) : null}
     </View>
   );
 };
