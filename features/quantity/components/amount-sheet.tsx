@@ -47,12 +47,12 @@ export function AmountSheet({
   return (
     <BottomSheet
       ref={ref}
-      onOpen={() => input.current?.focus()}
+      onStartOpen={() => input.current?.focus()}
       onDismiss={onDismiss}
-      viewClassName="pb-safe"
+      insetAdjustment="never"
     >
       <BottomSheet.Header
-        className="px-4"
+        className="mb-0 px-4"
         title={quantity === undefined ? 'Add quantity' : 'Adjust quantity'}
         dismissButton={
           <BackButton
@@ -70,7 +70,7 @@ export function AmountSheet({
           />
         }
       />
-      <View className="gap-5 px-6 pb-5">
+      <View className="gap-4 px-6 py-4">
         <View className="gap-2">
           <Text className="text-sm font-medium text-muted-foreground">
             Quantity

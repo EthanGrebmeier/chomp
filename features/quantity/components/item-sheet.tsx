@@ -1,10 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import {
-  ArrowUpRight,
-  ChevronRight,
-  MoreHorizontal,
-  Plus,
-} from 'lucide-react-native';
+import { MoreHorizontal } from 'lucide-react-native';
 import { useEffect, useRef, useState, type ComponentType } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
@@ -14,7 +9,6 @@ import {
   ItemNameField,
   ItemNotesField,
 } from '@/components/item-sheet/item-fields';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -22,18 +16,10 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
-import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
-import { Pill } from '@/components/ui/pill';
 import { Text } from '@/components/ui/text';
 
-import {
-  entriesFor,
-  formatQuantity,
-  record,
-  records,
-  totalFor,
-} from '../model';
+import { entriesFor, record, records, totalFor } from '../model';
 import {
   deleteRows,
   editQuantity,
@@ -41,20 +27,12 @@ import {
   extraQuantity,
   type NewId,
 } from '../shopping';
-import type { Operation, QuantityEntry, QuantityState } from '../types';
+import type { Operation, QuantityState } from '../types';
 
 import { AmountSheet } from './amount-sheet';
 import { MetadataBar } from './metadata-bar';
-import { MoveItemSheet } from './move-item-sheet';
-
-function sourceDetail(entry: QuantityEntry) {
-  if (entry.sourceId)
-    return `Planned for ${entry.mealTag.toLowerCase()} on ${new Date(`${entry.sourceDate}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
-  if (entry.origin === 'recipe') return 'Added from recipe';
-  if (entry.origin === 'scheduled' || entry.origin === 'planned')
-    return 'Purchased from meal plan';
-  return 'Added manually';
-}
+import { QuantitySection } from './quantity-section';
+import { ShoppingListDropdown } from './shopping-list-dropdown';
 
 export function ItemSheet({
   state,
@@ -85,9 +63,7 @@ export function ItemSheet({
 }) {
   const row = record(state, rowId, 'row');
   const availableLists = lists ?? records(state, 'list');
-  const currentList = availableLists.find(list => list.id === row.listId);
   const ref = useRef<TrueSheet>(null);
-  const [choosingList, setChoosingList] = useState(false);
   const [editor, setEditor] = useState<{
     id?: string;
     snapshot: QuantityState;
@@ -100,6 +76,10 @@ export function ItemSheet({
   const navigation = useRef<(() => void) | null>(null);
   const history = row.status !== 'active';
   const entries = entriesFor(state, row.id);
+  const [quantityExpanded, setQuantityExpanded] = useState(
+    entries.length === 0
+  );
+  const needsScroll = quantityExpanded && entries.length > 3;
   useEffect(() => {
     void ref.current?.present();
   }, []);
@@ -164,17 +144,14 @@ export function ItemSheet({
       ]
     );
   const listPill = (
-    <HapticPressable
-      accessibilityRole="button"
-      accessibilityLabel={`Choose shopping list, current list: ${currentList?.name ?? 'Shopping list'}`}
-      className="min-h-11 justify-center"
-      onPress={() => setChoosingList(true)}
-    >
-      <Pill hasValue>{currentList?.name ?? 'Shopping list'}</Pill>
-    </HapticPressable>
+    <ShoppingListDropdown
+      lists={availableLists}
+      selectedListId={row.listId}
+      onSelect={listId => leave(() => onMove(rowId, listId))}
+    />
   );
   const content = (
-    <View className="px-6 pb-5">
+    <View className="px-6">
       <BottomSheet.Header
         title="Edit item"
         button={
@@ -217,78 +194,21 @@ export function ItemSheet({
           Purchased · Read-only history
         </Text>
       ) : null}
-      <View className="mb-3 mt-4">
-        <View className="min-h-12 flex-row items-center justify-between pb-2">
-          <View>
-            <Text className="text-lg font-semibold">Quantity</Text>
-            <Text
-              className="text-sm text-muted-foreground"
-              style={{ fontVariant: ['tabular-nums'] }}
-            >
-              {formatQuantity(totalFor(state, rowId) ?? 0)} {row.unit}
-            </Text>
-          </View>
-          {!history ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              accessibilityLabel="Add quantity"
-              onPress={() => setEditor({ snapshot: state })}
-            >
-              <Icon as={Plus} size={22} />
-            </Button>
-          ) : null}
-        </View>
-        {entries.length === 0 ? (
-          <Text className="py-4 text-muted-foreground">
-            No quantities. Add one to put this item on your shopping list.
-          </Text>
-        ) : null}
-        {entries.map((entry, index) => (
-          <HapticPressable
-            key={entry.id}
-            disabled={history}
-            accessibilityRole="button"
-            accessibilityLabel={`${entry.sourceId ? 'Open meal plan for' : 'Adjust quantity for'} ${entry.sourceName || row.name}, ${entry.quantity} ${row.unit}`}
-            onPress={() =>
-              entry.sourceId && entry.mealId
-                ? leave(() => onOpenMeal(entry.mealId!, entry.sourceId!))
-                : setEditor({ id: entry.id, snapshot: state })
-            }
-            className="min-h-16 flex-row items-center gap-3 border-border py-3"
-            style={{ borderBottomWidth: index === entries.length - 1 ? 0 : 1 }}
-          >
-            <View className="flex-1 gap-1">
-              <Text className="font-medium">
-                {entry.origin === 'manual'
-                  ? 'Added Manually'
-                  : entry.sourceName || 'Quantity'}
-              </Text>
-              {entry.origin !== 'manual' && entry.sourceNotes ? (
-                <Text className="text-sm">{entry.sourceNotes}</Text>
-              ) : null}
-              {entry.origin !== 'manual' ? (
-                <Text className="text-sm text-muted-foreground">
-                  {sourceDetail(entry)}
-                </Text>
-              ) : null}
-            </View>
-            <Text
-              className="font-medium"
-              style={{ fontVariant: ['tabular-nums'] }}
-            >
-              {formatQuantity(entry.quantity)} {row.unit}
-            </Text>
-            {!history ? (
-              <Icon
-                as={entry.sourceId ? ArrowUpRight : ChevronRight}
-                size={18}
-                className="text-muted-foreground"
-              />
-            ) : null}
-          </HapticPressable>
-        ))}
-      </View>
+      <QuantitySection
+        entries={entries}
+        total={totalFor(state, rowId) ?? 0}
+        itemName={row.name}
+        unit={row.unit}
+        history={history}
+        expanded={quantityExpanded}
+        onToggle={() => setQuantityExpanded(value => !value)}
+        onAdd={() => setEditor({ snapshot: state })}
+        onSelect={entry =>
+          entry.sourceId && entry.mealId
+            ? leave(() => onOpenMeal(entry.mealId!, entry.sourceId!))
+            : setEditor({ id: entry.id, snapshot: state })
+        }
+      />
       {!history ? (
         <View className="gap-3 pt-2">
           {MetadataComponent ? (
@@ -319,11 +239,16 @@ export function ItemSheet({
         navigation.current?.();
       }}
       onStartClose={saveMetadata}
-      detents={entries.length > 3 ? [0.9] : undefined}
-      scrollable={entries.length > 3}
+      detents={needsScroll ? [0.9] : undefined}
+      scrollable={needsScroll}
     >
       {entries.length > 3 ? (
-        <ScrollView keyboardShouldPersistTaps="handled">{content}</ScrollView>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          scrollEnabled={needsScroll}
+        >
+          {content}
+        </ScrollView>
       ) : (
         content
       )}
@@ -349,14 +274,6 @@ export function ItemSheet({
               : undefined
           }
           onDismiss={() => setEditor(null)}
-        />
-      ) : null}
-      {choosingList ? (
-        <MoveItemSheet
-          lists={availableLists}
-          selectedListId={row.listId}
-          onSelect={listId => leave(() => onMove(rowId, listId))}
-          onDismiss={() => setChoosingList(false)}
         />
       ) : null}
     </BottomSheet>

@@ -1,14 +1,20 @@
 import { useState } from 'react';
 import { View } from 'react-native';
+import { toast } from 'sonner-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { OptionDropdown } from '@/components/item-sheet/option-dropdown';
 import { MetaBarLayout } from '@/components/meta-bar-layout';
 import { ScrollingMetaBar } from '@/components/scrolling-meta-bar';
 import { Button } from '@/components/ui/button';
-import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Pill } from '@/components/ui/pill';
 import { Text } from '@/components/ui/text';
 import { categoryOptions } from '@/features/shared/category/categories';
+import {
+  getCategorySurfaceClassName,
+  getCategoryTextClassName,
+  resolveCategoryColor,
+} from '@/features/shared/category/category-colors';
 
 import { Sheet } from './sheet';
 import { useSheetController } from './use-sheet-controller';
@@ -29,38 +35,70 @@ export function MetadataBar({
   onChange: (field: 'category' | 'store', value: string) => Promise<void>;
 }) {
   const [picker, setPicker] = useState<'category' | 'store' | null>(null);
-  const label =
-    categoryOptions.find(c => c.value === category)?.label ?? category;
+  const selectedCategory = categoryOptions.find(c => c.value === category);
+  const label = selectedCategory?.label ?? category;
+  const categoryColor = category
+    ? resolveCategoryColor(category, selectedCategory?.color)
+    : undefined;
   return (
     <>
       <MetaBarLayout>
         <ScrollingMetaBar>
-          <HapticPressable
+          <OptionDropdown
+            label="category"
+            value={category}
+            options={
+              category &&
+              !categoryOptions.some(option => option.value === category)
+                ? [{ value: category, label: category }, ...categoryOptions]
+                : categoryOptions
+            }
             disabled={disabled}
-            accessibilityRole="button"
-            accessibilityLabel="Choose a category"
-            onPress={() => setPicker('category')}
-            className="min-h-11 justify-center"
+            onSelect={value => {
+              void onChange('category', value ?? '').catch(e =>
+                toast.error(String(e))
+              );
+            }}
+            onCreate={() => setPicker('category')}
           >
-            <Pill hasValue={!!category}>{label || 'Category'}</Pill>
-          </HapticPressable>
-          <HapticPressable
+            <Pill
+              hasValue={!!category}
+              className={
+                categoryColor
+                  ? getCategorySurfaceClassName(categoryColor)
+                  : undefined
+              }
+              textClassName={
+                categoryColor
+                  ? getCategoryTextClassName(categoryColor)
+                  : undefined
+              }
+            >
+              {label || 'Category'}
+            </Pill>
+          </OptionDropdown>
+          <OptionDropdown
+            label="store"
+            value={store}
+            options={[...new Set([store, ...stores])]
+              .filter(Boolean)
+              .map(value => ({ value, label: value }))}
             disabled={disabled}
-            accessibilityRole="button"
-            accessibilityLabel="Choose a store"
-            onPress={() => setPicker('store')}
-            className="min-h-11 justify-center"
+            onSelect={value => {
+              void onChange('store', value ?? '').catch(e =>
+                toast.error(String(e))
+              );
+            }}
+            onCreate={() => setPicker('store')}
           >
             <Pill hasValue={!!store}>{store || 'Store'}</Pill>
-          </HapticPressable>
+          </OptionDropdown>
           {children}
         </ScrollingMetaBar>
       </MetaBarLayout>
       {picker ? (
-        <MetadataPicker
+        <CreateMetadataSheet
           kind={picker}
-          value={picker === 'category' ? category : store}
-          stores={stores}
           onSave={value => onChange(picker, value)}
           onDismiss={() => setPicker(null)}
         />
@@ -69,31 +107,20 @@ export function MetadataBar({
   );
 }
 
-function MetadataPicker({
+function CreateMetadataSheet({
   kind,
-  value,
-  stores,
   onSave,
   onDismiss,
 }: {
   kind: 'category' | 'store';
-  value: string;
-  stores: string[];
   onSave: (value: string) => Promise<void>;
   onDismiss: () => void;
 }) {
   const sheet = useSheetController(onDismiss);
-  const [draft, setDraft] = useState(value);
+  const [draft, setDraft] = useState('');
   const [error, setError] = useState('');
-  const options =
-    kind === 'category'
-      ? categoryOptions.map(c => ({ value: c.value, label: c.label }))
-      : [...new Set(['', ...stores])].map(value => ({
-          value,
-          label: value || 'No store',
-        }));
   return (
-    <Sheet title={`Choose a ${kind}`} controller={sheet}>
+    <Sheet title={`Create a ${kind}`} controller={sheet}>
       <View className="gap-2">
         <BottomSheet.TextInput
           accessibilityLabel={kind === 'store' ? 'Store name' : 'Category name'}
@@ -101,20 +128,10 @@ function MetadataPicker({
           onChangeText={setDraft}
           placeholder={`New ${kind}`}
         />
-        {options.map(option => (
-          <HapticPressable
-            key={`${option.value}:${draft === option.value}`}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: draft === option.value }}
-            onPress={() => setDraft(option.value)}
-            className={`min-h-12 justify-center rounded-xl px-3 ${draft === option.value ? 'bg-muted' : ''}`}
-          >
-            <Text>{option.label}</Text>
-          </HapticPressable>
-        ))}
       </View>
       {error ? <Text className="text-destructive">{error}</Text> : null}
       <Button
+        disabled={!draft.trim()}
         onPress={() => {
           void onSave(draft.trim())
             .then(() => sheet.dismiss())
