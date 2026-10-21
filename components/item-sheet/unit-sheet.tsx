@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { ScaleIcon } from 'lucide-react-native';
+import { ChevronDownIcon, ChevronUpIcon, ScaleIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 
@@ -27,7 +27,12 @@ type UnitOptionProps = {
 };
 
 const UnitOption = ({ label, isSelected, onPress }: UnitOptionProps) => (
-  <HapticPressable onPress={onPress} hapticType="selection">
+  <HapticPressable
+    onPress={onPress}
+    hapticType="selection"
+    accessibilityRole="button"
+    accessibilityState={{ selected: isSelected }}
+  >
     <View
       className={cn(
         'w-full flex-row items-center justify-center gap-3 rounded-xl px-2 py-3',
@@ -67,6 +72,7 @@ export const UnitSheet = ({
   const quantityInput = useUncontrolledTextInput(quantity.toString());
   const [quantityIsValid, setQuantityIsValid] = useState(quantity > 0);
   const [localUnit, setLocalUnit] = useState(normalizeUnit(unit));
+  const [showUnitOptions, setShowUnitOptions] = useState(false);
 
   const normalizedLocalUnit = normalizeUnit(localUnit);
   const isCatalogUnit = UNIT_OPTIONS.some(
@@ -79,7 +85,7 @@ export const UnitSheet = ({
 
   const isValid = quantityIsValid;
 
-  const formatDisplay = () => formatQuantityUnit(quantity, unit);
+  const displayQuantity = formatQuantityUnit(quantity, unit);
 
   const openSheet = () => {
     if (disabled) return;
@@ -87,6 +93,7 @@ export const UnitSheet = ({
     quantityInput.reset(nextQuantity);
     setQuantityIsValid((parseQuantity(nextQuantity) ?? 0) > 0);
     setLocalUnit(normalizeUnit(unit));
+    setShowUnitOptions(false);
     sheetRef.current?.present();
   };
 
@@ -101,6 +108,7 @@ export const UnitSheet = ({
       return;
     }
     setLocalUnit(value);
+    setShowUnitOptions(false);
   };
 
   const handleConfirm = () => {
@@ -119,6 +127,10 @@ export const UnitSheet = ({
           onPress={openSheet}
           hapticType="light"
           disabled={disabled}
+          accessibilityRole="button"
+          accessibilityLabel={`Set quantity, ${quantity} ${normalizeUnit(unit)}`}
+          accessibilityState={{ disabled }}
+          className="min-h-11 justify-center"
         >
           <Pill
             textClassName={cn(
@@ -135,7 +147,7 @@ export const UnitSheet = ({
             hasValue={true}
             className={cn('min-w-16 justify-between', disabled && 'opacity-50')}
           >
-            {formatDisplay()}
+            {displayQuantity}
           </Pill>
         </HapticPressable>
       </WithLayoutTransition>
@@ -143,8 +155,7 @@ export const UnitSheet = ({
       <BottomSheet
         ref={sheetRef}
         name="unit-sheet"
-        scrollable
-        detents={[0.7, 0.9]}
+        scrollable={showUnitOptions}
         viewClassName="pb-safe"
       >
         <BottomSheet.Header
@@ -156,7 +167,7 @@ export const UnitSheet = ({
           button={<ConfirmButton onPress={handleConfirm} disabled={!isValid} />}
         />
 
-        <View>
+        <View className="pb-4">
           <View className="px-4">
             <View className="flex-row items-center justify-between gap-3 rounded-xl bg-muted px-4 py-3 ">
               <TextInput
@@ -169,36 +180,53 @@ export const UnitSheet = ({
                 placeholder="1"
                 placeholderTextColor="#9ca3af"
                 selectTextOnFocus
+                accessibilityLabel="Quantity"
               />
               <HapticPressable
-                onPress={() => handleUnitSelect(CUSTOM_UNIT_VALUE)}
+                onPress={() => {
+                  quantityInputRef.current?.blur();
+                  setShowUnitOptions(value => !value);
+                }}
+                className="min-h-11 flex-row items-center gap-2 px-2"
+                accessibilityRole="button"
+                accessibilityLabel={`Unit, ${displayUnitLabel}`}
+                accessibilityHint="Show or hide unit choices"
+                accessibilityState={{ expanded: showUnitOptions }}
               >
                 <Text className="text-lg text-muted-foreground">
                   {displayUnitLabel || DEFAULT_UNIT_VALUE}
                 </Text>
+                <Icon
+                  as={showUnitOptions ? ChevronUpIcon : ChevronDownIcon}
+                  size={16}
+                  className="text-muted-foreground"
+                />
               </HapticPressable>
             </View>
           </View>
 
-          <ScrollView
-            className="max-h-80 px-2"
-            nestedScrollEnabled
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 24, paddingTop: 8 }}
-          >
-            {UNIT_OPTIONS.map(option => (
-              <UnitOption
-                key={option.value}
-                label={option.label}
-                isSelected={
-                  option.value === CUSTOM_UNIT_VALUE
-                    ? !isCatalogUnit
-                    : normalizedLocalUnit === option.value
-                }
-                onPress={() => handleUnitSelect(option.value)}
-              />
-            ))}
-          </ScrollView>
+          {showUnitOptions ? (
+            <ScrollView
+              className="max-h-80 px-2"
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 24, paddingTop: 8 }}
+            >
+              {UNIT_OPTIONS.map(option => (
+                <UnitOption
+                  key={option.value}
+                  label={option.label}
+                  isSelected={
+                    option.value === CUSTOM_UNIT_VALUE
+                      ? !isCatalogUnit
+                      : normalizedLocalUnit === option.value
+                  }
+                  onPress={() => handleUnitSelect(option.value)}
+                />
+              ))}
+            </ScrollView>
+          ) : null}
         </View>
       </BottomSheet>
 
@@ -206,6 +234,7 @@ export const UnitSheet = ({
         ref={editSheetRef}
         onSave={value => {
           setLocalUnit(normalizeUnit(value));
+          setShowUnitOptions(false);
         }}
       />
     </>

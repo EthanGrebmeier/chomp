@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { TextInput, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { cn } from '../../lib/utils';
 import { HapticPressable } from '../ui/haptic-pressable';
@@ -10,6 +9,8 @@ import { ItemNameField } from './item-fields';
 import { MatchingItem, useMatchingItems } from './use-matching-items';
 
 type ItemInputProps = {
+  renderContent?: (input: ReactNode, suggestions: ReactNode) => ReactNode;
+  compact?: boolean;
   placeholder: string;
   inputKey: number;
   defaultValue: string;
@@ -25,6 +26,8 @@ type ItemInputProps = {
 };
 
 export const ItemInput = ({
+  renderContent,
+  compact = false,
   placeholder,
   inputKey,
   defaultValue,
@@ -38,7 +41,10 @@ export const ItemInput = ({
   disableAutocomplete = false,
   keepKeyboardOnSubmit = false,
 }: ItemInputProps) => {
-  const { matchingItems } = useMatchingItems(matchingValue);
+  const { matchingItems } = useMatchingItems(
+    matchingValue,
+    renderContent ? 12 : 7
+  );
   const isApplyingSuggestionRef = useRef(false);
   const hideSuggestionsTimeoutRef = useRef<ReturnType<
     typeof setTimeout
@@ -94,46 +100,82 @@ export const ItemInput = ({
     }, 75);
   };
 
-  return (
-    <View className="w-full">
-      <ItemNameField
-        key={inputKey}
-        ref={inputRef}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        onChangeText={handleChangeText}
-        onBlur={handleInputBlur}
-        onSubmitEditing={onSubmit}
-        submitBehavior={keepKeyboardOnSubmit ? 'submit' : 'blurAndSubmit'}
-      />
-      {shouldShowAutocomplete && (
-        <Animated.View
-          entering={FadeIn.duration(300)}
-          exiting={FadeOut.duration(300)}
-          className="absolute left-0 right-0 top-[75%] z-10  flex-row flex-wrap gap-1.5 overflow-hidden pt-4"
-        >
-          {matchingItems.map(item => (
-            <Animated.View key={item.cloudSavedItemId ?? item.localSavedItemId}>
-              <HapticPressable
-                className={cn(
-                  'flex-row items-center justify-between self-start rounded-xl border border-border bg-[#F3F4F6] px-2 py-0.5 dark:bg-[#1E2023]'
-                )}
-                onPressIn={handleSuggestionPressIn}
-                onPress={() => handleSuggestionPress(item)}
-              >
-                <Text
-                  allowFontScaling={false}
-                  className={cn(
-                    'text-lg font-medium text-black dark:text-white'
-                  )}
-                >
-                  {item.name}
-                </Text>
-              </HapticPressable>
-            </Animated.View>
-          ))}
-        </Animated.View>
+  const input = (
+    <ItemNameField
+      {...(compact
+        ? {
+            className:
+              'min-h-0 py-1 text-2xl font-semibold leading-8 text-foreground',
+          }
+        : {})}
+      key={inputKey}
+      ref={inputRef}
+      placeholder={placeholder}
+      defaultValue={defaultValue}
+      onChangeText={handleChangeText}
+      onBlur={handleInputBlur}
+      onSubmitEditing={onSubmit}
+      submitBehavior={keepKeyboardOnSubmit ? 'submit' : 'blurAndSubmit'}
+    />
+  );
+  const suggestions = shouldShowAutocomplete ? (
+    <View
+      className={cn(
+        'flex-row flex-wrap',
+        renderContent
+          ? '-mx-0.5'
+          : 'absolute left-0 right-0 top-[75%] z-10 gap-1.5 overflow-hidden pt-4'
       )}
+    >
+      {matchingItems.map((item, index) => (
+        <View
+          key={`${item.source}:${item.cloudSavedItemId ?? item.localSavedItemId}`}
+          style={
+            renderContent
+              ? {
+                  width: '50%',
+                  padding: 3,
+                  // Keep ranking order, with the incomplete row at the top.
+                  marginRight:
+                    index === 0 && matchingItems.length % 2 === 1 ? '50%' : 0,
+                }
+              : undefined
+          }
+        >
+          <HapticPressable
+            accessibilityRole="button"
+            accessibilityLabel={`Use ${item.name}`}
+            className={cn(
+              'justify-center rounded-xl bg-background px-3 py-1 shadow-sm shadow-black/5',
+              renderContent ? 'min-h-11 flex-1' : 'self-start'
+            )}
+            onPressIn={handleSuggestionPressIn}
+            onPress={() => handleSuggestionPress(item)}
+            onPressOut={() => {
+              isApplyingSuggestionRef.current = false;
+            }}
+          >
+            <Text
+              numberOfLines={renderContent ? 2 : undefined}
+              className={cn(
+                'font-medium text-foreground',
+                renderContent ? 'text-sm leading-4' : 'text-lg'
+              )}
+            >
+              {item.name}
+            </Text>
+          </HapticPressable>
+        </View>
+      ))}
+    </View>
+  ) : null;
+
+  return renderContent ? (
+    renderContent(input, suggestions)
+  ) : (
+    <View className="w-full">
+      {input}
+      {suggestions}
     </View>
   );
 };

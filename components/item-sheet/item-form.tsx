@@ -10,9 +10,11 @@ type ItemFormProps = {
    * show where the item came from (recipe or meal plan link).
    */
   source?: ReactNode;
+  compact?: boolean;
+  renderContent?: (fields: ReactNode, suggestions: ReactNode) => ReactNode;
 };
 
-export const ItemForm = ({ source }: ItemFormProps) => {
+export const ItemForm = ({ source, compact, renderContent }: ItemFormProps) => {
   const {
     itemInputValue,
     itemInputKey,
@@ -37,7 +39,21 @@ export const ItemForm = ({ source }: ItemFormProps) => {
   return (
     <>
       <ItemInput
-        placeholder="Add Item"
+        compact={compact}
+        renderContent={
+          renderContent
+            ? (input, suggestions) =>
+                renderContent(
+                  <>
+                    {input}
+                    {source}
+                    <NotesInput compact={compact} />
+                  </>,
+                  suggestions
+                )
+            : undefined
+        }
+        placeholder="Item Name"
         inputKey={itemInputKey}
         defaultValue={itemInputDefaultValue}
         matchingValue={itemInputValue}
@@ -50,8 +66,12 @@ export const ItemForm = ({ source }: ItemFormProps) => {
         disableAutocomplete={disableAutocomplete}
         keepKeyboardOnSubmit={mode === 'add'}
       />
-      {source}
-      <NotesInput />
+      {!renderContent ? (
+        <>
+          {source}
+          <NotesInput compact={compact} />
+        </>
+      ) : null}
     </>
   );
 };

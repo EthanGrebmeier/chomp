@@ -4,18 +4,23 @@ import { cn } from '../lib/utils';
 
 type ScrollingMetaBarProps = {
   children: React.ReactNode;
+  trailingInset?: number;
   className?: string;
   contentClassName?: string;
 };
 
 export const ScrollingMetaBar = ({
   children,
+  trailingInset = 0,
   className,
   contentClassName,
 }: ScrollingMetaBarProps) => {
   return (
     <View className={cn('-mx-4 flex-row items-center ', className)}>
       <ScrollView
+        contentContainerStyle={
+          trailingInset ? { paddingRight: trailingInset } : undefined
+        }
         horizontal
         showsHorizontalScrollIndicator={false}
         className="min-h-8"

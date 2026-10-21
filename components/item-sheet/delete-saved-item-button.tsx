@@ -1,5 +1,5 @@
 import { Trash2Icon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { ComponentType, useRef, useState } from 'react';
 import { toast } from 'sonner-native';
 
 import { removeSavedItem } from '../../features/saved-items/instant/remove-saved-item';
@@ -18,6 +18,7 @@ import { useItemSheet } from './use-item-sheet';
 
 type DeleteSavedItemButtonProps = {
   disabled?: boolean;
+  Trigger?: ComponentType<{ onPress: () => void }>;
 };
 
 /**
@@ -27,6 +28,7 @@ type DeleteSavedItemButtonProps = {
  */
 export const DeleteSavedItemButton = ({
   disabled = false,
+  Trigger,
 }: DeleteSavedItemButtonProps) => {
   const { selectedItem, setSelectedItem, getItemInputValue } = useItemSheet();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -77,26 +79,30 @@ export const DeleteSavedItemButton = ({
 
   return (
     <>
-      <WithLayoutTransition>
-        <HapticPressable
-          accessibilityRole="button"
-          accessibilityLabel="Delete saved item"
-          onPress={() => deleteSheetRef.current?.present()}
-          hapticType="light"
-          disabled={disabled}
-        >
-          <Pill
-            className={cn('border-destructive', disabled && 'opacity-50')}
-            icon={
-              <Icon as={Trash2Icon} size={16} className="text-destructive" />
-            }
-            textClassName="font-semibold text-destructive"
-            hasValue
+      {Trigger ? (
+        <Trigger onPress={() => deleteSheetRef.current?.present()} />
+      ) : (
+        <WithLayoutTransition>
+          <HapticPressable
+            accessibilityRole="button"
+            accessibilityLabel="Delete saved item"
+            onPress={() => deleteSheetRef.current?.present()}
+            hapticType="light"
+            disabled={disabled}
           >
-            Delete Saved Item
-          </Pill>
-        </HapticPressable>
-      </WithLayoutTransition>
+            <Pill
+              className={cn('border-destructive', disabled && 'opacity-50')}
+              icon={
+                <Icon as={Trash2Icon} size={16} className="text-destructive" />
+              }
+              textClassName="font-semibold text-destructive"
+              hasValue
+            >
+              Delete Saved Item
+            </Pill>
+          </HapticPressable>
+        </WithLayoutTransition>
+      )}
       <DeleteSavedItemSheet
         ref={deleteSheetRef}
         itemName={itemName}

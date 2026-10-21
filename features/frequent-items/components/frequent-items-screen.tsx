@@ -9,7 +9,6 @@ import { formatQuantityUnit } from '@/components/item-sheet/unit-utils';
 import { StoreTag } from '@/components/store-tag';
 import { EmptyHeading } from '@/components/text/empty-heading';
 import { EmptySubtext } from '@/components/text/empty-subtext';
-import { Heading } from '@/components/text/heading';
 import { GestureHapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
@@ -184,14 +183,6 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
 
   return (
     <View className="min-h-0 flex-1 pb-6">
-      <View className="gap-1 px-4 pb-3">
-        <View className="flex-row items-center gap-2">
-          <Heading>Frequent Items</Heading>
-        </View>
-        <Text variant="caption">
-          Your most-added items from the last 90 days.
-        </Text>
-      </View>
       {isLoading ? (
         <FrequentItemsSkeleton />
       ) : error ? (
