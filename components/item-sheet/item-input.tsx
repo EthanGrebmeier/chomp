@@ -1,10 +1,14 @@
 import { ReactNode, useEffect, useRef } from 'react';
-import { TextInput, View } from 'react-native';
+import { ScrollView, TextInput, View } from 'react-native';
 
 import { cn } from '../../lib/utils';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Text } from '../ui/text';
 
+import {
+  getSuggestionTreatment,
+  useSuggestionStyle,
+} from './add-item/suggestion-style';
 import { ItemNameField } from './item-fields';
 import { MatchingItem, useMatchingItems } from './use-matching-items';
 
@@ -14,6 +18,7 @@ type ItemInputProps = {
   placeholder: string;
   inputKey: number;
   defaultValue: string;
+  value: string;
   matchingValue: string;
   onChangeText: (text: string) => void;
   onSelect: (item: MatchingItem) => void;
@@ -31,6 +36,7 @@ export const ItemInput = ({
   placeholder,
   inputKey,
   defaultValue,
+  value,
   matchingValue,
   onChangeText,
   onSelect,
@@ -41,11 +47,12 @@ export const ItemInput = ({
   disableAutocomplete = false,
   keepKeyboardOnSubmit = false,
 }: ItemInputProps) => {
-  const { matchingItems } = useMatchingItems(
-    matchingValue,
-    renderContent ? 12 : 7
-  );
-  const isApplyingSuggestionRef = useRef(false);
+  const suggestionStyle = useSuggestionStyle();
+  const suggestionTreatment = getSuggestionTreatment(suggestionStyle);
+  const suggestionLayout = suggestionTreatment.layout;
+  const { matchingItems } = useMatchingItems(matchingValue, 12);
+  const isPressingSuggestionRef = useRef(false);
+
   const hideSuggestionsTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -62,29 +69,25 @@ export const ItemInput = ({
     !disableAutocomplete && showMatchingItems && matchingItems.length > 0;
 
   const handleChangeText = (text: string) => {
-    if (isApplyingSuggestionRef.current) {
-      return;
-    }
     onChangeText(text);
   };
 
   const handleSuggestionPress = (item: MatchingItem) => {
-    isApplyingSuggestionRef.current = true;
+    isPressingSuggestionRef.current = true;
     if (hideSuggestionsTimeoutRef.current) {
       clearTimeout(hideSuggestionsTimeoutRef.current);
       hideSuggestionsTimeoutRef.current = null;
     }
-    onChangeText(item.name);
-    inputRef?.current?.setNativeProps({ text: item.name });
+    // Let React Native synchronize text and its native event count together.
+    // Imperative text writes can be rejected after the user has edited a pick.
     onSelect(item);
+    inputRef?.current?.focus();
     setShowMatchingItems(false);
-    setTimeout(() => {
-      isApplyingSuggestionRef.current = false;
-    }, 0);
+    isPressingSuggestionRef.current = false;
   };
 
   const handleSuggestionPressIn = () => {
-    isApplyingSuggestionRef.current = true;
+    isPressingSuggestionRef.current = true;
     if (hideSuggestionsTimeoutRef.current) {
       clearTimeout(hideSuggestionsTimeoutRef.current);
       hideSuggestionsTimeoutRef.current = null;
@@ -93,7 +96,7 @@ export const ItemInput = ({
 
   const handleInputBlur = () => {
     hideSuggestionsTimeoutRef.current = setTimeout(() => {
-      if (isApplyingSuggestionRef.current) {
+      if (isPressingSuggestionRef.current) {
         return;
       }
       setShowMatchingItems(false);
@@ -111,6 +114,7 @@ export const ItemInput = ({
       key={inputKey}
       ref={inputRef}
       placeholder={placeholder}
+      value={value}
       defaultValue={defaultValue}
       onChangeText={handleChangeText}
       onBlur={handleInputBlur}
@@ -122,44 +126,58 @@ export const ItemInput = ({
     <View
       className={cn(
         'flex-row flex-wrap',
-        renderContent
-          ? '-mx-0.5'
-          : 'absolute left-0 right-0 top-[75%] z-10 gap-1.5 overflow-hidden pt-4'
+        suggestionLayout === 'list'
+          ? 'overflow-hidden rounded-2xl bg-white px-3 dark:bg-neutral-800'
+          : '-mx-0.5'
       )}
     >
       {matchingItems.map((item, index) => (
         <View
           key={`${item.source}:${item.cloudSavedItemId ?? item.localSavedItemId}`}
-          style={
-            renderContent
-              ? {
-                  width: '50%',
-                  padding: 3,
-                  // Keep ranking order, with the incomplete row at the top.
-                  marginRight:
-                    index === 0 && matchingItems.length % 2 === 1 ? '50%' : 0,
-                }
-              : undefined
-          }
+          style={{
+            width:
+              suggestionLayout === 'list'
+                ? '100%'
+                : suggestionLayout === 'grid'
+                  ? '50%'
+                  : undefined,
+            maxWidth: '100%',
+            padding: suggestionLayout === 'list' ? 0 : 3,
+            // Keep ranking order, with the incomplete row at the top.
+            marginRight:
+              suggestionLayout === 'grid' &&
+              index === 0 &&
+              matchingItems.length % 2 === 1
+                ? '50%'
+                : 0,
+          }}
         >
           <HapticPressable
             accessibilityRole="button"
             accessibilityLabel={`Use ${item.name}`}
+            style={
+              suggestionLayout !== 'grid'
+                ? { shadowOpacity: 0, elevation: 0 }
+                : undefined
+            }
             className={cn(
-              'justify-center rounded-xl bg-background px-3 py-1 shadow-sm shadow-black/5',
-              renderContent ? 'min-h-11 flex-1' : 'self-start'
+              'min-h-11 flex-1 justify-center rounded-xl border border-transparent px-3 py-1 shadow-sm shadow-black/5',
+              suggestionTreatment.className,
+              suggestionLayout === 'list' &&
+                index > 0 &&
+                'border-t-neutral-200 dark:border-t-neutral-700'
             )}
             onPressIn={handleSuggestionPressIn}
             onPress={() => handleSuggestionPress(item)}
             onPressOut={() => {
-              isApplyingSuggestionRef.current = false;
+              isPressingSuggestionRef.current = false;
             }}
           >
             <Text
-              numberOfLines={renderContent ? 2 : undefined}
+              numberOfLines={2}
               className={cn(
-                'font-medium text-foreground',
-                renderContent ? 'text-sm leading-4' : 'text-lg'
+                'text-sm font-medium leading-4 text-foreground',
+                suggestionTreatment.textClassName
               )}
             >
               {item.name}
@@ -174,8 +192,17 @@ export const ItemInput = ({
     renderContent(input, suggestions)
   ) : (
     <View className="w-full">
+      {suggestions ? (
+        <ScrollView
+          style={{ maxHeight: 200, flexGrow: 0 }}
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="none"
+          showsVerticalScrollIndicator={false}
+        >
+          {suggestions}
+        </ScrollView>
+      ) : null}
       {input}
-      {suggestions}
     </View>
   );
 };

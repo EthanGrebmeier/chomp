@@ -1,16 +1,9 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
-import { ChevronDownIcon, PlusIcon } from 'lucide-react-native';
+import { ArrowUpIcon, ChevronDownIcon, PlusIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useRef, useState } from 'react';
-import {
-  Keyboard,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Keyboard, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   LinearTransition,
@@ -53,12 +46,13 @@ import { Button } from '../../ui/button';
 import { Icon } from '../../ui/icon';
 import { Text } from '../../ui/text';
 import { ItemForm } from '../item-form';
+import { ItemSuggestions } from '../item-suggestions';
 import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 
 import { IngredientSelector } from './ingredient-selector';
 import { RecipeSelector } from './recipe-selector';
-import { SavedItemMenu } from './saved-item-menu';
+import { SavedItemActions } from './saved-item-actions';
 
 // The native detent animates the sheet's position; this keeps its visible card
 // continuous while the transparent suggestion space and content bounds change.
@@ -115,11 +109,14 @@ const ModeMenu = ({ mode, onModeChange }: ModeToggleProps) => (
 const ModeHeader = (props: ModeToggleProps) => (
   // Preserve a native header container so its menu moves in the card's local
   // coordinates instead of being flattened into the sheet's layout.
-  <View collapsable={false} className="items-center px-14">
+  <View
+    collapsable={false}
+    className={cn('items-center', props.mode === 'item' ? 'px-24' : 'px-14')}
+  >
     <ModeMenu {...props} />
     {props.mode === 'item' ? (
       <View className="absolute right-2 top-0">
-        <SavedItemMenu />
+        <SavedItemActions />
       </View>
     ) : null}
   </View>
@@ -250,6 +247,14 @@ const AddItemSheet = ({
     setSelectedIngredientIds(new Set());
   };
 
+  const handleOpenRecipe = async () => {
+    if (!selectedRecipe) return;
+
+    const recipeId = selectedRecipe.id;
+    await ref.current?.dismiss();
+    router.push(navigation.goToRecipe(recipeId, groceryListId));
+  };
+
   const handleCreateRecipe = (initialName?: string) => {
     ref.current?.dismiss();
     router.push(navigation.goToCreateRecipeManual(groceryListId, initialName));
@@ -375,12 +380,16 @@ const AddItemSheet = ({
         name="add-item-sheet"
         detents={mode === 'item' ? ['auto'] : [expandedHeight / windowHeight]}
         scrollable={mode !== 'item'}
+        draggable={mode !== 'item'}
         backgroundColor={mode === 'item' ? 'transparent' : backgroundColor}
         cornerRadius={mode === 'item' ? 0 : undefined}
         grabber={mode !== 'item'}
         elevation={mode === 'item' ? 0 : undefined}
         insetAdjustment="never"
         onWillPresent={() => setIsSessionOpen(true)}
+        onWillFocus={() => {
+          if (mode === 'item') itemInputRef.current?.focus();
+        }}
         onDidDismiss={handleClose}
       >
         <ItemForm
@@ -398,25 +407,12 @@ const AddItemSheet = ({
               }
             >
               {mode === 'item' ? (
-                // Keep the native auto detent stable as matches appear and disappear.
-                // Suggestions grow upward inside this transparent, reserved space.
-                <View style={{ height: 208 }} className="justify-end pb-2">
-                  <Pressable
-                    style={StyleSheet.absoluteFill}
-                    onPress={() => void ref.current?.dismiss()}
-                    accessibilityLabel="Close add item"
-                    accessibilityRole="button"
-                  />
-                  {suggestions ? (
-                    <ScrollView
-                      style={{ maxHeight: 200, flexGrow: 0 }}
-                      keyboardShouldPersistTaps="always"
-                      showsVerticalScrollIndicator={false}
-                    >
-                      {suggestions}
-                    </ScrollView>
-                  ) : null}
-                </View>
+                <ItemSuggestions
+                  onClose={() => void ref.current?.dismiss()}
+                  label="Close add item"
+                >
+                  {suggestions}
+                </ItemSuggestions>
               ) : null}
               <Animated.View
                 collapsable={false}
@@ -483,7 +479,7 @@ const AddItemSheet = ({
                         onSuccessComplete={onItemAddedFeedbackComplete}
                       >
                         <Icon
-                          as={PlusIcon}
+                          as={ArrowUpIcon}
                           size={22}
                           strokeWidth={2.5}
                           className="text-primary-foreground"
@@ -529,6 +525,7 @@ const AddItemSheet = ({
                     <IngredientSelector
                       recipe={selectedRecipe}
                       onBack={handleBackToRecipes}
+                      onOpenRecipe={() => void handleOpenRecipe()}
                       onDismiss={() => void ref.current?.dismiss()}
                       listId={groceryListId}
                       selectedIds={selectedIngredientIds}

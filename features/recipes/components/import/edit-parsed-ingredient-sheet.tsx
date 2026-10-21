@@ -6,11 +6,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Keyboard } from 'react-native';
 
-import { BottomSheet } from '@/components/bottom-sheet';
-import { ItemForm } from '@/components/item-sheet/item-form';
-import { MetaBar } from '@/components/item-sheet/meta-bar';
+import { ItemEditorSheet } from '@/components/item-sheet/item-editor-sheet';
 import {
   ItemSheetProvider,
   useItemSheet,
@@ -44,41 +41,25 @@ type EditingState = {
  */
 const EditSheetContents = ({
   sheetRef,
-  editingState,
-  onSave,
   onDismiss,
 }: {
   sheetRef: React.RefObject<TrueSheet | null>;
-  editingState: EditingState;
-  onSave: (index: number, ingredient: ParsedIngredient) => void;
   onDismiss: () => void;
 }) => {
-  const { reset, itemInputRef } = useItemSheet();
-
+  const { reset } = useItemSheet();
   const handleClose = useCallback(() => {
-    Keyboard.dismiss();
     reset();
     onDismiss();
   }, [reset, onDismiss]);
 
-  const handleOpen = useCallback(() => {
-    itemInputRef.current?.focus();
-  }, [itemInputRef]);
-
   return (
-    <BottomSheet
-      viewClassName="pb-4"
+    <ItemEditorSheet
       name="edit-parsed-ingredient-sheet"
-      ref={sheetRef}
-      onStartClose={handleClose}
-      onOpen={handleOpen}
-    >
-      <BottomSheet.SheetView>
-        <BottomSheet.Header title="Edit ingredient" className="mb-4" />
-        <ItemForm />
-        <MetaBar />
-      </BottomSheet.SheetView>
-    </BottomSheet>
+      title="Edit ingredient"
+      sheetRef={sheetRef}
+      onDismiss={handleClose}
+      actionLabel="Save ingredient"
+    />
   );
 };
 
@@ -156,12 +137,7 @@ export const EditParsedIngredientSheet = forwardRef<
       setFromItemRef={setFromItemRef}
       disableAutocomplete={true}
     >
-      <EditSheetContents
-        sheetRef={sheetRef}
-        editingState={editingState}
-        onSave={onSave}
-        onDismiss={handleDismiss}
-      />
+      <EditSheetContents sheetRef={sheetRef} onDismiss={handleDismiss} />
     </ItemSheetProvider>
   );
 });

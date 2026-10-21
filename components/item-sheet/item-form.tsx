@@ -11,10 +11,16 @@ type ItemFormProps = {
    */
   source?: ReactNode;
   compact?: boolean;
+  showNotes?: boolean;
   renderContent?: (fields: ReactNode, suggestions: ReactNode) => ReactNode;
 };
 
-export const ItemForm = ({ source, compact, renderContent }: ItemFormProps) => {
+export const ItemForm = ({
+  source,
+  compact,
+  renderContent,
+  showNotes = true,
+}: ItemFormProps) => {
   const {
     itemInputValue,
     itemInputKey,
@@ -47,7 +53,7 @@ export const ItemForm = ({ source, compact, renderContent }: ItemFormProps) => {
                   <>
                     {input}
                     {source}
-                    <NotesInput compact={compact} />
+                    {showNotes ? <NotesInput compact={compact} /> : null}
                   </>,
                   suggestions
                 )
@@ -56,6 +62,7 @@ export const ItemForm = ({ source, compact, renderContent }: ItemFormProps) => {
         placeholder="Item Name"
         inputKey={itemInputKey}
         defaultValue={itemInputDefaultValue}
+        value={itemInputValue}
         matchingValue={itemInputValue}
         onChangeText={onChangeItemText}
         onSelect={onSelect}
@@ -69,7 +76,7 @@ export const ItemForm = ({ source, compact, renderContent }: ItemFormProps) => {
       {!renderContent ? (
         <>
           {source}
-          <NotesInput compact={compact} />
+          {showNotes ? <NotesInput compact={compact} /> : null}
         </>
       ) : null}
     </>

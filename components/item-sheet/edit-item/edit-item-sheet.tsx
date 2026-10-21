@@ -21,10 +21,8 @@ import {
   BaseGroceryItem,
   GroceryListItemWithRecipe,
 } from '../../../features/grocery-list/types';
-import { BottomSheet } from '../../bottom-sheet';
-import { ItemForm } from '../item-form';
+import { ItemEditorSheet } from '../item-editor-sheet';
 import { ItemSourceSentence } from '../item-source-sentence';
-import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 import { MatchingItem } from '../use-matching-items';
 
@@ -116,18 +114,14 @@ const EditItemContents = () => {
   }, [reset, liveSyncRef]);
 
   return (
-    <BottomSheet
+    <ItemEditorSheet
       name="edit-item-sheet"
-      ref={sheetRef}
+      title="Edit item"
+      sheetRef={sheetRef}
       onStartClose={onStartClose}
       onDismiss={onDismiss}
-    >
-      <BottomSheet.SheetView>
-        <BottomSheet.Header title="Edit item" />
-        <ItemForm source={<EditItemSource />} />
-        <MetaBar />
-      </BottomSheet.SheetView>
-    </BottomSheet>
+      source={<EditItemSource />}
+    />
   );
 };
 

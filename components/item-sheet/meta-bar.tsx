@@ -62,8 +62,7 @@ export const MetaBar = ({
             setStoreName(nextStoreName);
           }}
         />
-        {mode === 'add' &&
-        !(savedItemActionsInHeader && hasEditableSavedItem) ? (
+        {mode === 'add' && !savedItemActionsInHeader ? (
           <>
             <SaveItemToggle
               value={saveItem}

@@ -140,6 +140,7 @@ type IngredientSelectorProps = {
   recipe: RecipeWithIngredients;
   onBack: () => void;
   onDismiss: () => void;
+  onOpenRecipe?: () => void;
   showFooter?: boolean;
   listId?: string;
   onComplete?: () => void;
@@ -154,6 +155,7 @@ type IngredientSelectorProps = {
   onPersistSelection?: (selectedIds: Set<string>) => void;
   onEditIngredient?: (id: string) => void;
   showHeader?: boolean;
+  selectionHeader?: 'default' | 'compact';
   bottomContentInset?: number;
   recipeNameHeading?: boolean;
   scheduleControl?: React.ReactNode;
@@ -183,6 +185,7 @@ export const IngredientSelector = forwardRef<
     recipe,
     onBack,
     onDismiss,
+    onOpenRecipe,
     selectedIds,
     onToggleIngredient,
     onToggleAll,
@@ -197,6 +200,7 @@ export const IngredientSelector = forwardRef<
     onPersistSelection,
     onEditIngredient,
     showHeader = true,
+    selectionHeader = 'default',
     bottomContentInset,
     recipeNameHeading = false,
     scheduleControl,
@@ -268,8 +272,12 @@ export const IngredientSelector = forwardRef<
   ).length;
 
   const handleGoToRecipe = useCallback(() => {
+    if (onOpenRecipe) {
+      onOpenRecipe();
+      return;
+    }
     recipeDetailSheetRef.current?.present(recipe.id);
-  }, [recipe.id]);
+  }, [onOpenRecipe, recipe.id]);
 
   const handleToggleIngredient = (id: string) => {
     if (selectionDisabled || !selectableIds.includes(id)) return;
@@ -461,17 +469,22 @@ export const IngredientSelector = forwardRef<
         <View
           className={cn(
             'mb-2 flex-row items-center justify-between px-4',
-            !showHeader && !recipeNameHeading && 'pt-4',
+            !showHeader &&
+              !recipeNameHeading &&
+              selectionHeader !== 'compact' &&
+              'pt-4',
             recipeNameHeading && 'pt-4'
           )}
         >
-          <View>
+          <View className="min-w-0 flex-1 pr-3">
             <Text variant="overline">Ingredients</Text>
-            <Text variant="caption" tabularNumbers>
-              {purchasedCount > 0
-                ? `${purchasedCount} purchased · ${unpurchasedSelectedCount} selected`
-                : `${effectiveSelectedIds.size} of ${ingredients.length} selected`}
-            </Text>
+            {selectionHeader !== 'compact' ? (
+              <Text variant="caption" tabularNumbers>
+                {purchasedCount > 0
+                  ? `${purchasedCount} purchased · ${unpurchasedSelectedCount} selected`
+                  : `${effectiveSelectedIds.size} of ${ingredients.length} selected`}
+              </Text>
+            ) : null}
           </View>
           <HapticPressable
             onPress={handleToggleAll}

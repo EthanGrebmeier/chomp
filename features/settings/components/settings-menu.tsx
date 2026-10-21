@@ -16,6 +16,7 @@ import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 import { useInstantAuthState } from '@/lib/instant/use-clerk-auth';
 
 import { type SettingsSubmenu } from './settings-types';
+import { SuggestionStyleMenu } from './suggestion-style-menu';
 
 type SettingsMenuProps = {
   onSelect: (view: SettingsSubmenu) => void;
@@ -81,6 +82,7 @@ export function SettingsMenu({ onSelect, onCreateAccount }: SettingsMenuProps) {
               className="text-muted-foreground"
             />
           </HapticPressable>
+          <SuggestionStyleMenu />
           {quantityWorkspaceAvailable() ? (
             <HapticPressable
               onPress={() => onSelect('quantity-workspace')}

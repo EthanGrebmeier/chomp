@@ -1,5 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import {
   forwardRef,
   useCallback,
@@ -9,15 +10,17 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, View, useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { BackButton } from '../../../components/ui/back-button';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
+import { BackButton } from '../../../components/ui/back-button';
 import { navigation } from '../../../lib/navigation';
+import { THEME } from '../../../lib/theme';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useDefaultStore } from '../../stores/instant/use-default-store';
 import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
@@ -69,6 +72,15 @@ export type EditMealSheetRef = {
 
 export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
   ({ listId }, ref) => {
+    const { height: windowHeight } = useWindowDimensions();
+    const insets = useSafeAreaInsets();
+    const { colorScheme } = useColorScheme();
+    const backgroundColor =
+      THEME[colorScheme === 'dark' ? 'dark' : 'light'].background;
+    const expandedHeight = Math.min(
+      windowHeight * 0.94,
+      windowHeight - insets.top - 12
+    );
     const [mealTag, setMealTag] = useState<string | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<string | undefined>(
       undefined
@@ -510,20 +522,22 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
 
     return (
       <>
-        <BottomSheet
+        <TrueSheet
           name="edit-meal-sheet"
-          onOpen={() => setSheetOpen(true)}
+          onDidPresent={() => setSheetOpen(true)}
           ref={sheetRef}
-          detents={[1]}
-          viewClassName="flex-1"
+          detents={[expandedHeight / windowHeight]}
+          backgroundColor={backgroundColor}
+          insetAdjustment="never"
+          grabber
           scrollable
-          onStartClose={() => {
-            KeyboardController.dismiss();
-            flushAutoSave();
-          }}
-          onDismiss={handleSheetDismiss}
+          onWillDismiss={flushAutoSave}
+          onDidDismiss={handleSheetDismiss}
         >
-          <BottomSheet.SheetView className="pb-safe flex-1">
+          <View
+            style={{ height: expandedHeight, paddingTop: 24 }}
+            className="px-4 pb-6"
+          >
             <View className="min-h-0 flex-1">
               <BottomSheet.Header
                 title="Edit meal"
@@ -603,8 +617,8 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                 </View>
               ) : null}
             </View>
-          </BottomSheet.SheetView>
-        </BottomSheet>
+          </View>
+        </TrueSheet>
 
         <MealPlanIngredientOverrideSheet
           ref={ingredientOverrideSheetRef}

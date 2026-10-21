@@ -22,9 +22,9 @@ type DeleteSavedItemButtonProps = {
 };
 
 /**
- * Metabar action shown when the item being added is linked to an existing
+ * Action shown when the item being added is linked to an existing
  * saved item. Opens a confirmation sheet, then deletes the saved item and
- * clears the link so the metabar reverts to the "Save item" toggle.
+ * clears the link so the controls revert to the "Save item" toggle.
  */
 export const DeleteSavedItemButton = ({
   disabled = false,
@@ -65,7 +65,7 @@ export const DeleteSavedItemButton = ({
             selectedItem?.source === 'local' && selectedItem.isDefault,
         });
       }
-      // Drop the link so the metabar reverts to the "Save item" toggle and
+      // Drop the link so the controls revert to the "Save item" toggle and
       // the add flow no longer treats this as a linked item.
       setSelectedItem(null);
       deleteSheetRef.current?.dismiss();
@@ -91,7 +91,7 @@ export const DeleteSavedItemButton = ({
             disabled={disabled}
           >
             <Pill
-              className={cn('border-destructive', disabled && 'opacity-50')}
+              className={cn('bg-destructive/10', disabled && 'opacity-50')}
               icon={
                 <Icon as={Trash2Icon} size={16} className="text-destructive" />
               }
