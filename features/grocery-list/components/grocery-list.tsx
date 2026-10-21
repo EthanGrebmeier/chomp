@@ -12,7 +12,6 @@ import {
 } from 'react';
 import {
   Alert,
-  Keyboard,
   TextInput as RNTextInput,
   useWindowDimensions,
   View,
@@ -299,8 +298,9 @@ export const GroceryList = ({
   const [bulkMoveItemCount, setBulkMoveItemCount] = useState(0);
 
   const dismissSearch = () => {
+    // Sheet taps also pass through this capture handler. Only blur our search
+    // field; dismissing the global keyboard steals focus from nested editors.
     searchInputRef.current?.blur();
-    Keyboard.dismiss();
   };
 
   const handleGroupByChange = (newGroupBy: GroceryListGroupBy) => {
@@ -940,6 +940,7 @@ export const GroceryList = ({
         <ShareListSheet ref={shareListSheetRef} />
         <EditListNameSheet ref={editListNameSheetRef} />
         <CategorySheet
+          selectionMode="sheet"
           ref={bulkCategorySheetRef}
           category={bulkCategorySelectionDraft?.category}
           onSelect={handleBulkCategorySheetSelect}
@@ -949,6 +950,7 @@ export const GroceryList = ({
           openRequestId={bulkCategoryOpenRequestId}
         />
         <StoreSheet
+          selectionMode="sheet"
           ref={bulkStoreSheetRef}
           storeId={bulkStoreSelectionDraft?.storeId}
           storeName={bulkStoreSelectionDraft?.storeName}

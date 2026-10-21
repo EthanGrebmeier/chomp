@@ -28,7 +28,8 @@ export const ScrollingMetaBar = ({
           'flex-row items-center gap-2 pl-4 pr-4 overflow-hidden ',
           contentClassName
         )}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="always"
+        keyboardDismissMode="none"
       >
         {children}
       </ScrollView>

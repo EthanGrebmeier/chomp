@@ -22,6 +22,11 @@ type BottomSheetProps = {
   ref: React.RefObject<TrueSheet | null>;
   name?: string;
   onOpen?: () => void;
+  /** Focus inputs during presentation so the keyboard transitions with the sheet. */
+  onStartOpen?: () => void;
+  /** Restore input focus as a sheet above this one begins to dismiss. */
+  onFocus?: () => void;
+  draggable?: boolean;
   /**
    * Fires when the sheet has started closing (swipe, tap-outside, or
    * programmatic dismiss) but before its dismiss animation has finished.
@@ -48,6 +53,9 @@ export const BottomSheet = ({
   onStartClose,
   onDismiss,
   onOpen,
+  onStartOpen,
+  onFocus,
+  draggable,
   viewClassName,
   footer,
   detents,
@@ -62,6 +70,9 @@ export const BottomSheet = ({
       name={name}
       detents={detents ?? ['auto']}
       onDidPresent={onOpen}
+      onWillPresent={onStartOpen}
+      onWillFocus={onFocus}
+      draggable={draggable}
       onWillDismiss={onStartClose}
       onDidDismiss={onDismiss}
       backgroundColor={

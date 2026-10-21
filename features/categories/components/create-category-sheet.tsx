@@ -173,7 +173,7 @@ export const CreateCategorySheet = forwardRef<
         name={sheetName}
         ref={sheetRef}
         onStartClose={reset}
-        onOpen={() => {
+        onStartOpen={() => {
           nameInputRef.current?.focus();
         }}
         footer={

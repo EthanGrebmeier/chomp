@@ -13,7 +13,7 @@ import {
   parseMealPlanDate,
 } from '../utils/meal-plan-date-format';
 
-import { MealTimeSheet, MealTimeSheetRef } from './meal-time-sheet';
+import { MealTimeDropdown } from './meal-time-dropdown';
 
 type MealScheduleSentenceProps = {
   date?: string;
@@ -31,7 +31,6 @@ export const MealScheduleSentence = ({
   disabled = false,
 }: MealScheduleSentenceProps) => {
   const calendarSheetRef = useRef<CalendarSheetRef>(null);
-  const mealTimeSheetRef = useRef<MealTimeSheetRef>(null);
 
   const spanClassName = (hasValue: boolean) =>
     cn(
@@ -43,17 +42,22 @@ export const MealScheduleSentence = ({
 
   return (
     <View className={cn(disabled && 'opacity-50')}>
-      <Text variant="body" className="text-muted-foreground">
-        Planned for{' '}
-        <Text
-          className={spanClassName(!!mealTag)}
-          onPress={
-            disabled ? undefined : () => mealTimeSheetRef.current?.present()
-          }
+      <View className="flex-row flex-wrap items-center gap-x-1">
+        <Text variant="body" className="text-muted-foreground">
+          Planned for
+        </Text>
+        <MealTimeDropdown
+          mealTime={mealTag}
+          onSelect={onMealTagChange}
+          disabled={disabled}
         >
-          {mealTag ?? 'a meal time'}
-        </Text>{' '}
-        on{' '}
+          <Text className={spanClassName(!!mealTag)}>
+            {mealTag ?? 'no meal time'}
+          </Text>
+        </MealTimeDropdown>
+        <Text variant="body" className="text-muted-foreground">
+          on
+        </Text>
         <Text
           className={spanClassName(!!date)}
           onPress={
@@ -62,7 +66,7 @@ export const MealScheduleSentence = ({
         >
           {date ? formatMealPlanDate(date) : 'a date'}
         </Text>
-      </Text>
+      </View>
 
       <CalendarSheet
         ref={calendarSheetRef}
@@ -72,13 +76,6 @@ export const MealScheduleSentence = ({
         onChange={selectedDate => {
           onDateChange(format(selectedDate, 'yyyy-MM-dd'));
         }}
-      />
-      <MealTimeSheet
-        ref={mealTimeSheetRef}
-        hideTrigger
-        mealTime={mealTag}
-        onSelect={onMealTagChange}
-        disabled={disabled}
       />
     </View>
   );

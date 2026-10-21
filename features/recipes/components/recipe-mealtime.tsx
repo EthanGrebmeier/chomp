@@ -1,4 +1,4 @@
-import { MealTimeSheet } from '../../meal-planner/components/meal-time-sheet';
+import { MealTimeDropdown } from '../../meal-planner/components/meal-time-dropdown';
 import { updateRecipe } from '../instant/update-recipe';
 
 type RecipeMealtimeProps = {
@@ -15,9 +15,7 @@ export const RecipeMealtime = ({ mealTag, recipeId }: RecipeMealtimeProps) => {
       },
     });
   };
-  return (
-    <MealTimeSheet mealTime={mealTag} onSelect={onSelect} canGoBack={false} />
-  );
+  return <MealTimeDropdown mealTime={mealTag} onSelect={onSelect} />;
 };
 
 export default RecipeMealtime;

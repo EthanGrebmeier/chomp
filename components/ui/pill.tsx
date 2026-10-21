@@ -1,12 +1,18 @@
 import { XIcon } from 'lucide-react-native';
 import { ReactNode } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { cn } from '@/lib/utils';
 
 import { HapticPressable } from './haptic-pressable';
 import { Icon } from './icon';
 import { Text } from './text';
+
+const styles = StyleSheet.create({
+  container: {
+    borderCurve: 'continuous',
+  },
+});
 
 type PillProps = {
   children: ReactNode;
@@ -31,10 +37,11 @@ export const Pill = ({
     <View>
       <View
         className={cn(
-          'flex-row items-center gap-2 rounded-full border border-border bg-white/10 px-3 py-1',
+          'flex-row items-center gap-2 rounded-lg bg-muted px-3 py-1',
           hasValue && onClear && 'pr-8',
           className
         )}
+        style={styles.container}
       >
         {icon}
         <Text

@@ -1,7 +1,6 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '../bottom-sheet';
 import { TextInput } from '../text-input';
@@ -55,7 +54,6 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
     };
 
     const handleDismiss = () => {
-      KeyboardController.dismiss();
       unitInput.reset();
       setCanSave(false);
     };
@@ -64,7 +62,7 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
       <BottomSheet
         name="edit-unit-sheet"
         ref={sheetRef}
-        onOpen={() => {
+        onStartOpen={() => {
           inputRef.current?.focus();
         }}
         onDismiss={handleDismiss}
