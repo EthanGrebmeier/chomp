@@ -1,8 +1,3 @@
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
-
-import { db } from '../../../lib/instant';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-
 export const incrementGroceryListItem = async ({
   itemId,
   quantityToAdd,
@@ -10,31 +5,7 @@ export const incrementGroceryListItem = async ({
   itemId: string;
   quantityToAdd: number;
 }) => {
-  if (quantityWorkspaceAvailable()) {
-    const { addExtraQuantity } =
-      await import('@/features/quantity/app/grocery-actions');
-    return addExtraQuantity(itemId, quantityToAdd);
-  }
-
-  // Query all grocery items and filter client-side
-  // This ensures offline-created items are found (where clauses don't work for unsynced data)
-  const existingItemQuery = await db.queryOnce({
-    grocery_items: {},
-  });
-
-  const existingItem = existingItemQuery.data.grocery_items.find(
-    item => item.id === itemId
-  );
-
-  if (!existingItem) {
-    return;
-  }
-
-  const newQuantity = existingItem.quantity + quantityToAdd;
-
-  return db.transact([
-    db.tx.grocery_items[itemId].update(
-      trimStringFields({ quantity: newQuantity })
-    ),
-  ]);
+  const { addExtraQuantity } =
+    await import('@/features/quantity/app/grocery-actions');
+  return addExtraQuantity(itemId, quantityToAdd);
 };

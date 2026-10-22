@@ -1,15 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Button, Text, View } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
-import { db } from './index';
+
 import { restoreLegacySession } from './restore-legacy-session';
 
+import { db } from './index';
+
 export function QuantitySessionGate({ children }: { children: ReactNode }) {
+  // Restore old production sessions only into the promoted production app.
   const enabled =
-    quantityWorkspaceAvailable() &&
-    process.env.EXPO_PUBLIC_QUANTITY_RELEASE === '1';
+    process.env.EXPO_PUBLIC_INSTANT_APP_ID ===
+    '5df33e29-252b-4e1c-a111-53787beccba3';
   const [state, setState] = useState<'loading' | 'ready' | 'error'>(
     enabled ? 'loading' : 'ready'
   );

@@ -1,9 +1,4 @@
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
-
-import { db } from '../../../lib/instant';
-
 import {
-  addIngredientsWithStacking,
   ConflictResolution,
   DefaultStoreForStacking,
 } from './stack-recipe-ingredients';
@@ -34,40 +29,13 @@ export const addRecipeToList = async ({
   defaultStore,
   conflictResolution = 'prompt',
 }: AddRecipeToListArgs) => {
-  if (quantityWorkspaceAvailable()) {
-    const { addQuantityRecipe } =
-      await import('@/features/quantity/app/recipe-actions');
-    return addQuantityRecipe({
-      recipeId,
-      listId,
-      ingredients,
-      defaultStore,
-      conflictResolution,
-    });
-  }
-  const result = await addIngredientsWithStacking({
+  const { addQuantityRecipe } =
+    await import('@/features/quantity/app/recipe-actions');
+  return addQuantityRecipe({
+    recipeId,
     listId,
-    conflictResolution,
+    ingredients,
     defaultStore,
-    ingredients: ingredients.map(ingredient => ({
-      ...ingredient,
-      recipeId,
-    })),
+    conflictResolution,
   });
-
-  if (
-    !result.requiresConflictResolution &&
-    result.createdCount + result.stackedCount > 0
-  ) {
-    await db.transact([
-      db.tx.recipes[recipeId].update({
-        lastAddedToListAt: new Date().toISOString(),
-      }),
-    ]);
-  }
-
-  return {
-    ...result,
-    addedItems: result.createdCount + result.stackedCount,
-  };
 };

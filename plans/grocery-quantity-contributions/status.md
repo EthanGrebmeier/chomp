@@ -1,3 +1,7 @@
+> Historical release record. The quantity update has shipped. For current setup
+> and maintenance, see `features/quantity/README.md` and `docs/releases.md`.
+> One-off proof, setup, seeding, and cutover commands below are retired.
+
 # Quantity implementation status
 
 Updated October 20, 2026, for `exploration/grocery-quantity-rethink`.

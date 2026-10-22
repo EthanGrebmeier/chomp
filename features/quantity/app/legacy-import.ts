@@ -72,9 +72,7 @@ export function recipeFromLegacy(
     ),
   };
 }
-/** Shared conversion for development imports and offline production rehearsal.
- * Callers supply IDs; a production plan must use a deterministic generator.
- */
+/** Initialize contribution history for an existing scalar list. */
 export function buildLegacyQuantityOperation(
   list: LegacyList,
   newId: () => string
