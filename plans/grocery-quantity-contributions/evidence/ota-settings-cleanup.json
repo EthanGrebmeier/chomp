@@ -1,0 +1,42 @@
+{
+  "updates": [
+    {
+      "id": "01a161eb-8b7d-7258-87df-b5ed27047691",
+      "createdAt": "2026-10-22T04:43:09.053Z",
+      "group": "76f43c8e-36be-40ba-ae85-4a2372726320",
+      "branch": "production",
+      "message": "Remove testing controls from Settings",
+      "runtimeVersion": "1.0.5",
+      "platform": "ios",
+      "manifestPermalink": "https://u.expo.dev/update/01a161eb-8b7d-7258-87df-b5ed27047691",
+      "isRollBackToEmbedded": false,
+      "gitCommitHash": "03222aa295b7e7da000dc1c32eb5da70a2e2ca30",
+      "deliveryVerified": true
+    },
+    {
+      "id": "01a161eb-9677-75c1-bcb6-cecc1c1944f1",
+      "createdAt": "2026-10-22T04:43:11.863Z",
+      "group": "9b356570-8f39-483b-979b-11a17d3e342f",
+      "branch": "production",
+      "message": "Remove testing controls from Settings",
+      "runtimeVersion": "1.0.6",
+      "platform": "ios",
+      "manifestPermalink": "https://u.expo.dev/update/01a161eb-9677-75c1-bcb6-cecc1c1944f1",
+      "isRollBackToEmbedded": false,
+      "gitCommitHash": "b2552453c4803c4f5e4edeff33291e1de7c877a4",
+      "deliveryVerified": true
+    }
+  ],
+  "validation": [
+    "lint",
+    "tsc",
+    "release compatibility guard",
+    "iOS bundle export"
+  ],
+  "removed": [
+    "Suggestion style preview",
+    "Quantity workspace",
+    "Duplicate resolution demo",
+    "Quantity contributions demo"
+  ]
+}
