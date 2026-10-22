@@ -23,7 +23,10 @@
     "format:staged": "prettier --write --ignore-unknown",
     "push-perms": "npx instant-cli@latest push perms",
     "push-schema": "npx instant-cli@latest push schema",
-    "check-instant": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-instant-drift.mjs"
+    "check-instant": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-instant-drift.mjs",
+    "release:check": "node --env-file=.env.local scripts/release/check-candidate.mjs",
+    "release:export": "pnpm release:check && expo export --platform ios --output-dir dist/ios",
+    "eas-build-pre-install": "node scripts/release/check-candidate.mjs"
   },
   "dependencies": {
     "@clerk/expo": "3.7.8",
