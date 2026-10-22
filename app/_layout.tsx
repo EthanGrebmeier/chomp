@@ -19,6 +19,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import {
   ReanimatedLogLevel,
   configureReanimatedLogger,
+  useReducedMotion,
 } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
@@ -63,6 +64,7 @@ const hideSplashScreen = async () => {
 
 function InitialLayout() {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
 
   return (
     <View className="flex-1 bg-background">
@@ -74,6 +76,15 @@ function InitialLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen
+          name="shopping"
+          options={{
+            presentation: 'card',
+            gestureEnabled: true,
+            animation: reducedMotion ? 'fade' : 'default',
+            contentStyle: { backgroundColor: theme.background },
+          }}
+        />
         <Stack.Screen
           name="meal-plan"
           options={{

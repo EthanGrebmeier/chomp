@@ -123,6 +123,7 @@ const ModeHeader = (props: ModeToggleProps) => (
 );
 
 type AddItemSheetProps = {
+  itemOnly?: boolean;
   groceryListId: string;
   defaultStore?: { id: string; name: string } | null;
   isTriggerVisible?: boolean;
@@ -131,6 +132,7 @@ type AddItemSheetProps = {
 };
 
 const AddItemSheet = ({
+  itemOnly = false,
   groceryListId,
   defaultStore,
   isTriggerVisible = true,
@@ -425,7 +427,13 @@ const AddItemSheet = ({
                     : 'min-h-0 flex-1'
                 )}
               >
-                <ModeHeader mode={mode} onModeChange={handleModeChange} />
+                {itemOnly ? (
+                  <Text className="py-3 text-center text-lg font-semibold">
+                    Add item
+                  </Text>
+                ) : (
+                  <ModeHeader mode={mode} onModeChange={handleModeChange} />
+                )}
                 <Animated.View
                   style={[
                     contentAnimatedStyle,
@@ -582,12 +590,20 @@ const AddItemSheet = ({
 };
 
 type AddItemProps = {
+  /** Undefined uses saved/default stores; null explicitly focuses No store. */
+  focusedStore?: { id: string; name: string } | null;
   groceryListId: string;
   isTriggerVisible?: boolean;
 };
 
-const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
-  const { data: defaultStore } = useDefaultStore();
+const AddItem = ({
+  groceryListId,
+  isTriggerVisible = true,
+  focusedStore,
+}: AddItemProps) => {
+  const { data: userDefaultStore } = useDefaultStore();
+  const defaultStore =
+    focusedStore !== undefined ? focusedStore : userDefaultStore;
   const [isItemAdded, setIsItemAdded] = useState(false);
 
   const onSubmit = ({
@@ -667,9 +683,11 @@ const AddItem = ({ groceryListId, isTriggerVisible = true }: AddItemProps) => {
       defaultStore={defaultStore}
       onSubmit={onSubmit}
       mode="add"
+      preferDefaultStore={focusedStore !== undefined}
     >
       <AddItemSheet
         groceryListId={groceryListId}
+        itemOnly={focusedStore !== undefined}
         defaultStore={defaultStore}
         isTriggerVisible={isTriggerVisible}
         isItemAdded={isItemAdded}

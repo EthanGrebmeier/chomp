@@ -35,6 +35,7 @@ type GroceryListItemProps = {
   categoryOptions: CategoryOption[];
   isChecked: boolean;
   className?: string;
+  hideOrganizationTags?: boolean;
   onEdit?: (item: GroceryListItemWithRecipe) => void;
   isBulkSelectionModeActive?: boolean;
   isBulkSelected?: boolean;
@@ -99,6 +100,7 @@ const GroceryListItemComponent = ({
   categoryOptions,
   isChecked,
   className,
+  hideOrganizationTags = false,
   onEdit,
   isBulkSelectionModeActive = false,
   isBulkSelected = false,
@@ -268,7 +270,7 @@ const GroceryListItemComponent = ({
             </View>
           </View>
           <View className="flex-row gap-2">
-            {item.category ? (
+            {!hideOrganizationTags && item.category ? (
               <CategoryTag
                 category={item.category}
                 categoryOptions={categoryOptions}
@@ -286,7 +288,9 @@ const GroceryListItemComponent = ({
           </Text>
         ) : null}
         <View className="flex-row items-center gap-2">
-          {item.store?.name && <StoreTag name={item.store.name} />}
+          {!hideOrganizationTags && item.store?.name && (
+            <StoreTag name={item.store.name} />
+          )}
           {sourceLabel ? <RecipeTag name={sourceLabel} /> : null}
         </View>
       </HapticPressable>
@@ -309,6 +313,7 @@ export const GroceryListItem = memo(
   (previousProps, nextProps) => {
     return (
       previousProps.item === nextProps.item &&
+      previousProps.hideOrganizationTags === nextProps.hideOrganizationTags &&
       previousProps.categoryOptions === nextProps.categoryOptions &&
       previousProps.isChecked === nextProps.isChecked &&
       previousProps.className === nextProps.className &&

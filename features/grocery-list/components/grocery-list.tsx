@@ -1,6 +1,6 @@
 import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   type ReactNode,
   useCallback,
@@ -41,6 +41,7 @@ import {
   StoreSheetRef,
 } from '../../../components/item-sheet/store-sheet';
 import { db } from '../../../lib/instant';
+import { buildShoppingUrl } from '../../../lib/navigation';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 import {
@@ -80,6 +81,7 @@ import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
 import { removeMovedGroceryItems } from '../instant/delete-grocery-items';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
+import { useShoppingSession } from '../shopping/use-shopping-session';
 import {
   BaseGroceryItem,
   GroceryListGroupBy,
@@ -155,6 +157,26 @@ export const GroceryList = ({
   const editListNameSheetRef = useRef<EditListNameSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
   const { user } = db.useAuth();
+  const shopping = useShoppingSession(user?.id, listId);
+  const shoppingPushPending = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      shoppingPushPending.current = false;
+    }, [])
+  );
+  useFocusEffect(
+    useCallback(() => {
+      if (
+        !listId ||
+        !shopping.ready ||
+        !shopping.session ||
+        shoppingPushPending.current
+      )
+        return;
+      shoppingPushPending.current = true;
+      router.push(buildShoppingUrl(listId));
+    }, [listId, shopping.ready, shopping.session])
+  );
   const activeItems = filterActiveItems(items);
   const { mutate: clearGroceryList, mutateAsync: clearGroceryListAsync } =
     useClearGroceryList();
@@ -826,6 +848,12 @@ export const GroceryList = ({
           actions={
             activeView === 'grocery-list' && listId ? (
               <GroceryListActions
+                onStartShopping={() =>
+                  shopping.setSession({ screen: 'picker' })
+                }
+                canStartShopping={
+                  shopping.ready && !isItemsLoading && activeItems.length > 0
+                }
                 items={items}
                 ownerId={ownerId}
                 groupBy={groupBy}

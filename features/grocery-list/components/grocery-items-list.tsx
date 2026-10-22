@@ -27,6 +27,7 @@ import { GroceryListItem } from './grocery-list-item';
 type GroceryItemsListProps = {
   items: GroceryListItemWithRecipe[];
   totalItemCount: number;
+  hideOrganizationTags?: boolean;
   /** True while the list's items are still being fetched. */
   isLoading?: boolean;
   groupBy: GroceryListGroupBy;
@@ -77,6 +78,7 @@ const CHECKED_SECTION_SETTLE_DELAY_MS = 1000;
 export const GroceryItemsList = ({
   items,
   totalItemCount,
+  hideOrganizationTags = false,
   isLoading = false,
   groupBy,
   sortBy,
@@ -409,6 +411,7 @@ export const GroceryItemsList = ({
       return (
         <GroceryListItem
           item={item.item}
+          hideOrganizationTags={hideOrganizationTags}
           categoryOptions={categoryOptions}
           isChecked={Boolean(item.item.isChecked)}
           onEdit={presentEditSheet}
@@ -421,6 +424,7 @@ export const GroceryItemsList = ({
     },
     [
       categoryOptions,
+      hideOrganizationTags,
       isBulkSelectionModeActive,
       onEnterBulkSelectionModeWithItem,
       onToggleBulkSelectionItem,

@@ -90,6 +90,7 @@ type ItemSheetProviderProps = {
   children: React.ReactNode;
   listId?: string;
   defaultStore?: DefaultStoreSelection | null;
+  preferDefaultStore?: boolean;
   onSubmit: (args: {
     item: BaseGroceryItem;
     listId?: string;
@@ -117,6 +118,7 @@ export const ItemSheetProvider = ({
   children,
   listId,
   defaultStore,
+  preferDefaultStore = false,
   onSubmit,
   setFromItemRef,
   disableAutocomplete = false,
@@ -321,8 +323,16 @@ export const ItemSheetProvider = ({
     setNotesInputValue(item.notes ?? '');
     const defaultStoreId = mode === 'add' ? defaultStore?.id : undefined;
     const defaultStoreName = mode === 'add' ? defaultStore?.name : undefined;
-    setStoreId(item.storeId ?? defaultStoreId);
-    setStoreName(item.storeId ? undefined : defaultStoreName);
+    setStoreId(
+      preferDefaultStore ? defaultStoreId : (item.storeId ?? defaultStoreId)
+    );
+    setStoreName(
+      preferDefaultStore
+        ? defaultStoreName
+        : item.storeId
+          ? undefined
+          : defaultStoreName
+    );
     setShowMatchingItems(false);
     // Notify observers (e.g. useLiveItemSync in the Edit flow) on the next
     // macrotask so React can commit the state updates above first. This keeps
