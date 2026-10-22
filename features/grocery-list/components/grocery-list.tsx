@@ -5,6 +5,7 @@ import {
   useCallback,
   useDeferredValue,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -230,6 +231,13 @@ export const GroceryList = ({
     });
   }, [items, normalizedQuery]);
 
+  // Row/section handlers keep their identity across checkoffs while reading
+  // the latest committed items, not the items captured on their first render.
+  const filteredItemsRef = useRef(filteredItems);
+  useLayoutEffect(() => {
+    filteredItemsRef.current = filteredItems;
+  }, [filteredItems]);
+
   useEffect(() => {
     if (!bulkSelectionState.isActive) {
       return;
@@ -437,8 +445,10 @@ export const GroceryList = ({
     setBulkSelectionState(currentState => clearBulkSelection(currentState));
   };
 
-  const handleToggleBulkSelectionItem = (itemId: string) => {
-    const item = filteredItems.find(candidate => candidate.id === itemId);
+  const handleToggleBulkSelectionItem = useCallback((itemId: string) => {
+    const item = filteredItemsRef.current.find(
+      candidate => candidate.id === itemId
+    );
     if (!item) {
       return;
     }
@@ -449,10 +459,12 @@ export const GroceryList = ({
         isChecked: Boolean(item.isChecked),
       })
     );
-  };
+  }, []);
 
-  const handleEnterBulkSelectionModeWithItem = (itemId: string) => {
-    const item = filteredItems.find(candidate => candidate.id === itemId);
+  const handleEnterBulkSelectionModeWithItem = useCallback((itemId: string) => {
+    const item = filteredItemsRef.current.find(
+      candidate => candidate.id === itemId
+    );
     if (!item) {
       return;
     }
@@ -463,11 +475,11 @@ export const GroceryList = ({
         isChecked: Boolean(item.isChecked),
       })
     );
-  };
+  }, []);
 
-  const handleSelectBulkSectionItems = (itemIds: string[]) => {
+  const handleSelectBulkSectionItems = useCallback((itemIds: string[]) => {
     const selectableItemIds = new Set(
-      filteredItems
+      filteredItemsRef.current
         .filter(item => !item.isChecked)
         .map(item => item.id)
         .filter(id => itemIds.includes(id))
@@ -492,9 +504,9 @@ export const GroceryList = ({
         selectedItemIds: nextSelectedItemIds,
       };
     });
-  };
+  }, []);
 
-  const handleDeselectBulkSectionItems = (itemIds: string[]) => {
+  const handleDeselectBulkSectionItems = useCallback((itemIds: string[]) => {
     if (itemIds.length === 0) {
       return;
     }
@@ -519,7 +531,7 @@ export const GroceryList = ({
         selectedItemIds: nextSelectedItemIds,
       };
     });
-  };
+  }, []);
 
   const confirmBulkDelete = (selectedCount: number) => {
     const copy = getBulkDeleteConfirmationCopy(selectedCount);

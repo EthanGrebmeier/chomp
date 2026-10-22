@@ -1,9 +1,11 @@
 import { useRecyclingState } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { memo, useCallback, useLayoutEffect, useRef } from 'react';
 import { Platform, View, type TextLayoutEvent } from 'react-native';
 import Animated, {
+  Easing,
   SharedValue,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -61,13 +63,13 @@ type StrikethroughLineProps = {
   totalLines: number;
 };
 
-const StrikethroughLine = ({
+const StrikethroughLine = memo(function StrikethroughLine({
   color,
   line,
   lineIndex,
   progress,
   totalLines,
-}: StrikethroughLineProps) => {
+}: StrikethroughLineProps) {
   const animatedStyle = useAnimatedStyle(() => {
     const lineProgress = Math.min(
       Math.max(progress.get() * totalLines - lineIndex, 0),
@@ -75,7 +77,14 @@ const StrikethroughLine = ({
     );
 
     return {
-      width: line.width * lineProgress,
+      // Keep the left edge fixed without changing layout on every frame.
+      // Transform-only updates bypass the shadow tree (see the Reanimated
+      // `*_SYNCHRONOUSLY_UPDATE_UI_PROPS` flags in package.json), so React
+      // commits from the check-off re-render cannot pause this animation.
+      transform: [
+        { translateX: ((lineProgress - 1) * line.width) / 2 },
+        { scaleX: lineProgress },
+      ],
     };
   });
 
@@ -88,13 +97,14 @@ const StrikethroughLine = ({
           position: 'absolute',
           top: line.y + line.height / 2 - 1,
           left: line.x,
+          width: line.width,
           height: 2,
           backgroundColor: color,
         },
       ]}
     />
   );
-};
+});
 
 const GroceryListItemComponent = ({
   item,
@@ -113,7 +123,9 @@ const GroceryListItemComponent = ({
   >([], [item.id]);
   const notes = item.notes?.trim();
   const sourceLabel = groceryItemSourceLabel(item);
-  const hasMountedRef = useRef(false);
+  const animationTargetRef = useRef({ itemId: item.id, isChecked });
+  const lastObservedCheckedStateRef = useRef({ itemId: item.id, isChecked });
+  const checkAttemptRef = useRef(0);
   const swipeableRef = useRef<SwipeToDeleteHandle | null>(null);
   const lastLongPressAtRef = useRef(0);
 
@@ -123,23 +135,63 @@ const GroceryListItemComponent = ({
     default: undefined,
   });
 
-  // Animated value for strikethrough
+  // Both animations receive local intent before the list re-renders.
+  const animatedChecked = useSharedValue(isChecked);
   const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
 
-  useEffect(() => {
-    const targetValue = isChecked ? 1 : 0;
-    if (!hasMountedRef.current) {
-      hasMountedRef.current = true;
-      strikethroughWidth.set(targetValue);
-      return;
+  const strokeDuration = 200 * Math.max(strikethroughLines.length, 1);
+  // Create and advance the animation on the UI runtime. Re-renders and text
+  // measurements must not create a fresh timing animation for the same intent.
+  useAnimatedReaction(
+    () => animatedChecked.get(),
+    (checked, previousChecked) => {
+      if (previousChecked === null || checked === previousChecked) {
+        return;
+      }
+      strikethroughWidth.set(
+        withTiming(checked ? 1 : 0, {
+          duration: strokeDuration,
+          // Ease the whole stroke, not each line, so multi-line items do not
+          // stall at line breaks. Quad keeps the last line from crawling.
+          easing: Easing.out(Easing.quad),
+        })
+      );
     }
+  );
 
-    strikethroughWidth.set(
-      withTiming(targetValue, {
-        duration: 300 * Math.max(strikethroughLines.length, 1),
-      })
-    );
-  }, [isChecked, strikethroughLines.length, strikethroughWidth]);
+  const animateCheckedState = useCallback(
+    (checked: boolean) => {
+      animationTargetRef.current = { itemId: item.id, isChecked: checked };
+      animatedChecked.set(checked);
+    },
+    [animatedChecked, item.id]
+  );
+
+  useLayoutEffect(() => {
+    const previousObserved = lastObservedCheckedStateRef.current;
+    lastObservedCheckedStateRef.current = { itemId: item.id, isChecked };
+
+    if (previousObserved.itemId !== item.id) {
+      // FlashList can recycle this row for an entirely different item.
+      checkAttemptRef.current += 1;
+      animationTargetRef.current = { itemId: item.id, isChecked };
+      animatedChecked.set(isChecked);
+      strikethroughWidth.set(isChecked ? 1 : 0);
+    } else if (
+      previousObserved.isChecked !== isChecked &&
+      animationTargetRef.current.isChecked !== isChecked
+    ) {
+      // Only a changed prop can override local intent. Text-layout updates
+      // must not reverse a tap while the controlled prop is catching up.
+      animateCheckedState(isChecked);
+    }
+  }, [
+    animateCheckedState,
+    animatedChecked,
+    isChecked,
+    item.id,
+    strikethroughWidth,
+  ]);
 
   const handleTextLayout = useCallback(
     (event: TextLayoutEvent) => {
@@ -179,9 +231,14 @@ const GroceryListItemComponent = ({
       return;
     }
 
+    const attempt = ++checkAttemptRef.current;
+    animateCheckedState(checked);
     try {
       await checkListItem({ itemId: item.id, isChecked: checked });
     } catch {
+      if (checkAttemptRef.current === attempt) {
+        animateCheckedState(lastObservedCheckedStateRef.current.isChecked);
+      }
       toast.error('Could not save item. Check your connection and try again.');
     }
   };
@@ -231,6 +288,9 @@ const GroceryListItemComponent = ({
       <GroceryItemCheckbox
         key={`${item.id}:${isBulkSelectionModeActive}`}
         checked={checkboxChecked}
+        animatedChecked={
+          isBulkSelectionModeActive ? undefined : animatedChecked
+        }
         onChange={onCheck}
       />
 
@@ -264,7 +324,7 @@ const GroceryListItemComponent = ({
               {strikethroughLines.map((line, index) => (
                 <StrikethroughLine
                   key={`${line.x}:${line.y}`}
-                  color={isChecked ? theme.destructive : 'transparent'}
+                  color={theme.destructive}
                   line={line}
                   lineIndex={index}
                   progress={strikethroughWidth}
