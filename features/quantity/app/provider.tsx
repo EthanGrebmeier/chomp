@@ -4,7 +4,6 @@ import { toast } from 'sonner-native';
 
 import { db } from '@/lib/instant';
 
-import { quantityWorkspaceAvailable } from '../config';
 import { saveRecipe } from '../meals';
 import { records } from '../model';
 import { useQuantityWorkspace } from '../use-quantity-workspace';
@@ -89,11 +88,10 @@ function Initialize({ listId, userId }: { listId: string; userId: string }) {
 }
 export function QuantityAppProvider({ children }: { children: ReactNode }) {
   const { user } = db.useAuth();
-  const enabled = quantityWorkspaceAvailable();
-  const query = db.useQuery(enabled && user ? { grocery_lists: {} } : null);
+  const query = db.useQuery(user ? { grocery_lists: {} } : null);
   return (
     <>
-      {enabled && user
+      {user
         ? query.data?.grocery_lists.map(list => (
             <Initialize
               key={`${user.id}:${list.id}`}
@@ -103,7 +101,7 @@ export function QuantityAppProvider({ children }: { children: ReactNode }) {
           ))
         : null}
       {children}
-      {enabled && user ? <StoreReviewHost key={user.id} /> : null}
+      {user ? <StoreReviewHost key={user.id} /> : null}
     </>
   );
 }

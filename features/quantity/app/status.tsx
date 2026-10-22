@@ -5,14 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 
 import { ConflictCard } from '../components/conflict-card';
-import { quantityWorkspaceAvailable } from '../config';
 import { QuantityTransaction } from '../transaction';
 
 import { useQuantityList } from './session';
 
 export function QuantityListStatus({ listId }: { listId?: string }) {
   const session = useQuantityList(listId);
-  if (!quantityWorkspaceAvailable() || !listId) return null;
+  if (!listId) return null;
   const errors = session.pending.filter(p => p.error);
   return (
     <View className="px-4">
