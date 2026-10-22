@@ -4,10 +4,12 @@ import { db } from '@/lib/instant';
 
 import { commitOperations } from '../commits';
 import { quantityCommitStore } from '../instant-commit-store';
-import { materialize, normalize } from '../model';
+import { materialize } from '../model';
 import { operationChunk } from '../sync-workspace';
 import { QuantityTransaction } from '../transaction';
-import type { Ingredient, Meal, Operation, Recipe } from '../types';
+import type { Ingredient, Operation, Recipe } from '../types';
+
+import { buildLegacyQuantityOperation } from './legacy-import';
 
 export function ingredientFromApp(item: {
   id?: string;
@@ -78,106 +80,7 @@ async function initialize(listId: string, userId: string) {
   });
   const list = result.data.grocery_lists[0];
   if (!list) throw new Error('Grocery list access is unavailable');
-  const tx = new QuantityTransaction(materialize([]));
-  tx.put({ kind: 'list', id: listId, name: list.name });
-  // Preserve every original amount without inventing its allocation. Legacy
-  // records remain untouched as a backup; the new app never writes them.
-  for (const item of list.grocery_items) {
-    const ingredient = ingredientFromApp(item);
-    tx.put({
-      kind: 'row',
-      id: item.id,
-      listId,
-      name: item.name,
-      unit: normalize(item.unit),
-      notes: ingredient.notes,
-      category: ingredient.category,
-      store: ingredient.store,
-      status: item.isDeleted
-        ? 'deleted'
-        : item.isChecked
-          ? 'checked'
-          : 'active',
-      createdAt: item.createdAt,
-      ...(item.saved_item ? { savedItemId: item.saved_item.id } : {}),
-    });
-    tx.put({
-      kind: 'entry',
-      id: id(),
-      rowId: item.id,
-      quantity: item.quantity,
-      unit: normalize(item.unit),
-      sourceUnit: item.unit,
-      origin: 'manual',
-      sourceName: '',
-      sourceNotes: '',
-      sourceDate: '',
-      mealTag: '',
-      sourceId: null,
-      mealId: null,
-    });
-  }
-  // Existing plans are retained, initially off the shopping list: their scalar
-  // quantities above already account for the old shopping cycle.
-  for (const item of list.meal_plan_items) {
-    tx.put({
-      kind: 'meal',
-      id: item.id,
-      listId,
-      name: item.name,
-      recipeId: null,
-      date: item.date,
-      mealTag: item.mealTag ?? '',
-      servings: 1,
-      ingredients: [
-        {
-          ...ingredientFromApp(item),
-          id: id(),
-          recipeIngredientId: null,
-          selected: false,
-          overridden: false,
-        },
-      ],
-    });
-  }
-  for (const item of list.meal_plan_recipes) {
-    if (!item.recipe) continue;
-    const recipe = recipeFromApp(item.recipe);
-    tx.put(recipe);
-    const ingredients: Meal['ingredients'] = item.ingredient_snapshots.length
-      ? item.ingredient_snapshots.map(i => ({
-          ...ingredientFromApp(i),
-          quantity: i.isQuantityOverridden
-            ? i.quantity
-            : i.quantity * item.servings,
-          recipeIngredientId: i.sourceRecipeIngredientId,
-          selected: false,
-          overridden: i.isQuantityOverridden,
-        }))
-      : recipe.ingredients.map(i => ({
-          ...i,
-          id: id(),
-          recipeIngredientId: i.id,
-          quantity: i.quantity * item.servings,
-          selected: false,
-          overridden: false,
-        }));
-    tx.put({
-      kind: 'meal',
-      id: item.id,
-      listId,
-      name: recipe.name,
-      recipeId: recipe.id,
-      date: item.date,
-      mealTag: item.mealTag ?? '',
-      servings: item.servings,
-      ingredients,
-    });
-  }
-  const operation = {
-    ...tx.build(id(), 'Initialize list quantities'),
-    commit: { sequence: 1, parents: [] },
-  };
+  const operation = buildLegacyQuantityOperation(list, id);
   try {
     await db.transact([
       db.tx.gqc_workspaces_v1[listId]

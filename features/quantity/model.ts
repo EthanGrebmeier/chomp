@@ -72,7 +72,10 @@ export function validateDocuments(documents: QuantityState['documents']) {
       if (!value.name.trim()) throw new Error('A name is required');
     }
     if (value.kind === 'row') {
-      if (!value.name.trim() || documents[value.listId]?.kind !== 'list')
+      if (
+        (!value.name.trim() && value.status !== 'deleted') ||
+        documents[value.listId]?.kind !== 'list'
+      )
         throw new Error('Invalid shopping row');
       if (
         value.unit !== normalize(value.unit) ||
