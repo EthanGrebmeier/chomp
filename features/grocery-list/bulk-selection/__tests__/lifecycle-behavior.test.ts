@@ -218,7 +218,6 @@ describe('bulk mode lifecycle behavior', () => {
   });
 });
 
-// These fixtures exercise the legacy writer, regardless of release environment.
-vi.mock('@/features/quantity/config', () => ({
-  quantityWorkspaceAvailable: () => false,
+vi.mock('@/features/quantity/app/grocery-actions', () => ({
+  bulkQuantityMetadata: vi.fn().mockResolvedValue(undefined),
 }));

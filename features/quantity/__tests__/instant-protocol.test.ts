@@ -20,7 +20,6 @@ describe('allowlisted InstantDB protocol', () => {
   it.skipIf(process.env.RUN_QUANTITY_SDK !== '1')(
     'persists immutable intents, conflicts, permissions, complete reads and offline replay',
     async () => {
-      process.argv.push('--test-app');
       const { db } = testApp();
       const users = [randomUUID(), randomUUID(), randomUUID()];
       const workspaceId = randomUUID();
@@ -376,11 +375,11 @@ describe('allowlisted InstantDB protocol', () => {
         });
         expect(revoked.data[names.operations]).toEqual([]);
         findings.push('revoked member loses complete operation read');
-        mkdirSync('plans/grocery-quantity-contributions/evidence', {
+        mkdirSync('tmp/quantity-tests', {
           recursive: true,
         });
         writeFileSync(
-          'plans/grocery-quantity-contributions/evidence/quantity-workspace-sdk.json',
+          'tmp/quantity-tests/quantity-workspace-sdk.json',
           JSON.stringify(
             {
               time: new Date().toISOString(),
