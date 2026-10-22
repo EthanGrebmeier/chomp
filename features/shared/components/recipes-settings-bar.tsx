@@ -91,7 +91,9 @@ export function RecipesSettingsBarHost({ children }: { children: ReactNode }) {
   return (
     <RecipesSettingsBarContext.Provider value={controller}>
       {children}
-      <RecipesSettingsBar listId={state.listId} visible={state.visible} />
+      {state.visible ? (
+        <RecipesSettingsBar listId={state.listId} visible />
+      ) : null}
     </RecipesSettingsBarContext.Provider>
   );
 }
