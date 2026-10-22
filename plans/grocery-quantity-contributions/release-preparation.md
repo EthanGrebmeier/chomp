@@ -1,5 +1,32 @@
 # Quantity release preparation
 
+## Publication status — October 21, 2026, 8:03 p.m. Pacific
+
+The owner authorized OTA publication and requested reconciliation of newer
+production edits first. A live production read at 8:00 p.m. Pacific found nine
+new grocery items and nine add-history records in one list, plus two access
+timestamps. These were reconciled into dev in one transaction and verified;
+existing quantity operations were unchanged. The source now has 2,123 items.
+Private source/target snapshots and the receipt are under
+`backups/production/live-cutover/`. The narrow reconciler rejects other delta
+shapes rather than overwrite existing changes.
+
+The iOS 1.0.6 OTA is published to production:
+
+- Group: `e3c31bd8-e322-499e-b9ac-2b80d9b9eaee`.
+- Update: `01a16190-8835-7b3a-9996-6c8bb236d87f`.
+- Commit: `849bf3dc25a5d10eee720406027fc9f917b87bf7`.
+- The production update endpoint was queried with iOS/runtime 1.0.6 headers
+  and confirmed it serves this update. This confirms delivery routing, not
+  successful installation on every device.
+
+  1.0.5 publication is pending the owner's confirmation that incompatible
+  TestFlight build 52, which shares runtime 1.0.5, is retired. EAS cannot route
+  this OTA to build 50 alone. No 1.0.7 build or older-runtime gate was published.
+
+The remaining sections record preparation history; their earlier statements
+that nothing was published are superseded by this status.
+
 Inspected October 21, 2026, from `exploration/grocery-quantity-rethink` at
 `ab1eeed`. Updated after release preparation and the dev-database import. No OTA or App Store submission has been published. Production database contents and permissions were not changed by this work.
 
