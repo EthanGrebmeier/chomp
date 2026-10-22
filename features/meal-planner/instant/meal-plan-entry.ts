@@ -1,23 +1,4 @@
-import { id, tx } from '@instantdb/react-native';
-
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
-
-import { db, type TransactionChunk } from '../../../lib/instant';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
-
-import { buildMealPlanListSyncTransactions } from './build-meal-plan-list-sync-transactions';
-import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
-import {
-  type MealPlanEntrySyncContext,
-  toMealPlanItemSyncContext,
-  toMealPlanRecipeSyncContext,
-} from './meal-plan-entry-sync-context';
-import { planMealPlanEntryIgnored } from './plan-meal-plan-entry-ignored';
-import type { MealPlanEntryForSync } from './plan-meal-plan-list-sync';
-import {
-  queryMealPlanItemSyncRow,
-  queryMealPlanRecipeSyncRow,
-} from './query-meal-plan-entry-sync-rows';
 
 /** Which kind of meal plan entry: a `meal_plan_recipes` or `meal_plan_items` row. */
 export type MealPlanEntryType = 'recipe' | 'item';
@@ -43,109 +24,12 @@ export type SetMealPlanEntryIgnoredArgs = MealPlanEntryRef & {
   defaultStore: DefaultStoreForStacking | null | undefined;
 };
 
-const entryNamespace = (type: MealPlanEntryType) =>
-  type === 'recipe' ? tx.meal_plan_recipes : tx.meal_plan_items;
-
-const querySyncContext = async ({
-  type,
-  id: entryId,
-}: MealPlanEntryRef): Promise<{
-  found: boolean;
-  context: MealPlanEntrySyncContext<MealPlanEntryForSync> | null;
-}> => {
-  if (type === 'recipe') {
-    const row = await queryMealPlanRecipeSyncRow({
-      mealPlanRecipeId: entryId,
-    });
-    return {
-      found: row !== null,
-      context: row ? toMealPlanRecipeSyncContext(row) : null,
-    };
-  }
-
-  const row = await queryMealPlanItemSyncRow(entryId);
-  return {
-    found: row !== null,
-    context: row ? toMealPlanItemSyncContext(row) : null,
-  };
-};
-
-/**
- * Turns "meal plan only" on or off for a meal plan entry and, in the same
- * transaction, brings its linked grocery items in line (see
- * `planMealPlanEntryIgnored`): hiding removes pending rows and hides purchases;
- * showing restores the saved selection while keeping purchases checked, even
- * when the persisted ignored flag was already false.
- */
+/** Changes meal selection through the quantity model, preserving purchased history. */
 export const setMealPlanEntryIgnored = async ({
-  type,
   id: entryId,
   ignored,
-  defaultStore,
 }: SetMealPlanEntryIgnoredArgs) => {
-  if (quantityWorkspaceAvailable()) {
-    const { setQuantityMealIgnored } =
-      await import('@/features/quantity/app/meal-actions');
-    return setQuantityMealIgnored(entryId, ignored);
-  }
-
-  const { found, context } = await querySyncContext({ type, id: entryId });
-  if (!found) {
-    throw new Error(
-      type === 'recipe'
-        ? 'Meal plan recipe not found'
-        : 'Meal plan item not found'
-    );
-  }
-
-  const now = new Date().toISOString();
-  const transactions: TransactionChunk[] = [
-    entryNamespace(type)[entryId].update({
-      ignoredByGroceryList: ignored,
-      updatedAt: now,
-    }),
-  ];
-
-  // Without a list (or recipe) there are no linked items to sync.
-  if (context) {
-    const plan = planMealPlanEntryIgnored({
-      entry: context.entry,
-      ignored,
-      defaultStore,
-      createId: id,
-    });
-
-    transactions.push(
-      ...plan.snapshotRowIdsToSelect.map(snapshotRowId =>
-        tx.meal_plan_recipe_ingredient_snapshots[snapshotRowId].update({
-          isSelected: true,
-        })
-      ),
-      ...buildSnapshotRowCreateTransactions({
-        mealPlanRecipeId: entryId,
-        rows: plan.snapshotRowsToCreate,
-      }),
-      ...buildMealPlanListSyncTransactions({
-        listId: context.listId,
-        plan: plan.listSync,
-        now,
-      }),
-      ...plan.softDeletes.map(({ groceryItemId }) =>
-        tx.grocery_items[groceryItemId].update({
-          isDeleted: true,
-          deletedAt: now,
-          updatedAt: now,
-        })
-      ),
-      ...plan.softRestores.map(({ groceryItemId }) =>
-        tx.grocery_items[groceryItemId].update({
-          isDeleted: false,
-          deletedAt: null,
-          updatedAt: now,
-        })
-      )
-    );
-  }
-
-  await db.transact(transactions);
+  const { setQuantityMealIgnored } =
+    await import('@/features/quantity/app/meal-actions');
+  return setQuantityMealIgnored(entryId, ignored);
 };

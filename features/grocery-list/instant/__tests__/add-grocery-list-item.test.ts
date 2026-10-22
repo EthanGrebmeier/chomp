@@ -9,13 +9,17 @@ type Transaction = {
   payload: unknown;
 };
 
-const { toastErrorMock, transactMock, upsertLocalSavedItemMock } = vi.hoisted(
-  () => ({
-    toastErrorMock: vi.fn(),
-    transactMock: vi.fn(),
-    upsertLocalSavedItemMock: vi.fn(),
-  })
-);
+const {
+  addManualQuantityMock,
+  toastErrorMock,
+  transactMock,
+  upsertLocalSavedItemMock,
+} = vi.hoisted(() => ({
+  addManualQuantityMock: vi.fn(),
+  toastErrorMock: vi.fn(),
+  transactMock: vi.fn(),
+  upsertLocalSavedItemMock: vi.fn(),
+}));
 
 vi.mock('sonner-native', () => ({
   toast: {
@@ -86,138 +90,77 @@ vi.mock('../../../saved-items/local/upsert-local-saved-item', () => ({
 }));
 
 beforeEach(() => {
-  transactMock.mockClear();
+  addManualQuantityMock.mockReset();
+  transactMock.mockReset();
   toastErrorMock.mockReset();
   upsertLocalSavedItemMock.mockReset();
 });
 
+const item = { name: 'Milk', quantity: 1, unit: 'each' };
+
+vi.mock('@/features/quantity/app/grocery-actions', () => ({
+  addManualQuantity: addManualQuantityMock,
+}));
+
 describe('addGroceryListItem', () => {
-  it('optimistically sends all cloud writes in one child-linked transaction', () => {
-    const transaction = createDeferred();
-    transactMock.mockReturnValue(transaction.promise);
-
+  it('waits for the durable quantity operation before recording history', async () => {
+    const quantity = createDeferred();
+    addManualQuantityMock.mockReturnValue(quantity.promise);
+    transactMock.mockResolvedValue(undefined);
     const result = addGroceryListItem({
-      listId: 'list-1',
-      item: {
-        name: 'Milk',
-        quantity: 1,
-        unit: 'gallon',
-        category: 'Dairy',
-        notes: 'Whole',
-        storeId: 'store-new',
-      },
-      savedItemId: 'saved-1',
-      selectedCloudSavedItemStoreId: 'store-old',
+      listId: 'list',
+      item,
+      savedItemId: 'saved',
     });
-
-    expect(result).toBe(transaction.promise);
+    await vi.waitFor(() =>
+      expect(addManualQuantityMock).toHaveBeenCalledWith('list', item, 'saved')
+    );
+    expect(transactMock).not.toHaveBeenCalled();
+    quantity.resolve();
+    await result;
     expect(transactMock).toHaveBeenCalledTimes(1);
-    expect(transactMock).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          operation: 'link',
-          namespace: 'grocery_items',
-          entityId: 'item-1',
-          payload: { grocery_list: 'list-1' },
-        }),
-        expect.objectContaining({
-          operation: 'update',
-          namespace: 'saved_items',
-          entityId: 'saved-1',
-        }),
-        expect.objectContaining({
-          operation: 'unlink',
-          namespace: 'saved_items',
-          entityId: 'saved-1',
-          payload: { store: 'store-old' },
-        }),
-        expect.objectContaining({
-          operation: 'link',
-          namespace: 'saved_items',
-          entityId: 'saved-1',
-          payload: { store: 'store-new' },
-        }),
-      ])
-    );
-    expect(transactMock.mock.calls[0]?.[0]).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          namespace: 'grocery_lists',
-          operation: 'link',
-        }),
-      ])
-    );
-
-    transaction.resolve();
-  });
-
-  it('schedules local saved-item persistence without waiting for server acknowledgment', () => {
-    const transaction = createDeferred();
-    const localPersistence = createDeferred();
-    transactMock.mockReturnValue(transaction.promise);
-    upsertLocalSavedItemMock.mockReturnValue(localPersistence.promise);
-
-    const result = addGroceryListItem({
-      listId: 'list-1',
-      item: {
-        name: 'Bananas',
-        quantity: 6,
-        unit: 'each',
-      },
-      selectedLocalSavedItemId: 'local-1',
-    });
-
-    expect(result).toBe(transaction.promise);
-    expect(upsertLocalSavedItemMock).toHaveBeenCalledWith({
-      item: {
-        name: 'Bananas',
-        quantity: 6,
-        unit: 'each',
-      },
-      selectedLocalSavedItemId: 'local-1',
-    });
-
-    transaction.resolve();
-    localPersistence.resolve();
-  });
-
-  it('skips local saved-item persistence when persistLocalSavedItem is false', () => {
-    transactMock.mockReturnValue(Promise.resolve());
-
-    addGroceryListItem({
-      listId: 'list-1',
-      item: {
-        name: 'Bananas',
-        quantity: 6,
-        unit: 'each',
-      },
-      persistLocalSavedItem: false,
-    });
-
+    expect(
+      transactMock.mock.calls[0][0].every(
+        (tx: Transaction) => tx.namespace === 'grocery_item_add_events'
+      )
+    ).toBe(true);
     expect(upsertLocalSavedItemMock).not.toHaveBeenCalled();
   });
-
-  it('reports local saved-item persistence failures independently', async () => {
-    transactMock.mockReturnValue(Promise.resolve());
-    upsertLocalSavedItemMock.mockRejectedValue(new Error('SQLite is locked'));
-
-    addGroceryListItem({
-      listId: 'list-1',
-      item: {
-        name: 'Bread',
-        quantity: 1,
-        unit: 'loaf',
-      },
+  it('does not record history when adding the quantity fails', async () => {
+    addManualQuantityMock.mockRejectedValue(new Error('Outbox unavailable'));
+    await expect(addGroceryListItem({ listId: 'list', item })).rejects.toThrow(
+      'Outbox unavailable'
+    );
+    expect(transactMock).not.toHaveBeenCalled();
+    expect(upsertLocalSavedItemMock).not.toHaveBeenCalled();
+  });
+  it('honors the saved-item toggle', async () => {
+    addManualQuantityMock.mockResolvedValue(undefined);
+    transactMock.mockResolvedValue(undefined);
+    await addGroceryListItem({
+      listId: 'list',
+      item,
+      persistLocalSavedItem: false,
     });
-    await Promise.resolve();
-
+    expect(upsertLocalSavedItemMock).not.toHaveBeenCalled();
+    await addGroceryListItem({
+      listId: 'list',
+      item,
+      selectedLocalSavedItemId: 'local',
+    });
+    expect(upsertLocalSavedItemMock).toHaveBeenCalledWith({
+      item,
+      selectedLocalSavedItemId: 'local',
+    });
+  });
+  it('reports history failure without rejecting an already saved quantity', async () => {
+    addManualQuantityMock.mockResolvedValue(undefined);
+    transactMock.mockRejectedValue(new Error('History unavailable'));
+    await expect(
+      addGroceryListItem({ listId: 'list', item })
+    ).resolves.toBeUndefined();
     expect(toastErrorMock).toHaveBeenCalledWith(
-      'Item added, but saved item history could not be updated'
+      'Quantity saved, but recent-item history could not be updated'
     );
   });
 });
-
-// These fixtures exercise the legacy writer, regardless of release environment.
-vi.mock('@/features/quantity/config', () => ({
-  quantityWorkspaceAvailable: () => false,
-}));
