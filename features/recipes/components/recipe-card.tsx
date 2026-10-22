@@ -33,7 +33,7 @@ export const RecipeCardContent = ({
 }: RecipeCardContentProps) => {
   return (
     <View className={className}>
-      <Text variant="h4" style={compactTextStyle} numberOfLines={2}>
+      <Text variant="itemTitle" style={compactTextStyle} numberOfLines={2}>
         {name}
       </Text>
     </View>

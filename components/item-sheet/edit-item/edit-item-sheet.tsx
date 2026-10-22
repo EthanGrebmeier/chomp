@@ -1,4 +1,10 @@
-import { createContext, useContext, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 
 import { AppQuantityItemSheet } from '@/features/quantity/app/item-sheet';
 
@@ -36,20 +42,24 @@ function QuantityEditItemProvider({
   children,
 }: EditItemProps) {
   const [itemId, setItemId] = useState<string | null>(null);
+  const present = useCallback(
+    (item: GroceryListItemWithRecipe) => setItemId(item.id),
+    []
+  );
+  const dismiss = useCallback(() => setItemId(null), []);
+  const contextValue = useMemo(
+    () => ({ present, dismiss }),
+    [present, dismiss]
+  );
   return (
-    <EditItemContext.Provider
-      value={{
-        present: item => setItemId(item.id),
-        dismiss: () => setItemId(null),
-      }}
-    >
+    <EditItemContext.Provider value={contextValue}>
       {children}
       {itemId ? (
         <AppQuantityItemSheet
           key={`${groceryListId}:${itemId}`}
           listId={groceryListId}
           rowId={itemId}
-          onDismiss={() => setItemId(null)}
+          onDismiss={dismiss}
           onOpenMealPlanDate={onOpenMealPlanDate}
         />
       ) : null}
