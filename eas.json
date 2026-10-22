@@ -18,7 +18,22 @@
     "production": {
       "pnpm": "11.9.0",
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_INSTANT_APP_ID": "5df33e29-252b-4e1c-a111-53787beccba3",
+        "EXPO_PUBLIC_QUANTITY_RELEASE": "1"
+      }
+    },
+    "quantity-validation": {
+      "pnpm": "11.9.0",
+      "autoIncrement": false,
+      "channel": "quantity-validation",
+      "env": {
+        "EXPO_PUBLIC_INSTANT_APP_ID": "5df33e29-252b-4e1c-a111-53787beccba3",
+        "EXPO_PUBLIC_QUANTITY_RELEASE": "1"
+      },
+      "distribution": "internal",
+      "environment": "production"
     }
   },
   "submit": {
