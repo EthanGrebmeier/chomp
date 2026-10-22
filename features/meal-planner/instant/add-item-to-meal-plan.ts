@@ -1,15 +1,4 @@
-import { id, tx } from '@instantdb/react-native';
-
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
-
-import { db, type TransactionChunk } from '../../../lib/instant';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
-import { addSavedItemIfNotExists } from '../../saved-items/instant/add-saved-item-if-not-exists';
-
-import { buildMealPlanListSyncTransactions } from './build-meal-plan-list-sync-transactions';
-import { toNewMealPlanItemEntryForSync } from './new-meal-plan-entry-for-sync';
-import { planMealPlanListSync } from './plan-meal-plan-list-sync';
 
 export type AddItemToDateArgs = {
   listId: string;
@@ -41,77 +30,18 @@ export const addItemToDate = async ({
   mealTag,
   defaultStore,
 }: AddItemToDateArgs) => {
-  if (quantityWorkspaceAvailable()) {
-    const { planQuantityItem } =
-      await import('@/features/quantity/app/meal-actions');
-    return planQuantityItem({
-      listId,
-      name,
-      quantity,
-      unit,
-      notes,
-      category,
-      storeId,
-      date,
-      mealTag,
-      defaultStore,
-    });
-  }
-
-  const mealPlanItemId = id();
-  const now = new Date().toISOString();
-
-  const transactions: TransactionChunk[] = [
-    tx.meal_plan_items[mealPlanItemId].update(
-      trimStringFields({
-        name,
-        quantity,
-        unit,
-        notes,
-        category,
-        mealTag,
-        date,
-        ignoredByGroceryList: false,
-        createdAt: now,
-        updatedAt: now,
-      })
-    ),
-    tx.meal_plan_items[mealPlanItemId].link({
-      grocery_list: listId,
-    }),
-  ];
-
-  // Add store link if provided
-  if (storeId) {
-    transactions.push(
-      tx.meal_plan_items[mealPlanItemId].link({
-        store: storeId,
-      })
-    );
-  }
-
-  const syncPlan = planMealPlanListSync({
-    entry: toNewMealPlanItemEntryForSync({
-      mealPlanItemId,
-      name,
-      quantity,
-      unit,
-      notes,
-      category,
-      storeId,
-    }),
+  const { planQuantityItem } =
+    await import('@/features/quantity/app/meal-actions');
+  return planQuantityItem({
+    listId,
+    name,
+    quantity,
+    unit,
+    notes,
+    category,
+    storeId,
+    date,
+    mealTag,
     defaultStore,
   });
-  transactions.push(
-    ...buildMealPlanListSyncTransactions({ listId, plan: syncPlan, now })
-  );
-
-  await db.transact(transactions);
-
-  addSavedItemIfNotExists({
-    name,
-    category,
-  });
-
-  return { id: mealPlanItemId };
 };

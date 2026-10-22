@@ -3,10 +3,56 @@
 import type { InstantRules } from '@instantdb/react-native';
 
 const rules = {
-  // The simulator workspace has an explicit allowlisted setup script. A normal
-  // permissions deployment must never enable these development-only writers.
-  gqc_workspaces_v1: { allow: { $default: 'false' } },
-  gqc_operations_v1: { allow: { $default: 'false' } },
+  // Matches production. Retain deny-all rules for retired probe namespaces.
+  gqc_operations_v1: {
+    allow: {
+      view: "size(data.ref('workspace.appListId')) == 1 ? auth.id in data.ref('workspace.groceryList.shares.user_id') : auth.id in data.ref('workspace.memberIds')[0]",
+      create:
+        "auth.id == data.authorId && size(data.ref('workspace.id')) == 1 && data.workspaceId in data.ref('workspace.id') && (data.serialKey == null || data.serialKey.startsWith(data.workspaceId + ':')) && (size(data.ref('workspace.appListId')) == 1 ? (data.serialKey != null && auth.id in data.ref('workspace.groceryList.shares.user_id')) : auth.id in data.ref('workspace.memberIds')[0]) && size(data.body) < 200000",
+      update: 'false',
+      $default: 'false',
+    },
+  },
+  qty02_probe_rows: {
+    allow: {
+      $default: 'false',
+    },
+  },
+  qty02_probe_private: {
+    allow: {
+      $default: 'false',
+    },
+  },
+  qty02_probe_entries: {
+    allow: {
+      $default: 'false',
+    },
+  },
+  qty02_probe_lists: {
+    allow: {
+      $default: 'false',
+    },
+  },
+  gqc_workspaces_v1: {
+    allow: {
+      view: "data.appListId != null ? auth.id in data.ref('groceryList.shares.user_id') : auth.id in data.memberIds",
+      create:
+        "auth.id != null && data.ownerId == auth.id && auth.id in data.memberIds && (data.appListId != null ? (data.appListId == data.id && data.id in data.ref('groceryList.id') && auth.id in data.ref('groceryList.shares.user_id')) : size(data.ref('groceryList.id')) == 0)",
+      update:
+        "size(data.ref('groceryList.id')) == 0 && data.appListId == null && newData.appListId == null && data.ownerId == auth.id && newData.ownerId == data.ownerId && auth.id in newData.memberIds",
+      $default: 'false',
+    },
+  },
+  qty02_probe_sources: {
+    allow: {
+      $default: 'false',
+    },
+  },
+  qty02_probe_receipts: {
+    allow: {
+      $default: 'false',
+    },
+  },
   grocery_items: {
     bind: ['isOwner', "auth.id in data.ref('grocery_list.shares.user_id')"],
     allow: {

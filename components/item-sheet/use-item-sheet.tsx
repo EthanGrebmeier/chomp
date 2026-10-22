@@ -106,10 +106,7 @@ type ItemSheetProviderProps = {
   disableAutocomplete?: boolean;
   /**
    * Optional observer fired after the shared form state has been populated
-   * from an autocomplete pick. The Edit flow wires this to
-   * useLiveItemSync.onPickCloudMatch so picks cancel the text-field
-   * debounce, commit immediately, and rebase the diff snapshot. The Add
-   * flow leaves this unset so its submit-on-button path is unchanged.
+   * from an autocomplete pick.
    */
   onPickMatch?: (match: MatchingItem) => void;
 };
@@ -334,7 +331,7 @@ export const ItemSheetProvider = ({
           : defaultStoreName
     );
     setShowMatchingItems(false);
-    // Notify observers (e.g. useLiveItemSync in the Edit flow) on the next
+    // Notify observers on the next
     // macrotask so React can commit the state updates above first. This keeps
     // downstream snapshot/rebase logic aligned with the picked form values.
     setTimeout(() => {

@@ -17,8 +17,7 @@ if (hash(pkg.reanimated ?? null) !== lane.reanimatedSha256)
   throw Error('Reanimated build flags do not match this binary lane');
 if (
   process.env.EXPO_PUBLIC_INSTANT_APP_ID !==
-    '5df33e29-252b-4e1c-a111-53787beccba3' ||
-  process.env.EXPO_PUBLIC_QUANTITY_RELEASE !== '1'
+  '5df33e29-252b-4e1c-a111-53787beccba3'
 )
   throw Error(
     'Candidate must explicitly use the approved quantity destination'
