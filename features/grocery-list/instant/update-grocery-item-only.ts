@@ -1,3 +1,4 @@
+import { updateQuantityChecked } from '@/features/quantity/app/checked-state';
 import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 
 import { db } from '../../../lib/instant';
@@ -109,8 +110,6 @@ export const updateGroceryItemsCheckedState = async (
   updates: CheckedStateUpdate[]
 ) => {
   if (quantityWorkspaceAvailable()) {
-    const { updateQuantityChecked } =
-      await import('@/features/quantity/app/grocery-actions');
     return updateQuantityChecked(updates);
   }
   if (updates.length === 0) {

@@ -5,6 +5,7 @@ vi.mock('@instantdb/react-native', () => ({ id: () => `id-${++mocks.id}` }));
 vi.mock('react-native', () => ({ Alert: { alert: mocks.alert } }));
 vi.mock('@/lib/instant', () => ({ db: { queryOnce: mocks.query } }));
 
+import { updateQuantityChecked } from '../app/checked-state';
 import { addQuantityRecipe } from '../app/recipe-actions';
 import {
   addManualQuantity,
@@ -20,7 +21,12 @@ import {
   quantitySnapshots,
 } from '../app/meal-actions';
 import { emptyListSession, publishListSession } from '../app/session';
-import { groceryProjection, mealProjection } from '../app/projection';
+import {
+  groceryProjection,
+  mealProjection,
+  createGroceryProjector,
+} from '../app/projection';
+import { readWorkspaceState, type Pending } from '../sync-workspace';
 import { materialize, records, totalFor } from '../model';
 import {
   checkRow,
@@ -473,4 +479,86 @@ describe('direct item store review', () => {
       unregister();
     }
   });
+});
+
+it('serializes rapid checkbox reversals against the published quantity model', async () => {
+  await addManualQuantity('list', { name: 'Milk', quantity: 2, unit: 'each' });
+  const row = records(state(), 'row')[0];
+  await Promise.all([
+    updateQuantityChecked([{ itemId: row.id, isChecked: true }]),
+    updateQuantityChecked([{ itemId: row.id, isChecked: false }]),
+    updateQuantityChecked([{ itemId: row.id, isChecked: true }]),
+  ]);
+  expect(state().conflicts).toEqual([]);
+  expect(state().documents[row.id]).toMatchObject({ status: 'checked' });
+  expect(totalFor(state(), row.id)).toBe(2);
+});
+
+it('preserves unchanged projected row references across replay but refreshes changed quantities', async () => {
+  await addManualQuantity('list', { name: 'Milk', quantity: 2, unit: 'each' });
+  await addManualQuantity('list', { name: 'Bread', quantity: 1, unit: 'each' });
+  const project = createGroceryProjector();
+  const before = project(state());
+  const milk = before.find(row => row.name === 'Milk')!;
+  const bread = before.find(row => row.name === 'Bread')!;
+  expect(project(state()).find(row => row.id === milk.id)).toBe(milk);
+  await updateQuantityChecked([{ itemId: milk.id, isChecked: true }]);
+  const checked = project(state());
+  expect(checked.find(row => row.id === milk.id)).toMatchObject({
+    isChecked: true,
+    quantity: 2,
+  });
+  expect(checked.find(row => row.id === milk.id)).not.toBe(milk);
+  expect(checked.find(row => row.id === bread.id)).toBe(bread);
+  await send(extraQuantity(state(), () => `id-${++mocks.id}`, bread.id, 3));
+  const edited = project(state()).find(row => row.id === bread.id)!;
+  expect(edited).not.toBe(bread);
+  expect(edited.quantity).toBe(4);
+  expect(
+    project({ ...state(), complete: false }).find(row => row.id === bread.id)
+      ?.quantity
+  ).toBe(0);
+});
+
+it('keeps rapid offline checkbox edits in the durable outbox with valid version guards', async () => {
+  await addManualQuantity('list', { name: 'Milk', quantity: 2, unit: 'each' });
+  const row = records(state(), 'row')[0];
+  const committed = history.map(operation => ({
+    id: operation.id,
+    body: JSON.stringify(operation),
+  }));
+  const pending: Pending[] = [];
+  const offlineState = () => readWorkspaceState([], pending, committed, 1);
+  const publish = () =>
+    publishListSession('list', {
+      ...emptyListSession,
+      state: offlineState(),
+      canEdit: true,
+      loading: false,
+      connection: 'closed',
+      pending: [...pending],
+      send: async operation => {
+        // Model publication follows successful local persistence, without a server ack.
+        await Promise.resolve();
+        pending.push({ operation });
+        publish();
+      },
+    });
+  publish();
+  await Promise.all([
+    updateQuantityChecked([{ itemId: row.id, isChecked: true }]),
+    updateQuantityChecked([{ itemId: row.id, isChecked: false }]),
+  ]);
+  expect(pending).toHaveLength(2);
+  expect(offlineState().conflicts).toEqual([]);
+  expect(offlineState().documents[row.id]).toMatchObject({ status: 'active' });
+  expect(totalFor(offlineState(), row.id)).toBe(2);
+  // A fresh reconstruction from the saved outbox retains both operations.
+  const reloaded = readWorkspaceState(
+    [],
+    JSON.parse(JSON.stringify(pending)),
+    committed,
+    1
+  );
+  expect(reloaded).toEqual(offlineState());
 });

@@ -79,3 +79,53 @@ export function changeDocument(
   const session = documentSession(documentId);
   return session.send(build(session.state));
 }
+
+/**
+ * Finish a UI action once its durable intent has reached the published model.
+ * send() alone resolves after disk persistence, before React publishes that model.
+ * Waiting for publication lets useOptimistic hand back without a stale-state flash.
+ * This never waits for a network acknowledgement.
+ */
+export async function sendAndObserveListOperation(
+  listId: string,
+  operation: Operation
+) {
+  const session = listSession(listId);
+  let unsubscribe = () => {};
+  let observe = () => {};
+  let persisted = false;
+  const published = new Promise<void>((resolve, reject) => {
+    observe = () => {
+      const current = sessions.get(listId);
+      if (!current) {
+        reject(new Error('This list is no longer available.'));
+        return;
+      }
+      if (!persisted) return;
+      if (
+        current.pending.some(item => item.operation.id === operation.id) ||
+        current.state.heads.includes(operation.id) ||
+        current.state.conflicts.some(
+          conflict => conflict.operation.id === operation.id
+        ) ||
+        Object.values(current.state.documents).some(
+          document => document.version === operation.id
+        )
+      )
+        resolve();
+    };
+    unsubscribe = subscribe(observe);
+  });
+  // Attach rejection handling immediately, including removal during persistence.
+  const saving = Promise.resolve()
+    .then(() => session.send(operation))
+    .then(() => {
+      persisted = true;
+      observe();
+    });
+  try {
+    await Promise.all([saving, published]);
+  } finally {
+    unsubscribe();
+  }
+}

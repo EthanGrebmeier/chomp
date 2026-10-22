@@ -89,8 +89,15 @@ export const endPendingCheckedState = (itemId: string, token: number) => {
 
 export const getPendingCheckedState = getSnapshot;
 
-export const usePendingCheckedState = (): PendingCheckedState =>
-  useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+const subscribeToNothing = () => () => {};
+const getEmptySnapshot = () => EMPTY_PENDING_CHECKED_STATE;
+
+export const usePendingCheckedState = (enabled = true): PendingCheckedState =>
+  useSyncExternalStore(
+    enabled ? subscribe : subscribeToNothing,
+    enabled ? getSnapshot : getEmptySnapshot,
+    getEmptySnapshot
+  );
 
 /**
  * Returns `items` with `isChecked` overridden by any pending intent. Items

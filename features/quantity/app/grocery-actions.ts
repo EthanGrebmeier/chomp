@@ -104,26 +104,6 @@ export function updateQuantityRow(
     return { ...tx.build(id(), `Edit ${row.name}`), syncSavedItems: true };
   });
 }
-export async function updateQuantityChecked(
-  updates: { itemId: string; isChecked: boolean }[]
-) {
-  const grouped = new Map<string, typeof updates>();
-  for (const update of updates) {
-    const { listId } = documentSession(update.itemId);
-    grouped.set(listId, [...(grouped.get(listId) ?? []), update]);
-  }
-  for (const [listId, values] of grouped) {
-    const session = listSession(listId);
-    const tx = new QuantityTransaction(session.state);
-    for (const { itemId, isChecked } of values) {
-      const row = record(session.state, itemId, 'row');
-      if (row.status === 'deleted') throw new Error('Item has been deleted');
-      tx.requireEntries(row.id);
-      tx.put({ ...row, status: isChecked ? 'checked' : 'active' });
-    }
-    await session.send(tx.build(id(), 'Update purchased items'));
-  }
-}
 export async function deleteQuantityRows(itemIds: string[]) {
   const grouped = new Map<string, string[]>();
   for (const itemId of itemIds) {

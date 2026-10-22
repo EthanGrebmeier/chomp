@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { groceryProjection } from '@/features/quantity/app/projection';
+import { createGroceryProjector } from '@/features/quantity/app/projection';
 import { useQuantityList } from '@/features/quantity/app/session';
 import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 
@@ -34,9 +34,10 @@ export const useGroceryListItems = (listId: string | undefined) => {
   const quantity = useQuantityList(listId);
   const enabled = quantityWorkspaceAvailable();
   const stores = db.useQuery(enabled ? { stores: {} } : null);
+  const project = useMemo(() => createGroceryProjector(), []);
   const projected = useMemo(
-    () => groceryProjection(quantity.state, stores.data?.stores),
-    [quantity.state, stores.data]
+    () => project(quantity.state, stores.data?.stores),
+    [project, quantity.state, stores.data]
   );
   const query = db.useQuery(
     listId && !enabled
@@ -68,7 +69,7 @@ export const useGroceryListItems = (listId: string | undefined) => {
         }
       : null
   );
-  const pendingCheckedState = usePendingCheckedState();
+  const pendingCheckedState = usePendingCheckedState(!enabled);
 
   const queriedItems = query.data?.grocery_items ?? EMPTY_ITEMS;
   const items = useMemo(

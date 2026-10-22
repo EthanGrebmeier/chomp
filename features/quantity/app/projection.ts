@@ -131,3 +131,36 @@ export function mealProjection(
   }
   return { recipes, items };
 }
+
+type CachedGroceryRow = {
+  version: string;
+  entryVersions: string;
+  complete: boolean;
+  item: GroceryListItemWithRecipe;
+};
+
+/** Keep unchanged rows memoized when replay recreates the workspace documents. */
+export function createGroceryProjector() {
+  let previous = new Map<string, CachedGroceryRow>();
+  return (state: QuantityState, stores: Store[] = []) => {
+    const next = new Map<string, CachedGroceryRow>();
+    const items = groceryProjection(state, stores).map(item => {
+      const version = state.documents[item.id].version;
+      const entryVersions = JSON.stringify(
+        entriesFor(state, item.id).map(entry => [entry.id, entry.version])
+      );
+      const cached = previous.get(item.id);
+      const entry =
+        cached?.version === version &&
+        cached.entryVersions === entryVersions &&
+        cached.complete === state.complete &&
+        cached.item.store === item.store
+          ? cached
+          : { version, entryVersions, complete: state.complete, item };
+      next.set(item.id, entry);
+      return entry.item;
+    });
+    previous = next;
+    return items;
+  };
+}
