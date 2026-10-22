@@ -12,6 +12,7 @@ import { GroceryItemsList } from '../components/grocery-items-list';
 import type { GroceryListItemWithRecipe } from '../types';
 
 import { getShoppingDestinations, type ShoppingSession } from './destinations';
+import { ShoppingComplete } from './shopping-complete';
 import { ShoppingHeader } from './shopping-header';
 
 type Props = {
@@ -59,6 +60,8 @@ export function ShoppingScreen({
         item => !item.isDeleted && (item.store?.id ?? null) === selected.storeId
       )
     : [];
+  const isComplete =
+    !isLoading && selected?.remaining === 0 && focusedItems.length > 0;
 
   return (
     <View className="flex-1 bg-background">
@@ -79,7 +82,7 @@ export function ShoppingScreen({
       />
       {selected ? (
         <>
-          {!isLoading && selected.remaining === 0 ? (
+          {!isLoading && focusedItems.length === 0 ? (
             <View className="mx-4 mb-3 gap-2 rounded-2xl bg-muted p-4">
               <View className="flex-row items-center gap-2">
                 <Icon as={Check} size={20} />
@@ -87,9 +90,7 @@ export function ShoppingScreen({
                   className="font-semibold"
                   accessibilityLiveRegion="polite"
                 >
-                  {focusedItems.length > 0
-                    ? 'Everything checked'
-                    : 'No items at this destination'}
+                  No items at this destination
                 </Text>
               </View>
               <Button
@@ -102,7 +103,13 @@ export function ShoppingScreen({
             </View>
           ) : null}
           <EditItemProvider groceryListId={listId}>
-            {focusedItems.length > 0 || isLoading ? (
+            {isComplete ? (
+              <ShoppingComplete
+                key={`${listId}:${selected.storeId ?? 'no-store'}`}
+                items={focusedItems}
+                onChooseStore={() => onSessionChange({ screen: 'picker' })}
+              />
+            ) : focusedItems.length > 0 || isLoading ? (
               <GroceryItemsList
                 key={selected.storeId ?? 'no-store'}
                 items={focusedItems}
@@ -121,6 +128,7 @@ export function ShoppingScreen({
             groceryListId={listId}
             isTriggerVisible={
               !isLoading &&
+              !isComplete &&
               (Boolean(representedDestination) || selected.storeId === null)
             }
             focusedStore={
