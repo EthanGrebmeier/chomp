@@ -20,9 +20,16 @@ The iOS 1.0.6 OTA is published to production:
   and confirmed it serves this update. This confirms delivery routing, not
   successful installation on every device.
 
-  1.0.5 publication is pending the owner's confirmation that incompatible
-  TestFlight build 52, which shares runtime 1.0.5, is retired. EAS cannot route
-  this OTA to build 50 alone. No 1.0.7 build or older-runtime gate was published.
+The owner confirmed TestFlight build 52 is no longer in use. The iOS 1.0.5 OTA
+was published to production at 8:08 p.m. Pacific on October 21:
+
+- Group: `8ff2da8a-4f9a-45b7-bca6-bc65cf7a8a0e`.
+- Update: `01a16194-c190-7fc6-b167-96b9215650ac`.
+- Commit: `436d11071450a6ab73874dd85834a4a1255d51d3`.
+- The production endpoint confirmed it serves this update for iOS runtime 1.0.5.
+
+Both requested OTAs are now published. No 1.0.7 build or older-runtime gate was
+published.
 
 The remaining sections record preparation history; their earlier statements
 that nothing was published are superseded by this status.
