@@ -194,3 +194,6 @@ update for up to 5 seconds before showing content
 - Record tooling or documentation friction with `pnpx frog log`
   (`pnpx frog list` shows what's already known).
 - Privacy policy: [`docs/privacy-policy.md`](docs/privacy-policy.md).
+
+Release branches, backports, and manual OTA publishing are documented in
+[Release maintenance](docs/releases.md).
