@@ -1,8 +1,7 @@
 # Quantity release preparation
 
 Inspected October 21, 2026, from `exploration/grocery-quantity-rethink` at
-`ab1eeed`. This records backup and release discovery; no OTA, store build,
-production schema, permissions, or data mutation has been published.
+`ab1eeed`. Updated after release preparation and the dev-database import. No OTA or App Store submission has been published. Production database contents and permissions were not changed by this work.
 
 ## Backup secured locally
 
@@ -37,7 +36,7 @@ Create the private output directory first. The empty token variables select the
 existing CLI account login instead of the test app token; do not alter
 `.env.local` to perform a download.
 
-This is a nightly snapshot, **not a cutover snapshot or a rehearsed restore**.
+This is a nightly snapshot, **not a cutover snapshot**. Its hosted import into the approved dev app has now been rehearsed and verified (see below).
 [Instant's documented ZIP restore](https://www.instantdb.com/docs/backups)
 targets a self-hosted instance. Do not assume it can be uploaded back into the
 hosted production app. #53 still needs a verified hosted-app recovery path
@@ -57,16 +56,27 @@ to EAS branch `production`; Git branch names do not route OTA traffic.
 | August App Store release    | Build 50, `18dbad75cff902b3fefe99fc20343dd159aa9cdf`, created August 4                          | `1.0.5` | Owner confirmed October 21: App Store version 1.0.5 was build 50; this resolves the earlier “1.1” label.        |
 | TestFlight only             | Build 59, `5cc2ca4343126152b5e3e61c9aa1c46299666111`, October 13                                | `1.0.7` | Not released, per owner. Prepare a replacement native build on this version with the intended Reanimated flags. |
 
-Suggested Git lane names for the confirmed release builds:
-`codex/quantity-ota-1.0.6`, `codex/quantity-ota-1.0.5`, and
-`codex/quantity-native-1.0.7`. These are planned names, not created branches.
+Created and committed local release branches:
+
+| Branch                        | Candidate commit | Workspace                                                   |
+| ----------------------------- | ---------------- | ----------------------------------------------------------- |
+| `codex/quantity-ota-1.0.5`    | `436d110`        | `/Users/ethan/.codex/worktrees/quantity-ota-105/grocery`    |
+| `codex/quantity-ota-1.0.6`    | `849bf3d`        | `/Users/ethan/.codex/worktrees/quantity-ota-106/grocery`    |
+| `codex/quantity-native-1.0.7` | `718a143`        | `/Users/ethan/.codex/worktrees/quantity-native-107/grocery` |
+
+Each has a `release-target.json`, `release:check`, and `release:export` command.
+The build guard checks the version, baseline dependency declarations, native
+app configuration, Reanimated flags, and explicit dev database/release flag.
+The 1.0.5 lane retains its native lock and loads Alpino fonts in JavaScript;
+its added DnD package is JavaScript-only. The 1.0.7 lane includes the intended
+native Reanimated flags. Public-only local environment files select the dev app;
+admin tokens are not copied to release worktrees.
 
 ### September OTA
 
 `41e0729` → `ab1eeed` has identical `app.json`, `pnpm-lock.yaml`,
 `pnpm-workspace.yaml`, and native patches. `package.json` changes are scripts
-only. This is a strong candidate for a JS-only update; export and actual-build
-tests are still required. Keep the native dependency versions and runtime
+only. The iOS export passed; actual installed-build tests are still required. Keep the native dependency versions and runtime
 `1.0.6` fixed. Do not bring the TestFlight Reanimated flags into this lane.
 
 The latest observed production OTA was group
@@ -128,11 +138,10 @@ writers and their queued edits server-side even if the prompt is never seen.
    build separately, including offline process death, saved-item retries,
    two-client edits/revocation, and realistic history size. Run Android checks
    if Android is a release target; this inventory covers iOS only.
-4. **Production configuration:** `features/quantity/config.ts` still requires
-   `__DEV__` and the test app ID. Publishing the current branch unchanged would
-   keep quantities disabled. Enable the production path only with the verified
-   schema, migration, and permissions; a release build on the test app must be
-   possible for pre-production validation.
+4. **Production configuration:** release candidates explicitly set
+   `EXPO_PUBLIC_QUANTITY_RELEASE=1` and the approved dev app ID. The allowlist
+   remains restricted to that app. Validate the configured backend and real
+   installed client before publishing.
 5. **Cutover:** ready clients, old-client gates, fresh backup, write pause,
    migration/fence, ordinary/shared-list audit, then reopen writes. Record the
    recovery owner and go/no-go. If validation fails, keep writes paused and
@@ -145,3 +154,81 @@ concrete release failures rather than bundling an unrelated backlog cleanup.
 
 Reference: [Expo runtime compatibility](https://docs.expo.dev/eas-update/runtime-versions/)
 and [update routing](https://docs.expo.dev/eas-update/how-it-works/).
+
+## Completed dev-database rehearsal
+
+The owner chose the existing dev database because new Instant app creation is
+unavailable. The production ZIP was imported additively into that app, retaining
+existing dev records. Three existing registered users were mapped by email;
+references were remapped consistently. The existing Clerk provider was reused,
+and the production Clerk client configuration was copied. The configured Clerk
+publishable key/client name match; no Clerk application change was made.
+
+Private import manifests, before snapshots, and verification results live under
+`backups/quantity-import/383620635e76b0147ea451e0f119aeb6b09c5c9249076b58ddbfcc094c0161e0/`.
+The importer verifies scalars and reconstructed forward/reverse links. Source
+backup auth records were included. No backup content or credentials are committed.
+
+The deterministic quantity plan preserves all 117 lists and 2,114 items in
+123 operations. Replay verification checks row identity, totals, status, saved
+item references, and meal quantities. Re-running installation produced no new
+operations. The private plan is in `backups/quantity-plan/`.
+
+The app restores the old native session token directly from its persisted key,
+without starting the old SDK or replaying its pending queue. Restore failures
+show a retry screen instead of silently creating a new guest. A hosted synthetic
+refresh-token restore passed; migration from an actual installed App Store
+binary still needs verification.
+
+### Validation completed
+
+- All three lanes: `pnpm lint`, `pnpm tsc`, and iOS Expo export passed.
+- iOS bundles are local to each worktree at `dist/ios`; none was published.
+- Root suite: 597 tests passed, three live SDK tests skipped in that run.
+- Separate live run: all three SDK tests passed, including permissions and
+  cross-list behavior. Sanitized evidence files were refreshed.
+- Backup helper tests: four passed. Focused session/import/initialization tests:
+  nine passed.
+- React Doctor: 56/100 with existing branch-wide warnings; not a clean audit.
+
+### Backend and remaining cutover work
+
+API source is `https://github.com/EthanGrebmeier/chomp-website`.
+`server/account/instantClient.ts` uses `INSTANT_APP_ID` and
+`INSTANT_ADMIN_TOKEN`; recipe previews use those same credentials.
+The owner confirmed switching the deployed secrets to dev while keeping Clerk
+unchanged and reported redeploying. Deployment completion was not independently
+verified. The owner explicitly accepts the brief overlap with old clients and
+does not require dual-database account deletion for this small rollout.
+No backend source edits were retained or deployed by this work.
+
+Account deletion currently relies on user cascades plus explicit membership
+cleanup. Quantity workspaces/operations have no cascade; test their cleanup
+before declaring account deletion verified for the new model.
+
+Before publication:
+
+1. Finish installed-binary QA, especially guest/session transfer, offline
+   relaunch, shared lists, and the 1.0.5 native compatibility backport.
+2. Resolve runtime collisions and determine which older installed versions need
+   update-required bundles. Those bundles have not been prepared or published.
+3. Pause old production writes and capture the final delta. This rehearsal
+   snapshot is from October 20 at 8 p.m. Pacific; later edits are not included.
+   Reconcile newer source changes against any dev edits before migration. The
+   importer deliberately rejects conflicting overwrites; a newer ZIP alone is
+   not a complete cutover procedure.
+4. Validate the backend deployment and lifecycle cleanup with disposable users.
+5. Keep the original snapshot and import manifests. Moving back to the old prod
+   app later requires a fresh reverse migration, including users, links, and
+   quantity histories; changing an app ID alone would discard intervening data.
+
+Issues #51, #53, and #40 remain open. No issue or PR comments were posted.
+
+### Replacement native build attempt
+
+`eas build --platform ios --profile production --non-interactive --no-wait`
+failed before build creation: the saved Apple provisioning profile is expired
+and references a missing distribution certificate. EAS incremented remote build
+number 59 to 60. No native build artifact was created, and nothing was submitted.
+Repair EAS iOS signing credentials, then retry the native candidate without
+`--auto-submit`. The local 1.0.7 JavaScript bundle export succeeded.

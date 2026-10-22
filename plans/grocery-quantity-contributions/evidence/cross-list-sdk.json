@@ -1,5 +1,5 @@
 {
-  "time": "2026-10-20T15:45:27.667Z",
+  "time": "2026-10-22T02:19:04.592Z",
   "findings": [
     "Permissions reject unsequenced app writers and attempts to reserve another list’s slot.",
     "A real unique-slot collision rejects both move halves; concurrent source add survives.",
