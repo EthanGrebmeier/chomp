@@ -8,8 +8,8 @@ import { fadeInUp, STAGGER_MS } from '@/components/animated/transitions';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useCreateRecipe } from '@/features/recipes/hooks/useCreateRecipe';
-import { useRecipe } from '@/features/recipes/hooks/useRecipe';
 import { useRecipeBySourceId } from '@/features/recipes/hooks/useRecipeBySourceId';
+import { useSharedRecipe } from '@/features/recipes/hooks/useSharedRecipe';
 import { db } from '@/lib/instant';
 import { navigation } from '@/lib/navigation';
 
@@ -29,7 +29,7 @@ export default function ImportSharedRecipe() {
   const { data: existingRecipe, isLoading: existingRecipeLoading } =
     useRecipeBySourceId(sourceRecipeId);
   const { data: sourceRecipe, isLoading: sourceLoading } =
-    useRecipe(sourceRecipeId);
+    useSharedRecipe(sourceRecipeId);
   const { mutate: createRecipe, isPending: isCreating } = useCreateRecipe();
 
   useEffect(() => {

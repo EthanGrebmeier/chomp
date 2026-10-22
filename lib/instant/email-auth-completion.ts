@@ -21,9 +21,7 @@ export const subscribeToEmailAuthCompletionState = (
 export const getIsEmailAuthCompletionActive = () =>
   emailAuthCompletionCount > 0;
 
-export const runWithEmailAuthCompletion = async <T,>(
-  task: () => Promise<T>
-) => {
+export const runWithEmailAuthCompletion = async <T>(task: () => Promise<T>) => {
   emailAuthCompletionCount += 1;
   publishEmailAuthCompletionState();
 

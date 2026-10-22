@@ -11,11 +11,21 @@ import {
   GroceryListSortBy,
 } from './types';
 
+export function groceryItemSourceLabel(item: GroceryListItemWithRecipe) {
+  if (!item.quantityEntries) return item.recipe?.name;
+  const names = [
+    ...new Set(
+      item.quantityEntries
+        .filter(e => e.origin !== 'manual')
+        .map(e => e.sourceName)
+        .filter(Boolean)
+    ),
+  ];
+  return names.length ? names.join(' + ') : undefined;
+}
+
 const normalizeGroupToken = (value?: string | null): string =>
-  (value ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, ' ');
+  (value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
 
 const compareOptionalLabels = (
   aValue: string | null | undefined,
@@ -58,8 +68,8 @@ export const sortItems = (
 
     if (sortBy === 'recipe') {
       const recipeComparison = compareOptionalLabels(
-        a.recipe?.name,
-        b.recipe?.name,
+        groceryItemSourceLabel(a),
+        groceryItemSourceLabel(b),
         'Ungrouped'
       );
       if (recipeComparison !== 0) return recipeComparison;
@@ -114,7 +124,7 @@ export const groupItemsBy = (
 
   if (groupBy === 'recipe') {
     items.forEach(item => {
-      const recipeName = item.recipe?.name ?? 'Ungrouped';
+      const recipeName = groceryItemSourceLabel(item) ?? 'Ungrouped';
       if (!groups.has(recipeName)) {
         groups.set(recipeName, []);
       }

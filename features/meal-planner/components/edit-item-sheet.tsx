@@ -1,23 +1,23 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
 } from 'react';
 import { Alert, TextInput, View } from 'react-native';
-import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '../../../components/bottom-sheet';
-import { ItemInput } from '../../../components/item-sheet/item-input';
+import { ItemComposerCard } from '../../../components/item-sheet/item-composer-card';
+import { ItemSuggestions } from '../../../components/item-sheet/item-suggestions';
 import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
-import { isMealPlanOnly } from '../instant/meal-plan-entry';
 import { MealPlanItemWithStore } from '../types';
+import { getMealPlanShoppingState } from '../utils/shopping-state';
 import {
   countUncheckedLinkedGroceryItems,
   withUncheckedLinkedGroceryItemsNotice,
@@ -29,6 +29,7 @@ import {
   MealPlanItemProvider,
   useMealPlanItem,
 } from './meal-plan-item-context';
+import { MealPlanItemForm } from './meal-plan-item-form';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
 import { AddToGroceryListSwitch } from './meal-plan-only';
 
@@ -44,35 +45,46 @@ const EditItemSheetContent = ({
   listId,
   itemToEdit,
   onClose,
+  inputRef,
 }: EditItemSheetProps & {
   itemToEdit: MealPlanItemWithStore;
   onClose: () => void;
+  inputRef: React.RefObject<TextInput | null>;
 }) => {
   const {
     itemName,
-    itemNameInputKey,
-    itemNameDefaultValue,
     getItemName,
-    setItemName,
-    itemNotesInputKey,
-    itemNotesDefaultValue,
-    setItemNotes,
-    showMatchingItems,
-    setShowMatchingItems,
-    populateFromItem,
+    quantity,
+    setQuantity,
+    unit,
+    setUnit,
+    category,
+    setCategory,
+    storeId,
+    setStoreId,
+    hasItemTitle,
+    isValid,
   } = useMealPlanItem();
-
-  const itemInputRef = useRef<TextInput>(null);
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
   // Shared with the planner view, so "meal plan only" stays live.
-  const { items: mealPlanItems } = useUserMealPlanData(listId);
+  const { items: mealPlanItems, isLoading } = useUserMealPlanData(listId);
   const liveItem =
     mealPlanItems.find(item => item.id === itemToEdit.id) ?? itemToEdit;
-  const { isMealPlanOnly: mealPlanOnly, setMealPlanOnly } =
-    useMealPlanOnlyToggle({
-      entry: { type: 'item', id: itemToEdit.id },
-      isMealPlanOnly: isMealPlanOnly(liveItem),
-    });
+  const shoppingState = getMealPlanShoppingState(liveItem);
+  const {
+    isMealPlanOnly: mealPlanOnly,
+    setMealPlanOnly,
+    isPending,
+  } = useMealPlanOnlyToggle({
+    entry: { type: 'item', id: itemToEdit.id },
+    isMealPlanOnly: !shoppingState.isShownOnGroceryList,
+  });
+
+  const switchDescription = shoppingState.allPurchased
+    ? mealPlanOnly
+      ? 'Purchased. Turning this on adds this item again.'
+      : 'Purchased. Turning this off hides the item and keeps purchase history.'
+    : undefined;
 
   const handleRemoveItem = () => {
     const currentItemName = getItemName();
@@ -112,49 +124,77 @@ const EditItemSheetContent = ({
   };
 
   return (
-    <View className="gap-4">
-      <View className="w-full flex-row items-center justify-between gap-2">
-        <View className="flex-1">
-          <ItemInput
-            placeholder="Item name"
-            inputKey={itemNameInputKey}
-            defaultValue={itemNameDefaultValue}
-            matchingValue={itemName}
-            onChangeText={text => {
-              setItemName(text);
-              setShowMatchingItems(true);
-            }}
-            onSelect={item => {
-              populateFromItem(item);
-              itemInputRef.current?.blur();
-            }}
-            showMatchingItems={showMatchingItems}
-            setShowMatchingItems={setShowMatchingItems}
-            onSubmit={() => {}}
-            inputRef={itemInputRef}
-          />
+    <MealPlanItemForm
+      compact
+      inputRef={inputRef}
+      onSubmit={() => inputRef.current?.blur()}
+      showMetaBar={false}
+      renderContent={(fields, suggestions) => (
+        <View className="px-2" style={{ paddingBottom: 24 }}>
+          <ItemSuggestions onClose={onClose} label="Close meal-plan item">
+            {suggestions}
+          </ItemSuggestions>
+          <ItemComposerCard
+            title="Edit meal-plan item"
+            onClose={onClose}
+            headerActions={
+              <MealItemDropdownMenu
+                itemName={itemName}
+                onRemove={handleRemoveItem}
+              />
+            }
+            metadata={
+              <MealPlanMetaBar
+                quantity={quantity}
+                onQuantityChange={setQuantity}
+                unit={unit}
+                onUnitChange={setUnit}
+                category={category}
+                onCategoryChange={setCategory}
+                storeId={storeId}
+                onStoreIdChange={setStoreId}
+                onSubmit={() => {}}
+                isValid={isValid()}
+                showAction={false}
+                optionsDisabled={!hasItemTitle}
+              />
+            }
+          >
+            {fields}
+            <AddToGroceryListSwitch
+              className="py-2"
+              isMealPlanOnly={mealPlanOnly}
+              onMealPlanOnlyChange={setMealPlanOnly}
+              disabled={isPending || isLoading}
+              description={switchDescription}
+            />
+          </ItemComposerCard>
         </View>
-        <MealItemDropdownMenu itemName={itemName} onRemove={handleRemoveItem} />
-      </View>
-
-      <View className="gap-4">
-        <BottomSheet.BareTextInput
-          key={itemNotesInputKey}
-          className="min-h-24 text-base text-foreground"
-          placeholder="Notes"
-          defaultValue={itemNotesDefaultValue}
-          onChangeText={setItemNotes}
-          multiline
-          textAlignVertical="top"
-        />
-        <AddToGroceryListSwitch
-          isMealPlanOnly={mealPlanOnly}
-          onMealPlanOnlyChange={setMealPlanOnly}
-        />
-      </View>
-    </View>
+      )}
+    />
   );
 };
+
+const getSnapshot = (updates: {
+  name?: string;
+  quantity?: number;
+  unit?: string;
+  notes?: string;
+  category?: string;
+  storeId?: string;
+  date?: string;
+  mealTag?: string;
+}) =>
+  JSON.stringify({
+    name: updates.name ?? null,
+    quantity: updates.quantity ?? null,
+    unit: updates.unit ?? null,
+    notes: updates.notes ?? null,
+    category: updates.category ?? null,
+    storeId: updates.storeId ?? null,
+    date: updates.date ?? null,
+    mealTag: updates.mealTag ?? null,
+  });
 
 const EditItemSheetContainer = ({
   listId,
@@ -170,64 +210,34 @@ const EditItemSheetContainer = ({
 }) => {
   const {
     itemName,
-    hasItemTitle,
     itemNotes,
     getItemName,
     getItemNotes,
     quantity,
-    setQuantity,
     unit,
-    setUnit,
     category,
-    setCategory,
     storeId,
-    setStoreId,
     selectedDate,
-    setSelectedDate,
     mealTag,
-    setMealTag,
-    isValid,
   } = useMealPlanItem();
+  const itemInputRef = useRef<TextInput>(null);
   const { mutate: updateMealPlanItem } = useUpdateMealPlanItem();
   const lastSyncedSnapshotRef = useRef<string | null>(null);
   const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const getSnapshot = (updates: {
-    name?: string;
-    quantity?: number;
-    unit?: string;
-    notes?: string;
-    category?: string;
-    storeId?: string;
-    date?: string;
-    mealTag?: string;
-  }) =>
-    JSON.stringify({
-      name: updates.name ?? null,
-      quantity: updates.quantity ?? null,
-      unit: updates.unit ?? null,
-      notes: updates.notes ?? null,
-      category: updates.category ?? null,
-      storeId: updates.storeId ?? null,
-      date: updates.date ?? null,
-      mealTag: updates.mealTag ?? null,
-    });
-
-  const getCurrentUpdates = () => ({
-    name: getItemName().trim(),
-    quantity,
-    unit,
-    notes: getItemNotes().trim() || undefined,
-    category,
-    storeId,
-    date: selectedDate,
-    mealTag,
-  });
-
-  const persistChanges = () => {
-    if (!itemToEdit || !isValid()) return;
-
-    const updates = getCurrentUpdates();
+  const persistChanges = useCallback(() => {
+    if (!itemToEdit || !selectedDate) return;
+    const updates = {
+      name: getItemName().trim(),
+      quantity,
+      unit,
+      notes: getItemNotes().trim() || undefined,
+      category,
+      storeId,
+      date: selectedDate,
+      mealTag,
+    };
+    if (!updates.name) return;
     const snapshot = getSnapshot(updates);
     if (snapshot === lastSyncedSnapshotRef.current) return;
 
@@ -245,19 +255,18 @@ const EditItemSheetContainer = ({
         },
       }
     );
-  };
-
-  const scheduleAutoSave = () => {
-    if (!itemToEdit || !isValid()) return;
-
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-    }
-
-    updateTimeoutRef.current = setTimeout(() => {
-      persistChanges();
-    }, 350);
-  };
+  }, [
+    itemToEdit,
+    selectedDate,
+    getItemName,
+    getItemNotes,
+    quantity,
+    unit,
+    category,
+    storeId,
+    mealTag,
+    updateMealPlanItem,
+  ]);
 
   const flushAutoSave = () => {
     if (updateTimeoutRef.current) {
@@ -274,7 +283,7 @@ const EditItemSheetContainer = ({
       name: itemToEdit.name.trim(),
       quantity: itemToEdit.quantity,
       unit: itemToEdit.unit,
-      notes: itemToEdit.notes?.trim() || undefined,
+      notes: itemToEdit.notes?.trim() ? itemToEdit.notes.trim() : undefined,
       category: itemToEdit.category ?? undefined,
       storeId: itemToEdit.store?.id ?? undefined,
       date: itemToEdit.date,
@@ -283,73 +292,39 @@ const EditItemSheetContainer = ({
   }, [itemToEdit]);
 
   useEffect(() => {
-    if (!itemToEdit || !isValid()) return;
-    scheduleAutoSave();
+    updateTimeoutRef.current = setTimeout(persistChanges, 350);
     return () => {
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
       }
     };
-  }, [
-    category,
-    getItemName,
-    getItemNotes,
-    isValid,
-    itemName,
-    itemNotes,
-    itemToEdit,
-    mealTag,
-    quantity,
-    selectedDate,
-    storeId,
-    unit,
-  ]);
+  }, [persistChanges, itemName, itemNotes]);
 
   return (
-    <BottomSheet
-      name="edit-item-sheet"
+    <TrueSheet
+      name="edit-meal-plan-item-sheet"
       ref={sheetRef}
-      onStartClose={() => {
-        KeyboardController.dismiss();
-        flushAutoSave();
-        onReset();
-      }}
-      footer={
-        itemToEdit ? (
-          <View className="pb-safe px-4">
-            <MealPlanMetaBar
-              date={selectedDate}
-              onDateChange={setSelectedDate}
-              mealTag={mealTag}
-              onMealTagChange={setMealTag}
-              quantity={quantity}
-              onQuantityChange={setQuantity}
-              unit={unit}
-              onUnitChange={setUnit}
-              category={category}
-              onCategoryChange={setCategory}
-              storeId={storeId}
-              onStoreIdChange={setStoreId}
-              onSubmit={() => {}}
-              isValid={isValid()}
-              showAction={false}
-              optionsDisabled={!hasItemTitle}
-            />
-          </View>
-        ) : undefined
-      }
+      detents={['auto']}
+      draggable={false}
+      backgroundColor="transparent"
+      cornerRadius={0}
+      grabber={false}
+      elevation={0}
+      insetAdjustment="never"
+      onWillPresent={() => itemInputRef.current?.focus()}
+      onWillFocus={() => itemInputRef.current?.focus()}
+      onWillDismiss={flushAutoSave}
+      onDidDismiss={onReset}
     >
-      <BottomSheet.SheetView className="pb-safe">
-        <BottomSheet.Header title="Edit meal-plan item" />
-        {itemToEdit && (
-          <EditItemSheetContent
-            listId={listId}
-            itemToEdit={itemToEdit}
-            onClose={onClose}
-          />
-        )}
-      </BottomSheet.SheetView>
-    </BottomSheet>
+      {itemToEdit ? (
+        <EditItemSheetContent
+          listId={listId}
+          itemToEdit={itemToEdit}
+          onClose={onClose}
+          inputRef={itemInputRef}
+        />
+      ) : null}
+    </TrueSheet>
   );
 };
 
@@ -361,7 +336,7 @@ export const EditItemSheet = forwardRef<EditItemSheetRef, EditItemSheetProps>(
     const [initialValues, setInitialValues] = useState<
       MealPlanItemInitialValues | undefined
     >(undefined);
-    const [shouldPresent, setShouldPresent] = useState(false);
+    const [openRequest, setOpenRequest] = useState(0);
 
     const sheetRef = useRef<TrueSheet>(null);
 
@@ -378,18 +353,17 @@ export const EditItemSheet = forwardRef<EditItemSheetRef, EditItemSheetProps>(
           selectedDate: item.date,
           mealTag: item.mealTag ?? undefined,
         });
-        setShouldPresent(true);
+        setOpenRequest(request => request + 1);
       },
     }));
 
     // Present the sheet after state has committed and the provider has remounted
     // with the correct initial values (mirroring EditMealSheet's forwardRef pattern).
     useEffect(() => {
-      if (shouldPresent) {
+      if (openRequest > 0) {
         sheetRef.current?.present();
-        setShouldPresent(false);
       }
-    }, [shouldPresent]);
+    }, [openRequest]);
 
     const handleClose = () => {
       sheetRef.current?.dismiss();

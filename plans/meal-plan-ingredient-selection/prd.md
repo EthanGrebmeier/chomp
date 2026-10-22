@@ -2,15 +2,15 @@
 
 ## Problem Statement
 
-When I add a recipe to my meal plan, the app assumes I always want every recipe ingredient later when I send meals to the grocery list. In real life, I often want only a subset (for example, skipping pantry staples I already have, omitting garnishes, or replacing one ingredient with another).  
+When I add a recipe to my meal plan, the app assumes I always want every recipe ingredient later when I send meals to the grocery list. In real life, I often want only a subset (for example, skipping pantry staples I already have, omitting garnishes, or replacing one ingredient with another).
 
 The current behavior creates extra cleanup work after add-to-list and makes meal planning feel less intentional. I need to decide ingredient-by-ingredient when I place a recipe in the meal plan, keep those choices attached to that planned meal, and have those choices respected when the meal plan is converted into grocery items.
 
 ## Solution
 
-When adding a recipe to a meal plan, I can see all recipe ingredients immediately, select which ones I want included, and optionally open a secondary edit surface per ingredient to override details (name, quantity, unit, notes, category, store).  
+When adding a recipe to a meal plan, I can see all recipe ingredients immediately, select which ones I want included, and optionally open a secondary edit surface per ingredient to override details (name, quantity, unit, notes, category, store).
 
-Those choices are persisted on that specific planned meal through a dedicated child-entity snapshot model. Later, when I add meals to the grocery list (bulk or single-meal quick add), the app projects from that snapshot rather than blindly using the raw recipe ingredients.  
+Those choices are persisted on that specific planned meal through a dedicated child-entity snapshot model. Later, when I add meals to the grocery list (bulk or single-meal quick add), the app projects from that snapshot rather than blindly using the raw recipe ingredients.
 
 Existing meal-plan recipes that predate this feature are backfilled lazily the first time they are added to the grocery list.
 

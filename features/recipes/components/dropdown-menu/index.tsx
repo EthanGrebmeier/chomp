@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
-import { Alert, Share } from 'react-native';
+import { Alert, Platform, Share } from 'react-native';
 import { toast } from 'sonner-native';
 
 import {
@@ -17,6 +17,7 @@ import { buildRecipeShareURL, navigation } from '@/lib/navigation';
 import { useDeleteRecipe } from '../../hooks/useDeleteRecipe';
 import { useDuplicateRecipe } from '../../hooks/useDuplicateRecipe';
 import { RecipeWithIngredients } from '../../types';
+import { buildRecipeShareContent } from '../../utils/build-recipe-share-content';
 
 type RecipeDropdownMenuProps = {
   trigger: ReactNode;
@@ -49,16 +50,14 @@ export const RecipeDropdownMenu = ({
   };
 
   const handleShareRecipe = async () => {
-    const shareUrl = buildRecipeShareURL(recipe.id);
-    if (!shareUrl) {
-      toast.error('Recipe sharing is unavailable right now');
-      return;
-    }
+    const { title, message, url } = buildRecipeShareContent(
+      recipe,
+      buildRecipeShareURL(recipe.id),
+      Platform.OS
+    );
 
     try {
-      await Share.share({
-        url: shareUrl,
-      });
+      await Share.share({ title, message, url }, { subject: title });
     } catch {
       toast.error('Failed to share recipe link');
     }

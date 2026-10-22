@@ -7,4 +7,3 @@ export type DeleteStoreArgs = {
 export const deleteStore = async ({ storeId }: DeleteStoreArgs) => {
   await db.transact([db.tx.stores[storeId].delete()]);
 };
-

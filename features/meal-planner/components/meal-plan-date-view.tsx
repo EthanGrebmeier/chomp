@@ -1,4 +1,6 @@
 import * as Haptics from 'expo-haptics';
+
+import { cn } from '@/lib/utils';
 import {
   createContext,
   use,
@@ -15,8 +17,6 @@ import {
   type ViewProps,
 } from 'react-native';
 import Animated, {
-  FadeIn,
-  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -31,8 +31,6 @@ import {
 } from 'react-native-reanimated-dnd';
 import { toast } from 'sonner-native';
 
-import { EmptyHeading } from '../../../components/text/empty-heading';
-import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { Recipe } from '../../recipes/types';
@@ -48,7 +46,6 @@ import {
   MealPlanDayListSection,
   MealPlanEntryIdentity,
   MoveMealPlanEntry,
-  createMealPlanDayEntries,
 } from '../utils/meal-plan-day-list';
 
 import MealPlanItemCard from './meal-plan-item-card';
@@ -60,10 +57,7 @@ type DayListSection = MealPlanDayListSection<
 >;
 
 type MealPlanDateViewProps = {
-  recipes: MealPlanRecipeWithRecipe[];
-  items: MealPlanItemWithStore[];
-  mode?: 'calendar' | 'day-list';
-  dayListSections?: DayListSection[];
+  dayListSections: DayListSection[];
   onDayPress?: (dateKey: string) => void;
   onMealPress: ({
     mealPlanRecipe,
@@ -74,7 +68,7 @@ type MealPlanDateViewProps = {
   }) => void;
   onItemPress: (item: MealPlanItemWithStore) => void;
   onMoveEntry?: MoveMealPlanEntry;
-  /** Day List only: scrolls the requested day to the top. */
+  /** Scrolls the requested day to the top. */
   focusRequest?: MealPlanFocusRequest | null;
 };
 
@@ -203,122 +197,83 @@ const DraggableMealPlanEntry = ({
   );
 };
 
-const groupEntriesByMealTime = (entries: readonly MealPlanEntry[]) => {
-  const groupedRecipes = {} as Record<MealTag, MealPlanRecipeWithRecipe[]>;
-  const groupedItems = {} as Record<MealTag, MealPlanItemWithStore[]>;
-
-  entries.forEach(entry => {
-    const tag = (entry.value.mealTag as MealTag) || 'None';
-    if (entry.type === 'recipe') {
-      groupedRecipes[tag] = [...(groupedRecipes[tag] ?? []), entry.value];
-    } else {
-      groupedItems[tag] = [...(groupedItems[tag] ?? []), entry.value];
-    }
-  });
-
-  return {
-    groupedRecipes,
-    groupedItems,
-    mealTimesWithContent: mealTimeOrder.filter(
-      mealTime =>
-        (groupedRecipes[mealTime]?.length ?? 0) +
-          (groupedItems[mealTime]?.length ?? 0) >
-        0
-    ),
-  };
+const entryTypeOrder: Record<MealPlanEntry['type'], number> = {
+  recipe: 0,
+  item: 1,
 };
 
-type MealPlanMealTimeGroupProps = {
-  mealTime: MealTag;
-  groupedRecipes: Record<MealTag, MealPlanRecipeWithRecipe[]>;
-  groupedItems: Record<MealTag, MealPlanItemWithStore[]>;
+const getMealTimeRank = (entry: MealPlanEntry) =>
+  mealTimeOrder.indexOf((entry.value.mealTag as MealTag | undefined) ?? 'None');
+
+/**
+ * Keeps entries that share a meal time together (in meal time order, recipes
+ * before items) without rendering a heading per group; each card shows its
+ * own meal time badge instead.
+ */
+const sortEntriesByMealTime = (entries: readonly MealPlanEntry[]) =>
+  [...entries].sort(
+    (a, b) =>
+      getMealTimeRank(a) - getMealTimeRank(b) ||
+      entryTypeOrder[a.type] - entryTypeOrder[b.type]
+  );
+
+const getEntryKey = (entry: MealPlanEntry) => `${entry.type}:${entry.id}`;
+
+type MealPlanEntryRowProps = {
+  entry: MealPlanEntry;
   onMealPress: MealPlanDateViewProps['onMealPress'];
   onItemPress: MealPlanDateViewProps['onItemPress'];
   dragConfig?: MealPlanDragConfig;
 };
 
-const MealPlanMealTimeGroup = ({
-  mealTime,
-  groupedRecipes,
-  groupedItems,
+const MealPlanEntryRow = ({
+  entry,
   onMealPress,
   onItemPress,
   dragConfig,
-}: MealPlanMealTimeGroupProps) => (
-  <View className="mb-2">
-    <Text className="px-4 text-lg font-semibold capitalize text-muted-foreground">
-      {mealTime === 'None' ? 'No Mealtime' : mealTime}
-    </Text>
-    <View>
-      {groupedRecipes[mealTime]?.map((mealPlanRecipe, index) => {
-        const recipe = mealPlanRecipe.recipe;
-        if (!recipe) return null;
-        const recipesCount = groupedRecipes[mealTime]?.length ?? 0;
-        const itemsCount = groupedItems[mealTime]?.length ?? 0;
-        const isLast = index === recipesCount - 1 && itemsCount === 0;
-        const card = (
-          <MealPlanMealCard
-            key={mealPlanRecipe.id}
-            mealPlanRecipe={mealPlanRecipe}
-            recipe={recipe}
-            isLast={isLast}
-            contextMenuEnabled={!dragConfig}
-            onMealPress={onMealPress}
-          />
-        );
+}: MealPlanEntryRowProps) => {
+  let card: ReactNode;
+  if (entry.type === 'recipe') {
+    const recipe = entry.value.recipe;
+    if (!recipe) return null;
+    card = (
+      <MealPlanMealCard
+        mealPlanRecipe={entry.value}
+        recipe={recipe}
+        contextMenuEnabled={!dragConfig}
+        onMealPress={onMealPress}
+      />
+    );
+  } else {
+    card = (
+      <MealPlanItemCard
+        mealPlanItem={entry.value}
+        contextMenuEnabled={!dragConfig}
+        onItemPress={onItemPress}
+      />
+    );
+  }
 
-        if (!dragConfig) return card;
+  if (!dragConfig) return card;
 
-        const entry: MealPlanEntryIdentity = {
-          type: 'recipe',
-          id: mealPlanRecipe.id,
-          date: mealPlanRecipe.date,
-        };
+  const identity: MealPlanEntryIdentity = {
+    type: entry.type,
+    id: entry.id,
+    date: entry.date,
+  };
 
-        return (
-          <DraggableMealPlanEntry
-            key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
-            entry={entry}
-            onDragStart={dragConfig.onDragStart}
-            onDragEnd={dragConfig.onDragEnd}
-          >
-            {card}
-          </DraggableMealPlanEntry>
-        );
-      })}
-      {groupedItems[mealTime]?.map((mealPlanItem, index) => {
-        const card = (
-          <MealPlanItemCard
-            key={mealPlanItem.id}
-            mealPlanItem={mealPlanItem}
-            isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
-            contextMenuEnabled={!dragConfig}
-            onItemPress={onItemPress}
-          />
-        );
-
-        if (!dragConfig) return card;
-
-        const entry: MealPlanEntryIdentity = {
-          type: 'item',
-          id: mealPlanItem.id,
-          date: mealPlanItem.date,
-        };
-
-        return (
-          <DraggableMealPlanEntry
-            key={`${entry.type}:${entry.id}:${entry.date}:${dragConfig.resetKey}`}
-            entry={entry}
-            onDragStart={dragConfig.onDragStart}
-            onDragEnd={dragConfig.onDragEnd}
-          >
-            {card}
-          </DraggableMealPlanEntry>
-        );
-      })}
-    </View>
-  </View>
-);
+  return (
+    <DraggableMealPlanEntry
+      // Remount when the date or reset key changes so the draggable snaps back.
+      key={`${identity.date}:${dragConfig.resetKey}`}
+      entry={identity}
+      onDragStart={dragConfig.onDragStart}
+      onDragEnd={dragConfig.onDragEnd}
+    >
+      {card}
+    </DraggableMealPlanEntry>
+  );
+};
 
 type MealPlanDayContentProps = {
   entries: readonly MealPlanEntry[];
@@ -332,22 +287,16 @@ const MealPlanDayContent = ({
   onMealPress,
   onItemPress,
   dragConfig,
-}: MealPlanDayContentProps) => {
-  const { groupedRecipes, groupedItems, mealTimesWithContent } =
-    groupEntriesByMealTime(entries);
-
-  return mealTimesWithContent.map(mealTime => (
-    <MealPlanMealTimeGroup
-      key={mealTime}
-      mealTime={mealTime}
-      groupedRecipes={groupedRecipes}
-      groupedItems={groupedItems}
+}: MealPlanDayContentProps) =>
+  sortEntriesByMealTime(entries).map(entry => (
+    <MealPlanEntryRow
+      key={getEntryKey(entry)}
+      entry={entry}
       onMealPress={onMealPress}
       onItemPress={onItemPress}
       dragConfig={dragConfig}
     />
   ));
-};
 
 type MealPlanDayListSectionViewProps = {
   section: DayListSection;
@@ -399,13 +348,16 @@ const MealPlanDayListSectionView = ({
           style={[dragStyles.activeDropTarget, dropHighlightStyle]}
         />
         <HapticPressable
-          className="min-h-14 justify-center  px-4 py-3"
+          className={cn(
+            'min-h-14 justify-center px-4 py-3',
+            section.entries.length > 0 && 'min-h-0 pb-1'
+          )}
           onPress={() => onDayPress?.(section.dateKey)}
           accessibilityRole="button"
           accessibilityLabel={`Add to meal plan for ${section.label}`}
         >
           <View className="flex-row items-center justify-between gap-3">
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-xl font-semibold tracking-tight text-foreground">
               {section.label}
             </Text>
             {section.isToday ? (
@@ -433,10 +385,7 @@ const MealPlanDayListSectionView = ({
 };
 
 export const MealPlanDateView = ({
-  recipes,
-  items,
-  mode = 'calendar',
-  dayListSections = [],
+  dayListSections,
   onDayPress,
   onMealPress,
   onItemPress,
@@ -524,7 +473,7 @@ export const MealPlanDateView = ({
       )
     : -1;
   useEffect(() => {
-    if (mode !== 'day-list' || !focusRequest) return;
+    if (!focusRequest) return;
     if (handledFocusRequestIdRef.current === focusRequest.id) return;
     handledFocusRequestIdRef.current = focusRequest.id;
     if (focusSectionIndex < 0) return;
@@ -534,7 +483,7 @@ export const MealPlanDateView = ({
       index: focusSectionIndex,
       animated: false,
     });
-  }, [focusRequest, focusSectionIndex, mode]);
+  }, [focusRequest, focusSectionIndex]);
 
   // Rows outside the render window have no measured offset yet: jump to an
   // estimate so they render, then retry the exact scroll.
@@ -554,26 +503,7 @@ export const MealPlanDateView = ({
     });
   };
 
-  const calendarEntries = createMealPlanDayEntries(recipes, items);
-  const calendarGroups = groupEntriesByMealTime(calendarEntries);
-
-  // Empty state when no meals or items
-  if (mode === 'calendar' && calendarGroups.mealTimesWithContent.length === 0) {
-    return (
-      <Animated.View
-        entering={FadeIn.duration(140)}
-        exiting={FadeOut.duration(140)}
-        className="flex-1 items-center justify-center px-4"
-      >
-        <View className="-mt-24">
-          <EmptyHeading className="mt-4">No meals planned</EmptyHeading>
-          <EmptySubtext>Tap the + button to add a meal</EmptySubtext>
-        </View>
-      </Animated.View>
-    );
-  }
-
-  return mode === 'day-list' ? (
+  return (
     <DropProvider ref={dropProviderRef}>
       <ActiveDragSectionContext value={activeDragSectionIndex}>
         <DayCellLayoutContext value={handleDayCellLayout}>
@@ -607,20 +537,5 @@ export const MealPlanDateView = ({
         </DayCellLayoutContext>
       </ActiveDragSectionContext>
     </DropProvider>
-  ) : (
-    <FlatList
-      contentContainerClassName="pb-20"
-      data={calendarGroups.mealTimesWithContent}
-      keyExtractor={item => item}
-      renderItem={({ item: mealTime }) => (
-        <MealPlanMealTimeGroup
-          mealTime={mealTime}
-          groupedRecipes={calendarGroups.groupedRecipes}
-          groupedItems={calendarGroups.groupedItems}
-          onMealPress={onMealPress}
-          onItemPress={onItemPress}
-        />
-      )}
-    />
   );
 };

@@ -52,8 +52,7 @@ const textVariants = cva(
         muted: 'text-muted-foreground text-sm',
         label: 'text-sm font-medium',
         caption: 'text-muted-foreground text-sm',
-        overline:
-          'text-muted-foreground text-xs font-semibold uppercase leading-4 tracking-wider',
+        overline: 'text-lg font-medium text-foreground',
         itemTitle: 'text-xl leading-6 tracking-tight',
         itemMeta: 'text-muted-foreground text-base leading-6',
         itemDescription: 'text-muted-foreground text-base leading-6',

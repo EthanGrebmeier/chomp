@@ -37,7 +37,7 @@ import {
   LEAVE_LIST_MEAL_PLAN_WARNING,
   useLeaveGroceryList,
 } from '../instant/useLeaveGroceryList';
-import { useTrackListAccess } from '../instant/useTrackListAccess';
+import { useTrackListAccess } from '../local/use-track-list-access';
 
 import {
   CreateGroceryListSheet,

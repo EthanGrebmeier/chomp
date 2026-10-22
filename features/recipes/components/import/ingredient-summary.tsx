@@ -60,7 +60,7 @@ export const IngredientSummary = ({
                 'flex-row items-baseline gap-1.5 rounded-xl border px-3 py-1.5',
                 isSelected
                   ? 'border-border bg-card'
-                  : 'border-dashed border-border/60 bg-transparent'
+                  : 'border-border/60 bg-transparent'
               )}
             >
               <Text

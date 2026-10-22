@@ -14,7 +14,7 @@ import type { MealPlanListReconciliationPlan } from './plan-meal-plan-list-recon
 export const buildMealPlanListReconciliationTransactions = ({
   listId,
   plan,
-  now,
+  now = new Date().toISOString(),
 }: {
   /** List the meal plan belongs to; created linked items are added here. */
   listId: string;
@@ -29,6 +29,13 @@ export const buildMealPlanListReconciliationTransactions = ({
     plan: { ...plan.listSync, updates: [] },
     now,
   }),
+  ...(plan.groceryItemIdsToSoftDelete ?? []).map(itemId =>
+    tx.grocery_items[itemId].update({
+      isDeleted: true,
+      deletedAt: now,
+      updatedAt: now,
+    })
+  ),
   ...plan.snapshotRowIdsToDelete.map(rowId =>
     tx.meal_plan_recipe_ingredient_snapshots[rowId].delete()
   ),

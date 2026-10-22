@@ -20,7 +20,8 @@ export type MatchingItem = BaseGroceryItem & {
 };
 
 export const useMatchingItems = (
-  value: string
+  value: string,
+  limit = 7
 ): { matchingItems: MatchingItem[] } => {
   const { data: savedItems } = useUnifiedSavedItems();
 
@@ -49,7 +50,7 @@ export const useMatchingItems = (
         // Then alphabetically
         return aLower.localeCompare(bLower);
       })
-      .slice(0, 7)
+      .slice(0, limit)
       .map(
         (item): MatchingItem => ({
           name: item.name,
@@ -65,7 +66,7 @@ export const useMatchingItems = (
           isDefault: item.isDefault,
         })
       );
-  }, [savedItems, value]);
+  }, [savedItems, value, limit]);
 
   return { matchingItems };
 };

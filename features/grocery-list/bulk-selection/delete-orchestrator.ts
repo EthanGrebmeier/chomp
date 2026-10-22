@@ -4,14 +4,18 @@ export type RunBulkDeleteArgs = {
   selectedItemIds: Set<string>;
   confirmDelete: (selectedCount: number) => Promise<boolean>;
   deleteItems: (itemIds: string[]) => Promise<void>;
-  onDeleteSuccess: () => void;
+  /**
+   * Runs once the user confirms, before the write is awaited, so the UI can
+   * leave bulk mode immediately instead of waiting on the delete.
+   */
+  onDeleteConfirmed: () => void;
 };
 
 export const runBulkDelete = async ({
   selectedItemIds,
   confirmDelete,
   deleteItems,
-  onDeleteSuccess,
+  onDeleteConfirmed,
 }: RunBulkDeleteArgs): Promise<BulkDeleteResult> => {
   if (selectedItemIds.size === 0) {
     return 'noop';
@@ -23,8 +27,9 @@ export const runBulkDelete = async ({
     return 'cancelled';
   }
 
-  await deleteItems(Array.from(selectedItemIds));
-  onDeleteSuccess();
+  const itemIds = Array.from(selectedItemIds);
+  onDeleteConfirmed();
+  await deleteItems(itemIds);
   return 'deleted';
 };
 

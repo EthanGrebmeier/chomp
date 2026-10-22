@@ -29,7 +29,7 @@ const logStartupUpdate = (message: string, payload?: unknown) => {
   console.log(`[startup-update] ${message}`, payload);
 };
 
-const withStartupUpdateTimeout = async <T,>(
+const withStartupUpdateTimeout = async <T>(
   stage: string,
   timeoutMs: number,
   task: () => Promise<T>

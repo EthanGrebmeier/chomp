@@ -1,24 +1,22 @@
 import { View } from 'react-native';
 
-import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/ui/skeleton';
+import {
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
+} from '@/components/ui/skeleton';
 
 type GroceryItemSkeletonProps = {
-  showBorder?: boolean;
   showNotes?: boolean;
   showTags?: boolean;
 };
 
 export const GroceryItemSkeleton = ({
-  showBorder = true,
   showNotes = false,
   showTags = true,
 }: GroceryItemSkeletonProps) => {
   return (
-    <View
-      className={`flex-row items-start gap-3 px-4 py-2 ${
-        showBorder ? 'border-b border-dashed border-border' : ''
-      }`}
-    >
+    <View className="flex-row items-start gap-3 px-4 py-2">
       {/* Checkbox */}
       <SkeletonCircle size={24} className="mt-1" />
 
@@ -45,4 +43,3 @@ export const GroceryItemSkeleton = ({
     </View>
   );
 };
-

@@ -39,4 +39,3 @@ export const updateSavedItem = async ({
     await db.transact(transactions);
   }
 };
-

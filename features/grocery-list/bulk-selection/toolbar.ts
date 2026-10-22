@@ -15,11 +15,6 @@ export type BulkToolbarAction = {
 const BULK_TOOLBAR_ACTION_DEFINITIONS: Omit<BulkToolbarAction, 'isDisabled'>[] =
   [
     {
-      id: 'exit',
-      label: 'Exit Bulk Select',
-      isDestructive: false,
-    },
-    {
       id: 'set-store',
       label: 'Set Store',
       isDestructive: false,
@@ -38,6 +33,11 @@ const BULK_TOOLBAR_ACTION_DEFINITIONS: Omit<BulkToolbarAction, 'isDisabled'>[] =
       id: 'delete',
       label: 'Delete',
       isDestructive: true,
+    },
+    {
+      id: 'exit',
+      label: 'Exit Bulk Select',
+      isDestructive: false,
     },
   ];
 

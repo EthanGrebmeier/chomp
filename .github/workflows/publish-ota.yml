@@ -1,0 +1,97 @@
+name: Publish OTA
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: Supported native runtime branch
+        type: choice
+        options: [release/1.0.5, release/1.0.6]
+        required: true
+      commit:
+        description: Full reviewed commit SHA at the head of that branch
+        required: true
+        type: string
+      message:
+        description: Describe the update
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-ota-${{ inputs.release_branch }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production-ota
+    permissions:
+      contents: write
+    env:
+      RELEASE_BRANCH: ${{ inputs.release_branch }}
+      RELEASE_COMMIT: ${{ inputs.commit }}
+      UPDATE_MESSAGE: ${{ inputs.message }}
+      EXPO_NO_DOTENV: '1'
+      EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
+      EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: ${{ vars.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID }}
+      EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: ${{ vars.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME }}
+      EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: ${{ vars.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID }}
+      EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      EXPO_PUBLIC_INSTANT_APP_ID: 5df33e29-252b-4e1c-a111-53787beccba3
+      EXPO_PUBLIC_INSTANT_CLIENT_NAME: ${{ vars.EXPO_PUBLIC_INSTANT_CLIENT_NAME }}
+      EXPO_PUBLIC_QUANTITY_RELEASE: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_branch }}
+          fetch-depth: 0
+      - name: Verify reviewed branch head and public configuration
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const target = JSON.parse(fs.readFileSync('release-target.json'));
+          if (process.env.RELEASE_BRANCH !== `release/${target.version}` || target.kind !== 'ota') throw Error('Wrong OTA branch');
+          for (const name of ['EXPO_PUBLIC_API_URL', 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY', 'EXPO_PUBLIC_INSTANT_CLIENT_NAME']) {
+            if (!process.env[name]) throw Error(`Missing repository variable ${name}`);
+          }
+          NODE
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint && pnpm tsc
+      - run: pnpm exec vitest run
+      - run: node --test scripts/release/check-ota-baseline.test.mjs
+      - run: node scripts/release/check-candidate.mjs && node scripts/release/check-ota-baseline.mjs
+      - name: Export with the approved public environment
+        run: pnpm exec expo export --platform ios --output-dir dist/ios
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: 24.7.0
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Publish the validated bundle
+        run: eas update --channel production --platform ios --environment production --skip-bundler --input-dir dist/ios --message "$UPDATE_MESSAGE" --non-interactive --json > ota-publication.json
+      - name: Save publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ota-publication-${{ github.run_id }}
+          path: ota-publication.json
+          if-no-files-found: ignore
+      - name: Verify delivery and tag the published commit
+        run: |
+          node scripts/release/verify-ota-publication.mjs ota-publication.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          version="${RELEASE_BRANCH#release/}"
+          tag="ota/$version/$(date -u +%Y-%m-%d)-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          git tag -a "$tag" "$RELEASE_COMMIT" -F ota-publication.json
+          git push origin "refs/tags/$tag"
+          printf 'Published `%s` from `%s`.\n' "$tag" "$RELEASE_COMMIT" >> "$GITHUB_STEP_SUMMARY"

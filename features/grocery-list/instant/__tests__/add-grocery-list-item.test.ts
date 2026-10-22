@@ -216,3 +216,8 @@ describe('addGroceryListItem', () => {
     );
   });
 });
+
+// These fixtures exercise the legacy writer, regardless of release environment.
+vi.mock('@/features/quantity/config', () => ({
+  quantityWorkspaceAvailable: () => false,
+}));

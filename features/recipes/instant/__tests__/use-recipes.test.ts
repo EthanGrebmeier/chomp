@@ -29,7 +29,7 @@ describe('useRecipes', () => {
     expect(useQueryMock).toHaveBeenCalledWith(null);
   });
 
-  it('subscribes only to the current user recipes and their ingredients', () => {
+  it('loads ingredient stores for meal-plan selection while scoping recipes to the current user', () => {
     useAuthMock.mockReturnValue({ user: { id: 'user-1' } });
 
     useRecipes();
@@ -41,7 +41,9 @@ describe('useRecipes', () => {
             'user.id': 'user-1',
           },
         },
-        recipe_ingredients: {},
+        recipe_ingredients: {
+          store: {},
+        },
       },
     });
   });

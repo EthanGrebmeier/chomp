@@ -5,17 +5,15 @@ import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import { Text } from '../../../components/ui/text';
-import { cn } from '../../../lib/utils';
 import { Store } from '../types';
 
 type StoreRowProps = {
   store: Store;
-  isLast: boolean;
   onPress: () => void;
 };
 
-const StoreRow = ({ store, isLast, onPress }: StoreRowProps) => (
-  <ListItem className={cn(!isLast && 'border-b border-dashed border-border')}>
+const StoreRow = ({ store, onPress }: StoreRowProps) => (
+  <ListItem>
     <HapticPressable
       onPress={onPress}
       hapticType="light"
@@ -67,11 +65,7 @@ export const StoresList = ({ stores, onEditStore }: StoresListProps) => {
     <FlatList
       data={sortedStores}
       renderItem={({ item, index }) => (
-        <StoreRow
-          store={item}
-          isLast={index === sortedStores.length - 1}
-          onPress={() => onEditStore(item)}
-        />
+        <StoreRow store={item} onPress={() => onEditStore(item)} />
       )}
       keyExtractor={item => item.id}
       showsVerticalScrollIndicator={false}

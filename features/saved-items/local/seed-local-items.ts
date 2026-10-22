@@ -54,12 +54,13 @@ export const seedLocalSavedItems = async () => {
     })
   );
 
-  for (let offset = 0; offset < defaultItems.length; offset += INSERT_CHUNK_SIZE) {
+  for (
+    let offset = 0;
+    offset < defaultItems.length;
+    offset += INSERT_CHUNK_SIZE
+  ) {
     const chunk = defaultItems.slice(offset, offset + INSERT_CHUNK_SIZE);
-    await db
-      .insert(localSavedItemTable)
-      .values(chunk)
-      .onConflictDoNothing();
+    await db.insert(localSavedItemTable).values(chunk).onConflictDoNothing();
   }
 
   await db

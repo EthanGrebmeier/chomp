@@ -9,11 +9,7 @@ export const MetaBarLayout = ({ children, action }: MetaBarLayoutProps) => {
   return (
     <View>
       {children}
-      {action && (
-        <View className="mt-3 border-t border-dashed border-border pt-3">
-          {action}
-        </View>
-      )}
+      {action && <View className="mt-3">{action}</View>}
     </View>
   );
 };

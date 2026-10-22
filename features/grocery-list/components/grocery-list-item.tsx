@@ -14,7 +14,6 @@ import { CategoryTag } from '../../../components/category-tag';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { RecipeTag } from '../../../components/recipe-tag';
 import { StoreTag } from '../../../components/store-tag';
-import { Checkbox } from '../../../components/ui/checkbox';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
 import {
@@ -28,12 +27,16 @@ import { CategoryOption } from '../../shared/category/categories';
 import { checkListItem } from '../instant/check-list-item';
 import { removeGroceryListItem } from '../instant/remove-grocery-list-item';
 import { GroceryListItemWithRecipe } from '../types';
+import { groceryItemSourceLabel } from '../util';
+
+import { GroceryItemCheckbox } from './grocery-item-checkbox';
 
 type GroceryListItemProps = {
   item: GroceryListItemWithRecipe;
   categoryOptions: CategoryOption[];
   isChecked: boolean;
   className?: string;
+  hideOrganizationTags?: boolean;
   onEdit?: (item: GroceryListItemWithRecipe) => void;
   isBulkSelectionModeActive?: boolean;
   isBulkSelected?: boolean;
@@ -98,6 +101,7 @@ const GroceryListItemComponent = ({
   categoryOptions,
   isChecked,
   className,
+  hideOrganizationTags = false,
   onEdit,
   isBulkSelectionModeActive = false,
   isBulkSelected = false,
@@ -108,6 +112,7 @@ const GroceryListItemComponent = ({
     StrikethroughLineMetrics[]
   >([], [item.id]);
   const notes = item.notes?.trim();
+  const sourceLabel = groceryItemSourceLabel(item);
   const hasMountedRef = useRef(false);
   const swipeableRef = useRef<SwipeToDeleteHandle | null>(null);
   const lastLongPressAtRef = useRef(0);
@@ -166,7 +171,7 @@ const GroceryListItemComponent = ({
     [setStrikethroughLines]
   );
 
-  const onCheck = () => {
+  const onCheck = async (checked: boolean) => {
     swipeableRef.current?.close();
 
     if (isBulkSelectionModeActive) {
@@ -174,12 +179,11 @@ const GroceryListItemComponent = ({
       return;
     }
 
-    void checkListItem({
-      itemId: item.id,
-      isChecked: !isChecked,
-    }).catch(() => {
+    try {
+      await checkListItem({ itemId: item.id, isChecked: checked });
+    } catch {
       toast.error('Could not save item. Check your connection and try again.');
-    });
+    }
   };
 
   const handleRowPress = () => {
@@ -224,10 +228,14 @@ const GroceryListItemComponent = ({
 
   const itemContent = (
     <ListItem className={className}>
-      <Checkbox checked={checkboxChecked} onPress={onCheck} className="mr-1" />
+      <GroceryItemCheckbox
+        key={`${item.id}:${isBulkSelectionModeActive}`}
+        checked={checkboxChecked}
+        onChange={onCheck}
+      />
 
       <HapticPressable
-        className="flex-1 gap-1 py-1"
+        className="flex-1 gap-0.5 py-1"
         onPress={handleRowPress}
         onLongPress={handleRowLongPress}
         delayLongPress={200}
@@ -266,7 +274,7 @@ const GroceryListItemComponent = ({
             </View>
           </View>
           <View className="flex-row gap-2">
-            {item.category ? (
+            {!hideOrganizationTags && item.category ? (
               <CategoryTag
                 category={item.category}
                 categoryOptions={categoryOptions}
@@ -277,15 +285,17 @@ const GroceryListItemComponent = ({
         {notes ? (
           <Text
             variant="itemDescription"
-            className={cn(isChecked && 'opacity-80')}
+            className={cn('-my-0.5', isChecked && 'opacity-80')}
             style={compactTextStyle}
           >
             {notes}
           </Text>
         ) : null}
         <View className="flex-row items-center gap-2">
-          {item.store?.name && <StoreTag name={item.store.name} />}
-          {item.recipe?.name && <RecipeTag name={item.recipe.name} />}
+          {!hideOrganizationTags && item.store?.name && (
+            <StoreTag name={item.store.name} />
+          )}
+          {sourceLabel ? <RecipeTag name={sourceLabel} /> : null}
         </View>
       </HapticPressable>
     </ListItem>
@@ -307,6 +317,7 @@ export const GroceryListItem = memo(
   (previousProps, nextProps) => {
     return (
       previousProps.item === nextProps.item &&
+      previousProps.hideOrganizationTags === nextProps.hideOrganizationTags &&
       previousProps.categoryOptions === nextProps.categoryOptions &&
       previousProps.isChecked === nextProps.isChecked &&
       previousProps.className === nextProps.className &&

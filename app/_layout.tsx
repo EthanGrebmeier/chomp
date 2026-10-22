@@ -19,10 +19,13 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import {
   ReanimatedLogLevel,
   configureReanimatedLogger,
+  useReducedMotion,
 } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
+import { QuantityAppProvider } from '@/features/quantity/app/provider';
+import { QuantitySessionGate } from '@/lib/instant/quantity-session-gate';
 import {
   InstantAuthHandler,
   useInstantAuthState,
@@ -62,6 +65,7 @@ const hideSplashScreen = async () => {
 
 function InitialLayout() {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
 
   return (
     <View className="flex-1 bg-background">
@@ -73,6 +77,15 @@ function InitialLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen
+          name="shopping"
+          options={{
+            presentation: 'card',
+            gestureEnabled: true,
+            animation: reducedMotion ? 'fade' : 'default',
+            contentStyle: { backgroundColor: theme.background },
+          }}
+        />
         <Stack.Screen
           name="meal-plan"
           options={{
@@ -242,7 +255,9 @@ function RootLayoutContent({
             <MigrationProvider onStatusChange={handleMigrationStatusChange}>
               <SafeAreaProvider>
                 <GestureHandlerRootView style={{ flex: 1 }}>
-                  <InitialLayout />
+                  <QuantityAppProvider>
+                    <InitialLayout />
+                  </QuantityAppProvider>
                   <InstantAuthHandler />
                   <PortalHost />
                 </GestureHandlerRootView>
@@ -262,5 +277,9 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutContent isStartupUpdateReady={isStartupUpdateReady} />;
+  return (
+    <QuantitySessionGate>
+      <RootLayoutContent isStartupUpdateReady={isStartupUpdateReady} />
+    </QuantitySessionGate>
+  );
 }

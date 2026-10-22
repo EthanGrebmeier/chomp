@@ -26,14 +26,12 @@ type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
   onCreateRecipe: (initialName?: string) => void;
   fillHeight?: boolean;
-  listHeight?: number;
 };
 
 export const RecipeSelector = ({
   onSelectRecipe,
   onCreateRecipe,
   fillHeight = false,
-  listHeight,
 }: RecipeSelectorProps) => {
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { data: recipes, isLoading } = useRecipes();
@@ -67,24 +65,16 @@ export const RecipeSelector = ({
   }, [mealTag, recipes, searchQuery, sortBy]);
 
   const renderRecipeItem = useCallback(
-    ({ item, index }: ListRenderItemInfo<RecipeWithIngredients>) => (
+    ({ item }: ListRenderItemInfo<RecipeWithIngredients>) => (
       <HapticPressable
         onPress={() => onSelectRecipe(item)}
-        className={cn(
-          'w-full px-4 py-1',
-          index < filteredRecipes.length - 1 &&
-            'border-b border-dashed border-border'
-        )}
+        className="w-full px-4 py-1"
         hapticType="light"
       >
-        <RecipeCardContent
-          name={item.name}
-          ingredientCount={item.recipe_ingredients.length}
-          className="w-full"
-        />
+        <RecipeCardContent name={item.name} className="w-full" />
       </HapticPressable>
     ),
-    [filteredRecipes.length, onSelectRecipe]
+    [onSelectRecipe]
   );
 
   if (isLoading) {
@@ -149,7 +139,6 @@ export const RecipeSelector = ({
           renderItem={renderRecipeItem}
           scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
           showsVerticalScrollIndicator={false}
-          style={listHeight ? { height: listHeight } : undefined}
         />
       )}
     </View>

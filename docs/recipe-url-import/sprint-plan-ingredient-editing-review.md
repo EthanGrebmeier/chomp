@@ -3,6 +3,7 @@
 ## Summary of Recommendations
 
 ### ✅ Strengths
+
 - Clear task breakdown with good separation of concerns
 - Excellent reuse of existing components (`ItemForm`, `MetaBar`, `ItemSheetProvider`)
 - Appropriate validation tests specified
@@ -25,15 +26,18 @@
 **Description**: Extend the import state machine to support updating an ingredient at a specific index.
 
 **Files**:
+
 - `features/recipes/types/import-state.ts`
 - `features/recipes/hooks/useImportRecipeState.tsx`
 
 **Changes**:
+
 - Add `UPDATE_INGREDIENT` action type: `{ type: 'UPDATE_INGREDIENT'; index: number; ingredient: ParsedIngredient }`
 - Add reducer case that updates the ingredient at the given index
 - Add `updateIngredient(index, ingredient)` helper method
 
 **Validation**:
+
 - ✅ Unit test: `updateIngredient(0, updatedIngredient)` updates first ingredient
 - ✅ Unit test: Invalid index (negative, out of bounds) does not crash
 - ✅ Unit test: State only changes when in 'preview' status
@@ -50,10 +54,12 @@
 **Description**: Create a new bottom sheet component for editing a parsed ingredient. This will reuse `ItemForm` and `MetaBar` components but manage local state instead of InstantDB.
 
 **Files**:
+
 - `features/recipes/components/import/edit-parsed-ingredient-sheet.tsx` (new)
 - `features/recipes/utils/parsed-ingredient-converters.ts` (new - helper functions)
 
 **Props**:
+
 ```typescript
 type EditParsedIngredientSheetRef = {
   present: (index: number, ingredient: ParsedIngredient) => void;
@@ -67,6 +73,7 @@ type EditParsedIngredientSheetProps = {
 ```
 
 **Implementation**:
+
 - Use `BottomSheet` component
 - Wrap content in `ItemSheetProvider` with `mode="update"` and `disableAutocomplete={true}`
 - Include `ItemForm` and `MetaBar` components
@@ -78,8 +85,11 @@ type EditParsedIngredientSheetProps = {
 - **NEW**: Override `ItemSheetProvider` validation to ensure quantity > 0
 
 **Helper Functions** (in new utils file):
+
 ```typescript
-function parsedIngredientToBaseGroceryItem(ingredient: ParsedIngredient): BaseGroceryItem {
+function parsedIngredientToBaseGroceryItem(
+  ingredient: ParsedIngredient
+): BaseGroceryItem {
   return {
     name: ingredient.name,
     quantity: ingredient.quantity ?? 1,
@@ -90,7 +100,7 @@ function parsedIngredientToBaseGroceryItem(ingredient: ParsedIngredient): BaseGr
 }
 
 function baseGroceryItemToParsedIngredient(
-  item: BaseGroceryItem, 
+  item: BaseGroceryItem,
   originalCategory: IngredientCategory
 ): ParsedIngredient {
   return {
@@ -104,6 +114,7 @@ function baseGroceryItemToParsedIngredient(
 ```
 
 **Validation**:
+
 - ✅ Sheet opens when `present()` is called
 - ✅ Form is pre-populated with ingredient data
 - ✅ Save button calls `onSave` with updated ingredient
@@ -128,9 +139,11 @@ function baseGroceryItemToParsedIngredient(
 **Description**: Add tap handling to ingredients in the preview list to trigger editing.
 
 **Files**:
+
 - `features/recipes/components/import/ingredient-list-preview.tsx`
 
 **Changes**:
+
 - Add `onEdit?: (index: number, ingredient: ParsedIngredient) => void` prop
 - Wrap each ingredient item content in a `Pressable` (inside `ListItem`, like `RecipeIngredientItem`)
 - Call `onEdit` with index and ingredient when tapped
@@ -140,6 +153,7 @@ function baseGroceryItemToParsedIngredient(
 - **NEW**: Prevent multiple rapid taps (debounce or disable while sheet is opening)
 
 **Validation**:
+
 - ✅ Tapping an ingredient calls `onEdit` with correct index and ingredient
 - ✅ Visual feedback on press
 - ✅ Swipe-to-remove still works (no interference with tap)
@@ -157,9 +171,11 @@ function baseGroceryItemToParsedIngredient(
 **Description**: Integrate the EditParsedIngredientSheet into the ImportRecipeSheet.
 
 **Files**:
+
 - `features/recipes/components/import/import-recipe-sheet.tsx`
 
 **Changes**:
+
 - Add ref for `EditParsedIngredientSheetRef`
 - Create `handleEditIngredient` callback that calls `editSheetRef.present(index, ingredient)`
 - Pass `onEdit={handleEditIngredient}` to `IngredientListPreview`
@@ -170,6 +186,7 @@ function baseGroceryItemToParsedIngredient(
 - **NEW**: Handle index invalidation (ingredient removed while editing) - dismiss edit sheet
 
 **Validation**:
+
 - ✅ Tapping ingredient opens edit sheet
 - ✅ Editing and saving updates the ingredient in the list
 - ✅ Sheet dismisses after save
@@ -189,16 +206,19 @@ function baseGroceryItemToParsedIngredient(
 **Description**: Handle edge cases and error scenarios not covered in previous tasks.
 
 **Cases**:
+
 - Index invalidation (already handled in Task 4, verify)
 - Category type preservation (already handled in Task 2, verify)
 - Empty ingredients list after edit (verify import still works)
 - Form state persistence (verify form doesn't retain data between edits)
 
 **Files**:
+
 - `features/recipes/components/import/edit-parsed-ingredient-sheet.tsx`
 - `features/recipes/components/import/import-recipe-sheet.tsx`
 
 **Validation**:
+
 - ✅ All edge cases from original Task 6 are verified
 - ✅ Form resets properly between edits
 - ✅ Import works correctly after editing ingredients
@@ -213,6 +233,7 @@ function baseGroceryItemToParsedIngredient(
 **Description**: Any remaining UX improvements discovered during testing.
 
 **Potential items**:
+
 - Loading states during save
 - Error handling for save failures
 - Animation improvements
@@ -259,17 +280,20 @@ The conversion between `ParsedIngredient` and `BaseGroceryItem` needs careful ha
 ## Testing Strategy
 
 ### Unit Tests
+
 - State machine reducer (Task 1)
 - Type conversion helpers (Task 2)
 - Component rendering and callbacks (Tasks 2, 3)
 
 ### Integration Tests
+
 - Full edit flow: tap → edit → save → verify update (Task 4)
 - Edit → cancel → verify no change (Task 4)
 - Edit → dismiss parent → verify cleanup (Task 4)
 - Multiple sequential edits (Task 4)
 
 ### Manual Testing Checklist
+
 - [ ] Edit ingredient name
 - [ ] Edit ingredient quantity
 - [ ] Edit ingredient unit
@@ -291,14 +315,17 @@ The conversion between `ParsedIngredient` and `BaseGroceryItem` needs careful ha
 ## Risk Assessment
 
 ### Low Risk
+
 - Task 1: Straightforward state machine extension
 - Task 3: Simple prop addition and Pressable wrapper
 
 ### Medium Risk
+
 - Task 2: Need to ensure `ItemSheetProvider` works correctly with local state
 - Task 4: Integration complexity, need to handle cleanup properly
 
 ### Mitigation
+
 - Test `ItemSheetProvider` with local state early (Task 2)
 - Add comprehensive integration tests (Task 4)
 - Manual testing of all edge cases before completion

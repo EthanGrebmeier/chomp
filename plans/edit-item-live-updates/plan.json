@@ -92,9 +92,7 @@
             "Performs relink transactions only when selectedSavedItemId differs from currentSavedItemId, and unlinks currentSavedItemId when selectedLocalSavedItemId is provided.",
             "No saved_items writes and no upsertLocalSavedItem calls."
           ],
-          "dependencies": [
-            "P1-T1"
-          ],
+          "dependencies": ["P1-T1"],
           "testPlan": [
             "No unit tests: db.transact is the only observable effect and stubbing it would couple tests to call shape/order (implementation detail). Behavior is validated via the P1-T4 wrapper smoke test and end-to-end flows in later phases.",
             "pnpm tsc"
@@ -115,9 +113,7 @@
             "Skips saved_items.update when the current user does not own the target saved item.",
             "When owned, writes saved_items.update with trim-normalized fields and reconciles saved_items↔stores against savedItemStoreId baseline."
           ],
-          "dependencies": [
-            "P1-T1"
-          ],
+          "dependencies": ["P1-T1"],
           "testPlan": [
             "No unit tests: db.transact and upsertLocalSavedItem are the only observable effects and stubbing them would couple tests to call shape/order (implementation detail). Behavior is validated via the P1-T4 wrapper smoke test and end-to-end flows in later phases.",
             "pnpm tsc"
@@ -136,19 +132,14 @@
             "All existing call sites continue to import updateGroceryListItem without modification.",
             "No duplication of logic between the wrapper and the two extracted writers."
           ],
-          "dependencies": [
-            "P1-T2",
-            "P1-T3"
-          ],
+          "dependencies": ["P1-T2", "P1-T3"],
           "testPlan": [
             "Manual smoke: Add Item sheet and Edit Item sheet (with the current button flow) still create and update items as before on iOS simulator.",
             "pnpm test",
             "pnpm lint",
             "pnpm tsc"
           ],
-          "outOfScope": [
-            "Edit Item sheet behavior change (deferred to P3+)."
-          ]
+          "outOfScope": ["Edit Item sheet behavior change (deferred to P3+)."]
         }
       ]
     },
@@ -176,9 +167,7 @@
             "pnpm tsc to confirm types propagate.",
             "Manual smoke: autocomplete suggestions still render identically in the Add and Edit sheets."
           ],
-          "outOfScope": [
-            "Consumer logic that uses ownerId (P5)."
-          ]
+          "outOfScope": ["Consumer logic that uses ownerId (P5)."]
         }
       ]
     },
@@ -214,10 +203,7 @@
             "Exposes a flushAndSyncOnClose function callable from onStartClose that flushes pending debounce synchronously and then commits final state.",
             "No new error handling beyond existing Instant optimistic behavior."
           ],
-          "dependencies": [
-            "P1-T2",
-            "P1-T4"
-          ],
+          "dependencies": ["P1-T2", "P1-T4"],
           "testPlan": [
             "Manual: open Edit sheet, change quantity pill — list reflects change immediately; change name, wait 500ms — change is persisted; change name rapidly and close the sheet mid-typing — final value is persisted.",
             "Manual: clear name to empty, close — nothing is persisted to the name field.",
@@ -242,9 +228,7 @@
             "onDismiss calls reset (from useItemSheet) and the hook's snapshot clear.",
             "Add Item sheet is unchanged (still uses its existing button, onSubmit, and toast)."
           ],
-          "dependencies": [
-            "P3-T1"
-          ],
+          "dependencies": ["P3-T1"],
           "testPlan": [
             "Manual: verify Edit sheet has no footer button, no toast on edit, and swipe-to-dismiss persists changes.",
             "Manual: verify Add Item sheet still shows button and toast.",
@@ -263,9 +247,7 @@
             "No write is triggered as a direct consequence of the return key (debounce effect still applies).",
             "Add Item sheet's return-key behavior is unchanged."
           ],
-          "dependencies": [
-            "P3-T1"
-          ],
+          "dependencies": ["P3-T1"],
           "testPlan": [
             "Manual: type into name input, press return — keyboard dismisses, sheet stays open, list reflects the debounced value shortly after.",
             "Manual: repeat in Add Item sheet — behavior unchanged.",
@@ -295,11 +277,7 @@
             "When no cloud saved_item is linked and there is a diff, upsertLocalSavedItem runs via the writer as before.",
             "Editing only non-saved-item fields (e.g. quantity) produces no saved_items writes on close."
           ],
-          "dependencies": [
-            "P1-T1",
-            "P1-T3",
-            "P3-T1"
-          ],
+          "dependencies": ["P1-T1", "P1-T3", "P3-T1"],
           "testPlan": [
             "Manual: change only quantity, close — confirm saved_items row is untouched (inspect Instant dashboard or query).",
             "Manual: as owner, change category + notes, close — saved_items row and store link reflect changes.",
@@ -308,9 +286,7 @@
             "pnpm lint",
             "pnpm tsc"
           ],
-          "outOfScope": [
-            "Snapshot rebase behavior on autocomplete pick (P5)."
-          ]
+          "outOfScope": ["Snapshot rebase behavior on autocomplete pick (P5)."]
         }
       ]
     },
@@ -334,11 +310,7 @@
             "Snapshot is updated in place so that subsequent diffItemSnapshot calls compare against the picked saved_item's values.",
             "No saved_items writes are performed as a direct consequence of the pick itself."
           ],
-          "dependencies": [
-            "P2-T1",
-            "P3-T1",
-            "P4-T1"
-          ],
+          "dependencies": ["P2-T1", "P3-T1", "P4-T1"],
           "testPlan": [
             "Manual: start typing 'Mi', see suggestions, tap 'Milk' — grocery item becomes Milk with the match's category/notes/store; close with no further edits — no saved_items write occurs.",
             "Manual: type 'X' then immediately tap a suggestion — suggestion wins, no stale 'X' write is persisted.",
@@ -358,9 +330,7 @@
             "In the Add sheet, suggestion taps continue to use the existing onSelect path unchanged.",
             "Form state (category, notes, storeId) is populated from the match so the UI still reflects the chosen values immediately."
           ],
-          "dependencies": [
-            "P5-T1"
-          ],
+          "dependencies": ["P5-T1"],
           "testPlan": [
             "Manual: Edit sheet suggestion tap — item is persisted with match values.",
             "Manual: Add sheet suggestion tap — flow unchanged, commit still happens on Add button.",
@@ -379,9 +349,7 @@
             "The grocery item's recipe association is removed without waiting for sheet dismissal.",
             "Add Item sheet behavior is unchanged (recipe clear there still flows through the existing submit path)."
           ],
-          "dependencies": [
-            "P3-T1"
-          ],
+          "dependencies": ["P3-T1"],
           "testPlan": [
             "Manual: open Edit sheet on an item with a recipe tag, tap the X on the recipe tag, observe it detaches immediately (even before closing the sheet).",
             "Manual: swipe the sheet shut without other edits — confirm no duplicate unlink is attempted.",
@@ -416,9 +384,7 @@
             "pnpm lint",
             "pnpm tsc"
           ],
-          "outOfScope": [
-            "Rewriting validation elsewhere in the item sheet."
-          ]
+          "outOfScope": ["Rewriting validation elsewhere in the item sheet."]
         }
       ]
     }

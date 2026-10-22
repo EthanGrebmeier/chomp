@@ -28,13 +28,21 @@ const otherAccountBanana = {
 
 describe('local saved item scoping', () => {
   it('shows shared defaults to every owner', () => {
-    expect(isLocalSavedItemVisibleForOwner(defaultApple, 'account-a')).toBe(true);
-    expect(isLocalSavedItemVisibleForOwner(defaultApple, 'account-b')).toBe(true);
+    expect(isLocalSavedItemVisibleForOwner(defaultApple, 'account-a')).toBe(
+      true
+    );
+    expect(isLocalSavedItemVisibleForOwner(defaultApple, 'account-b')).toBe(
+      true
+    );
   });
 
   it('only shows account-owned custom rows to their owner', () => {
-    expect(isLocalSavedItemVisibleForOwner(accountApple, 'account-a')).toBe(true);
-    expect(isLocalSavedItemVisibleForOwner(accountApple, 'account-b')).toBe(false);
+    expect(isLocalSavedItemVisibleForOwner(accountApple, 'account-a')).toBe(
+      true
+    );
+    expect(isLocalSavedItemVisibleForOwner(accountApple, 'account-b')).toBe(
+      false
+    );
   });
 
   it('lets account-owned rows override shared defaults by name', () => {

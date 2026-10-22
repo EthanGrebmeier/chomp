@@ -11,4 +11,3 @@ export const generateJoinCode = (): string => {
   }
   return code;
 };
-

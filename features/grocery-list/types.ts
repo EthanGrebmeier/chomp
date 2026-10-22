@@ -36,6 +36,7 @@ export type GroceryListLinkedMealPlanItem = InstaQLEntity<
 export type AppSettings = typeof appSettingsTable.$inferSelect;
 
 export type GroceryListItemWithRecipe = GroceryListItem & {
+  quantityEntries?: import('../quantity/types').QuantityEntry[];
   recipe?: Recipe | null;
   store?: Store | null;
   saved_item?: GroceryListLinkedSavedItem | null;

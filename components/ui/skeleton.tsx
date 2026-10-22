@@ -20,11 +20,7 @@ export const Skeleton = ({ className, ...props }: SkeletonProps) => {
   const opacity = useSharedValue(0.5);
 
   useEffect(() => {
-    opacity.value = withRepeat(
-      withTiming(1, { duration: 1500 }),
-      -1,
-      true
-    );
+    opacity.value = withRepeat(withTiming(1, { duration: 1500 }), -1, true);
   }, [opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -35,7 +31,7 @@ export const Skeleton = ({ className, ...props }: SkeletonProps) => {
     <Animated.View
       style={animatedStyle}
       {...props}
-      className={cn('bg-muted rounded-md', className)}
+      className={cn('rounded-md bg-muted', className)}
     />
   );
 };
@@ -114,4 +110,3 @@ export const SkeletonCard = ({ className, children }: SkeletonCardProps) => {
 
   return <Skeleton className={cn('h-24 rounded-lg', className)} />;
 };
-

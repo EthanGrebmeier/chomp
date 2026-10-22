@@ -139,6 +139,6 @@ Prior art:
 
 ## Further Notes
 
-- The snapshot-rebase rule on autocomplete pick is the subtle piece. The mental model is: "the snapshot represents the saved target the user is committed to." On pick, the user has committed to a different saved item, so the snapshot should align with that target going forward; anything they type *after* the pick is a real diff against the new target and should sync on close.
+- The snapshot-rebase rule on autocomplete pick is the subtle piece. The mental model is: "the snapshot represents the saved target the user is committed to." On pick, the user has committed to a different saved item, so the snapshot should align with that target going forward; anything they type _after_ the pick is a real diff against the new target and should sync on close.
 - The `UnitSheet` fix (don't commit unit when quantity is invalid) is strictly a correctness cleanup; it is included here because this PRD is the first change that relies on "the top-level state is always valid" as an invariant.
 - Keeping `updateGroceryListItem` as a wrapper over the two new writers is deliberate: it preserves the Add Item flow's single-call ergonomics and means this PRD does not have to rationalize about the Add path.

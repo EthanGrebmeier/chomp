@@ -117,13 +117,7 @@ export const IngredientListPreview = ({
         const notes = ingredient.notes?.trim();
 
         return (
-          <ListItem
-            key={`${ingredient.name}-${index}`}
-            className={cn(
-              index !== ingredients.length - 1 &&
-                'border-b border-dashed border-border'
-            )}
-          >
+          <ListItem key={`${ingredient.name}-${index}`}>
             <Checkbox
               checked={isSelected}
               onPress={() => onToggleSelection(index)}

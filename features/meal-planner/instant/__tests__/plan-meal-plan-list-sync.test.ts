@@ -675,6 +675,18 @@ describe('buildMealPlanListSyncTransactions', () => {
 
     expect(transactions).toEqual([
       {
+        operation: 'delete',
+        namespace: 'grocery_items',
+        entityId: 'grocery-2',
+        payload: undefined,
+      },
+      {
+        operation: 'unlink',
+        namespace: 'grocery_items',
+        entityId: 'grocery-3',
+        payload: { meal_plan_ingredient_snapshot: 'snapshot-3' },
+      },
+      {
         operation: 'update',
         namespace: 'grocery_items',
         entityId: 'grocery-1',
@@ -698,18 +710,6 @@ describe('buildMealPlanListSyncTransactions', () => {
         namespace: 'grocery_items',
         entityId: 'grocery-1',
         payload: { store: 'store-new' },
-      },
-      {
-        operation: 'delete',
-        namespace: 'grocery_items',
-        entityId: 'grocery-2',
-        payload: undefined,
-      },
-      {
-        operation: 'unlink',
-        namespace: 'grocery_items',
-        entityId: 'grocery-3',
-        payload: { meal_plan_ingredient_snapshot: 'snapshot-3' },
       },
     ]);
   });

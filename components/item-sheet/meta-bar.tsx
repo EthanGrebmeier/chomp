@@ -8,7 +8,13 @@ import { StoreSheet } from './store-sheet';
 import { UnitSheet } from './unit-sheet';
 import { useItemSheet } from './use-item-sheet';
 
-export const MetaBar = () => {
+export const MetaBar = ({
+  trailingInset = 0,
+  savedItemActionsInHeader = false,
+}: {
+  trailingInset?: number;
+  savedItemActionsInHeader?: boolean;
+}) => {
   const {
     category,
     setCategory,
@@ -34,7 +40,7 @@ export const MetaBar = () => {
 
   return (
     <MetaBarLayout>
-      <ScrollingMetaBar>
+      <ScrollingMetaBar trailingInset={trailingInset}>
         <UnitSheet
           quantity={quantity}
           unit={unit}
@@ -56,7 +62,7 @@ export const MetaBar = () => {
             setStoreName(nextStoreName);
           }}
         />
-        {mode === 'add' ? (
+        {mode === 'add' && !savedItemActionsInHeader ? (
           <>
             <SaveItemToggle
               value={saveItem}

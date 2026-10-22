@@ -1,0 +1,45 @@
+{
+  "updates": [
+    {
+      "id": "01a161bb-1991-7602-8180-f7fe676b8136",
+      "createdAt": "2026-10-22T03:50:14.161Z",
+      "group": "88aaace9-db91-4523-b8bb-a87ae68995a2",
+      "branch": "production",
+      "message": "Fix signed-in list freezes: index quantity projections once",
+      "runtimeVersion": "1.0.5",
+      "platform": "ios",
+      "manifestPermalink": "https://u.expo.dev/update/01a161bb-1991-7602-8180-f7fe676b8136",
+      "isRollBackToEmbedded": false,
+      "gitCommitHash": "e26fc52804d8a478bf7d33b5526a231e66833d1e",
+      "deliveryVerified": true
+    },
+    {
+      "id": "01a161ba-f099-77d9-9d27-2b28609a30db",
+      "createdAt": "2026-10-22T03:50:03.673Z",
+      "group": "f157dd77-81e4-43b6-aa51-2509e949f265",
+      "branch": "production",
+      "message": "Fix signed-in list freezes: index quantity projections once",
+      "runtimeVersion": "1.0.6",
+      "platform": "ios",
+      "manifestPermalink": "https://u.expo.dev/update/01a161ba-f099-77d9-9d27-2b28609a30db",
+      "isRollBackToEmbedded": false,
+      "gitCommitHash": "023df822d75c50792935493ad5d5f4eed432b222",
+      "deliveryVerified": true
+    }
+  ],
+  "benchmark": {
+    "rows": 1062,
+    "meals": 77,
+    "beforeMealProjectionMs": 1980.37,
+    "afterMealProjectionMs": 1.96,
+    "environment": "Node desktop benchmark using private migrated snapshot; not device timing"
+  },
+  "validation": {
+    "testsPassed": 598,
+    "testsSkipped": 3,
+    "lint": true,
+    "typecheck": true,
+    "simulator": "Opened E & K Grocery and switched meal tab after local fix"
+  },
+  "native107": "Source updated; TestFlight build identity requested before publication"
+}

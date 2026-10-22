@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { useDefaultStore } from '../../stores/instant/use-default-store';
 import { reconcileMealPlanList } from '../instant/reconcile-meal-plan-list';
 import { useMealPlanData } from '../instant/use-user-meal-plan-data';
@@ -30,7 +32,9 @@ export const useMealPlanListReconciler = ({
   const { isLoading: isMealPlanLoading } = useMealPlanData(listId);
   const { data: defaultStore, isLoading: isStoresLoading } = useDefaultStore();
   const defaultStoreRef = useRef(defaultStore);
-  defaultStoreRef.current = defaultStore;
+  useEffect(() => {
+    defaultStoreRef.current = defaultStore;
+  }, [defaultStore]);
   const reconciledListIdsRef = useRef(new Set<string>());
 
   const isReady =
@@ -41,6 +45,7 @@ export const useMealPlanListReconciler = ({
 
   useEffect(() => {
     if (
+      quantityWorkspaceAvailable() ||
       !isReady ||
       !listId ||
       reconciledListIdsRef.current.has(listId) ||

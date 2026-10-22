@@ -12,11 +12,11 @@ import { useGroceryListItems } from '@/features/grocery-list/instant/useGroceryL
 import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDeleteGroceryList';
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
-import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
+import { useTrackListAccess } from '@/features/grocery-lists/local/use-track-list-access';
 import { MealPlanner } from '@/features/meal-planner/components';
 import { useMealPlanListReconciler } from '@/features/meal-planner/hooks';
-import { useMealPlanViewMode } from '@/features/meal-planner/hooks/use-meal-plan-view-mode';
 import { type MealPlanFocusRequest } from '@/features/meal-planner/types';
+import { QuantityListStatus } from '@/features/quantity/app/status';
 import { db } from '@/lib/instant';
 import { buildGroceryListsIndexUrl } from '@/lib/navigation';
 
@@ -53,8 +53,6 @@ export default function List() {
       ? 'grocery-list'
       : selectedView;
   const { user } = db.useAuth();
-  const { viewMode: mealPlanViewMode, setViewMode: setMealPlanViewMode } =
-    useMealPlanViewMode(user?.id);
   // Set when a linked grocery item's date is tapped; cleared on list switch
   // so a remounted meal planner doesn't jump to a stale date.
   const [mealPlanFocusRequest, setMealPlanFocusRequest] =
@@ -141,11 +139,13 @@ export default function List() {
   );
 
   const handleOpenMealPlanDate = useCallback(
-    (date: string) => {
+    (date: string, mealId?: string, sourceId?: string) => {
       handleViewChange('meal-plan');
       setMealPlanFocusRequest(current => ({
         id: (current?.id ?? 0) + 1,
         date,
+        mealId,
+        sourceId,
       }));
     },
     [handleViewChange]
@@ -186,6 +186,7 @@ export default function List() {
             exiting={FadeOut.duration(200)}
             className="flex-1"
           >
+            <QuantityListStatus listId={activeListId} />
             <GroceryList
               listId={activeListId}
               listName={activeList?.name}
@@ -201,16 +202,12 @@ export default function List() {
               activeListChangeVersion={activeListId}
               activeView={activeView}
               onViewChange={handleViewChange}
-              mealPlanViewMode={mealPlanViewMode}
-              onMealPlanViewModeChange={setMealPlanViewMode}
               onOpenMealPlanDate={handleOpenMealPlanDate}
               alternateContent={
                 activeListId ? (
                   <MealPlanner
                     listId={activeListId}
                     showHeader={false}
-                    viewMode={mealPlanViewMode}
-                    onViewModeChange={setMealPlanViewMode}
                     focusRequest={mealPlanFocusRequest}
                   />
                 ) : null

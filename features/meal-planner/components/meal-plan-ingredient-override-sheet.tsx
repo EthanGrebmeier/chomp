@@ -6,18 +6,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Keyboard } from 'react-native';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '../../../components/bottom-sheet';
-import { ItemForm } from '../../../components/item-sheet/item-form';
-import { MetaBar } from '../../../components/item-sheet/meta-bar';
+import { ItemEditorSheet } from '../../../components/item-sheet/item-editor-sheet';
 import {
   ItemSheetProvider,
   useItemSheet,
 } from '../../../components/item-sheet/use-item-sheet';
-import { Button } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
 import { BaseGroceryItem } from '../../grocery-list/types';
 import { MealPlanIngredientEditorRow } from '../meal-plan-recipe-ingredient-editor';
 
@@ -47,46 +42,26 @@ type MealPlanIngredientOverrideSheetProps = {
 
 const EditMealIngredientSheetContents = ({
   sheetRef,
-  editingRow,
   onDismiss,
 }: {
   sheetRef: React.RefObject<TrueSheet | null>;
-  editingRow: MealPlanIngredientEditorRow | null;
   onDismiss: () => void;
 }) => {
-  const { reset, itemInputRef, onSubmit, isValid } = useItemSheet();
+  const { reset } = useItemSheet();
 
   const handleClose = useCallback(() => {
-    Keyboard.dismiss();
     reset();
     onDismiss();
   }, [onDismiss, reset]);
 
-  const handleOpen = useCallback(() => {
-    itemInputRef.current?.focus();
-  }, [itemInputRef]);
-
   return (
-    <BottomSheet
-      viewClassName="pb-safe"
+    <ItemEditorSheet
       name="meal-plan-ingredient-override-sheet"
-      ref={sheetRef}
-      onStartClose={handleClose}
-      onOpen={handleOpen}
-      footer={
-        <BottomSheet.SheetView className="pb-safe gap-4 px-4 pt-3">
-          <MetaBar />
-          <Button onPress={onSubmit} disabled={!isValid}>
-            <Text>Save ingredient</Text>
-          </Button>
-        </BottomSheet.SheetView>
-      }
-    >
-      <BottomSheet.SheetView>
-        <BottomSheet.Header title="Adjust ingredient" className="mb-4" />
-        <ItemForm />
-      </BottomSheet.SheetView>
-    </BottomSheet>
+      title="Adjust ingredient"
+      sheetRef={sheetRef}
+      onDismiss={handleClose}
+      actionLabel="Save ingredient"
+    />
   );
 };
 
@@ -139,6 +114,7 @@ export const MealPlanIngredientOverrideSheet = forwardRef<
         sheetRef.current?.dismiss();
       } catch {
         toast.error('Failed to save ingredient override');
+        return false;
       }
     },
     [editingRow, onSave]
@@ -157,7 +133,6 @@ export const MealPlanIngredientOverrideSheet = forwardRef<
     >
       <EditMealIngredientSheetContents
         sheetRef={sheetRef}
-        editingRow={editingRow}
         onDismiss={handleDismiss}
       />
     </ItemSheetProvider>

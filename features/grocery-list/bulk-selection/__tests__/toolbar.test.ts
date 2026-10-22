@@ -7,25 +7,25 @@ describe('bulk toolbar actions', () => {
     const actions = getBulkToolbarActions(1);
 
     expect(actions.map(action => action.id)).toEqual([
-      'exit',
       'set-store',
       'set-category',
       'move',
       'delete',
+      'exit',
     ]);
     expect(actions.map(action => action.label)).toEqual([
-      'Exit Bulk Select',
       'Set Store',
       'Set Category',
       'Move',
       'Delete',
+      'Exit Bulk Select',
     ]);
   });
 
-  it('marks delete as the only destructive action at the end', () => {
+  it('places exit last and marks delete as the only destructive action', () => {
     const actions = getBulkToolbarActions(1);
 
-    expect(actions.at(-1)?.id).toBe('delete');
+    expect(actions.at(-1)?.id).toBe('exit');
     expect(
       actions.filter(action => action.isDestructive).map(action => action.id)
     ).toEqual(['delete']);

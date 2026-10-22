@@ -88,9 +88,7 @@
             "No React, hook, or Instant imports in the module"
           ],
           "dependencies": [],
-          "testPlan": [
-            "pnpm tsc --noEmit"
-          ],
+          "testPlan": ["pnpm tsc --noEmit"],
           "outOfScope": [
             "Unit tests for the helper (PRD defers tests; grocery's diffItemSnapshot tests are the model if added later)"
           ]
@@ -115,9 +113,7 @@
             "handleRef also exposes an onPickMatch stub that is safe to call but is a no-op in this ticket (wired fully in P2)"
           ],
           "dependencies": ["P1-T1"],
-          "testPlan": [
-            "pnpm tsc --noEmit"
-          ],
+          "testPlan": ["pnpm tsc --noEmit"],
           "outOfScope": [
             "Autocomplete pick behavior (P2)",
             "Unit tests for the hook"
@@ -135,9 +131,7 @@
             "Exports the LiveIngredientSyncHandle type for consumers"
           ],
           "dependencies": ["P1-T2"],
-          "testPlan": [
-            "pnpm tsc --noEmit"
-          ],
+          "testPlan": ["pnpm tsc --noEmit"],
           "outOfScope": []
         },
         {
@@ -167,9 +161,7 @@
             "Manual: open an ingredient, clear the name to empty, pause past the debounce, and confirm no write fires (name is unchanged on reopen); restore the name and confirm normal persistence resumes",
             "Manual: confirm 'Add Ingredient' flow still works end-to-end: footer button present, toast appears, sheet stays open, form resets"
           ],
-          "outOfScope": [
-            "Autocomplete pick rebase (P2)"
-          ]
+          "outOfScope": ["Autocomplete pick rebase (P2)"]
         }
       ]
     },
@@ -196,9 +188,7 @@
             "Does not attempt any saved_items relink"
           ],
           "dependencies": ["P1-T4"],
-          "testPlan": [
-            "pnpm tsc --noEmit"
-          ],
+          "testPlan": ["pnpm tsc --noEmit"],
           "outOfScope": []
         },
         {

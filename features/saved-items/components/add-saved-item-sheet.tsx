@@ -7,19 +7,16 @@ import {
   useRef,
   useState,
 } from 'react';
-import { View } from 'react-native';
 
-import { BottomSheet } from '../../../components/bottom-sheet';
 import { CategorySheet } from '../../../components/item-sheet/category-sheet';
-import { ItemInput } from '../../../components/item-sheet/item-input';
+import { ItemEditorSheet } from '../../../components/item-sheet/item-editor-sheet';
 import { StoreSheet } from '../../../components/item-sheet/store-sheet';
 import {
   ItemSheetProvider,
   useItemSheet,
 } from '../../../components/item-sheet/use-item-sheet';
 import { MetaBarLayout } from '../../../components/meta-bar-layout';
-import { Button } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
+import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
 import { BaseGroceryItem } from '../../grocery-list/types';
 import { addSavedItem } from '../instant/add-saved-item';
 import { UnifiedSavedItem } from '../types';
@@ -48,103 +45,51 @@ export const useSavedItemSheet = () => {
 };
 
 const SavedItemMetaBar = () => {
-  const { category, setCategory, storeId, setStoreId } = useItemSheet();
+  const { category, setCategory, storeId, setStoreId, hasItemTitle } =
+    useItemSheet();
 
   return (
     <MetaBarLayout>
-      <View className="flex-row gap-2">
-        <CategorySheet category={category} onSelect={setCategory} />
-        <StoreSheet storeId={storeId} onSelect={setStoreId} />
-      </View>
+      <ScrollingMetaBar>
+        <CategorySheet
+          category={category}
+          onSelect={setCategory}
+          disabled={!hasItemTitle}
+        />
+        <StoreSheet
+          storeId={storeId}
+          onSelect={setStoreId}
+          disabled={!hasItemTitle}
+        />
+      </ScrollingMetaBar>
     </MetaBarLayout>
   );
 };
 
 const SavedItemSheetContents = ({ isEditing }: { isEditing: boolean }) => {
-  const {
-    reset,
-    mode,
-    itemInputRef,
-    itemInputValue,
-    itemInputKey,
-    itemInputDefaultValue,
-    showMatchingItems,
-    setShowMatchingItems,
-    onChangeItemText,
-    onSelect,
-    onSubmit,
-    isValid,
-    disableAutocomplete,
-  } = useItemSheet();
+  const { reset } = useItemSheet();
   const { sheetRef, liveSyncRef } = useSavedItemSheetInternal();
 
-  const handleSubmitEditing =
-    mode === 'update' ? () => itemInputRef.current?.blur() : onSubmit;
-
-  // Keep add-mode semantics unchanged (reset on close start), but in edit mode
-  // flush pending debounced writes before state resets.
   const onStartClose = useCallback(() => {
-    if (isEditing) {
-      liveSyncRef.current?.flushAndSyncOnClose();
-      return;
-    }
-    reset();
-  }, [isEditing, liveSyncRef, reset]);
+    if (isEditing) liveSyncRef.current?.flushAndSyncOnClose();
+  }, [isEditing, liveSyncRef]);
 
   const onDismiss = useCallback(() => {
-    if (!isEditing) return;
     reset();
     liveSyncRef.current?.clearSnapshot();
-  }, [isEditing, liveSyncRef, reset]);
+  }, [liveSyncRef, reset]);
 
   return (
-    <BottomSheet
-      viewClassName={isEditing ? undefined : 'pb-4'}
+    <ItemEditorSheet
       name="saved-item-sheet"
-      ref={sheetRef}
+      title={isEditing ? 'Edit saved item' : 'Save item for later'}
+      sheetRef={sheetRef}
       onStartClose={onStartClose}
-      onDismiss={isEditing ? onDismiss : undefined}
-      onOpen={() => {
-        if (!isEditing) {
-          itemInputRef.current?.focus();
-        }
-      }}
-      footer={
-        isEditing ? (
-          <BottomSheet.SheetView className="pb-safe px-4 pt-3">
-            <SavedItemMetaBar />
-          </BottomSheet.SheetView>
-        ) : (
-          <View className="px-10 pb-4">
-            <Button onPress={onSubmit} disabled={!isValid}>
-              <Text>Add</Text>
-            </Button>
-          </View>
-        )
-      }
-    >
-      <BottomSheet.SheetView
-        className={isEditing ? 'pb-20' : 'pb-safe gap-4'}
-      >
-        <BottomSheet.Header
-          title={isEditing ? 'Edit saved item' : 'Save item for later'}
-        />
-        <ItemInput
-          placeholder="Item name"
-          inputKey={itemInputKey}
-          defaultValue={itemInputDefaultValue}
-          matchingValue={itemInputValue}
-          onChangeText={onChangeItemText}
-          onSelect={onSelect}
-          showMatchingItems={showMatchingItems}
-          setShowMatchingItems={setShowMatchingItems}
-          onSubmit={handleSubmitEditing}
-          inputRef={itemInputRef}
-          disableAutocomplete={disableAutocomplete}
-        />
-        {!isEditing ? <SavedItemMetaBar /> : null}
-      </BottomSheet.SheetView>
-    </BottomSheet>
+      onDismiss={onDismiss}
+      showNotes={false}
+      metadata={<SavedItemMetaBar />}
+      actionLabel={isEditing ? undefined : 'Add saved item'}
+    />
   );
 };
 

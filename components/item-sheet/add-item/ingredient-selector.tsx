@@ -16,6 +16,7 @@ import {
   RecipeConflictSheet,
   RecipeConflictSheetRef,
 } from '../../../features/grocery-list/components/recipe-conflict-sheet';
+import type { IngredientShoppingStatus } from '../../../features/meal-planner/utils/shopping-state';
 import {
   RecipeDetailSheet,
   RecipeDetailSheetRef,
@@ -45,6 +46,8 @@ type IngredientRowProps = {
   isSelected: boolean;
   onToggle: () => void;
   onEdit?: () => void;
+  selectionDisabled?: boolean;
+  shoppingStatus?: IngredientShoppingStatus;
 };
 
 const IngredientRow = ({
@@ -54,6 +57,8 @@ const IngredientRow = ({
   isSelected,
   onToggle,
   onEdit,
+  selectionDisabled = false,
+  shoppingStatus,
 }: IngredientRowProps) => {
   const compactTextStyle = Platform.select({
     android: { includeFontPadding: false },
@@ -62,9 +67,20 @@ const IngredientRow = ({
 
   return (
     <ListItem className={cn('py-1', className)}>
-      <Checkbox checked={isSelected} onPress={onToggle} className="mr-1" />
+      {shoppingStatus === 'purchased' ? (
+        <View className="mr-1 size-5" />
+      ) : (
+        <Checkbox
+          checked={isSelected}
+          onPress={onToggle}
+          disabled={selectionDisabled}
+          accessibilityLabel={`Include ${ingredient.name} on grocery list`}
+          className="mr-1"
+        />
+      )}
       <HapticPressable
         onPress={onEdit ?? onToggle}
+        disabled={!onEdit && selectionDisabled}
         hapticType="selection"
         className="flex-1 gap-1 py-1"
       >
@@ -93,6 +109,13 @@ const IngredientRow = ({
             />
           ) : null}
         </View>
+        {shoppingStatus === 'purchased' || shoppingStatus === 'removed' ? (
+          <Text variant="itemDescription" className="text-muted-foreground">
+            {shoppingStatus === 'purchased'
+              ? 'Purchased'
+              : 'Not on grocery list'}
+          </Text>
+        ) : null}
         {ingredient.notes ? (
           <Text
             variant="itemDescription"
@@ -109,12 +132,15 @@ const IngredientRow = ({
 
 type MealPlanSelectableIngredient = RecipeIngredient & {
   sourceRecipeIngredientId?: string;
+  shoppingStatus?: IngredientShoppingStatus;
+  selectionDisabled?: boolean;
 };
 
 type IngredientSelectorProps = {
   recipe: RecipeWithIngredients;
   onBack: () => void;
   onDismiss: () => void;
+  onOpenRecipe?: () => void;
   showFooter?: boolean;
   listId?: string;
   onComplete?: () => void;
@@ -129,9 +155,11 @@ type IngredientSelectorProps = {
   onPersistSelection?: (selectedIds: Set<string>) => void;
   onEditIngredient?: (id: string) => void;
   showHeader?: boolean;
+  selectionHeader?: 'default' | 'compact';
   bottomContentInset?: number;
   recipeNameHeading?: boolean;
   scheduleControl?: React.ReactNode;
+  selectionDisabled?: boolean;
 };
 
 export type IngredientSelectorRef = {
@@ -157,6 +185,7 @@ export const IngredientSelector = forwardRef<
     recipe,
     onBack,
     onDismiss,
+    onOpenRecipe,
     selectedIds,
     onToggleIngredient,
     onToggleAll,
@@ -171,9 +200,11 @@ export const IngredientSelector = forwardRef<
     onPersistSelection,
     onEditIngredient,
     showHeader = true,
+    selectionHeader = 'default',
     bottomContentInset,
     recipeNameHeading = false,
     scheduleControl,
+    selectionDisabled = false,
   }: IngredientSelectorProps,
   ref
 ) {
@@ -222,13 +253,34 @@ export const IngredientSelector = forwardRef<
     ? (selectedIds as Set<string>)
     : internalSelectedIds;
 
-  const allSelected = effectiveSelectedIds.size === ingredients.length;
+  const selectableIds = ingredients
+    .filter(ingredient => !ingredient.selectionDisabled)
+    .map(ingredient => ingredient.sourceRecipeIngredientId ?? ingredient.id);
+  const allSelected =
+    selectableIds.length > 0 &&
+    selectableIds.every(id => effectiveSelectedIds.has(id));
+  const bulkSelectionDisabled = selectionDisabled || selectableIds.length === 0;
+  const purchasedCount = ingredients.filter(
+    ingredient => ingredient.shoppingStatus === 'purchased'
+  ).length;
+  const unpurchasedSelectedCount = ingredients.filter(
+    ingredient =>
+      ingredient.shoppingStatus !== 'purchased' &&
+      effectiveSelectedIds.has(
+        ingredient.sourceRecipeIngredientId ?? ingredient.id
+      )
+  ).length;
 
   const handleGoToRecipe = useCallback(() => {
+    if (onOpenRecipe) {
+      onOpenRecipe();
+      return;
+    }
     recipeDetailSheetRef.current?.present(recipe.id);
-  }, [recipe.id]);
+  }, [onOpenRecipe, recipe.id]);
 
   const handleToggleIngredient = (id: string) => {
+    if (selectionDisabled || !selectableIds.includes(id)) return;
     if (isControlled) {
       const nextSelected = new Set(effectiveSelectedIds);
       if (nextSelected.has(id)) {
@@ -253,11 +305,13 @@ export const IngredientSelector = forwardRef<
   };
 
   const handleToggleAll = () => {
+    if (bulkSelectionDisabled) return;
     if (isControlled) {
-      const shouldSelectAll = effectiveSelectedIds.size !== ingredients.length;
-      const nextSelected = shouldSelectAll
-        ? new Set(ingredientIds)
-        : new Set<string>();
+      const nextSelected = new Set(effectiveSelectedIds);
+      for (const id of selectableIds) {
+        if (allSelected) nextSelected.delete(id);
+        else nextSelected.add(id);
+      }
       onToggleAll?.();
       onPersistSelection?.(nextSelected);
       return;
@@ -415,22 +469,30 @@ export const IngredientSelector = forwardRef<
         <View
           className={cn(
             'mb-2 flex-row items-center justify-between px-4',
-            !showHeader && !recipeNameHeading && 'pt-4',
+            !showHeader &&
+              !recipeNameHeading &&
+              selectionHeader !== 'compact' &&
+              'pt-4',
             recipeNameHeading && 'pt-4'
           )}
         >
-          <View>
-            <Text className="text-lg font-medium text-foreground">
-              Ingredients
-            </Text>
-            <Text variant="caption" tabularNumbers>
-              {effectiveSelectedIds.size} of {ingredients.length} selected
-            </Text>
+          <View className="min-w-0 flex-1 pr-3">
+            <Text variant="overline">Ingredients</Text>
+            {selectionHeader !== 'compact' ? (
+              <Text variant="caption" tabularNumbers>
+                {purchasedCount > 0
+                  ? `${purchasedCount} purchased · ${unpurchasedSelectedCount} selected`
+                  : `${effectiveSelectedIds.size} of ${ingredients.length} selected`}
+              </Text>
+            ) : null}
           </View>
           <HapticPressable
             onPress={handleToggleAll}
             hapticType="selection"
-            className="p-1"
+            className="min-h-11 justify-center p-1"
+            disabled={bulkSelectionDisabled}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: bulkSelectionDisabled }}
           >
             <Text variant="caption" className="text-sm text-muted-foreground">
               {allSelected ? 'Deselect all' : 'Select all'}
@@ -452,14 +514,14 @@ export const IngredientSelector = forwardRef<
               ingredient.sourceRecipeIngredientId ?? ingredient.id;
             return (
               <IngredientRow
-                className={cn(
-                  index < ingredients.length - 1 &&
-                    'border-b border-dashed border-border'
-                )}
                 key={ingredient.id}
                 ingredient={ingredient}
                 categoryOptions={categoryOptions}
                 isSelected={effectiveSelectedIds.has(ingredientId)}
+                selectionDisabled={
+                  selectionDisabled || ingredient.selectionDisabled
+                }
+                shoppingStatus={ingredient.shoppingStatus}
                 onToggle={() => handleToggleIngredient(ingredientId)}
                 onEdit={
                   onEditIngredient

@@ -1,3 +1,4 @@
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 import { db, type TransactionChunk } from '@/lib/instant';
 
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
@@ -212,6 +213,16 @@ export const runBulkStoreUpdate = async ({
   selectedItems,
   storeId,
 }: RunBulkStoreUpdateArgs): Promise<BulkStoreCategoryWriteResult> => {
+  if (quantityWorkspaceAvailable()) {
+    const { bulkQuantityMetadata } =
+      await import('@/features/quantity/app/grocery-actions');
+    await bulkQuantityMetadata(selectedItemIds, { store: storeId ?? '' });
+    return {
+      updatedItemCount: selectedItemIds.length,
+      skippedItemCount: 0,
+      failedSavedItemSyncCount: 0,
+    };
+  }
   const selectedItemsMap = createSelectedItemsMap(selectedItems);
   const patch = { storeId };
   const { matchedItems, skippedItemCount } = resolveSelectedItemsForWrite({
@@ -280,6 +291,16 @@ export const runBulkCategoryUpdate = async ({
   selectedItems,
   category,
 }: RunBulkCategoryUpdateArgs): Promise<BulkStoreCategoryWriteResult> => {
+  if (quantityWorkspaceAvailable()) {
+    const { bulkQuantityMetadata } =
+      await import('@/features/quantity/app/grocery-actions');
+    await bulkQuantityMetadata(selectedItemIds, { category: category ?? '' });
+    return {
+      updatedItemCount: selectedItemIds.length,
+      skippedItemCount: 0,
+      failedSavedItemSyncCount: 0,
+    };
+  }
   const selectedItemsMap = createSelectedItemsMap(selectedItems);
   const patch = { category };
   const { matchedItems, skippedItemCount } = resolveSelectedItemsForWrite({

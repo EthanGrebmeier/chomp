@@ -1,0 +1,41 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [main, 'release/**']
+  push:
+    branches: [main, 'release/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Release validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPO_PUBLIC_INSTANT_APP_ID: 5df33e29-252b-4e1c-a111-53787beccba3
+      EXPO_PUBLIC_QUANTITY_RELEASE: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint && pnpm tsc
+      - run: pnpm exec vitest run
+      - run: node --test scripts/release/check-ota-baseline.test.mjs
+      - name: Check release configuration
+        run: node scripts/release/check-candidate.mjs
+      - name: Check frozen OTA native dependencies
+        if: startsWith(github.base_ref, 'release/') || startsWith(github.ref_name, 'release/')
+        run: node scripts/release/check-ota-baseline.mjs

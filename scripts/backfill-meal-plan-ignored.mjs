@@ -20,8 +20,8 @@
  *   # Apply the migration
  *   node --env-file=.env.local scripts/backfill-meal-plan-ignored.mjs
  *
- * Point the env vars at a dev app first, then re-run against production once
- * the dry run's counts look right.
+ * Validate against a throwaway dev app first (see "Data migrations against a
+ * dev Instant app" in README.md), then dry-run and run against production.
  */
 import { init } from '@instantdb/admin';
 

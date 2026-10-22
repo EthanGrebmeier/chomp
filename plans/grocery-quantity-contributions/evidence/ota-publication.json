@@ -1,0 +1,31 @@
+{
+  "updates": [
+    {
+      "id": "01a16190-8835-7b3a-9996-6c8bb236d87f",
+      "createdAt": "2026-10-22T03:03:44.437Z",
+      "group": "e3c31bd8-e322-499e-b9ac-2b80d9b9eaee",
+      "branch": "production",
+      "message": "Quantity release for 1.0.6 build 56; reconciled database migration",
+      "runtimeVersion": "1.0.6",
+      "platform": "ios",
+      "manifestPermalink": "https://u.expo.dev/update/01a16190-8835-7b3a-9996-6c8bb236d87f",
+      "isRollBackToEmbedded": false,
+      "gitCommitHash": "849bf3dc25a5d10eee720406027fc9f917b87bf7"
+    },
+    {
+      "id": "01a16194-c190-7fc6-b167-96b9215650ac",
+      "createdAt": "2026-10-22T03:08:21.264Z",
+      "group": "8ff2da8a-4f9a-45b7-bca6-bc65cf7a8a0e",
+      "branch": "production",
+      "message": "Quantity release for 1.0.5 build 50; reconciled database migration",
+      "runtimeVersion": "1.0.5",
+      "platform": "ios",
+      "manifestPermalink": "https://u.expo.dev/update/01a16194-c190-7fc6-b167-96b9215650ac",
+      "isRollBackToEmbedded": false,
+      "gitCommitHash": "436d11071450a6ab73874dd85834a4a1255d51d3"
+    }
+  ],
+  "deliveryVerified": ["1.0.6", "1.0.5"],
+  "pending": [],
+  "build52RetiredConfirmedByOwner": true
+}

@@ -10,9 +10,7 @@ import {
   IngredientSelector,
   IngredientSelectorRef,
 } from '@/components/item-sheet/add-item/ingredient-selector';
-import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
-import { ExternalLinkButton } from '@/components/ui/external-link-button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { db } from '@/lib/instant';
@@ -47,6 +45,9 @@ export const RecipeAddToListButton = ({
     () => listId ?? fallbackListId ?? null,
     [fallbackListId, listId]
   );
+  const targetList = groceryLists?.grocery_lists?.find(
+    list => list.id === (selectedListIdForIngredients ?? targetListId)
+  );
 
   const handleIngredientSelectorComplete = () => {
     const listIdToNavigate = selectedListIdForIngredients;
@@ -75,18 +76,18 @@ export const RecipeAddToListButton = ({
       toast.error('No grocery list available');
       return;
     }
+    setSelectedIngredientIds(
+      new Set(recipe.recipe_ingredients.map(ingredient => ingredient.id))
+    );
+    setIsSubmitting(false);
     setSelectedListIdForIngredients(targetListId);
   };
 
   useEffect(() => {
     if (selectedListIdForIngredients) {
-      setSelectedIngredientIds(
-        new Set(recipe.recipe_ingredients.map(ingredient => ingredient.id))
-      );
-      setIsSubmitting(false);
       ingredientSelectorSheetRef.current?.present();
     }
-  }, [recipe.recipe_ingredients, selectedListIdForIngredients]);
+  }, [selectedListIdForIngredients]);
 
   const handleToggleIngredient = (id: string) => {
     setSelectedIngredientIds(prev => {
@@ -121,21 +122,19 @@ export const RecipeAddToListButton = ({
 
   return (
     <>
-      <View className="bottom-safe absolute left-6 z-20">
-        <Button
-          variant="secondary"
-          size="wide-small"
-          onPress={handleAddToList}
-          disabled={!targetListId}
-        >
-          <Icon
-            as={ShoppingCartIcon}
-            size={24}
-            strokeWidth={3}
-            className="text-secondary-foreground"
-          />
-        </Button>
-      </View>
+      <Button
+        className="h-11 self-start px-4"
+        onPress={handleAddToList}
+        disabled={!targetListId}
+      >
+        <Icon
+          as={ShoppingCartIcon}
+          size={18}
+          strokeWidth={2.5}
+          className="text-primary-foreground"
+        />
+        <Text>Add to list</Text>
+      </Button>
       <BottomSheet
         detents={['auto']}
         name="recipe-ingredient-selector-sheet"
@@ -146,10 +145,15 @@ export const RecipeAddToListButton = ({
         footer={
           <View className="px-4 pb-4 pt-3">
             <Button
+              className="min-h-11 w-full"
               onPress={handleFooterSubmit}
               disabled={selectedIngredientIds.size === 0 || isSubmitting}
             >
-              <Text>{isSubmitting ? 'Adding...' : 'Add to List'}</Text>
+              <Text tabularNumbers>
+                {isSubmitting
+                  ? 'Adding…'
+                  : `Add ${selectedIngredientIds.size} ingredient${selectedIngredientIds.size === 1 ? '' : 's'}`}
+              </Text>
             </Button>
           </View>
         }
@@ -157,12 +161,16 @@ export const RecipeAddToListButton = ({
         <BottomSheet.Header
           className="px-4"
           title="Choose ingredients"
-          description={recipe.name}
-          dismissButton={<BackButton onPress={handleIngredientSelectorBack} />}
-          button={
-            <ExternalLinkButton
-              onPress={() => ingredientSelectorRef.current?.openRecipeDetails()}
-            />
+          description={
+            <>
+              {recipe.name}
+              {'\n'}
+              <Text variant="caption">
+                {targetList?.name
+                  ? `Adding to ${targetList.name}`
+                  : 'Adding to your grocery list'}
+              </Text>
+            </>
           }
         />
         {selectedListIdForIngredients && (
@@ -179,6 +187,7 @@ export const RecipeAddToListButton = ({
             onBusyStateChange={setIsSubmitting}
             showFooter={false}
             showHeader={false}
+            selectionHeader="compact"
           />
         )}
       </BottomSheet>

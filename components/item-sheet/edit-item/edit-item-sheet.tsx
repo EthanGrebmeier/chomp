@@ -7,6 +7,9 @@ import {
   useState,
 } from 'react';
 
+import { AppQuantityItemSheet } from '@/features/quantity/app/item-sheet';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
 import { useGroceryItemMealPlanLink } from '../../../features/grocery-list/instant/use-grocery-item-meal-plan-link';
 import {
@@ -18,10 +21,8 @@ import {
   BaseGroceryItem,
   GroceryListItemWithRecipe,
 } from '../../../features/grocery-list/types';
-import { BottomSheet } from '../../bottom-sheet';
-import { ItemForm } from '../item-form';
+import { ItemEditorSheet } from '../item-editor-sheet';
 import { ItemSourceSentence } from '../item-source-sentence';
-import { MetaBar } from '../meta-bar';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 import { MatchingItem } from '../use-matching-items';
 
@@ -113,18 +114,14 @@ const EditItemContents = () => {
   }, [reset, liveSyncRef]);
 
   return (
-    <BottomSheet
+    <ItemEditorSheet
       name="edit-item-sheet"
-      ref={sheetRef}
+      title="Edit item"
+      sheetRef={sheetRef}
       onStartClose={onStartClose}
       onDismiss={onDismiss}
-    >
-      <BottomSheet.SheetView>
-        <BottomSheet.Header title="Edit item" />
-        <ItemForm source={<EditItemSource />} />
-        <MetaBar />
-      </BottomSheet.SheetView>
-    </BottomSheet>
+      source={<EditItemSource />}
+    />
   );
 };
 
@@ -151,7 +148,11 @@ const EditItemLiveSync = (props: EditItemLiveSyncProps) => {
 type EditItemInternalContextType = {
   sheetRef: React.RefObject<TrueSheet | null>;
   liveSyncRef: React.RefObject<UseLiveItemSyncHandle | null>;
-  onOpenMealPlanDate?: (date: string) => void;
+  onOpenMealPlanDate?: (
+    date: string,
+    mealId?: string,
+    sourceId?: string
+  ) => void;
 };
 
 const EditItemInternalContext =
@@ -170,7 +171,11 @@ const useEditItemSheetInternal = () => {
 type EditItemProps = {
   groceryListId: string;
   /** Opens the meal plan view on `date` (`yyyy-MM-dd`). */
-  onOpenMealPlanDate?: (date: string) => void;
+  onOpenMealPlanDate?: (
+    date: string,
+    mealId?: string,
+    sourceId?: string
+  ) => void;
   children: React.ReactNode;
 };
 
@@ -285,4 +290,38 @@ const EditItemProvider = ({
   );
 };
 
-export default EditItemProvider;
+function QuantityEditItemProvider({
+  groceryListId,
+  onOpenMealPlanDate,
+  children,
+}: EditItemProps) {
+  const [itemId, setItemId] = useState<string | null>(null);
+  return (
+    <EditItemContext.Provider
+      value={{
+        present: item => setItemId(item.id),
+        dismiss: () => setItemId(null),
+        clearRecipe: () => {},
+        mealPlanLink: null,
+      }}
+    >
+      {children}
+      {itemId ? (
+        <AppQuantityItemSheet
+          key={`${groceryListId}:${itemId}`}
+          listId={groceryListId}
+          rowId={itemId}
+          onDismiss={() => setItemId(null)}
+          onOpenMealPlanDate={onOpenMealPlanDate}
+        />
+      ) : null}
+    </EditItemContext.Provider>
+  );
+}
+export default function IntegratedEditItemProvider(props: EditItemProps) {
+  return quantityWorkspaceAvailable() ? (
+    <QuantityEditItemProvider {...props} />
+  ) : (
+    <EditItemProvider {...props} />
+  );
+}

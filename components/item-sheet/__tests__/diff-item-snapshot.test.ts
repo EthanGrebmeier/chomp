@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  diffItemSnapshot,
-  ItemSnapshot,
-} from '../diff-item-snapshot';
+import { diffItemSnapshot, ItemSnapshot } from '../diff-item-snapshot';
 
 const baseSnapshot: ItemSnapshot = {
   name: 'Milk',

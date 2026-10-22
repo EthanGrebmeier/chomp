@@ -108,10 +108,7 @@ const PulsingDot = ({ index }: { index: number }) => {
   }));
 
   return (
-    <Animated.View
-      style={style}
-      className="h-2 w-2 rounded-full bg-primary"
-    />
+    <Animated.View style={style} className="h-2 w-2 rounded-full bg-primary" />
   );
 };
 

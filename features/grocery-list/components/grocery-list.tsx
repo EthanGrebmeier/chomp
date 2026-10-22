@@ -1,6 +1,6 @@
 import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   type ReactNode,
   useCallback,
@@ -12,7 +12,6 @@ import {
 } from 'react';
 import {
   Alert,
-  Keyboard,
   TextInput as RNTextInput,
   useWindowDimensions,
   View,
@@ -28,26 +27,29 @@ import Animated, {
 } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
+import { moveQuantityRows } from '@/features/quantity/app/grocery-actions';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import {
   CategorySheet,
   CategorySheetRef,
 } from '../../../components/item-sheet/category-sheet';
 import EditItemProvider from '../../../components/item-sheet/edit-item/edit-item-sheet';
-import { LEAVE_LIST_MEAL_PLAN_WARNING } from '../../grocery-lists/instant/useLeaveGroceryList';
 import {
   StoreSheet,
   StoreSheetRef,
 } from '../../../components/item-sheet/store-sheet';
 import { db } from '../../../lib/instant';
+import { buildShoppingUrl } from '../../../lib/navigation';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
 } from '../../grocery-lists/components/select-grocery-list-sheet';
-import { MealPlanHeaderActionsForList } from '../../meal-planner/components/meal-plan-dropdown-menu';
-import { MealPlanViewMode } from '../../meal-planner/types';
+import { LEAVE_LIST_MEAL_PLAN_WARNING } from '../../grocery-lists/instant/useLeaveGroceryList';
+import { MealPlanDropdownMenuForList } from '../../meal-planner/components/meal-plan-dropdown-menu';
 import { useRecipesSettingsBar } from '../../shared/components/recipes-settings-bar';
 import {
   clearBulkSelection,
@@ -79,12 +81,14 @@ import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
 import { removeMovedGroceryItems } from '../instant/delete-grocery-items';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
+import { useShoppingSession } from '../shopping/use-shopping-session';
 import {
   BaseGroceryItem,
   GroceryListGroupBy,
   GroceryListItemWithRecipe,
   GroceryListSortBy,
 } from '../types';
+import { groceryItemSourceLabel } from '../util';
 
 import { AddItemConflictSheet } from './add-item-conflict-sheet';
 import { BulkSelectionControls } from './bulk-selection-controls';
@@ -114,11 +118,13 @@ type GroceryListProps = {
   activeListChangeVersion?: string;
   activeView?: ListView;
   onViewChange: (view: ListView) => void;
-  mealPlanViewMode: MealPlanViewMode;
-  onMealPlanViewModeChange: (viewMode: MealPlanViewMode) => void;
   alternateContent?: ReactNode;
   /** Opens the meal plan view on `date` (`yyyy-MM-dd`). */
-  onOpenMealPlanDate?: (date: string) => void;
+  onOpenMealPlanDate?: (
+    date: string,
+    mealId?: string,
+    sourceId?: string
+  ) => void;
 };
 
 type GroupingBulkAction = {
@@ -143,8 +149,6 @@ export const GroceryList = ({
   activeListChangeVersion,
   activeView = 'grocery-list',
   onViewChange,
-  mealPlanViewMode,
-  onMealPlanViewModeChange,
   alternateContent,
   onOpenMealPlanDate,
 }: GroceryListProps) => {
@@ -153,6 +157,26 @@ export const GroceryList = ({
   const editListNameSheetRef = useRef<EditListNameSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
   const { user } = db.useAuth();
+  const shopping = useShoppingSession(user?.id, listId);
+  const shoppingPushPending = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      shoppingPushPending.current = false;
+    }, [])
+  );
+  useFocusEffect(
+    useCallback(() => {
+      if (
+        !listId ||
+        !shopping.ready ||
+        !shopping.session ||
+        shoppingPushPending.current
+      )
+        return;
+      shoppingPushPending.current = true;
+      router.push(buildShoppingUrl(listId));
+    }, [listId, shopping.ready, shopping.session])
+  );
   const activeItems = filterActiveItems(items);
   const { mutate: clearGroceryList, mutateAsync: clearGroceryListAsync } =
     useClearGroceryList();
@@ -171,7 +195,6 @@ export const GroceryList = ({
   const [bulkSelectionState, setBulkSelectionState] = useState(() =>
     createBulkSelectionState()
   );
-  const bulkToolbarOpacity = useSharedValue(0);
   const viewTransitionProgress = useSharedValue(
     activeView === 'meal-plan' ? 1 : 0
   );
@@ -203,7 +226,7 @@ export const GroceryList = ({
       const name = item.name.toLowerCase();
       const category = item.category?.toLowerCase() ?? '';
       const notes = item.notes?.toLowerCase() ?? '';
-      const recipeName = item.recipe?.name?.toLowerCase() ?? '';
+      const recipeName = groceryItemSourceLabel(item)?.toLowerCase() ?? '';
       const storeName = item.store?.name?.toLowerCase() ?? '';
 
       return (
@@ -251,17 +274,6 @@ export const GroceryList = ({
   ]);
 
   useEffect(() => {
-    bulkToolbarOpacity.set(
-      withTiming(
-        activeView === 'grocery-list' && bulkSelectionState.isActive ? 1 : 0,
-        {
-          duration: 200,
-        }
-      )
-    );
-  }, [activeView, bulkSelectionState.isActive, bulkToolbarOpacity]);
-
-  useEffect(() => {
     const target = activeView === 'meal-plan' ? 1 : 0;
     viewTransitionProgress.set(
       reduceMotion
@@ -281,10 +293,6 @@ export const GroceryList = ({
     transform: [
       { translateX: viewportWidth * (1 - viewTransitionProgress.get()) },
     ],
-  }));
-
-  const bulkToolbarAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: bulkToolbarOpacity.get(),
   }));
 
   const addItemConflictSheetRef = useRef<TrueSheet | null>(null);
@@ -307,10 +315,14 @@ export const GroceryList = ({
   const [bulkCategoryOpenRequestId, setBulkCategoryOpenRequestId] = useState<
     number | undefined
   >(undefined);
+  // Captured on present: bulk mode exits as soon as a destination is picked,
+  // so the live selection would read 0 while the sheet dismisses.
+  const [bulkMoveItemCount, setBulkMoveItemCount] = useState(0);
 
   const dismissSearch = () => {
+    // Sheet taps also pass through this capture handler. Only blur our search
+    // field; dismissing the global keyboard steals focus from nested editors.
     searchInputRef.current?.blur();
-    Keyboard.dismiss();
   };
 
   const handleGroupByChange = (newGroupBy: GroceryListGroupBy) => {
@@ -594,6 +606,7 @@ export const GroceryList = ({
     }
 
     if (actionId === 'move') {
+      setBulkMoveItemCount(bulkSelectionState.selectedItemIds.size);
       bulkMoveListSheetRef.current?.present();
       return;
     }
@@ -612,11 +625,7 @@ export const GroceryList = ({
             items: items.filter(item => selectedIds.has(item.id)),
           });
         },
-        onDeleteSuccess: () => {
-          setBulkSelectionState(currentState =>
-            exitBulkSelectionMode(currentState)
-          );
-        },
+        onDeleteConfirmed: handleExitBulkSelectionMode,
       });
     } catch {
       toast.error('Failed to delete selected items');
@@ -640,15 +649,13 @@ export const GroceryList = ({
     const selectedItems = filteredItems.filter(item =>
       payload.selectedItemIds.includes(item.id)
     );
+    handleExitBulkSelectionMode();
     try {
       await runBulkStoreUpdate({
         selectedItemIds: payload.selectedItemIds,
         selectedItems,
         storeId: payload.storeId,
       });
-      setBulkSelectionState(currentState =>
-        exitBulkSelectionMode(currentState)
-      );
     } catch {
       toast.error('Failed to update store for selected items');
     }
@@ -667,15 +674,13 @@ export const GroceryList = ({
     const selectedItems = filteredItems.filter(item =>
       payload.selectedItemIds.includes(item.id)
     );
+    handleExitBulkSelectionMode();
     try {
       await runBulkCategoryUpdate({
         selectedItemIds: payload.selectedItemIds,
         selectedItems,
         category: payload.category,
       });
-      setBulkSelectionState(currentState =>
-        exitBulkSelectionMode(currentState)
-      );
     } catch {
       toast.error('Failed to update category for selected items');
     }
@@ -695,6 +700,21 @@ export const GroceryList = ({
     const selectedItems = filteredItems.filter(item =>
       moveSelectionPayload.selectedItemIds.includes(item.id)
     );
+    handleExitBulkSelectionMode();
+    if (quantityWorkspaceAvailable()) {
+      try {
+        await moveQuantityRows(
+          selectedItems.map(item => item.id),
+          destinationListId
+        );
+        onActiveListChange?.(destinationListId);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : 'Could not move items'
+        );
+      }
+      return;
+    }
     const fetchDestinationItems = async (
       destinationListIdToUse: string
     ): Promise<BulkMoveItemForPlanning[]> => {
@@ -804,9 +824,6 @@ export const GroceryList = ({
           });
         },
         onMoveSuccess: () => {
-          setBulkSelectionState(currentState =>
-            exitBulkSelectionMode(currentState)
-          );
           onActiveListChange?.(moveSelectionPayload.destinationListId);
         },
       });
@@ -831,6 +848,12 @@ export const GroceryList = ({
           actions={
             activeView === 'grocery-list' && listId ? (
               <GroceryListActions
+                onStartShopping={() =>
+                  shopping.setSession({ screen: 'picker' })
+                }
+                canStartShopping={
+                  shopping.ready && !isItemsLoading && activeItems.length > 0
+                }
                 items={items}
                 ownerId={ownerId}
                 groupBy={groupBy}
@@ -848,11 +871,7 @@ export const GroceryList = ({
                 onExitBulkSelectionMode={handleExitBulkSelectionMode}
               />
             ) : activeView === 'meal-plan' && listId ? (
-              <MealPlanHeaderActionsForList
-                listId={listId}
-                viewMode={mealPlanViewMode}
-                onViewModeChange={onMealPlanViewModeChange}
-              />
+              <MealPlanDropdownMenuForList listId={listId} />
             ) : null
           }
         />
@@ -949,6 +968,7 @@ export const GroceryList = ({
         <ShareListSheet ref={shareListSheetRef} />
         <EditListNameSheet ref={editListNameSheetRef} />
         <CategorySheet
+          selectionMode="sheet"
           ref={bulkCategorySheetRef}
           category={bulkCategorySelectionDraft?.category}
           onSelect={handleBulkCategorySheetSelect}
@@ -958,6 +978,7 @@ export const GroceryList = ({
           openRequestId={bulkCategoryOpenRequestId}
         />
         <StoreSheet
+          selectionMode="sheet"
           ref={bulkStoreSheetRef}
           storeId={bulkStoreSelectionDraft?.storeId}
           storeName={bulkStoreSelectionDraft?.storeName}
@@ -972,7 +993,7 @@ export const GroceryList = ({
           selectedListId={listId}
           onSelectList={handleBulkMoveListSelect}
           title="Move items to another list"
-          description={`Select a destination for ${bulkSelectionState.selectedItemIds.size} item${bulkSelectionState.selectedItemIds.size === 1 ? '' : 's'}.`}
+          description={`Select a destination for ${bulkMoveItemCount} item${bulkMoveItemCount === 1 ? '' : 's'}.`}
           showJoinByCode={false}
           showManageActions={false}
           disabledListIds={listId ? [listId] : []}
@@ -987,20 +1008,22 @@ export const GroceryList = ({
             activeView === 'grocery-list' && !bulkSelectionState.isActive
           }
         />
-        <Animated.View
-          className="bottom-safe absolute inset-x-0 z-10 items-center"
-          style={bulkToolbarAnimatedStyle}
-          pointerEvents={
-            activeView === 'grocery-list' && bulkSelectionState.isActive
-              ? 'auto'
-              : 'none'
-          }
-        >
-          <BulkSelectionToolbar
-            selectedItemCount={bulkSelectionState.selectedItemIds.size}
-            onActionPress={handleBulkToolbarActionPress}
-          />
-        </Animated.View>
+        {/* Mounted only while bulk mode is active so visibility always follows
+            React state; a persistent view driven by an opacity shared value
+            could end up invisible while selection was active. */}
+        {activeView === 'grocery-list' && bulkSelectionState.isActive ? (
+          <Animated.View
+            key="bulk-selection-toolbar"
+            entering={FadeIn.duration(180)}
+            exiting={FadeOut.duration(120)}
+            className="bottom-safe absolute inset-x-0 z-10 items-center"
+          >
+            <BulkSelectionToolbar
+              selectedItemCount={bulkSelectionState.selectedItemIds.size}
+              onActionPress={handleBulkToolbarActionPress}
+            />
+          </Animated.View>
+        ) : null}
       </>
     </>
   );

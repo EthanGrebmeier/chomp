@@ -17,7 +17,6 @@ export default function Welcome() {
   const router = useRouter();
   const continueAsGuest = useContinueAsGuest();
   const [isContinuingAsGuest, setIsContinuingAsGuest] = useState(false);
-  const [isSocialLoading, setIsSocialLoading] = useState(false);
 
   const colorScheme = useColorScheme();
 
@@ -72,7 +71,7 @@ export default function Welcome() {
             variant="ghost"
             size="xl"
             onPress={handleContinueAsGuest}
-            disabled={isSocialLoading || isContinuingAsGuest}
+            disabled={isContinuingAsGuest}
           >
             {isContinuingAsGuest ? (
               <ActivityIndicator color="white" />

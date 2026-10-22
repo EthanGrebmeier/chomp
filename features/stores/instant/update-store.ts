@@ -9,10 +9,7 @@ export type UpdateStoreArgs = {
   };
 };
 
-export const updateStore = async ({
-  storeId,
-  updates,
-}: UpdateStoreArgs) => {
+export const updateStore = async ({ storeId, updates }: UpdateStoreArgs) => {
   const user = await db.getAuth();
   if (!user) {
     throw new Error('User not authenticated');
@@ -32,7 +29,9 @@ export const updateStore = async ({
       result.data.stores
         ?.filter(
           store =>
-            store.id !== storeId && store.user?.id === user.id && store.isDefault
+            store.id !== storeId &&
+            store.user?.id === user.id &&
+            store.isDefault
         )
         .map(store =>
           db.tx.stores[store.id].update({
@@ -50,9 +49,8 @@ export const updateStore = async ({
         ...updates,
         updatedAt: now,
       })
-    ),
+    )
   );
 
   await db.transact(transactions);
 };
-

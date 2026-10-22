@@ -17,6 +17,8 @@ import {
 import { GroceryListItemWithRecipe } from '../../types';
 
 type GroceryListDropdownMenuProps = {
+  onStartShopping?: () => void;
+  canStartShopping?: boolean;
   trigger: ReactNode;
   onClearListPress: () => void;
   onSharePress: () => void;
@@ -31,6 +33,8 @@ type GroceryListDropdownMenuProps = {
 };
 
 export const GroceryListDropdownMenu = ({
+  onStartShopping,
+  canStartShopping = false,
   trigger,
   onClearListPress,
   onSharePress,
@@ -58,6 +62,16 @@ export const GroceryListDropdownMenu = ({
   return (
     <DropdownMenuRoot trigger={trigger}>
       <DropdownMenuContent>
+        {onStartShopping && !isBulkSelectionModeActive ? (
+          <DropdownMenuItem
+            key="start-shopping"
+            onSelect={onStartShopping}
+            disabled={!canStartShopping}
+          >
+            <DropdownMenuItemTitle>Start shopping</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'cart' }} />
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem onSelect={onSharePress} key="share-list">
           <DropdownMenuItemTitle>Share</DropdownMenuItemTitle>
           <DropdownMenuItemIcon ios={{ name: 'square.and.arrow.up' }} />
@@ -82,9 +96,7 @@ export const GroceryListDropdownMenu = ({
             }
           >
             <DropdownMenuItemTitle>
-              {isBulkSelectionModeActive
-                ? 'Exit Bulk Select'
-                : 'Select Items'}
+              {isBulkSelectionModeActive ? 'Exit Bulk Select' : 'Select Items'}
             </DropdownMenuItemTitle>
             <DropdownMenuItemIcon
               ios={{

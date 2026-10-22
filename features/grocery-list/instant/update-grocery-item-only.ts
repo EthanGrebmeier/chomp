@@ -1,3 +1,6 @@
+import { updateQuantityChecked } from '@/features/quantity/app/checked-state';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { buildLinkedGroceryItemWriteBackTransactions } from '../../meal-planner/instant/build-list-to-meal-plan-write-back-transactions';
@@ -49,6 +52,12 @@ export const updateGroceryItemOnly = async ({
   selectedLocalSavedItemId,
   mealPlanWriteBack,
 }: UpdateGroceryItemOnlyArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { updateQuantityRow } =
+      await import('@/features/quantity/app/grocery-actions');
+    return updateQuantityRow(itemId, item);
+  }
+
   const { storeId, ...updateData } = item;
 
   await db.transact([
@@ -100,6 +109,9 @@ export const updateGroceryItemOnly = async ({
 export const updateGroceryItemsCheckedState = async (
   updates: CheckedStateUpdate[]
 ) => {
+  if (quantityWorkspaceAvailable()) {
+    return updateQuantityChecked(updates);
+  }
   if (updates.length === 0) {
     return;
   }

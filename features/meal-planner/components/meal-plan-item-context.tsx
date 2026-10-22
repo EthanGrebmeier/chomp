@@ -93,10 +93,6 @@ export const MealPlanItemProvider = ({
     initialValues?.mealTag
   );
   const [showMatchingItems, setShowMatchingItems] = useState(false);
-  const commitItemName = useDebounceCallback(
-    setCommittedItemName,
-    TEXT_COMMIT_DEBOUNCE_MS
-  );
   const commitItemNotes = useDebounceCallback(
     setCommittedItemNotes,
     TEXT_COMMIT_DEBOUNCE_MS
@@ -105,7 +101,7 @@ export const MealPlanItemProvider = ({
   const setItemName = (name: string) => {
     itemNameInput.handleChangeText(name);
     setHasItemTitle(name.trim().length > 0);
-    commitItemName(name);
+    setCommittedItemName(name);
   };
 
   const setItemNotes = (notes: string) => {
@@ -117,7 +113,6 @@ export const MealPlanItemProvider = ({
     itemNameInputRef?: React.RefObject<TextInput | null>;
     keepMealContext?: boolean;
   }) => {
-    commitItemName.cancel();
     commitItemNotes.cancel();
     // For continuous add entry, clear the name field in place (setNativeProps)
     // instead of remounting via a key bump. Remounting the focused input
@@ -147,17 +142,16 @@ export const MealPlanItemProvider = ({
   };
 
   const populateFromItem = (item: BaseGroceryItem) => {
-    commitItemName.cancel();
-    itemNameInput.reset(item.name);
-    setCommittedItemName(item.name);
-    setHasItemTitle(item.name.trim().length > 0);
+    setItemName(item.name);
     setUnit(normalizeUnit(item.unit));
     if (item.category) setCategory(item.category);
     setShowMatchingItems(false);
   };
 
   const isValid = () => {
-    return itemNameInput.getValue().trim().length > 0 && selectedDate !== undefined;
+    return (
+      itemNameInput.getValue().trim().length > 0 && selectedDate !== undefined
+    );
   };
 
   const value: MealPlanItemContextValue = {

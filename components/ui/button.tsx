@@ -319,7 +319,9 @@ function Button({
                   strokeWidth={3}
                   className="text-white"
                 />
-                <Text className="text-white">{successLabel}</Text>
+                {successLabel ? (
+                  <Text className="text-white">{successLabel}</Text>
+                ) : null}
               </View>
             )
           : typeof children === 'function'

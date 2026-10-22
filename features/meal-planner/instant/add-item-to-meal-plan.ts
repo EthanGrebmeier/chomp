@@ -1,5 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db, type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
@@ -39,6 +41,23 @@ export const addItemToDate = async ({
   mealTag,
   defaultStore,
 }: AddItemToDateArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { planQuantityItem } =
+      await import('@/features/quantity/app/meal-actions');
+    return planQuantityItem({
+      listId,
+      name,
+      quantity,
+      unit,
+      notes,
+      category,
+      storeId,
+      date,
+      mealTag,
+      defaultStore,
+    });
+  }
+
   const mealPlanItemId = id();
   const now = new Date().toISOString();
 

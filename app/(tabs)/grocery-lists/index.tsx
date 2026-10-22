@@ -1,7 +1,7 @@
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinkIcon, PlusIcon } from 'lucide-react-native';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { ActivityIndicator, Alert, View } from 'react-native';
 
 import { Heading } from '@/components/text/heading';
@@ -39,7 +39,8 @@ import {
   LEAVE_LIST_MEAL_PLAN_WARNING,
   useLeaveGroceryList,
 } from '@/features/grocery-lists/instant/useLeaveGroceryList';
-import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
+import { useTrackListAccess } from '@/features/grocery-lists/local/use-track-list-access';
+import { sortGroceryListsByCreatedAt } from '@/features/grocery-lists/utils/sort-grocery-lists-by-created-at';
 import { useRecipesSettingsBar } from '@/features/shared/components/recipes-settings-bar';
 import { db } from '@/lib/instant';
 import { buildListUrl } from '@/lib/navigation';
@@ -62,11 +63,19 @@ export default function GroceryListsIndex() {
   const leaveGroceryList = useLeaveGroceryList();
   const canDeleteList = useCanDeleteGroceryList();
   const trackListAccess = useTrackListAccess();
-  const groceryLists = data?.grocery_lists ?? EMPTY_GROCERY_LISTS;
+  // Stable order here: last-access order would shuffle rows as lists are opened.
+  const unsortedGroceryLists = data?.grocery_lists;
+  const groceryLists = useMemo(
+    () =>
+      unsortedGroceryLists
+        ? sortGroceryListsByCreatedAt(unsortedGroceryLists)
+        : EMPTY_GROCERY_LISTS,
+    [unsortedGroceryLists]
+  );
   useRecipesSettingsBar({ listId: selectedListId });
 
   const handleSelectList = (listId: string) => {
-    void trackListAccess(listId);
+    trackListAccess(listId);
     router.navigate(buildListUrl({ listId }), {
       withAnchor: true,
     });

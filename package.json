@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "packageManager": "pnpm@11.9.0",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "sync:theme-colors": "node ./scripts/sync-theme-colors.mjs",
     "implement-sub-issues": "./scripts/implement-sub-issues.sh",
     "android": "expo run:android",
@@ -14,12 +14,20 @@
     "test": "vitest",
     "test:unit": "vitest",
     "lint": "expo lint",
+    "lint:quantity": "eslint features/quantity app/quantity-workspace.tsx --max-warnings 0",
+    "quantity:setup": "node --env-file=.env.local scripts/setup-quantity-workspace.mjs --test-app",
+    "test:quantity": "vitest run features/quantity/__tests__/lifecycle.test.ts",
+    "test:quantity:sync": "RUN_QUANTITY_SDK=1 node --env-file=.env.local node_modules/vitest/vitest.mjs run features/quantity/__tests__/instant-protocol.test.ts features/quantity/__tests__/app-permissions.test.ts features/quantity/__tests__/cross-list-sdk.test.ts",
     "lint:fix": "expo lint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:staged": "prettier --write --ignore-unknown",
     "push-perms": "npx instant-cli@latest push perms",
-    "push-schema": "npx instant-cli@latest push schema"
+    "push-schema": "npx instant-cli@latest push schema",
+    "check-instant": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-instant-drift.mjs",
+    "release:check": "node --env-file=.env.local scripts/release/check-candidate.mjs",
+    "release:export": "pnpm release:check && expo export --platform ios --output-dir dist/ios",
+    "eas-build-pre-install": "node scripts/release/check-candidate.mjs"
   },
   "dependencies": {
     "@clerk/expo": "3.7.8",
@@ -108,5 +116,11 @@
     "typescript": "~6.0.3",
     "vitest": "^4.0.18"
   },
-  "private": true
+  "private": true,
+  "reanimated": {
+    "staticFeatureFlags": {
+      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
+      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true
+    }
+  }
 }

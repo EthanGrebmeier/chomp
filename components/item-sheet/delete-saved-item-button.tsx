@@ -1,5 +1,5 @@
 import { Trash2Icon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { ComponentType, useRef, useState } from 'react';
 import { toast } from 'sonner-native';
 
 import { removeSavedItem } from '../../features/saved-items/instant/remove-saved-item';
@@ -18,15 +18,17 @@ import { useItemSheet } from './use-item-sheet';
 
 type DeleteSavedItemButtonProps = {
   disabled?: boolean;
+  Trigger?: ComponentType<{ onPress: () => void }>;
 };
 
 /**
- * Metabar action shown when the item being added is linked to an existing
+ * Action shown when the item being added is linked to an existing
  * saved item. Opens a confirmation sheet, then deletes the saved item and
- * clears the link so the metabar reverts to the "Save item" toggle.
+ * clears the link so the controls revert to the "Save item" toggle.
  */
 export const DeleteSavedItemButton = ({
   disabled = false,
+  Trigger,
 }: DeleteSavedItemButtonProps) => {
   const { selectedItem, setSelectedItem, getItemInputValue } = useItemSheet();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -63,7 +65,7 @@ export const DeleteSavedItemButton = ({
             selectedItem?.source === 'local' && selectedItem.isDefault,
         });
       }
-      // Drop the link so the metabar reverts to the "Save item" toggle and
+      // Drop the link so the controls revert to the "Save item" toggle and
       // the add flow no longer treats this as a linked item.
       setSelectedItem(null);
       deleteSheetRef.current?.dismiss();
@@ -77,26 +79,30 @@ export const DeleteSavedItemButton = ({
 
   return (
     <>
-      <WithLayoutTransition>
-        <HapticPressable
-          accessibilityRole="button"
-          accessibilityLabel="Delete saved item"
-          onPress={() => deleteSheetRef.current?.present()}
-          hapticType="light"
-          disabled={disabled}
-        >
-          <Pill
-            className={cn('border-destructive', disabled && 'opacity-50')}
-            icon={
-              <Icon as={Trash2Icon} size={16} className="text-destructive" />
-            }
-            textClassName="font-semibold text-destructive"
-            hasValue
+      {Trigger ? (
+        <Trigger onPress={() => deleteSheetRef.current?.present()} />
+      ) : (
+        <WithLayoutTransition>
+          <HapticPressable
+            accessibilityRole="button"
+            accessibilityLabel="Delete saved item"
+            onPress={() => deleteSheetRef.current?.present()}
+            hapticType="light"
+            disabled={disabled}
           >
-            Delete Saved Item
-          </Pill>
-        </HapticPressable>
-      </WithLayoutTransition>
+            <Pill
+              className={cn('bg-destructive/10', disabled && 'opacity-50')}
+              icon={
+                <Icon as={Trash2Icon} size={16} className="text-destructive" />
+              }
+              textClassName="font-semibold text-destructive"
+              hasValue
+            >
+              Delete Saved Item
+            </Pill>
+          </HapticPressable>
+        </WithLayoutTransition>
+      )}
       <DeleteSavedItemSheet
         ref={deleteSheetRef}
         itemName={itemName}

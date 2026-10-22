@@ -1,5 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db, type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
@@ -7,13 +9,18 @@ import {
   initializeMealPlanIngredientEditor,
   toSnapshotCreateInputs,
 } from '../meal-plan-recipe-ingredient-editor';
+import {
+  getCanonicalSnapshots,
+  isHistory,
+  isVisible,
+} from '../utils/shopping-state';
 
 import {
   applySnapshotRowEdits,
   type SnapshotRowEdit,
 } from './apply-meal-plan-entry-edits';
-import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
 import { buildMealPlanEntrySyncTransactions } from './build-meal-plan-list-sync-transactions';
+import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
 import {
   type MealPlanRecipeSyncRow,
   toMealPlanRecipeSyncContext,
@@ -125,6 +132,12 @@ const toNewSnapshotRows = (sourceIngredients: RecipeIngredientWithStore[]) =>
   ).map(snapshot => ({ ...snapshot, id: id() }));
 
 const initializeSnapshot = async (mealPlanRecipeId: string) => {
+  if (quantityWorkspaceAvailable()) {
+    const { quantitySnapshots } =
+      await import('@/features/quantity/app/meal-actions');
+    return quantitySnapshots(mealPlanRecipeId);
+  }
+
   const context = await getSnapshotContext(mealPlanRecipeId);
   if (!context) {
     throw new Error('Meal plan recipe not found');
@@ -153,6 +166,12 @@ const initializeSnapshot = async (mealPlanRecipeId: string) => {
 };
 
 const readSnapshot = async (mealPlanRecipeId: string) => {
+  if (quantityWorkspaceAvailable()) {
+    const { quantitySnapshots } =
+      await import('@/features/quantity/app/meal-actions');
+    return quantitySnapshots(mealPlanRecipeId);
+  }
+
   const context = await getSnapshotContext(mealPlanRecipeId);
   if (!context) {
     throw new Error('Meal plan recipe not found');
@@ -165,6 +184,12 @@ const readSnapshot = async (mealPlanRecipeId: string) => {
 };
 
 const ensureBackfilledSnapshot = async (mealPlanRecipeId: string) => {
+  if (quantityWorkspaceAvailable()) {
+    const { quantitySnapshots } =
+      await import('@/features/quantity/app/meal-actions');
+    return quantitySnapshots(mealPlanRecipeId);
+  }
+
   const context = await getSnapshotContext(mealPlanRecipeId);
   if (!context) {
     throw new Error('Meal plan recipe not found');
@@ -195,7 +220,7 @@ type SnapshotRowEditsPlan = {
 /**
  * Loads a meal plan recipe, then writes the snapshot row edits planned
  * against it and, in the same transaction, the linked grocery item changes
- * they cause.
+ * they cause. Queries fresh context before transaction to guard against stale data.
  */
 const transactSnapshotRowEdits = async ({
   lookup,
@@ -206,12 +231,15 @@ const transactSnapshotRowEdits = async ({
   planEdits: (row: MealPlanRecipeSyncRow) => SnapshotRowEditsPlan;
   defaultStore: DefaultStoreForStacking | null | undefined;
 }) => {
+  // Query fresh context to guard against stale data
   const row = await queryMealPlanRecipeSyncRow(lookup);
   if (!row) {
     throw new Error('Meal plan recipe not found');
   }
 
   const { edits, transactions } = planEdits(row);
+  if (transactions.length === 0) return;
+
   const context = toMealPlanRecipeSyncContext(row);
   if (context) {
     transactions.push(
@@ -228,26 +256,48 @@ const transactSnapshotRowEdits = async ({
   await db.transact(transactions);
 };
 
+/** Guard shopping selection against the freshly loaded, authoritative state. */
 const planSelectionEdits = (
+  row: MealPlanRecipeSyncRow,
   selections: SnapshotRowSelection[]
-): SnapshotRowEditsPlan => ({
-  edits: new Map(
-    selections.map(({ snapshotRowId, isSelected }) => [
-      snapshotRowId,
-      { isSelected },
-    ])
-  ),
-  transactions: selections.map(({ snapshotRowId, isSelected }) =>
-    tx.meal_plan_recipe_ingredient_snapshots[snapshotRowId].update({
-      isSelected,
-    })
-  ),
-});
+): SnapshotRowEditsPlan => {
+  const canonicalRows = getCanonicalSnapshots(
+    row.recipe?.recipe_ingredients ?? [],
+    row.ingredient_snapshots ?? []
+  );
+  // Clearing the last purchase turns showing off even if the persisted
+  // ignored flag is still false. Only an explicit show command may restore it.
+  const showing =
+    !row.ignoredByGroceryList &&
+    canonicalRows.some(snapshot => isVisible(snapshot.grocery_item));
+  const eligibleIds = new Set(
+    canonicalRows
+      .filter(snapshot => showing && !isHistory(snapshot.grocery_item))
+      .map(snapshot => snapshot.id)
+  );
+  const eligibleSelections = selections.filter(({ snapshotRowId }) =>
+    eligibleIds.has(snapshotRowId)
+  );
+
+  return {
+    edits: new Map(
+      eligibleSelections.map(({ snapshotRowId, isSelected }) => [
+        snapshotRowId,
+        { isSelected },
+      ])
+    ),
+    transactions: eligibleSelections.map(({ snapshotRowId, isSelected }) =>
+      tx.meal_plan_recipe_ingredient_snapshots[snapshotRowId].update({
+        isSelected,
+      })
+    ),
+  };
+};
 
 /**
  * Selects or deselects snapshot rows of one meal plan recipe (e.g. select
  * all/none) in one transaction, adding or removing their linked unchecked
- * grocery items.
+ * grocery items. Filters out ineligible rows (checked, deleted, ignored, etc.).
  */
 const updateRowsSelection = async ({
   mealPlanRecipeId,
@@ -258,18 +308,24 @@ const updateRowsSelection = async ({
   selections: SnapshotRowSelection[];
   defaultStore: DefaultStoreForStacking | null | undefined;
 }) => {
+  if (quantityWorkspaceAvailable()) {
+    const { selectQuantityIngredients } =
+      await import('@/features/quantity/app/meal-actions');
+    return selectQuantityIngredients(mealPlanRecipeId, selections);
+  }
   if (selections.length === 0) return;
 
   await transactSnapshotRowEdits({
     lookup: { mealPlanRecipeId },
-    planEdits: () => planSelectionEdits(selections),
+    planEdits: row => planSelectionEdits(row, selections),
     defaultStore,
   });
 };
 
 /**
  * Selects or deselects one snapshot row, adding or removing its linked
- * unchecked grocery item.
+ * unchecked grocery item. Ignores the edit if the row is ineligible
+ * (checked, deleted, ignored, etc.).
  */
 const updateRowSelection = async ({
   snapshotRowId,
@@ -278,9 +334,14 @@ const updateRowSelection = async ({
 }: SnapshotRowSelection & {
   defaultStore: DefaultStoreForStacking | null | undefined;
 }) => {
+  if (quantityWorkspaceAvailable()) {
+    const { selectQuantityIngredient } =
+      await import('@/features/quantity/app/meal-actions');
+    return selectQuantityIngredient(snapshotRowId, isSelected);
+  }
   await transactSnapshotRowEdits({
     lookup: { snapshotRowId },
-    planEdits: () => planSelectionEdits([{ snapshotRowId, isSelected }]),
+    planEdits: row => planSelectionEdits(row, [{ snapshotRowId, isSelected }]),
     defaultStore,
   });
 };
@@ -294,6 +355,11 @@ const updateRowOverrides = async ({
   updates,
   defaultStore,
 }: UpdateSnapshotRowOverridesArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { overrideQuantityIngredient } =
+      await import('@/features/quantity/app/meal-actions');
+    return overrideQuantityIngredient({ snapshotRowId, updates, defaultStore });
+  }
   await transactSnapshotRowEdits({
     lookup: { snapshotRowId },
     planEdits: row => {
@@ -350,6 +416,12 @@ const updateRowOverrides = async ({
 };
 
 const reconcileSnapshot = async (mealPlanRecipeId: string) => {
+  if (quantityWorkspaceAvailable()) {
+    const { quantitySnapshots } =
+      await import('@/features/quantity/app/meal-actions');
+    return quantitySnapshots(mealPlanRecipeId);
+  }
+
   const context = await getSnapshotContext(mealPlanRecipeId);
   if (!context) {
     throw new Error('Meal plan recipe not found');

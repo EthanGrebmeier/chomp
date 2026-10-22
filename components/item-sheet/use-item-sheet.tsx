@@ -18,6 +18,10 @@ import {
 import { Recipe } from '../../features/recipes/types';
 import { useSaveItemPreference } from '../../features/saved-items/hooks/use-save-item-preference';
 
+import {
+  hasSavedItemLink,
+  keepSelectedItemForTitle,
+} from './saved-item-intent';
 import { MatchingItem } from './use-matching-items';
 
 const itemSheetContext = createContext<{
@@ -86,6 +90,7 @@ type ItemSheetProviderProps = {
   children: React.ReactNode;
   listId?: string;
   defaultStore?: DefaultStoreSelection | null;
+  preferDefaultStore?: boolean;
   onSubmit: (args: {
     item: BaseGroceryItem;
     listId?: string;
@@ -113,15 +118,14 @@ export const ItemSheetProvider = ({
   children,
   listId,
   defaultStore,
+  preferDefaultStore = false,
   onSubmit,
   setFromItemRef,
   disableAutocomplete = false,
   mode,
   onPickMatch,
 }: ItemSheetProviderProps) => {
-  const [selectedItem, setSelectedItem] = useState<MatchingItem | null>(
-    null
-  );
+  const [selectedItem, setSelectedItem] = useState<MatchingItem | null>(null);
   const itemInput = useUncontrolledTextInput();
   const notesInput = useUncontrolledTextInput();
   const {
@@ -131,7 +135,6 @@ export const ItemSheetProvider = ({
     handleChangeText: handleItemInputTextChange,
     getValue: getItemInputValue,
     reset: resetItemInput,
-    setValue: setItemInputNativeValue,
   } = itemInput;
   const {
     inputKey: notesInputKey,
@@ -158,11 +161,12 @@ export const ItemSheetProvider = ({
   const notesInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { saveItem, setSaveItem } = useSaveItemPreference();
-  const commitItemInputValue = useDebounceCallback(
-    setItemInputValue,
-    TEXT_COMMIT_DEBOUNCE_MS
-  );
+  const { saveItem: saveNewItem, setSaveItem: setSaveNewItem } =
+    useSaveItemPreference();
+  const [syncSavedItem, setSyncSavedItem] = useState(false);
+  const isSync = hasSavedItemLink(selectedItem);
+  const saveItem = isSync ? syncSavedItem : saveNewItem;
+  const setSaveItem = isSync ? setSyncSavedItem : setSaveNewItem;
   const commitNotesInputValue = useDebounceCallback(
     setNotesInputValue,
     TEXT_COMMIT_DEBOUNCE_MS
@@ -171,14 +175,14 @@ export const ItemSheetProvider = ({
   const reset = ({
     keepInputsMounted = false,
   }: { keepInputsMounted?: boolean } = {}) => {
-    commitItemInputValue.cancel();
     commitNotesInputValue.cancel();
     setSelectedItem(null);
-    // For continuous add entry we clear the text in place (setNativeProps)
+    setSyncSavedItem(false);
+    // For continuous add entry we clear the text in place
     // instead of remounting via a key bump. Remounting unmounts the focused
     // input, which dismisses and re-opens the keyboard (a visible flicker).
     if (keepInputsMounted) {
-      setItemInputNativeValue('', itemInputRef);
+      handleItemInputTextChange('');
       setNotesInputNativeValue('', notesInputRef);
     } else {
       resetItemInput();
@@ -199,9 +203,9 @@ export const ItemSheetProvider = ({
 
   const setFromItem = useCallback(
     (item: GroceryListItemWithRecipe | BaseGroceryItem) => {
-      commitItemInputValue.cancel();
       commitNotesInputValue.cancel();
       setSelectedItem(null);
+      setSyncSavedItem(false);
       resetItemInput(item.name);
       setItemInputValue(item.name);
       setHasItemTitle(item.name.trim().length > 0);
@@ -228,12 +232,7 @@ export const ItemSheetProvider = ({
       setStoreName(derivedStoreName);
       setShowMatchingItems(false);
     },
-    [
-      commitItemInputValue,
-      commitNotesInputValue,
-      resetItemInput,
-      resetNotesInput,
-    ]
+    [commitNotesInputValue, resetItemInput, resetNotesInput]
   );
 
   // Expose setFromItem to parent via ref
@@ -252,8 +251,8 @@ export const ItemSheetProvider = ({
     // Mirror the footer button's `disabled={!isValid}` guard. The button is
     // gated on `isValid`, but the return key routes here directly, so without
     // this check pressing enter on an empty field would create a blank item.
-    // Read the live input value (not the debounced `itemInputValue`) so a
-    // fast enter press right after typing is still validated correctly.
+    // Read the live input ref so a fast return-key press is validated even
+    // before React commits the latest title render.
     if (
       isSubmitting ||
       !getItemInputValue().trim().length ||
@@ -306,25 +305,34 @@ export const ItemSheetProvider = ({
     if (mode === 'add') {
       reset({ keepInputsMounted: true });
       itemInputRef.current?.focus();
-    } else {
-      reset();
     }
+    // Edit sheets reset on dismissal so the closing card keeps its contents.
   };
 
   const onSelect = (item: MatchingItem) => {
-    commitItemInputValue.cancel();
     commitNotesInputValue.cancel();
     setSelectedItem(item);
-    setItemInputNativeValue(item.name, itemInputRef);
+    setSyncSavedItem(false);
+    handleItemInputTextChange(item.name);
     setItemInputValue(item.name);
     setHasItemTitle(item.name.trim().length > 0);
     setCategory(item.category);
-    resetNotesInput(item.notes ?? '');
+    // Keep the native multiline input mounted so picking a suggestion does
+    // not restart its height measurement inside the auto-sized add sheet.
+    setNotesInputNativeValue(item.notes ?? '', notesInputRef);
     setNotesInputValue(item.notes ?? '');
-      const defaultStoreId = mode === 'add' ? defaultStore?.id : undefined;
-      const defaultStoreName = mode === 'add' ? defaultStore?.name : undefined;
-      setStoreId(item.storeId ?? defaultStoreId);
-      setStoreName(item.storeId ? undefined : defaultStoreName);
+    const defaultStoreId = mode === 'add' ? defaultStore?.id : undefined;
+    const defaultStoreName = mode === 'add' ? defaultStore?.name : undefined;
+    setStoreId(
+      preferDefaultStore ? defaultStoreId : (item.storeId ?? defaultStoreId)
+    );
+    setStoreName(
+      preferDefaultStore
+        ? defaultStoreName
+        : item.storeId
+          ? undefined
+          : defaultStoreName
+    );
     setShowMatchingItems(false);
     // Notify observers (e.g. useLiveItemSync in the Edit flow) on the next
     // macrotask so React can commit the state updates above first. This keeps
@@ -336,9 +344,9 @@ export const ItemSheetProvider = ({
 
   const onChangeItemText = (text: string) => {
     handleItemInputTextChange(text);
-    setSelectedItem(null);
+    setSelectedItem(current => keepSelectedItemForTitle(current, text));
     setHasItemTitle(text.trim().length > 0);
-    commitItemInputValue(text);
+    setItemInputValue(text);
     setShowMatchingItems(true);
   };
   const onChangeNotesText = (text: string) => {

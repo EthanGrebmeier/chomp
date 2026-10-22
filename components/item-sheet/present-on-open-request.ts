@@ -4,8 +4,7 @@ export const shouldPresentOnOpenRequest = (
   openRequestId: number | undefined,
   lastPresentedOpenRequestId: number | undefined
 ) =>
-  openRequestId !== undefined &&
-  openRequestId !== lastPresentedOpenRequestId;
+  openRequestId !== undefined && openRequestId !== lastPresentedOpenRequestId;
 
 export const usePresentOnOpenRequest = (
   openRequestId: number | undefined,

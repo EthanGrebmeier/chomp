@@ -58,7 +58,9 @@ export const useUnifiedSavedItems = () => {
       category: item.category ?? undefined,
       notes: item.notes ?? undefined,
       storeId: item.store?.id,
-      store: item.store ? { id: item.store.id, name: item.store.name } : undefined,
+      store: item.store
+        ? { id: item.store.id, name: item.store.name }
+        : undefined,
       source: 'cloud' as const,
       ownerId: item.user?.id,
     }));
@@ -73,4 +75,3 @@ export const useUnifiedSavedItems = () => {
     error: localError ?? cloudError,
   };
 };
-

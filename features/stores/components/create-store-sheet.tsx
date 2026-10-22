@@ -78,7 +78,7 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
       name="store-sheet"
       ref={sheetRef}
       onStartClose={reset}
-      onOpen={() => {
+      onStartOpen={() => {
         nameInputRef.current?.focus();
       }}
       footer={

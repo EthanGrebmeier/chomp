@@ -72,9 +72,9 @@ function parseVariables(block) {
 
 function orderedKeys(themeObject) {
   const keys = Object.keys(themeObject);
-  const preferred = preferredOrder.filter((key) => keys.includes(key));
+  const preferred = preferredOrder.filter(key => keys.includes(key));
   const extras = keys
-    .filter((key) => !preferredOrder.includes(key))
+    .filter(key => !preferredOrder.includes(key))
     .sort((a, b) => a.localeCompare(b));
   return [...preferred, ...extras];
 }
@@ -152,13 +152,15 @@ async function main() {
 
   const range = findThemeExportRange(themeText);
   const nextThemeText =
-    themeText.slice(0, range.start) + nextThemeExport + themeText.slice(range.end);
+    themeText.slice(0, range.start) +
+    nextThemeExport +
+    themeText.slice(range.end);
 
   await writeFile(themePath, nextThemeText, 'utf8');
   console.log('Synced `lib/theme.ts` from `global.css` color variables.');
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });

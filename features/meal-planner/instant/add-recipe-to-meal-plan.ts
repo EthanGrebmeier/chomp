@@ -1,5 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db, type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
@@ -9,8 +11,8 @@ import {
   toSnapshotCreateInputs,
 } from '../meal-plan-recipe-ingredient-editor';
 
-import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
 import { buildMealPlanListSyncTransactions } from './build-meal-plan-list-sync-transactions';
+import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
 import { toNewMealPlanRecipeEntryForSync } from './new-meal-plan-entry-for-sync';
 import {
   type MealPlanRecipeEntryForSync,
@@ -47,6 +49,21 @@ export const addRecipeToDate = async ({
   ),
   defaultStore,
 }: AddRecipeToDateArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { planQuantityRecipe } =
+      await import('@/features/quantity/app/meal-actions');
+    return planQuantityRecipe({
+      listId,
+      recipeId,
+      date,
+      mealTag,
+      servings,
+      sourceIngredients,
+      ingredientSnapshots,
+      defaultStore,
+    });
+  }
+
   const mealPlanRecipeId = id();
   const now = new Date().toISOString();
   const transactions: TransactionChunk[] = [
