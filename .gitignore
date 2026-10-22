@@ -41,6 +41,9 @@ yarn-error.*
 # scratch output from local scripts (e.g. pnpm check-instant)
 /tmp/
 
+# Sensitive production snapshots; retain locally, never commit.
+/backups/
+
 # typescript
 *.tsbuildinfo
 

@@ -132,7 +132,10 @@ check a different app.
 
 ### Data migrations against a dev Instant app
 
-`.env.local` points at the production Instant app. Validate admin-SDK
+Do not assume `.env.local` points at production: quantity development uses the
+allowlisted test app there. Verify the app ID before any admin command and keep
+production credentials in a separate gitignored `.env.production.local` file.
+Validate admin-SDK
 migrations (`scripts/*.mjs`) on a throwaway app before running them for real:
 
 ```bash
@@ -153,7 +156,8 @@ node --env-file=.env.dev.local scripts/<migration>.mjs --dry-run
 node --env-file=.env.dev.local scripts/<migration>.mjs
 ```
 
-Once the dev run looks right, dry-run and then run against `.env.local`.
+Once the dev run looks right and a recoverable backup is verified, dry-run and
+then run against the explicitly verified production environment file.
 
 ### On-device SQLite
 
