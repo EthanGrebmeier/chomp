@@ -1,9 +1,3 @@
-import { id, tx } from '@instantdb/react-native';
-
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
-
-import { db, type TransactionChunk } from '../../../lib/instant';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
 import {
   initializeMealPlanIngredientEditor,
@@ -11,13 +5,7 @@ import {
   toSnapshotCreateInputs,
 } from '../meal-plan-recipe-ingredient-editor';
 
-import { buildMealPlanListSyncTransactions } from './build-meal-plan-list-sync-transactions';
-import { buildSnapshotRowCreateTransactions } from './build-snapshot-row-create-transactions';
-import { toNewMealPlanRecipeEntryForSync } from './new-meal-plan-entry-for-sync';
-import {
-  type MealPlanRecipeEntryForSync,
-  planMealPlanListSync,
-} from './plan-meal-plan-list-sync';
+import { type MealPlanRecipeEntryForSync } from './plan-meal-plan-list-sync';
 
 export type AddRecipeToDateArgs = {
   listId: string;
@@ -49,67 +37,16 @@ export const addRecipeToDate = async ({
   ),
   defaultStore,
 }: AddRecipeToDateArgs) => {
-  if (quantityWorkspaceAvailable()) {
-    const { planQuantityRecipe } =
-      await import('@/features/quantity/app/meal-actions');
-    return planQuantityRecipe({
-      listId,
-      recipeId,
-      date,
-      mealTag,
-      servings,
-      sourceIngredients,
-      ingredientSnapshots,
-      defaultStore,
-    });
-  }
-
-  const mealPlanRecipeId = id();
-  const now = new Date().toISOString();
-  const transactions: TransactionChunk[] = [
-    tx.meal_plan_recipes[mealPlanRecipeId].update(
-      trimStringFields({
-        mealTag: mealTag,
-        date: date,
-        servings: servings,
-        ignoredByGroceryList: false,
-        createdAt: now,
-        updatedAt: now,
-      })
-    ),
-    tx.meal_plan_recipes[mealPlanRecipeId].link({
-      grocery_list: listId,
-      recipe: recipeId,
-    }),
-  ];
-
-  const snapshotRows = ingredientSnapshots.map(snapshot => ({
-    ...snapshot,
-    id: id(),
-  }));
-
-  transactions.push(
-    ...buildSnapshotRowCreateTransactions({
-      mealPlanRecipeId,
-      rows: snapshotRows,
-    })
-  );
-
-  const syncPlan = planMealPlanListSync({
-    entry: toNewMealPlanRecipeEntryForSync({
-      mealPlanRecipeId,
-      recipeId,
-      servings,
-      sourceIngredients,
-      snapshotRows,
-    }),
+  const { planQuantityRecipe } =
+    await import('@/features/quantity/app/meal-actions');
+  return planQuantityRecipe({
+    listId,
+    recipeId,
+    date,
+    mealTag,
+    servings,
+    sourceIngredients,
+    ingredientSnapshots,
     defaultStore,
   });
-  transactions.push(
-    ...buildMealPlanListSyncTransactions({ listId, plan: syncPlan, now })
-  );
-
-  await db.transact(transactions);
-
-  return { id: mealPlanRecipeId };
 };

@@ -20,7 +20,6 @@ jobs:
     timeout-minutes: 20
     env:
       EXPO_PUBLIC_INSTANT_APP_ID: 5df33e29-252b-4e1c-a111-53787beccba3
-      EXPO_PUBLIC_QUANTITY_RELEASE: '1'
     steps:
       - uses: actions/checkout@v6
         with:

@@ -5,6 +5,11 @@ vi.mock('@instantdb/react-native', () => ({ id: () => `id-${++mocks.id}` }));
 vi.mock('react-native', () => ({ Alert: { alert: mocks.alert } }));
 vi.mock('@/lib/instant', () => ({ db: { queryOnce: mocks.query } }));
 
+import {
+  runBulkCategoryUpdate,
+  runBulkStoreUpdate,
+} from '@/features/grocery-list/bulk-selection/store-category-orchestrator';
+
 import { updateQuantityChecked } from '../app/checked-state';
 import { addQuantityRecipe } from '../app/recipe-actions';
 import {
@@ -81,6 +86,32 @@ beforeEach(async () => {
 });
 
 describe('actual app quantity adapters', () => {
+  it('routes bulk metadata through contributions and rejects stale selections', async () => {
+    await addManualQuantity('list', {
+      name: 'Milk',
+      quantity: 1,
+      unit: 'each',
+    });
+    const row = records(state(), 'row')[0];
+    const args = {
+      selectedItemIds: [row.id],
+      selectedItems: [{ id: row.id, name: row.name }],
+    };
+    await runBulkStoreUpdate({ ...args, storeId: 'store' });
+    await runBulkCategoryUpdate({ ...args, category: 'Dairy' });
+    expect(records(state(), 'row')[0]).toMatchObject({
+      store: 'store',
+      category: 'Dairy',
+    });
+    await expect(
+      runBulkCategoryUpdate({
+        ...args,
+        selectedItemIds: ['missing'],
+        category: 'Other',
+      })
+    ).rejects.toThrow();
+    expect(records(state(), 'row')[0].category).toBe('Dairy');
+  });
   it('retains saved-item identity through additions, combining, and bulk edits', async () => {
     const item = {
       name: 'Milk',
