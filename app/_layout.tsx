@@ -25,6 +25,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
 import { QuantityAppProvider } from '@/features/quantity/app/provider';
+import { QuantitySessionGate } from '@/lib/instant/quantity-session-gate';
 import {
   InstantAuthHandler,
   useInstantAuthState,
@@ -276,5 +277,9 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutContent isStartupUpdateReady={isStartupUpdateReady} />;
+  return (
+    <QuantitySessionGate>
+      <RootLayoutContent isStartupUpdateReady={isStartupUpdateReady} />
+    </QuantitySessionGate>
+  );
 }
