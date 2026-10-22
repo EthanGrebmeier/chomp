@@ -1,0 +1,25 @@
+{
+  "appVersion": "1.0.7",
+  "buildNumber": "62",
+  "commit": "9475c74a6ebc3f29e3578e58208c837960e55725",
+  "buildId": "756ba4e4-e205-49f4-b843-f452ebe6b3c4",
+  "buildUrl": "https://expo.dev/accounts/ethangrebmeier/projects/chomp/builds/756ba4e4-e205-49f4-b843-f452ebe6b3c4",
+  "lastObservedBuildStatus": "IN_PROGRESS",
+  "submissionId": "81a1ea19-d58a-4563-823d-0104e013295d",
+  "submissionUrl": "https://expo.dev/accounts/ethangrebmeier/projects/chomp/submissions/81a1ea19-d58a-4563-823d-0104e013295d",
+  "submissionStatus": "scheduled; waits for build completion",
+  "settingsRemoved": [
+    "Suggestion style preview",
+    "Quantity workspace",
+    "Duplicate resolution demo",
+    "Quantity contributions demo"
+  ],
+  "signing": "Renewed distribution certificate and App Store provisioning profile; expires October 21, 2027",
+  "validation": [
+    "lint",
+    "tsc",
+    "release candidate guard",
+    "simulator settings inspection"
+  ],
+  "note": "TestFlight processing and availability not yet confirmed. Build 61 failed before creation due to expired signing credentials."
+}
