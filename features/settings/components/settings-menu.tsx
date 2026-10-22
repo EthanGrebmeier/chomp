@@ -12,11 +12,9 @@ import { Button } from '@/components/ui/button';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 import { useInstantAuthState } from '@/lib/instant/use-clerk-auth';
 
 import { type SettingsSubmenu } from './settings-types';
-import { SuggestionStyleMenu } from './suggestion-style-menu';
 
 type SettingsMenuProps = {
   onSelect: (view: SettingsSubmenu) => void;
@@ -82,53 +80,6 @@ export function SettingsMenu({ onSelect, onCreateAccount }: SettingsMenuProps) {
               className="text-muted-foreground"
             />
           </HapticPressable>
-          <SuggestionStyleMenu />
-          {quantityWorkspaceAvailable() ? (
-            <HapticPressable
-              onPress={() => onSelect('quantity-workspace')}
-              accessibilityRole="button"
-              className="min-h-12 flex-row items-center justify-between gap-3 border-t border-border pt-4"
-            >
-              <Text className="flex-1 font-medium">Quantity workspace</Text>
-              <Icon
-                as={ChevronRightIcon}
-                size={20}
-                className="text-muted-foreground"
-              />
-            </HapticPressable>
-          ) : null}
-          {__DEV__ ? (
-            <HapticPressable
-              onPress={() => onSelect('duplicate-resolution-demo')}
-              accessibilityRole="button"
-              className="min-h-12 flex-row items-center justify-between gap-3 border-t border-border pt-4 active:opacity-70"
-            >
-              <Text className="flex-1 font-medium">
-                Duplicate resolution demo
-              </Text>
-              <Icon
-                as={ChevronRightIcon}
-                size={20}
-                className="text-muted-foreground"
-              />
-            </HapticPressable>
-          ) : null}
-          {__DEV__ ? (
-            <HapticPressable
-              onPress={() => onSelect('quantity-contributions-demo')}
-              accessibilityRole="button"
-              className="min-h-12 flex-row items-center justify-between gap-3 border-t border-border pt-4 active:opacity-70"
-            >
-              <Text className="flex-1 font-medium">
-                Quantity contributions demo
-              </Text>
-              <Icon
-                as={ChevronRightIcon}
-                size={20}
-                className="text-muted-foreground"
-              />
-            </HapticPressable>
-          ) : null}
           {hasInstantEmailSession ? (
             <HapticPressable
               onPress={() => onSelect('account')}
