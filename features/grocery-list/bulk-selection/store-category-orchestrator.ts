@@ -1,6 +1,13 @@
-import { db } from '@/lib/instant';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+import { db, type TransactionChunk } from '@/lib/instant';
 
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import { buildLinkedGroceryItemWriteBackTransactions } from '../../meal-planner/instant/build-list-to-meal-plan-write-back-transactions';
+import {
+  type GroceryItemWithMealPlanWriteBackLinks,
+  type LinkedGroceryItemPatch,
+  resolveMealPlanWriteBackSource,
+} from '../../meal-planner/instant/plan-list-to-meal-plan-write-back';
 import { syncRecipeIngredientsFromGroceryItem } from '../instant/sync-recipe-ingredients-from-grocery-item';
 import { syncSavedItemFromGroceryItem } from '../instant/sync-saved-item-from-grocery-item';
 
@@ -34,7 +41,7 @@ export type BulkStoreCategorySelectedItem = {
       id?: string;
     } | null;
   } | null;
-};
+} & GroceryItemWithMealPlanWriteBackLinks;
 
 type RunBulkStoreUpdateArgs = {
   selectedItemIds: string[];
@@ -87,6 +94,19 @@ const resolveSelectedItemsForWrite = ({
     skippedItemCount,
   };
 };
+
+// Linked items write the bulk change back to their meal plan source in the
+// same transaction as the grocery item writes.
+const buildMealPlanWriteBackTransactions = (
+  items: BulkStoreCategorySelectedItem[],
+  patch: LinkedGroceryItemPatch
+): TransactionChunk[] =>
+  items.flatMap(item =>
+    buildLinkedGroceryItemWriteBackTransactions({
+      source: resolveMealPlanWriteBackSource(item),
+      patch,
+    })
+  );
 
 const runBestEffortSavedItemSyncForItems = async ({
   items,
@@ -193,13 +213,23 @@ export const runBulkStoreUpdate = async ({
   selectedItems,
   storeId,
 }: RunBulkStoreUpdateArgs): Promise<BulkStoreCategoryWriteResult> => {
+  if (quantityWorkspaceAvailable()) {
+    const { bulkQuantityMetadata } =
+      await import('@/features/quantity/app/grocery-actions');
+    await bulkQuantityMetadata(selectedItemIds, { store: storeId ?? '' });
+    return {
+      updatedItemCount: selectedItemIds.length,
+      skippedItemCount: 0,
+      failedSavedItemSyncCount: 0,
+    };
+  }
   const selectedItemsMap = createSelectedItemsMap(selectedItems);
   const patch = { storeId };
   const { matchedItems, skippedItemCount } = resolveSelectedItemsForWrite({
     selectedItemIds,
     selectedItemsMap,
   });
-  const transactions = [];
+  const transactions: TransactionChunk[] = [];
 
   for (const item of matchedItems) {
     const currentStoreId = item.store?.id;
@@ -230,6 +260,12 @@ export const runBulkStoreUpdate = async ({
     }
   }
 
+  transactions.push(
+    ...buildMealPlanWriteBackTransactions(matchedItems, {
+      storeId: storeId ?? null,
+    })
+  );
+
   if (transactions.length > 0) {
     await db.transact(transactions);
   }
@@ -255,19 +291,34 @@ export const runBulkCategoryUpdate = async ({
   selectedItems,
   category,
 }: RunBulkCategoryUpdateArgs): Promise<BulkStoreCategoryWriteResult> => {
+  if (quantityWorkspaceAvailable()) {
+    const { bulkQuantityMetadata } =
+      await import('@/features/quantity/app/grocery-actions');
+    await bulkQuantityMetadata(selectedItemIds, { category: category ?? '' });
+    return {
+      updatedItemCount: selectedItemIds.length,
+      skippedItemCount: 0,
+      failedSavedItemSyncCount: 0,
+    };
+  }
   const selectedItemsMap = createSelectedItemsMap(selectedItems);
   const patch = { category };
   const { matchedItems, skippedItemCount } = resolveSelectedItemsForWrite({
     selectedItemIds,
     selectedItemsMap,
   });
-  const transactions = matchedItems.map(item =>
-    db.tx.grocery_items[item.id].update(
-      trimStringFields({
-        category: category ?? null,
-      })
-    )
-  );
+  const transactions: TransactionChunk[] = [
+    ...matchedItems.map(item =>
+      db.tx.grocery_items[item.id].update(
+        trimStringFields({
+          category: category ?? null,
+        })
+      )
+    ),
+    ...buildMealPlanWriteBackTransactions(matchedItems, {
+      category: category ?? null,
+    }),
+  ];
 
   if (transactions.length > 0) {
     await db.transact(transactions);

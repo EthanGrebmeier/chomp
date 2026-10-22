@@ -1,0 +1,112 @@
+{
+  "note": "Exploratory outcome summaries; duplicated schema/rule payloads and graph/event IDs omitted. Full local originals remain in ignored tmp/gqc04/*.evidence.json. Final reproducible payload/evidence: gqc04-3c1f1ff4-8875-4554-9253-7cc0e798f66a.json.",
+  "runs": [
+    {
+      "kind": "GQC-04-isolated-SDK-emulation-not-actual-build",
+      "run": "08af57a1-c22c-4654-80fd-8eafa3b34663",
+      "target": "allowlisted-test-app",
+      "startedAt": "2026-10-20T03:47:50.833Z",
+      "sdk": "0.22.185",
+      "gate": "BLOCKED-actual-build-and-full-application-graph-not-tested",
+      "cleanup": "verified-records-and-users-absent-schema-and-rules-restored",
+      "originalRulesDigest": "eae39c753ddedc86490fbdb26d11e031b8e05ef918cc247ae6dab20327edcfa1",
+      "originalSchemaDigest": "2cd20eb900a1baf31d4dd6f8c6317087c7db8fccc6183d850ad55827531b9a81",
+      "failure": {
+        "stage": "full-fence-offline-replay",
+        "category": "Error",
+        "detail": "Case failed: fenced-cold-client-scalar"
+      },
+      "finishedAt": "2026-10-20T03:48:15.117Z",
+      "observationSummary": {
+        "total": 30,
+        "passingAssertions": 27,
+        "failedAssertions": [
+          {
+            "name": "fenced-cold-client-scalar",
+            "status": "enqueued",
+            "pass": false,
+            "unchanged": true
+          }
+        ],
+        "fencedOnlineCases": 22,
+        "allFencedOnlinePermissionDenied": true,
+        "offlineReplay": {
+          "name": "fenced-offline-replay",
+          "pass": true,
+          "unchanged": true,
+          "queuedRejections": 19,
+          "allPermissionDenied": true,
+          "pending": 0
+        },
+        "updatedSynced": 0,
+        "updatedRejected": 0
+      }
+    },
+    {
+      "kind": "GQC-04-isolated-SDK-emulation-not-actual-build",
+      "run": "c6f155fe-6c9c-4a2f-8795-d7179ca2118e",
+      "target": "allowlisted-test-app",
+      "startedAt": "2026-10-20T03:48:38.553Z",
+      "sdk": "0.22.185",
+      "gate": "BLOCKED-actual-build-and-full-application-graph-not-tested",
+      "cleanup": "verified-records-and-users-absent-schema-and-rules-restored",
+      "originalRulesDigest": "eae39c753ddedc86490fbdb26d11e031b8e05ef918cc247ae6dab20327edcfa1",
+      "originalSchemaDigest": "2cd20eb900a1baf31d4dd6f8c6317087c7db8fccc6183d850ad55827531b9a81",
+      "boundedResult": "PASS-disjoint-namespace-fence-only",
+      "finishedAt": "2026-10-20T03:49:11.826Z",
+      "observationSummary": {
+        "total": 53,
+        "passingAssertions": 49,
+        "failedAssertions": [],
+        "fencedOnlineCases": 22,
+        "allFencedOnlinePermissionDenied": true,
+        "offlineReplay": {
+          "name": "fenced-offline-replay",
+          "pass": true,
+          "unchanged": true,
+          "queuedRejections": 19,
+          "allPermissionDenied": true,
+          "pending": 0
+        },
+        "updatedSynced": 13,
+        "updatedRejected": 8
+      }
+    },
+    {
+      "kind": "GQC-04-isolated-SDK-emulation-not-actual-build",
+      "run": "5f024ca7-73c5-4a53-bb85-35d2df033ddb",
+      "target": "allowlisted-test-app",
+      "startedAt": "2026-10-20T03:50:33.722Z",
+      "sdk": "0.22.185",
+      "gate": "BLOCKED-actual-build-and-full-application-graph-not-tested",
+      "cleanup": "verified-records-and-users-absent-schema-and-rules-restored",
+      "originalRulesDigest": "eae39c753ddedc86490fbdb26d11e031b8e05ef918cc247ae6dab20327edcfa1",
+      "originalSchemaDigest": "2cd20eb900a1baf31d4dd6f8c6317087c7db8fccc6183d850ad55827531b9a81",
+      "boundedResult": "PASS-disjoint-namespace-fence-only",
+      "finishedAt": "2026-10-20T03:51:14.943Z",
+      "observationSummary": {
+        "total": 57,
+        "passingAssertions": 53,
+        "failedAssertions": [],
+        "fencedOnlineCases": 22,
+        "allFencedOnlinePermissionDenied": true,
+        "offlineReplay": {
+          "name": "fenced-offline-replay",
+          "pass": true,
+          "unchanged": true,
+          "queuedRejections": 19,
+          "allPermissionDenied": true,
+          "pending": 0
+        },
+        "updatedSynced": 15,
+        "updatedRejected": 9,
+        "updatedOfflineReplay": {
+          "name": "updated-offline-replay",
+          "pass": true,
+          "enqueueStatus": "enqueued",
+          "serverStatus": "synced"
+        }
+      }
+    }
+  ]
+}

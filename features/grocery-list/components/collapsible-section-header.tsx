@@ -3,15 +3,12 @@ import { memo } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { CategoryLabel } from '../../../components/category-label';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { cn } from '../../../lib/utils';
-import { CategoryColor } from '../../shared/category/category-colors';
 
 type CollapsibleSectionHeaderProps = {
   title: string;
-  categoryColor?: CategoryColor;
   itemCount?: number;
   isExpanded: boolean;
   onToggle: () => void;
@@ -22,7 +19,6 @@ type CollapsibleSectionHeaderProps = {
 
 const CollapsibleSectionHeaderComponent = ({
   title,
-  categoryColor,
   itemCount,
   isExpanded,
   onToggle,
@@ -35,18 +31,9 @@ const CollapsibleSectionHeaderComponent = ({
       {showCollapse ? (
         <View className="flex-row items-center justify-between">
           <Pressable onPress={onToggle} className="flex-1">
-            {categoryColor ? (
-              <CategoryLabel
-                color={categoryColor}
-                className="font-semibold capitalize"
-              >
-                {title}
-              </CategoryLabel>
-            ) : (
-              <Text className="font-semibold capitalize text-foreground">
-                {title}
-              </Text>
-            )}
+            <Text className="font-semibold capitalize text-foreground">
+              {title}
+            </Text>
             {itemCount !== undefined ? (
               <Text variant="caption" tabularNumbers>
                 {itemCount} items
@@ -76,15 +63,6 @@ const CollapsibleSectionHeaderComponent = ({
             </Pressable>
           </View>
         </View>
-      ) : categoryColor ? (
-        <CategoryLabel
-          color={categoryColor}
-          tabularNumbers
-          className="text-lg font-semibold capitalize leading-7"
-        >
-          {title}
-          {itemCount !== undefined ? ` (${itemCount})` : null}
-        </CategoryLabel>
       ) : (
         <Text
           tabularNumbers
@@ -102,7 +80,6 @@ export const CollapsibleSectionHeader = memo(
   CollapsibleSectionHeaderComponent,
   (previousProps, nextProps) =>
     previousProps.title === nextProps.title &&
-    previousProps.categoryColor === nextProps.categoryColor &&
     previousProps.itemCount === nextProps.itemCount &&
     previousProps.isExpanded === nextProps.isExpanded &&
     previousProps.actionLabel === nextProps.actionLabel &&

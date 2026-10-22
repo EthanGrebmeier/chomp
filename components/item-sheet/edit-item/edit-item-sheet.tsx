@@ -7,14 +7,22 @@ import {
   useState,
 } from 'react';
 
+import { AppQuantityItemSheet } from '@/features/quantity/app/item-sheet';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { unlinkRecipeFromItem } from '../../../features/grocery-list/instant/unlink-recipe-from-item';
+import { useGroceryItemMealPlanLink } from '../../../features/grocery-list/instant/use-grocery-item-meal-plan-link';
+import {
+  buildMealPlanLinkSentence,
+  buildRecipeLinkSentence,
+  GroceryItemMealPlanLink,
+} from '../../../features/grocery-list/meal-plan-link';
 import {
   BaseGroceryItem,
   GroceryListItemWithRecipe,
 } from '../../../features/grocery-list/types';
-import { BottomSheet } from '../../bottom-sheet';
-import { ItemForm } from '../item-form';
-import { MetaBar } from '../meta-bar';
+import { ItemEditorSheet } from '../item-editor-sheet';
+import { ItemSourceSentence } from '../item-source-sentence';
 import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 import { MatchingItem } from '../use-matching-items';
 
@@ -25,11 +33,16 @@ type EditItemContextType = {
   dismiss: () => void;
   /**
    * Immediately unlink the recipe association from the currently-presented
-   * grocery item. RecipeTag calls this from its X-button so the detach
+   * grocery item. The source sentence calls this from its X-button so the detach
    * lands as soon as the user taps it, rather than waiting for sheet close
    * like the pre-live-updates submit path did.
    */
   clearRecipe: (recipeId: string) => void;
+  /**
+   * Meal plan source of the presented item, or `null` for unlinked items
+   * (including checked items whose meal plan entry was deleted).
+   */
+  mealPlanLink: GroceryItemMealPlanLink | null;
 };
 
 const EditItemContext = createContext<EditItemContextType | null>(null);
@@ -40,6 +53,45 @@ export const useEditItemSheet = () => {
     throw new Error('useEditItemSheet must be used within an EditItemProvider');
   }
   return context;
+};
+
+// Where the presented item came from: the meal plan link sentence for
+// meal plan items, otherwise a recipe sentence (with an unlink X) for items
+// that were added from a recipe.
+const EditItemSource = () => {
+  const { recipe, setRecipe, listId } = useItemSheet();
+  const { mealPlanLink, dismiss, clearRecipe } = useEditItemSheet();
+  const { onOpenMealPlanDate } = useEditItemSheetInternal();
+
+  if (mealPlanLink) {
+    return (
+      <ItemSourceSentence
+        parts={buildMealPlanLinkSentence(mealPlanLink)}
+        listId={listId}
+        onOpenMealPlanDate={onOpenMealPlanDate}
+        onNavigate={dismiss}
+      />
+    );
+  }
+
+  if (!recipe) return null;
+
+  // Fire the cloud unlink immediately alongside the local form-state clear
+  // so the grocery item's recipe association detaches right away instead of
+  // waiting for sheet dismissal.
+  const handleUnlink = () => {
+    clearRecipe(recipe.id);
+    setRecipe(null);
+  };
+
+  return (
+    <ItemSourceSentence
+      parts={buildRecipeLinkSentence(recipe)}
+      listId={listId}
+      onNavigate={dismiss}
+      onUnlink={handleUnlink}
+    />
+  );
 };
 
 const EditItemContents = () => {
@@ -62,17 +114,14 @@ const EditItemContents = () => {
   }, [reset, liveSyncRef]);
 
   return (
-    <BottomSheet
+    <ItemEditorSheet
       name="edit-item-sheet"
-      ref={sheetRef}
+      title="Edit item"
+      sheetRef={sheetRef}
       onStartClose={onStartClose}
       onDismiss={onDismiss}
-    >
-      <BottomSheet.SheetView>
-        <ItemForm />
-        <MetaBar />
-      </BottomSheet.SheetView>
-    </BottomSheet>
+      source={<EditItemSource />}
+    />
   );
 };
 
@@ -99,6 +148,11 @@ const EditItemLiveSync = (props: EditItemLiveSyncProps) => {
 type EditItemInternalContextType = {
   sheetRef: React.RefObject<TrueSheet | null>;
   liveSyncRef: React.RefObject<UseLiveItemSyncHandle | null>;
+  onOpenMealPlanDate?: (
+    date: string,
+    mealId?: string,
+    sourceId?: string
+  ) => void;
 };
 
 const EditItemInternalContext =
@@ -116,11 +170,24 @@ const useEditItemSheetInternal = () => {
 
 type EditItemProps = {
   groceryListId: string;
+  /** Opens the meal plan view on `date` (`yyyy-MM-dd`). */
+  onOpenMealPlanDate?: (
+    date: string,
+    mealId?: string,
+    sourceId?: string
+  ) => void;
   children: React.ReactNode;
 };
 
-const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
+const EditItemProvider = ({
+  groceryListId,
+  onOpenMealPlanDate,
+  children,
+}: EditItemProps) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [presentedItem, setPresentedItem] =
+    useState<GroceryListItemWithRecipe | null>(null);
+  const mealPlanLink = useGroceryItemMealPlanLink(presentedItem);
   const [currentItemName, setCurrentItemName] = useState<string | undefined>(
     undefined
   );
@@ -162,6 +229,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   const present = (item: GroceryListItemWithRecipe) => {
     setFromItemRef.current?.(item);
     setSelectedItemId(item.id);
+    setPresentedItem(item);
     setCurrentItemName(item.name);
     setCurrentStoreId(item.store?.id);
     setCurrentSavedItemId(item.saved_item?.id);
@@ -182,7 +250,7 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   // deferring it to sheet close. The old submit path used to collect a
   // `clearedRecipeId` and flush it alongside the grocery-item write; that
   // path is gone (P3-T2), so we commit directly here. No-op when no item
-  // is currently presented (defensive — RecipeTag only renders when there
+  // is currently presented (defensive — the unlink X only renders when there
   // is one).
   const clearRecipe = useCallback(
     (recipeId: string) => {
@@ -193,8 +261,12 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   );
 
   return (
-    <EditItemContext.Provider value={{ present, dismiss, clearRecipe }}>
-      <EditItemInternalContext.Provider value={{ sheetRef, liveSyncRef }}>
+    <EditItemContext.Provider
+      value={{ present, dismiss, clearRecipe, mealPlanLink }}
+    >
+      <EditItemInternalContext.Provider
+        value={{ sheetRef, liveSyncRef, onOpenMealPlanDate }}
+      >
         <ItemSheetProvider
           mode="update"
           listId={groceryListId}
@@ -218,4 +290,38 @@ const EditItemProvider = ({ groceryListId, children }: EditItemProps) => {
   );
 };
 
-export default EditItemProvider;
+function QuantityEditItemProvider({
+  groceryListId,
+  onOpenMealPlanDate,
+  children,
+}: EditItemProps) {
+  const [itemId, setItemId] = useState<string | null>(null);
+  return (
+    <EditItemContext.Provider
+      value={{
+        present: item => setItemId(item.id),
+        dismiss: () => setItemId(null),
+        clearRecipe: () => {},
+        mealPlanLink: null,
+      }}
+    >
+      {children}
+      {itemId ? (
+        <AppQuantityItemSheet
+          key={`${groceryListId}:${itemId}`}
+          listId={groceryListId}
+          rowId={itemId}
+          onDismiss={() => setItemId(null)}
+          onOpenMealPlanDate={onOpenMealPlanDate}
+        />
+      ) : null}
+    </EditItemContext.Provider>
+  );
+}
+export default function IntegratedEditItemProvider(props: EditItemProps) {
+  return quantityWorkspaceAvailable() ? (
+    <QuantityEditItemProvider {...props} />
+  ) : (
+    <EditItemProvider {...props} />
+  );
+}

@@ -1,4 +1,4 @@
-import { db } from '../../../lib/instant';
+import { db, type TransactionChunk } from '../../../lib/instant';
 
 export type LinkStoreToItemArgs = {
   itemId: string;
@@ -6,12 +6,16 @@ export type LinkStoreToItemArgs = {
   currentStoreId?: string;
 };
 
-export const linkStoreToItem = async ({
+/**
+ * Builds the writes that move a grocery item's store link from
+ * `currentStoreId` to `storeId` (unlinking when `storeId` is undefined).
+ */
+export const buildStoreLinkTransactions = ({
   itemId,
   storeId,
   currentStoreId,
-}: LinkStoreToItemArgs) => {
-  const transactions = [];
+}: LinkStoreToItemArgs): TransactionChunk[] => {
+  const transactions: TransactionChunk[] = [];
 
   // If storeId is undefined and we have a current store, unlink it
   if (storeId === undefined && currentStoreId) {
@@ -41,8 +45,5 @@ export const linkStoreToItem = async ({
     }
   }
 
-  if (transactions.length > 0) {
-    await db.transact(transactions);
-  }
+  return transactions;
 };
-

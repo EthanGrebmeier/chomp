@@ -14,10 +14,8 @@ export type RecipeIngredient = InstaQLEntity<
 > & {
   store?: Store | null;
 };
-export type RecipeGroceryItem = InstaQLEntity<typeof schema, 'grocery_items'>;
 export type RecipeWithIngredients = Recipe & {
   recipe_ingredients: RecipeIngredient[];
-  grocery_items?: RecipeGroceryItem[];
 };
 
 export type CreateRecipeArgs = {

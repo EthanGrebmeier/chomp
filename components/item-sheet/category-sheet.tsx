@@ -3,7 +3,6 @@ import { PlusIcon } from 'lucide-react-native';
 import {
   useCallback,
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -25,6 +24,7 @@ import {
 import {
   CategoryColor,
   getCategoryTextClassName,
+  getCategorySurfaceClassName,
 } from '../../features/shared/category/category-colors';
 import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
@@ -35,6 +35,9 @@ import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
 import { Text } from '../ui/text';
+
+import { OptionDropdown } from './option-dropdown';
+import { usePresentOnOpenRequest } from './present-on-open-request';
 
 type CategoryOptionProps = {
   label: string;
@@ -86,6 +89,7 @@ type CategorySheetProps = {
   sheetName?: string;
   openRequestId?: number;
   disabled?: boolean;
+  selectionMode?: 'sheet' | 'dropdown';
 };
 
 export type CategorySheetRef = {
@@ -103,6 +107,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
       sheetName = 'category-sheet',
       openRequestId,
       disabled = false,
+      selectionMode = 'dropdown',
     },
     ref
   ) => {
@@ -136,13 +141,7 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
       sheetRef.current?.present();
     }, [category, disabled]);
 
-    useEffect(() => {
-      if (openRequestId === undefined) {
-        return;
-      }
-      const frame = requestAnimationFrame(openSheet);
-      return () => cancelAnimationFrame(frame);
-    }, [openRequestId, openSheet]);
+    usePresentOnOpenRequest(openRequestId, openSheet);
 
     useImperativeHandle(ref, () => ({
       present: openSheet,
@@ -170,123 +169,153 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
       createCategorySheetRef.current?.present();
     };
 
+    const trigger = (
+      <Pill
+        className={cn(
+          selectedCategoryColor &&
+            getCategorySurfaceClassName(selectedCategoryColor),
+          disabled && 'opacity-50'
+        )}
+        textClassName={
+          selectedCategoryColor
+            ? getCategoryTextClassName(selectedCategoryColor)
+            : disabled
+              ? 'text-muted-foreground'
+              : undefined
+        }
+        hasValue={!!selectedCategoryLabel}
+      >
+        {selectedCategoryLabel ?? 'Category'}
+      </Pill>
+    );
+
     return (
       <>
         {!hideTrigger && (
           <WithLayoutTransition>
-            <HapticPressable
-              onPress={openSheet}
-              hapticType="light"
-              disabled={disabled}
-            >
-              <Pill
-                className={cn(
-                  !selectedCategoryLabel && 'border-dashed',
-                  disabled && 'opacity-50'
-                )}
-                textClassName={
-                  selectedCategoryColor
-                    ? getCategoryTextClassName(selectedCategoryColor)
-                    : disabled
-                      ? 'text-muted-foreground'
-                      : undefined
+            {selectionMode === 'dropdown' ? (
+              <OptionDropdown
+                label="category"
+                value={category}
+                disabled={disabled}
+                options={
+                  category && !selectedCategory
+                    ? [
+                        createMissingCategoryOption(category),
+                        ...categoryOptions,
+                      ]
+                    : categoryOptions
                 }
-                hasValue={!!selectedCategoryLabel}
+                onSelect={onSelect}
+                onCreate={handleOpenCreateCategory}
               >
-                {selectedCategoryLabel ?? 'Category'}
-              </Pill>
-            </HapticPressable>
+                {trigger}
+              </OptionDropdown>
+            ) : (
+              <HapticPressable
+                onPress={openSheet}
+                hapticType="light"
+                disabled={disabled}
+              >
+                {trigger}
+              </HapticPressable>
+            )}
           </WithLayoutTransition>
         )}
 
-        <BottomSheet
-          detents={[0.7]}
-          scrollable
-          ref={sheetRef}
-          onOpen={handleScrollToSelectedCategory}
-          name={sheetName}
-        >
-          <BottomSheet.Header
-            className="px-4"
-            title="Category"
-            dismissButton={
-              showBackButton ? (
-                <BackButton onPress={() => sheetRef.current?.dismiss()} />
-              ) : undefined
-            }
-            button={
-              <ConfirmButton
-                onPress={handleConfirm}
-                disabled={localCategory === null}
-              />
-            }
-          />
-          <ScrollView
-            ref={scrollViewRef}
-            className="max-h-96 px-2"
-            nestedScrollEnabled
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
+        {selectionMode === 'sheet' ? (
+          <BottomSheet
+            detents={[0.7]}
+            scrollable
+            ref={sheetRef}
+            onOpen={handleScrollToSelectedCategory}
+            name={sheetName}
           >
-            <HapticPressable
-              onPress={handleOpenCreateCategory}
-              hapticType="light"
-            >
-              <View className="flex-row items-center justify-center gap-3 rounded-xl px-2 py-3">
-                <View className="size-4 items-center justify-center rounded-full bg-primary">
-                  <Icon
-                    className="text-primary-foreground"
-                    as={PlusIcon}
-                    strokeWidth={3}
-                    size={12}
-                  />
-                </View>
-                <Text className="text-base font-semibold text-primary">
-                  Create new category
-                </Text>
-              </View>
-            </HapticPressable>
-
-            <CategoryOption
-              label="None"
-              isSelected={localCategory === undefined}
-              onPress={() => setLocalCategory(undefined)}
-            />
-
-            {missingLocalCategory ? (
-              <CategoryOption
-                label={missingLocalCategory.label}
-                color={missingLocalCategory.color}
-                isSelected={true}
-                onPress={() => setLocalCategory(missingLocalCategory.value)}
-              />
-            ) : null}
-
-            {isLoading ? (
-              <View className="py-4">
-                <Text className="text-center text-muted-foreground">
-                  Loading categories...
-                </Text>
-              </View>
-            ) : (
-              categoryOptions.map(categoryOption => (
-                <CategoryOption
-                  key={categoryOption.value}
-                  label={categoryOption.label}
-                  color={categoryOption.color}
-                  isSelected={localCategory === categoryOption.value}
-                  onPress={() => setLocalCategory(categoryOption.value)}
+            <BottomSheet.Header
+              className="px-4"
+              title="Choose a category"
+              dismissButton={
+                showBackButton ? (
+                  <BackButton onPress={() => sheetRef.current?.dismiss()} />
+                ) : undefined
+              }
+              button={
+                <ConfirmButton
+                  onPress={handleConfirm}
+                  disabled={localCategory === null}
                 />
-              ))
-            )}
-          </ScrollView>
-        </BottomSheet>
+              }
+            />
+            <ScrollView
+              ref={scrollViewRef}
+              className="max-h-96 px-2"
+              nestedScrollEnabled
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
+            >
+              <HapticPressable
+                onPress={handleOpenCreateCategory}
+                hapticType="light"
+              >
+                <View className="flex-row items-center justify-center gap-3 rounded-xl px-2 py-3">
+                  <View className="size-4 items-center justify-center rounded-full bg-primary">
+                    <Icon
+                      className="text-primary-foreground"
+                      as={PlusIcon}
+                      strokeWidth={3}
+                      size={12}
+                    />
+                  </View>
+                  <Text className="text-base font-semibold text-primary">
+                    Create new category
+                  </Text>
+                </View>
+              </HapticPressable>
+
+              <CategoryOption
+                label="None"
+                isSelected={localCategory === undefined}
+                onPress={() => setLocalCategory(undefined)}
+              />
+
+              {missingLocalCategory ? (
+                <CategoryOption
+                  label={missingLocalCategory.label}
+                  color={missingLocalCategory.color}
+                  isSelected={true}
+                  onPress={() => setLocalCategory(missingLocalCategory.value)}
+                />
+              ) : null}
+
+              {isLoading ? (
+                <View className="py-4">
+                  <Text className="text-center text-muted-foreground">
+                    Loading categories...
+                  </Text>
+                </View>
+              ) : (
+                categoryOptions.map(categoryOption => (
+                  <CategoryOption
+                    key={categoryOption.value}
+                    label={categoryOption.label}
+                    color={categoryOption.color}
+                    isSelected={localCategory === categoryOption.value}
+                    onPress={() => setLocalCategory(categoryOption.value)}
+                  />
+                ))
+              )}
+            </ScrollView>
+          </BottomSheet>
+        ) : null}
 
         <CreateCategorySheet
           ref={createCategorySheetRef}
           sheetName="create-category-from-picker-sheet"
           showBackButton={showBackButton}
-          onSaved={({ value }) => setLocalCategory(value)}
+          onSaved={({ value }) => {
+            setLocalCategory(value);
+            if (selectionMode === 'dropdown') onSelect(value);
+          }}
         />
       </>
     );

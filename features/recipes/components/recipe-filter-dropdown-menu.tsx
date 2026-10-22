@@ -1,4 +1,5 @@
 import { ListFilter } from 'lucide-react-native';
+import { View } from 'react-native';
 
 import {
   DropdownMenuCheckboxItem,
@@ -34,59 +35,80 @@ export const RecipeFilterDropdownMenu = ({
   onMealTagChange,
   onSortByChange,
 }: RecipeFilterDropdownMenuProps) => {
+  const hasActiveFilters = !!mealTag || sortBy !== 'recent';
+
   return (
-    <DropdownMenuRoot>
-      <DropdownMenuTrigger>
-        <Icon as={ListFilter} size={24} hitSlop={14} />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger key="sort-by-submenu">
-            <DropdownMenuItemTitle>Sort By</DropdownMenuItemTitle>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuCheckboxItem
-              key="sort-recently-added"
-              value={sortBy === 'recent' ? 'on' : 'off'}
-              onValueChange={() => onSortByChange('recent')}
-            >
-              <DropdownMenuItemTitle>
-                Recently Added to List
-              </DropdownMenuItemTitle>
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              key="sort-name"
-              value={sortBy === 'name' ? 'on' : 'off'}
-              onValueChange={() => onSortByChange('name')}
-            >
-              <DropdownMenuItemTitle>Alphabetical</DropdownMenuItemTitle>
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger key="filter-by-meal-submenu">
-            <DropdownMenuItemTitle>Filter By Meal</DropdownMenuItemTitle>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuCheckboxItem
-              key="meal-all"
-              value={!mealTag ? 'on' : 'off'}
-              onValueChange={() => onMealTagChange(undefined)}
-            >
-              <DropdownMenuItemTitle>All</DropdownMenuItemTitle>
-            </DropdownMenuCheckboxItem>
-            {mealTagOptions.map(option => (
+    <View className="relative">
+      <DropdownMenuRoot>
+        <DropdownMenuTrigger>
+          <View
+            className="size-8 items-center justify-center"
+            accessibilityLabel="Sort and filter recipes"
+          >
+            <Icon
+              as={ListFilter}
+              size={18}
+              className={
+                hasActiveFilters ? 'text-foreground' : 'text-muted-foreground'
+              }
+            />
+          </View>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger key="sort-by-submenu">
+              <DropdownMenuItemTitle>Sort By</DropdownMenuItemTitle>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
               <DropdownMenuCheckboxItem
-                key={`meal-${option.toLowerCase()}`}
-                value={mealTag === option ? 'on' : 'off'}
-                onValueChange={() => onMealTagChange(option)}
+                key="sort-recently-added"
+                value={sortBy === 'recent' ? 'on' : 'off'}
+                onValueChange={() => onSortByChange('recent')}
               >
-                <DropdownMenuItemTitle>{option}</DropdownMenuItemTitle>
+                <DropdownMenuItemTitle>
+                  Recently Added to List
+                </DropdownMenuItemTitle>
               </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-      </DropdownMenuContent>
-    </DropdownMenuRoot>
+              <DropdownMenuCheckboxItem
+                key="sort-name"
+                value={sortBy === 'name' ? 'on' : 'off'}
+                onValueChange={() => onSortByChange('name')}
+              >
+                <DropdownMenuItemTitle>Alphabetical</DropdownMenuItemTitle>
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger key="filter-by-meal-submenu">
+              <DropdownMenuItemTitle>Filter By Meal</DropdownMenuItemTitle>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuCheckboxItem
+                key="meal-all"
+                value={!mealTag ? 'on' : 'off'}
+                onValueChange={() => onMealTagChange(undefined)}
+              >
+                <DropdownMenuItemTitle>All</DropdownMenuItemTitle>
+              </DropdownMenuCheckboxItem>
+              {mealTagOptions.map(option => (
+                <DropdownMenuCheckboxItem
+                  key={`meal-${option.toLowerCase()}`}
+                  value={mealTag === option ? 'on' : 'off'}
+                  onValueChange={() => onMealTagChange(option)}
+                >
+                  <DropdownMenuItemTitle>{option}</DropdownMenuItemTitle>
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenuRoot>
+      {hasActiveFilters ? (
+        <View
+          pointerEvents="none"
+          className="absolute right-0.5 top-0.5 size-2.5 rounded-full border-2 border-input bg-primary"
+        />
+      ) : null}
+    </View>
   );
 };

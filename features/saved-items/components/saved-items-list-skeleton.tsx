@@ -5,15 +5,14 @@ import { ListItemSkeleton } from '@/features/shared/components/list-item-skeleto
 export const SavedItemsListSkeleton = () => {
   return (
     <View className="flex-1">
-      <ListItemSkeleton showBorder />
-      <ListItemSkeleton showBorder />
-      <ListItemSkeleton showBorder />
-      <ListItemSkeleton showBorder />
-      <ListItemSkeleton showBorder />
-      <ListItemSkeleton showBorder />
-      <ListItemSkeleton showBorder />
-      <ListItemSkeleton showBorder={false} />
+      <ListItemSkeleton />
+      <ListItemSkeleton />
+      <ListItemSkeleton />
+      <ListItemSkeleton />
+      <ListItemSkeleton />
+      <ListItemSkeleton />
+      <ListItemSkeleton />
+      <ListItemSkeleton />
     </View>
   );
 };
-

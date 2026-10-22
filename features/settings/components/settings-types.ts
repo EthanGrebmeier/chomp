@@ -2,4 +2,7 @@ export type SettingsSubmenu =
   | 'saved-items'
   | 'stores'
   | 'categories'
-  | 'account';
+  | 'account'
+  | 'quantity-workspace'
+  | 'duplicate-resolution-demo'
+  | 'quantity-contributions-demo';

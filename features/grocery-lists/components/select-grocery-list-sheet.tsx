@@ -10,7 +10,7 @@ import {
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { Button } from '../../../components/ui/button';
+import { AddButton } from '../../../components/ui/add-button';
 import {
   ContextMenuItem,
   ContextMenuItemIcon,
@@ -33,8 +33,11 @@ import {
   useDeleteGroceryList,
 } from '../instant/useDeleteGroceryList';
 import { useGroceryLists } from '../instant/useGroceryLists';
-import { useLeaveGroceryList } from '../instant/useLeaveGroceryList';
-import { useTrackListAccess } from '../instant/useTrackListAccess';
+import {
+  LEAVE_LIST_MEAL_PLAN_WARNING,
+  useLeaveGroceryList,
+} from '../instant/useLeaveGroceryList';
+import { useTrackListAccess } from '../local/use-track-list-access';
 
 import {
   CreateGroceryListSheet,
@@ -52,7 +55,7 @@ type SelectGroceryListSheetProps = {
   selectedListId: string | undefined;
   onSelectList: (listId: string) => void;
   title?: string;
-  subtext?: ReactNode;
+  description?: ReactNode;
   showJoinByCode?: boolean;
   showManageActions?: boolean;
   disabledListIds?: string[];
@@ -68,8 +71,8 @@ export const SelectGroceryListSheet = forwardRef<
       selectedListId,
       onSelectList,
       name = 'select-grocery-list-sheet',
-      title = 'Select List',
-      subtext,
+      title = 'Choose a list',
+      description,
       showJoinByCode = true,
       showManageActions = true,
       disabledListIds = [],
@@ -147,7 +150,7 @@ export const SelectGroceryListSheet = forwardRef<
     const handleLeaveList = (listId: string, listName: string) => {
       Alert.alert(
         'Leave List',
-        `Are you sure you want to leave "${listName}"?`,
+        `Are you sure you want to leave "${listName}"? ${LEAVE_LIST_MEAL_PLAN_WARNING}`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -180,25 +183,12 @@ export const SelectGroceryListSheet = forwardRef<
           onStartClose={onStartClose}
         >
           <BottomSheet.Header
-            className="mb-0 px-4"
+            className="px-4"
             title={title}
-            subsection={
-              subtext ? (
-                <BottomSheet.Subtext>{subtext}</BottomSheet.Subtext>
-              ) : undefined
-            }
+            description={description}
             button={
               <DropdownMenuRoot
-                trigger={
-                  <Button size="icon">
-                    <Icon
-                      as={PlusIcon}
-                      size={24}
-                      strokeWidth={3}
-                      className="text-primary-foreground"
-                    />
-                  </Button>
-                }
+                trigger={<AddButton accessibilityLabel="Add grocery list" />}
               >
                 <DropdownMenuContent>
                   <DropdownMenuItem
@@ -233,7 +223,6 @@ export const SelectGroceryListSheet = forwardRef<
           <ScrollView
             nestedScrollEnabled
             showsVerticalScrollIndicator={false}
-            contentContainerClassName="mt-4"
             className="gap-1 px-4 pb-4"
           >
             {lists?.grocery_lists.map(list => {
@@ -246,7 +235,10 @@ export const SelectGroceryListSheet = forwardRef<
                 <Pressable
                   onPress={() => handleSelectList(list.id)}
                   disabled={isDisabled}
-                  accessibilityState={{ disabled: isDisabled, selected: isSelected }}
+                  accessibilityState={{
+                    disabled: isDisabled,
+                    selected: isSelected,
+                  }}
                   className={cn(
                     'flex-row items-center justify-center rounded-xl px-4 py-3',
                     isSelected && 'bg-muted',

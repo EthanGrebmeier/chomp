@@ -46,7 +46,7 @@ export function useOAuthFlow() {
           if (shouldCreateDefaultList) {
             await initializeDefaultGroceryList();
           }
-          router.replace('/(tabs)');
+          router.replace('/(tabs)', { withAnchor: true });
         } catch (error) {
           if (error instanceof InstantBridgeError) {
             toast.error(
@@ -110,7 +110,7 @@ export function useOAuthFlow() {
           if (shouldCreateDefaultList) {
             await initializeDefaultGroceryList();
           }
-          router.replace('/(tabs)');
+          router.replace('/(tabs)', { withAnchor: true });
         } catch (error) {
           if (error instanceof InstantBridgeError) {
             toast.error(

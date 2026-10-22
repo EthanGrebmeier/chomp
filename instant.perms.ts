@@ -3,6 +3,10 @@
 import type { InstantRules } from '@instantdb/react-native';
 
 const rules = {
+  // The simulator workspace has an explicit allowlisted setup script. A normal
+  // permissions deployment must never enable these development-only writers.
+  gqc_workspaces_v1: { allow: { $default: 'false' } },
+  gqc_operations_v1: { allow: { $default: 'false' } },
   grocery_items: {
     bind: ['isOwner', "auth.id in data.ref('grocery_list.shares.user_id')"],
     allow: {
@@ -35,9 +39,13 @@ const rules = {
       "auth.id in data.ref('user.id')",
       'canViewViaGroceryList',
       "auth.id in data.ref('grocery_items.grocery_list.shares.user_id')",
+      // Share links carry the recipe id; the import screen passes it back as a
+      // rule param, so knowing the id (from the link) is what grants read access.
+      'isOpenedFromShareLink',
+      'ruleParams.sharedRecipeId == data.id',
     ],
     allow: {
-      view: 'isOwner || data.visibility == "public" || canViewViaGroceryList',
+      view: 'isOwner || data.visibility == "public" || canViewViaGroceryList || isOpenedFromShareLink',
       create: 'auth.id != null',
       delete: 'isOwner',
       update: 'isOwner',

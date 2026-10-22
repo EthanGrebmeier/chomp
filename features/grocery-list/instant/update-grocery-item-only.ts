@@ -1,8 +1,16 @@
+import { updateQuantityChecked } from '@/features/quantity/app/checked-state';
+import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import { buildLinkedGroceryItemWriteBackTransactions } from '../../meal-planner/instant/build-list-to-meal-plan-write-back-transactions';
+import type {
+  LinkedGroceryItemPatch,
+  MealPlanWriteBackSource,
+} from '../../meal-planner/instant/plan-list-to-meal-plan-write-back';
 import { GroceryListItem } from '../types';
 
-import { linkStoreToItem } from './link-store-to-item';
+import { buildStoreLinkTransactions } from './link-store-to-item';
 
 export type UpdateGroceryItemOnlyArgs = {
   itemId: string;
@@ -11,6 +19,14 @@ export type UpdateGroceryItemOnlyArgs = {
   currentSavedItemId?: string;
   selectedSavedItemId?: string;
   selectedLocalSavedItemId?: string;
+  /**
+   * For items linked to the meal plan: the source to write the edit back to,
+   * and the fields that changed. Written in the same transaction.
+   */
+  mealPlanWriteBack?: {
+    source: MealPlanWriteBackSource;
+    patch: LinkedGroceryItemPatch;
+  };
 };
 
 export type CheckedStateUpdate = {
@@ -19,9 +35,10 @@ export type CheckedStateUpdate = {
 };
 
 /**
- * Writes the grocery_items row, reconciles the grocery_items↔stores link, and
- * performs grocery_items↔saved_items relink when the caller supplies a new
- * cloud suggestion or a local-only match.
+ * Writes the grocery_items row, reconciles the grocery_items↔stores link
+ * and writes the edit back to the item's meal plan source (if any), all in
+ * one transaction. Then performs grocery_items↔saved_items relink when the
+ * caller supplies a new cloud suggestion or a local-only match.
  *
  * Intentionally does NOT touch saved_items rows, saved_items↔stores, or the
  * local-saved-item upsert; that surface lives in syncSavedItemFromGroceryItem.
@@ -33,7 +50,14 @@ export const updateGroceryItemOnly = async ({
   currentSavedItemId,
   selectedSavedItemId,
   selectedLocalSavedItemId,
+  mealPlanWriteBack,
 }: UpdateGroceryItemOnlyArgs) => {
+  if (quantityWorkspaceAvailable()) {
+    const { updateQuantityRow } =
+      await import('@/features/quantity/app/grocery-actions');
+    return updateQuantityRow(itemId, item);
+  }
+
   const { storeId, ...updateData } = item;
 
   await db.transact([
@@ -43,15 +67,11 @@ export const updateGroceryItemOnly = async ({
         category: item.category ?? null,
       })
     ),
+    ...buildStoreLinkTransactions({ itemId, storeId, currentStoreId }),
+    ...(mealPlanWriteBack
+      ? buildLinkedGroceryItemWriteBackTransactions(mealPlanWriteBack)
+      : []),
   ]);
-
-  if (storeId !== undefined || currentStoreId) {
-    await linkStoreToItem({
-      itemId,
-      storeId,
-      currentStoreId,
-    });
-  }
 
   // Preserve existing link unless user explicitly selected a new cloud suggestion.
   const shouldRelink =
@@ -89,6 +109,9 @@ export const updateGroceryItemOnly = async ({
 export const updateGroceryItemsCheckedState = async (
   updates: CheckedStateUpdate[]
 ) => {
+  if (quantityWorkspaceAvailable()) {
+    return updateQuantityChecked(updates);
+  }
   if (updates.length === 0) {
     return;
   }

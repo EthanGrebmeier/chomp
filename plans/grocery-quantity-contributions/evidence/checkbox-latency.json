@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-21",
+  "environment": "iPhone 17 Pro simulator, iOS 26.5, Expo development build, quantity test database",
+  "method": "Temporary performance.now markers at Pressable onPressIn, grocery onPress, pending-intent publication, AsyncStorage queue/start/end, workspace replay start/end, session publication, React useLayoutEffect commit, and fill onLayout. Samples collected on a localhost-only HTTP listener. Instrumentation and injected faults removed after testing.",
+  "limitations": [
+    "Individual diagnostic samples, not percentile benchmarks or release-device measurements.",
+    "Commit and native layout callbacks identify when feedback becomes renderable; these do not measure display scanout or exact first painted pixel.",
+    "The 750ms delay and disk failure were injected locally. Offline publication is covered by unit tests; this run does not claim physical-device process-death QA."
+  ],
+  "samples": [
+    {
+      "scenario": "Before changes, editing mode, uncheck",
+      "millisecondsFromPressIn": {
+        "onPress": 15.03,
+        "intentPublished": 15.48,
+        "storageQueued": 91.01,
+        "storageStart": 91.24,
+        "storageEnd": 92.23,
+        "replayStart": 93.54,
+        "replayEnd": 117.3,
+        "sessionPublished": 174.54,
+        "rowCommitted": 361.1
+      },
+      "pressToFeedbackCommitMs": 346.07
+    },
+    {
+      "scenario": "Subscription and row-reference optimization only, editing mode, check",
+      "pressToFeedbackCommitMs": 105.66,
+      "storageWriteMs": 2.14
+    },
+    {
+      "scenario": "Optimistic feedback with publication handoff, before eager import, first check after restart",
+      "pressToFeedbackCommitMs": 33.26,
+      "millisecondsFromPressIn": {
+        "onPress": 16.95,
+        "checkboxCommitted": 50.21,
+        "storageQueued": 433.78,
+        "storageEnd": 435.16,
+        "sessionPublished": 474.1,
+        "modelRowCommitted": 565.01
+      },
+      "observation": "Feedback preceded lazy module loading and model publication without reverting. Checked-state actions were subsequently isolated and eagerly imported."
+    },
+    {
+      "scenario": "Final implementation, editing mode, uncheck",
+      "pressToFeedbackCommitMs": 13.55,
+      "millisecondsFromPressIn": {
+        "onPress": 41.49,
+        "checkboxCommitted": 55.05,
+        "storageStart": 58.37,
+        "storageEnd": 60.2,
+        "sessionPublished": 100.96,
+        "modelRowCommitted": 207.89
+      }
+    },
+    {
+      "scenario": "Final implementation, shopping mode, check",
+      "pressToFeedbackCommitMs": 11.59,
+      "pressToFillLayoutCallbackMs": 14.74,
+      "millisecondsFromPressIn": {
+        "onPress": 47.98,
+        "checkboxCommitted": 59.57,
+        "fillLayout": 62.72,
+        "storageEnd": 64.63,
+        "sessionPublished": 91.89,
+        "modelRowCommitted": 198.87
+      }
+    },
+    {
+      "scenario": "Injected slow disk failure, shopping mode, uncheck",
+      "pressToFeedbackCommitMs": 112.05,
+      "millisecondsFromPressIn": {
+        "onPress": 48.18,
+        "checkboxCommitted": 160.23,
+        "storageStart": 169.22,
+        "checkboxRolledBack": 984.96
+      },
+      "result": "Saved model remained checked; local feedback rolled back after failed persistence."
+    },
+    {
+      "scenario": "Injected 750ms storage delay, successful uncheck in shopping mode",
+      "pressToFeedbackCommitMs": 14.58,
+      "storageWriteIncludingInjectedDelayMs": 761.36,
+      "millisecondsFromPressIn": {
+        "onPress": 45.8,
+        "checkboxCommitted": 60.38,
+        "storageStart": 67.61,
+        "storageEnd": 828.97,
+        "sessionPublished": 870.49,
+        "modelRowCommitted": 968.0
+      },
+      "result": "Feedback stayed unchecked throughout persistence and model publication; no intermediate revert."
+    }
+  ]
+}

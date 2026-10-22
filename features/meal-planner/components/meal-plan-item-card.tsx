@@ -1,7 +1,6 @@
-import { Alert, View } from 'react-native';
+import { Alert } from 'react-native';
 
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
-import { Checkbox } from '../../../components/ui/checkbox';
 import {
   ContextMenuItem,
   ContextMenuItemTitle,
@@ -9,29 +8,55 @@ import {
 } from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
-import { Text } from '../../../components/ui/text';
+import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
-import { MealPlanItem } from '../types';
+import { MealPlanItemWithStore } from '../types';
+import { getMealPlanShoppingState } from '../utils/shopping-state';
+import {
+  countUncheckedLinkedGroceryItems,
+  withUncheckedLinkedGroceryItemsNotice,
+} from '../utils/unchecked-linked-grocery-items';
+
+import { MealPlanCardContent } from './meal-plan-card-content';
+import { MEAL_PLAN_ONLY_LABEL } from './meal-plan-only';
 
 type MealPlanItemCardProps = {
-  mealPlanItem: MealPlanItem;
-  isLast: boolean;
-  onItemPress: (item: MealPlanItem) => void;
-  onIndicatorPress: (mealPlanItem: MealPlanItem) => void;
+  mealPlanItem: MealPlanItemWithStore;
+  contextMenuEnabled?: boolean;
+  onItemPress: (item: MealPlanItemWithStore) => void;
 };
 
 const MealPlanItemCard = ({
   mealPlanItem,
-  isLast,
+  contextMenuEnabled = true,
   onItemPress,
-  onIndicatorPress,
 }: MealPlanItemCardProps) => {
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
+  const shoppingState = getMealPlanShoppingState(mealPlanItem);
+  const {
+    isMealPlanOnly: mealPlanOnly,
+    setMealPlanOnly,
+    isPending,
+  } = useMealPlanOnlyToggle({
+    entry: { type: 'item', id: mealPlanItem.id },
+    isMealPlanOnly: !shoppingState.isShownOnGroceryList,
+  });
+
+  const statusLabel = shoppingState.allPurchased
+    ? 'Purchased'
+    : mealPlanItem.ignoredByGroceryList
+      ? MEAL_PLAN_ONLY_LABEL
+      : !shoppingState.isShownOnGroceryList
+        ? 'Not on grocery list'
+        : null;
 
   const handleDelete = () => {
     Alert.alert(
       'Delete Item',
-      `Are you sure you want to delete "${mealPlanItem.name}" from your meal plan?`,
+      withUncheckedLinkedGroceryItemsNotice(
+        `Are you sure you want to delete "${mealPlanItem.name}" from your meal plan?`,
+        countUncheckedLinkedGroceryItems({ items: [mealPlanItem] })
+      ),
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -44,37 +69,38 @@ const MealPlanItemCard = ({
     );
   };
 
+  const card = (
+    <ListItem>
+      <HapticPressable
+        key={mealPlanItem.id}
+        onPress={() => onItemPress(mealPlanItem)}
+        className="flex-1"
+      >
+        <MealPlanCardContent
+          title={mealPlanItem.name}
+          meta={[
+            formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit),
+            statusLabel,
+          ]}
+          mealTag={mealPlanItem.mealTag}
+        />
+      </HapticPressable>
+    </ListItem>
+  );
+
+  if (!contextMenuEnabled) return card;
+
   return (
-    <ContextMenuRoot
-      trigger={
-        <ListItem
-          className={
-            !isLast ? 'border-b border-dashed border-border' : undefined
-          }
-        >
-          <HapticPressable
-            key={mealPlanItem.id}
-            onPress={() => onItemPress(mealPlanItem)}
-            className="flex-1"
-          >
-            <View className="w-full flex-row items-center gap-3 py-1">
-              <Checkbox
-                checked={!!mealPlanItem.addedToList}
-                onPress={() => onIndicatorPress(mealPlanItem)}
-              />
-              <View className="flex-1 flex-row items-center justify-between gap-3">
-                <Text className="flex-1 text-xl font-medium text-foreground">
-                  {mealPlanItem.name}
-                </Text>
-                <Text className="text-sm text-muted-foreground">
-                  {formatQuantityUnit(mealPlanItem.quantity, mealPlanItem.unit)}
-                </Text>
-              </View>
-            </View>
-          </HapticPressable>
-        </ListItem>
-      }
-    >
+    <ContextMenuRoot trigger={card}>
+      <ContextMenuItem
+        key="toggle-meal-plan-only"
+        disabled={isPending}
+        onSelect={() => setMealPlanOnly(!mealPlanOnly)}
+      >
+        <ContextMenuItemTitle>
+          {mealPlanOnly ? 'Add to list' : 'Hide from list'}
+        </ContextMenuItemTitle>
+      </ContextMenuItem>
       <ContextMenuItem key="delete-item" destructive onSelect={handleDelete}>
         <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
       </ContextMenuItem>

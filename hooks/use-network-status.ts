@@ -20,7 +20,7 @@ export const useNetworkStatus = (): NetworkStatus => {
 
   useEffect(() => {
     // Subscribe to network state updates
-    const unsubscribe = NetInfo.addEventListener((state) => {
+    const unsubscribe = NetInfo.addEventListener(state => {
       // isInternetReachable can be null during initial check
       // Consider offline if either we're not connected or internet is explicitly not reachable
       const isOffline =

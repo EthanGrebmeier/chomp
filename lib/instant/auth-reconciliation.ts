@@ -7,6 +7,8 @@ export type AuthReconciliationAction =
   | 'wait'
   | 'keep-email-session'
   | 'keep-guest-session'
+  | 'defer-instant-sign-out'
+  | 'use-cached-instant-session'
   | 'bridge-clerk-session'
   | 'clear-instant-session'
   | 'signed-out';
@@ -17,6 +19,20 @@ type GetAuthReconciliationActionArgs = {
   clerkUserId: string | null;
   clerkEmail: string | null;
   instantAuth: AuthIdentity | null | undefined;
+  hasClerkSignOutGraceElapsed: boolean;
+  /**
+   * Clerk restores its session over the network. On a weak connection that
+   * request can hang for a long time, so once this is true we stop waiting and
+   * trust the locally persisted Instant session until Clerk catches up.
+   */
+  hasClerkRestoreTimedOut: boolean;
+};
+
+type ShouldStartClerkSignOutGracePeriodArgs = Pick<
+  GetAuthReconciliationActionArgs,
+  'isClerkLoaded' | 'isSignedIn'
+> & {
+  isOffline: boolean;
 };
 
 const normalizeEmail = (email: string | null | undefined) =>
@@ -48,15 +64,28 @@ export const doesInstantAuthMatchClerk = ({
   );
 };
 
+export const shouldStartClerkSignOutGracePeriod = ({
+  isClerkLoaded,
+  isSignedIn,
+  isOffline,
+}: ShouldStartClerkSignOutGracePeriodArgs) =>
+  isClerkLoaded && isSignedIn === false && !isOffline;
+
 export const getAuthReconciliationAction = ({
   isClerkLoaded,
   isSignedIn,
   clerkUserId,
   clerkEmail,
   instantAuth,
+  hasClerkSignOutGraceElapsed,
+  hasClerkRestoreTimedOut,
 }: GetAuthReconciliationActionArgs): AuthReconciliationAction => {
-  if (!isClerkLoaded || isSignedIn === undefined || instantAuth === undefined) {
+  if (instantAuth === undefined) {
     return 'wait';
+  }
+
+  if (!isClerkLoaded || isSignedIn === undefined) {
+    return hasClerkRestoreTimedOut ? 'use-cached-instant-session' : 'wait';
   }
 
   if (isSignedIn) {
@@ -79,7 +108,9 @@ export const getAuthReconciliationAction = ({
   }
 
   if (instantAuth?.email) {
-    return 'clear-instant-session';
+    return hasClerkSignOutGraceElapsed
+      ? 'clear-instant-session'
+      : 'defer-instant-sign-out';
   }
 
   if (instantAuth) {

@@ -47,4 +47,3 @@ export const updateSavedItem = async ({
     return { id: item.id, promoted: false };
   }
 };
-

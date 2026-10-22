@@ -37,6 +37,7 @@ type MealPlanItemContextValue = {
   // Helper methods
   resetState: (options?: {
     itemNameInputRef?: React.RefObject<TextInput | null>;
+    keepMealContext?: boolean;
   }) => void;
   populateFromItem: (item: BaseGroceryItem) => void;
   isValid: () => boolean;
@@ -92,10 +93,6 @@ export const MealPlanItemProvider = ({
     initialValues?.mealTag
   );
   const [showMatchingItems, setShowMatchingItems] = useState(false);
-  const commitItemName = useDebounceCallback(
-    setCommittedItemName,
-    TEXT_COMMIT_DEBOUNCE_MS
-  );
   const commitItemNotes = useDebounceCallback(
     setCommittedItemNotes,
     TEXT_COMMIT_DEBOUNCE_MS
@@ -104,7 +101,7 @@ export const MealPlanItemProvider = ({
   const setItemName = (name: string) => {
     itemNameInput.handleChangeText(name);
     setHasItemTitle(name.trim().length > 0);
-    commitItemName(name);
+    setCommittedItemName(name);
   };
 
   const setItemNotes = (notes: string) => {
@@ -114,8 +111,8 @@ export const MealPlanItemProvider = ({
 
   const resetState = (options?: {
     itemNameInputRef?: React.RefObject<TextInput | null>;
+    keepMealContext?: boolean;
   }) => {
-    commitItemName.cancel();
     commitItemNotes.cancel();
     // For continuous add entry, clear the name field in place (setNativeProps)
     // instead of remounting via a key bump. Remounting the focused input
@@ -134,23 +131,27 @@ export const MealPlanItemProvider = ({
     setUnit('each');
     setCategory(undefined);
     setStoreId(undefined);
-    setSelectedDate(undefined);
-    setMealTag(undefined);
+    // During continuous entry we keep the selected date and meal tag so the
+    // next item lands on the same day/meal. Clearing them would leave the
+    // form invalid (a date is required) and disable the Add button.
+    if (!options?.keepMealContext) {
+      setSelectedDate(undefined);
+      setMealTag(undefined);
+    }
     setShowMatchingItems(false);
   };
 
   const populateFromItem = (item: BaseGroceryItem) => {
-    commitItemName.cancel();
-    itemNameInput.reset(item.name);
-    setCommittedItemName(item.name);
-    setHasItemTitle(item.name.trim().length > 0);
+    setItemName(item.name);
     setUnit(normalizeUnit(item.unit));
     if (item.category) setCategory(item.category);
     setShowMatchingItems(false);
   };
 
   const isValid = () => {
-    return itemNameInput.getValue().trim().length > 0 && selectedDate !== undefined;
+    return (
+      itemNameInput.getValue().trim().length > 0 && selectedDate !== undefined
+    );
   };
 
   const value: MealPlanItemContextValue = {

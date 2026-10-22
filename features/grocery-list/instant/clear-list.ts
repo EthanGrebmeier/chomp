@@ -1,29 +1,25 @@
 import { useMutation } from '@tanstack/react-query';
 
-import { db } from '../../../lib/instant';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import type { GroceryItemForDeletion } from '../../meal-planner/instant/plan-linked-grocery-item-deletion';
 import { GroceryListItem } from '../types';
 
+import { deleteGroceryItems } from './delete-grocery-items';
+
 type clearGroceryListArgs = {
-  itemIds: string[];
+  items: GroceryItemForDeletion[];
 };
 
-const clearGroceryList = async ({ itemIds }: clearGroceryListArgs) => {
-  return db.transact(
-    itemIds.map(itemId =>
-      db.tx.grocery_items[itemId].update(
-        trimStringFields({
-          isDeleted: true,
-          deletedAt: new Date().toISOString(),
-        })
-      )
-    )
-  );
-};
+/**
+ * Deletes the given items (Clear List and bulk delete). Unchecked linked
+ * items count as deletes and deselect their meal plan source; checked items
+ * leave the meal plan alone. See `deleteGroceryItems`.
+ */
+const clearGroceryList = async ({ items }: clearGroceryListArgs) =>
+  deleteGroceryItems({ items });
 
-export const filterActiveItems = (groceryItems: GroceryListItem[]) => {
-  return groceryItems.filter(item => !item.isDeleted).map(item => item.id);
-};
+export const filterActiveItems = <Item extends GroceryListItem>(
+  groceryItems: Item[]
+) => groceryItems.filter(item => !item.isDeleted);
 
 export const useClearGroceryList = () => {
   return useMutation({

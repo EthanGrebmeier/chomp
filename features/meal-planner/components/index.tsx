@@ -1,200 +1,122 @@
-import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
-import { MoreHorizontalIcon, PlusIcon } from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, View } from 'react-native';
-import PagerView from 'react-native-pager-view';
+import { format, isSameDay, startOfDay } from 'date-fns';
+import { PlusIcon } from 'lucide-react-native';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, View } from 'react-native';
 
 import { Heading } from '../../../components/text/heading';
 import { Button } from '../../../components/ui/button';
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuItemIcon,
-  DropdownMenuItemTitle,
-  DropdownMenuRoot,
-} from '../../../components/ui/dropdown-menu';
 import { Icon } from '../../../components/ui/icon';
-import { useClearMealPlan } from '../hooks/useClearMealPlan';
+import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
+import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
-import { MealPlanItemWithStore } from '../types';
-
-import { AddMealsToListButton } from './add-meals-to-list-button';
+import { MealPlanFocusRequest, MealPlanItemWithStore } from '../types';
 import {
-  AddMealsToListConfirmation,
-  AddMealsToListSheetRef,
-} from './add-meals-to-list-confirmation';
+  buildMealPlanDayListSections,
+  MEAL_PLAN_DAY_LIST_PAST_DAYS,
+  type MoveMealPlanEntry,
+} from '../utils/meal-plan-day-list';
+
 import {
   AddToMealPlanSheet,
   AddToMealPlanSheetRef,
 } from './add-to-meal-plan-sheet';
-import MealPlanDateSelector from './date-selector/meal-plan-date-selector';
 import { EditItemSheet, EditItemSheetRef } from './edit-item-sheet';
 import { EditMealSheet, EditMealSheetRef } from './edit-meal-sheet';
-import { MealPlanDate } from './meal-plan-date';
 import { MealPlanDateView } from './meal-plan-date-view';
-
-const DAYS_RANGE = 30; //  days before and after today
+import { MealPlanDropdownMenu } from './meal-plan-dropdown-menu';
 
 type MealPlannerProps = {
   listId: string;
   listName?: string;
   onViewListsPress?: () => void;
   showHeader?: boolean;
+  /** Scrolls the requested day into view. */
+  focusRequest?: MealPlanFocusRequest | null;
 };
 
-export const MealPlanner = ({
+export const MealPlanner = memo(function MealPlanner({
   listId,
   listName,
   onViewListsPress,
   showHeader = true,
-}: MealPlannerProps) => {
+  focusRequest,
+}: MealPlannerProps) {
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
-  const addMealsToListSheet = useRef<AddMealsToListSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
-  const pagerRef = useRef<PagerView>(null);
-  const isProgrammaticNavigationRef = useRef(false);
   const { recipes, items } = useUserMealPlanData(listId);
-  const { mutate: clearMealPlan } = useClearMealPlan();
-  const hasMealPlanEntries = recipes.length > 0 || items.length > 0;
-  const unaddedCount =
-    recipes.filter(recipe => !recipe.addedToList).length +
-    items.filter(item => !item.addedToList).length;
-
-  const { datesWithMeals, datesAllMealsAdded } = useMemo(() => {
-    const mealStatusByDate = new Map<
-      string,
-      { hasMeals: boolean; allMealsAdded: boolean }
-    >();
-
-    const register = (date: string, addedToList: boolean) => {
-      const status = mealStatusByDate.get(date) ?? {
-        hasMeals: false,
-        allMealsAdded: true,
-      };
-      status.hasMeals = true;
-      if (!addedToList) {
-        status.allMealsAdded = false;
-      }
-      mealStatusByDate.set(date, status);
-    };
-
-    recipes.forEach(recipe => register(recipe.date, recipe.addedToList));
-    items.forEach(item => register(item.date, item.addedToList));
-
-    const withMeals = new Set<string>();
-    const allAdded = new Set<string>();
-
-    mealStatusByDate.forEach((status, date) => {
-      if (!status.hasMeals) return;
-      withMeals.add(date);
-      if (status.allMealsAdded) {
-        allAdded.add(date);
-      }
-    });
-
-    return { datesWithMeals: withMeals, datesAllMealsAdded: allAdded };
-  }, [items, recipes]);
-
-  // Track when the date array was generated to detect day changes
+  const { mutateAsync: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
+  const { mutateAsync: updateMealPlanItem } = useUpdateMealPlanItem();
   const [dateAnchor, setDateAnchor] = useState(() => startOfDay(new Date()));
+  const dayListSections = useMemo(
+    () =>
+      buildMealPlanDayListSections({ anchorDate: dateAnchor, recipes, items }),
+    [dateAnchor, recipes, items]
+  );
 
-  // Generate date range: 30 days before today to 30 days after
-  const daysOfPlan = useMemo(() => {
-    const dates = [];
-    for (let i = -DAYS_RANGE; i <= DAYS_RANGE; i++) {
-      dates.push(
-        i < 0 ? subDays(dateAnchor, Math.abs(i)) : addDays(dateAnchor, i)
-      );
-    }
-    return dates;
-  }, [dateAnchor]);
-
-  // Initial page index is today (middle of the range)
-  const initialPageIndex = DAYS_RANGE;
-
-  const [currentPageIndex, setCurrentPageIndex] =
-    useState<number>(initialPageIndex);
-
-  // When app becomes active, check if the day has changed and navigate to today
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
       if (nextState === 'active') {
-        const realToday = startOfDay(new Date());
-        if (!isSameDay(realToday, dateAnchor)) {
-          // Day has changed - update the date anchor and navigate to today
-          setDateAnchor(realToday);
-          isProgrammaticNavigationRef.current = true;
-          pagerRef.current?.setPageWithoutAnimation(initialPageIndex);
-          setCurrentPageIndex(initialPageIndex);
-        }
+        const today = startOfDay(new Date());
+        setDateAnchor(current => (isSameDay(current, today) ? current : today));
       }
     });
     return () => subscription.remove();
-  }, [dateAnchor, initialPageIndex]);
+  }, []);
 
-  const currentDate =
-    daysOfPlan[currentPageIndex] ?? daysOfPlan[initialPageIndex];
+  const lastFocusedRequest = useRef<number | null>(null);
+  useEffect(() => {
+    if (!focusRequest?.mealId || lastFocusedRequest.current === focusRequest.id)
+      return;
+    const meal = recipes.find(m => m.id === focusRequest.mealId);
+    const item = items.find(i => i.id === focusRequest.mealId);
+    if (!meal && !item) return;
+    lastFocusedRequest.current = focusRequest.id;
+    if (meal)
+      editMealSheet.current?.open({
+        mealPlanRecipe: meal,
+        recipe: meal.recipe,
+        focusSourceId: focusRequest.sourceId,
+      });
+    else if (item) editItemSheet.current?.open(item);
+  }, [focusRequest, recipes, items]);
 
-  const getRecipesForDate = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return recipes.filter(recipe => recipe.date === dateStr);
-  };
+  const handleItemPress = useCallback((item: MealPlanItemWithStore) => {
+    editItemSheet.current?.open(item);
+  }, []);
 
-  const getItemsForDate = (date: Date): MealPlanItemWithStore[] => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return items.filter(item => item.date === dateStr);
-  };
+  const handleMealPress = useCallback<
+    React.ComponentProps<typeof MealPlanDateView>['onMealPress']
+  >(({ mealPlanRecipe, recipe }) => {
+    editMealSheet.current?.open({ mealPlanRecipe, recipe });
+  }, []);
 
-  const handleDatePress = useCallback(
-    (date: Date) => {
-      const index = daysOfPlan.findIndex(d => isSameDay(d, date));
-      if (index !== -1) {
-        isProgrammaticNavigationRef.current = true;
-        pagerRef.current?.setPageWithoutAnimation(index);
-        setCurrentPageIndex(index);
+  const handleMoveMealPlanEntry = useCallback<MoveMealPlanEntry>(
+    async (entry, targetDate) => {
+      if (entry.date === targetDate) return;
+
+      if (entry.type === 'recipe') {
+        await updateMealPlanRecipe({
+          mealPlanRecipeId: entry.id,
+          updates: { date: targetDate },
+        });
+        return;
       }
+
+      await updateMealPlanItem({
+        mealPlanItemId: entry.id,
+        updates: { date: targetDate },
+      });
     },
-    [daysOfPlan]
+    [updateMealPlanRecipe, updateMealPlanItem]
   );
 
-  const handlePageSelected = (e: { nativeEvent: { position: number } }) => {
-    setCurrentPageIndex(e.nativeEvent.position);
-  };
-
-  const handleItemPress = (item: MealPlanItemWithStore) => {
-    editItemSheet.current?.open(item);
-  };
+  const openAddSheetForDate = useCallback((dateKey: string) => {
+    addToMealPlanSheet.current?.present({ defaultDate: dateKey });
+  }, []);
 
   const handleAddPress = () => {
-    const dateStr = format(currentDate, 'yyyy-MM-dd');
-    addToMealPlanSheet.current?.present({ defaultDate: dateStr });
-  };
-
-  const handleTodayPress = () => {
-    const today = startOfDay(new Date());
-    handleDatePress(today);
-  };
-
-  const handleClearMealPlan = () => {
-    if (!hasMealPlanEntries) return;
-
-    Alert.alert(
-      'Clear Meal Plan',
-      'Are you sure you want to remove all meals and items from your meal plan?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: () =>
-            clearMealPlan({
-              mealPlanRecipeIds: recipes.map(recipe => recipe.id),
-              mealPlanItemIds: items.map(item => item.id),
-            }),
-        },
-      ]
-    );
+    openAddSheetForDate(format(dateAnchor, 'yyyy-MM-dd'));
   };
 
   return (
@@ -211,75 +133,25 @@ export const MealPlanner = ({
               <Heading>{listName ?? 'Meal Plan'}</Heading>
             </Button>
           </View>
-          <View className="flex-row items-center gap-1">
-            <DropdownMenuRoot
-              trigger={
-                <Button variant="ghost" size="icon" className="h-10 w-10">
-                  <Icon as={MoreHorizontalIcon} size={20} />
-                </Button>
-              }
-            >
-              <DropdownMenuContent>
-                <DropdownMenuItem
-                  key="clear-meal-plan"
-                  destructive
-                  onSelect={handleClearMealPlan}
-                  disabled={!hasMealPlanEntries}
-                >
-                  <DropdownMenuItemTitle>Clear Meal Plan</DropdownMenuItemTitle>
-                  <DropdownMenuItemIcon ios={{ name: 'xmark.circle' }} />
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenuRoot>
-          </View>
+          <MealPlanDropdownMenu recipes={recipes} items={items} />
         </View>
       ) : null}
-      <AddMealsToListButton
-        unaddedCount={unaddedCount}
-        onPress={() => addMealsToListSheet.current?.present()}
-      />
-      <AddMealsToListConfirmation ref={addMealsToListSheet} listId={listId} />
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} listId={listId} />
-      <EditItemSheet ref={editItemSheet} />
-      <View className="flex-1">
-        <MealPlanDate
-          currentDate={currentDate}
-          onTodayPress={handleTodayPress}
-        />
-        <MealPlanDateSelector
-          dates={daysOfPlan}
-          currentDate={currentDate}
-          onDatePress={handleDatePress}
-          isProgrammaticNavigationRef={isProgrammaticNavigationRef}
-          datesWithMeals={datesWithMeals}
-          datesAllMealsAdded={datesAllMealsAdded}
-        />
-        <PagerView
-          ref={pagerRef}
-          style={{ flex: 1 }}
-          initialPage={initialPageIndex}
-          onPageSelected={handlePageSelected}
-        >
-          {daysOfPlan.map(date => (
-            <View key={date.toISOString()} style={{ flex: 1 }}>
-              <MealPlanDateView
-                listId={listId}
-                recipes={getRecipesForDate(date)}
-                items={getItemsForDate(date)}
-                onMealPress={({ mealPlanRecipe, recipe }) => {
-                  editMealSheet.current?.open({ mealPlanRecipe, recipe });
-                }}
-                onItemPress={handleItemPress}
-              />
-            </View>
-          ))}
-        </PagerView>
-      </View>
+      <EditItemSheet ref={editItemSheet} listId={listId} />
+      <MealPlanDateView
+        key={dayListSections[MEAL_PLAN_DAY_LIST_PAST_DAYS]?.dateKey}
+        dayListSections={dayListSections}
+        onDayPress={openAddSheetForDate}
+        onMoveEntry={handleMoveMealPlanEntry}
+        onMealPress={handleMealPress}
+        onItemPress={handleItemPress}
+        focusRequest={focusRequest}
+      />
       <Button
         size="wide-small"
         onPress={handleAddPress}
-        className="absolute bottom-12 right-6 z-10"
+        className="absolute bottom-8 right-6 z-10"
       >
         <Icon
           as={PlusIcon}
@@ -290,4 +162,4 @@ export const MealPlanner = ({
       </Button>
     </View>
   );
-};
+});

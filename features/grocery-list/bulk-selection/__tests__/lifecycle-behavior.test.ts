@@ -42,6 +42,9 @@ vi.mock('@/lib/instant', () => ({
   },
 }));
 
+// Meal plan write-back builders import `tx`; these items aren't linked.
+vi.mock('@instantdb/react-native', () => ({ tx: {} }));
+
 vi.mock('../../instant/update-grocery-item-only', () => ({
   updateGroceryItemOnly: updateGroceryItemOnlyMock,
 }));
@@ -97,14 +100,14 @@ describe('bulk mode lifecycle behavior', () => {
     expect(exited.selectedItemIds.size).toBe(0);
   });
 
-  it('resets mode state after successful bulk delete', async () => {
+  it('resets mode state once bulk delete is confirmed', async () => {
     let state = buildActiveSelectionState();
 
     const result = await runBulkDelete({
       selectedItemIds: state.selectedItemIds,
       confirmDelete: vi.fn().mockResolvedValue(true),
       deleteItems: vi.fn().mockResolvedValue(undefined),
-      onDeleteSuccess: () => {
+      onDeleteConfirmed: () => {
         state = exitBulkSelectionMode(state);
       },
     });

@@ -3,12 +3,17 @@ import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 
+import { FadeSwitch } from '../../../components/animated/fade-switch';
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
 import { EmptySubtext } from '../../../components/text/empty-subtext';
-import { cn } from '../../../lib/utils';
 import { useCategoryOptions } from '../../categories/use-category-options';
-import { getCategoryColor } from '../../shared/category/categories';
+import {
+  createCheckedStateSnapshot,
+  getPresentedCheckedState,
+  hasCheckedStateTransition,
+  reconcilePresentedCheckedState,
+} from '../checked-state-presentation';
 import {
   GroceryListGroupBy,
   GroceryListItemWithRecipe,
@@ -22,6 +27,9 @@ import { GroceryListItem } from './grocery-list-item';
 type GroceryItemsListProps = {
   items: GroceryListItemWithRecipe[];
   totalItemCount: number;
+  hideOrganizationTags?: boolean;
+  /** True while the list's items are still being fetched. */
+  isLoading?: boolean;
   groupBy: GroceryListGroupBy;
   sortBy: GroceryListSortBy;
   collapsedSectionsResetKey?: string;
@@ -29,6 +37,7 @@ type GroceryItemsListProps = {
     type: 'collapse' | 'expand';
     id: number;
   } | null;
+  scrollsToTop?: boolean;
   onListInteraction?: () => void;
   isBulkSelectionModeActive?: boolean;
   selectedBulkItemIds?: Set<string>;
@@ -62,19 +71,20 @@ type GroceryListRow =
       sectionKey: string;
       sectionTitle: string;
       item: GroceryListItemWithRecipe;
-      isLastInSection: boolean;
     };
 
-const MEASURED_HEADER_HEIGHT = 52;
-const MEASURED_ITEM_HEIGHT = 72;
+const CHECKED_SECTION_SETTLE_DELAY_MS = 1000;
 
 export const GroceryItemsList = ({
   items,
   totalItemCount,
+  hideOrganizationTags = false,
+  isLoading = false,
   groupBy,
   sortBy,
   collapsedSectionsResetKey,
   groupingBulkAction,
+  scrollsToTop = true,
   onListInteraction,
   isBulkSelectionModeActive = false,
   selectedBulkItemIds = new Set<string>(),
@@ -89,9 +99,79 @@ export const GroceryItemsList = ({
   const [collapsedSectionsByGroup, setCollapsedSectionsByGroup] = useState<
     Record<GroceryItemsListProps['groupBy'], Set<string>>
   >(createInitialCollapsedSectionsByGroup);
-  const lastAppliedBulkActionId = useRef<number | null>(null);
+  const [
+    appliedCollapsedSectionsResetKey,
+    setAppliedCollapsedSectionsResetKey,
+  ] = useState(collapsedSectionsResetKey);
+  const [appliedBulkActionId, setAppliedBulkActionId] = useState<number | null>(
+    null
+  );
+  const [presentedCheckedState, setPresentedCheckedState] = useState(() =>
+    createCheckedStateSnapshot(items)
+  );
+  const lastObservedCheckedStateRef = useRef(presentedCheckedState);
+  const latestCheckedStateRef = useRef(presentedCheckedState);
+  const checkedStateSettleTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const checkedStateReconcileTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  if (collapsedSectionsResetKey !== appliedCollapsedSectionsResetKey) {
+    setAppliedCollapsedSectionsResetKey(collapsedSectionsResetKey);
+    setCollapsedSectionsByGroup(createInitialCollapsedSectionsByGroup());
+    setAppliedBulkActionId(null);
+  }
 
   const collapsedSections = collapsedSectionsByGroup[groupBy];
+
+  useEffect(() => {
+    const nextCheckedState = createCheckedStateSnapshot(items);
+    const hasTransition = hasCheckedStateTransition(
+      lastObservedCheckedStateRef.current,
+      nextCheckedState
+    );
+
+    lastObservedCheckedStateRef.current = nextCheckedState;
+    latestCheckedStateRef.current = nextCheckedState;
+
+    if (checkedStateReconcileTimeoutRef.current) {
+      clearTimeout(checkedStateReconcileTimeoutRef.current);
+    }
+    // Reconcile membership on the next task so observing new props does not
+    // synchronously cascade another render.
+    checkedStateReconcileTimeoutRef.current = setTimeout(() => {
+      setPresentedCheckedState(previous =>
+        reconcilePresentedCheckedState(previous, nextCheckedState)
+      );
+      checkedStateReconcileTimeoutRef.current = null;
+    }, 0);
+
+    if (!hasTransition) {
+      return;
+    }
+
+    if (checkedStateSettleTimeoutRef.current) {
+      clearTimeout(checkedStateSettleTimeoutRef.current);
+    }
+
+    checkedStateSettleTimeoutRef.current = setTimeout(() => {
+      setPresentedCheckedState(new Map(latestCheckedStateRef.current));
+      checkedStateSettleTimeoutRef.current = null;
+    }, CHECKED_SECTION_SETTLE_DELAY_MS);
+  }, [items]);
+
+  useEffect(() => {
+    return () => {
+      if (checkedStateSettleTimeoutRef.current) {
+        clearTimeout(checkedStateSettleTimeoutRef.current);
+      }
+      if (checkedStateReconcileTimeoutRef.current) {
+        clearTimeout(checkedStateReconcileTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const toggleSection = useCallback(
     (sectionKey: string) => {
@@ -113,9 +193,13 @@ export const GroceryItemsList = ({
   );
 
   const { uncheckedItems, checkedItems } = useMemo(() => {
-    const nextUncheckedItems = items.filter(item => !item.isChecked);
+    const nextUncheckedItems = items.filter(
+      item => !getPresentedCheckedState(item, presentedCheckedState)
+    );
     const nextCheckedItems = sortItems(
-      items.filter(item => item.isChecked),
+      items.filter(item =>
+        getPresentedCheckedState(item, presentedCheckedState)
+      ),
       sortBy,
       categoryOptions
     );
@@ -124,7 +208,7 @@ export const GroceryItemsList = ({
       uncheckedItems: nextUncheckedItems,
       checkedItems: nextCheckedItems,
     };
-  }, [categoryOptions, items, sortBy]);
+  }, [categoryOptions, items, presentedCheckedState, sortBy]);
 
   // Group unchecked items based on selected grouping
   const groupedUncheckedItems = useMemo(
@@ -172,20 +256,12 @@ export const GroceryItemsList = ({
     return keys;
   }, [checkedItems.length, groupedUncheckedItems, isBulkSelectionModeActive]);
 
-  useEffect(() => {
-    setCollapsedSectionsByGroup(createInitialCollapsedSectionsByGroup());
-    lastAppliedBulkActionId.current = null;
-  }, [collapsedSectionsResetKey]);
-
-  useEffect(() => {
-    if (!groupingBulkAction || groupBy === 'none') {
-      return;
-    }
-    if (lastAppliedBulkActionId.current === groupingBulkAction.id) {
-      return;
-    }
-    lastAppliedBulkActionId.current = groupingBulkAction.id;
-
+  if (
+    groupingBulkAction != null &&
+    groupBy !== 'none' &&
+    groupingBulkAction.id !== appliedBulkActionId
+  ) {
+    setAppliedBulkActionId(groupingBulkAction.id);
     setCollapsedSectionsByGroup(previous => {
       const nextByGroup = { ...previous };
       nextByGroup[groupBy] =
@@ -194,7 +270,7 @@ export const GroceryItemsList = ({
           : new Set(groupingSectionKeys);
       return nextByGroup;
     });
-  }, [groupBy, groupingBulkAction, groupingSectionKeys]);
+  }
 
   const listRows = useMemo(() => {
     const rows: GroceryListRow[] = [];
@@ -236,7 +312,6 @@ export const GroceryItemsList = ({
           sectionKey,
           sectionTitle,
           item,
-          isLastInSection: index === data.length - 1,
         });
       });
     };
@@ -292,15 +367,10 @@ export const GroceryItemsList = ({
       const hasSectionItems = sectionIds.length > 0;
       const areAllSectionItemsSelected =
         hasSectionItems && sectionIds.every(id => selectedBulkItemIds.has(id));
-      const categoryColor = getCategoryColor(
-        categoryOptions,
-        row.categoryValue
-      );
 
       return (
         <CollapsibleSectionHeader
           title={row.title}
-          categoryColor={categoryColor}
           itemCount={row.itemCount}
           isExpanded={row.isExpanded}
           onToggle={() => toggleSection(row.sectionKey)}
@@ -325,7 +395,6 @@ export const GroceryItemsList = ({
     [
       handleDeselectSectionItems,
       handleSelectSectionItems,
-      categoryOptions,
       isBulkSelectionModeActive,
       sectionItemIds,
       selectedBulkItemIds,
@@ -334,32 +403,17 @@ export const GroceryItemsList = ({
   );
 
   const renderRow = useCallback(
-    ({ item, target }: ListRenderItemInfo<GroceryListRow>) => {
-      // FlashList may invoke measurement renders; keep them lightweight.
-      if (target === 'Measurement') {
-        return (
-          <View
-            style={{
-              height:
-                item.type === 'header'
-                  ? MEASURED_HEADER_HEIGHT
-                  : MEASURED_ITEM_HEIGHT,
-            }}
-          />
-        );
-      }
-
+    ({ item }: ListRenderItemInfo<GroceryListRow>) => {
       if (item.type === 'header') {
         return renderSectionHeader(item);
       }
 
-      const showBorder = !item.isLastInSection;
       return (
         <GroceryListItem
           item={item.item}
+          hideOrganizationTags={hideOrganizationTags}
           categoryOptions={categoryOptions}
           isChecked={Boolean(item.item.isChecked)}
-          className={cn(showBorder && 'border-b border-dashed border-border')}
           onEdit={presentEditSheet}
           isBulkSelectionModeActive={isBulkSelectionModeActive}
           isBulkSelected={selectedBulkItemIds.has(item.item.id)}
@@ -370,6 +424,7 @@ export const GroceryItemsList = ({
     },
     [
       categoryOptions,
+      hideOrganizationTags,
       isBulkSelectionModeActive,
       onEnterBulkSelectionModeWithItem,
       onToggleBulkSelectionItem,
@@ -379,65 +434,95 @@ export const GroceryItemsList = ({
     ]
   );
 
-  if (totalItemCount === 0) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <View className="-translate-y-12">
-          <View className="w-64">
-            <Image
-              source={require('../../../assets/images/FruitBasket.png')}
-              style={{
-                width: 'auto',
-                height: 180,
-              }}
-              contentFit="contain"
-            />
-          </View>
-          <View className="mt-4">
-            <EmptyHeading className="px-4">
-              Your grocery list is empty
-            </EmptyHeading>
-            <EmptySubtext className="px-4">
-              Add some items to get started!
-            </EmptySubtext>
-          </View>
-        </View>
-      </View>
-    );
-  }
+  const contentState = getContentState({
+    isLoading,
+    totalItemCount,
+    visibleItemCount: items.length,
+  });
 
-  if (items.length === 0) {
-    return (
-      <View className="flex-1 items-center justify-center px-6">
-        <EmptyHeading className="px-4">No matches found</EmptyHeading>
-        <EmptySubtext className="px-4">
-          Try a different search or clear the filter.
-        </EmptySubtext>
-      </View>
-    );
-  }
-
+  // Cross-fade between loading/empty/list states instead of popping, e.g.
+  // when items arrive after the skeleton or the last item is removed.
   return (
-    <FlashList
-      data={listRows.rows}
-      renderItem={renderRow}
-      keyExtractor={item =>
-        item.type === 'header'
-          ? `header-${item.sectionKey}`
-          : `item-${item.item.id}`
-      }
-      getItemType={item => item.type}
-      drawDistance={150}
-      stickyHeaderIndices={listRows.stickyHeaderIndices}
-      contentContainerClassName="pb-36"
-      contentContainerStyle={{ flexGrow: 1 }}
-      showsVerticalScrollIndicator={false}
-      onScrollBeginDrag={onListInteraction}
-      onTouchStart={onListInteraction}
-      maintainVisibleContentPosition={{
-        disabled: false,
-        autoscrollToTopThreshold: 0,
-      }}
-    />
+    <View className="flex-1">
+      <FadeSwitch stateKey={contentState}>
+        {contentState === 'loading' ? null : contentState === 'empty' ? (
+          <EmptyListState />
+        ) : contentState === 'no-matches' ? (
+          <NoMatchesState />
+        ) : (
+          <FlashList
+            data={listRows.rows}
+            renderItem={renderRow}
+            keyExtractor={item =>
+              item.type === 'header'
+                ? `header-${item.sectionKey}`
+                : `item-${item.item.id}`
+            }
+            getItemType={item => item.type}
+            drawDistance={300}
+            stickyHeaderIndices={listRows.stickyHeaderIndices}
+            contentContainerClassName="pb-36"
+            contentContainerStyle={{ flexGrow: 1 }}
+            showsVerticalScrollIndicator={false}
+            scrollsToTop={scrollsToTop}
+            onScrollBeginDrag={onListInteraction}
+            onTouchStart={onListInteraction}
+            maintainVisibleContentPosition={{
+              disabled: true,
+            }}
+          />
+        )}
+      </FadeSwitch>
+    </View>
   );
 };
+
+type GroceryItemsListContentState = 'loading' | 'empty' | 'no-matches' | 'list';
+
+const getContentState = ({
+  isLoading,
+  totalItemCount,
+  visibleItemCount,
+}: {
+  isLoading: boolean;
+  totalItemCount: number;
+  visibleItemCount: number;
+}): GroceryItemsListContentState => {
+  if (totalItemCount === 0) {
+    // Items for this list haven't arrived yet; don't flash the empty state.
+    return isLoading ? 'loading' : 'empty';
+  }
+  return visibleItemCount === 0 ? 'no-matches' : 'list';
+};
+
+const EmptyListState = () => (
+  <View className="flex-1 items-center justify-center">
+    <View className="-translate-y-12">
+      <View className="w-64">
+        <Image
+          source={require('../../../assets/images/FruitBasket.png')}
+          style={{
+            width: 'auto',
+            height: 180,
+          }}
+          contentFit="contain"
+        />
+      </View>
+      <View className="mt-4">
+        <EmptyHeading className="px-4">Your grocery list is empty</EmptyHeading>
+        <EmptySubtext className="px-4">
+          Add some items to get started!
+        </EmptySubtext>
+      </View>
+    </View>
+  </View>
+);
+
+const NoMatchesState = () => (
+  <View className="flex-1 items-center justify-center px-6">
+    <EmptyHeading className="px-4">No matches found</EmptyHeading>
+    <EmptySubtext className="px-4">
+      Try a different search or clear the filter.
+    </EmptySubtext>
+  </View>
+);

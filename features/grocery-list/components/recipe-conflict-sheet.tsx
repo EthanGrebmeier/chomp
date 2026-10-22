@@ -69,14 +69,8 @@ export const RecipeConflictSheet = forwardRef<
       >
         <BottomSheet.SheetView className="pb-safe-offset-12">
           <BottomSheet.Header
-            subsection={
-              <BottomSheet.Subtext className="px-8 text-muted-foreground">
-                Some ingredients from &quot;{recipeName}&quot; already exist
-                with the same name, but different metadata. What would you like
-                to do?
-              </BottomSheet.Subtext>
-            }
-            title={`Recipe Already Exists`}
+            title="Choose how to add ingredients"
+            description={`Some ingredients from "${recipeName}" match items already on this list.`}
             dismissButton={<BackButton onPress={handleClose} />}
           />
         </BottomSheet.SheetView>

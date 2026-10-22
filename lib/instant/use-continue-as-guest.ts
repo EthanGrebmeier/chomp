@@ -33,7 +33,7 @@ const setIsGuestContinuationPending = (isPending: boolean) => {
   }
 
   isGuestContinuationPending = isPending;
-  guestContinuationListeners.forEach((listener) => listener(isPending));
+  guestContinuationListeners.forEach(listener => listener(isPending));
 };
 
 export const subscribeToGuestContinuationState = (

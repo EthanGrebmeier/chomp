@@ -13,6 +13,8 @@ import { GroceryListDropdownMenu } from './dropdown-menu';
 import { ListFilterDropdownMenu } from './list-filter-dropdown-menu';
 
 type GroceryListActionsProps = {
+  onStartShopping: () => void;
+  canStartShopping: boolean;
   items: GroceryListItemWithRecipe[];
   ownerId?: string;
   groupBy: GroceryListGroupBy;
@@ -31,6 +33,8 @@ type GroceryListActionsProps = {
 };
 
 export function GroceryListActions({
+  onStartShopping,
+  canStartShopping,
   items,
   ownerId,
   groupBy,
@@ -67,6 +71,8 @@ export function GroceryListActions({
         onCollapseAllGroupings={onCollapseAllGroupings}
       />
       <GroceryListDropdownMenu
+        onStartShopping={onStartShopping}
+        canStartShopping={canStartShopping}
         items={items}
         ownerId={ownerId}
         trigger={<Icon hitSlop={14} as={MoreHorizontal} size={24} />}

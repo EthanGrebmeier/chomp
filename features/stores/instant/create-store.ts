@@ -8,7 +8,10 @@ export type CreateStoreArgs = {
   isDefault?: boolean;
 };
 
-export const createStore = async ({ name, isDefault = false }: CreateStoreArgs) => {
+export const createStore = async ({
+  name,
+  isDefault = false,
+}: CreateStoreArgs) => {
   const user = await db.getAuth();
   if (!user) {
     throw new Error('User not authenticated');

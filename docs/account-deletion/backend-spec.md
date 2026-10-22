@@ -138,7 +138,7 @@ These entities have a cascading link to `$users` (directly or transitively):
 - **`grocery_list_shares` where the deleted user is a member (not the owner).**
   The share's membership is stored as a plain string field (`user_id`) rather
   than as a cascading link to `$users`. Deleting the user will **not** remove
-  share rows that reference them as a member of *someone else's* list. The
+  share rows that reference them as a member of _someone else's_ list. The
   backend must find and delete all `grocery_list_shares` whose `user_id` equals
   the deleted user's id so that no dangling membership rows remain.
 

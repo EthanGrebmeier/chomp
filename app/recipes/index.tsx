@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useDebounceCallback } from 'usehooks-ts';
 
-import { Text } from '@/components/ui/text';
+import { SearchButton } from '@/components/ui/search-button';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { RecipeFilters } from '@/features/recipes/components/recipe-filters';
 import { RecipeList } from '@/features/recipes/components/recipe-list';
@@ -31,6 +31,7 @@ export default function Recipes() {
   const { listId } = useLocalSearchParams<{ listId?: string }>();
   const { data: recipes, isLoading } = useRecipes();
 
+  const [searchMode, setSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mealTag, setMealTag] = useState<string | undefined>();
   const [sortBy, setSortBy] = useState<RecipeSortOption>('recent');
@@ -75,32 +76,44 @@ export default function Recipes() {
 
   return (
     <View className="flex-1 bg-background ">
-      <View className="flex-row items-center gap-2 px-4">
-        <BackButton onPress={() => router.back()} />
-        <Heading>Recipe Book</Heading>
-      </View>
-      <View className="mt-2">
-        <RecipeFilters
-          searchInputKey={searchInputKey}
-          searchDefaultValue={searchDefaultValue}
-          onSearchChange={handleSearchChange}
-          mealTag={mealTag}
-          onMealTagChange={setMealTag}
-          sortBy={sortBy}
-          onSortByChange={setSortBy}
-        />
-      </View>
-      <View className="px-4">
-        <Text variant="caption" tabularNumbers>
-          {filteredRecipes.length} recipe
-          {filteredRecipes.length !== 1 ? 's' : ''}
-          {searchQuery.trim() && ` matching "${searchQuery.trim()}"`}
-          {mealTag && !searchQuery.trim() && ` in ${mealTag}`}
-        </Text>
-      </View>
-      <View className="bottom-safe absolute right-6 z-10">
-        <CreateRecipeButton listId={listId} />
-      </View>
+      {searchMode ? (
+        <Animated.View
+          key="search-header"
+          entering={FadeIn.duration(200)}
+          exiting={FadeOut.duration(200)}
+        >
+          <RecipeFilters
+            searchInputKey={searchInputKey}
+            searchDefaultValue={searchDefaultValue}
+            onSearchChange={handleSearchChange}
+            onClose={() => setSearchMode(false)}
+            mealTag={mealTag}
+            onMealTagChange={setMealTag}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+          />
+        </Animated.View>
+      ) : (
+        <Animated.View
+          key="default-header"
+          entering={FadeIn.duration(200)}
+          exiting={FadeOut.duration(200)}
+          className="px-4 pb-2"
+        >
+          <View className="h-11 flex-row items-center gap-2">
+            <BackButton onPress={() => router.back()} />
+            <Heading>Recipe Book</Heading>
+            <View className="ml-auto flex-row items-center gap-2">
+              <SearchButton
+                accessibilityLabel="Search recipes"
+                onPress={() => setSearchMode(true)}
+                hasActiveFilters={hasActiveFilters}
+              />
+              <CreateRecipeButton listId={listId} />
+            </View>
+          </View>
+        </Animated.View>
+      )}
       <View className="flex-1">
         {isLoading ? (
           <Animated.View

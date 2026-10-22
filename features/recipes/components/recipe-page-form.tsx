@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react';
-import { TextInput as RNTextInput, ScrollView, View } from 'react-native';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { TextInput as RNTextInput, View } from 'react-native';
+import {
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+} from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TextInput } from '@/components/text-input';
@@ -10,6 +13,9 @@ import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-inp
 import { cn } from '@/lib/utils';
 
 const mealTimeOptions = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
+
+// xl button (h-12) + sticky bar padding (pt-3) + gap above the keyboard.
+const STICKY_SUBMIT_OFFSET = 72;
 
 export type RecipePageFormData = {
   name: string;
@@ -68,8 +74,9 @@ export const RecipePageForm = ({
 
   return (
     <View className="flex-1">
-      <ScrollView
-        automaticallyAdjustKeyboardInsets
+      <KeyboardAwareScrollView
+        bottomOffset={STICKY_SUBMIT_OFFSET}
+        extraKeyboardSpace={STICKY_SUBMIT_OFFSET}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -160,7 +167,7 @@ export const RecipePageForm = ({
             accessibilityLabel="Recipe source URL"
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <KeyboardStickyView
         offset={{

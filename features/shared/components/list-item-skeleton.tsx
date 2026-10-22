@@ -2,19 +2,9 @@ import { View } from 'react-native';
 
 import { SkeletonCircle, SkeletonText } from '@/components/ui/skeleton';
 
-type ListItemSkeletonProps = {
-  showBorder?: boolean;
-};
-
-export const ListItemSkeleton = ({
-  showBorder = true,
-}: ListItemSkeletonProps) => {
+export const ListItemSkeleton = () => {
   return (
-    <View
-      className={`flex-row items-center gap-3 px-4 py-4 ${
-        showBorder ? 'border-b border-dashed border-border' : ''
-      }`}
-    >
+    <View className="flex-row items-center gap-3 px-4 py-4">
       {/* Icon or avatar placeholder */}
       <SkeletonCircle size={20} />
 
@@ -28,4 +18,3 @@ export const ListItemSkeleton = ({
     </View>
   );
 };
-

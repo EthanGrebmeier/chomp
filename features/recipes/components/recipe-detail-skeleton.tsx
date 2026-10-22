@@ -1,46 +1,51 @@
 import { View } from 'react-native';
 
-import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/ui/skeleton';
+import {
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
+} from '@/components/ui/skeleton';
 
+import { RecipeIngredientSkeleton } from './recipe-ingredient-skeleton';
+
+/** Mirrors RecipeDetail: fixed nav bar, then overview + ingredients in one scroll. */
 export const RecipeDetailSkeleton = () => {
   return (
-    <View className="pt-safe flex-1 bg-background">
-      <View className="flex-1 gap-4 px-4">
-        {/* Back button */}
-        <SkeletonCircle size={40} />
+    <View className="flex-1 bg-background">
+      <View className="h-11 flex-row items-center justify-between px-4">
+        <SkeletonCircle size={32} />
+        <SkeletonCircle size={32} />
+      </View>
 
-        {/* Recipe title */}
-        <View className="gap-2">
-          <SkeletonText width="full" height="lg" />
-          <SkeletonText width="lg" height="lg" />
-        </View>
-
-        {/* Image placeholder */}
-        <Skeleton className="h-48 w-full rounded-xl" />
-
-        {/* Ingredients section */}
-        <View className="gap-3">
-          <SkeletonText width="sm" height="md" />
+      <View className="flex-1 gap-6 pt-2">
+        {/* Overview */}
+        <View className="gap-3 px-4">
+          <View className="items-start gap-2">
+            <Skeleton className="h-9 w-4/5 rounded-md" />
+            <Skeleton className="h-6 w-20 rounded-lg" />
+          </View>
           <View className="gap-2">
-            <SkeletonText width="lg" height="sm" />
-            <SkeletonText width="full" height="sm" />
-            <SkeletonText width="md" height="sm" />
-            <SkeletonText width="lg" height="sm" />
-            <SkeletonText width="full" height="sm" />
+            <SkeletonText width="full" height="md" />
+            <SkeletonText width="lg" height="md" />
           </View>
         </View>
 
-        {/* Instructions section */}
-        <View className="gap-3">
-          <SkeletonText width="sm" height="md" />
-          <View className="gap-2">
-            <SkeletonText width="full" height="sm" />
-            <SkeletonText width="full" height="sm" />
-            <SkeletonText width="lg" height="sm" />
+        {/* Ingredients */}
+        <View className="gap-1">
+          <View className="h-9 justify-center px-4">
+            <SkeletonText width="sm" height="xs" />
           </View>
+          <RecipeIngredientSkeleton showNotes />
+          <RecipeIngredientSkeleton />
+          <RecipeIngredientSkeleton showTag={false} />
+          <RecipeIngredientSkeleton />
+          <RecipeIngredientSkeleton />
         </View>
+      </View>
+
+      <View className="bottom-safe pointer-events-none absolute inset-x-4 z-10">
+        <Skeleton className="h-10 w-full rounded-full" />
       </View>
     </View>
   );
 };
-

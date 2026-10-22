@@ -12,6 +12,7 @@ export function ConfirmButton({ onPress, disabled }: ConfirmButtonProps) {
   return (
     <Button
       size="icon"
+      accessibilityLabel="Confirm"
       variant="default"
       onPress={onPress}
       disabled={disabled}

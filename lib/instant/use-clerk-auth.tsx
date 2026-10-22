@@ -29,6 +29,7 @@ import { createInstantAuthBridge, InstantBridgeError } from './auth-bridge';
 import {
   doesInstantAuthMatchClerk,
   getAuthReconciliationAction,
+  shouldStartClerkSignOutGracePeriod,
 } from './auth-reconciliation';
 import { redirectSignedOutAuth } from './auth-redirect';
 import {
@@ -46,8 +47,13 @@ export { runWithEmailAuthCompletion } from './email-auth-completion';
 export { InstantBridgeError } from './auth-bridge';
 
 const AUTH_LOADING_TIMEOUT_MS = 4000;
+// Clerk restores its session over the network and only falls back to its cache
+// on a hard network error. On a weak signal the request can hang instead, so
+// after this long we let the user in with the locally persisted Instant session.
+const CLERK_RESTORE_TIMEOUT_MS = 3000;
 const AUTH_RESTORE_RETRY_COUNT = 10;
 const AUTH_RESTORE_RETRY_DELAY_MS = 250;
+const CLERK_SIGN_OUT_GRACE_PERIOD_MS = 3000;
 const AUTH_WELCOME_ROUTE: Href = '/(auth)';
 const AUTH_EXPIRED_ROUTE: Href = AUTH_WELCOME_ROUTE;
 const BRIDGE_BACKGROUND_RETRY_COUNT = 3;
@@ -75,6 +81,7 @@ export type InstantAuthState = {
 type InstantAuthSnapshotArgs = {
   isClerkLoaded: boolean;
   isSignedIn: boolean | undefined;
+  isClerkRestoreDeferred: boolean;
   instantAuth: InstantAuthSession | undefined;
   isResolvingAuthState: boolean;
   isBlockingAuthLoad: boolean;
@@ -146,6 +153,7 @@ const publishInstantAuthStateSnapshot = (snapshot: InstantAuthState) => {
 const buildInstantAuthStateSnapshot = ({
   isClerkLoaded,
   isSignedIn,
+  isClerkRestoreDeferred,
   instantAuth,
   isResolvingAuthState,
   isBlockingAuthLoad,
@@ -153,17 +161,17 @@ const buildInstantAuthStateSnapshot = ({
   isGuestContinuationPending,
   bridgeStatus,
 }: InstantAuthSnapshotArgs): InstantAuthState => {
+  const isClerkSettled =
+    (isClerkLoaded && isSignedIn !== undefined) || isClerkRestoreDeferred;
   const isReconciled =
-    isClerkLoaded &&
+    isClerkSettled &&
     instantAuth !== undefined &&
-    isSignedIn !== undefined &&
     !isResolvingAuthState &&
     bridgeStatus !== 'pending';
   const hasInstantEmailSession = Boolean(instantAuth?.email);
   const hasInstantGuestSession = Boolean(instantAuth && !instantAuth.email);
   const shouldBlockAuthUi =
-    !isClerkLoaded ||
-    isSignedIn === undefined ||
+    !isClerkSettled ||
     isBlockingAuthLoad ||
     isResolvingAuthState ||
     instantAuth === undefined ||
@@ -262,9 +270,12 @@ export const InstantAuthHandler = ({
   const { user: clerkUser } = useUser();
   const signInToInstant = useInstantSignIn();
   const previousIsSignedInRef = useRef<boolean | undefined>(isSignedIn);
+  const hasClerkSignOutGraceElapsedRef = useRef(false);
   const transitionIdRef = useRef(0);
   const previousAppStateRef = useRef(AppState.currentState);
+  const hasShownExpiredToastRef = useRef(false);
   const [hasAuthLoadingTimedOut, setHasAuthLoadingTimedOut] = useState(false);
+  const [hasClerkRestoreTimedOut, setHasClerkRestoreTimedOut] = useState(false);
   const [isResolvingAuthState, setIsResolvingAuthState] = useState(true);
   const [didExpireSignedInSession, setDidExpireSignedInSession] =
     useState(false);
@@ -295,6 +306,8 @@ export const InstantAuthHandler = ({
   const { isLoading: isLoadingInstant, user: liveInstantUser } = db.useAuth();
 
   const isBlockingAuthLoad = isLoadingInstant && !hasAuthLoadingTimedOut;
+  const isClerkSettled = isClerkLoaded && isSignedIn !== undefined;
+  const isClerkRestoreDeferred = !isClerkSettled && hasClerkRestoreTimedOut;
   const liveGuestInstantAuth =
     !isSignedIn &&
     !isLoadingInstant &&
@@ -307,6 +320,7 @@ export const InstantAuthHandler = ({
       buildInstantAuthStateSnapshot({
         isClerkLoaded,
         isSignedIn,
+        isClerkRestoreDeferred,
         instantAuth: liveGuestInstantAuth ?? resolvedInstantAuth,
         isResolvingAuthState: liveGuestInstantAuth
           ? false
@@ -323,6 +337,7 @@ export const InstantAuthHandler = ({
       didExpireSignedInSession,
       isBlockingAuthLoad,
       isClerkLoaded,
+      isClerkRestoreDeferred,
       isGuestContinuationPending,
       isEmailAuthCompletionActive,
       isResolvingAuthState,
@@ -356,6 +371,21 @@ export const InstantAuthHandler = ({
   }, [isLoadingInstant]);
 
   useEffect(() => {
+    if (isClerkSettled) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      logBridge('Clerk restore timed out; using cached Instant session');
+      setHasClerkRestoreTimedOut(true);
+    }, CLERK_RESTORE_TIMEOUT_MS);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [isClerkSettled]);
+
+  useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
       const previousState = previousAppStateRef.current;
       previousAppStateRef.current = nextState;
@@ -369,9 +399,30 @@ export const InstantAuthHandler = ({
   }, []);
 
   useEffect(() => {
+    hasClerkSignOutGraceElapsedRef.current = false;
+
+    if (
+      !shouldStartClerkSignOutGracePeriod({
+        isClerkLoaded,
+        isSignedIn,
+        isOffline,
+      })
+    ) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      hasClerkSignOutGraceElapsedRef.current = true;
+      setReconcileNonce(current => current + 1);
+    }, CLERK_SIGN_OUT_GRACE_PERIOD_MS);
+
+    return () => clearTimeout(timeout);
+  }, [isClerkLoaded, isOffline, isSignedIn]);
+
+  useEffect(() => {
     const transitionId = ++transitionIdRef.current;
 
-    if (!isClerkLoaded || isSignedIn === undefined || isBlockingAuthLoad) {
+    if ((!isClerkSettled && !hasClerkRestoreTimedOut) || isBlockingAuthLoad) {
       return;
     }
 
@@ -408,6 +459,8 @@ export const InstantAuthHandler = ({
           clerkUserId: clerkUserId ?? null,
           clerkEmail,
           instantAuth: stableAuth,
+          hasClerkSignOutGraceElapsed: hasClerkSignOutGraceElapsedRef.current,
+          hasClerkRestoreTimedOut,
         });
 
         if (action === 'wait') {
@@ -415,9 +468,18 @@ export const InstantAuthHandler = ({
           return;
         }
 
+        if (action === 'use-cached-instant-session') {
+          // Clerk is still restoring over a slow network. Trust whatever
+          // Instant persisted locally; this effect re-runs and fully
+          // reconciles (bridge / sign-out) once Clerk finishes loading.
+          nextResolvedInstantAuth = stableAuth;
+          return;
+        }
+
         if (
           action === 'keep-email-session' ||
-          action === 'keep-guest-session'
+          action === 'keep-guest-session' ||
+          action === 'defer-instant-sign-out'
         ) {
           nextResolvedInstantAuth = stableAuth;
           setBridgeRetryAttempt(0);
@@ -505,8 +567,10 @@ export const InstantAuthHandler = ({
   }, [
     clerkEmail,
     clerkUserId,
+    hasClerkRestoreTimedOut,
     isBlockingAuthLoad,
     isClerkLoaded,
+    isClerkSettled,
     isEmailAuthCompletionActive,
     isLoadingInstant,
     isOffline,
@@ -541,6 +605,9 @@ export const InstantAuthHandler = ({
       instantAuthState.isSignedInWithClerk ||
       instantAuthState.bridgeStatus !== 'idle'
     ) {
+      // The user has (re)gained a valid session, so allow the next expiration
+      // to surface a fresh toast.
+      hasShownExpiredToastRef.current = false;
       return;
     }
 
@@ -553,7 +620,10 @@ export const InstantAuthHandler = ({
     const isOnAuthRoute = segments[0] === '(auth)';
 
     if (didExpireSignedInSession) {
-      toast.info('Your session expired. Please sign in again.');
+      if (!hasShownExpiredToastRef.current) {
+        hasShownExpiredToastRef.current = true;
+        toast.info('Your session expired. Please sign in again.');
+      }
       queueMicrotask(() => setDidExpireSignedInSession(false));
 
       redirectSignedOutAuth({

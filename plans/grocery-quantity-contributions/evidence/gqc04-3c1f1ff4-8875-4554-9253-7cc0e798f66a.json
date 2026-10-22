@@ -1,0 +1,1922 @@
+{
+  "kind": "GQC-04-isolated-SDK-emulation-not-actual-build",
+  "run": "3c1f1ff4-8875-4554-9253-7cc0e798f66a",
+  "target": "allowlisted-test-app",
+  "startedAt": "2026-10-20T03:53:15.985Z",
+  "scriptSha256": "9ebc3e46a3cdb2ada670949eab8d5c5354608757061608391d4a0da85a5454ed",
+  "modelSha256": "16cc341a4822202c92a6fd58d6559d737f05fc0f00ba684b27c2901a983416a5",
+  "sdk": "0.22.185",
+  "observations": [
+    {
+      "name": "schema-installed",
+      "entities": 9,
+      "attributes": 61,
+      "noCrossGenerationLinks": true,
+      "applicationSchemaUnchanged": true
+    },
+    {
+      "name": "legacy-before-fence-scalar-allowed",
+      "client": "legacy-online-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "78a73c22-ddba-41d1-acac-b31e49927510",
+      "unchanged": false,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "048605a1d33555cf94b068974b834ca91d2af291e937a800072a2a759fd600c6",
+      "pass": true
+    },
+    {
+      "name": "row-only-freeze-rejects-scalar",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "048605a1d33555cf94b068974b834ca91d2af291e937a800072a2a759fd600c6",
+      "after": "048605a1d33555cf94b068974b834ca91d2af291e937a800072a2a759fd600c6",
+      "pass": true
+    },
+    {
+      "name": "row-only-freeze-still-allows-source-edit",
+      "client": "legacy-online-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "520b2ec1-9ba9-4260-b2c5-9cbc912c7705",
+      "unchanged": false,
+      "before": "048605a1d33555cf94b068974b834ca91d2af291e937a800072a2a759fd600c6",
+      "after": "330007b8b891e1a0eb2ebfc895f26872c5c12da1955ce518decad4d95bfdfe26",
+      "pass": true
+    },
+    {
+      "name": "row-only-freeze-still-allows-list-rename",
+      "client": "legacy-online-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "52327f7e-4fa4-42d0-a7a0-d5947378f8d3",
+      "unchanged": false,
+      "before": "330007b8b891e1a0eb2ebfc895f26872c5c12da1955ce518decad4d95bfdfe26",
+      "after": "8891fa058b77eb83352ee341cb4539773ddf5a8acd32ef027b2cd761044d9aac",
+      "pass": true
+    },
+    {
+      "name": "pre-fence-offline-queue",
+      "warmSubscription": true,
+      "transactions": 19,
+      "statuses": [
+        {
+          "name": "scalar",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "stale-metadata",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "checked",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "soft-delete",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "source-edit",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "source-delete",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "source-unlink",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "row-delete",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "reconcile-create",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "source-create",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "reconcile-relink",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "move-destination",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "move-source",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "list-rename",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "list-create",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "membership-edit",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "membership-delete",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "membership-unlink",
+          "enqueueStatus": "enqueued"
+        },
+        {
+          "name": "list-unlink",
+          "enqueueStatus": "enqueued"
+        }
+      ],
+      "unchanged": true
+    },
+    {
+      "name": "fenced-online-scalar",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-stale-metadata",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-checked",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-soft-delete",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-source-edit",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-source-delete",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-source-unlink",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-row-delete",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-reconcile-create",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-source-create",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-reconcile-relink",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-move-destination",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-move-source",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-list-rename",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-list-create",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-membership-edit",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-membership-delete",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-membership-unlink",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-list-unlink",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-list-delete-owner",
+      "client": "updated-owner",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-membership-create-owner",
+      "client": "updated-owner",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-online-reverse-source-unlink",
+      "client": "legacy-online-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "fenced-offline-replay",
+      "results": [
+        {
+          "name": "scalar",
+          "eventId": "56238612-926a-4fc8-a4ea-f45223a07650",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "stale-metadata",
+          "eventId": "5f469d66-554d-45e1-aa15-e4bbc1ad4827",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "checked",
+          "eventId": "5ba2b9db-cb06-48a6-a273-0fb0eab7bc34",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "soft-delete",
+          "eventId": "39250a19-b078-4e86-9aab-188bd3b5db09",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "source-edit",
+          "eventId": "6e73fbbf-fb3c-4156-929b-941c309b5fd6",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "source-delete",
+          "eventId": "6d230c00-3dcf-4ab1-a019-0127539265a9",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "source-unlink",
+          "eventId": "2edb3332-bf1b-40cf-a34e-43824f3a59de",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "row-delete",
+          "eventId": "ad03a089-4c65-4e46-ac1c-13556731cfeb",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "reconcile-create",
+          "eventId": "89db7876-ff5e-4557-b607-f29944f69101",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "source-create",
+          "eventId": "42e96399-521e-4f32-8029-0cb560d53c0f",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "reconcile-relink",
+          "eventId": "679be5c7-5a56-4e3a-a46d-b3582ba20f48",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "move-destination",
+          "eventId": "5d90ce70-1977-4272-b190-f34c5f4dd756",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "move-source",
+          "eventId": "c6f41a28-b1eb-482a-82d6-e825f60fb54f",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "list-rename",
+          "eventId": "6c53ef55-dc43-4852-b602-b5945fc43ea0",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "list-create",
+          "eventId": "4301cbf4-d964-41c6-9150-f692c48066a3",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "membership-edit",
+          "eventId": "689f5353-31c8-479e-85af-581d03e04911",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "membership-delete",
+          "eventId": "d1ddb715-96af-4793-bf35-f31345d4998c",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "membership-unlink",
+          "eventId": "6ebb4772-e130-40cb-8b9a-2b01ea38899d",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        },
+        {
+          "name": "list-unlink",
+          "eventId": "a9d41d7b-b710-487f-bdd4-5a184e924195",
+          "enqueueStatus": "enqueued",
+          "server": {
+            "type": "permission-denied",
+            "status": 400
+          }
+        }
+      ],
+      "unchanged": true,
+      "pending": 0,
+      "pass": true
+    },
+    {
+      "name": "fenced-cold-client-scalar",
+      "client": "legacy-cold-schema-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "pass": true
+    },
+    {
+      "name": "updated-member-row-metadata",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "c9d9ee2d-a2ad-4f7e-9bba-0698f1f1dfc0",
+      "unchanged": false,
+      "before": "4b37790cf066a8c6e17675720beff10fe485cd054cc2a395bde72b333592237b",
+      "after": "3e0a39067c2aff7355764c97fda66b8e79c4258528bbe6b4cb0fe9543b57fdf8",
+      "pass": true
+    },
+    {
+      "name": "updated-member-direct-add",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "da64167f-37f5-4c51-828e-99a2a5f7687a",
+      "unchanged": false,
+      "before": "3e0a39067c2aff7355764c97fda66b8e79c4258528bbe6b4cb0fe9543b57fdf8",
+      "after": "8bd5b0b6df2ecda05f610d3a6c11bf199f97bbe1925792bc1fe9243277e30f99",
+      "pass": true
+    },
+    {
+      "name": "updated-member-entry-edit",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "eb8d0878-ff17-49d7-890b-5f4b6b4158e8",
+      "unchanged": false,
+      "before": "8bd5b0b6df2ecda05f610d3a6c11bf199f97bbe1925792bc1fe9243277e30f99",
+      "after": "e3f1bc18190b4fc2eddcc411c4736691f71e3d1af398c3e33db466bedff605d9",
+      "pass": true
+    },
+    {
+      "name": "updated-member-source-edit",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "9db6116f-29cf-497b-a549-3c45d81db6c8",
+      "unchanged": false,
+      "before": "e3f1bc18190b4fc2eddcc411c4736691f71e3d1af398c3e33db466bedff605d9",
+      "after": "638fa8af344b38273e0e602011d27a8498a3595faf06c77a7dccf5e379a238d6",
+      "pass": true
+    },
+    {
+      "name": "updated-server-postcondition",
+      "entries": 3,
+      "total": 12,
+      "scalarOnNewRow": false
+    },
+    {
+      "name": "updated-member-entry-remove",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "0046aa9b-1614-4807-9ce0-1ddef5d16e6b",
+      "unchanged": false,
+      "before": "638fa8af344b38273e0e602011d27a8498a3595faf06c77a7dccf5e379a238d6",
+      "after": "8136280efe4f522e13b91dc2625dcf710c5399cc0dcae24583ab31e4f027bd50",
+      "pass": true
+    },
+    {
+      "name": "updated-member-source-remove",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "9569913b-8017-4de3-a923-f2c0fd5972b9",
+      "unchanged": false,
+      "before": "8136280efe4f522e13b91dc2625dcf710c5399cc0dcae24583ab31e4f027bd50",
+      "after": "f9a55a7b39c0e945685077ca1cc41c1b2a4541f026455682f725b2ea7fcb12dd",
+      "pass": true
+    },
+    {
+      "name": "updated-member-source-create",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "37d77b82-77f3-42da-ab07-e2b1f85dd61d",
+      "unchanged": false,
+      "before": "f9a55a7b39c0e945685077ca1cc41c1b2a4541f026455682f725b2ea7fcb12dd",
+      "after": "d9a62c01dd10599448824f77ede24c125b7b0097a444cdb2dd160732759a8b75",
+      "pass": true
+    },
+    {
+      "name": "updated-member-created-source-remove",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "d8268cbd-2392-4675-9421-a64b65ffbf87",
+      "unchanged": false,
+      "before": "d9a62c01dd10599448824f77ede24c125b7b0097a444cdb2dd160732759a8b75",
+      "after": "f9a55a7b39c0e945685077ca1cc41c1b2a4541f026455682f725b2ea7fcb12dd",
+      "pass": true
+    },
+    {
+      "name": "updated-row-scalar-attribute-denied",
+      "client": "updated-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "f9a55a7b39c0e945685077ca1cc41c1b2a4541f026455682f725b2ea7fcb12dd",
+      "after": "f9a55a7b39c0e945685077ca1cc41c1b2a4541f026455682f725b2ea7fcb12dd",
+      "pass": true
+    },
+    {
+      "name": "updated-member-list-rename",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "a8265045-aea7-4e26-926a-2639f4ee0146",
+      "unchanged": false,
+      "before": "f9a55a7b39c0e945685077ca1cc41c1b2a4541f026455682f725b2ea7fcb12dd",
+      "after": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "pass": true
+    },
+    {
+      "name": "updated-owner-list-create",
+      "client": "updated-owner",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "41c6ee55-cb9c-4aa7-82aa-f5357264d231",
+      "unchanged": false,
+      "before": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "after": "89e26e514ec1d45d52a1fbebd8ccd0ae43782d8f5c5003ea2add726a7e762a61",
+      "pass": true
+    },
+    {
+      "name": "updated-owner-remove-extra-row-list",
+      "client": "updated-owner",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "03474596-9e1d-4823-8f16-5a062fb0cbb5",
+      "unchanged": false,
+      "before": "89e26e514ec1d45d52a1fbebd8ccd0ae43782d8f5c5003ea2add726a7e762a61",
+      "after": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "pass": true
+    },
+    {
+      "name": "updated-outsider-row-edit",
+      "client": "updated-outsider",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "after": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "pass": true
+    },
+    {
+      "name": "updated-outsider-entry-create",
+      "client": "updated-outsider",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "after": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "pass": true
+    },
+    {
+      "name": "updated-outsider-membership-create",
+      "client": "updated-outsider",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "after": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "pass": true
+    },
+    {
+      "name": "updated-member-owner-escalation",
+      "client": "updated-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "after": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "pass": true
+    },
+    {
+      "name": "updated-cross-list-entry-link",
+      "client": "updated-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "after": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "pass": true
+    },
+    {
+      "name": "updated-legacy-batch-atomic-rejection",
+      "client": "updated-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "after": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "pass": true
+    },
+    {
+      "name": "updated-owner-grant-membership",
+      "client": "updated-owner",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "0cd412b6-3246-4006-8603-37065b50588c",
+      "unchanged": false,
+      "before": "46ca84232d408a26fe0f510e7053aaa99e9373e41b9ecfbc318f9381b24e4e1a",
+      "after": "6d2e66458acfc0e4f95c604a260e7a279ae618fda5302e532999ab2f2acfca93",
+      "pass": true
+    },
+    {
+      "name": "updated-newly-granted-member-edit",
+      "client": "updated-outsider",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "42f4d217-a91b-4970-81bf-078b2bfc0809",
+      "unchanged": false,
+      "before": "6d2e66458acfc0e4f95c604a260e7a279ae618fda5302e532999ab2f2acfca93",
+      "after": "87719298a96ab4ebe7ee8c77130a6667caa515f5f626b2db2ee62eca7a7dcca8",
+      "pass": true
+    },
+    {
+      "name": "updated-owner-revoke-membership",
+      "client": "updated-owner",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "26dc94a6-eb87-45fe-a00f-88d71939fbef",
+      "unchanged": false,
+      "before": "87719298a96ab4ebe7ee8c77130a6667caa515f5f626b2db2ee62eca7a7dcca8",
+      "after": "4cc8b4021ab07594cc41f728d771c8aaa9092a1c18bc51871215cc7a1e308d29",
+      "pass": true
+    },
+    {
+      "name": "updated-revoked-member-edit",
+      "client": "updated-outsider",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "4cc8b4021ab07594cc41f728d771c8aaa9092a1c18bc51871215cc7a1e308d29",
+      "after": "4cc8b4021ab07594cc41f728d771c8aaa9092a1c18bc51871215cc7a1e308d29",
+      "pass": true
+    },
+    {
+      "name": "updated-offline-replay",
+      "enqueueStatus": "enqueued",
+      "serverStatus": "synced",
+      "persistedNote": true,
+      "pass": true
+    },
+    {
+      "name": "updated-member-leave",
+      "client": "updated-member",
+      "expected": "synced",
+      "status": "synced",
+      "eventId": "5ec2b15e-a4a6-48ba-9163-0073975de9a8",
+      "unchanged": false,
+      "before": "aeade78ade0e0eb65dba9983dc2d20117c9371bca109bb65650af16bcf865836",
+      "after": "5e8f218c113a348567c3eebf96726c3b0c758d78dc304c1b6b2933e6a1fd9987",
+      "pass": true
+    },
+    {
+      "name": "updated-departed-member-edit",
+      "client": "updated-member",
+      "expected": "rejected",
+      "status": "rejected",
+      "errorName": "InstantAPIError",
+      "server": [
+        {
+          "type": "permission-denied",
+          "status": 400
+        }
+      ],
+      "unchanged": true,
+      "before": "5e8f218c113a348567c3eebf96726c3b0c758d78dc304c1b6b2933e6a1fd9987",
+      "after": "5e8f218c113a348567c3eebf96726c3b0c758d78dc304c1b6b2933e6a1fd9987",
+      "pass": true
+    },
+    {
+      "name": "final-server-postcondition",
+      "entries": 1,
+      "total": 4,
+      "legacyScalar": 2,
+      "legacySourceQuantity": 2
+    }
+  ],
+  "gate": "BLOCKED-actual-build-and-full-application-graph-not-tested",
+  "cleanup": "verified-records-and-users-absent-schema-and-rules-restored",
+  "originalRulesDigest": "eae39c753ddedc86490fbdb26d11e031b8e05ef918cc247ae6dab20327edcfa1",
+  "originalSchemaDigest": "2cd20eb900a1baf31d4dd6f8c6317087c7db8fccc6183d850ad55827531b9a81",
+  "proofRules": {
+    "gqc04_3c1f1ff48875455492537cc0e798f66a_old_lists": {
+      "allow": {
+        "$default": "false",
+        "view": "auth.id == data.ownerId || auth.id in data.ref('members.userId')"
+      }
+    },
+    "gqc04_3c1f1ff48875455492537cc0e798f66a_old_members": {
+      "allow": {
+        "$default": "false",
+        "view": "auth.id in data.ref('list.members.userId')"
+      }
+    },
+    "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows": {
+      "allow": {
+        "$default": "false",
+        "view": "auth.id in data.ref('list.members.userId')"
+      }
+    },
+    "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources": {
+      "allow": {
+        "$default": "false",
+        "view": "auth.id in data.ref('list.members.userId')"
+      }
+    },
+    "gqc04_3c1f1ff48875455492537cc0e798f66a_new_lists": {
+      "allow": {
+        "$default": "false",
+        "view": "auth.id == data.ownerId || auth.id in data.ref('members.userId')",
+        "create": "auth.id != null && auth.id == data.ownerId",
+        "update": "(auth.id == data.ownerId || auth.id in data.ref('members.userId')) && newData.ownerId == data.ownerId",
+        "delete": "auth.id == data.ownerId"
+      }
+    },
+    "gqc04_3c1f1ff48875455492537cc0e798f66a_new_members": {
+      "allow": {
+        "$default": "false",
+        "view": "auth.id in data.ref('list.members.userId')",
+        "create": "auth.id in data.ref('list.ownerId')",
+        "delete": "auth.id == data.userId || auth.id in data.ref('list.ownerId')"
+      }
+    },
+    "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows": {
+      "allow": {
+        "$default": "false",
+        "view": "auth.id in data.ref('list.members.userId')",
+        "create": "auth.id in data.ref('list.members.userId')",
+        "update": "auth.id in data.ref('list.members.userId')",
+        "delete": "auth.id in data.ref('list.members.userId')"
+      }
+    },
+    "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources": {
+      "allow": {
+        "$default": "false",
+        "view": "auth.id in data.ref('list.members.userId')",
+        "create": "auth.id in data.ref('list.members.userId')",
+        "update": "auth.id in data.ref('list.members.userId')",
+        "delete": "auth.id in data.ref('list.members.userId')"
+      }
+    },
+    "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries": {
+      "allow": {
+        "$default": "false",
+        "view": "auth.id in data.ref('list.members.userId')",
+        "create": "auth.id in data.ref('list.members.userId') && size(data.ref('row.id')) == 1 && data.ref('row.list.id') == data.ref('list.id') && (size(data.ref('source.id')) == 0 || data.ref('source.list.id') == data.ref('list.id')) && data.quantity >= 0",
+        "update": "auth.id in data.ref('list.members.userId') && size(data.ref('row.id')) == 1 && data.ref('row.list.id') == data.ref('list.id') && (size(data.ref('source.id')) == 0 || data.ref('source.list.id') == data.ref('list.id')) && data.quantity >= 0",
+        "delete": "auth.id in data.ref('list.members.userId')"
+      }
+    }
+  },
+  "proofSchema": [
+    {
+      "id": "ff49d50f-9cc8-45cf-9db2-de58912d638d",
+      "forward-identity": [
+        "dfbcfd88-96f4-4281-83a2-dd82ba5347eb",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_lists",
+        "id"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": true,
+      "index?": false
+    },
+    {
+      "id": "35248d4a-df49-44dc-b301-4b10deddd303",
+      "forward-identity": [
+        "79081102-70d7-4add-91de-a3885673c2c0",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_lists",
+        "marker"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "70710d74-35e9-417f-8861-7be137ad81cb",
+      "forward-identity": [
+        "0939c726-123d-4454-aaf2-b7e664f77072",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_lists",
+        "name"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "d9cbbd2b-b852-4dc5-8fbc-c492bacbde06",
+      "forward-identity": [
+        "81850e3a-c064-4f14-9804-dabe2e67fb56",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_lists",
+        "ownerId"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "2233c633-5636-419d-899d-a4a1981ef03f",
+      "forward-identity": [
+        "01acae23-3a96-4c08-8494-d39f317efb9e",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_members",
+        "id"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": true,
+      "index?": false
+    },
+    {
+      "id": "fac71c4a-4814-46df-95b6-6b25354e76c0",
+      "forward-identity": [
+        "9911da28-9613-4c43-86bf-49dd450f6e4a",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_members",
+        "marker"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "d4af5064-6d3d-42f8-9b7c-55bfe0081f2a",
+      "forward-identity": [
+        "12ac22a8-52d1-4590-8576-16504081883c",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_members",
+        "userId"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "51991540-4a38-4963-8e4f-ed6f3e362382",
+      "forward-identity": [
+        "029283a7-198e-434a-aab2-30b3d4c6ab2c",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "id"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": true,
+      "index?": false
+    },
+    {
+      "id": "cac593a0-6f44-4b70-bc0c-d5a240cfc865",
+      "forward-identity": [
+        "0eebb634-f2a6-4e9e-8f46-3198b1e4b61b",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "marker"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "ae54ca74-80d1-4a87-a996-4e440ed77f41",
+      "forward-identity": [
+        "82922754-d7b5-4482-9777-a373bc7c4d9d",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "name"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "597f1b5e-1cc4-4ba3-8b35-e14553698537",
+      "forward-identity": [
+        "db09463f-3e0a-4978-a316-76639707eb88",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "unit"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "99062994-b3c9-4c18-8c07-77e76d6922e7",
+      "forward-identity": [
+        "eec06e73-cb7a-4a97-885d-ec4af7089310",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "notes"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "022ed12b-8b54-4746-99a3-6c2e893024ee",
+      "forward-identity": [
+        "436416d1-cbf0-43a9-a7f0-8ad3e4624d04",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "category"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "cd0a6dd3-29e1-4961-a6b4-7ed77803b2ed",
+      "forward-identity": [
+        "4960f59e-8b49-41b1-81a3-013c7a8e7c80",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "isChecked"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "b559491e-70ec-4e7a-8568-163ec3459335",
+      "forward-identity": [
+        "d639cd28-523b-42d9-a492-c46997433e0e",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "isDeleted"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "c366f89a-83b3-449e-b729-420b514e7548",
+      "forward-identity": [
+        "4c0fe85e-156f-48aa-80f6-f7b8812f355f",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "quantity"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "6cf09026-9fdb-4def-86ee-588a798b48a4",
+      "forward-identity": [
+        "a152d768-306e-4acd-b808-ed21e193e499",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources",
+        "id"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": true,
+      "index?": false
+    },
+    {
+      "id": "aab6b732-86bb-4718-8b59-a8ee6771ee0f",
+      "forward-identity": [
+        "c374c544-cc96-4f3b-ae3c-fbed6e234a4f",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources",
+        "marker"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "e6d14b1d-a1b1-4931-9f2e-135f90f91541",
+      "forward-identity": [
+        "a879a9a4-63e1-4b1d-9314-ed6d4d065f3c",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources",
+        "name"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "3b405736-57f5-4e34-9cf7-61aa696e4d6f",
+      "forward-identity": [
+        "78e8641d-27fe-4725-adfa-bd1e0cd4b89a",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources",
+        "quantity"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "96d1f7ae-7d9e-4c82-a697-f7fa7618d3d1",
+      "forward-identity": [
+        "52d10851-0a47-46cd-afa1-0169ea32cf06",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources",
+        "unit"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "c517ffb8-a5c3-4766-9c5c-4e284f3c59be",
+      "forward-identity": [
+        "9d0872a4-e2bb-4280-94d9-d2236ec22743",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources",
+        "selected"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "b94bdd44-8f0e-430a-8166-cc8bf304de90",
+      "forward-identity": [
+        "909d0168-128a-47aa-9145-74787bee28ef",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources",
+        "ignored"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "72b5a94c-e4c3-4829-a288-cf31b37e659c",
+      "forward-identity": [
+        "c26fadf3-8861-49e4-8617-fed658e55476",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_lists",
+        "id"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": true,
+      "index?": false
+    },
+    {
+      "id": "cf45777c-7609-4506-b5fc-0548cb8be0ea",
+      "forward-identity": [
+        "656a5c67-e07f-4911-9cdd-254216815c53",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_lists",
+        "marker"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "93ffcb55-cb40-4d55-b232-57207ed673ea",
+      "forward-identity": [
+        "1aafc4a5-a4bc-4029-9a1d-1f148c001417",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_lists",
+        "name"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "f15b420d-9527-4fb6-a702-41e70a83c5bf",
+      "forward-identity": [
+        "3767dcfd-2817-4205-b7e8-f8a3b105c94e",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_lists",
+        "ownerId"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "0d35f0bd-340a-49f9-946b-7a4fded60687",
+      "forward-identity": [
+        "54db103f-dbe3-4f28-8f84-c1e6aa384a85",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_members",
+        "id"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": true,
+      "index?": false
+    },
+    {
+      "id": "2e5c7bae-1c93-4cac-a10e-40110e1a6b57",
+      "forward-identity": [
+        "e8f04f22-2a37-4e8e-8960-e0703380345f",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_members",
+        "marker"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "ae16e969-0256-4d6d-b70b-46e6c4b12be3",
+      "forward-identity": [
+        "01a67b82-6380-4c88-a3be-89c5fb0d473b",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_members",
+        "userId"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "7dad3e3c-4282-4115-80f4-96c66f441e7b",
+      "forward-identity": [
+        "fbd9bb1f-acf5-4a63-ade0-047f15032a39",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "id"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": true,
+      "index?": false
+    },
+    {
+      "id": "42161cab-572e-46d2-9b84-159250aa0e39",
+      "forward-identity": [
+        "cfa9ac91-b4ff-49e5-8f91-0db944b6ec79",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "marker"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "af5f8f09-8a95-4d93-8ee4-f88933912c4d",
+      "forward-identity": [
+        "0734df15-0eb5-4db7-b8e4-333af5339fbd",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "name"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "76de1b2a-c959-4618-bc20-5d6defc0b497",
+      "forward-identity": [
+        "41e9ac00-5841-48ba-a222-1d5a23eac876",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "unit"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "442b9bbf-71cd-42b7-b3b4-095d9746b356",
+      "forward-identity": [
+        "d5882b1e-832a-49a0-92db-b6b522ed9493",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "notes"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "629be85d-eec3-42ac-a369-3c801d9015dd",
+      "forward-identity": [
+        "7296f48a-4b87-4d7e-b3c6-2e10416fa76c",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "category"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "8430694d-55b1-479b-b2a1-2dbc162ef35e",
+      "forward-identity": [
+        "e779b896-1d49-4026-addc-3faaf9dbda69",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "isChecked"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "ae66a805-9ce2-4549-9ff7-2895d9b4142e",
+      "forward-identity": [
+        "d1af0a98-c77d-48a7-9bd2-16d5690f12c5",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "isDeleted"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "9cc44bc2-2bc1-43d4-a3bc-61cf9c0ebf12",
+      "forward-identity": [
+        "4045a7a7-9b1d-41ee-b8aa-8c9e2cf997a9",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources",
+        "id"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": true,
+      "index?": false
+    },
+    {
+      "id": "b4a2c69b-bc63-460d-9290-30098badd808",
+      "forward-identity": [
+        "0ae9fba8-3509-41c8-9f11-a49d60cf28ff",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources",
+        "marker"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "8bd9ac4e-99a7-4b91-a9c2-864bc800bd05",
+      "forward-identity": [
+        "e4ee7a9a-a4fc-4ed0-8d7a-fbf51e671168",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources",
+        "name"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "dcd96bad-8d8f-4f30-8c46-445a932d2692",
+      "forward-identity": [
+        "0854bbb6-3e27-44a7-a4ea-e5fa56ca5279",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources",
+        "quantity"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "66d0c3d8-9e70-4473-9501-39444a1b4b96",
+      "forward-identity": [
+        "d955cbff-a384-4d48-95f1-88e543a73f17",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources",
+        "unit"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "680a70c0-4ef7-4477-a043-e702d5cbced7",
+      "forward-identity": [
+        "64a2f05c-8e50-4253-ba7c-ccfa8d4d46db",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources",
+        "selected"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "0098c071-59d9-4956-86bb-392f2cd5dbb7",
+      "forward-identity": [
+        "5f9f9a86-d2e2-46bb-b2d7-7cc2429ece78",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources",
+        "ignored"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "72474e88-a6c3-4679-aaa7-29e8e6c34fbe",
+      "forward-identity": [
+        "92adfad2-fc3b-400c-ab5e-7358a92784e0",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries",
+        "id"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": true,
+      "index?": false
+    },
+    {
+      "id": "1da9e933-a809-41e6-a0fb-7265685fb23b",
+      "forward-identity": [
+        "2f56cc69-584f-42e0-ab21-dde295d19d81",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries",
+        "marker"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "2768f6a3-2871-479f-8f9d-2920a0da063c",
+      "forward-identity": [
+        "945b7f13-9ce0-4c66-b87d-6aa6292eb511",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries",
+        "quantity"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "d2a9a52b-3e8a-4709-950c-662c1fa04232",
+      "forward-identity": [
+        "21cb8835-7175-4f52-aee2-1f2344b283dc",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries",
+        "unit"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "6c61b487-daaa-4156-a115-0fca07693996",
+      "forward-identity": [
+        "f05b8d8d-c99a-4218-8bd1-d635ee0884a6",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries",
+        "kind"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "e8e41ba6-90cd-4493-ba51-2b69c28cf583",
+      "forward-identity": [
+        "0d364a60-7b09-4041-afa1-770a9d11a88a",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries",
+        "active"
+      ],
+      "value-type": "blob",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "473c78bc-a3b2-4cbd-a888-953aaf97a96e",
+      "forward-identity": [
+        "e0918638-d739-4774-a434-f1db7b69913f",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_members",
+        "list"
+      ],
+      "reverse-identity": [
+        "1fac05e5-b1ba-4e04-9842-b32a20e59737",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_lists",
+        "members"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "41a60793-fb5f-4474-ba57-54b89fefc042",
+      "forward-identity": [
+        "dd0401e7-2099-4f09-be03-4f6394cc41f8",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "list"
+      ],
+      "reverse-identity": [
+        "475afc2b-e918-4f85-9cee-a8ad8d731836",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_lists",
+        "rows"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "cb11cbb2-5b5f-42db-bb83-8fae11669524",
+      "forward-identity": [
+        "c51ab0ca-6953-41b7-9074-af19d8dc2ee5",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources",
+        "list"
+      ],
+      "reverse-identity": [
+        "30f2f905-b74a-4136-bc7f-85c15b54e96a",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_lists",
+        "sources"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "a57ac4e2-5540-4cdc-b9e5-65e46be8de75",
+      "forward-identity": [
+        "af1db692-3012-4bce-bfc0-6e654dcd4e1d",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_rows",
+        "source"
+      ],
+      "reverse-identity": [
+        "7cb9003c-85f0-4104-940f-cb860bfd8e7b",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_old_sources",
+        "rows"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "a1f30d17-615b-4b7d-a73c-d4109bbd4d4a",
+      "forward-identity": [
+        "4b036ba4-52f5-4a09-95cc-ef6724ce1928",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_members",
+        "list"
+      ],
+      "reverse-identity": [
+        "85f39de5-c517-4aad-84c2-12ea89d32e08",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_lists",
+        "members"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "858a6be5-ceb6-474d-9a2b-9ac3f22d604f",
+      "forward-identity": [
+        "fb307ed8-c37f-4fb4-8add-2038edff6864",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "list"
+      ],
+      "reverse-identity": [
+        "63ce3158-b7f4-40e5-901d-fa1ce5a692a9",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_lists",
+        "rows"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "9b12a4ee-8ead-448d-a372-2b852ed1b0fb",
+      "forward-identity": [
+        "936454a0-36ce-4bca-829f-13e0ec7dea50",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources",
+        "list"
+      ],
+      "reverse-identity": [
+        "4e8e2661-c270-4fa1-a934-481f6c6b1197",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_lists",
+        "sources"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "f878bb3c-dee9-44f0-b54c-3b828c0336d5",
+      "forward-identity": [
+        "316e2002-423e-4e29-8c3b-eed09aac7ac3",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries",
+        "list"
+      ],
+      "reverse-identity": [
+        "40fbe230-23e4-44f4-b9f2-f8e7cc14911c",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_lists",
+        "entries"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "cd66603b-a89b-43b5-9e03-b4a1e26352b4",
+      "forward-identity": [
+        "c0cc558a-553e-4626-a875-c96a57abef3b",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries",
+        "row"
+      ],
+      "reverse-identity": [
+        "8a8c3b43-fae1-4c21-840d-b13c5c1d06be",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_rows",
+        "entries"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    },
+    {
+      "id": "7192e361-1163-414c-a7c6-a104249dffed",
+      "forward-identity": [
+        "699c4267-a74f-4242-81f3-4e567de16ffd",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_entries",
+        "source"
+      ],
+      "reverse-identity": [
+        "6538e4bc-ff6f-4fb3-a42c-bb81a655a8bd",
+        "gqc04_3c1f1ff48875455492537cc0e798f66a_new_sources",
+        "entries"
+      ],
+      "value-type": "ref",
+      "cardinality": "one",
+      "unique?": false,
+      "index?": false
+    }
+  ],
+  "boundedResult": "PASS-disjoint-namespace-fence-only",
+  "restoredRulesDigest": "eae39c753ddedc86490fbdb26d11e031b8e05ef918cc247ae6dab20327edcfa1",
+  "restoredSchemaDigest": "2cd20eb900a1baf31d4dd6f8c6317087c7db8fccc6183d850ad55827531b9a81",
+  "finishedAt": "2026-10-20T03:54:01.806Z"
+}

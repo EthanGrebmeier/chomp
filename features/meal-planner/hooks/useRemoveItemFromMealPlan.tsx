@@ -8,8 +8,3 @@ export const useRemoveItemFromMealPlan = () => {
     // No need to invalidate queries - InstantDB updates in real-time
   });
 };
-
-
-
-
-

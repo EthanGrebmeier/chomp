@@ -60,7 +60,7 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
     {
       onChange,
       onClose: onCloseProp,
-      headerTitle = 'Select Date',
+      headerTitle = 'Choose a date',
       name,
       validStartDate,
       validEndDate,

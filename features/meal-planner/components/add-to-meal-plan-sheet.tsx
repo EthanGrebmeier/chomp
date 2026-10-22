@@ -1,19 +1,48 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
-import { useImperativeHandle, useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
-import { KeyboardController } from 'react-native-keyboard-controller';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { ArrowUpIcon, ChevronDownIcon } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
+import { useEffect, useImperativeHandle, useRef, useState } from 'react';
+import {
+  Keyboard,
+  StyleSheet,
+  TextInput,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+import Animated, {
+  Easing,
+  LinearTransition,
+  ReduceMotion,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
+import {
+  slideInRight,
+  slideOutRight,
+} from '../../../components/animated/transitions';
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
-import { ScrollingMetaBar } from '../../../components/scrolling-meta-bar';
+import { ItemSuggestions } from '../../../components/item-sheet/item-suggestions';
+import {
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuItemTitle,
+} from '../../../components/native-dropdown';
+import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
-import { HapticPressable } from '../../../components/ui/haptic-pressable';
+import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { navigation } from '../../../lib/navigation';
+import { THEME } from '../../../lib/theme';
 import { cn } from '../../../lib/utils';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
@@ -28,7 +57,6 @@ import {
   toggleMealPlanIngredientSelection,
 } from '../meal-plan-recipe-ingredient-editor';
 
-import { DatePillSheet } from './date-pill-sheet';
 import {
   MealPlanIngredientOverrideSheet,
   MealPlanIngredientOverrideSheetRef,
@@ -39,60 +67,55 @@ import {
 } from './meal-plan-item-context';
 import { MealPlanItemForm } from './meal-plan-item-form';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
-import { MealPlanRecipeTitle } from './meal-plan-recipe-title';
-import { MealTimeSheet } from './meal-time-sheet';
+import { MealScheduleSentence } from './meal-schedule-sentence';
 
-type AddMode = 'item' | 'recipe';
+// Match the grocery add sheet: keep the card continuous as its detent changes.
+const CARD_RESIZE = LinearTransition.duration(300)
+  .easing(Easing.bezier(0.32, 0.72, 0, 1))
+  .reduceMotion(ReduceMotion.System);
 
-type ModeToggleProps = {
+type AddMode = 'recipe' | 'item';
+
+const ModeMenu = ({
+  mode,
+  onModeChange,
+}: {
   mode: AddMode;
   onModeChange: (mode: AddMode) => void;
-};
-
-const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
-  return (
-    <View className="mb-4 flex-row items-center justify-center gap-2">
-      <HapticPressable
-        onPress={() => onModeChange('recipe')}
-        className={cn(
-          'rounded-full px-4 py-2',
-          mode === 'recipe' ? 'bg-primary' : 'bg-muted'
-        )}
-        hapticType="light"
+}) => (
+  <DropdownMenuRoot>
+    <DropdownMenuTrigger>
+      <View
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel="Change meal-plan entry type"
+        className="min-h-11 flex-row items-center justify-center gap-2"
       >
-        <Text
-          className={cn(
-            'text-base font-semibold',
-            mode === 'recipe'
-              ? 'text-primary-foreground'
-              : 'text-muted-foreground'
-          )}
-        >
-          Recipe
+        <Text className="text-lg font-semibold">
+          {mode === 'item' ? 'Plan item' : 'Plan recipe'}
         </Text>
-      </HapticPressable>
-      <HapticPressable
-        onPress={() => onModeChange('item')}
-        className={cn(
-          'rounded-full px-4 py-2',
-          mode === 'item' ? 'bg-primary' : 'bg-muted'
-        )}
-        hapticType="light"
-      >
-        <Text
-          className={cn(
-            'text-base font-semibold',
-            mode === 'item'
-              ? 'text-primary-foreground'
-              : 'text-muted-foreground'
-          )}
+        <Icon
+          as={ChevronDownIcon}
+          size={16}
+          className="text-muted-foreground"
+        />
+      </View>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent>
+      {(['item', 'recipe'] as const).map(value => (
+        <DropdownMenuCheckboxItem
+          key={value}
+          value={mode === value ? 'on' : 'off'}
+          onValueChange={() => onModeChange(value)}
         >
-          Item
-        </Text>
-      </HapticPressable>
-    </View>
-  );
-};
+          <DropdownMenuItemTitle>
+            {value === 'item' ? 'Plan item' : 'Plan recipe'}
+          </DropdownMenuItemTitle>
+        </DropdownMenuCheckboxItem>
+      ))}
+    </DropdownMenuContent>
+  </DropdownMenuRoot>
+);
 
 type AddToMealPlanSheetProps = {
   listId: string;
@@ -106,6 +129,16 @@ export type AddToMealPlanSheetRef = {
 
 const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const reduceMotion = useReducedMotion();
+  const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const backgroundColor =
+    THEME[colorScheme === 'dark' ? 'dark' : 'light'].background;
+  const expandedHeight = Math.min(
+    windowHeight * 0.94,
+    windowHeight - insets.top - 12
+  );
   const itemInputRef = useRef<TextInput>(null);
   const {
     itemName,
@@ -121,13 +154,34 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     setStoreId,
     setSelectedDate,
     mealTag,
-    setMealTag,
     itemNotes,
     resetState: resetMealPlanItemState,
     isValid,
   } = useMealPlanItem();
 
   const [mode, setMode] = useState<AddMode>('recipe');
+  const [isSessionOpen, setIsSessionOpen] = useState(false);
+  const contentOpacity = useSharedValue(1);
+  const contentAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.get(),
+  }));
+
+  useEffect(() => {
+    if (!isSessionOpen || mode !== 'item') return;
+    // Let the native detent and visible input layout commit before focusing.
+    const frame = requestAnimationFrame(() => itemInputRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [isSessionOpen, mode]);
+
+  useEffect(() => {
+    contentOpacity.set(
+      withTiming(1, {
+        duration: 150,
+        easing: Easing.bezier(0.23, 1, 0.32, 1),
+        reduceMotion: ReduceMotion.System,
+      })
+    );
+  }, [mode, contentOpacity]);
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
   const [ingredientRows, setIngredientRows] = useState<
@@ -167,6 +221,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   };
 
   const handleSelectRecipe = (recipe: RecipeWithIngredients) => {
+    Keyboard.dismiss();
     setSelectedRecipe(recipe);
     setRecipeMealTag(recipe.mealTag ?? undefined);
     setIngredientRows(
@@ -195,6 +250,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         date: recipeDate,
         mealTag: recipeMealTag,
         servings: 1,
+        sourceIngredients: selectedRecipe.recipe_ingredients,
         ingredientSnapshots: toSnapshotCreateInputs(ingredientRows),
       },
       {
@@ -210,13 +266,11 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   };
 
   const handleModeChange = (newMode: AddMode) => {
-    setMode(newMode);
+    if (newMode === mode) return;
+    Keyboard.dismiss();
     setSelectedRecipe(null);
-    if (newMode === 'item') {
-      setTimeout(() => {
-        itemInputRef.current?.focus();
-      }, 10);
-    }
+    contentOpacity.set(0);
+    setMode(newMode);
   };
 
   const handleAddItem = () => {
@@ -238,7 +292,10 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         onSuccess: () => {
           // Keep the sheet open for continuous entry. Clear the name field in
           // place (no remount) so it keeps focus and the keyboard stays up.
-          resetMealPlanItemState({ itemNameInputRef: itemInputRef });
+          resetMealPlanItemState({
+            itemNameInputRef: itemInputRef,
+            keepMealContext: true,
+          });
           itemInputRef.current?.focus();
         },
         onError: () => {
@@ -300,117 +357,190 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const isRecipeAddDisabled =
     !isRecipeModeValid || selectedIngredientIds.size === 0;
 
-  const footer =
-    mode === 'recipe' && selectedRecipe ? (
-      <View className="pb-safe gap-4 px-4">
-        <ScrollingMetaBar>
-          <DatePillSheet date={recipeDate} onSelect={setRecipeDate} />
-          <MealTimeSheet mealTime={recipeMealTag} onSelect={setRecipeMealTag} />
-        </ScrollingMetaBar>
-        <Button
-          size="lg"
-          onPress={handleAddRecipe}
-          disabled={isRecipeAddDisabled}
-        >
-          <Text>Add to Plan</Text>
-        </Button>
-      </View>
-    ) : mode === 'item' ? (
-      <View className="pb-safe gap-4 px-4">
-        <MealPlanMetaBar
-          date={selectedDate}
-          onDateChange={setSelectedDate}
-          mealTag={mealTag}
-          onMealTagChange={setMealTag}
-          quantity={quantity}
-          onQuantityChange={setQuantity}
-          unit={unit}
-          onUnitChange={setUnit}
-          category={category}
-          onCategoryChange={setCategory}
-          storeId={storeId}
-          onStoreIdChange={setStoreId}
-          onSubmit={handleAddItem}
-          isValid={isValid()}
-          showAction={false}
-          optionsDisabled={!hasItemTitle}
-        />
-        <Button
-          variant="default"
-          size="lg"
-          onPress={handleAddItem}
-          disabled={!isValid() || isAddingItem}
-        >
-          <Text className="text-primary-foreground">Add Item</Text>
-        </Button>
-      </View>
-    ) : (
-      <View />
-    );
+  const metadata = (
+    <MealPlanMetaBar
+      quantity={quantity}
+      onQuantityChange={setQuantity}
+      unit={unit}
+      onUnitChange={setUnit}
+      category={category}
+      onCategoryChange={setCategory}
+      storeId={storeId}
+      onStoreIdChange={setStoreId}
+      onSubmit={handleAddItem}
+      isValid={isValid()}
+      showAction={false}
+      optionsDisabled={!hasItemTitle}
+    />
+  );
 
   return (
-    <BottomSheet
+    <TrueSheet
       name="add-to-meal-plan-sheet"
       ref={sheetRef}
-      detents={[1]}
+      detents={mode === 'item' ? ['auto'] : [expandedHeight / windowHeight]}
       scrollable={mode === 'recipe'}
-      viewClassName={mode === 'recipe' ? 'flex-1' : undefined}
-      onStartClose={() => {
-        KeyboardController.dismiss();
+      draggable={mode === 'recipe'}
+      backgroundColor={mode === 'item' ? 'transparent' : backgroundColor}
+      cornerRadius={mode === 'item' ? 0 : undefined}
+      grabber={mode === 'recipe'}
+      elevation={mode === 'item' ? 0 : undefined}
+      insetAdjustment="never"
+      onWillPresent={() => setIsSessionOpen(true)}
+      onWillDismiss={() => setIsSessionOpen(false)}
+      onWillFocus={() => {
+        if (mode === 'item') itemInputRef.current?.focus();
+      }}
+      onDidDismiss={() => {
+        Keyboard.dismiss();
         resetMealPlanItemState();
         resetSheetState();
       }}
-      footer={footer}
     >
-      {!selectedRecipe && (
-        <ModeToggle mode={mode} onModeChange={handleModeChange} />
-      )}
-
-      <View className={mode === 'recipe' ? 'min-h-0 flex-1' : undefined}>
-        {mode === 'recipe' ? (
-          selectedRecipe ? (
+      <MealPlanItemForm
+        compact
+        onSubmit={handleAddItem}
+        showMetaBar={false}
+        inputRef={itemInputRef}
+        keepKeyboardOnSubmit
+        renderContent={(fields, suggestions) => (
+          <View
+            style={
+              mode === 'recipe'
+                ? { height: expandedHeight, paddingTop: 24 }
+                : { paddingHorizontal: 8, paddingBottom: 24 }
+            }
+          >
+            {mode === 'item' ? (
+              <ItemSuggestions
+                onClose={() => void sheetRef.current?.dismiss()}
+                label="Close meal planner"
+              >
+                {suggestions}
+              </ItemSuggestions>
+            ) : null}
             <Animated.View
-              entering={FadeIn.duration(150)}
-              exiting={FadeOut.duration(150)}
-              className="min-h-0 flex-1"
+              collapsable={false}
+              collapsableChildren={false}
+              layout={CARD_RESIZE}
+              className={cn(
+                'overflow-hidden bg-background',
+                mode === 'item'
+                  ? 'rounded-[32px] border border-border pb-2.5 pt-1.5'
+                  : 'min-h-0 flex-1'
+              )}
             >
-              <IngredientSelector
-                recipe={selectedRecipe}
-                mode="meal-plan"
-                listId={listId}
-                bottomContentInset={180}
-                mealPlanIngredients={mealPlanIngredients}
-                onBack={handleBackToRecipes}
-                onDismiss={() => sheetRef.current?.dismiss()}
-                onToggleIngredient={handleToggleIngredient}
-                onToggleAll={handleToggleAllIngredients}
-                selectedIds={selectedIngredientIds}
-                onEditIngredient={handleEditIngredient}
-                headerTitle={
-                  <MealPlanRecipeTitle
-                    name={selectedRecipe.name}
-                    className="text-center"
-                  />
+              <View
+                collapsable={false}
+                className="min-h-11 items-center justify-center px-4"
+                pointerEvents={selectedRecipe ? 'none' : 'auto'}
+                accessibilityElementsHidden={!!selectedRecipe}
+                importantForAccessibility={
+                  selectedRecipe ? 'no-hide-descendants' : 'auto'
                 }
-              />
+              >
+                <ModeMenu mode={mode} onModeChange={handleModeChange} />
+              </View>
+              <Animated.View
+                style={[
+                  contentAnimatedStyle,
+                  { display: mode === 'item' ? 'flex' : 'none' },
+                ]}
+                className="px-3"
+              >
+                <View className="pl-1">{fields}</View>
+                <View className="mt-1 min-h-11 flex-row items-center gap-2">
+                  <View className="min-w-0 flex-1">{metadata}</View>
+                  <Button
+                    size="icon"
+                    className="size-10"
+                    hitSlop={2}
+                    accessibilityLabel="Add item to meal plan"
+                    onPress={handleAddItem}
+                    disabled={!isValid() || isAddingItem}
+                  >
+                    <Icon
+                      as={ArrowUpIcon}
+                      size={22}
+                      strokeWidth={2.5}
+                      className="text-primary-foreground"
+                    />
+                  </Button>
+                </View>
+              </Animated.View>
+              <Animated.View
+                className="min-h-0 flex-1 overflow-hidden"
+                style={[
+                  contentAnimatedStyle,
+                  { display: mode === 'recipe' ? 'flex' : 'none' },
+                ]}
+              >
+                <View
+                  className="min-h-0 flex-1"
+                  pointerEvents={selectedRecipe ? 'none' : 'auto'}
+                  accessibilityElementsHidden={!!selectedRecipe}
+                  importantForAccessibility={
+                    selectedRecipe ? 'no-hide-descendants' : 'auto'
+                  }
+                >
+                  <RecipeSelector
+                    fillHeight
+                    onSelectRecipe={handleSelectRecipe}
+                    onCreateRecipe={handleCreateRecipe}
+                  />
+                </View>
+              </Animated.View>
+              {selectedRecipe ? (
+                <Animated.View
+                  key="ingredient-selector"
+                  className="overflow-hidden bg-background"
+                  style={StyleSheet.absoluteFill}
+                  entering={reduceMotion ? undefined : slideInRight()}
+                  exiting={reduceMotion ? undefined : slideOutRight()}
+                >
+                  <BottomSheet.Header
+                    className="px-4"
+                    title="Choose ingredients"
+                    dismissButton={<BackButton onPress={handleBackToRecipes} />}
+                  />
+                  <IngredientSelector
+                    recipe={selectedRecipe}
+                    mode="meal-plan"
+                    listId={listId}
+                    bottomContentInset={24}
+                    mealPlanIngredients={mealPlanIngredients}
+                    onBack={handleBackToRecipes}
+                    onDismiss={() => sheetRef.current?.dismiss()}
+                    onToggleIngredient={handleToggleIngredient}
+                    onToggleAll={handleToggleAllIngredients}
+                    selectedIds={selectedIngredientIds}
+                    onEditIngredient={handleEditIngredient}
+                    showHeader={false}
+                    showFooter={false}
+                    recipeNameHeading
+                    scheduleControl={
+                      <MealScheduleSentence
+                        date={recipeDate}
+                        onDateChange={setRecipeDate}
+                        mealTag={recipeMealTag}
+                        onMealTagChange={setRecipeMealTag}
+                      />
+                    }
+                  />
+                  <View className="px-4 pb-6 pt-2">
+                    <Button
+                      onPress={handleAddRecipe}
+                      disabled={isRecipeAddDisabled}
+                    >
+                      <Text>Add to plan</Text>
+                    </Button>
+                  </View>
+                </Animated.View>
+              ) : null}
             </Animated.View>
-          ) : (
-            <RecipeSelector
-              onSelectRecipe={handleSelectRecipe}
-              onCreateRecipe={handleCreateRecipe}
-            />
-          )
-        ) : (
-          <View className="px-4">
-            <MealPlanItemForm
-              onSubmit={handleAddItem}
-              showMetaBar={false}
-              inputRef={itemInputRef}
-              keepKeyboardOnSubmit
-            />
           </View>
         )}
-      </View>
+      />
       <MealPlanIngredientOverrideSheet
         ref={ingredientOverrideSheetRef}
         onSave={async ({ sourceRecipeIngredientId, updates }) => {
@@ -423,7 +553,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           );
         }}
       />
-    </BottomSheet>
+    </TrueSheet>
   );
 };
 

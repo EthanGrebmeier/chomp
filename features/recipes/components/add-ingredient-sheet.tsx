@@ -6,22 +6,16 @@ import {
   useRef,
   useState,
 } from 'react';
-import { View } from 'react-native';
 
-import { BottomSheet } from '../../../components/bottom-sheet';
-import { ItemForm } from '../../../components/item-sheet/item-form';
-import { MetaBar } from '../../../components/item-sheet/meta-bar';
+import { ItemEditorSheet } from '../../../components/item-sheet/item-editor-sheet';
 import { normalizeUnit } from '../../../components/item-sheet/unit-utils';
 import {
   ItemSheetProvider,
   useItemSheet,
 } from '../../../components/item-sheet/use-item-sheet';
 import { MatchingItem } from '../../../components/item-sheet/use-matching-items';
-import { Button } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
-import { cn } from '../../../lib/utils';
 import { BaseGroceryItem } from '../../grocery-list/types';
-import { addRecipeIngredient } from '../instant/add-recipe-ingredient';
+import { useAddRecipeIngredient } from '../hooks/useAddRecipeIngredient';
 import { RecipeIngredient } from '../types';
 
 import {
@@ -48,56 +42,28 @@ export const useAddIngredientSheet = () => {
 };
 
 const AddIngredientContents = () => {
-  const { reset, itemInputRef, onSubmit, isValid, mode } = useItemSheet();
+  const { reset } = useItemSheet();
   const { sheetRef, liveSyncRef, isEditing } = useAddIngredientSheetInternal();
 
-  // In edit mode, flush the pending debounce so the last few keystrokes
-  // land before dismissal completes. Add mode has no live-sync; it just
-  // resets like it did before.
   const onStartClose = useCallback(() => {
-    if (isEditing) {
-      liveSyncRef.current?.flush();
-    }
-    reset();
-  }, [isEditing, liveSyncRef, reset]);
+    if (isEditing) liveSyncRef.current?.flush();
+  }, [isEditing, liveSyncRef]);
 
-  // onDismiss fires after the sheet is fully closed. In edit mode we also
-  // drop the diff snapshot so the next present() starts from a clean
-  // baseline. Add mode doesn't need anything here — reset already ran in
-  // onStartClose, and there's no snapshot to clear.
   const onDismiss = useCallback(() => {
-    if (!isEditing) return;
     reset();
     liveSyncRef.current?.clearSnapshot();
-  }, [isEditing, liveSyncRef, reset]);
+  }, [liveSyncRef, reset]);
 
   return (
-    <BottomSheet
-      detents={[1]}
+    <ItemEditorSheet
       name="add-ingredient-sheet"
-      ref={sheetRef}
+      title={isEditing ? 'Edit ingredient' : 'Add ingredient'}
+      sheetRef={sheetRef}
       onStartClose={onStartClose}
       onDismiss={onDismiss}
-      onOpen={() => {
-        itemInputRef.current?.focus();
-      }}
-      footer={
-        <View className="gap-2 px-4 pb-4">
-          <MetaBar />
-          {isEditing ? null : (
-            <Button onPress={onSubmit} disabled={!isValid}>
-              <Text>
-                {mode === 'add' ? 'Add Ingredient' : 'Update Ingredient'}
-              </Text>
-            </Button>
-          )}
-        </View>
-      }
-    >
-      <BottomSheet.SheetView className={cn(isEditing ? undefined : 'pb-safe')}>
-        <ItemForm />
-      </BottomSheet.SheetView>
-    </BottomSheet>
+      actionLabel={isEditing ? undefined : 'Add ingredient'}
+      savedItemActions={!isEditing}
+    />
   );
 };
 
@@ -138,6 +104,7 @@ export const AddIngredientProvider = ({
   const liveSyncRef = useRef<LiveIngredientSyncHandle | null>(null);
   const setFromItemRef = useRef<((item: BaseGroceryItem) => void) | null>(null);
 
+  const { mutate: addRecipeIngredient } = useAddRecipeIngredient();
   const isEditing = !!editingIngredient;
 
   // In edit mode the Update Ingredient button is gone; all persistence

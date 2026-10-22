@@ -12,6 +12,7 @@ import {
 } from '../../shared/category/category-colors';
 import {
   findDuplicateCategoryName,
+  findHiddenBuiltInCategoryByName,
   getUniqueCategoryValue,
 } from '../category-values';
 
@@ -25,37 +26,71 @@ const existingCategories = [
   },
 ];
 
+const produceOverride = {
+  id: 'override-1',
+  name: 'Veggies',
+  value: 'produce',
+  color: 'teal',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
 describe('category value helpers', () => {
   it('creates unique values without colliding with existing categories', () => {
     expect(getUniqueCategoryValue('Bulk Foods', existingCategories)).toBe(
       'bulk-foods-2'
     );
+    expect(getUniqueCategoryValue('Produce', [])).toBe('produce-2');
   });
 
   it('prevents duplicate built-in and custom category names', () => {
-    expect(
-      findDuplicateCategoryName({
-        name: 'Produce',
-        existingCategories,
-      })
-    ).toBe('A category with this name already exists');
+    const options = mergeCategoryOptions(existingCategories);
 
-    expect(
-      findDuplicateCategoryName({
-        name: ' bulk   foods ',
-        existingCategories,
-      })
-    ).toBe('A category with this name already exists');
+    expect(findDuplicateCategoryName({ name: 'Produce', options })).toBe(
+      'A category with this name already exists'
+    );
+    expect(findDuplicateCategoryName({ name: ' bulk   foods ', options })).toBe(
+      'A category with this name already exists'
+    );
   });
 
   it('allows editing a category without matching itself', () => {
+    const options = mergeCategoryOptions(existingCategories);
+
     expect(
       findDuplicateCategoryName({
         name: 'Bulk Foods',
-        existingCategories,
-        excludingCategoryId: 'category-1',
+        options,
+        excludingValue: 'bulk-foods',
       })
     ).toBeNull();
+    expect(
+      findDuplicateCategoryName({
+        name: 'produce',
+        options,
+        excludingValue: 'produce',
+      })
+    ).toBeNull();
+  });
+
+  it('frees up the name of a hidden built-in category', () => {
+    const records = [{ ...produceOverride, isHidden: true }];
+
+    expect(
+      findDuplicateCategoryName({
+        name: 'Produce',
+        options: mergeCategoryOptions(records),
+      })
+    ).toBeNull();
+    expect(findHiddenBuiltInCategoryByName('produce', records)?.id).toBe(
+      'override-1'
+    );
+    expect(findHiddenBuiltInCategoryByName('Veggies', records)?.id).toBe(
+      'override-1'
+    );
+    expect(
+      findHiddenBuiltInCategoryByName('Produce', [produceOverride])
+    ).toBeUndefined();
   });
 });
 
@@ -90,6 +125,30 @@ describe('category option helpers', () => {
       color: 'purple',
       isBuiltIn: false,
     });
+  });
+
+  it('applies built-in overrides in place and drops hidden built-ins', () => {
+    const options = mergeCategoryOptions([
+      produceOverride,
+      {
+        ...produceOverride,
+        id: 'override-2',
+        name: 'Deli',
+        value: 'deli',
+        isHidden: true,
+      },
+    ]);
+
+    expect(options[0]).toMatchObject({
+      id: 'override-1',
+      label: 'Veggies',
+      value: 'produce',
+      color: 'teal',
+      isBuiltIn: true,
+    });
+    expect(options.some(option => option.value === 'deli')).toBe(false);
+    expect(getCategoryLabel(options, 'deli')).toBe('Deli');
+    expect(getCategoryLabel(options, 'health-beauty')).toBe('Health & Beauty');
   });
 
   it('falls back to a readable label for unknown category values', () => {

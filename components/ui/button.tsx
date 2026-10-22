@@ -86,9 +86,8 @@ const buttonVariants = cva(
           Platform.select({ web: 'has-[>svg]:px-6' })
         ),
         'wide-small': cn('h-10 w-24'),
-        icon: 'size-8',
+        icon: 'size-9',
         iconLg: 'size-14',
-        circle: 'rounded-full p-2',
       },
     },
     defaultVariants: {
@@ -129,7 +128,6 @@ const buttonTextVariants = cva(
         'wide-small': '',
         icon: '',
         iconLg: '',
-        circle: '',
       },
     },
     defaultVariants: {
@@ -175,10 +173,6 @@ const floatingIconOffsets: Record<
     left: 'left-4',
     right: 'right-4',
   },
-  circle: {
-    left: 'left-2',
-    right: 'right-2',
-  },
 };
 
 type ButtonProps = React.ComponentProps<typeof HapticPressable> &
@@ -212,6 +206,8 @@ type ButtonProps = React.ComponentProps<typeof HapticPressable> &
     /**
      * Displays an acknowledged completion state. Keep this controlled so the
      * caller can transition to success only after its work has completed.
+     * Success remains pressable unless the caller explicitly disables the
+     * button.
      * @default 'idle'
      */
     status?: ButtonStatus;
@@ -285,8 +281,8 @@ function Button({
   const renderAnimatedContents = (content: React.ReactNode) => (
     <Animated.View
       key={isSuccess ? 'success' : 'idle'}
-      entering={successTextEntering.duration(200)}
-      exiting={successTextExiting.duration(160)}
+      entering={isSuccess ? successTextEntering.duration(200) : undefined}
+      exiting={isSuccess ? successTextExiting.duration(160) : undefined}
       className={hasFloatingIcon ? 'w-full' : undefined}
     >
       {content}
@@ -310,7 +306,7 @@ function Button({
         role="button"
         haptic={haptic}
         hapticType={hapticType}
-        disabled={disabled === true || isSuccess}
+        disabled={disabled === true}
         style={style}
         {...props}
       >
@@ -323,7 +319,9 @@ function Button({
                   strokeWidth={3}
                   className="text-white"
                 />
-                <Text className="text-white">{successLabel}</Text>
+                {successLabel ? (
+                  <Text className="text-white">{successLabel}</Text>
+                ) : null}
               </View>
             )
           : typeof children === 'function'

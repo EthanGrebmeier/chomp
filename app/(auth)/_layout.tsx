@@ -18,7 +18,7 @@ export default function AuthLayout() {
     (hasInstantEmailSession || isSignedInWithClerk) &&
     !isGuestContinuationPending
   ) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/(tabs)" withAnchor />;
   }
 
   if (
@@ -27,7 +27,7 @@ export default function AuthLayout() {
     isAuthEntryRoute &&
     !isGuestContinuationPending
   ) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/(tabs)" withAnchor />;
   }
 
   return (

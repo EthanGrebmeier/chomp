@@ -1,11 +1,27 @@
+import { ReactNode } from 'react';
+
 import { ItemInput } from './item-input';
 import { NotesInput } from './notes-input';
-import { RecipeTag } from './recipe-tag';
 import { useItemSheet } from './use-item-sheet';
 
-export const ItemForm = () => {
+type ItemFormProps = {
+  /**
+   * Rendered between the name and notes inputs; the Edit sheet uses it to
+   * show where the item came from (recipe or meal plan link).
+   */
+  source?: ReactNode;
+  compact?: boolean;
+  showNotes?: boolean;
+  renderContent?: (fields: ReactNode, suggestions: ReactNode) => ReactNode;
+};
+
+export const ItemForm = ({
+  source,
+  compact,
+  renderContent,
+  showNotes = true,
+}: ItemFormProps) => {
   const {
-    recipe,
     itemInputValue,
     itemInputKey,
     itemInputDefaultValue,
@@ -29,9 +45,24 @@ export const ItemForm = () => {
   return (
     <>
       <ItemInput
-        placeholder="Add Item"
+        compact={compact}
+        renderContent={
+          renderContent
+            ? (input, suggestions) =>
+                renderContent(
+                  <>
+                    {input}
+                    {source}
+                    {showNotes ? <NotesInput compact={compact} /> : null}
+                  </>,
+                  suggestions
+                )
+            : undefined
+        }
+        placeholder="Item Name"
         inputKey={itemInputKey}
         defaultValue={itemInputDefaultValue}
+        value={itemInputValue}
         matchingValue={itemInputValue}
         onChangeText={onChangeItemText}
         onSelect={onSelect}
@@ -42,8 +73,12 @@ export const ItemForm = () => {
         disableAutocomplete={disableAutocomplete}
         keepKeyboardOnSubmit={mode === 'add'}
       />
-      {recipe && <RecipeTag />}
-      <NotesInput />
+      {!renderContent ? (
+        <>
+          {source}
+          {showNotes ? <NotesInput compact={compact} /> : null}
+        </>
+      ) : null}
     </>
   );
 };

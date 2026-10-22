@@ -3,14 +3,20 @@ import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
+import { EmptyHeading } from '@/components/text/empty-heading';
+import { EmptySubtext } from '@/components/text/empty-subtext';
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
 import { GroceryListSkeleton } from '@/features/grocery-list/components/grocery-list-skeleton';
 import { type ListView } from '@/features/grocery-list/components/list-view-tabs';
+import { useGroceryListItems } from '@/features/grocery-list/instant/useGroceryListItems';
 import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDeleteGroceryList';
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
-import { useTrackListAccess } from '@/features/grocery-lists/instant/useTrackListAccess';
+import { useTrackListAccess } from '@/features/grocery-lists/local/use-track-list-access';
 import { MealPlanner } from '@/features/meal-planner/components';
+import { useMealPlanListReconciler } from '@/features/meal-planner/hooks';
+import { type MealPlanFocusRequest } from '@/features/meal-planner/types';
+import { QuantityListStatus } from '@/features/quantity/app/status';
 import { db } from '@/lib/instant';
 import { buildGroceryListsIndexUrl } from '@/lib/navigation';
 
@@ -25,7 +31,11 @@ export default function List() {
   const [selectedListId, setSelectedListId] = useState<
     string | null | undefined
   >(listIdParam);
-  const { data: lists, isLoading: listsLoading } = useGroceryLists();
+  const {
+    data: lists,
+    isLoading: listsLoading,
+    error: listsError,
+  } = useGroceryLists();
   const selectedList =
     selectedListId === null
       ? undefined
@@ -37,13 +47,16 @@ export default function List() {
     selectedListId === null
       ? undefined
       : (selectedList?.id ?? parameterList?.id ?? lists?.grocery_lists[0]?.id);
-  const requestedView: ListView =
-    viewParam === 'meal-plan' ? 'meal-plan' : 'grocery-list';
+  const [selectedView, setSelectedView] = useState<ListView>('grocery-list');
   const activeView: ListView =
-    requestedView === 'meal-plan' && !activeListId && !listsLoading
+    selectedView === 'meal-plan' && !activeListId && !listsLoading
       ? 'grocery-list'
-      : requestedView;
+      : selectedView;
   const { user } = db.useAuth();
+  // Set when a linked grocery item's date is tapped; cleared on list switch
+  // so a remounted meal planner doesn't jump to a stale date.
+  const [mealPlanFocusRequest, setMealPlanFocusRequest] =
+    useState<MealPlanFocusRequest | null>(null);
   const deleteGroceryList = useDeleteGroceryList();
   const leaveGroceryList = useLeaveGroceryList();
   const trackListAccess = useTrackListAccess();
@@ -55,6 +68,7 @@ export default function List() {
       }
 
       setSelectedListId(nextListId ?? null);
+      setMealPlanFocusRequest(null);
       router.setParams({ listId: nextListId });
     },
     [activeListId]
@@ -75,7 +89,14 @@ export default function List() {
   const activeList = lists?.grocery_lists.find(
     list => list.id === activeListId
   );
-  const activeListItems = activeList?.grocery_items ?? [];
+  const { items: activeListItems, isLoading: itemsLoading } =
+    useGroceryListItems(activeListId);
+  // Repairs meal plan ↔ grocery list drift once per list load; this screen
+  // hosts both the grocery list and the meal plan.
+  useMealPlanListReconciler({
+    listId: activeListId,
+    isGroceryListReady: !itemsLoading,
+  });
 
   const handleDeleteOrLeave = async () => {
     if (!activeListId || !activeList) return;
@@ -99,6 +120,8 @@ export default function List() {
     }
   };
 
+  // Items load per list; keep <GroceryList> mounted across list switches and
+  // let it render a quiet list area instead of tearing down to the skeleton.
   const isLoading = listsLoading || settingsLoading;
 
   const handleViewChange = useCallback(
@@ -107,6 +130,7 @@ export default function List() {
         return;
       }
 
+      setSelectedView(nextView);
       router.setParams({
         view: nextView === 'meal-plan' ? 'meal-plan' : undefined,
       });
@@ -114,19 +138,39 @@ export default function List() {
     [activeListId]
   );
 
+  const handleOpenMealPlanDate = useCallback(
+    (date: string, mealId?: string, sourceId?: string) => {
+      handleViewChange('meal-plan');
+      setMealPlanFocusRequest(current => ({
+        id: (current?.id ?? 0) + 1,
+        date,
+        mealId,
+        sourceId,
+      }));
+    },
+    [handleViewChange]
+  );
+
   const handleOpenListsIndex = useCallback(() => {
-    router.push(
+    router.dismissTo(
       buildGroceryListsIndexUrl({
         selectedListId: activeListId,
-        view: activeView === 'meal-plan' ? 'meal-plan' : undefined,
       })
     );
-  }, [activeListId, activeView]);
+  }, [activeListId]);
 
   return (
     <View className="flex-1 bg-background">
       <View className="pt-safe flex-1">
-        {isLoading ? (
+        {listsError ? (
+          <View
+            accessibilityRole="alert"
+            className="flex-1 items-center justify-center gap-1 px-6"
+          >
+            <EmptyHeading>Couldn&apos;t load your grocery lists</EmptyHeading>
+            <EmptySubtext>Check your connection, then try again.</EmptySubtext>
+          </View>
+        ) : isLoading ? (
           <Animated.View
             key="skeleton"
             entering={FadeIn.duration(200)}
@@ -142,12 +186,14 @@ export default function List() {
             exiting={FadeOut.duration(200)}
             className="flex-1"
           >
+            <QuantityListStatus listId={activeListId} />
             <GroceryList
               listId={activeListId}
               listName={activeList?.name}
               joinCode={activeList?.joinCode}
               ownerId={activeList?.ownerId}
               items={activeListItems}
+              isItemsLoading={itemsLoading}
               groupBy={settings.groupBy}
               sortBy={settings.sortBy}
               onBackPress={handleOpenListsIndex}
@@ -156,9 +202,14 @@ export default function List() {
               activeListChangeVersion={activeListId}
               activeView={activeView}
               onViewChange={handleViewChange}
+              onOpenMealPlanDate={handleOpenMealPlanDate}
               alternateContent={
                 activeListId ? (
-                  <MealPlanner listId={activeListId} showHeader={false} />
+                  <MealPlanner
+                    listId={activeListId}
+                    showHeader={false}
+                    focusRequest={mealPlanFocusRequest}
+                  />
                 ) : null
               }
             />

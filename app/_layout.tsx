@@ -1,24 +1,30 @@
 import { ClerkProvider } from '@clerk/expo';
 import { resourceCache } from '@clerk/expo/resource-cache';
 import { tokenCache } from '@clerk/expo/token-cache';
-import { AveriaSerifLibre_400Regular } from '@expo-google-fonts/averia-serif-libre';
-import { Jaro_400Regular } from '@expo-google-fonts/jaro';
 import { PortalHost } from '@rn-primitives/portal';
-import { useFonts } from 'expo-font';
-import { Stack, useRootNavigationState, useSegments } from 'expo-router';
+import {
+  DarkTheme,
+  DefaultTheme,
+  Stack,
+  ThemeProvider,
+  useRootNavigationState,
+  useSegments,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { View, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import {
   ReanimatedLogLevel,
   configureReanimatedLogger,
+  useReducedMotion,
 } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
+import { QuantityAppProvider } from '@/features/quantity/app/provider';
 import {
   InstantAuthHandler,
   useInstantAuthState,
@@ -31,6 +37,7 @@ import {
 import { QueryClientProvider } from '@/providers/query-client-provider';
 
 import '../global.css';
+import { useAppFonts } from '../hooks/use-app-fonts';
 import { useTheme } from '../hooks/use-theme';
 
 configureReanimatedLogger({
@@ -57,6 +64,7 @@ const hideSplashScreen = async () => {
 
 function InitialLayout() {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
 
   return (
     <View className="flex-1 bg-background">
@@ -69,14 +77,12 @@ function InitialLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen
-          name="grocery-lists"
+          name="shopping"
           options={{
             presentation: 'card',
-            animation: 'slide_from_left',
-            contentStyle: {
-              height: '100%',
-              backgroundColor: theme.background,
-            },
+            gestureEnabled: true,
+            animation: reducedMotion ? 'fade' : 'default',
+            contentStyle: { backgroundColor: theme.background },
           }}
         />
         <Stack.Screen
@@ -177,16 +183,12 @@ function RootLayoutContent({
 }: {
   isStartupUpdateReady: boolean;
 }) {
-  const [fontsLoaded, fontLoadError] = useFonts({
-    'averia-serif-libre': AveriaSerifLibre_400Regular,
-    'jaro-regular': Jaro_400Regular,
-    'alpino-regular': require('../assets/fonts/alpino/Alpino-Regular.otf'),
-    'alpino-medium': require('../assets/fonts/alpino/Alpino-Medium.otf'),
-  });
+  const [fontsLoaded, fontLoadError] = useAppFonts();
   const { hasAppAccess, isReconciled, isSignedInWithClerk, shouldBlockAuthUi } =
     useInstantAuthState();
   const rootNavigationState = useRootNavigationState();
   const segments = useSegments();
+  const colorscheme = useColorScheme();
   const hasHiddenSplashRef = useRef(false);
   const [migrationStatus, setMigrationStatus] =
     useState<MigrationStatus | null>(null);
@@ -197,7 +199,7 @@ function RootLayoutContent({
   }, []);
 
   useEffect(() => {
-    const areFontsReady = fontsLoaded || Boolean(fontLoadError);
+    const areFontsReady = fontsLoaded ? true : Boolean(fontLoadError);
     const isMigrationErrorVisible = migrationStatus === 'error';
     const isNavigationReady = Boolean(rootNavigationState?.key);
     const topLevelSegment = segments[0];
@@ -241,25 +243,29 @@ function RootLayoutContent({
   ]);
 
   return (
-    <ClerkProvider
-      __experimental_resourceCache={resourceCache}
-      tokenCache={tokenCache}
-      publishableKey={publishableKey}
-    >
-      <QueryClientProvider>
-        <KeyboardProvider>
-          <MigrationProvider onStatusChange={handleMigrationStatusChange}>
-            <SafeAreaProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <InitialLayout />
-                <InstantAuthHandler />
-                <PortalHost />
-              </GestureHandlerRootView>
-            </SafeAreaProvider>
-          </MigrationProvider>
-        </KeyboardProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
+    <ThemeProvider value={colorscheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ClerkProvider
+        __experimental_resourceCache={resourceCache}
+        tokenCache={tokenCache}
+        publishableKey={publishableKey}
+      >
+        <QueryClientProvider>
+          <KeyboardProvider>
+            <MigrationProvider onStatusChange={handleMigrationStatusChange}>
+              <SafeAreaProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <QuantityAppProvider>
+                    <InitialLayout />
+                  </QuantityAppProvider>
+                  <InstantAuthHandler />
+                  <PortalHost />
+                </GestureHandlerRootView>
+              </SafeAreaProvider>
+            </MigrationProvider>
+          </KeyboardProvider>
+        </QueryClientProvider>
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }
 

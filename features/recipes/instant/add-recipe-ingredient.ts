@@ -1,8 +1,14 @@
 import { id, tx } from '@instantdb/react-native';
 
-import { db } from '../../../lib/instant';
+import { db, type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
+import {
+  buildRecipeIngredientEditTransactions,
+  queryRecipeIngredientEditTargets,
+} from '../../meal-planner/instant/propagate-recipe-ingredient-edit';
 import { addSavedItemIfNotExists } from '../../saved-items/instant/add-saved-item-if-not-exists';
+
+import type { DefaultStoreForStacking } from './stack-recipe-ingredients-plan';
 
 export type AddRecipeIngredientArgs = {
   recipeId: string;
@@ -12,8 +18,16 @@ export type AddRecipeIngredientArgs = {
   notes?: string;
   category?: string | null;
   storeId?: string;
+  /** List default store, applied to linked grocery items without a store. */
+  defaultStore: DefaultStoreForStacking | null | undefined;
 };
 
+/**
+ * Adds an ingredient to a recipe and, in the same transaction, to each
+ * planned meal using the recipe (on lists the editor is a member of) that
+ * isn't ignored by the grocery list: a selected snapshot row and a linked
+ * grocery item.
+ */
 export const addRecipeIngredient = async ({
   recipeId,
   name,
@@ -22,19 +36,20 @@ export const addRecipeIngredient = async ({
   notes,
   category,
   storeId,
+  defaultStore,
 }: AddRecipeIngredientArgs) => {
   const ingredientId = id();
+  const fields = trimStringFields({
+    name,
+    quantity,
+    unit,
+    notes,
+    category: category ?? undefined,
+  });
+  const recipeRows = await queryRecipeIngredientEditTargets({ recipeId });
 
-  const transactions = [
-    tx.recipe_ingredients[ingredientId].create(
-      trimStringFields({
-        name,
-        quantity,
-        unit,
-        notes,
-        category: category ?? undefined,
-      })
-    ),
+  const transactions: TransactionChunk[] = [
+    tx.recipe_ingredients[ingredientId].create(fields),
     tx.recipe_ingredients[ingredientId].link({
       recipe: recipeId,
     }),
@@ -48,6 +63,21 @@ export const addRecipeIngredient = async ({
       })
     );
   }
+
+  transactions.push(
+    ...buildRecipeIngredientEditTransactions({
+      recipeRows,
+      edit: {
+        type: 'add',
+        ingredient: {
+          ...fields,
+          id: ingredientId,
+          store: storeId ? { id: storeId } : null,
+        },
+      },
+      defaultStore,
+    })
+  );
 
   await db.transact(transactions);
 

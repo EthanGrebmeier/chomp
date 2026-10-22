@@ -7,4 +7,3 @@ export type RemoveSavedItemArgs = {
 export const removeSavedItem = async ({ itemId }: RemoveSavedItemArgs) => {
   await db.transact([db.tx.saved_items[itemId].delete()]);
 };
-

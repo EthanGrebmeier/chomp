@@ -1,47 +1,64 @@
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+
+import { cn } from '@/lib/utils';
+import {
+  createContext,
+  use,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+  type ViewProps,
+} from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import {
+  Draggable,
+  DropProvider,
+  Droppable,
+  type DropProviderRef,
+} from 'react-native-reanimated-dnd';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '../../../components/bottom-sheet';
-import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
-import { EmptyHeading } from '../../../components/text/empty-heading';
-import { EmptySubtext } from '../../../components/text/empty-subtext';
-import { Button } from '../../../components/ui/button';
-import { Pill } from '../../../components/ui/pill';
+import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { Recipe } from '../../recipes/types';
-import { useAddMealsToGroceryList, useUnmarkMealAdded } from '../hooks';
 import {
-  applyMealPlanIngredientOverride,
-  getSelectedSourceIngredientIds,
-  hydrateMealPlanIngredientEditorFromSnapshot,
-  MealPlanIngredientEditorRow,
-  toggleAllMealPlanIngredientSelection,
-  toggleMealPlanIngredientSelection,
-} from '../meal-plan-recipe-ingredient-editor';
-import { getReconciledMealPlanSnapshotRows } from '../instant/get-reconciled-meal-plan-snapshot-rows';
-import { MealPlanIngredientSnapshotStore } from '../instant/meal-plan-ingredient-snapshot-store';
-import {
+  MealPlanFocusRequest,
   MealPlanItemWithStore,
   MealPlanRecipe,
   MealPlanRecipeWithRecipe,
   MealTag,
 } from '../types';
-
 import {
-  MealPlanIngredientOverrideSheet,
-  MealPlanIngredientOverrideSheetRef,
-} from './meal-plan-ingredient-override-sheet';
+  MealPlanDayListEntry,
+  MealPlanDayListSection,
+  MealPlanEntryIdentity,
+  MoveMealPlanEntry,
+} from '../utils/meal-plan-day-list';
+
 import MealPlanItemCard from './meal-plan-item-card';
 import MealPlanMealCard from './meal-plan-meal-card';
 
+type DayListSection = MealPlanDayListSection<
+  MealPlanRecipeWithRecipe,
+  MealPlanItemWithStore
+>;
+
 type MealPlanDateViewProps = {
-  listId: string;
-  recipes: MealPlanRecipeWithRecipe[];
-  items: MealPlanItemWithStore[];
+  dayListSections: DayListSection[];
+  onDayPress?: (dateKey: string) => void;
   onMealPress: ({
     mealPlanRecipe,
     recipe,
@@ -50,6 +67,9 @@ type MealPlanDateViewProps = {
     recipe: Recipe;
   }) => void;
   onItemPress: (item: MealPlanItemWithStore) => void;
+  onMoveEntry?: MoveMealPlanEntry;
+  /** Scrolls the requested day to the top. */
+  focusRequest?: MealPlanFocusRequest | null;
 };
 
 const mealTimeOrder: MealTag[] = [
@@ -61,498 +81,461 @@ const mealTimeOrder: MealTag[] = [
   'None',
 ];
 
-export const MealPlanDateView = ({
-  listId,
-  recipes,
-  items,
+type MealPlanEntry = MealPlanDayListEntry<
+  MealPlanRecipeWithRecipe,
+  MealPlanItemWithStore
+>;
+
+const dragStyles = StyleSheet.create({
+  activeDraggable: {
+    zIndex: 100,
+  },
+  activeDropTarget: {
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+  },
+});
+
+const MEAL_PLAN_DRAG_LONG_PRESS_MS = 300;
+const DROP_HIGHLIGHT_ENTER_MS = 60;
+const DROP_HIGHLIGHT_EXIT_DELAY_MS = 50;
+const DROP_HIGHLIGHT_EXIT_MS = 100;
+
+// Days rendered below the fold on first paint, in addition to the past days.
+const DAY_LIST_INITIAL_FUTURE_DAYS_TO_RENDER = 8;
+
+const ActiveDragSectionContext = createContext<SharedValue<
+  number | null
+> | null>(null);
+
+// Reports each cell's layout (relative to the list content) so the list can
+// scroll to today using measured positions instead of estimates.
+const DayCellLayoutContext = createContext<
+  ((index: number, event: LayoutChangeEvent) => void) | null
+>(null);
+
+type MealPlanDayCellProps = ViewProps & {
+  index: number;
+};
+
+const MealPlanDayCell = ({
+  index,
+  style,
+  children,
+  onLayout,
+  ...props
+}: MealPlanDayCellProps) => {
+  const activeSectionIndex = use(ActiveDragSectionContext);
+  const onDayCellLayout = use(DayCellLayoutContext);
+  const activeCellStyle = useAnimatedStyle(() => ({
+    zIndex: activeSectionIndex?.get() === index ? 100 : 0,
+  }));
+
+  const handleLayout = (event: LayoutChangeEvent) => {
+    onLayout?.(event);
+    onDayCellLayout?.(index, event);
+  };
+
+  return (
+    <Animated.View
+      {...props}
+      onLayout={handleLayout}
+      style={[style, activeCellStyle]}
+    >
+      {children}
+    </Animated.View>
+  );
+};
+
+type MealPlanDragConfig = {
+  resetKey: number;
+  onDragStart: (entry: MealPlanEntryIdentity) => void;
+  onDragEnd: () => void;
+};
+
+type DraggableMealPlanEntryProps = {
+  entry: MealPlanEntryIdentity;
+  children: ReactNode;
+  onDragStart: MealPlanDragConfig['onDragStart'];
+  onDragEnd: MealPlanDragConfig['onDragEnd'];
+};
+
+const DraggableMealPlanEntry = ({
+  entry,
+  onDragStart,
+  onDragEnd,
+  children,
+}: DraggableMealPlanEntryProps) => {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragStart = (draggedEntry: MealPlanEntryIdentity) => {
+    setIsDragging(true);
+    onDragStart(draggedEntry);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    onDragEnd();
+  };
+
+  return (
+    <Draggable
+      data={entry}
+      draggableId={`${entry.type}:${entry.id}`}
+      dragAxis="y"
+      collisionAlgorithm="center"
+      preDragDelay={MEAL_PLAN_DRAG_LONG_PRESS_MS}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      style={isDragging ? dragStyles.activeDraggable : undefined}
+    >
+      <View className={isDragging ? 'bg-background/70' : undefined}>
+        {children}
+      </View>
+    </Draggable>
+  );
+};
+
+const entryTypeOrder: Record<MealPlanEntry['type'], number> = {
+  recipe: 0,
+  item: 1,
+};
+
+const getMealTimeRank = (entry: MealPlanEntry) =>
+  mealTimeOrder.indexOf((entry.value.mealTag as MealTag | undefined) ?? 'None');
+
+/**
+ * Keeps entries that share a meal time together (in meal time order, recipes
+ * before items) without rendering a heading per group; each card shows its
+ * own meal time badge instead.
+ */
+const sortEntriesByMealTime = (entries: readonly MealPlanEntry[]) =>
+  [...entries].sort(
+    (a, b) =>
+      getMealTimeRank(a) - getMealTimeRank(b) ||
+      entryTypeOrder[a.type] - entryTypeOrder[b.type]
+  );
+
+const getEntryKey = (entry: MealPlanEntry) => `${entry.type}:${entry.id}`;
+
+type MealPlanEntryRowProps = {
+  entry: MealPlanEntry;
+  onMealPress: MealPlanDateViewProps['onMealPress'];
+  onItemPress: MealPlanDateViewProps['onItemPress'];
+  dragConfig?: MealPlanDragConfig;
+};
+
+const MealPlanEntryRow = ({
+  entry,
   onMealPress,
   onItemPress,
-}: MealPlanDateViewProps) => {
-  const { mutate: addMealsToGroceryList, isPending: isAddingToList } =
-    useAddMealsToGroceryList();
-  const { mutate: unmarkMealAdded } = useUnmarkMealAdded();
-  const quickReviewSheetRef = useRef<TrueSheet>(null);
-  const ingredientOverrideSheetRef =
-    useRef<MealPlanIngredientOverrideSheetRef>(null);
-  const [quickReviewMealPlanRecipe, setQuickReviewMealPlanRecipe] =
-    useState<MealPlanRecipeWithRecipe | null>(null);
-  const queryClient = useQueryClient();
-
-  const quickReviewRecipe = quickReviewMealPlanRecipe?.recipe ?? null;
-  const quickReviewQueryKey = useMemo(
-    () => ['meal-plan-quick-review-rows', quickReviewMealPlanRecipe?.id ?? null],
-    [quickReviewMealPlanRecipe?.id]
-  );
-
-  const {
-    data: quickReviewIngredientRows = [],
-    isPending: isLoadingQuickReviewIngredients,
-  } = useQuery<MealPlanIngredientEditorRow[]>({
-    queryKey: quickReviewQueryKey,
-    enabled: Boolean(quickReviewMealPlanRecipe && quickReviewRecipe),
-    queryFn: async () => {
-      if (!quickReviewMealPlanRecipe || !quickReviewRecipe) {
-        return [];
-      }
-      const snapshotRows = await getReconciledMealPlanSnapshotRows(
-        quickReviewMealPlanRecipe.id
-      );
-
-      return hydrateMealPlanIngredientEditorFromSnapshot({
-        sourceIngredients: quickReviewRecipe.recipe_ingredients ?? [],
-        snapshotRows,
-      });
-    },
-  });
-
-  const setQuickReviewQueryRows = useCallback(
-    (
-      updater: (
-        rows: MealPlanIngredientEditorRow[]
-      ) => MealPlanIngredientEditorRow[]
-    ) => {
-      queryClient.setQueryData<MealPlanIngredientEditorRow[]>(
-        quickReviewQueryKey,
-        prev => updater(prev ?? [])
-      );
-    },
-    [queryClient, quickReviewQueryKey]
-  );
-
-  const quickReviewSelectionMutation = useMutation({
-    mutationFn: ({
-      snapshotRowId,
-      isSelected,
-    }: {
-      snapshotRowId: string;
-      isSelected: boolean;
-    }) =>
-      MealPlanIngredientSnapshotStore.updateRowSelection({
-        snapshotRowId,
-        isSelected,
-      }),
-  });
-
-  const quickReviewOverrideMutation = useMutation({
-    mutationFn: ({
-      snapshotRowId,
-      updates,
-    }: {
-      snapshotRowId: string;
-      updates: {
-        name: string;
-        quantity: number;
-        unit: string;
-        notes?: string | null;
-        category?: string | null;
-        storeId?: string;
-        isQuantityOverridden: boolean;
-      };
-    }) =>
-      MealPlanIngredientSnapshotStore.updateRowOverrides({
-        snapshotRowId,
-        updates,
-      }),
-  });
-
-  const selectedQuickReviewIngredientIds = useMemo(
-    () => getSelectedSourceIngredientIds(quickReviewIngredientRows),
-    [quickReviewIngredientRows]
-  );
-
-  const closeQuickReviewSheet = useCallback(() => {
-    quickReviewSheetRef.current?.dismiss();
-  }, []);
-
-  const handleQuickReviewDismiss = useCallback(() => {
-    setQuickReviewMealPlanRecipe(null);
-    ingredientOverrideSheetRef.current?.dismiss();
-  }, []);
-
-  const handleOpenQuickReview = useCallback((mealPlanRecipe: MealPlanRecipeWithRecipe) => {
-    setQuickReviewMealPlanRecipe(mealPlanRecipe);
-    quickReviewSheetRef.current?.present();
-  }, []);
-
-  const handleToggleQuickReviewIngredientSelection = useCallback(
-    async (sourceRecipeIngredientId: string) => {
-      const currentRow = quickReviewIngredientRows.find(
-        row => row.sourceRecipeIngredientId === sourceRecipeIngredientId
-      );
-      if (!currentRow?.snapshotRowId) return;
-
-      const previousIsSelected = currentRow.isSelected;
-      const nextIsSelected = !previousIsSelected;
-
-      setQuickReviewQueryRows(rows =>
-        toggleMealPlanIngredientSelection(rows, sourceRecipeIngredientId)
-      );
-
-      try {
-        await quickReviewSelectionMutation.mutateAsync({
-          snapshotRowId: currentRow.snapshotRowId,
-          isSelected: nextIsSelected,
-        });
-      } catch {
-        setQuickReviewQueryRows(rows =>
-          rows.map(row =>
-            row.sourceRecipeIngredientId === sourceRecipeIngredientId
-              ? { ...row, isSelected: previousIsSelected }
-              : row
-          )
-        );
-        toast.error('Failed to save ingredient selection');
-      }
-    },
-    [
-      quickReviewIngredientRows,
-      quickReviewSelectionMutation,
-      setQuickReviewQueryRows,
-    ]
-  );
-
-  const handleToggleAllQuickReviewIngredientSelections = useCallback(async () => {
-    if (quickReviewIngredientRows.length === 0) return;
-
-    const previousRows = quickReviewIngredientRows;
-    const nextRows = toggleAllMealPlanIngredientSelection(previousRows);
-    const nextIsSelected = nextRows[0]?.isSelected ?? true;
-
-    setQuickReviewQueryRows(() => nextRows);
-    try {
-      await Promise.all(
-        previousRows
-          .filter(row => row.snapshotRowId)
-          .map(row =>
-            quickReviewSelectionMutation.mutateAsync({
-              snapshotRowId: row.snapshotRowId as string,
-              isSelected: nextIsSelected,
-            })
-          )
-      );
-    } catch {
-      setQuickReviewQueryRows(() => previousRows);
-      toast.error('Failed to save ingredient selections');
-    }
-  }, [
-    quickReviewIngredientRows,
-    quickReviewSelectionMutation,
-    setQuickReviewQueryRows,
-  ]);
-
-  const handleEditQuickReviewIngredient = useCallback(
-    (sourceRecipeIngredientId: string) => {
-      const row = quickReviewIngredientRows.find(
-        ingredientRow =>
-          ingredientRow.sourceRecipeIngredientId === sourceRecipeIngredientId
-      );
-      if (!row) return;
-      ingredientOverrideSheetRef.current?.present(row);
-    },
-    [quickReviewIngredientRows]
-  );
-
-  const handleConfirmQuickAdd = useCallback(() => {
-    if (!quickReviewMealPlanRecipe || isAddingToList) return;
-
-    addMealsToGroceryList(
-      {
-        listId,
-        selectedRecipeIds: [quickReviewMealPlanRecipe.id],
-      },
-      {
-        onSuccess: result => {
-          const totalAdded = result.addedRecipes + result.addedItems;
-          if (totalAdded === 0) {
-            toast.info('Already added to list');
-          }
-          closeQuickReviewSheet();
-        },
-        onError: () => {
-          toast.error('Failed to add to list');
-        },
-      }
+  dragConfig,
+}: MealPlanEntryRowProps) => {
+  let card: ReactNode;
+  if (entry.type === 'recipe') {
+    const recipe = entry.value.recipe;
+    if (!recipe) return null;
+    card = (
+      <MealPlanMealCard
+        mealPlanRecipe={entry.value}
+        recipe={recipe}
+        contextMenuEnabled={!dragConfig}
+        onMealPress={onMealPress}
+      />
     );
-  }, [addMealsToGroceryList, closeQuickReviewSheet, isAddingToList, listId, quickReviewMealPlanRecipe]);
-
-  const handleIndicatorPress = useCallback(
-    (
-      type: 'recipe' | 'item',
-      id: string,
-      name: string,
-      addedToList: boolean
-    ) => {
-      if (isAddingToList) return;
-
-      if (addedToList) {
-        Alert.alert(
-          'Already Added',
-          `"${name}" has already been added to a grocery list. Would you like to mark it as unadded?`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Mark as Unadded',
-              onPress: () => unmarkMealAdded({ type, id }),
-            },
-          ]
-        );
-      } else {
-        if (type === 'recipe') {
-          const mealPlanRecipe = recipes.find(recipe => recipe.id === id);
-          if (!mealPlanRecipe) {
-            toast.error('Recipe not found');
-            return;
-          }
-          handleOpenQuickReview(mealPlanRecipe);
-          return;
-        }
-
-        const args = { listId, selectedItemIds: [id] };
-
-        addMealsToGroceryList(args, {
-          onSuccess: result => {
-            const totalAdded = result.addedRecipes + result.addedItems;
-            if (totalAdded === 0) {
-              toast.info('Already added to list');
-            }
-          },
-          onError: () => {
-            toast.error('Failed to add to list');
-          },
-        });
-      }
-    },
-    [
-      addMealsToGroceryList,
-      handleOpenQuickReview,
-      isAddingToList,
-      listId,
-      recipes,
-      unmarkMealAdded,
-    ]
-  );
-
-  const handleRecipeIndicatorPress = useCallback(
-    (mealPlanRecipe: MealPlanRecipeWithRecipe) => {
-      const name = mealPlanRecipe.recipe.name;
-      handleIndicatorPress(
-        'recipe',
-        mealPlanRecipe.id,
-        name,
-        !!mealPlanRecipe.addedToList
-      );
-    },
-    [recipes, handleIndicatorPress]
-  );
-
-  const handleItemIndicatorPress = useCallback(
-    (mealPlanItem: MealPlanItemWithStore) => {
-      handleIndicatorPress(
-        'item',
-        mealPlanItem.id,
-        mealPlanItem.name,
-        !!mealPlanItem.addedToList
-      );
-    },
-    [handleIndicatorPress]
-  );
-
-  // Group recipes by meal time
-  const groupedRecipes = recipes.reduce(
-    (acc, recipe) => {
-      if (!recipe.recipe) return acc;
-      const tag = (recipe.mealTag as MealTag) || 'None'; // Default to None if no mealTag
-      acc[tag] = [...(acc[tag] || []), recipe];
-      return acc;
-    },
-    {} as Record<MealTag, MealPlanRecipeWithRecipe[]>
-  );
-
-  // Group items by meal time
-  const groupedItems = items.reduce(
-    (acc, item) => {
-      const tag = (item.mealTag as MealTag) || 'None'; // Default to None if no mealTag
-      acc[tag] = [...(acc[tag] ?? []), item];
-      return acc;
-    },
-    {} as Record<MealTag, MealPlanItemWithStore[]>
-  );
-
-  // Only include meal times that have recipes or items
-  const mealTimesWithContent = mealTimeOrder.filter(
-    mealTime =>
-      (groupedRecipes[mealTime]?.length ?? 0) +
-        (groupedItems[mealTime]?.length ?? 0) >
-      0
-  );
-
-  // Empty state when no meals or items
-  if (mealTimesWithContent.length === 0) {
-    return (
-      <Animated.View
-        entering={FadeIn.duration(140)}
-        exiting={FadeOut.duration(140)}
-        className="flex-1 items-center justify-center px-4"
-      >
-        <View className="-mt-24">
-          <EmptyHeading className="mt-4">No meals planned</EmptyHeading>
-          <EmptySubtext>Tap the + button to add a meal</EmptySubtext>
-        </View>
-      </Animated.View>
+  } else {
+    card = (
+      <MealPlanItemCard
+        mealPlanItem={entry.value}
+        contextMenuEnabled={!dragConfig}
+        onItemPress={onItemPress}
+      />
     );
   }
 
+  if (!dragConfig) return card;
+
+  const identity: MealPlanEntryIdentity = {
+    type: entry.type,
+    id: entry.id,
+    date: entry.date,
+  };
+
   return (
-    <>
-      <FlatList
-        contentContainerClassName="pb-20"
-        data={mealTimesWithContent}
-        keyExtractor={item => item}
-        renderItem={({ item: mealTime }) => (
-          <View className="mb-5">
-            <Text className="px-4 text-lg font-semibold capitalize text-muted-foreground">
-              {mealTime}
+    <DraggableMealPlanEntry
+      // Remount when the date or reset key changes so the draggable snaps back.
+      key={`${identity.date}:${dragConfig.resetKey}`}
+      entry={identity}
+      onDragStart={dragConfig.onDragStart}
+      onDragEnd={dragConfig.onDragEnd}
+    >
+      {card}
+    </DraggableMealPlanEntry>
+  );
+};
+
+type MealPlanDayContentProps = {
+  entries: readonly MealPlanEntry[];
+  onMealPress: MealPlanDateViewProps['onMealPress'];
+  onItemPress: MealPlanDateViewProps['onItemPress'];
+  dragConfig?: MealPlanDragConfig;
+};
+
+const MealPlanDayContent = ({
+  entries,
+  onMealPress,
+  onItemPress,
+  dragConfig,
+}: MealPlanDayContentProps) =>
+  sortEntriesByMealTime(entries).map(entry => (
+    <MealPlanEntryRow
+      key={getEntryKey(entry)}
+      entry={entry}
+      onMealPress={onMealPress}
+      onItemPress={onItemPress}
+      dragConfig={dragConfig}
+    />
+  ));
+
+type MealPlanDayListSectionViewProps = {
+  section: DayListSection;
+  onDayPress?: MealPlanDateViewProps['onDayPress'];
+  onMealPress: MealPlanDateViewProps['onMealPress'];
+  onItemPress: MealPlanDateViewProps['onItemPress'];
+  onEntryDrop: (entry: MealPlanEntryIdentity, targetDate: string) => void;
+  dragConfig?: MealPlanDragConfig;
+};
+
+const MealPlanDayListSectionView = ({
+  section,
+  onDayPress,
+  onMealPress,
+  onItemPress,
+  onEntryDrop,
+  dragConfig,
+}: MealPlanDayListSectionViewProps) => {
+  const dropHighlightProgress = useSharedValue(0);
+  const dropHighlightStyle = useAnimatedStyle(() => ({
+    opacity: dropHighlightProgress.get(),
+  }));
+
+  const handleDrop = (entry: MealPlanEntryIdentity) => {
+    onEntryDrop(entry, section.dateKey);
+  };
+
+  const handleActiveChange = (isActive: boolean) => {
+    dropHighlightProgress.set(
+      isActive
+        ? withTiming(1, { duration: DROP_HIGHLIGHT_ENTER_MS })
+        : withDelay(
+            DROP_HIGHLIGHT_EXIT_DELAY_MS,
+            withTiming(0, { duration: DROP_HIGHLIGHT_EXIT_MS })
+          )
+    );
+  };
+
+  return (
+    <Droppable
+      droppableId={`meal-plan-day:${section.dateKey}`}
+      onDrop={handleDrop}
+      onActiveChange={handleActiveChange}
+      capacity={Number.MAX_SAFE_INTEGER}
+    >
+      <View className="min-h-14">
+        <Animated.View
+          pointerEvents="none"
+          style={[dragStyles.activeDropTarget, dropHighlightStyle]}
+        />
+        <HapticPressable
+          className={cn(
+            'min-h-14 justify-center px-4 py-3',
+            section.entries.length > 0 && 'min-h-0 pb-1'
+          )}
+          onPress={() => onDayPress?.(section.dateKey)}
+          accessibilityRole="button"
+          accessibilityLabel={`Add to meal plan for ${section.label}`}
+        >
+          <View className="flex-row items-center justify-between gap-3">
+            <Text className="text-xl font-semibold tracking-tight text-foreground">
+              {section.label}
             </Text>
-            <Animated.View
-              entering={FadeIn.duration(140)}
-              exiting={FadeOut.duration(140)}
-            >
-              <View>
-                {groupedRecipes[mealTime]?.map((mealPlanRecipe, index) => {
-                  const recipe = mealPlanRecipe.recipe;
-                  if (!recipe) return null;
-                  const recipesCount = groupedRecipes[mealTime]?.length ?? 0;
-                  const itemsCount = groupedItems[mealTime]?.length ?? 0;
-                  const isLast = index === recipesCount - 1 && itemsCount === 0;
-
-                  return (
-                    <MealPlanMealCard
-                      key={mealPlanRecipe.id}
-                      mealPlanRecipe={mealPlanRecipe}
-                      recipe={recipe}
-                      isLast={isLast}
-                      onMealPress={onMealPress}
-                      onIndicatorPress={handleRecipeIndicatorPress}
-                    />
-                  );
-                })}
-                {groupedItems[mealTime]?.map((mealPlanItem, index) => (
-                  <MealPlanItemCard
-                    key={mealPlanItem.id}
-                    mealPlanItem={mealPlanItem}
-                    isLast={index === (groupedItems[mealTime]?.length ?? 0) - 1}
-                    onItemPress={onItemPress}
-                    onIndicatorPress={handleItemIndicatorPress}
-                  />
-                ))}
+            {section.isToday ? (
+              <View className="rounded-full bg-primary/15 px-2.5 py-1">
+                <Text className="text-xs font-semibold text-primary">
+                  Today
+                </Text>
               </View>
-            </Animated.View>
+            ) : null}
           </View>
-        )}
-      />
-      <BottomSheet
-        name="meal-plan-quick-review-sheet"
-        ref={quickReviewSheetRef}
-        detents={[0.9]}
-        scrollable
-        onDismiss={handleQuickReviewDismiss}
-        footer={
-          <BottomSheet.SheetView className="flex-row gap-2 px-4 pb-safe pt-3">
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onPress={closeQuickReviewSheet}
-            >
-              <Text>Cancel</Text>
-            </Button>
-            <Button
-              className="flex-1"
-              onPress={handleConfirmQuickAdd}
-              disabled={isAddingToList}
-            >
-              <Text>{isAddingToList ? 'Adding...' : 'Add Meal to List'}</Text>
-            </Button>
-          </BottomSheet.SheetView>
-        }
-      >
-        <BottomSheet.SheetView className="pb-safe">
-          <BottomSheet.Header
-            title={quickReviewMealPlanRecipe?.recipe.name ?? 'Review ingredients'}
-            subsection={
-              <BottomSheet.Subtext>
-                Review or edit this meal&apos;s ingredients before adding to your grocery list.
-              </BottomSheet.Subtext>
-            }
-          />
-          {quickReviewRecipe ? (
-            <View className="-mx-4 pb-20">
-              <IngredientSelector
-                recipe={quickReviewRecipe}
-                mode="meal-plan"
-                showHeader={false}
-                showFooter={false}
-                onBack={closeQuickReviewSheet}
-                onDismiss={closeQuickReviewSheet}
-                selectedIds={selectedQuickReviewIngredientIds}
-                onToggleIngredient={id => {
-                  void handleToggleQuickReviewIngredientSelection(id);
-                }}
-                onToggleAll={() => {
-                  void handleToggleAllQuickReviewIngredientSelections();
-                }}
-                onEditIngredient={handleEditQuickReviewIngredient}
-              />
-            </View>
-          ) : null}
-          {isLoadingQuickReviewIngredients ||
-          quickReviewSelectionMutation.isPending ||
-          quickReviewOverrideMutation.isPending ? (
-            <View className="px-4 pb-4">
-              <Pill hasValue>
-                {isLoadingQuickReviewIngredients
-                  ? 'Loading ingredient selections...'
-                  : quickReviewOverrideMutation.isPending
-                    ? 'Saving ingredient override...'
-                    : 'Saving ingredient selections...'}
-              </Pill>
-            </View>
-          ) : null}
-        </BottomSheet.SheetView>
-      </BottomSheet>
-      <MealPlanIngredientOverrideSheet
-        ref={ingredientOverrideSheetRef}
-        onSave={async ({ sourceRecipeIngredientId, updates }) => {
-          const currentRow = quickReviewIngredientRows.find(
-            row => row.sourceRecipeIngredientId === sourceRecipeIngredientId
-          );
-          if (!currentRow?.snapshotRowId) {
-            throw new Error('Snapshot row not found');
-          }
+        </HapticPressable>
+        {section.entries.length > 0 ? (
+          <View className="border-b border-border">
+            <MealPlanDayContent
+              entries={section.entries}
+              onMealPress={onMealPress}
+              onItemPress={onItemPress}
+              dragConfig={dragConfig}
+            />
+          </View>
+        ) : null}
+      </View>
+    </Droppable>
+  );
+};
 
-          setQuickReviewQueryRows(rows =>
-            rows.map(row =>
-              row.sourceRecipeIngredientId === sourceRecipeIngredientId
-                ? applyMealPlanIngredientOverride({ row, updates })
-                : row
-            )
-          );
-          try {
-            await quickReviewOverrideMutation.mutateAsync({
-              snapshotRowId: currentRow.snapshotRowId,
-              updates,
-            });
-          } catch (error) {
-            setQuickReviewQueryRows(rows =>
-              rows.map(row =>
-                row.sourceRecipeIngredientId === sourceRecipeIngredientId
-                  ? currentRow
-                  : row
-              )
-            );
-            throw error;
-          }
-        }}
-      />
-    </>
+export const MealPlanDateView = ({
+  dayListSections,
+  onDayPress,
+  onMealPress,
+  onItemPress,
+  onMoveEntry,
+  focusRequest,
+}: MealPlanDateViewProps) => {
+  const dropProviderRef = useRef<DropProviderRef>(null);
+  const dayListRef = useRef<FlatList<DayListSection>>(null);
+  const [dragResetKey, setDragResetKey] = useState(0);
+  const activeDragSectionIndex = useSharedValue<number | null>(null);
+
+  const refreshDragDropPositions = () => {
+    dropProviderRef.current?.requestPositionUpdate();
+  };
+
+  const handleDragStart = (entry: MealPlanEntryIdentity) => {
+    const sectionIndex = dayListSections.findIndex(
+      section => section.dateKey === entry.date
+    );
+    activeDragSectionIndex.set(sectionIndex >= 0 ? sectionIndex : null);
+    refreshDragDropPositions();
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const handleDragEnd = () => {
+    activeDragSectionIndex.set(null);
+  };
+
+  const handleEntryDrop = (
+    entry: MealPlanEntryIdentity,
+    targetDate: string
+  ) => {
+    if (!onMoveEntry || entry.date === targetDate) {
+      setDragResetKey(current => current + 1);
+      return;
+    }
+
+    // The date change remounts only the moved draggable. Resetting here would
+    // remount every row before that update arrives, causing a visible flicker.
+    void Promise.resolve(onMoveEntry(entry, targetDate))
+      .then(() => {
+        void Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+      })
+      .catch(() => {
+        setDragResetKey(current => current + 1);
+        toast.error('Failed to move meal');
+      });
+  };
+
+  const dragConfig: MealPlanDragConfig | undefined = onMoveEntry
+    ? {
+        resetKey: dragResetKey,
+        onDragStart: handleDragStart,
+        onDragEnd: handleDragEnd,
+      }
+    : undefined;
+
+  const todaySectionIndex = dayListSections.findIndex(
+    section => section.isToday
+  );
+
+  // Deliberately not using FlatList's `initialScrollIndex`: it skips rendering
+  // every row above that index (the past days) and mounts them only after the
+  // first scroll, so they visibly pop in. Instead, the past days render up
+  // front and we scroll to today once its real position is measured.
+  const hasScrolledToTodayRef = useRef(false);
+  const handleDayCellLayout = (index: number, event: LayoutChangeEvent) => {
+    if (hasScrolledToTodayRef.current || index !== todaySectionIndex) return;
+    hasScrolledToTodayRef.current = true;
+    if (index <= 0) return;
+    dayListRef.current?.scrollToOffset({
+      offset: event.nativeEvent.layout.y,
+      animated: false,
+    });
+  };
+
+  // Scroll to a requested day (from a linked grocery item). Days outside the
+  // Day List window leave the scroll position alone.
+  const handledFocusRequestIdRef = useRef<number | null>(null);
+  const focusSectionIndex = focusRequest
+    ? dayListSections.findIndex(
+        section => section.dateKey === focusRequest.date
+      )
+    : -1;
+  useEffect(() => {
+    if (!focusRequest) return;
+    if (handledFocusRequestIdRef.current === focusRequest.id) return;
+    handledFocusRequestIdRef.current = focusRequest.id;
+    if (focusSectionIndex < 0) return;
+    // The requested day wins over the initial scroll to today.
+    hasScrolledToTodayRef.current = true;
+    dayListRef.current?.scrollToIndex({
+      index: focusSectionIndex,
+      animated: false,
+    });
+  }, [focusRequest, focusSectionIndex]);
+
+  // Rows outside the render window have no measured offset yet: jump to an
+  // estimate so they render, then retry the exact scroll.
+  const handleScrollToIndexFailed = ({
+    index,
+    averageItemLength,
+  }: {
+    index: number;
+    averageItemLength: number;
+  }) => {
+    dayListRef.current?.scrollToOffset({
+      offset: averageItemLength * index,
+      animated: false,
+    });
+    requestAnimationFrame(() => {
+      dayListRef.current?.scrollToIndex({ index, animated: false });
+    });
+  };
+
+  return (
+    <DropProvider ref={dropProviderRef}>
+      <ActiveDragSectionContext value={activeDragSectionIndex}>
+        <DayCellLayoutContext value={handleDayCellLayout}>
+          <FlatList
+            ref={dayListRef}
+            data={dayListSections}
+            keyExtractor={section => section.dateKey}
+            contentContainerClassName="pb-20"
+            initialNumToRender={
+              Math.max(todaySectionIndex, 0) +
+              DAY_LIST_INITIAL_FUTURE_DAYS_TO_RENDER
+            }
+            windowSize={5}
+            CellRendererComponent={MealPlanDayCell}
+            onLayout={refreshDragDropPositions}
+            onContentSizeChange={refreshDragDropPositions}
+            onMomentumScrollEnd={refreshDragDropPositions}
+            onScrollEndDrag={refreshDragDropPositions}
+            onScrollToIndexFailed={handleScrollToIndexFailed}
+            renderItem={({ item: section }) => (
+              <MealPlanDayListSectionView
+                section={section}
+                onDayPress={onDayPress}
+                onMealPress={onMealPress}
+                onItemPress={onItemPress}
+                onEntryDrop={handleEntryDrop}
+                dragConfig={dragConfig}
+              />
+            )}
+          />
+        </DayCellLayoutContext>
+      </ActiveDragSectionContext>
+    </DropProvider>
   );
 };

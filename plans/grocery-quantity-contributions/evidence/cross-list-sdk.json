@@ -1,0 +1,12 @@
+{
+  "time": "2026-10-20T15:45:27.667Z",
+  "findings": [
+    "Permissions reject unsequenced app writers and attempts to reserve another list’s slot.",
+    "A real unique-slot collision rejects both move halves; concurrent source add survives.",
+    "Destination membership revocation rejects the entire move without removing the source.",
+    "An accepted move remains stable when a stale intent arrives; the stale edit is a visible conflict.",
+    "A racing planned source prevents catalog deletion and every list-side deletion.",
+    "Retry commits catalog deletion and all list tombstones atomically."
+  ],
+  "productionEnabled": false
+}

@@ -71,9 +71,12 @@ export const hydrateMealPlanIngredientEditorFromSnapshot = ({
   sourceIngredients: SourceIngredient[];
   snapshotRows: SnapshotIngredient[];
 }): MealPlanIngredientEditorRow[] => {
-  const snapshotsBySourceId = new Map(
-    snapshotRows.map(row => [row.sourceRecipeIngredientId, row])
-  );
+  const snapshotsBySourceId = new Map<string, SnapshotIngredient>();
+  for (const row of snapshotRows) {
+    if (!snapshotsBySourceId.has(row.sourceRecipeIngredientId)) {
+      snapshotsBySourceId.set(row.sourceRecipeIngredientId, row);
+    }
+  }
 
   return sourceIngredients.map(sourceIngredient => {
     const snapshotRow = snapshotsBySourceId.get(sourceIngredient.id);
@@ -129,9 +132,7 @@ export const getSelectedSourceIngredientIds = (
   rows: MealPlanIngredientEditorRow[]
 ): Set<string> =>
   new Set(
-    rows
-      .filter(row => row.isSelected)
-      .map(row => row.sourceRecipeIngredientId)
+    rows.filter(row => row.isSelected).map(row => row.sourceRecipeIngredientId)
   );
 
 export const toSnapshotCreateInputs = (

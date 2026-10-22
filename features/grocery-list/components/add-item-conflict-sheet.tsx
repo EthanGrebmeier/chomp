@@ -31,19 +31,17 @@ export const AddItemConflictSheet = ({
       }
     >
       <BottomSheet.SheetView className="pb-safe">
-        <BottomSheet.Header title="Item Already Exists" />
-        <View className="gap-4">
-          <Text className="text-muted-foreground">
-            This item already exists in the list. What would you like to do?
-          </Text>
-          <View className="gap-2">
-            <Button size="lg" variant="outline" onPress={onCreateSeparate}>
-              <Text>Create Separate Items</Text>
-            </Button>
-            <Button size="lg" onPress={onCancel} variant="ghost">
-              <Text>Cancel</Text>
-            </Button>
-          </View>
+        <BottomSheet.Header
+          title="Choose how to add this item"
+          description="This item is already in the list. Increment its quantities or create a separate item."
+        />
+        <View className="gap-2">
+          <Button size="lg" variant="outline" onPress={onCreateSeparate}>
+            <Text>Create Separate Items</Text>
+          </Button>
+          <Button size="lg" onPress={onCancel} variant="ghost">
+            <Text>Cancel</Text>
+          </Button>
         </View>
       </BottomSheet.SheetView>
     </BottomSheet>

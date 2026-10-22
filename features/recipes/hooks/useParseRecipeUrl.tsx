@@ -1,133 +1,54 @@
 import { useAuth } from '@clerk/expo';
 import { useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
-import { categoryOptions } from '@/features/shared/category/categories';
+import { useCategoryOptions } from '@/features/categories/use-category-options';
 
+import {
+  isMockRecipeImportEnabled,
+  mockParseRecipeUrl,
+} from '../api/mock-parse-recipe-url';
 import { parseRecipeUrl, RecipeParseError } from '../api/parse-recipe-url';
-import { IngredientCategory, ParseRecipeUrlResponse } from '../api/types';
+import { ParseRecipeUrlResponse } from '../api/types';
+import {
+  normalizeParsedRecipeCategories,
+  toRecipeImportCategories,
+} from '../utils/recipe-import-categories';
 
-// Temporary local mock to avoid hitting the parse API while building the flow.
-const USE_MOCK_PARSE_RECIPE_RESPONSE = false;
-const MOCK_PARSE_DELAY_MS = 500;
-
-function getMockParseRecipeResponse(url: string): ParseRecipeUrlResponse {
-  return {
-    sourceUrl: url,
-    recipeName: 'Autofilled Creamy Garlic Chicken Pasta',
-    servings: '4',
-    ingredients: [
-      {
-        name: 'Boneless chicken breast',
-        quantity: 1.5,
-        unit: 'lb',
-        notes: 'cut into bite-size pieces',
-        category: 'deli',
-      },
-      {
-        name: 'Penne pasta',
-        quantity: 12,
-        unit: 'oz',
-        notes: null,
-        category: 'other',
-      },
-      {
-        name: 'Heavy cream',
-        quantity: 1,
-        unit: 'cup',
-        notes: null,
-        category: 'dairy',
-      },
-      {
-        name: 'Parmesan cheese',
-        quantity: 0.5,
-        unit: 'cup',
-        notes: 'freshly grated',
-        category: 'dairy',
-      },
-      {
-        name: 'Baby spinach',
-        quantity: 4,
-        unit: 'cup',
-        notes: 'packed',
-        category: 'produce',
-      },
-      {
-        name: 'Garlic cloves',
-        quantity: 4,
-        unit: null,
-        notes: 'minced',
-        category: 'produce',
-      },
-      {
-        name: 'Olive oil',
-        quantity: 2,
-        unit: 'tbsp',
-        notes: null,
-        category: 'other',
-      },
-      {
-        name: 'Kosher salt',
-        quantity: 1,
-        unit: 'tsp',
-        notes: 'or to taste',
-        category: 'other',
-      },
-      {
-        name: 'Black pepper',
-        quantity: 0.5,
-        unit: 'tsp',
-        notes: 'freshly cracked',
-        category: 'other',
-      },
-    ],
-  };
-}
-
-/**
- * Normalize a category value to match the expected lowercase format.
- * Returns the matching category value or 'other' as fallback.
- */
-function normalizeCategory(category: string): IngredientCategory {
-  const lowerCategory = category.toLowerCase();
-  const match = categoryOptions.find(opt => opt.value === lowerCategory);
-  return match?.value ?? 'other';
-}
-
-/**
- * Normalize all ingredient categories in the API response.
- */
-function normalizeResponse(
-  response: ParseRecipeUrlResponse
-): ParseRecipeUrlResponse {
-  return {
-    ...response,
-    ingredients: response.ingredients.map(ingredient => ({
-      ...ingredient,
-      category: normalizeCategory(ingredient.category),
-    })),
-  };
-}
+type ParseRecipeUrlVariables = {
+  url: string;
+  /** Lets the caller cancel an in-flight import. */
+  signal?: AbortSignal;
+};
 
 export const useParseRecipeUrl = () => {
   const { getToken } = useAuth();
-
-  return useMutation<ParseRecipeUrlResponse, RecipeParseError, { url: string }>(
-    {
-      mutationFn: async ({ url }) => {
-        if (USE_MOCK_PARSE_RECIPE_RESPONSE) {
-          await new Promise(resolve =>
-            setTimeout(resolve, MOCK_PARSE_DELAY_MS)
-          );
-          return normalizeResponse(getMockParseRecipeResponse(url));
-        }
-
-        const token = await getToken();
-        if (!token) {
-          throw new RecipeParseError('unauthorized', 'Not authenticated');
-        }
-        const response = await parseRecipeUrl({ url }, token);
-        return normalizeResponse(response);
-      },
-    }
+  // Offer the model exactly the categories the user can currently pick,
+  // including custom ones and excluding hidden built-ins.
+  const { data: categoryOptions } = useCategoryOptions();
+  const categories = useMemo(
+    () => toRecipeImportCategories(categoryOptions),
+    [categoryOptions]
   );
+
+  return useMutation<
+    ParseRecipeUrlResponse,
+    RecipeParseError,
+    ParseRecipeUrlVariables
+  >({
+    mutationFn: async ({ url, signal }) => {
+      const parse = isMockRecipeImportEnabled()
+        ? mockParseRecipeUrl
+        : parseRecipeUrl;
+
+      // The mock doesn't need a token, but don't skip auth for the real API.
+      const token = isMockRecipeImportEnabled() ? 'mock' : await getToken();
+      if (!token) {
+        throw new RecipeParseError('unauthorized', 'Not authenticated');
+      }
+
+      const response = await parse({ url, categories }, token, { signal });
+      return normalizeParsedRecipeCategories(response, categories);
+    },
+  });
 };

@@ -1,22 +1,25 @@
+import { useRecyclingState } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, View, type TextLayoutEvent } from 'react-native';
-import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { memo, useCallback, useEffect, useRef } from 'react';
+import { Platform, View, type TextLayoutEvent } from 'react-native';
 import Animated, {
   SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { toast } from 'sonner-native';
 
 import { CategoryTag } from '../../../components/category-tag';
 import { formatQuantityUnit } from '../../../components/item-sheet/unit-utils';
 import { RecipeTag } from '../../../components/recipe-tag';
 import { StoreTag } from '../../../components/store-tag';
-import { Checkbox } from '../../../components/ui/checkbox';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
+import {
+  SwipeToDelete,
+  type SwipeToDeleteHandle,
+} from '../../../components/ui/swipe-to-delete';
 import { Text } from '../../../components/ui/text';
 import { useTheme } from '../../../hooks/use-theme';
 import { cn } from '../../../lib/utils';
@@ -24,12 +27,16 @@ import { CategoryOption } from '../../shared/category/categories';
 import { checkListItem } from '../instant/check-list-item';
 import { removeGroceryListItem } from '../instant/remove-grocery-list-item';
 import { GroceryListItemWithRecipe } from '../types';
+import { groceryItemSourceLabel } from '../util';
+
+import { GroceryItemCheckbox } from './grocery-item-checkbox';
 
 type GroceryListItemProps = {
   item: GroceryListItemWithRecipe;
   categoryOptions: CategoryOption[];
   isChecked: boolean;
   className?: string;
+  hideOrganizationTags?: boolean;
   onEdit?: (item: GroceryListItemWithRecipe) => void;
   isBulkSelectionModeActive?: boolean;
   isBulkSelected?: boolean;
@@ -37,13 +44,7 @@ type GroceryListItemProps = {
   onEnterBulkSelectionModeWithItem?: (itemId: string) => void;
 };
 
-const SWIPE_ACTION_WIDTH = 88;
 const LONG_PRESS_SUPPRESSION_MS = 750;
-
-type SwipeDeleteActionProps = {
-  drag: SharedValue<number>;
-  onPress: () => void;
-};
 
 type StrikethroughLineMetrics = {
   height: number;
@@ -95,41 +96,25 @@ const StrikethroughLine = ({
   );
 };
 
-const SwipeDeleteAction = ({ drag, onPress }: SwipeDeleteActionProps) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: drag.value + SWIPE_ACTION_WIDTH }],
-  }));
-
-  return (
-    <Animated.View style={[animatedStyle, { width: SWIPE_ACTION_WIDTH }]}>
-      <Pressable
-        className="h-full items-center justify-center bg-destructive"
-        onPress={onPress}
-      >
-        <Text className="text-sm font-semibold text-foreground">Delete</Text>
-      </Pressable>
-    </Animated.View>
-  );
-};
-
 const GroceryListItemComponent = ({
   item,
   categoryOptions,
   isChecked,
   className,
+  hideOrganizationTags = false,
   onEdit,
   isBulkSelectionModeActive = false,
   isBulkSelected = false,
   onToggleBulkSelection,
   onEnterBulkSelectionModeWithItem,
 }: GroceryListItemProps) => {
-  const [internalIsChecked, setInternalIsChecked] = useState(isChecked);
-  const [strikethroughLines, setStrikethroughLines] = useState<
+  const [strikethroughLines, setStrikethroughLines] = useRecyclingState<
     StrikethroughLineMetrics[]
-  >([]);
+  >([], [item.id]);
   const notes = item.notes?.trim();
+  const sourceLabel = groceryItemSourceLabel(item);
   const hasMountedRef = useRef(false);
-  const swipeableRef = useRef<SwipeableMethods | null>(null);
+  const swipeableRef = useRef<SwipeToDeleteHandle | null>(null);
   const lastLongPressAtRef = useRef(0);
 
   const theme = useTheme();
@@ -142,11 +127,7 @@ const GroceryListItemComponent = ({
   const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
 
   useEffect(() => {
-    setInternalIsChecked(isChecked);
-  }, [isChecked, item.id]);
-
-  useEffect(() => {
-    const targetValue = internalIsChecked ? 1 : 0;
+    const targetValue = isChecked ? 1 : 0;
     if (!hasMountedRef.current) {
       hasMountedRef.current = true;
       strikethroughWidth.set(targetValue);
@@ -158,36 +139,39 @@ const GroceryListItemComponent = ({
         duration: 300 * Math.max(strikethroughLines.length, 1),
       })
     );
-  }, [internalIsChecked, strikethroughLines.length, strikethroughWidth]);
+  }, [isChecked, strikethroughLines.length, strikethroughWidth]);
 
-  const handleTextLayout = useCallback((event: TextLayoutEvent) => {
-    const nextLines = event.nativeEvent.lines.map(
-      ({ height, width, x, y }) => ({
-        height,
-        width,
-        x,
-        y,
-      })
-    );
+  const handleTextLayout = useCallback(
+    (event: TextLayoutEvent) => {
+      const nextLines = event.nativeEvent.lines.map(
+        ({ height, width, x, y }) => ({
+          height,
+          width,
+          x,
+          y,
+        })
+      );
 
-    setStrikethroughLines(previousLines => {
-      const linesAreUnchanged =
-        previousLines.length === nextLines.length &&
-        previousLines.every((line, index) => {
-          const nextLine = nextLines[index];
-          return (
-            line.height === nextLine.height &&
-            line.width === nextLine.width &&
-            line.x === nextLine.x &&
-            line.y === nextLine.y
-          );
-        });
+      setStrikethroughLines(previousLines => {
+        const linesAreUnchanged =
+          previousLines.length === nextLines.length &&
+          previousLines.every((line, index) => {
+            const nextLine = nextLines[index];
+            return (
+              line.height === nextLine.height &&
+              line.width === nextLine.width &&
+              line.x === nextLine.x &&
+              line.y === nextLine.y
+            );
+          });
 
-      return linesAreUnchanged ? previousLines : nextLines;
-    });
-  }, []);
+        return linesAreUnchanged ? previousLines : nextLines;
+      }, true);
+    },
+    [setStrikethroughLines]
+  );
 
-  const onCheck = () => {
+  const onCheck = async (checked: boolean) => {
     swipeableRef.current?.close();
 
     if (isBulkSelectionModeActive) {
@@ -195,11 +179,11 @@ const GroceryListItemComponent = ({
       return;
     }
 
-    setInternalIsChecked(previousIsChecked => {
-      const nextIsChecked = !previousIsChecked;
-      checkListItem({ itemId: item.id, isChecked: nextIsChecked });
-      return nextIsChecked;
-    });
+    try {
+      await checkListItem({ itemId: item.id, isChecked: checked });
+    } catch {
+      toast.error('Could not save item. Check your connection and try again.');
+    }
   };
 
   const handleRowPress = () => {
@@ -232,26 +216,26 @@ const GroceryListItemComponent = ({
 
   const checkboxChecked = isBulkSelectionModeActive
     ? isBulkSelected
-    : internalIsChecked;
+    : isChecked;
 
   const handleSwipeDeletePress = useCallback(() => {
-    swipeableRef.current?.close();
-    removeGroceryListItem({ itemId: item.id });
-  }, [item.id]);
-
-  const renderRightActions = useCallback(
-    (_: SharedValue<number>, drag: SharedValue<number>) => (
-      <SwipeDeleteAction drag={drag} onPress={handleSwipeDeletePress} />
-    ),
-    [handleSwipeDeletePress]
-  );
+    removeGroceryListItem({ item }).catch(() => {
+      toast.error(
+        'Could not delete item. Check your connection and try again.'
+      );
+    });
+  }, [item]);
 
   const itemContent = (
     <ListItem className={className}>
-      <Checkbox checked={checkboxChecked} onPress={onCheck} className="mr-1" />
+      <GroceryItemCheckbox
+        key={`${item.id}:${isBulkSelectionModeActive}`}
+        checked={checkboxChecked}
+        onChange={onCheck}
+      />
 
       <HapticPressable
-        className="flex-1 gap-1 py-1"
+        className="flex-1 gap-0.5 py-1"
         onPress={handleRowPress}
         onLongPress={handleRowLongPress}
         delayLongPress={200}
@@ -262,7 +246,7 @@ const GroceryListItemComponent = ({
             <View className="flex-row items-center gap-2">
               <Text
                 variant="itemTitle"
-                className={cn(internalIsChecked && 'text-muted-foreground')}
+                className={cn(isChecked && 'text-muted-foreground')}
                 style={compactTextStyle}
                 onTextLayout={handleTextLayout}
               >
@@ -280,7 +264,7 @@ const GroceryListItemComponent = ({
               {strikethroughLines.map((line, index) => (
                 <StrikethroughLine
                   key={`${line.x}:${line.y}`}
-                  color={internalIsChecked ? theme.destructive : 'transparent'}
+                  color={isChecked ? theme.destructive : 'transparent'}
                   line={line}
                   lineIndex={index}
                   progress={strikethroughWidth}
@@ -290,7 +274,7 @@ const GroceryListItemComponent = ({
             </View>
           </View>
           <View className="flex-row gap-2">
-            {item.category ? (
+            {!hideOrganizationTags && item.category ? (
               <CategoryTag
                 category={item.category}
                 categoryOptions={categoryOptions}
@@ -301,15 +285,17 @@ const GroceryListItemComponent = ({
         {notes ? (
           <Text
             variant="itemDescription"
-            className={cn(internalIsChecked && 'opacity-80')}
+            className={cn('-my-0.5', isChecked && 'opacity-80')}
             style={compactTextStyle}
           >
             {notes}
           </Text>
         ) : null}
         <View className="flex-row items-center gap-2">
-          {item.store?.name && <StoreTag name={item.store.name} />}
-          {item.recipe?.name && <RecipeTag name={item.recipe.name} />}
+          {!hideOrganizationTags && item.store?.name && (
+            <StoreTag name={item.store.name} />
+          )}
+          {sourceLabel ? <RecipeTag name={sourceLabel} /> : null}
         </View>
       </HapticPressable>
     </ListItem>
@@ -320,16 +306,9 @@ const GroceryListItemComponent = ({
   }
 
   return (
-    <ReanimatedSwipeable
-      ref={swipeableRef}
-      enableTrackpadTwoFingerGesture
-      friction={2}
-      rightThreshold={40}
-      overshootRight={false}
-      renderRightActions={renderRightActions}
-    >
+    <SwipeToDelete ref={swipeableRef} onDelete={handleSwipeDeletePress}>
       {itemContent}
-    </ReanimatedSwipeable>
+    </SwipeToDelete>
   );
 };
 
@@ -338,6 +317,7 @@ export const GroceryListItem = memo(
   (previousProps, nextProps) => {
     return (
       previousProps.item === nextProps.item &&
+      previousProps.hideOrganizationTags === nextProps.hideOrganizationTags &&
       previousProps.categoryOptions === nextProps.categoryOptions &&
       previousProps.isChecked === nextProps.isChecked &&
       previousProps.className === nextProps.className &&

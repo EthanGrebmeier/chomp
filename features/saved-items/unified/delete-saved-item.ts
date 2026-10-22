@@ -18,4 +18,3 @@ export const deleteSavedItem = async ({ item }: DeleteSavedItemArgs) => {
     await removeSavedItem({ itemId: item.id });
   }
 };
-

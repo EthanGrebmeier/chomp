@@ -7,4 +7,5 @@ export type {
   ParseRecipeUrlRequest,
   ParseRecipeUrlResponse,
   RateLimitInfo,
+  RecipeImportCategory,
 } from './types';

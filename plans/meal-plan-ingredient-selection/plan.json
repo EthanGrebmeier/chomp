@@ -70,14 +70,8 @@
             "Schema and permissions compile without type errors"
           ],
           "dependencies": [],
-          "testPlan": [
-            "pnpm lint",
-            "pnpm tsc --noEmit"
-          ],
-          "outOfScope": [
-            "UI integration",
-            "Projection wiring"
-          ]
+          "testPlan": ["pnpm lint", "pnpm tsc --noEmit"],
+          "outOfScope": ["UI integration", "Projection wiring"]
         },
         {
           "id": "P1-T2",
@@ -91,16 +85,9 @@
             "Row order is preserved in recipe ingredient order after initialization and reconciliation",
             "Store logic is reusable from both bulk and single-meal add-to-list pathways"
           ],
-          "dependencies": [
-            "P1-T1"
-          ],
-          "testPlan": [
-            "pnpm lint",
-            "pnpm tsc --noEmit"
-          ],
-          "outOfScope": [
-            "Secondary ingredient edit sheet UI"
-          ]
+          "dependencies": ["P1-T1"],
+          "testPlan": ["pnpm lint", "pnpm tsc --noEmit"],
+          "outOfScope": ["Secondary ingredient edit sheet UI"]
         }
       ]
     },
@@ -132,17 +119,13 @@
             "Editor state model can hydrate from existing snapshots and from fresh initialization",
             "Selector behavior for existing add-item/add-to-list recipe flow remains functional"
           ],
-          "dependencies": [
-            "P1-T2"
-          ],
+          "dependencies": ["P1-T2"],
           "testPlan": [
             "pnpm lint",
             "pnpm tsc --noEmit",
             "Manual: add a recipe to meal plan, deselect two rows, save, reopen edit meal and confirm the same rows remain deselected"
           ],
-          "outOfScope": [
-            "Bulk add-to-list review UI"
-          ]
+          "outOfScope": ["Bulk add-to-list review UI"]
         },
         {
           "id": "P2-T2",
@@ -156,17 +139,13 @@
             "Non-overridden rows continue scaling behavior based on servings changes",
             "Edits persist per meal_plan_recipes entry and survive closing/reopening the meal edit experience"
           ],
-          "dependencies": [
-            "P2-T1"
-          ],
+          "dependencies": ["P2-T1"],
           "testPlan": [
             "pnpm lint",
             "pnpm tsc --noEmit",
             "Manual: edit one row quantity and one row notes, change meal servings, verify overridden quantity stays fixed and non-overridden rows rescale"
           ],
-          "outOfScope": [
-            "Quick-add review modal"
-          ]
+          "outOfScope": ["Quick-add review modal"]
         }
       ]
     },
@@ -192,17 +171,13 @@
             "Skipping a meal in the bulk list still marks it as added without creating grocery items, matching existing behavior",
             "Item-only meal_plan_items behavior remains unchanged"
           ],
-          "dependencies": [
-            "P2-T2"
-          ],
+          "dependencies": ["P2-T2"],
           "testPlan": [
             "pnpm lint",
             "pnpm tsc --noEmit",
             "Manual: open bulk add sheet, edit one meal ingredient selection, submit, and confirm resulting grocery items reflect the edit"
           ],
-          "outOfScope": [
-            "Single-meal quick add modal"
-          ]
+          "outOfScope": ["Single-meal quick add modal"]
         },
         {
           "id": "P3-T2",
@@ -214,18 +189,11 @@
             "Bulk add invokes lazy backfill and reconciliation before projection when snapshot state is missing or stale",
             "Selected and skipped recipe handling remains externally unchanged in API and UI behavior",
             "Produced add payload still routes through existing metadata-aware stacking module",
-            "addedToList and addedToListAt fields update consistently for selected and skipped entries"
+            "Added-to-list state updates consistently for selected and skipped entries"
           ],
-          "dependencies": [
-            "P3-T1"
-          ],
-          "testPlan": [
-            "pnpm lint",
-            "pnpm tsc --noEmit"
-          ],
-          "outOfScope": [
-            "Indicator quick-add experience"
-          ]
+          "dependencies": ["P3-T1"],
+          "testPlan": ["pnpm lint", "pnpm tsc --noEmit"],
+          "outOfScope": ["Indicator quick-add experience"]
         }
       ]
     },
@@ -247,21 +215,17 @@
           "acceptanceCriteria": [
             "Triggering add for an unadded meal-plan recipe opens a quick review modal instead of immediate submission",
             "Quick review uses the same selection and per-ingredient override capabilities as bulk review",
-            "User can confirm add or cancel without mutating addedToList state when cancelled",
+            "User can confirm add or cancel without mutating added-to-list state when cancelled",
             "After confirm, only that meal entry is marked added and projected into grocery add inputs",
             "Already-added meals still support mark-as-unadded flow"
           ],
-          "dependencies": [
-            "P3-T2"
-          ],
+          "dependencies": ["P3-T2"],
           "testPlan": [
             "pnpm lint",
             "pnpm tsc --noEmit",
             "Manual: tap meal check indicator, adjust one ingredient in review, confirm, and verify toast plus grocery list output"
           ],
-          "outOfScope": [
-            "Bulk add sheet redesign"
-          ]
+          "outOfScope": ["Bulk add sheet redesign"]
         },
         {
           "id": "P4-T2",
@@ -275,16 +239,9 @@
             "Conflict handling and stacking path remain consistent across both entrypoints",
             "No duplicate projection logic remains in callsites"
           ],
-          "dependencies": [
-            "P4-T1"
-          ],
-          "testPlan": [
-            "pnpm lint",
-            "pnpm tsc --noEmit"
-          ],
-          "outOfScope": [
-            "New user settings for quick-add behavior"
-          ]
+          "dependencies": ["P4-T1"],
+          "testPlan": ["pnpm lint", "pnpm tsc --noEmit"],
+          "outOfScope": ["New user settings for quick-add behavior"]
         }
       ]
     },
@@ -313,17 +270,13 @@
             "Tests verify reconciliation adds new source ingredients and removes deleted source ingredients deterministically by source id",
             "Tests verify output payload fields align with existing stacking module requirements"
           ],
-          "dependencies": [
-            "P4-T2"
-          ],
+          "dependencies": ["P4-T2"],
           "testPlan": [
             "pnpm vitest features/meal-planner --run",
             "pnpm lint",
             "pnpm tsc --noEmit"
           ],
-          "outOfScope": [
-            "End-to-end UI automation"
-          ]
+          "outOfScope": ["End-to-end UI automation"]
         },
         {
           "id": "P5-T2",
@@ -337,17 +290,13 @@
             "Recipe ingredient addition/removal is reflected in existing meal snapshot behavior on next projection",
             "No regressions in meal_plan_items add-to-list behavior"
           ],
-          "dependencies": [
-            "P5-T1"
-          ],
+          "dependencies": ["P5-T1"],
           "testPlan": [
             "Manual: execute checklist for add, edit, quick add, bulk add, unmark-and-readd, and recipe evolution scenarios",
             "pnpm lint",
             "pnpm tsc --noEmit"
           ],
-          "outOfScope": [
-            "Standalone meal_plan_items feature expansion"
-          ]
+          "outOfScope": ["Standalone meal_plan_items feature expansion"]
         }
       ]
     }

@@ -19,9 +19,7 @@ describe('Clerk auth error helpers', () => {
     };
 
     expect(isClerkMissingSessionError(error)).toBe(true);
-    expect(getClerkErrorMessage(error)).toBe(
-      'Session sess_123 does not exist'
-    );
+    expect(getClerkErrorMessage(error)).toBe('Session sess_123 does not exist');
     expect(getSafeClerkErrorMessage(error)).toBeNull();
   });
 

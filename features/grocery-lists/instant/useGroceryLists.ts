@@ -1,65 +1,70 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { db } from '../../../lib/instant';
+import {
+  seedListAccessTimes,
+  useListAccessTimes,
+} from '../local/list-access-store';
+import {
+  legacyListAccessTimesFromShares,
+  sortGroceryListsByLastAccess,
+} from '../utils/sort-grocery-lists-by-last-access';
 
+/**
+ * Light query for the list picker: every list the user can see plus its
+ * shares (needed for the "Shared" badge).
+ *
+ * Lists are ordered by this device's local last-access times, so another
+ * device signed into the same account can't reorder them.
+ *
+ * Items are intentionally NOT included here. Use `useGroceryListItems` for the
+ * active list so a collaborator's edit on one list does not re-emit every list
+ * on every device.
+ */
 export const useGroceryLists = () => {
   const { user } = db.useAuth();
+  const userId = user?.id;
 
-  const groceryListsQuery = db.useQuery(
-    {
-      grocery_lists: {
-        shares: {},
-        grocery_items: {
-          $: {
-            where: {
-              isDeleted: false,
-            },
-          },
-          recipe: {},
-          store: {},
-          saved_item: {
-            store: {},
-            user: {},
-          },
-        },
-      },
+  const groceryListsQuery = db.useQuery({
+    grocery_lists: {
+      shares: {},
+    },
+  });
+  const listAccess = useListAccessTimes(userId);
+  const groceryLists = groceryListsQuery.data?.grocery_lists;
+
+  useEffect(() => {
+    if (userId && groceryLists && listAccess.isHydrated) {
+      seedListAccessTimes(
+        userId,
+        legacyListAccessTimesFromShares(groceryLists, userId)
+      );
     }
-  );
+  }, [groceryLists, listAccess.isHydrated, userId]);
 
-  // Sort grocery lists by lastAccessedAt (most recent first)
   const sortedData = useMemo(() => {
-    if (!groceryListsQuery.data || !user) {
+    if (!groceryListsQuery.data || !userId) {
       return groceryListsQuery.data;
     }
 
-    const sortedLists = [...groceryListsQuery.data.grocery_lists].sort(
-      (a, b) => {
-        // Find the current user's share record for each list
-        const aShare = a.shares?.find(share => share.user_id === user.id);
-        const bShare = b.shares?.find(share => share.user_id === user.id);
-
-        // Get lastAccessedAt timestamps
-        const aTime = aShare?.lastAccessedAt;
-        const bTime = bShare?.lastAccessedAt;
-
-        // Lists without lastAccessedAt appear at the end
-        if (!aTime && !bTime) return 0;
-        if (!aTime) return 1;
-        if (!bTime) return -1;
-
-        // Sort by most recent first (descending)
-        return bTime.localeCompare(aTime);
-      }
-    );
-
     return {
       ...groceryListsQuery.data,
-      grocery_lists: sortedLists,
+      grocery_lists: sortGroceryListsByLastAccess(
+        groceryListsQuery.data.grocery_lists,
+        listAccess.accessTimes
+      ),
     };
-  }, [groceryListsQuery.data, user]);
+  }, [groceryListsQuery.data, listAccess.accessTimes, userId]);
+
+  // Hold loading until the local order is ready (hydrated and, on first run,
+  // seeded) so the home screen doesn't default to — and track — the wrong list.
+  const isOrderPending =
+    !!userId &&
+    (!listAccess.isHydrated || (!!groceryLists && !listAccess.hasLocalValue));
 
   return {
     ...groceryListsQuery,
+    isLoading: groceryListsQuery.isLoading || isOrderPending,
     data: sortedData,
   };
 };

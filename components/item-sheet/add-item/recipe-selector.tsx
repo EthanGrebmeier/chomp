@@ -26,14 +26,12 @@ type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
   onCreateRecipe: (initialName?: string) => void;
   fillHeight?: boolean;
-  listHeight?: number;
 };
 
 export const RecipeSelector = ({
   onSelectRecipe,
   onCreateRecipe,
   fillHeight = false,
-  listHeight,
 }: RecipeSelectorProps) => {
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { data: recipes, isLoading } = useRecipes();
@@ -67,24 +65,16 @@ export const RecipeSelector = ({
   }, [mealTag, recipes, searchQuery, sortBy]);
 
   const renderRecipeItem = useCallback(
-    ({ item, index }: ListRenderItemInfo<RecipeWithIngredients>) => (
+    ({ item }: ListRenderItemInfo<RecipeWithIngredients>) => (
       <HapticPressable
         onPress={() => onSelectRecipe(item)}
-        className={cn(
-          'w-full px-4 py-1',
-          index < filteredRecipes.length - 1 &&
-            'border-b border-dashed border-border'
-        )}
+        className="w-full px-4 py-1"
         hapticType="light"
       >
-        <RecipeCardContent
-          name={item.name}
-          ingredientCount={item.recipe_ingredients.length}
-          className="w-full"
-        />
+        <RecipeCardContent name={item.name} className="w-full" />
       </HapticPressable>
     ),
-    [filteredRecipes.length, onSelectRecipe]
+    [onSelectRecipe]
   );
 
   if (isLoading) {
@@ -115,7 +105,7 @@ export const RecipeSelector = ({
   }
 
   return (
-    <View className={cn(fillHeight ? 'flex-1 pb-6' : 'pb-6')}>
+    <View className={cn(fillHeight ? 'min-h-0 flex-1 pb-6' : 'pb-6')}>
       <RecipeFilters
         searchInputKey={searchInputKey}
         searchDefaultValue={searchDefaultValue}
@@ -125,12 +115,6 @@ export const RecipeSelector = ({
         sortBy={sortBy}
         onSortByChange={setSortBy}
       />
-      <View className="px-4 pb-2">
-        <Text className="text-sm text-muted-foreground">
-          {filteredRecipes.length} recipe
-          {filteredRecipes.length === 1 ? '' : 's'}
-        </Text>
-      </View>
       {filteredRecipes.length === 0 ? (
         <Animated.View
           key="no-results"
@@ -148,14 +132,13 @@ export const RecipeSelector = ({
         </Animated.View>
       ) : (
         <FlatList
-          className={cn(fillHeight && 'flex-1')}
+          className={cn(fillHeight && 'min-h-0 flex-1')}
           contentInset={{ bottom: safeAreaBottom + 24 }}
           data={filteredRecipes}
           keyExtractor={item => item.id}
           renderItem={renderRecipeItem}
           scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
           showsVerticalScrollIndicator={false}
-          style={listHeight ? { height: listHeight } : undefined}
         />
       )}
     </View>

@@ -29,15 +29,22 @@ export type MealPlanToListProjectionInput = {
   snapshotRows: SnapshotRowWithStore[];
 };
 
+export type MealPlanRecipeListProjectionRow = StackableIngredientInput & {
+  /** Recipe ingredient the row was projected from. */
+  sourceRecipeIngredientId: string;
+};
+
 /**
- * Projects a meal-plan recipe's reconciled snapshot rows into stackable grocery inputs.
+ * Projects a meal-plan recipe's reconciled snapshot rows into grocery inputs,
+ * tagging each row with the recipe ingredient it came from so callers can map
+ * it back to its snapshot row (e.g. to link a grocery item one-to-one).
  */
-export const projectMealPlanRecipeToListInputs = ({
+export const projectMealPlanRecipeToListRows = ({
   recipeId,
   servings,
   sourceIngredients,
   snapshotRows,
-}: MealPlanToListProjectionInput): StackableIngredientInput[] => {
+}: MealPlanToListProjectionInput): MealPlanRecipeListProjectionRow[] => {
   const safeServings = servings > 0 ? servings : 1;
   const snapshotsBySourceId = new Map(
     snapshotRows.map(snapshot => [snapshot.sourceRecipeIngredientId, snapshot])
@@ -56,6 +63,7 @@ export const projectMealPlanRecipeToListInputs = ({
 
     return [
       {
+        sourceRecipeIngredientId: sourceIngredient.id,
         name: snapshot?.name ?? sourceIngredient.name,
         quantity,
         unit: snapshot?.unit ?? sourceIngredient.unit,
@@ -68,3 +76,13 @@ export const projectMealPlanRecipeToListInputs = ({
     ];
   });
 };
+
+/**
+ * Projects a meal-plan recipe's reconciled snapshot rows into stackable grocery inputs.
+ */
+export const projectMealPlanRecipeToListInputs = (
+  input: MealPlanToListProjectionInput
+): StackableIngredientInput[] =>
+  projectMealPlanRecipeToListRows(input).map(
+    ({ sourceRecipeIngredientId: _sourceRecipeIngredientId, ...row }) => row
+  );

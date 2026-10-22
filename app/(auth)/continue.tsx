@@ -102,9 +102,9 @@ export default function ContinueSignUp() {
     () => missingFields.filter(field => field !== 'legal_accepted'),
     [missingFields]
   );
-  const hasLegalAcceptedRequirement =
-    missingFields.includes('legal_accepted');
-  const isBusy = isSubmitting || isFinishingSignIn || fetchStatus === 'fetching';
+  const hasLegalAcceptedRequirement = missingFields.includes('legal_accepted');
+  const isBusy =
+    isSubmitting || isFinishingSignIn || fetchStatus === 'fetching';
   const canSubmit = !isBusy && (!hasLegalAcceptedRequirement || legalAccepted);
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function ContinueSignUp() {
       await signInToInstant();
       await initializeDefaultGroceryList();
       setBridgeFailed(false);
-      replace('/(tabs)');
+      replace('/(tabs)', { withAnchor: true });
     } catch (error) {
       // Clerk sign-up already finalized. A transient Instant bridge timeout
       // should not tear down the Clerk session — keep it and let the user
@@ -210,14 +210,11 @@ export default function ContinueSignUp() {
     try {
       const formData = textMissingFields.reduce<
         Record<string, string | boolean>
-      >(
-        (values, field) => {
-          values[getSignUpUpdateField(field)] =
-            fieldGettersRef.current[field]?.() ?? '';
-          return values;
-        },
-        {}
-      );
+      >((values, field) => {
+        values[getSignUpUpdateField(field)] =
+          fieldGettersRef.current[field]?.() ?? '';
+        return values;
+      }, {});
 
       if (hasLegalAcceptedRequirement) {
         formData.legalAccepted = true;

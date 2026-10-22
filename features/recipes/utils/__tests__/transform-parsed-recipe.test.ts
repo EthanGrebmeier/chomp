@@ -9,8 +9,20 @@ describe('transformParsedRecipe', () => {
     recipeName: 'Test Recipe',
     servings: '4 servings',
     ingredients: [
-      { name: 'flour', quantity: 2, unit: 'cups', notes: 'sifted', category: 'other' },
-      { name: 'sugar', quantity: 1, unit: 'cup', notes: null, category: 'other' },
+      {
+        name: 'flour',
+        quantity: 2,
+        unit: 'cups',
+        notes: 'sifted',
+        category: 'other',
+      },
+      {
+        name: 'sugar',
+        quantity: 1,
+        unit: 'cup',
+        notes: null,
+        category: 'other',
+      },
     ],
   };
 
@@ -29,8 +41,20 @@ describe('transformParsedRecipe', () => {
         servings: '4 servings',
       },
       ingredients: [
-        { name: 'flour', quantity: 2, unit: 'cups', notes: 'sifted', category: 'other' },
-        { name: 'sugar', quantity: 1, unit: 'cup', notes: undefined, category: 'other' },
+        {
+          name: 'flour',
+          quantity: 2,
+          unit: 'cups',
+          notes: 'sifted',
+          category: 'other',
+        },
+        {
+          name: 'sugar',
+          quantity: 1,
+          unit: 'cup',
+          notes: undefined,
+          category: 'other',
+        },
       ],
     });
   });
@@ -46,7 +70,11 @@ describe('transformParsedRecipe', () => {
   });
 
   it('falls back to parsed name when edited name is empty', () => {
-    const result = transformParsedRecipe(mockResponse, '', mockResponse.ingredients);
+    const result = transformParsedRecipe(
+      mockResponse,
+      '',
+      mockResponse.ingredients
+    );
 
     expect(result.recipe.name).toBe('Test Recipe');
   });
@@ -57,14 +85,24 @@ describe('transformParsedRecipe', () => {
       recipeName: null,
     };
 
-    const result = transformParsedRecipe(responseWithoutName, '', mockResponse.ingredients);
+    const result = transformParsedRecipe(
+      responseWithoutName,
+      '',
+      mockResponse.ingredients
+    );
 
     expect(result.recipe.name).toBe('Imported Recipe');
   });
 
   it('defaults null quantity to 1', () => {
     const ingredientsWithNullQuantity: ParsedIngredient[] = [
-      { name: 'salt', quantity: null, unit: 'pinch', notes: null, category: 'other' },
+      {
+        name: 'salt',
+        quantity: null,
+        unit: 'pinch',
+        notes: null,
+        category: 'other',
+      },
     ];
 
     const result = transformParsedRecipe(
@@ -81,7 +119,11 @@ describe('transformParsedRecipe', () => {
       { name: 'egg', quantity: 2, unit: null, notes: null, category: 'dairy' },
     ];
 
-    const result = transformParsedRecipe(mockResponse, 'Test', ingredientsWithNullUnit);
+    const result = transformParsedRecipe(
+      mockResponse,
+      'Test',
+      ingredientsWithNullUnit
+    );
 
     expect(result.ingredients[0].unit).toBe('');
   });
@@ -89,7 +131,11 @@ describe('transformParsedRecipe', () => {
   it('only includes selected ingredients', () => {
     const selectedIngredients = [mockResponse.ingredients[0]];
 
-    const result = transformParsedRecipe(mockResponse, 'Test', selectedIngredients);
+    const result = transformParsedRecipe(
+      mockResponse,
+      'Test',
+      selectedIngredients
+    );
 
     expect(result.ingredients).toHaveLength(1);
     expect(result.ingredients[0].name).toBe('flour');
@@ -97,10 +143,20 @@ describe('transformParsedRecipe', () => {
 
   it('passes through category from API', () => {
     const ingredientsWithCategory: ParsedIngredient[] = [
-      { name: 'chicken', quantity: 1, unit: 'lb', notes: null, category: 'proteins' },
+      {
+        name: 'chicken',
+        quantity: 1,
+        unit: 'lb',
+        notes: null,
+        category: 'proteins',
+      },
     ];
 
-    const result = transformParsedRecipe(mockResponse, 'Test', ingredientsWithCategory);
+    const result = transformParsedRecipe(
+      mockResponse,
+      'Test',
+      ingredientsWithCategory
+    );
 
     expect(result.ingredients[0].category).toBe('proteins');
   });

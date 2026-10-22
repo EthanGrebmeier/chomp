@@ -1,8 +1,18 @@
 export type IngredientCategory = string;
 
+/** A category the model may assign to parsed ingredients. */
+export type RecipeImportCategory = {
+  /** Stable identifier the server must echo back in `ParsedIngredient.category`. */
+  value: IngredientCategory;
+  /** User-facing name; gives the model semantic context for custom categories. */
+  label: string;
+};
+
 // Request
 export type ParseRecipeUrlRequest = {
   url: string;
+  /** The user's visible categories (built-in and custom), in display order. */
+  categories: RecipeImportCategory[];
 };
 
 // Response
@@ -21,8 +31,8 @@ export type ParsedIngredient = {
   category: IngredientCategory;
 };
 
-// Error codes matching API spec
-export type ParseRecipeUrlErrorCode =
+/** Error codes returned by the server. */
+export type ParseRecipeUrlServerErrorCode =
   | 'invalid_url'
   | 'unsupported_content'
   | 'unauthorized'
@@ -33,9 +43,25 @@ export type ParseRecipeUrlErrorCode =
   | 'rate_limited'
   | 'server_error';
 
+/**
+ * Error codes raised on the client before/while talking to the server.
+ * Kept distinct so the UI can tell "your device is offline" apart from
+ * "the recipe website is slow" (which the server reports as fetch_timeout).
+ */
+export type ParseRecipeUrlClientErrorCode =
+  | 'offline'
+  | 'network_error'
+  | 'request_timeout'
+  | 'cancelled'
+  | 'config_error';
+
+export type ParseRecipeUrlErrorCode =
+  | ParseRecipeUrlServerErrorCode
+  | ParseRecipeUrlClientErrorCode;
+
 export type ParseRecipeUrlError = {
   error: {
-    code: ParseRecipeUrlErrorCode;
+    code: ParseRecipeUrlServerErrorCode;
     message: string;
   };
 };

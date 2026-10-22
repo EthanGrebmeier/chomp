@@ -17,7 +17,6 @@ export default function Welcome() {
   const router = useRouter();
   const continueAsGuest = useContinueAsGuest();
   const [isContinuingAsGuest, setIsContinuingAsGuest] = useState(false);
-  const [isSocialLoading, setIsSocialLoading] = useState(false);
 
   const colorScheme = useColorScheme();
 
@@ -26,7 +25,9 @@ export default function Welcome() {
 
     try {
       const listId = await continueAsGuest();
-      router.replace(navigation.goToList(listId ?? undefined));
+      router.replace(navigation.goToList(listId ?? undefined), {
+        withAnchor: true,
+      });
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('[guest-continuation] welcome screen failed', error);
@@ -70,7 +71,7 @@ export default function Welcome() {
             variant="ghost"
             size="xl"
             onPress={handleContinueAsGuest}
-            disabled={isSocialLoading || isContinuingAsGuest}
+            disabled={isContinuingAsGuest}
           >
             {isContinuingAsGuest ? (
               <ActivityIndicator color="white" />

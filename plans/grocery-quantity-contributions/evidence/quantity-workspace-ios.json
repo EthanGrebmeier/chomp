@@ -1,0 +1,35 @@
+{
+  "verifiedAt": "2026-10-20T04:50:30.685Z",
+  "device": "iPhone 17 Pro",
+  "os": "iOS 26.5 simulator",
+  "bundleId": "com.ethangrebmeier.chomp",
+  "branch": "exploration/grocery-quantity-rethink",
+  "findings": [
+    "Settings opens the persistent development quantity workspace",
+    "Original Apples example derives 5 each from planned 2, direct recipe 1, manual 2; 500 g is a separate row",
+    "Removing Apple butter leaves 4; navigating to the exact planned ingredient and changing 2 to 3 restores 5",
+    "Added fractional manual amount 0.5 is a separate entry; 5.5 and its individual entries survive terminate/launch",
+    "Moving 5.5 to Weekend shop preserves 3, 2 and 0.5 as separately editable amounts without live planned links",
+    "Corrected native sheet lifecycle dismisses the move sheet after confirmation and returns to the updated list",
+    "Adding Apple butter again offers only the compatible each row, defaults to Keep separate, and explicitly combining produces total 6 with two independent recipe entries",
+    "Purchasing the row and editing the planned source from 2 to 8 leaves purchased total at 6 and creates no unchecked difference",
+    "Reset restores the original example for user testing"
+  ],
+  "automated": {
+    "unitTestsPassed": 521,
+    "unitFilesPassed": 64,
+    "isolatedSdkSuitePassed": true,
+    "lintPassed": true,
+    "quantityLintPassed": true,
+    "typecheckPassed": true
+  },
+  "reactDoctor": {
+    "errors": 0,
+    "warnings": 7,
+    "review": "Five web-oriented icon-label warnings have native accessibilityLabel props and observed AX labels. One shared form helper export and one simple workspace ScrollView remain; production-scale rendering is not claimed."
+  },
+  "pendingOfflineProcessDeathTested": false,
+  "androidTested": false,
+  "productionEnabled": false,
+  "scope": "Isolated persistent test workspace. Existing application writers and production migration/cutover are not replaced."
+}

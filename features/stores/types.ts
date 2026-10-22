@@ -7,4 +7,3 @@ export type Store = {
 };
 
 export type BaseStore = Omit<Store, 'id' | 'createdAt' | 'updatedAt'>;
-

@@ -1,48 +1,77 @@
 import {
-  CheckedStateUpdate,
-  updateGroceryItemsCheckedState,
-} from './update-grocery-item-only';
+  beginPendingCheckedState,
+  endPendingCheckedState,
+  isPendingCheckedStateCurrent,
+} from '../pending-checked-state';
+
+import { updateGroceryItemsCheckedState } from './update-grocery-item-only';
+
 type CheckListItemArgs = {
   itemId: string;
   isChecked: boolean;
 };
 
-const CHECK_STATE_FLUSH_DELAY_MS = 1000;
+/**
+ * Message the InstantDB client uses when it gives up on an un-acked mutation
+ * (`Reactor._sendMutation`). This is the only failure worth retrying: the
+ * device reports itself online but the socket never delivered a `transact-ok`,
+ * so the SDK dropped the optimistic update. Server-side rejections arrive as
+ * `InstantAPIError` and are not retried.
+ */
+const TRANSACTION_TIMEOUT_MESSAGE = 'transaction timed out';
 
-let flushTimeout: ReturnType<typeof setTimeout> | null = null;
-const pendingCheckedStateUpdates = new Map<string, boolean>();
+/** Total attempts, including the first. Each timed-out attempt costs ~6s. */
+export const CHECK_LIST_ITEM_MAX_ATTEMPTS = 5;
+export const CHECK_LIST_ITEM_RETRY_DELAY_MS = 250;
 
-const flushCheckedStateUpdates = async () => {
-  flushTimeout = null;
+export const isTransactionTimeoutError = (error: unknown): boolean =>
+  error instanceof Error && error.message === TRANSACTION_TIMEOUT_MESSAGE;
 
-  const updates: CheckedStateUpdate[] = Array.from(
-    pendingCheckedStateUpdates.entries()
-  ).map(([itemId, isChecked]) => ({
-    itemId,
-    isChecked,
-  }));
+const wait = (ms: number) =>
+  new Promise<void>(resolve => {
+    setTimeout(resolve, ms);
+  });
 
-  pendingCheckedStateUpdates.clear();
-
-  if (updates.length === 0) {
-    return;
-  }
+/**
+ * Writes a single item's checked state, holding the user's intent locally and
+ * retrying when the InstantDB client times the mutation out.
+ *
+ * Resolves once the write is acked (or enqueued for offline flush). Resolves
+ * without writing if a newer toggle for the same item supersedes this one.
+ * Rejects on non-timeout errors, or once the retry budget is exhausted, so the
+ * caller can tell the user.
+ */
+export const checkListItem = async ({
+  itemId,
+  isChecked,
+}: CheckListItemArgs): Promise<void> => {
+  const token = beginPendingCheckedState(itemId, isChecked);
 
   try {
-    await updateGroceryItemsCheckedState(updates);
-  } catch (error) {
-    console.error('Failed to batch update grocery item checked states', error);
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        await updateGroceryItemsCheckedState([{ itemId, isChecked }]);
+        return;
+      } catch (error) {
+        if (
+          !isTransactionTimeoutError(error) ||
+          attempt >= CHECK_LIST_ITEM_MAX_ATTEMPTS
+        ) {
+          throw error;
+        }
+      }
+
+      if (!isPendingCheckedStateCurrent(itemId, token)) {
+        return;
+      }
+
+      await wait(CHECK_LIST_ITEM_RETRY_DELAY_MS);
+
+      if (!isPendingCheckedStateCurrent(itemId, token)) {
+        return;
+      }
+    }
+  } finally {
+    endPendingCheckedState(itemId, token);
   }
-};
-
-export const checkListItem = ({ itemId, isChecked }: CheckListItemArgs) => {
-  pendingCheckedStateUpdates.set(itemId, isChecked);
-
-  if (flushTimeout) {
-    clearTimeout(flushTimeout);
-  }
-
-  flushTimeout = setTimeout(() => {
-    void flushCheckedStateUpdates();
-  }, CHECK_STATE_FLUSH_DELAY_MS);
 };

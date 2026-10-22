@@ -18,6 +18,12 @@
       "sourceType": "github",
       "skillPath": "skills/better-ui/SKILL.md",
       "computedHash": "cb08e0fc63bdd829277770815d645979e0661ae5717dfb01e39a921138b684da"
+    },
+    "vercel-composition-patterns": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/composition-patterns/SKILL.md",
+      "computedHash": "575757e3e25761c8c562d6e395d29f0b76c98b1273c0bd72d88e6ab1bc9c7d42"
     }
   }
 }

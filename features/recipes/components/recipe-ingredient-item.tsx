@@ -8,6 +8,7 @@ import { Text } from '../../../components/ui/text';
 import { CategoryOption } from '../../shared/category/categories';
 import { useRemoveRecipeIngredient } from '../hooks/useRemoveRecipeIngredient';
 import { RecipeIngredient } from '../types';
+import { HapticPressable } from '@/components/ui/haptic-pressable';
 
 type RecipeIngredientItemProps = {
   ingredient: RecipeIngredient;
@@ -47,7 +48,7 @@ export const RecipeIngredientItem = ({
       }
       className={className}
     >
-      <Pressable
+      <HapticPressable
         className="flex-1 gap-1 py-1"
         onPress={handlePress}
         onPressIn={event => {
@@ -90,7 +91,7 @@ export const RecipeIngredientItem = ({
             {notes}
           </Text>
         ) : null}
-      </Pressable>
+      </HapticPressable>
     </ListItem>
   );
 };

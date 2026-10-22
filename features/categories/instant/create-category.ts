@@ -2,13 +2,17 @@ import { id, tx } from '@instantdb/react-native';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { normalizeCategoryName } from '../../shared/category/categories';
+import {
+  mergeCategoryOptions,
+  normalizeCategoryName,
+} from '../../shared/category/categories';
 import {
   CategoryColor,
   isCategoryColor,
 } from '../../shared/category/category-colors';
 import {
   findDuplicateCategoryName,
+  findHiddenBuiltInCategoryByName,
   getUniqueCategoryValue,
 } from '../category-values';
 
@@ -19,6 +23,10 @@ export type CreateCategoryArgs = {
   color: CategoryColor;
 };
 
+/**
+ * Creates a custom category. If the name matches a built-in category the user
+ * previously deleted, that built-in is restored instead.
+ */
 export const createCategory = async ({ name, color }: CreateCategoryArgs) => {
   const user = await db.getAuth();
   if (!user) {
@@ -28,23 +36,39 @@ export const createCategory = async ({ name, color }: CreateCategoryArgs) => {
     throw new Error('Invalid category color');
   }
 
-  const existingCategories = await queryMyCategories(user.id);
+  const records = await queryMyCategories(user.id);
+  const normalizedName = normalizeCategoryName(name);
   const duplicateError = findDuplicateCategoryName({
-    name,
-    existingCategories,
+    name: normalizedName,
+    options: mergeCategoryOptions(records),
   });
 
   if (duplicateError) {
     throw new Error(duplicateError);
   }
 
-  const normalizedName = normalizeCategoryName(name);
-  const categoryId = id();
   const now = new Date().toISOString();
-  const categoryValue = getUniqueCategoryValue(
+  const hiddenBuiltIn = findHiddenBuiltInCategoryByName(
     normalizedName,
-    existingCategories
+    records
   );
+
+  if (hiddenBuiltIn) {
+    await db.transact([
+      tx.categories[hiddenBuiltIn.id].update(
+        trimStringFields({
+          name: normalizedName,
+          color,
+          isHidden: false,
+          updatedAt: now,
+        })
+      ),
+    ]);
+    return { id: hiddenBuiltIn.id, value: hiddenBuiltIn.value };
+  }
+
+  const categoryId = id();
+  const categoryValue = getUniqueCategoryValue(normalizedName, records);
 
   await db.transact([
     tx.categories[categoryId].update(

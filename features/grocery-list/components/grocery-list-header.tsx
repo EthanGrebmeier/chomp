@@ -17,12 +17,12 @@ export const GroceryListHeader = ({
 }: GroceryListHeaderProps) => {
   return (
     <View className="px-4">
-      <View className="h-11 flex-row items-center justify-between">
+      <View className="h-11 flex-row items-center">
         <BackButton onPress={onBackPress} />
+        <View className="min-w-0 flex-1 px-2">
+          <Heading numberOfLines={1}>{listName ?? 'Grocery List'}</Heading>
+        </View>
         {actions ? <View>{actions}</View> : null}
-      </View>
-      <View className="h-10 justify-center">
-        <Heading>{listName ?? 'Grocery List'}</Heading>
       </View>
     </View>
   );

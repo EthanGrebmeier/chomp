@@ -43,6 +43,7 @@ function createPreviewState(
     status: 'preview',
     data: mockParseResponse,
     editedName: mockParseResponse.recipeName ?? '',
+    editedSourceUrl: mockParseResponse.sourceUrl,
     ingredients: [...ingredients],
     selectedIndices: new Set(ingredients.map((_, index) => index)),
   };
@@ -131,7 +132,10 @@ describe('importReducer', () => {
 
     it('only changes state when in preview status', () => {
       const idleState: ImportState = { status: 'idle' };
-      const loadingState: ImportState = { status: 'loading' };
+      const loadingState: ImportState = {
+        status: 'loading',
+        url: 'https://example.com',
+      };
       const savingState: ImportState = { status: 'saving' };
 
       const updatedIngredient: ParsedIngredient = {
@@ -199,8 +203,7 @@ describe('importReducer', () => {
 
     it('creates a new array reference (state immutability)', () => {
       const state = createPreviewState();
-      const originalArray =
-        state.status === 'preview' ? state.ingredients : [];
+      const originalArray = state.status === 'preview' ? state.ingredients : [];
 
       const updatedIngredient: ParsedIngredient = {
         ...mockIngredient1,

@@ -4,8 +4,22 @@ import { i } from '@instantdb/react-native';
 
 const _schema = i.schema({
   entities: {
+    // Development quantity histories for actual lists and the optional demo.
+    // Deploy only with scripts/setup-quantity-workspace.mjs.
+    gqc_workspaces_v1: i.entity({
+      name: i.string(),
+      ownerId: i.string(),
+      memberIds: i.json<string[]>(),
+      appListId: i.string().optional(),
+    }),
+    gqc_operations_v1: i.entity({
+      serialKey: i.string().unique().optional(),
+      workspaceId: i.string().indexed(),
+      authorId: i.string(),
+      body: i.string(),
+    }),
     $users: i.entity({
-      email: i.string(),
+      email: i.string().unique().indexed().optional(),
       hasInitializedSavedItems: i.boolean().optional(),
       hasInitializedGroceryList: i.boolean().optional(),
     }),
@@ -32,7 +46,7 @@ const _schema = i.schema({
       isChecked: i.boolean(),
       createdAt: i.string().indexed(),
       updatedAt: i.string(),
-      isDeleted: i.boolean(),
+      isDeleted: i.boolean().indexed(),
       deletedAt: i.string().optional(),
     }),
     grocery_item_add_events: i.entity({
@@ -47,6 +61,8 @@ const _schema = i.schema({
     grocery_list_shares: i.entity({
       grocery_list_id: i.string(),
       user_id: i.string(),
+      // Deprecated: list access order is device-local now
+      // (features/grocery-lists/local). Kept so older clients can still write.
       lastAccessedAt: i.string().optional(),
     }),
     recipes: i.entity({
@@ -83,8 +99,9 @@ const _schema = i.schema({
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string(),
       servings: i.number(),
-      addedToList: i.boolean(),
-      addedToListAt: i.string().optional(),
+      // "Meal plan only": when true, the entry has no linked grocery items.
+      // A missing value is treated as false.
+      ignoredByGroceryList: i.boolean().indexed().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
@@ -96,8 +113,9 @@ const _schema = i.schema({
       category: i.string().optional(),
       mealTag: i.string().optional(), // 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert'
       date: i.string().indexed(),
-      addedToList: i.boolean(),
-      addedToListAt: i.string().optional(),
+      // "Meal plan only": when true, the entry has no linked grocery item.
+      // A missing value is treated as false.
+      ignoredByGroceryList: i.boolean().indexed().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
@@ -107,15 +125,26 @@ const _schema = i.schema({
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
+    // Rows are either user-created categories or overrides of a built-in
+    // category (matched by `value`). Overrides may rename, recolor, or hide it.
     categories: i.entity({
       name: i.string(),
       value: i.string().indexed(),
       color: i.string().optional(),
+      isHidden: i.boolean().optional(),
       createdAt: i.string(),
       updatedAt: i.string(),
     }),
   },
   links: {
+    gqc_workspace_grocery_list_v1: {
+      forward: { on: 'gqc_workspaces_v1', has: 'one', label: 'groceryList' },
+      reverse: { on: 'grocery_lists', has: 'one', label: 'quantityWorkspace' },
+    },
+    gqc_workspace_operations_v1: {
+      forward: { on: 'gqc_operations_v1', has: 'one', label: 'workspace' },
+      reverse: { on: 'gqc_workspaces_v1', has: 'many', label: 'operations' },
+    },
     grocery_listsGrocery_items: {
       forward: {
         on: 'grocery_lists',
@@ -165,6 +194,33 @@ const _schema = i.schema({
         on: 'recipes',
         has: 'many',
         label: 'grocery_items',
+      },
+    },
+    // One-to-one links from a grocery item to the meal plan source it was
+    // created from. Deliberately not cascaded: deleting a meal plan source
+    // must never delete a (possibly checked) grocery item.
+    grocery_items_meal_plan_ingredient_snapshots: {
+      forward: {
+        on: 'grocery_items',
+        has: 'one',
+        label: 'meal_plan_ingredient_snapshot',
+      },
+      reverse: {
+        on: 'meal_plan_recipe_ingredient_snapshots',
+        has: 'one',
+        label: 'grocery_item',
+      },
+    },
+    grocery_items_meal_plan_items: {
+      forward: {
+        on: 'grocery_items',
+        has: 'one',
+        label: 'meal_plan_item',
+      },
+      reverse: {
+        on: 'meal_plan_items',
+        has: 'one',
+        label: 'grocery_item',
       },
     },
     grocery_list_shares_grocery_lists: {

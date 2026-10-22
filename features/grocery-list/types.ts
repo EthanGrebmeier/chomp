@@ -19,12 +19,29 @@ export type GroceryListLinkedSavedItem = InstaQLEntity<
   { user: {}; store: {} }
 >;
 
+/** Recipe ingredient snapshot a linked grocery item was created from. */
+export type GroceryListLinkedMealPlanIngredientSnapshot = InstaQLEntity<
+  typeof schema,
+  'meal_plan_recipe_ingredient_snapshots',
+  { meal_plan_recipe: { ingredient_snapshots: {} }; store: {} }
+>;
+
+/** Standalone meal plan item a linked grocery item was created from. */
+export type GroceryListLinkedMealPlanItem = InstaQLEntity<
+  typeof schema,
+  'meal_plan_items',
+  { store: {} }
+>;
+
 export type AppSettings = typeof appSettingsTable.$inferSelect;
 
 export type GroceryListItemWithRecipe = GroceryListItem & {
+  quantityEntries?: import('../quantity/types').QuantityEntry[];
   recipe?: Recipe | null;
   store?: Store | null;
   saved_item?: GroceryListLinkedSavedItem | null;
+  meal_plan_ingredient_snapshot?: GroceryListLinkedMealPlanIngredientSnapshot | null;
+  meal_plan_item?: GroceryListLinkedMealPlanItem | null;
 };
 
 export type BaseGroceryItem = Omit<

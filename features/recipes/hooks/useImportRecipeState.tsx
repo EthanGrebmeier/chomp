@@ -12,10 +12,13 @@ import {
  * Reducer function for import state machine.
  * Exported for testing purposes.
  */
-export function importReducer(state: ImportState, action: ImportAction): ImportState {
+export function importReducer(
+  state: ImportState,
+  action: ImportAction
+): ImportState {
   switch (action.type) {
     case 'SUBMIT_URL':
-      return { status: 'loading' };
+      return { status: 'loading', url: action.url };
 
     case 'PARSE_SUCCESS': {
       const ingredients = [...action.data.ingredients];
@@ -27,6 +30,7 @@ export function importReducer(state: ImportState, action: ImportAction): ImportS
         status: 'preview',
         data: action.data,
         editedName: action.data.recipeName ?? '',
+        editedSourceUrl: action.data.sourceUrl,
         ingredients,
         selectedIndices,
       };
@@ -40,6 +44,13 @@ export function importReducer(state: ImportState, action: ImportAction): ImportS
       return {
         ...state,
         editedName: action.name,
+      };
+
+    case 'EDIT_SOURCE_URL':
+      if (state.status !== 'preview') return state;
+      return {
+        ...state,
+        editedSourceUrl: action.url,
       };
 
     case 'TOGGLE_INGREDIENT': {
@@ -58,7 +69,8 @@ export function importReducer(state: ImportState, action: ImportAction): ImportS
 
     case 'TOGGLE_ALL_INGREDIENTS': {
       if (state.status !== 'preview') return state;
-      const allSelected = state.selectedIndices.size === state.ingredients.length;
+      const allSelected =
+        state.selectedIndices.size === state.ingredients.length;
       const newSelectedIndices = allSelected
         ? new Set<number>()
         : new Set<number>(state.ingredients.map((_, index) => index));
@@ -131,6 +143,10 @@ export const useImportRecipeState = () => {
     dispatch({ type: 'EDIT_NAME', name });
   }, []);
 
+  const editSourceUrl = useCallback((url: string) => {
+    dispatch({ type: 'EDIT_SOURCE_URL', url });
+  }, []);
+
   const toggleIngredientSelection = useCallback((index: number) => {
     dispatch({ type: 'TOGGLE_INGREDIENT', index });
   }, []);
@@ -174,6 +190,7 @@ export const useImportRecipeState = () => {
     parseSuccess,
     parseError,
     editName,
+    editSourceUrl,
     toggleIngredientSelection,
     toggleAllIngredients,
     updateIngredient,
@@ -185,4 +202,6 @@ export const useImportRecipeState = () => {
   };
 };
 
-export type UseImportRecipeStateReturn = ReturnType<typeof useImportRecipeState>;
+export type UseImportRecipeStateReturn = ReturnType<
+  typeof useImportRecipeState
+>;

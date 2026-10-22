@@ -9,15 +9,13 @@ import { formatQuantityUnit } from '@/components/item-sheet/unit-utils';
 import { StoreTag } from '@/components/store-tag';
 import { EmptyHeading } from '@/components/text/empty-heading';
 import { EmptySubtext } from '@/components/text/empty-subtext';
-import { Heading } from '@/components/text/heading';
-import { HapticPressable } from '@/components/ui/haptic-pressable';
+import { GestureHapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
 import { Text } from '@/components/ui/text';
 import { useCategoryOptions } from '@/features/categories/use-category-options';
 import type { CategoryOption } from '@/features/shared/category/categories';
 import { ListItemSkeleton } from '@/features/shared/components/list-item-skeleton';
-import { cn } from '@/lib/utils';
 
 import { addGroceryListItem } from '../../grocery-list/instant/add-grocery-list-item';
 import { useStores } from '../../stores/instant/use-stores';
@@ -29,20 +27,17 @@ import {
 
 type FrequentItemsScreenProps = {
   listId: string;
-  listHeight?: number;
 };
 
 type FrequentItemRowProps = {
   item: FrequentItem;
   categoryOptions: CategoryOption[];
-  isLast: boolean;
   onAdd: (item: FrequentItem) => void;
 };
 
 const FrequentItemRow = ({
   item,
   categoryOptions,
-  isLast,
   onAdd,
 }: FrequentItemRowProps) => {
   const notes = item.notes?.trim();
@@ -52,12 +47,8 @@ const FrequentItemRow = ({
   });
 
   return (
-    <ListItem
-      className={cn(
-        !isLast ? 'border-b border-dashed border-border' : undefined
-      )}
-    >
-      <HapticPressable
+    <ListItem>
+      <GestureHapticPressable
         accessibilityRole="button"
         accessibilityLabel={`Add ${item.name} to grocery list`}
         className="mr-1 size-5 items-center justify-center rounded-md border border-border"
@@ -71,9 +62,9 @@ const FrequentItemRow = ({
           size={14}
           strokeWidth={2.5}
         />
-      </HapticPressable>
+      </GestureHapticPressable>
 
-      <HapticPressable
+      <GestureHapticPressable
         accessibilityRole="button"
         accessibilityLabel={`Add ${item.name} to grocery list`}
         className="flex-1 gap-1 py-1"
@@ -112,7 +103,7 @@ const FrequentItemRow = ({
             Added {item.count} times
           </Text>
         </View>
-      </HapticPressable>
+      </GestureHapticPressable>
     </ListItem>
   );
 };
@@ -120,15 +111,12 @@ const FrequentItemRow = ({
 const FrequentItemsSkeleton = () => (
   <View style={{ minHeight: 500 }}>
     {Array.from({ length: 8 }, (_, index) => (
-      <ListItemSkeleton key={index} showBorder={index !== 7} />
+      <ListItemSkeleton key={index} />
     ))}
   </View>
 );
 
-export const FrequentItemsScreen = ({
-  listId,
-  listHeight,
-}: FrequentItemsScreenProps) => {
+export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { frequentItems, isLoading, error } = useFrequentItems(listId);
   const { data: stores } = useStores();
@@ -194,15 +182,7 @@ export const FrequentItemsScreen = ({
   };
 
   return (
-    <View className="pb-6">
-      <View className="gap-1 px-4 pb-3">
-        <View className="flex-row items-center gap-2">
-          <Heading>Frequent Items</Heading>
-        </View>
-        <Text variant="caption">
-          Your most-added items from the last 90 days.
-        </Text>
-      </View>
+    <View className="min-h-0 flex-1 pb-6">
       {isLoading ? (
         <FrequentItemsSkeleton />
       ) : error ? (
@@ -227,6 +207,7 @@ export const FrequentItemsScreen = ({
         </View>
       ) : (
         <FlatList
+          className="min-h-0 flex-1"
           contentInset={{ bottom: safeAreaBottom + 24 }}
           data={visibleItems}
           keyExtractor={item => item.normalizedName}
@@ -234,13 +215,11 @@ export const FrequentItemsScreen = ({
             <FrequentItemRow
               item={item}
               categoryOptions={categoryOptions}
-              isLast={index === visibleItems.length - 1}
               onAdd={handleAdd}
             />
           )}
           scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
           showsVerticalScrollIndicator={false}
-          style={listHeight ? { height: listHeight } : undefined}
         />
       )}
     </View>

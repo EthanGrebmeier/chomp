@@ -41,7 +41,6 @@ export interface ListParams {
 
 export interface GroceryListsIndexParams {
   selectedListId?: string;
-  view?: 'meal-plan';
 }
 
 export interface ListMealPlanParams {
@@ -103,6 +102,11 @@ export function buildListUrl(params?: ListParams): Href {
   return `/(tabs)${query}` as Href;
 }
 
+/** A native shopping screen pushed over its grocery list. */
+export function buildShoppingUrl(listId: string): Href {
+  return `/shopping${buildQueryString({ listId })}` as Href;
+}
+
 /**
  * Builds the URL for the grocery lists index.
  */
@@ -111,7 +115,6 @@ export function buildGroceryListsIndexUrl(
 ): Href {
   const query = buildQueryString({
     selectedListId: params?.selectedListId,
-    view: params?.view,
   });
   return `/grocery-lists${query}` as Href;
 }
@@ -121,14 +124,6 @@ export function buildMealPlanUrl(params: ListMealPlanParams): Href {
     listId: params.listId,
     view: 'meal-plan',
   });
-}
-
-export function buildMealPlanAddToListUrl(params: ListMealPlanParams): Href {
-  const { listId } = params;
-  return {
-    pathname: '/meal-plan/[listId]/add-to-list',
-    params: { listId },
-  } as unknown as Href;
 }
 
 /**
@@ -159,6 +154,13 @@ export function buildCreateRecipeImportUrl(
   return `/recipes/create/import${query}` as Href;
 }
 
+export function buildCreateRecipeImportIngredientsUrl(
+  params?: CreateRecipeImportParams
+): Href {
+  const query = buildQueryString({ listId: params?.listId });
+  return `/recipes/create/import/ingredients${query}` as Href;
+}
+
 export function buildEditRecipeUrl(params: EditRecipeParams) {
   const { recipeId, listId } = params;
   return {
@@ -167,23 +169,22 @@ export function buildEditRecipeUrl(params: EditRecipeParams) {
   } as unknown as Href;
 }
 
+const getPublicBaseUrl = () =>
+  trimTrailingSlash(process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_PUBLIC_BASE_URL);
+
 /**
  * Builds a deep link URL for sharing a grocery list by join code
  */
 export function buildListURL(joinCode: string): string {
-  const baseUrl = trimTrailingSlash(
-    process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_PUBLIC_BASE_URL
-  );
-  return `${baseUrl}/join-list/${encodeURIComponent(joinCode)}`;
+  return `${getPublicBaseUrl()}/join-list/${encodeURIComponent(joinCode)}`;
 }
 
 /**
- * Builds a share URL for a recipe via the API redirect
+ * Builds a share URL for a recipe. The website serves a preview page and the
+ * path is registered as a universal link, so installed apps open it directly.
  */
-export function buildRecipeShareURL(recipeId: string): string | null {
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (!apiUrl) return null;
-  return `${apiUrl}/recipes/share/${recipeId}`;
+export function buildRecipeShareURL(recipeId: string): string {
+  return `${getPublicBaseUrl()}/recipes/share/${encodeURIComponent(recipeId)}`;
 }
 
 /**
@@ -199,8 +200,6 @@ export const navigation = {
 
   // Meal plan view navigation
   goToMealPlan: (listId: string) => buildMealPlanUrl({ listId }),
-  goToMealPlanAddToList: (listId: string) =>
-    buildMealPlanAddToListUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -209,6 +208,8 @@ export const navigation = {
     buildCreateRecipeManualUrl({ listId, name }),
   goToCreateRecipeImport: (listId?: string) =>
     buildCreateRecipeImportUrl({ listId }),
+  goToCreateRecipeImportIngredients: (listId?: string) =>
+    buildCreateRecipeImportIngredientsUrl({ listId }),
   goToEditRecipe: (recipeId: string, listId?: string) =>
     buildEditRecipeUrl({ recipeId, listId }),
 } as const;
@@ -227,8 +228,6 @@ export function useNavigation() {
 
     // Meal plan view navigation
     goToMealPlan: (listId: string) => navigation.goToMealPlan(listId),
-    goToMealPlanAddToList: (listId: string) =>
-      navigation.goToMealPlanAddToList(listId),
 
     // Recipe navigation
     goToRecipe: (recipeId: string, listId?: string) =>
@@ -256,8 +255,6 @@ export const navActions = {
 
   // Meal plan view navigation
   goToMealPlan: (listId: string) => buildMealPlanUrl({ listId }),
-  goToMealPlanAddToList: (listId: string) =>
-    buildMealPlanAddToListUrl({ listId }),
 
   // Recipe navigation
   goToRecipe: (recipeId: string, listId?: string) =>
@@ -266,6 +263,8 @@ export const navActions = {
     buildCreateRecipeManualUrl({ listId, name }),
   goToCreateRecipeImport: (listId?: string) =>
     buildCreateRecipeImportUrl({ listId }),
+  goToCreateRecipeImportIngredients: (listId?: string) =>
+    buildCreateRecipeImportIngredientsUrl({ listId }),
   goToEditRecipe: (recipeId: string, listId?: string) =>
     buildEditRecipeUrl({ recipeId, listId }),
 } as const;
@@ -286,13 +285,13 @@ export const ROUTES = {
     VIEW: (listId: string) =>
       `/(tabs)?listId=${encodeURIComponent(listId)}&view=meal-plan`,
     LEGACY: (listId: string) => `/meal-plan/${listId}`,
-    ADD_TO_LIST: (listId: string) => `/meal-plan/${listId}/add-to-list`,
   },
   RECIPES: {
     INDEX: '/recipes',
     DETAIL: (recipeId: string) => `/recipes/${recipeId}`,
     CREATE_MANUAL: '/recipes/create/manual',
     CREATE_IMPORT: '/recipes/create/import',
+    CREATE_IMPORT_INGREDIENTS: '/recipes/create/import/ingredients',
     EDIT: (recipeId: string) => `/recipes/edit/${recipeId}`,
   },
 } as const;

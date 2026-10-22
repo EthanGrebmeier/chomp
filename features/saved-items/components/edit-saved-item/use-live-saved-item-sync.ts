@@ -82,7 +82,7 @@ export const useLiveSavedItemSync = ({
         storeId: current.storeId,
       },
       currentStoreId: currentStoreIdRef.current,
-    }).then((result) => {
+    }).then(result => {
       snapshotRef.current = current;
       if (storeIdChanged) {
         currentStoreIdRef.current = current.storeId;

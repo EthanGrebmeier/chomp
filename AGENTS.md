@@ -8,3 +8,9 @@ corners you cut will be cut again.
 Fight entropy. Leave the codebase better than you found it.
 
 After making changes, run `pnpm lint && pnpm tsc`
+
+## Friction log
+
+- Log papercuts and friction (tooling, docs, APIs, tests, conventions) as you hit them with `pnpx frog log`.
+- Do not add global, system, or internal friction.
+- Run `pnpx frog list` first to see what is already known.

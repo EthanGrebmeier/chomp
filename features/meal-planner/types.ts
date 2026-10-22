@@ -12,8 +12,18 @@ export type MealPlanRecipeIngredientSnapshot = InstaQLEntity<
   'meal_plan_recipe_ingredient_snapshots'
 >;
 
+/**
+ * Grocery item linked one-to-one to a meal plan source (a recipe ingredient
+ * snapshot or a standalone meal plan item).
+ */
+export type MealPlanLinkedGroceryItem = InstaQLEntity<
+  typeof schema,
+  'grocery_items'
+>;
+
 export type MealPlanItemWithStore = MealPlanItem & {
   store?: Store;
+  grocery_item?: MealPlanLinkedGroceryItem | null;
 };
 
 export type MealTag =
@@ -24,9 +34,27 @@ export type MealTag =
   | 'Dessert'
   | 'None';
 
+export type MealPlanRecipeIngredientSnapshotWithStore =
+  MealPlanRecipeIngredientSnapshot & {
+    store?: Store;
+    grocery_item?: MealPlanLinkedGroceryItem | null;
+  };
+
 export type MealPlanRecipeWithRecipe = MealPlanRecipe & {
-  recipe: RecipeWithIngredients;
-  ingredient_snapshots?: MealPlanRecipeIngredientSnapshot[];
+  recipe: RecipeWithIngredients & { user?: { id: string } };
+  ingredient_snapshots?: MealPlanRecipeIngredientSnapshotWithStore[];
+};
+
+/**
+ * A request to show one day in the meal plan (e.g. from a linked grocery
+ * item). `id` distinguishes repeated requests for the same date.
+ */
+export type MealPlanFocusRequest = {
+  mealId?: string;
+  sourceId?: string;
+  id: number;
+  /** `yyyy-MM-dd` */
+  date: string;
 };
 
 export type AddRecipeToDateArgs = {
@@ -51,18 +79,6 @@ export type UpdateMealPlanRecipeArgs = {
 
 export type RemoveRecipeFromMealPlanArgs = {
   mealPlanRecipeId: string;
-};
-
-export type AddMealsToGroceryListArgs = {
-  listId: string;
-  /** Recipe IDs to actually add ingredients for. If omitted, all unadded recipes are added. */
-  selectedRecipeIds?: string[];
-  /** Recipe IDs to mark as added without creating grocery items. */
-  skippedRecipeIds?: string[];
-  /** Item IDs to actually add. If omitted, all unadded items are added. */
-  selectedItemIds?: string[];
-  /** Item IDs to mark as added without creating grocery items. */
-  skippedItemIds?: string[];
 };
 
 export type AddItemToDateArgs = {

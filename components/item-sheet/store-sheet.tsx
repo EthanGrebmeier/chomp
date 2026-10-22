@@ -3,7 +3,6 @@ import { PlusIcon } from 'lucide-react-native';
 import {
   forwardRef,
   useCallback,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -25,6 +24,9 @@ import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
 import { Text } from '../ui/text';
 import { useUncontrolledTextInput } from '../use-uncontrolled-text-input';
+
+import { OptionDropdown } from './option-dropdown';
+import { usePresentOnOpenRequest } from './present-on-open-request';
 
 type StoreOptionProps = {
   label: string;
@@ -74,6 +76,7 @@ type StoreSheetProps = {
   sheetName?: string;
   openRequestId?: number;
   disabled?: boolean;
+  selectionMode?: 'sheet' | 'dropdown';
 };
 
 export type StoreSheetRef = {
@@ -92,6 +95,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       sheetName = 'store-sheet',
       openRequestId,
       disabled = false,
+      selectionMode = 'dropdown',
     },
     ref
   ) => {
@@ -133,12 +137,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
       sheetRef.current?.present();
     }, [disabled, storeId]);
 
-    useEffect(() => {
-      if (openRequestId === undefined) {
-        return;
-      }
-      openSheet();
-    }, [openRequestId, openSheet]);
+    usePresentOnOpenRequest(openRequestId, openSheet);
 
     useImperativeHandle(ref, () => ({
       present: openSheet,
@@ -185,6 +184,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
         setNewStoreIsDefault(false);
         setCanCreateStore(false);
         setLocalStoreId(newStoreId);
+        if (selectionMode === 'dropdown') onSelect(newStoreId, trimmedName);
         setTimeout(() => {
           setNewlyCreatedStore(null);
         }, 1000);
@@ -203,105 +203,147 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
 
     const canCreate = canCreateStore && !isCreating;
 
+    const trigger = (
+      <Pill
+        className={cn(disabled && 'opacity-50')}
+        textClassName={cn(
+          'font-semibold',
+          hasSelectedStore && !disabled
+            ? 'text-foreground'
+            : 'text-muted-foreground'
+        )}
+        hasValue={hasSelectedStore}
+      >
+        {selectedStoreName ?? 'Store'}
+      </Pill>
+    );
+    const dropdownOptions = sortedStores.map(store => ({
+      value: store.id,
+      label: store.isDefault ? `${store.name} (Default)` : store.name,
+    }));
+    if (storeId && !stores.some(store => store.id === storeId)) {
+      dropdownOptions.unshift({
+        value: storeId,
+        label: selectedStoreName ?? 'Current store',
+      });
+    }
+
     return (
       <>
         {!hideTrigger && (
           <WithLayoutTransition>
-            <HapticPressable
-              onPress={openSheet}
-              hapticType="light"
-              disabled={disabled}
-            >
-              <Pill
-                className={cn(
-                  !localStoreId && 'border-dashed',
-                  disabled && 'opacity-50'
-                )}
-                textClassName={cn(
-                  'font-semibold',
-                  hasSelectedStore && !disabled
-                    ? 'text-foreground'
-                    : 'text-muted-foreground'
-                )}
-                hasValue={hasSelectedStore}
+            {selectionMode === 'dropdown' ? (
+              <OptionDropdown
+                label="store"
+                value={storeId}
+                disabled={disabled}
+                options={dropdownOptions}
+                onSelect={value =>
+                  onSelect(
+                    value,
+                    value
+                      ? (stores.find(store => store.id === value)?.name ??
+                          selectedStoreName)
+                      : undefined
+                  )
+                }
+                onCreate={handleOpenCreateStore}
               >
-                {selectedStoreName ?? 'Store'}
-              </Pill>
-            </HapticPressable>
+                {trigger}
+              </OptionDropdown>
+            ) : (
+              <HapticPressable
+                onPress={openSheet}
+                hapticType="light"
+                disabled={disabled}
+              >
+                {trigger}
+              </HapticPressable>
+            )}
           </WithLayoutTransition>
         )}
 
-        <BottomSheet detents={[0.7]} scrollable ref={sheetRef} name={sheetName}>
-          <BottomSheet.Header
-            className="mb-0 px-4"
-            dismissButton={
-              showBackButton ? (
-                <BackButton onPress={() => sheetRef.current?.dismiss()} />
-              ) : undefined
-            }
-            title="Store"
-            button={
-              <ConfirmButton
-                onPress={handleConfirm}
-                disabled={localStoreId === null}
-              />
-            }
-          />
-
-          <ScrollView
-            className="max-h-96 px-2"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
+        {selectionMode === 'sheet' ? (
+          <BottomSheet
+            detents={[0.7]}
+            scrollable
+            ref={sheetRef}
+            name={sheetName}
           >
-            <HapticPressable onPress={handleOpenCreateStore} hapticType="light">
-              <View className="flex-row items-center justify-center gap-3 rounded-xl px-2 py-3">
-                <View className="size-4  items-center justify-center rounded-full bg-primary">
-                  <Icon
-                    className="text-primary-foreground"
-                    as={PlusIcon}
-                    strokeWidth={3}
-                    size={12}
-                  />
-                </View>
-                <Text className="text-base font-semibold text-primary">
-                  Create new store
-                </Text>
-              </View>
-            </HapticPressable>
-
-            <StoreOption
-              label="None"
-              isSelected={localStoreId === undefined}
-              onPress={() => setLocalStoreId(undefined)}
+            <BottomSheet.Header
+              className="mb-0 px-4"
+              dismissButton={
+                showBackButton ? (
+                  <BackButton onPress={() => sheetRef.current?.dismiss()} />
+                ) : undefined
+              }
+              title="Choose a store"
+              button={
+                <ConfirmButton
+                  onPress={handleConfirm}
+                  disabled={localStoreId === null}
+                />
+              }
             />
 
-            {hasMissingSelectedStore && (
-              <StoreOption
-                label={selectedStoreName ?? 'Current store'}
-                isSelected={true}
-                onPress={() => setLocalStoreId(storeId)}
-              />
-            )}
+            <ScrollView
+              className="max-h-96 px-2"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
+            >
+              <HapticPressable
+                onPress={handleOpenCreateStore}
+                hapticType="light"
+              >
+                <View className="flex-row items-center justify-center gap-3 rounded-xl px-2 py-3">
+                  <View className="size-4  items-center justify-center rounded-full bg-primary">
+                    <Icon
+                      className="text-primary-foreground"
+                      as={PlusIcon}
+                      strokeWidth={3}
+                      size={12}
+                    />
+                  </View>
+                  <Text className="text-base font-semibold text-primary">
+                    Create new store
+                  </Text>
+                </View>
+              </HapticPressable>
 
-            {isLoading ? (
-              <View className="py-4">
-                <Text className="text-center text-muted-foreground">
-                  Loading stores...
-                </Text>
-              </View>
-            ) : (
-              sortedStores.map(store => (
+              <StoreOption
+                label="None"
+                isSelected={localStoreId === undefined}
+                onPress={() => setLocalStoreId(undefined)}
+              />
+
+              {hasMissingSelectedStore && (
                 <StoreOption
-                  key={store.id}
-                  label={store.name}
-                  isDefault={!!store.isDefault}
-                  isSelected={store.id === localStoreId}
-                  onPress={() => setLocalStoreId(store.id)}
+                  label={selectedStoreName ?? 'Current store'}
+                  isSelected={true}
+                  onPress={() => setLocalStoreId(storeId)}
                 />
-              ))
-            )}
-          </ScrollView>
-        </BottomSheet>
+              )}
+
+              {isLoading ? (
+                <View className="py-4">
+                  <Text className="text-center text-muted-foreground">
+                    Loading stores...
+                  </Text>
+                </View>
+              ) : (
+                sortedStores.map(store => (
+                  <StoreOption
+                    key={store.id}
+                    label={store.name}
+                    isDefault={!!store.isDefault}
+                    isSelected={store.id === localStoreId}
+                    onPress={() => setLocalStoreId(store.id)}
+                  />
+                ))
+              )}
+            </ScrollView>
+          </BottomSheet>
+        ) : null}
 
         {/* Create Store Sheet */}
         <BottomSheet
@@ -323,7 +365,7 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
           <BottomSheet.SheetView className="pb-safe">
             <BottomSheet.Header
               className="mb-0"
-              title="New Store"
+              title="Add a store"
               dismissButton={
                 showBackButton ? (
                   <BackButton

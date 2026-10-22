@@ -26,6 +26,7 @@ export function BackButton({ onPress, className, href }: BackButtonProps) {
   return (
     <Button
       size="icon"
+      accessibilityLabel="Back"
       variant="ghost"
       onPress={handlePress}
       hapticType="light"
