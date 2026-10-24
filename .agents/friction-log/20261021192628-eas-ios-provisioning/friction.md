@@ -1,6 +1,7 @@
 ---
 title: 'EAS iOS provisioning profile references a missing distribution certificate'
 severity: 'blocker'
+issue: 'EthanGrebmeier/chomp#77'
 ---
 
 ## Expected Behavior

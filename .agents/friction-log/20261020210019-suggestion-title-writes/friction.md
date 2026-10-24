@@ -1,6 +1,7 @@
 ---
 title: 'Suggestion title writes bypass React Native text synchronization'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#68'
 ---
 
 ## Expected Behavior
