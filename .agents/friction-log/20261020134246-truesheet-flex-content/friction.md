@@ -1,6 +1,7 @@
 ---
 title: 'TrueSheet flex content uses screen height instead of visible detent height'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#67'
 ---
 
 ## Expected Behavior

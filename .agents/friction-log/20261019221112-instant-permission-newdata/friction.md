@@ -1,6 +1,7 @@
 ---
 title: 'Instant permission newData.ref fails at evaluation time'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#65'
 ---
 
 ### Expected Behavior

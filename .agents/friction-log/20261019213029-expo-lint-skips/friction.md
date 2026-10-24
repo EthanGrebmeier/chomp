@@ -1,6 +1,7 @@
 ---
 title: 'Expo lint skips the features directory by default'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#62'
 ---
 
 ### Expected Behavior

@@ -1,6 +1,7 @@
 ---
 title: 'Quantity permission modifiedFields guard does not reject unlink'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#63'
 ---
 
 ### Expected Behavior
