@@ -74,10 +74,10 @@ export default function List() {
   );
 
   useEffect(() => {
-    if (activeListId) {
+    if (activeListId && !listsLoading) {
       trackListAccess(activeListId);
     }
-  }, [activeListId, trackListAccess]);
+  }, [activeListId, listsLoading, trackListAccess]);
 
   useEffect(() => {
     if (viewParam === 'meal-plan' && !activeListId && !listsLoading) {

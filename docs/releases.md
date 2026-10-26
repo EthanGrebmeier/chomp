@@ -1,9 +1,11 @@
 # Release maintenance
 
 `main` contains ongoing development and the next native release. Maintain OTA fixes
-on `release/1.0.5` (App Store build 50) and `release/1.0.6` (build 56). Create
-`release/1.0.7` from the approved release commit when that version is ready for the
-App Store; TestFlight availability alone does not make it a supported store release.
+on `release/1.0.5` (App Store build 50) and `release/1.0.6` (build 56). `release/1.0.7` maintains TestFlight build 62, rooted at
+`9475c74a6ebc3f29e3578e58208c837960e55725`. It is not yet a supported App Store
+release. Its OTA baseline is tagged `runtime/1.0.7/build-62-ota-baseline`; this
+tag records the frozen native inputs and OTA lane configuration, not a published
+update. Keep 1.0.5 and 1.0.6 supported until 1.0.7 ships and the upgrade window ends.
 
 ## Backport a fix
 
