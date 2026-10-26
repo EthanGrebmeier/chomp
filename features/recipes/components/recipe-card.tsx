@@ -8,7 +8,7 @@ import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
 import { RecipeWithIngredients } from '../types';
 
-import { MealTagBadge } from './meal-tag-badge';
+import { RecipeSummary } from './recipe-summary';
 
 const compactTextStyle = Platform.select({
   android: { includeFontPadding: false },
@@ -43,15 +43,21 @@ export const RecipeCardContent = ({
 export const RecipeCard = ({ recipe, className, listId }: RecipeCardProps) => {
   return (
     <HapticPressable
-      className="w-full flex-row items-start gap-3 py-1"
+      accessibilityRole="button"
+      accessibilityLabel={recipe.name}
+      className={cn(
+        'w-full bg-recipe-surface px-4 py-3.5 active:bg-recipe-pressed',
+        className
+      )}
       hapticType="selection"
       onPress={() => router.push(navigation.goToRecipe(recipe.id, listId))}
     >
-      <RecipeCardContent
+      <RecipeSummary
         name={recipe.name}
-        className={cn('flex-1', className)}
+        ingredientCount={recipe.recipe_ingredients.length}
+        servings={recipe.servings}
+        mealTag={recipe.mealTag}
       />
-      <MealTagBadge mealTag={recipe.mealTag} />
     </HapticPressable>
   );
 };
