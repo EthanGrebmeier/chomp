@@ -11,7 +11,12 @@ import { Text } from '@/components/ui/text';
 import { GroceryItemsList } from '../components/grocery-items-list';
 import type { GroceryListItemWithRecipe } from '../types';
 
-import { getShoppingDestinations, type ShoppingSession } from './destinations';
+import {
+  findShoppingDestination,
+  getShoppingDestinations,
+  getShoppingItems,
+  type ShoppingSession,
+} from './destinations';
 import { ShoppingComplete } from './shopping-complete';
 import { ShoppingHeader } from './shopping-header';
 
@@ -35,12 +40,11 @@ export function ShoppingScreen({
   onExit,
 }: Props) {
   const destinations = getShoppingDestinations(items);
-  const representedDestination =
-    session.screen === 'store'
-      ? destinations.find(
-          destination => destination.storeId === session.storeId
-        )
-      : undefined;
+  const representedDestination = findShoppingDestination(
+    destinations,
+    items,
+    session
+  );
   // Keep the editor mounted if its last item moves to another store while
   // the native sheet is open. Also retain the destination during hydration.
   const selected =
@@ -55,11 +59,7 @@ export function ShoppingScreen({
           remaining: 0,
         }
       : undefined);
-  const focusedItems = selected
-    ? items.filter(
-        item => !item.isDeleted && (item.store?.id ?? null) === selected.storeId
-      )
-    : [];
+  const focusedItems = selected ? getShoppingItems(items, selected) : [];
   const isComplete =
     !isLoading && selected?.remaining === 0 && focusedItems.length > 0;
 
