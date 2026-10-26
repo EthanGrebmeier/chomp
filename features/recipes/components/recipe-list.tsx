@@ -1,17 +1,19 @@
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { memo, useCallback } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   ContextMenuItem,
   ContextMenuItemTitle,
   ContextMenuRoot,
 } from '../../../components/ui/context-menu';
-import { ListItem } from '../../../components/ui/list-item';
+import { SwipeToDelete } from '../../../components/ui/swipe-to-delete';
 import { useDeleteRecipe } from '../hooks';
 import { RecipeWithIngredients } from '../types';
 
 import { EmptyRecipePrompt } from './empty-recipe-prompt';
+import { RecipeBookSurface, RecipeRowSeparator } from './recipe-book-surface';
 import { RecipeCard } from './recipe-card';
 
 type RecipeRowProps = {
@@ -43,9 +45,12 @@ const RecipeRow = memo(function RecipeRow({
   return (
     <ContextMenuRoot
       trigger={
-        <ListItem onDelete={handleDelete}>
+        <SwipeToDelete
+          onDelete={handleDelete}
+          contentClassName="bg-recipe-surface"
+        >
           <RecipeCard recipe={recipe} listId={listId} />
-        </ListItem>
+        </SwipeToDelete>
       }
     >
       <ContextMenuItem
@@ -74,22 +79,23 @@ export const RecipeList = ({ recipes, listId }: RecipeListProps) => {
     [deleteRecipe, listId]
   );
 
-  if (recipes.length === 0) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <EmptyRecipePrompt />
-      </View>
-    );
-  }
-
   return (
-    <FlashList
-      keyboardDismissMode="on-drag"
-      contentContainerClassName="pb-24"
-      data={recipes}
-      renderItem={renderItem}
-      keyExtractor={item => item.id}
-      drawDistance={300}
-    />
+    <SafeAreaView edges={['bottom']} className="flex-1">
+      <RecipeBookSurface>
+        {recipes.length === 0 ? (
+          <EmptyRecipePrompt listId={listId} />
+        ) : (
+          <FlashList
+            keyboardDismissMode="on-drag"
+            contentContainerClassName="pb-4"
+            data={recipes}
+            renderItem={renderItem}
+            ItemSeparatorComponent={RecipeRowSeparator}
+            keyExtractor={item => item.id}
+            drawDistance={300}
+          />
+        )}
+      </RecipeBookSurface>
+    </SafeAreaView>
   );
 };

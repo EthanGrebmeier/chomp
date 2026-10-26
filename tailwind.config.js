@@ -85,6 +85,10 @@ module.exports = {
           DEFAULT: 'hsl(var(--popover))',
           foreground: 'hsl(var(--popover-foreground))',
         },
+        recipe: {
+          surface: 'hsl(var(--recipe-surface))',
+          pressed: 'hsl(var(--recipe-pressed))',
+        },
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
