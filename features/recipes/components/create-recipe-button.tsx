@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { navigation } from '@/lib/navigation';
 
 import { AddButton } from '../../../components/ui/add-button';
+import { Button } from '../../../components/ui/button';
 import {
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -11,12 +12,17 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '../../../components/ui/dropdown-menu';
+import { Text } from '../../../components/ui/text';
 
 type CreateRecipeButtonProps = {
   listId?: string;
+  label?: string;
 };
 
-export const CreateRecipeButton = ({ listId }: CreateRecipeButtonProps) => {
+export const CreateRecipeButton = ({
+  listId,
+  label,
+}: CreateRecipeButtonProps) => {
   const handleCreateRecipe = () => {
     router.push(navigation.goToCreateRecipeManual(listId));
   };
@@ -26,7 +32,17 @@ export const CreateRecipeButton = ({ listId }: CreateRecipeButtonProps) => {
   };
 
   return (
-    <DropdownMenuRoot trigger={<AddButton accessibilityLabel="Add recipe" />}>
+    <DropdownMenuRoot
+      trigger={
+        label ? (
+          <Button>
+            <Text>{label}</Text>
+          </Button>
+        ) : (
+          <AddButton accessibilityLabel="Add recipe" />
+        )
+      }
+    >
       <DropdownMenuContent>
         <DropdownMenuGroup>
           <DropdownMenuItem onSelect={handleCreateRecipe} key="create-recipe">
