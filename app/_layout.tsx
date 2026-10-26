@@ -31,6 +31,7 @@ import {
   useInstantAuthState,
 } from '@/lib/instant/use-clerk-auth';
 import { scheduleSplashHide } from '@/lib/schedule-splash-hide';
+import { hasReachedStartupRoute } from '@/lib/startup-route';
 import { useStartupEasUpdate } from '@/lib/use-startup-eas-update';
 import {
   MigrationProvider,
@@ -205,12 +206,11 @@ function RootLayoutContent({
     const isMigrationErrorVisible = migrationStatus === 'error';
     const isNavigationReady = Boolean(rootNavigationState?.key);
     const topLevelSegment = segments[0];
-    const isOnTabsGroup = topLevelSegment === '(tabs)';
-    const isOnAuthGroup = topLevelSegment === '(auth)';
     const shouldUseAppRoutes = hasAppAccess || isSignedInWithClerk;
-    const hasReachedInitialLandingPoint = shouldUseAppRoutes
-      ? isOnTabsGroup
-      : isOnAuthGroup;
+    const hasReachedInitialLandingPoint = hasReachedStartupRoute(
+      topLevelSegment,
+      shouldUseAppRoutes
+    );
     const isAppReady =
       isNavigationReady &&
       !shouldBlockAuthUi &&
