@@ -1,17 +1,22 @@
-import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { RecipeBookSurface, RecipeRowSeparator } from './recipe-book-surface';
 import { RecipeCardSkeleton } from './recipe-card-skeleton';
 
 export const RecipeListSkeleton = () => {
   return (
-    <View className="flex-1">
-      <View className="px-4">
+    <SafeAreaView edges={['bottom']} className="flex-1">
+      <RecipeBookSurface>
         <RecipeCardSkeleton />
+        <RecipeRowSeparator />
         <RecipeCardSkeleton />
+        <RecipeRowSeparator />
         <RecipeCardSkeleton />
+        <RecipeRowSeparator />
         <RecipeCardSkeleton />
+        <RecipeRowSeparator />
         <RecipeCardSkeleton />
-      </View>
-    </View>
+      </RecipeBookSurface>
+    </SafeAreaView>
   );
 };
