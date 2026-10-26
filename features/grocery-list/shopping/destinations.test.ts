@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import type { GroceryListItemWithRecipe } from '../types';
 
-import { getShoppingDestinations, parseShoppingSession } from './destinations';
+import {
+  findShoppingDestination,
+  getShoppingDestinations,
+  getShoppingItems,
+  parseShoppingSession,
+} from './destinations';
 
 const item = (
   overrides: Partial<GroceryListItemWithRecipe> = {}
@@ -42,13 +47,68 @@ describe('shopping destinations', () => {
     ]);
   });
 
-  it('uses linked store identities even for shared stores with the same name', () => {
+  it('combines shared stores by name for counts, filtering, and completion', () => {
+    const items = [
+      item({
+        id: 'mine',
+        store: store('mine', 'Whole Foods'),
+        isChecked: true,
+      }),
+      item({ id: 'shared', store: store('shared', ' whole  FOODS ') }),
+      item({ id: 'other', store: store('other', 'Market') }),
+      item({ store: store('deleted', 'Whole Foods'), isDeleted: true }),
+    ];
+    const destinations = getShoppingDestinations(items);
+    expect(destinations).toHaveLength(2);
+    const destination = destinations.find(d => d.name === 'Whole Foods')!;
+    expect(destination.remaining).toBe(1);
+    expect(getShoppingItems(items, destination).map(i => i.id)).toEqual([
+      'mine',
+      'shared',
+    ]);
     expect(
-      getShoppingDestinations([
-        item({ store: store('mine', 'Market') }),
-        item({ store: store('shared', 'Market') }),
-      ])
-    ).toHaveLength(2);
+      getShoppingDestinations(
+        items.map(i => ({ ...i, isChecked: true }))
+      ).every(d => d.remaining === 0)
+    ).toBe(true);
+  });
+
+  it('keeps an actual store named No store separate from unassigned items', () => {
+    const items = [item(), item({ store: store('named', 'No store') })];
+    const destinations = getShoppingDestinations(items);
+    expect(destinations).toHaveLength(2);
+    expect(getShoppingItems(items, destinations[0])).toEqual([items[1]]);
+    expect(getShoppingItems(items, destinations[1])).toEqual([items[0]]);
+  });
+
+  it('restores either duplicate ID and falls back to the saved name after removal', () => {
+    const items = [
+      item({ store: store('mine', 'Market') }),
+      item({ store: store('shared', 'Market') }),
+    ];
+    const destinations = getShoppingDestinations(items);
+    for (const storeId of ['mine', 'shared']) {
+      expect(
+        findShoppingDestination(destinations, items, {
+          screen: 'store',
+          storeId,
+        })
+      ).toBe(destinations[0]);
+    }
+    expect(
+      findShoppingDestination(destinations, items, {
+        screen: 'store',
+        storeId: 'removed',
+        storeName: ' MARKET ',
+      })
+    ).toBe(destinations[0]);
+    expect(
+      findShoppingDestination(destinations, items, {
+        screen: 'store',
+        storeId: 'shared',
+        storeName: 'Old name',
+      })
+    ).toBe(destinations[0]);
   });
 
   it('does not invent an unassigned destination on an assigned or empty list', () => {

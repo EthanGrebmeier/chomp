@@ -10,18 +10,61 @@ export type ShoppingSession =
   | { screen: 'picker' }
   | { screen: 'store'; storeId: string | null; storeName?: string };
 
+const storeNameKey = (name: string) =>
+  name.trim().toLowerCase().replace(/\s+/g, ' ');
+
+export function getShoppingItems(
+  items: GroceryListItemWithRecipe[],
+  destination: ShoppingDestination
+) {
+  return items.filter(
+    item =>
+      !item.isDeleted &&
+      (destination.storeId === null
+        ? !item.store
+        : Boolean(
+            item.store &&
+            storeNameKey(item.store.name) === storeNameKey(destination.name)
+          ))
+  );
+}
+
+export function findShoppingDestination(
+  destinations: ShoppingDestination[],
+  items: GroceryListItemWithRecipe[],
+  session: ShoppingSession
+) {
+  if (session.screen !== 'store') return undefined;
+  if (session.storeId === null) {
+    return destinations.find(destination => destination.storeId === null);
+  }
+  // Resolve older ID-only sessions and renamed stores before using the saved name.
+  const currentStore = items.find(
+    item => !item.isDeleted && item.store?.id === session.storeId
+  )?.store;
+  const name = currentStore?.name ?? session.storeName;
+  return destinations.find(
+    destination =>
+      destination.storeId !== null &&
+      (name !== undefined
+        ? storeNameKey(destination.name) === storeNameKey(name)
+        : destination.storeId === session.storeId)
+  );
+}
+
 export function getShoppingDestinations(items: GroceryListItemWithRecipe[]) {
   const destinations = new Map<string | null, ShoppingDestination>();
   for (const item of items) {
     if (item.isDeleted) continue;
     const storeId = item.store?.id ?? null;
-    const destination = destinations.get(storeId) ?? {
+    const key = item.store ? storeNameKey(item.store.name) : null;
+    const destination = destinations.get(key) ?? {
       storeId,
       name: item.store?.name ?? 'No store',
       remaining: 0,
     };
     if (!item.isChecked) destination.remaining += 1;
-    destinations.set(storeId, destination);
+    destinations.set(key, destination);
   }
   return [...destinations.values()].sort((a, b) => {
     if (a.storeId === null) return 1;
