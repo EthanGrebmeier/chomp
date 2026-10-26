@@ -32,7 +32,7 @@ function projectionIndex(state: QuantityState, stores: Store[]) {
     ])
   );
   const rows = records(state, 'row')
-    .filter(row => row.status !== 'deleted')
+    .filter(row => row.status !== 'deleted' && entriesByRow.has(row.id))
     .map(row => ({
       id: row.id,
       name: row.name,
