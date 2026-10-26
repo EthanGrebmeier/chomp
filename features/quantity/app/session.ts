@@ -70,14 +70,14 @@ export function changeList(
   build: (state: QuantityState) => Operation
 ) {
   const session = listSession(listId);
-  return session.send(build(session.state));
+  return sendAndObserveListOperation(listId, build(session.state));
 }
 export function changeDocument(
   documentId: string,
   build: (state: QuantityState) => Operation
 ) {
   const session = documentSession(documentId);
-  return session.send(build(session.state));
+  return sendAndObserveListOperation(session.listId, build(session.state));
 }
 
 /**

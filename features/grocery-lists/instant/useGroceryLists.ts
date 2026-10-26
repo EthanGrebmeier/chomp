@@ -65,6 +65,6 @@ export const useGroceryLists = () => {
   return {
     ...groceryListsQuery,
     isLoading: groceryListsQuery.isLoading || isOrderPending,
-    data: sortedData,
+    data: isOrderPending ? undefined : sortedData,
   };
 };

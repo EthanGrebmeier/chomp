@@ -30,7 +30,11 @@ and publishes only iOS to the existing EAS production channel. It uses repositor
 `EXPO_PUBLIC_*` variables and explicitly pins the approved quantity database.
 EAS environment values do not rebundle the pre-exported artifact.
 
-The workflow requires the repository secret `EXPO_TOKEN`. This token should have
+The workflow requires the repository secret `EXPO_TOKEN`, which is currently
+intentionally unset. Until it is added, use the authenticated local EAS CLI from
+the appropriate release worktree, run the same validation and export, then publish
+the pre-exported bundle and record an annotated tag. GitHub validation remains
+fully operational without the token. This token should have
 only the Expo access necessary for this project. Never commit credentials or
 production backups. The `production-ota` GitHub environment restricts dispatches
 to main. Merging a PR does not publish an OTA.

@@ -35,6 +35,7 @@ import {
   initializeMealPlanIngredientEditor,
 } from '../meal-plan-recipe-ingredient-editor';
 import { MealPlanRecipe } from '../types';
+import { SerializedAutosave } from '../utils/serialized-autosave';
 import {
   getCanonicalSnapshots,
   getIngredientShoppingStatus,
@@ -109,7 +110,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const changeRecipeSheetRef = useRef<TrueSheet>(null);
     const ingredientOverrideSheetRef =
       useRef<MealPlanIngredientOverrideSheetRef>(null);
-    const { mutate: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
+    const { mutateAsync: updateMealPlanRecipe } = useUpdateMealPlanRecipe();
     const { data: defaultStore } = useDefaultStore();
     const { mutate: removeRecipeFromMealPlan } = useRemoveRecipeFromMealPlan();
     // Shared with the planner view, so the entry's linked items stay live.
@@ -130,7 +131,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         : null,
       isMealPlanOnly: !shoppingState.isShownOnGroceryList,
     });
-    const lastSyncedSnapshotRef = useRef<string | null>(null);
+    const [autosave] = useState(() => new SerializedAutosave());
     const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onDismissRef = useRef<(() => void) | undefined>(undefined);
 
@@ -148,29 +149,21 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       if (!mealPlanRecipeToEdit || !selectedRecipe) return;
 
       const snapshot = getSnapshot(selectedRecipe.id, mealTag, selectedDate);
-      if (snapshot === lastSyncedSnapshotRef.current) return;
-
-      updateMealPlanRecipe(
-        {
-          mealPlanRecipeId: mealPlanRecipeToEdit.id,
-          updates: {
-            recipeId: selectedRecipe.id,
-            mealTag,
-            servings: 1,
-            date: selectedDate,
-          },
-        },
-        {
-          onSuccess: () => {
-            lastSyncedSnapshotRef.current = snapshot;
-            setPersistedRecipeId(selectedRecipe.id);
-          },
-          onError: () => {
-            toast.error('Failed to update meal');
-          },
-        }
-      );
+      void autosave
+        .save(snapshot, async () => {
+          await updateMealPlanRecipe({
+            mealPlanRecipeId: mealPlanRecipeToEdit.id,
+            updates: {
+              recipeId: selectedRecipe.id,
+              mealTag,
+              date: selectedDate,
+            },
+          });
+          setPersistedRecipeId(selectedRecipe.id);
+        })
+        .catch(() => toast.error('Failed to update meal'));
     }, [
+      autosave,
       getSnapshot,
       mealPlanRecipeToEdit,
       mealTag,
@@ -204,10 +197,12 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         setPersistedRecipeId(recipe.id);
         setMealTag(mealPlanRecipe.mealTag ?? undefined);
         onDismissRef.current = onDismiss;
-        lastSyncedSnapshotRef.current = getSnapshot(
-          recipe.id,
-          mealPlanRecipe.mealTag ?? undefined,
-          mealPlanRecipe.date
+        autosave.reset(
+          getSnapshot(
+            recipe.id,
+            mealPlanRecipe.mealTag ?? undefined,
+            mealPlanRecipe.date
+          )
         );
         changeRecipeSheetRef.current?.dismiss();
         sheetRef.current?.present();
@@ -224,7 +219,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       setMealTag(undefined);
       setMealPlanRecipeToEdit(null);
       setPersistedRecipeId(null);
-      lastSyncedSnapshotRef.current = null;
+      void autosave.stop();
       changeRecipeSheetRef.current?.dismiss();
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
@@ -232,7 +227,10 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       }
     };
 
-    const handleSheetDismiss = () => {
+    const handleSheetDismiss = async () => {
+      const session = editorSessionRef.current;
+      await autosave.flush();
+      if (session !== editorSessionRef.current) return;
       const onDismiss = onDismissRef.current;
       onDismissRef.current = undefined;
       resetState();
@@ -257,7 +255,8 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           {
             text: 'Delete',
             style: 'destructive',
-            onPress: () => {
+            onPress: async () => {
+              await autosave.stop();
               removeRecipeFromMealPlan(
                 { mealPlanRecipeId },
                 {
@@ -311,6 +310,9 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     useEffect(() => {
       if (!mealPlanRecipeToEdit || !selectedRecipe) return;
       scheduleAutoSave();
+      return () => {
+        if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+      };
     }, [mealPlanRecipeToEdit, scheduleAutoSave, selectedRecipe]);
 
     const selectedRecipeWithIngredients =

@@ -217,3 +217,8 @@ describe('bulk mode lifecycle behavior', () => {
     expect(state.selectedItemIds.size).toBe(0);
   });
 });
+
+// These fixtures exercise the legacy writer, regardless of release environment.
+vi.mock('@/features/quantity/config', () => ({
+  quantityWorkspaceAvailable: () => false,
+}));
