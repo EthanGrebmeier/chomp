@@ -6,10 +6,12 @@ import Animated, {
   FadeOut,
   LayoutAnimationConfig,
 } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDebounceCallback } from 'usehooks-ts';
 
 import { SearchButton } from '@/components/ui/search-button';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
+import { RecipeBookSurface } from '@/features/recipes/components/recipe-book-surface';
 import { RecipeFilters } from '@/features/recipes/components/recipe-filters';
 import { RecipeList } from '@/features/recipes/components/recipe-list';
 import { RecipeListSkeleton } from '@/features/recipes/components/recipe-list-skeleton';
@@ -133,12 +135,16 @@ export default function Recipes() {
           >
             <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
               {hasFilteredEmptyState ? (
-                <View className="flex-1 items-center justify-center px-4">
-                  <EmptyHeading>No recipes found</EmptyHeading>
-                  <EmptySubtext>
-                    Try adjusting your search or filters.
-                  </EmptySubtext>
-                </View>
+                <SafeAreaView edges={['bottom']} className="flex-1">
+                  <RecipeBookSurface>
+                    <View className="flex-1 items-center justify-center px-4">
+                      <EmptyHeading>No recipes found</EmptyHeading>
+                      <EmptySubtext>
+                        Try adjusting your search or filters.
+                      </EmptySubtext>
+                    </View>
+                  </RecipeBookSurface>
+                </SafeAreaView>
               ) : (
                 <RecipeList recipes={filteredRecipes} listId={listId} />
               )}
