@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { initialOperations } from '../fixtures';
+import { groceryProjection } from '../app/projection';
 import {
   addRecipe,
   editMealIngredient,
@@ -388,4 +389,69 @@ describe('persistent contribution contract', () => {
     ).toEqual([null, null, null, null, null]);
     expect(normalize('  fl   OZ ')).toBe('fl oz');
   });
+});
+
+it('hides rows emptied by meal removal or deselection but retains explicit zero quantities', () => {
+  const f = fixture();
+  f.apply(
+    scheduleMeal(
+      f.state,
+      f.id,
+      {
+        listId: f.row.listId,
+        recipeId: null,
+        name: 'Unique meal',
+        date: '2026-10-25',
+        mealTag: '',
+        servings: 1,
+      },
+      [
+        {
+          id: 'unique-source',
+          name: 'Unique avocado',
+          quantity: 1,
+          unit: 'each',
+          notes: '',
+          category: '',
+          store: '',
+        },
+      ]
+    )
+  );
+  const meal = records(f.state, 'meal').find(m => m.name === 'Unique meal')!;
+  const row = groceryProjection(f.state).find(
+    r => r.name === 'Unique avocado'
+  )!;
+  expect(row.quantity).toBe(1);
+  f.apply(
+    editMealIngredient(f.state, f.id, meal.id, meal.ingredients[0].id, {
+      quantity: 0,
+    })
+  );
+  expect(groceryProjection(f.state).find(r => r.id === row.id)?.quantity).toBe(
+    0
+  );
+  f.apply(
+    editMealIngredient(f.state, f.id, meal.id, meal.ingredients[0].id, {
+      selected: false,
+    })
+  );
+  expect(groceryProjection(f.state).find(r => r.id === row.id)).toBeUndefined();
+  f.apply(
+    editMealIngredient(f.state, f.id, meal.id, meal.ingredients[0].id, {
+      selected: true,
+      quantity: 1,
+    })
+  );
+  expect(
+    groceryProjection(f.state).find(r => r.name === 'Unique avocado')?.quantity
+  ).toBe(1);
+  f.apply(removeMeal(f.state, f.id, meal.id));
+  expect(
+    groceryProjection(f.state).find(r => r.name === 'Unique avocado')
+  ).toBeUndefined();
+  expect(f.state.conflicts).toEqual([]);
+  expect(
+    groceryProjection(f.state).find(r => r.id === f.row.id)?.quantity
+  ).toBe(5);
 });

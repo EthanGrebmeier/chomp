@@ -17,6 +17,7 @@ import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { useUpdateMealPlanItem } from '../hooks/useUpdateMealPlanItem';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
 import { MealPlanItemWithStore } from '../types';
+import { SerializedAutosave } from '../utils/serialized-autosave';
 import { getMealPlanShoppingState } from '../utils/shopping-state';
 import {
   countUncheckedLinkedGroceryItems,
@@ -46,10 +47,12 @@ const EditItemSheetContent = ({
   itemToEdit,
   onClose,
   inputRef,
+  beforeRemove,
 }: EditItemSheetProps & {
   itemToEdit: MealPlanItemWithStore;
   onClose: () => void;
   inputRef: React.RefObject<TextInput | null>;
+  beforeRemove: () => Promise<void>;
 }) => {
   const {
     itemName,
@@ -103,7 +106,8 @@ const EditItemSheetContent = ({
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            await beforeRemove();
             removeItemFromMealPlan(
               {
                 mealPlanItemId: itemToEdit.id,
@@ -221,8 +225,8 @@ const EditItemSheetContainer = ({
     mealTag,
   } = useMealPlanItem();
   const itemInputRef = useRef<TextInput>(null);
-  const { mutate: updateMealPlanItem } = useUpdateMealPlanItem();
-  const lastSyncedSnapshotRef = useRef<string | null>(null);
+  const { mutateAsync: updateMealPlanItem } = useUpdateMealPlanItem();
+  const [autosave] = useState(() => new SerializedAutosave());
   const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const persistChanges = useCallback(() => {
@@ -239,23 +243,16 @@ const EditItemSheetContainer = ({
     };
     if (!updates.name) return;
     const snapshot = getSnapshot(updates);
-    if (snapshot === lastSyncedSnapshotRef.current) return;
-
-    updateMealPlanItem(
-      {
-        mealPlanItemId: itemToEdit.id,
-        updates,
-      },
-      {
-        onSuccess: () => {
-          lastSyncedSnapshotRef.current = snapshot;
-        },
-        onError: () => {
-          toast.error('Failed to update item');
-        },
-      }
-    );
+    void autosave
+      .save(snapshot, () =>
+        updateMealPlanItem({
+          mealPlanItemId: itemToEdit.id,
+          updates,
+        })
+      )
+      .catch(() => toast.error('Failed to update item'));
   }, [
+    autosave,
     itemToEdit,
     selectedDate,
     getItemName,
@@ -279,17 +276,22 @@ const EditItemSheetContainer = ({
 
   useEffect(() => {
     if (!itemToEdit) return;
-    lastSyncedSnapshotRef.current = getSnapshot({
-      name: itemToEdit.name.trim(),
-      quantity: itemToEdit.quantity,
-      unit: itemToEdit.unit,
-      notes: itemToEdit.notes?.trim() ? itemToEdit.notes.trim() : undefined,
-      category: itemToEdit.category ?? undefined,
-      storeId: itemToEdit.store?.id ?? undefined,
-      date: itemToEdit.date,
-      mealTag: itemToEdit.mealTag ?? undefined,
-    });
-  }, [itemToEdit]);
+    autosave.reset(
+      getSnapshot({
+        name: itemToEdit.name.trim(),
+        quantity: itemToEdit.quantity,
+        unit: itemToEdit.unit,
+        notes: itemToEdit.notes?.trim() ? itemToEdit.notes.trim() : undefined,
+        category: itemToEdit.category ?? undefined,
+        storeId: itemToEdit.store?.id ?? undefined,
+        date: itemToEdit.date,
+        mealTag: itemToEdit.mealTag ?? undefined,
+      })
+    );
+    return () => {
+      void autosave.stop();
+    };
+  }, [autosave, itemToEdit]);
 
   useEffect(() => {
     updateTimeoutRef.current = setTimeout(persistChanges, 350);
@@ -314,7 +316,10 @@ const EditItemSheetContainer = ({
       onWillPresent={() => itemInputRef.current?.focus()}
       onWillFocus={() => itemInputRef.current?.focus()}
       onWillDismiss={flushAutoSave}
-      onDidDismiss={onReset}
+      onDidDismiss={async () => {
+        await autosave.flush();
+        onReset();
+      }}
     >
       {itemToEdit ? (
         <EditItemSheetContent
@@ -322,6 +327,7 @@ const EditItemSheetContainer = ({
           itemToEdit={itemToEdit}
           onClose={onClose}
           inputRef={itemInputRef}
+          beforeRemove={() => autosave.stop()}
         />
       ) : null}
     </TrueSheet>

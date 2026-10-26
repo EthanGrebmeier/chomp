@@ -14,7 +14,12 @@ import type { Meal, PlannedIngredient } from '../types';
 
 import { ingredientFromApp, recipeFromApp } from './initialize';
 import { snapshotProjection } from './projection';
-import { changeDocument, documentSession, listSession } from './session';
+import {
+  changeDocument,
+  documentSession,
+  listSession,
+  sendAndObserveListOperation,
+} from './session';
 import { chooseItemDestinations } from './store-review';
 
 export async function planQuantityRecipe(args: AddRecipeToDateArgs) {
@@ -67,7 +72,10 @@ export async function planQuantityRecipe(args: AddRecipeToDateArgs) {
   tx.put(recipe);
   tx.put(meal);
   syncMeal(tx, id, meal, destinations);
-  await session.send(tx.build(id(), `Plan ${meal.name}`));
+  await sendAndObserveListOperation(
+    args.listId,
+    tx.build(id(), `Plan ${meal.name}`)
+  );
   return { id: meal.id };
 }
 export async function planQuantityItem(args: AddItemToDateArgs) {
@@ -95,7 +103,10 @@ export async function planQuantityItem(args: AddItemToDateArgs) {
   const tx = new QuantityTransaction(session.state);
   tx.put(meal);
   syncMeal(tx, id, meal, destinations);
-  await session.send(tx.build(id(), `Plan ${meal.name}`));
+  await sendAndObserveListOperation(
+    args.listId,
+    tx.build(id(), `Plan ${meal.name}`)
+  );
   return { id: meal.id };
 }
 export function updateQuantityItem({
@@ -177,12 +188,14 @@ export async function updateQuantityMeal({
     tx.put(recipe);
     tx.put(replacement);
     syncMeal(tx, id, replacement, choices);
-    await session.send(
+    await sendAndObserveListOperation(
+      session.listId,
       tx.build(id(), `Replace planned meal with ${recipe.name}`)
     );
     return;
   }
-  await session.send(
+  await sendAndObserveListOperation(
+    session.listId,
     editMealSchedule(session.state, id, mealPlanRecipeId, {
       date: updates.date ?? meal.date,
       mealTag: updates.mealTag ?? meal.mealTag,
@@ -238,7 +251,10 @@ export async function selectQuantityIngredients(
   tx.require(meal);
   tx.put(updated);
   syncMeal(tx, id, updated, choices);
-  await session.send(tx.build(id(), `Select ingredients for ${meal.name}`));
+  await sendAndObserveListOperation(
+    session.listId,
+    tx.build(id(), `Select ingredients for ${meal.name}`)
+  );
 }
 export function selectQuantityIngredient(
   snapshotRowId: string,
@@ -294,5 +310,8 @@ export async function overrideQuantityIngredient({
   };
   tx.put(updated);
   syncMeal(tx, id, updated);
-  await session.send(tx.build(id(), `Edit ingredient in ${meal.name}`));
+  await sendAndObserveListOperation(
+    session.listId,
+    tx.build(id(), `Edit ingredient in ${meal.name}`)
+  );
 }
