@@ -51,6 +51,8 @@ export const THEME = {
     categoryTealForeground: 'oklch(0.4 0.051 190)',
     categoryTealSolid: 'oklch(0.68 0.094 190)',
     categoryTealSurface: 'oklch(0.82 0.071 190)',
+    recipePressed: 'hsl(18 20% 92%)',
+    recipeSurface: 'hsl(18 25% 96%)',
   },
   dark: {
     background: 'hsl(257 6% 8%)',
@@ -102,6 +104,8 @@ export const THEME = {
     categoryTealForeground: 'oklch(0.82 0.105 190)',
     categoryTealSolid: 'oklch(0.72 0.099 190)',
     categoryTealSurface: 'oklch(0.3 0.022 190)',
+    recipePressed: 'hsl(250 5% 16%)',
+    recipeSurface: 'hsl(250 5% 12%)',
   },
 };
 
