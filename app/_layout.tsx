@@ -30,6 +30,7 @@ import {
   InstantAuthHandler,
   useInstantAuthState,
 } from '@/lib/instant/use-clerk-auth';
+import { scheduleSplashHide } from '@/lib/schedule-splash-hide';
 import { useStartupEasUpdate } from '@/lib/use-startup-eas-update';
 import {
   MigrationProvider,
@@ -220,16 +221,13 @@ function RootLayoutContent({
       areFontsReady &&
       (isMigrationErrorVisible || isAppReady);
 
-    if (!canHideSplash || hasHiddenSplashRef.current) {
+    if (!canHideSplash) {
       return;
     }
 
-    hasHiddenSplashRef.current = true;
-    const timeoutId = setTimeout(hideSplashScreen, 300);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
+    return scheduleSplashHide(hasHiddenSplashRef, () => {
+      void hideSplashScreen();
+    });
   }, [
     fontLoadError,
     fontsLoaded,
