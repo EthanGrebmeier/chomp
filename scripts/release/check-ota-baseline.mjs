@@ -5,6 +5,7 @@ const target = JSON.parse(readFileSync('release-target.json', 'utf8'));
 const baselines = {
   '1.0.5': 'ota/1.0.5/2026-10-21-settings-cleanup',
   '1.0.6': 'ota/1.0.6/2026-10-21-settings-cleanup',
+  '1.0.7': 'runtime/1.0.7/build-62-ota-baseline',
 };
 const baseline = baselines[target.version];
 if (target.kind !== 'ota' || !baseline) {

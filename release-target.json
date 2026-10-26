@@ -1,7 +1,7 @@
 {
   "version": "1.0.7",
-  "kind": "native",
-  "baseCommit": "5cc2ca4343126152b5e3e61c9aa1c46299666111",
+  "kind": "ota",
+  "baseCommit": "9475c74a6ebc3f29e3578e58208c837960e55725",
   "targetAppId": "5df33e29-252b-4e1c-a111-53787beccba3",
   "appConfigSha256": "6ca6896f4ec71c93590ba8f3c58866d354e7cc80dabb5c9eee03e57e7e0ff672",
   "reanimatedSha256": "13754b31faee1b1a589a4a53db67ae31c2183bcce3f53f33ba3d9ab29bef1029",

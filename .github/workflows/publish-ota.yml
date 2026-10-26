@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       release_branch:
-        description: Supported native runtime branch
+        description: Native runtime branch (1.0.7 is TestFlight only)
         type: choice
-        options: [release/1.0.5, release/1.0.6]
+        options: [release/1.0.5, release/1.0.6, release/1.0.7]
         required: true
       commit:
         description: Full reviewed commit SHA at the head of that branch
