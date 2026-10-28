@@ -1,6 +1,4 @@
 import * as Haptics from 'expo-haptics';
-
-import { cn } from '@/lib/utils';
 import {
   createContext,
   use,
@@ -30,6 +28,8 @@ import {
   type DropProviderRef,
 } from 'react-native-reanimated-dnd';
 import { toast } from 'sonner-native';
+
+import { cn } from '@/lib/utils';
 
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Text } from '../../../components/ui/text';
@@ -454,14 +454,28 @@ export const MealPlanDateView = ({
   // first scroll, so they visibly pop in. Instead, the past days render up
   // front and we scroll to today once its real position is measured.
   const hasScrolledToTodayRef = useRef(false);
-  const handleDayCellLayout = (index: number, event: LayoutChangeEvent) => {
-    if (hasScrolledToTodayRef.current || index !== todaySectionIndex) return;
+  const todayOffset = useRef<number | null>(null);
+  const viewportHeight = useRef(0);
+  const contentHeight = useRef(0);
+  const scrollToTodayWhenMeasured = () => {
+    if (hasScrolledToTodayRef.current || todaySectionIndex <= 0) return;
+    const offset = todayOffset.current;
+    // On first activation, cell layout can arrive before the list's content
+    // size. Scrolling then clamps to zero and loses the intended today offset.
+    if (
+      offset === null ||
+      offset <= 0 ||
+      viewportHeight.current <= 0 ||
+      contentHeight.current < offset + viewportHeight.current
+    )
+      return;
     hasScrolledToTodayRef.current = true;
-    if (index <= 0) return;
-    dayListRef.current?.scrollToOffset({
-      offset: event.nativeEvent.layout.y,
-      animated: false,
-    });
+    dayListRef.current?.scrollToOffset({ offset, animated: false });
+  };
+  const handleDayCellLayout = (index: number, event: LayoutChangeEvent) => {
+    if (index !== todaySectionIndex) return;
+    todayOffset.current = event.nativeEvent.layout.y;
+    scrollToTodayWhenMeasured();
   };
 
   // Scroll to a requested day (from a linked grocery item). Days outside the
@@ -518,8 +532,16 @@ export const MealPlanDateView = ({
             }
             windowSize={5}
             CellRendererComponent={MealPlanDayCell}
-            onLayout={refreshDragDropPositions}
-            onContentSizeChange={refreshDragDropPositions}
+            onLayout={event => {
+              viewportHeight.current = event.nativeEvent.layout.height;
+              scrollToTodayWhenMeasured();
+              refreshDragDropPositions();
+            }}
+            onContentSizeChange={(_width, height) => {
+              contentHeight.current = height;
+              scrollToTodayWhenMeasured();
+              refreshDragDropPositions();
+            }}
             onMomentumScrollEnd={refreshDragDropPositions}
             onScrollEndDrag={refreshDragDropPositions}
             onScrollToIndexFailed={handleScrollToIndexFailed}
