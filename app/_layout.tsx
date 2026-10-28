@@ -30,8 +30,13 @@ import {
   InstantAuthHandler,
   useInstantAuthState,
 } from '@/lib/instant/use-clerk-auth';
+import { scheduleAfterPaint } from '@/lib/schedule-after-paint';
 import { scheduleSplashHide } from '@/lib/schedule-splash-hide';
 import { hasReachedStartupRoute } from '@/lib/startup-route';
+import {
+  markSplashDismissed,
+  StartupScreenReadyContext,
+} from '@/lib/startup-screen-ready';
 import { useStartupEasUpdate } from '@/lib/use-startup-eas-update';
 import {
   MigrationProvider,
@@ -79,6 +84,15 @@ function InitialLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen
+          name="purchased-items"
+          options={{
+            presentation: 'card',
+            gestureEnabled: true,
+            animation: reducedMotion ? 'fade' : 'default',
+            contentStyle: { backgroundColor: theme.background },
+          }}
+        />
         <Stack.Screen
           name="shopping"
           options={{
@@ -193,6 +207,9 @@ function RootLayoutContent({
   const segments = useSegments();
   const colorscheme = useColorScheme();
   const hasHiddenSplashRef = useRef(false);
+  const [isScreenReady, setIsScreenReady] = useState(false);
+  const splashPaintCleanup = useRef<(() => void) | undefined>(undefined);
+  useEffect(() => () => splashPaintCleanup.current?.(), []);
   const [migrationStatus, setMigrationStatus] =
     useState<MigrationStatus | null>(null);
   const handleMigrationStatusChange = useCallback((status: MigrationStatus) => {
@@ -225,9 +242,23 @@ function RootLayoutContent({
       return;
     }
 
-    return scheduleSplashHide(hasHiddenSplashRef, () => {
-      void hideSplashScreen();
-    });
+    // Other routes own their loading UI. For the initial grocery screen, wait
+    // for the persisted outbox and fresh access verification as well as items.
+    const isGroceryScreen =
+      topLevelSegment === '(tabs)' && segments.length === 1;
+    return scheduleSplashHide(
+      hasHiddenSplashRef,
+      () => {
+        void hideSplashScreen().then(() => {
+          // hideAsync dispatches a native hide; it is not an animation-complete
+          // callback. Wait for paint before permitting planner preloading.
+          splashPaintCleanup.current = scheduleAfterPaint(() =>
+            markSplashDismissed()
+          );
+        });
+      },
+      isGroceryScreen && !isScreenReady && !isMigrationErrorVisible ? 5000 : 0
+    );
   }, [
     fontLoadError,
     fontsLoaded,
@@ -235,6 +266,7 @@ function RootLayoutContent({
     isReconciled,
     isSignedInWithClerk,
     isStartupUpdateReady,
+    isScreenReady,
     migrationStatus,
     rootNavigationState?.key,
     segments,
@@ -242,38 +274,36 @@ function RootLayoutContent({
   ]);
 
   return (
-    <ThemeProvider value={colorscheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <ClerkProvider
-        __experimental_resourceCache={resourceCache}
-        tokenCache={tokenCache}
-        publishableKey={publishableKey}
-      >
-        <QueryClientProvider>
-          <KeyboardProvider>
-            <MigrationProvider onStatusChange={handleMigrationStatusChange}>
-              <SafeAreaProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <QuantityAppProvider>
-                    <InitialLayout />
-                  </QuantityAppProvider>
-                  <InstantAuthHandler />
-                  <PortalHost />
-                </GestureHandlerRootView>
-              </SafeAreaProvider>
-            </MigrationProvider>
-          </KeyboardProvider>
-        </QueryClientProvider>
-      </ClerkProvider>
-    </ThemeProvider>
+    <StartupScreenReadyContext.Provider value={setIsScreenReady}>
+      <ThemeProvider value={colorscheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ClerkProvider
+          __experimental_resourceCache={resourceCache}
+          tokenCache={tokenCache}
+          publishableKey={publishableKey}
+        >
+          <QueryClientProvider>
+            <KeyboardProvider>
+              <MigrationProvider onStatusChange={handleMigrationStatusChange}>
+                <SafeAreaProvider>
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <QuantityAppProvider>
+                      <InitialLayout />
+                    </QuantityAppProvider>
+                    <InstantAuthHandler />
+                    <PortalHost />
+                  </GestureHandlerRootView>
+                </SafeAreaProvider>
+              </MigrationProvider>
+            </KeyboardProvider>
+          </QueryClientProvider>
+        </ClerkProvider>
+      </ThemeProvider>
+    </StartupScreenReadyContext.Provider>
   );
 }
 
 export default function RootLayout() {
   const { isReady: isStartupUpdateReady } = useStartupEasUpdate();
-
-  if (!isStartupUpdateReady) {
-    return null;
-  }
 
   return (
     <QuantitySessionGate>

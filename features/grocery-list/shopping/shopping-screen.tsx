@@ -117,6 +117,7 @@ export function ShoppingScreen({
                 isLoading={isLoading}
                 groupBy="category"
                 sortBy="name"
+                rowPressAction="toggleChecked"
                 hideOrganizationTags
               />
             ) : (

@@ -13,11 +13,13 @@ import { useDeleteGroceryList } from '@/features/grocery-lists/instant/useDelete
 import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
 import { useLeaveGroceryList } from '@/features/grocery-lists/instant/useLeaveGroceryList';
 import { useTrackListAccess } from '@/features/grocery-lists/local/use-track-list-access';
-import { MealPlanner } from '@/features/meal-planner/components';
+import { PreloadedMealPlanner } from '@/features/meal-planner/components/preloaded-meal-planner';
 import { type MealPlanFocusRequest } from '@/features/meal-planner/types';
+import { useQuantityList } from '@/features/quantity/app/session';
 import { QuantityListStatus } from '@/features/quantity/app/status';
 import { db } from '@/lib/instant';
 import { buildGroceryListsIndexUrl } from '@/lib/navigation';
+import { useStartupScreenReady } from '@/lib/startup-screen-ready';
 
 import { useSettings } from '../../features/grocery-list/hooks/useSettings';
 
@@ -118,6 +120,12 @@ export default function List() {
   // Items load per list; keep <GroceryList> mounted across list switches and
   // let it render a quiet list area instead of tearing down to the skeleton.
   const isLoading = listsLoading || settingsLoading;
+  const quantity = useQuantityList(activeListId);
+  useStartupScreenReady(
+    Boolean(listsError) ||
+      (!isLoading &&
+        (!activeListId || quantity.canEdit || Boolean(quantity.error)))
+  );
 
   const handleViewChange = useCallback(
     (nextView: ListView) => {
@@ -200,9 +208,13 @@ export default function List() {
               onOpenMealPlanDate={handleOpenMealPlanDate}
               alternateContent={
                 activeListId ? (
-                  <MealPlanner
+                  <PreloadedMealPlanner
+                    key={activeListId}
                     listId={activeListId}
-                    showHeader={false}
+                    isActive={activeView === 'meal-plan'}
+                    isListReady={
+                      !isLoading && !itemsLoading && quantity.canEdit
+                    }
                     focusRequest={mealPlanFocusRequest}
                   />
                 ) : null

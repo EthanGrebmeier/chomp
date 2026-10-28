@@ -28,6 +28,7 @@ type GroceryItemsListProps = {
   items: GroceryListItemWithRecipe[];
   totalItemCount: number;
   hideOrganizationTags?: boolean;
+  rowPressAction?: 'edit' | 'toggleChecked';
   /** True while the list's items are still being fetched. */
   isLoading?: boolean;
   groupBy: GroceryListGroupBy;
@@ -79,6 +80,7 @@ export const GroceryItemsList = ({
   items,
   totalItemCount,
   hideOrganizationTags = false,
+  rowPressAction = 'edit',
   isLoading = false,
   groupBy,
   sortBy,
@@ -414,7 +416,8 @@ export const GroceryItemsList = ({
           hideOrganizationTags={hideOrganizationTags}
           categoryOptions={categoryOptions}
           isChecked={Boolean(item.item.isChecked)}
-          onEdit={presentEditSheet}
+          rowPressAction={rowPressAction}
+          onEdit={rowPressAction === 'edit' ? presentEditSheet : undefined}
           isBulkSelectionModeActive={isBulkSelectionModeActive}
           isBulkSelected={selectedBulkItemIds.has(item.item.id)}
           onToggleBulkSelection={onToggleBulkSelectionItem}
@@ -425,6 +428,7 @@ export const GroceryItemsList = ({
     [
       categoryOptions,
       hideOrganizationTags,
+      rowPressAction,
       isBulkSelectionModeActive,
       onEnterBulkSelectionModeWithItem,
       onToggleBulkSelectionItem,

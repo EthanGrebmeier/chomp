@@ -13,6 +13,7 @@ import { GroceryListDropdownMenu } from './dropdown-menu';
 import { ListFilterDropdownMenu } from './list-filter-dropdown-menu';
 
 type GroceryListActionsProps = {
+  onPurchasedItems: () => void;
   onStartShopping: () => void;
   canStartShopping: boolean;
   items: GroceryListItemWithRecipe[];
@@ -33,6 +34,7 @@ type GroceryListActionsProps = {
 };
 
 export function GroceryListActions({
+  onPurchasedItems,
   onStartShopping,
   canStartShopping,
   items,
@@ -71,6 +73,7 @@ export function GroceryListActions({
         onCollapseAllGroupings={onCollapseAllGroupings}
       />
       <GroceryListDropdownMenu
+        onPurchasedItems={onPurchasedItems}
         onStartShopping={onStartShopping}
         canStartShopping={canStartShopping}
         items={items}
