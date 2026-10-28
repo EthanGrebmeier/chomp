@@ -11,6 +11,8 @@ export type ShoppingRow = {
   store: string;
   status: 'active' | 'checked' | 'deleted';
   createdAt?: string;
+  /** Null marks a purchase whose date predates purchase tracking. */
+  purchasedAt?: string | null;
   savedItemId?: string;
 };
 export type Ingredient = {

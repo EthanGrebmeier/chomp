@@ -1,0 +1,444 @@
+{
+  "date": "2026-10-27",
+  "environment": "iPhone 17 Pro simulator, iOS 26.5, Expo development build using Metro; existing guest account",
+  "method": "Terminate and relaunch native process with existing storage. Temporary performance.now probes and a 16ms JS timer; local HTTP collection every 250ms. All instrumentation removed afterward. Times are relative to root-layout instrumentation module evaluation, NOT process start.",
+  "result": "Not verified interactive at the exact instant the splash becomes visually absent. Data/edit readiness precedes hideAsync resolution, but post-hide JS timer stalls occur on every run.",
+  "limitations": [
+    "hideAsync resolution is not a measurement of the final native splash animation frame.",
+    "Two empty-list runs and one single-item run; not representative of a large list.",
+    "UI interactions happened 12\u201316 seconds after hide, not at the exact dismissal boundary.",
+    "Profiler websocket closed before CPU samples could be collected; these are timing and event-loop traces, not CPU profiles.",
+    "Development mode, simulator and instrumentation add overhead; physical release-build timing remains unverified."
+  ],
+  "interactions": [
+    "Meal Plan tab visibly selected after click in run 1.",
+    "Add Item sheet opened and text input accepted a labeled profiling item in run 2.",
+    "Profiling item checkbox visibly changed to checked in run 3."
+  ],
+  "runs": [
+    {
+      "run": 1,
+      "itemsAtStartup": 0,
+      "listEditableMs": 2149.11,
+      "splashHideResolvedMs": 2423.12,
+      "plannerMountedMs": 2320.27,
+      "largestTimerDelayFirstTwoSecondsAfterHideMs": 80.76,
+      "raw": {
+        "marks": [
+          {
+            "name": "instrumentation-start",
+            "time": 1615508604.345916,
+            "wall": 1793157825552
+          },
+          {
+            "name": "list-state",
+            "time": 1615509847.582375,
+            "wall": 1793157826795,
+            "details": {
+              "isLoading": true,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 0,
+              "hasList": false,
+              "error": false
+            }
+          },
+          {
+            "name": "planner-mounted",
+            "time": 1615509847.58925,
+            "wall": 1793157826795,
+            "details": {
+              "mounted": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1615510112.700083,
+            "wall": 1793157827060,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 0,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1615510753.445666,
+            "wall": 1793157827701,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": true,
+              "itemCount": 0,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "planner-mounted",
+            "time": 1615510924.612666,
+            "wall": 1793157827872,
+            "details": {
+              "mounted": true
+            }
+          },
+          {
+            "name": "splash-hide-request",
+            "time": 1615511027.421625,
+            "wall": 1793157827975
+          },
+          {
+            "name": "splash-hide-resolved",
+            "time": 1615511027.464375,
+            "wall": 1793157827975
+          },
+          {
+            "name": "native-touch",
+            "time": 1615526761.363958,
+            "wall": 1793157843709,
+            "details": {
+              "timestamp": 1615526722.670374
+            }
+          },
+          {
+            "name": "view-press",
+            "time": 1615526790.278958,
+            "wall": 1793157843738,
+            "details": {
+              "view": "meal-plan"
+            }
+          }
+        ],
+        "stalls": [
+          {
+            "time": 1615509401.556916,
+            "delay": 781.2063748836517
+          },
+          {
+            "time": 1615510222.941166,
+            "delay": 639.0718328952789
+          },
+          {
+            "time": 1615511026.697166,
+            "delay": 293.37404108047485
+          },
+          {
+            "time": 1615511123.455916,
+            "delay": 80.75874996185303
+          },
+          {
+            "time": 1615511163.569166,
+            "delay": 24.113250017166138
+          },
+          {
+            "time": 1615526847.290416,
+            "delay": 47.122666120529175
+          }
+        ],
+        "started": 1615508604.339666
+      }
+    },
+    {
+      "run": 2,
+      "itemsAtStartup": 0,
+      "listEditableMs": 1711.36,
+      "splashHideResolvedMs": 2014.79,
+      "plannerMountedMs": 1916.95,
+      "largestTimerDelayFirstTwoSecondsAfterHideMs": 69.6,
+      "raw": {
+        "marks": [
+          {
+            "name": "instrumentation-start",
+            "time": 1615577119.98725,
+            "wall": 1793157894066
+          },
+          {
+            "name": "list-state",
+            "time": 1615578248.308541,
+            "wall": 1793157895195,
+            "details": {
+              "isLoading": true,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 0,
+              "hasList": false,
+              "error": false
+            }
+          },
+          {
+            "name": "planner-mounted",
+            "time": 1615578248.314041,
+            "wall": 1793157895195,
+            "details": {
+              "mounted": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1615578501.009625,
+            "wall": 1793157895447,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 0,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1615578831.341625,
+            "wall": 1793157895778,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": true,
+              "itemCount": 0,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "planner-mounted",
+            "time": 1615579036.936583,
+            "wall": 1793157895983,
+            "details": {
+              "mounted": true
+            }
+          },
+          {
+            "name": "splash-hide-request",
+            "time": 1615579134.723166,
+            "wall": 1793157896081
+          },
+          {
+            "name": "splash-hide-resolved",
+            "time": 1615579134.777083,
+            "wall": 1793157896081
+          },
+          {
+            "name": "native-touch",
+            "time": 1615591217.451125,
+            "wall": 1793157908163,
+            "details": {
+              "timestamp": 1615591193.165666
+            }
+          },
+          {
+            "name": "native-touch",
+            "time": 1615605237.951125,
+            "wall": 1793157922184,
+            "details": {
+              "timestamp": 1615605231.339541
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1615606136.799875,
+            "wall": 1793157923082,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": true,
+              "itemCount": 1,
+              "hasList": true,
+              "error": false
+            }
+          }
+        ],
+        "stalls": [
+          {
+            "time": 1615577723.181791,
+            "delay": 587.1910409927368
+          },
+          {
+            "time": 1615578652.813708,
+            "delay": 602.5122921466827
+          },
+          {
+            "time": 1615579134.511666,
+            "delay": 316.632040977478
+          },
+          {
+            "time": 1615579220.115416,
+            "delay": 69.60374999046326
+          },
+          {
+            "time": 1615579273.313708,
+            "delay": 23.36079216003418
+          },
+          {
+            "time": 1615579775.153666,
+            "delay": 25.115833044052124
+          },
+          {
+            "time": 1615591382.629583,
+            "delay": 116.09929180145264
+          },
+          {
+            "time": 1615599164.697416,
+            "delay": 31.071041107177734
+          },
+          {
+            "time": 1615605373.755166,
+            "delay": 56.757625102996826
+          },
+          {
+            "time": 1615606026.107833,
+            "delay": 225.72929191589355
+          },
+          {
+            "time": 1615606333.70525,
+            "delay": 291.59741711616516
+          },
+          {
+            "time": 1615606972.391833,
+            "delay": 88.62741708755493
+          },
+          {
+            "time": 1615607054.323,
+            "delay": 65.93116688728333
+          }
+        ],
+        "started": 1615577119.984125
+      }
+    },
+    {
+      "run": 3,
+      "itemsAtStartup": 1,
+      "listEditableMs": 1681.3,
+      "splashHideResolvedMs": 1952.87,
+      "plannerMountedMs": 1845.69,
+      "largestTimerDelayFirstTwoSecondsAfterHideMs": 95.76,
+      "raw": {
+        "marks": [
+          {
+            "name": "instrumentation-start",
+            "time": 1615619952.4685,
+            "wall": 1793157936898
+          },
+          {
+            "name": "list-state",
+            "time": 1615620953.600291,
+            "wall": 1793157937899,
+            "details": {
+              "isLoading": true,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 0,
+              "hasList": false,
+              "error": false
+            }
+          },
+          {
+            "name": "planner-mounted",
+            "time": 1615620953.605833,
+            "wall": 1793157937899,
+            "details": {
+              "mounted": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1615621206.798666,
+            "wall": 1793157938152,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 1,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1615621633.763625,
+            "wall": 1793157938579,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": true,
+              "itemCount": 1,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "planner-mounted",
+            "time": 1615621798.158458,
+            "wall": 1793157938743,
+            "details": {
+              "mounted": true
+            }
+          },
+          {
+            "name": "splash-hide-request",
+            "time": 1615621905.288666,
+            "wall": 1793157938851
+          },
+          {
+            "name": "splash-hide-resolved",
+            "time": 1615621905.331625,
+            "wall": 1793157938851
+          },
+          {
+            "name": "native-touch",
+            "time": 1615636091.068125,
+            "wall": 1793157953036,
+            "details": {
+              "timestamp": 1615636064.011083
+            }
+          }
+        ],
+        "stalls": [
+          {
+            "time": 1615620593.133333,
+            "delay": 624.6613750457764
+          },
+          {
+            "time": 1615621442.307125,
+            "delay": 742.2179591655731
+          },
+          {
+            "time": 1615621478.258166,
+            "delay": 19.951040983200073
+          },
+          {
+            "time": 1615621904.911208,
+            "delay": 338.2514579296112
+          },
+          {
+            "time": 1615622016.666375,
+            "delay": 95.75516700744629
+          },
+          {
+            "time": 1615622070.278333,
+            "delay": 20.344125032424927
+          },
+          {
+            "time": 1615636282.6145,
+            "delay": 132.26879215240479
+          },
+          {
+            "time": 1615636388.200375,
+            "delay": 54.729583978652954
+          },
+          {
+            "time": 1615636568.15625,
+            "delay": 117.83104205131531
+          },
+          {
+            "time": 1615637318.631041,
+            "delay": 34.8113751411438
+          }
+        ],
+        "started": 1615619952.465458
+      }
+    }
+  ]
+}

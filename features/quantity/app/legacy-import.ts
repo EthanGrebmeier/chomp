@@ -99,6 +99,7 @@ export function buildLegacyQuantityOperation(
           ? 'checked'
           : 'active',
       createdAt: item.createdAt,
+      ...(item.isChecked ? { purchasedAt: null } : {}),
       ...(item.saved_item ? { savedItemId: item.saved_item.id } : {}),
     });
     tx.put({

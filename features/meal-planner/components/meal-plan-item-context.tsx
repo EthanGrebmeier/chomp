@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
 import { TextInput } from 'react-native';
-import { useDebounceCallback } from 'usehooks-ts';
 
 import { normalizeUnit } from '../../../components/item-sheet/unit-utils';
 import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
@@ -47,8 +46,6 @@ const MealPlanItemContext = createContext<MealPlanItemContextValue | undefined>(
   undefined
 );
 
-const TEXT_COMMIT_DEBOUNCE_MS = 150;
-
 export type MealPlanItemInitialValues = {
   itemName?: string;
   itemNotes?: string;
@@ -93,10 +90,6 @@ export const MealPlanItemProvider = ({
     initialValues?.mealTag
   );
   const [showMatchingItems, setShowMatchingItems] = useState(false);
-  const commitItemNotes = useDebounceCallback(
-    setCommittedItemNotes,
-    TEXT_COMMIT_DEBOUNCE_MS
-  );
 
   const setItemName = (name: string) => {
     itemNameInput.handleChangeText(name);
@@ -106,14 +99,13 @@ export const MealPlanItemProvider = ({
 
   const setItemNotes = (notes: string) => {
     itemNotesInput.handleChangeText(notes);
-    commitItemNotes(notes);
+    setCommittedItemNotes(notes);
   };
 
   const resetState = (options?: {
     itemNameInputRef?: React.RefObject<TextInput | null>;
     keepMealContext?: boolean;
   }) => {
-    commitItemNotes.cancel();
     // For continuous add entry, clear the name field in place (setNativeProps)
     // instead of remounting via a key bump. Remounting the focused input
     // dismisses and re-opens the keyboard, causing a visible flicker. The

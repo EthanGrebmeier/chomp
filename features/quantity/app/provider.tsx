@@ -1,4 +1,5 @@
 import { id } from '@instantdb/react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState, useRef, type ReactNode } from 'react';
 import { toast } from 'sonner-native';
 
@@ -8,10 +9,13 @@ import { saveRecipe } from '../meals';
 import { records } from '../model';
 import { useQuantityWorkspace } from '../use-quantity-workspace';
 
+import { initializationCache } from './initialization-cache';
 import { recipeFromApp, ensureQuantityList } from './initialize';
 import { syncQuantitySavedItems } from './saved-items';
 import { publishListSession, emptyListSession } from './session';
 import { StoreReviewHost } from './store-review-sheet';
+
+const initializedLists = initializationCache(AsyncStorage);
 
 function Session({ listId, userId }: { listId: string; userId: string }) {
   const session = useQuantityWorkspace(listId, userId, syncQuantitySavedItems);
@@ -62,9 +66,24 @@ function Initialize({ listId, userId }: { listId: string; userId: string }) {
   const [attempt, setAttempt] = useState(0);
   const connection = db.useConnectionStatus();
   useEffect(() => {
-    if (connection !== 'authenticated') return;
     let active = true;
-    ensureQuantityList(listId, userId)
+    void initializedLists.has(listId, userId).then(cached => {
+      if (active && cached) setReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [listId, userId]);
+  useEffect(() => {
+    if (ready || connection !== 'authenticated') return;
+    let active = true;
+    initializedLists
+      .has(listId, userId)
+      .then(async cached => {
+        if (cached) return;
+        await ensureQuantityList(listId, userId);
+        await initializedLists.mark(listId, userId);
+      })
       .then(() => {
         if (active) setReady(true);
       })
@@ -82,7 +101,7 @@ function Initialize({ listId, userId }: { listId: string; userId: string }) {
     return () => {
       active = false;
     };
-  }, [connection, listId, userId, attempt]);
+  }, [connection, listId, userId, attempt, ready]);
   useEffect(() => () => publishListSession(listId, null), [listId]);
   return ready ? <Session listId={listId} userId={userId} /> : null;
 }
