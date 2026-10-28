@@ -30,6 +30,7 @@ type MealPlannerProps = {
   listName?: string;
   onViewListsPress?: () => void;
   showHeader?: boolean;
+  isActive?: boolean;
   /** Scrolls the requested day into view. */
   focusRequest?: MealPlanFocusRequest | null;
 };
@@ -39,8 +40,11 @@ export const MealPlanner = memo(function MealPlanner({
   listName,
   onViewListsPress,
   showHeader = true,
+  isActive = true,
   focusRequest,
 }: MealPlannerProps) {
+  const [hasBeenActive, setHasBeenActive] = useState(isActive);
+  if (isActive && !hasBeenActive) setHasBeenActive(true);
   const addToMealPlanSheet = useRef<AddToMealPlanSheetRef>(null);
   const editMealSheet = useRef<EditMealSheetRef>(null);
   const editItemSheet = useRef<EditItemSheetRef>(null);
@@ -118,6 +122,10 @@ export const MealPlanner = memo(function MealPlanner({
   const handleAddPress = () => {
     openAddSheetForDate(format(dateAnchor, 'yyyy-MM-dd'));
   };
+
+  // Warm the meal projection and day sections in the background. Native
+  // calendar/drag-drop layout and closed editors are not startup work.
+  if (!isActive && !hasBeenActive) return null;
 
   return (
     <View style={{ flex: 1 }}>
