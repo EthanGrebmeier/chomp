@@ -244,7 +244,8 @@ function RootLayoutContent({
 
     // Other routes own their loading UI. For the initial grocery screen, wait
     // for the persisted outbox and fresh access verification as well as items.
-    const isGroceryScreen = topLevelSegment === '(tabs)' && !segments[1];
+    const isGroceryScreen =
+      topLevelSegment === '(tabs)' && segments.length === 1;
     return scheduleSplashHide(
       hasHiddenSplashRef,
       () => {

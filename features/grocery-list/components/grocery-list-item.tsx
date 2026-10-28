@@ -201,7 +201,7 @@ const GroceryListItemComponent = ({
     }
 
     if (rowPressAction === 'toggleChecked') {
-      void onCheck(!animationTargetRef.current.isChecked);
+      void onCheck(!isChecked);
       return;
     }
 
