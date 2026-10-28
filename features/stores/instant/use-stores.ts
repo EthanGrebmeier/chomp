@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { db } from '../../../lib/instant';
 
 export const useStores = () => {
@@ -9,16 +11,21 @@ export const useStores = () => {
     },
   });
 
+  const stores = result.data?.stores;
+  const userId = user?.id;
+  const myStores = useMemo(
+    () =>
+      userId ? (stores?.filter(store => store.user?.id === userId) ?? []) : [],
+    [stores, userId]
+  );
+
   if (!user) {
     return {
-      data: [],
+      data: myStores,
       isLoading: false,
       error: null,
     };
   }
-
-  const myStores =
-    result.data?.stores?.filter(store => store.user?.id === user.id) ?? [];
 
   return {
     ...result,

@@ -1,5 +1,5 @@
 import { PlusIcon } from 'lucide-react-native';
-import { useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
@@ -9,7 +9,7 @@ import { formatQuantityUnit } from '@/components/item-sheet/unit-utils';
 import { StoreTag } from '@/components/store-tag';
 import { EmptyHeading } from '@/components/text/empty-heading';
 import { EmptySubtext } from '@/components/text/empty-subtext';
-import { GestureHapticPressable } from '@/components/ui/haptic-pressable';
+import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
 import { Text } from '@/components/ui/text';
@@ -35,11 +35,11 @@ type FrequentItemRowProps = {
   onAdd: (item: FrequentItem) => void;
 };
 
-const FrequentItemRow = ({
+const FrequentItemRow = memo(function FrequentItemRow({
   item,
   categoryOptions,
   onAdd,
-}: FrequentItemRowProps) => {
+}: FrequentItemRowProps) {
   const notes = item.notes?.trim();
   const compactTextStyle = Platform.select({
     android: { includeFontPadding: false },
@@ -48,7 +48,7 @@ const FrequentItemRow = ({
 
   return (
     <ListItem>
-      <GestureHapticPressable
+      <HapticPressable
         accessibilityRole="button"
         accessibilityLabel={`Add ${item.name} to grocery list`}
         className="mr-1 size-5 items-center justify-center rounded-md border border-border"
@@ -62,9 +62,9 @@ const FrequentItemRow = ({
           size={14}
           strokeWidth={2.5}
         />
-      </GestureHapticPressable>
+      </HapticPressable>
 
-      <GestureHapticPressable
+      <HapticPressable
         accessibilityRole="button"
         accessibilityLabel={`Add ${item.name} to grocery list`}
         className="flex-1 gap-1 py-1"
@@ -103,10 +103,10 @@ const FrequentItemRow = ({
             Added {item.count} times
           </Text>
         </View>
-      </GestureHapticPressable>
+      </HapticPressable>
     </ListItem>
   );
-};
+});
 
 const FrequentItemsSkeleton = () => (
   <View style={{ minHeight: 500 }}>
@@ -131,55 +131,58 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
     [frequentItems, pendingNames]
   );
 
-  const handleAdd = (item: FrequentItem) => {
-    if (pendingNamesRef.current.has(item.normalizedName)) {
-      return;
-    }
+  const handleAdd = useCallback(
+    (item: FrequentItem) => {
+      if (pendingNamesRef.current.has(item.normalizedName)) {
+        return;
+      }
 
-    pendingNamesRef.current.add(item.normalizedName);
-    setPendingNames(current => {
-      const next = new Set(current);
-      next.add(item.normalizedName);
-      return next;
-    });
+      pendingNamesRef.current.add(item.normalizedName);
+      setPendingNames(current => {
+        const next = new Set(current);
+        next.add(item.normalizedName);
+        return next;
+      });
 
-    setTimeout(() => {
-      const persistItem = async () => {
-        try {
-          const matchingStore =
-            stores.find(store => store.id === item.storeId) ??
-            stores.find(
-              store =>
-                !!item.storeName &&
-                normalizeGroceryItemName(store.name) ===
-                  normalizeGroceryItemName(item.storeName)
-            );
+      setTimeout(() => {
+        const persistItem = async () => {
+          try {
+            const matchingStore =
+              stores.find(store => store.id === item.storeId) ??
+              stores.find(
+                store =>
+                  !!item.storeName &&
+                  normalizeGroceryItemName(store.name) ===
+                    normalizeGroceryItemName(item.storeName)
+              );
 
-          await addGroceryListItem({
-            listId,
-            item: {
-              name: item.name,
-              quantity: item.quantity,
-              unit: item.unit,
-              category: item.category ?? undefined,
-              notes: item.notes ?? undefined,
-              storeId: matchingStore?.id,
-            },
-          });
-        } catch {
-          pendingNamesRef.current.delete(item.normalizedName);
-          setPendingNames(current => {
-            const next = new Set(current);
-            next.delete(item.normalizedName);
-            return next;
-          });
-          toast.error(`Couldn't add ${item.name}`);
-        }
-      };
+            await addGroceryListItem({
+              listId,
+              item: {
+                name: item.name,
+                quantity: item.quantity,
+                unit: item.unit,
+                category: item.category ?? undefined,
+                notes: item.notes ?? undefined,
+                storeId: matchingStore?.id,
+              },
+            });
+          } catch {
+            pendingNamesRef.current.delete(item.normalizedName);
+            setPendingNames(current => {
+              const next = new Set(current);
+              next.delete(item.normalizedName);
+              return next;
+            });
+            toast.error(`Couldn't add ${item.name}`);
+          }
+        };
 
-      void persistItem();
-    }, 0);
-  };
+        void persistItem();
+      }, 0);
+    },
+    [listId, stores]
+  );
 
   return (
     <View className="min-h-0 flex-1 pb-6">
@@ -211,7 +214,8 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
           contentInset={{ bottom: safeAreaBottom + 24 }}
           data={visibleItems}
           keyExtractor={item => item.normalizedName}
-          renderItem={({ item, index }) => (
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => (
             <FrequentItemRow
               item={item}
               categoryOptions={categoryOptions}
