@@ -219,7 +219,13 @@ export function deleteRows(
   );
   for (const row of rows) {
     tx.requireEntries(row.id);
-    tx.put({ ...row, status: 'deleted' });
+    tx.put({
+      ...row,
+      status: 'deleted',
+      ...(row.status === 'checked'
+        ? { purchasedAt: row.purchasedAt ?? null }
+        : {}),
+    });
   }
   return tx.build(
     newId(),
@@ -231,7 +237,7 @@ export function checkRow(state: QuantityState, newId: NewId, rowId: string) {
   const tx = new QuantityTransaction(state);
   const row = activeRow(tx, rowId);
   tx.requireEntries(rowId);
-  tx.put({ ...row, status: 'checked' });
+  tx.put({ ...row, status: 'checked', purchasedAt: new Date().toISOString() });
   return tx.build(newId(), `Purchase ${row.name}`);
 }
 
