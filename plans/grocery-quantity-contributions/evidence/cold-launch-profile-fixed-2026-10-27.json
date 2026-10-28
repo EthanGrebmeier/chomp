@@ -1,0 +1,382 @@
+{
+  "date": "2026-10-27",
+  "environment": "iPhone 17 Pro simulator, iOS 26.5, Expo development build via Metro, existing guest account, one visible unchecked profiling item",
+  "method": "Three process-cold launches preserving app storage. Same 16 ms JS heartbeat and temporary performance.now probes as baseline, with local HTTP collection every 250 ms. No builds or tests running during samples. Times relative to instrumentation module evaluation, not process start. Only timer delays above 19 ms are recorded.",
+  "baselineEvidence": "cold-launch-profile-2026-10-27.json",
+  "changes": [
+    "Wait for list edit readiness, native splash hide dispatch, two animation frames, then idle time before preloading.",
+    "Keep splash notification and preload state outside the grocery-screen render path.",
+    "Warm meal data subscriptions and the prepared day sections; defer native calendar and closed editor creation until the planner is shown.",
+    "Retain the activated planner using React Activity so toggling views preserves state."
+  ],
+  "result": "All three final samples had list edit readiness before splash hide, preload after hide and paint, and zero recorded JS timer delays above 50 ms within the following five seconds. Largest observed delay was 28.37 ms versus 69.60\u201395.76 ms in the baseline.",
+  "validation": {
+    "lint": true,
+    "typescript": true,
+    "focusedTestsPassed": 20,
+    "interactionChecks": [
+      "Grocery checkbox visibly toggled.",
+      "Add Item opened after observing splash dismissal.",
+      "Prepared meal planner opened, and tapping a day opened the recipe chooser."
+    ],
+    "temporaryProbesRemoved": true
+  },
+  "limitations": [
+    "Simulator development-build evidence, not a physical-device release benchmark.",
+    "One-item guest list does not establish large-list performance.",
+    "hideAsync dispatches native hiding; two subsequent animation frames provide a paint boundary, not a native animation-completion event. The configured splash uses the default non-fading hide.",
+    "UI tools cannot inject a tap at the exact native disappearance frame. Functional taps were later; timing probes cover the immediate post-hide interval.",
+    "Final visible-calendar scroll-to-today correction and guarded render-time state retention do not execute in the measured hidden-preload path."
+  ],
+  "runs": [
+    {
+      "run": 1,
+      "listEditableMs": 1822.93,
+      "splashHideResolvedMs": 1827.3,
+      "preloadAfterHideMs": 33.11,
+      "largestRecordedTimerDelayFirstFiveSecondsMs": null,
+      "timerDelayRecordingThresholdMs": 19,
+      "longDelaysOver50Ms": 0,
+      "raw": {
+        "marks": [
+          {
+            "name": "instrumentation-start",
+            "time": 1616836642.499666,
+            "wall": 1793159153660
+          },
+          {
+            "name": "list-state",
+            "time": 1616837964.108333,
+            "wall": 1793159154982,
+            "details": {
+              "isLoading": true,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 0,
+              "hasList": false,
+              "error": false
+            }
+          },
+          {
+            "name": "splash-painted",
+            "time": 1616838165.488875,
+            "wall": 1793159155183,
+            "details": {
+              "dismissed": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1616838173.69725,
+            "wall": 1793159155191,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 1,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1616838465.42625,
+            "wall": 1793159155483,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": true,
+              "itemCount": 1,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "splash-hide-request",
+            "time": 1616838469.758541,
+            "wall": 1793159155487
+          },
+          {
+            "name": "splash-hide-resolved",
+            "time": 1616838469.79675,
+            "wall": 1793159155487
+          },
+          {
+            "name": "splash-painted",
+            "time": 1616838502.816083,
+            "wall": 1793159155520,
+            "details": {
+              "dismissed": true
+            }
+          },
+          {
+            "name": "preload-request",
+            "time": 1616838502.904041,
+            "wall": 1793159155520
+          },
+          {
+            "name": "planner-render",
+            "time": 1616838517.662916,
+            "wall": 1793159155535,
+            "details": {
+              "isActive": false
+            }
+          }
+        ],
+        "stalls": [
+          {
+            "time": 1616837557.873791,
+            "delay": 899.3708329200745
+          },
+          {
+            "time": 1616838382.562916,
+            "delay": 716.1354999542236
+          },
+          {
+            "time": 1616838469.382791,
+            "delay": 36.12287497520447
+          }
+        ],
+        "started": 1616836642.497666
+      }
+    },
+    {
+      "run": 2,
+      "listEditableMs": 1914.51,
+      "splashHideResolvedMs": 1919.42,
+      "preloadAfterHideMs": 48.87,
+      "largestRecordedTimerDelayFirstFiveSecondsMs": 28.37,
+      "timerDelayRecordingThresholdMs": 19,
+      "longDelaysOver50Ms": 0,
+      "raw": {
+        "marks": [
+          {
+            "name": "instrumentation-start",
+            "time": 1616868324.168958,
+            "wall": 1793159185342
+          },
+          {
+            "name": "list-state",
+            "time": 1616869315.1095,
+            "wall": 1793159186333,
+            "details": {
+              "isLoading": true,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 0,
+              "hasList": false,
+              "error": false
+            }
+          },
+          {
+            "name": "splash-painted",
+            "time": 1616869516.703666,
+            "wall": 1793159186534,
+            "details": {
+              "dismissed": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1616869524.175416,
+            "wall": 1793159186542,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 1,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1616870238.678333,
+            "wall": 1793159187256,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": true,
+              "itemCount": 1,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "splash-hide-request",
+            "time": 1616870243.544416,
+            "wall": 1793159187261
+          },
+          {
+            "name": "splash-hide-resolved",
+            "time": 1616870243.589166,
+            "wall": 1793159187261
+          },
+          {
+            "name": "splash-painted",
+            "time": 1616870287.862916,
+            "wall": 1793159187305,
+            "details": {
+              "dismissed": true
+            }
+          },
+          {
+            "name": "preload-request",
+            "time": 1616870292.462875,
+            "wall": 1793159187310
+          },
+          {
+            "name": "planner-render",
+            "time": 1616870306.591958,
+            "wall": 1793159187324,
+            "details": {
+              "isActive": false
+            }
+          }
+        ],
+        "stalls": [
+          {
+            "time": 1616868940.76,
+            "delay": 600.5885419845581
+          },
+          {
+            "time": 1616869721.405916,
+            "delay": 688.0246660709381
+          },
+          {
+            "time": 1616869784.451958,
+            "delay": 47.04604196548462
+          },
+          {
+            "time": 1616869947.363541,
+            "delay": 30.6802499294281
+          },
+          {
+            "time": 1616870242.583375,
+            "delay": 42.456249952316284
+          },
+          {
+            "time": 1616871312.796458,
+            "delay": 28.371707916259766
+          }
+        ],
+        "started": 1616868324.167916
+      }
+    },
+    {
+      "run": 3,
+      "listEditableMs": 1867.46,
+      "splashHideResolvedMs": 1876.97,
+      "preloadAfterHideMs": 39.15,
+      "largestRecordedTimerDelayFirstFiveSecondsMs": 27.53,
+      "timerDelayRecordingThresholdMs": 19,
+      "longDelaysOver50Ms": 0,
+      "raw": {
+        "marks": [
+          {
+            "name": "instrumentation-start",
+            "time": 1616877570.406083,
+            "wall": 1793159194588
+          },
+          {
+            "name": "list-state",
+            "time": 1616878745.764625,
+            "wall": 1793159195763,
+            "details": {
+              "isLoading": true,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 0,
+              "hasList": false,
+              "error": false
+            }
+          },
+          {
+            "name": "splash-painted",
+            "time": 1616878967.803541,
+            "wall": 1793159195985,
+            "details": {
+              "dismissed": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1616878974.866833,
+            "wall": 1793159195992,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": false,
+              "itemCount": 1,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "list-state",
+            "time": 1616879437.863916,
+            "wall": 1793159196455,
+            "details": {
+              "isLoading": false,
+              "itemsLoading": false,
+              "canEdit": true,
+              "itemCount": 1,
+              "hasList": true,
+              "error": false
+            }
+          },
+          {
+            "name": "splash-hide-request",
+            "time": 1616879447.274708,
+            "wall": 1793159196465
+          },
+          {
+            "name": "splash-hide-resolved",
+            "time": 1616879447.369291,
+            "wall": 1793159196465
+          },
+          {
+            "name": "splash-painted",
+            "time": 1616879486.379625,
+            "wall": 1793159196504,
+            "details": {
+              "dismissed": true
+            }
+          },
+          {
+            "name": "preload-request",
+            "time": 1616879486.522208,
+            "wall": 1793159196504
+          },
+          {
+            "name": "planner-render",
+            "time": 1616879517.296541,
+            "wall": 1793159196535,
+            "details": {
+              "isActive": false
+            }
+          }
+        ],
+        "stalls": [
+          {
+            "time": 1616878361.358625,
+            "delay": 774.9475419521332
+          },
+          {
+            "time": 1616879212.097,
+            "delay": 762.1353747844696
+          },
+          {
+            "time": 1616879446.852125,
+            "delay": 29.906333923339844
+          },
+          {
+            "time": 1616879527.61125,
+            "delay": 27.52779197692871
+          }
+        ],
+        "started": 1616877570.403458
+      }
+    }
+  ]
+}
