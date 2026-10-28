@@ -128,7 +128,7 @@ export function ItemSheet({
     Alert.alert(
       `Delete ${row.name}?`,
       history
-        ? 'This clears purchased history without changing the meal plan.'
+        ? 'This removes the item from your list. It stays in purchased items.'
         : 'All planned ingredients in this item will be deselected from the grocery list. Other quantities will also be removed.',
       [
         { text: 'Cancel', style: 'cancel' },

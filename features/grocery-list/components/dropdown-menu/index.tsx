@@ -17,6 +17,7 @@ import {
 import { GroceryListItemWithRecipe } from '../../types';
 
 type GroceryListDropdownMenuProps = {
+  onPurchasedItems?: () => void;
   onStartShopping?: () => void;
   canStartShopping?: boolean;
   trigger: ReactNode;
@@ -33,6 +34,7 @@ type GroceryListDropdownMenuProps = {
 };
 
 export const GroceryListDropdownMenu = ({
+  onPurchasedItems,
   onStartShopping,
   canStartShopping = false,
   trigger,
@@ -70,6 +72,12 @@ export const GroceryListDropdownMenu = ({
           >
             <DropdownMenuItemTitle>Start shopping</DropdownMenuItemTitle>
             <DropdownMenuItemIcon ios={{ name: 'cart' }} />
+          </DropdownMenuItem>
+        ) : null}
+        {onPurchasedItems ? (
+          <DropdownMenuItem key="purchased-items" onSelect={onPurchasedItems}>
+            <DropdownMenuItemTitle>Purchased items</DropdownMenuItemTitle>
+            <DropdownMenuItemIcon ios={{ name: 'clock.arrow.circlepath' }} />
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem onSelect={onSharePress} key="share-list">
