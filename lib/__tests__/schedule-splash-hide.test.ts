@@ -10,7 +10,7 @@ describe('splash hide during startup', () => {
     const hasHidden = { current: false };
     const hide = vi.fn();
     const cleanup = scheduleSplashHide(hasHidden, hide);
-    vi.advanceTimersByTime(100);
+
     cleanup?.();
     expect(hasHidden.current).toBe(false);
 
@@ -40,4 +40,28 @@ describe('splash hide during startup', () => {
     vi.runAllTimers();
     expect(hide).toHaveBeenCalledOnce();
   });
+});
+
+it('dismisses on the next task when ready, without a fixed startup delay', () => {
+  vi.useFakeTimers();
+  const hide = vi.fn();
+  scheduleSplashHide({ current: false }, hide);
+  vi.advanceTimersByTime(0);
+  expect(hide).toHaveBeenCalledOnce();
+  vi.useRealTimers();
+});
+
+it('bounds the wait for data and cancels it when the screen becomes ready', () => {
+  vi.useFakeTimers();
+  const hidden = { current: false };
+  const hide = vi.fn();
+  const cancel = scheduleSplashHide(hidden, hide, 5000);
+  vi.advanceTimersByTime(1000);
+  expect(hide).not.toHaveBeenCalled();
+  cancel?.();
+  scheduleSplashHide(hidden, hide);
+  vi.advanceTimersByTime(0);
+  vi.advanceTimersByTime(5000);
+  expect(hide).toHaveBeenCalledOnce();
+  vi.useRealTimers();
 });
