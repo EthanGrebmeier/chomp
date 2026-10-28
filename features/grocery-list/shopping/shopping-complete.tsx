@@ -35,6 +35,7 @@ export function ShoppingComplete({
           totalItemCount={items.length}
           groupBy="category"
           sortBy="name"
+          rowPressAction="toggleChecked"
           hideOrganizationTags
           groupingBulkAction={EXPAND_CHECKED_ITEMS}
         />
