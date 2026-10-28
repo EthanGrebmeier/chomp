@@ -16,6 +16,8 @@ const checkedWrites = new Map<string, Promise<void>>();
 export async function updateQuantityChecked(
   updates: { itemId: string; isChecked: boolean }[]
 ) {
+  // Capture the action time before waiting for earlier writes to finish.
+  const checkedAt = new Date().toISOString();
   const grouped = new Map<string, typeof updates>();
   for (const update of updates) {
     const { listId } = documentSession(update.itemId);
@@ -32,7 +34,19 @@ export async function updateQuantityChecked(
           if (row.status === 'deleted')
             throw new Error('Item has been deleted');
           tx.requireEntries(row.id);
-          tx.put({ ...row, status: isChecked ? 'checked' : 'active' });
+          const { purchasedAt, ...rest } = row;
+          tx.put({
+            ...rest,
+            status: isChecked ? 'checked' : 'active',
+            ...(isChecked
+              ? {
+                  purchasedAt:
+                    row.status === 'checked'
+                      ? (purchasedAt ?? null)
+                      : checkedAt,
+                }
+              : {}),
+          });
         }
         await sendAndObserveListOperation(
           listId,
