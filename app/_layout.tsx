@@ -85,6 +85,15 @@ function InitialLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen
+          name="purchased-items"
+          options={{
+            presentation: 'card',
+            gestureEnabled: true,
+            animation: reducedMotion ? 'fade' : 'default',
+            contentStyle: { backgroundColor: theme.background },
+          }}
+        />
+        <Stack.Screen
           name="shopping"
           options={{
             presentation: 'card',

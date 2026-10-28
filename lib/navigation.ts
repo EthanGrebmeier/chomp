@@ -102,6 +102,10 @@ export function buildListUrl(params?: ListParams): Href {
   return `/(tabs)${query}` as Href;
 }
 
+export function buildPurchasedItemsUrl(listId: string): Href {
+  return `/purchased-items${buildQueryString({ listId })}` as Href;
+}
+
 /** A native shopping screen pushed over its grocery list. */
 export function buildShoppingUrl(listId: string): Href {
   return `/shopping${buildQueryString({ listId })}` as Href;
