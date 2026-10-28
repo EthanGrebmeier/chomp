@@ -7,7 +7,6 @@ import {
   useState,
 } from 'react';
 import { TextInput } from 'react-native';
-import { useDebounceCallback } from 'usehooks-ts';
 
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 
@@ -68,8 +67,6 @@ const itemSheetContext = createContext<{
   saveItem: boolean;
   setSaveItem: (saveItem: boolean) => void;
 } | null>(null);
-
-const TEXT_COMMIT_DEBOUNCE_MS = 150;
 
 export const useItemSheet = () => {
   const context = useContext(itemSheetContext);
@@ -167,15 +164,10 @@ export const ItemSheetProvider = ({
   const isSync = hasSavedItemLink(selectedItem);
   const saveItem = isSync ? syncSavedItem : saveNewItem;
   const setSaveItem = isSync ? setSyncSavedItem : setSaveNewItem;
-  const commitNotesInputValue = useDebounceCallback(
-    setNotesInputValue,
-    TEXT_COMMIT_DEBOUNCE_MS
-  );
 
   const reset = ({
     keepInputsMounted = false,
   }: { keepInputsMounted?: boolean } = {}) => {
-    commitNotesInputValue.cancel();
     setSelectedItem(null);
     setSyncSavedItem(false);
     // For continuous add entry we clear the text in place
@@ -203,7 +195,6 @@ export const ItemSheetProvider = ({
 
   const setFromItem = useCallback(
     (item: GroceryListItemWithRecipe | BaseGroceryItem) => {
-      commitNotesInputValue.cancel();
       setSelectedItem(null);
       setSyncSavedItem(false);
       resetItemInput(item.name);
@@ -232,7 +223,7 @@ export const ItemSheetProvider = ({
       setStoreName(derivedStoreName);
       setShowMatchingItems(false);
     },
-    [commitNotesInputValue, resetItemInput, resetNotesInput]
+    [resetItemInput, resetNotesInput]
   );
 
   // Expose setFromItem to parent via ref
@@ -310,7 +301,6 @@ export const ItemSheetProvider = ({
   };
 
   const onSelect = (item: MatchingItem) => {
-    commitNotesInputValue.cancel();
     setSelectedItem(item);
     setSyncSavedItem(false);
     handleItemInputTextChange(item.name);
@@ -351,7 +341,7 @@ export const ItemSheetProvider = ({
   };
   const onChangeNotesText = (text: string) => {
     handleNotesInputTextChange(text);
-    commitNotesInputValue(text);
+    setNotesInputValue(text);
   };
 
   return (
