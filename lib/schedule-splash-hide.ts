@@ -1,7 +1,8 @@
 /** Schedule a single hide, allowing an effect cleanup to cancel and retry it. */
 export function scheduleSplashHide(
   hasHidden: { current: boolean },
-  hide: () => void
+  hide: () => void,
+  delayMs = 0
 ) {
   if (hasHidden.current) return;
 
@@ -9,7 +10,7 @@ export function scheduleSplashHide(
     // Scheduling is not hiding: cleanup may cancel this attempt before it runs.
     hasHidden.current = true;
     hide();
-  }, 300);
+  }, delayMs);
 
   return () => clearTimeout(timeout);
 }
