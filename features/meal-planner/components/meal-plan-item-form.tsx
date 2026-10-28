@@ -1,7 +1,7 @@
 import React, { ReactNode, useRef } from 'react';
 import { TextInput, View } from 'react-native';
 
-import { BottomSheet } from '../../../components/bottom-sheet';
+import { ItemNotesField } from '../../../components/item-sheet/item-fields';
 import { ItemInput } from '../../../components/item-sheet/item-input';
 import { BaseGroceryItem } from '../../grocery-list/types';
 
@@ -41,7 +41,7 @@ export const MealPlanItemForm = ({
     itemNameDefaultValue,
     setItemName,
     itemNotesInputKey,
-    itemNotesDefaultValue,
+    itemNotes,
     setItemNotes,
     quantity,
     setQuantity,
@@ -90,17 +90,11 @@ export const MealPlanItemForm = ({
         onMealTagChange={setMealTag}
         disabled={!hasItemTitle}
       />
-      <BottomSheet.BareTextInput
+      <ItemNotesField
         key={itemNotesInputKey}
-        defaultValue={itemNotesDefaultValue}
+        value={itemNotes}
         onChangeText={setItemNotes}
         placeholder={notesPlaceholder}
-        multiline
-        style={{
-          textAlignVertical: 'top',
-          ...(compact ? { maxHeight: 72 } : {}),
-        }}
-        scrollEnabled={compact}
         className={
           compact
             ? 'min-h-0 py-0 text-lg leading-6 text-muted-foreground'

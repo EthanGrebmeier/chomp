@@ -40,7 +40,10 @@ import {
   StoreSheetRef,
 } from '../../../components/item-sheet/store-sheet';
 import { db } from '../../../lib/instant';
-import { buildShoppingUrl } from '../../../lib/navigation';
+import {
+  buildPurchasedItemsUrl,
+  buildShoppingUrl,
+} from '../../../lib/navigation';
 import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
@@ -735,6 +738,9 @@ export const GroceryList = ({
           actions={
             activeView === 'grocery-list' && listId ? (
               <GroceryListActions
+                onPurchasedItems={() =>
+                  router.push(buildPurchasedItemsUrl(listId))
+                }
                 onStartShopping={() =>
                   shopping.setSession({ screen: 'picker' })
                 }

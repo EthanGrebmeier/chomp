@@ -593,3 +593,17 @@ it('keeps rapid offline checkbox edits in the durable outbox with valid version 
   );
   expect(reloaded).toEqual(offlineState());
 });
+
+it('records purchase time, removes it on undo, and dates the next purchase anew', async () => {
+  await addManualQuantity('list', { name: 'Milk', quantity: 1, unit: 'each' });
+  const row = records(state(), 'row')[0];
+  await updateQuantityChecked([{ itemId: row.id, isChecked: true }]);
+  const purchased = records(state(), 'row')[0];
+  expect(purchased.purchasedAt).toEqual(expect.any(String));
+  await updateQuantityChecked([{ itemId: row.id, isChecked: true }]);
+  expect(records(state(), 'row')[0].purchasedAt).toBe(purchased.purchasedAt);
+  await updateQuantityChecked([{ itemId: row.id, isChecked: false }]);
+  expect(records(state(), 'row')[0].purchasedAt).toBeUndefined();
+  await updateQuantityChecked([{ itemId: row.id, isChecked: true }]);
+  expect(records(state(), 'row')[0].purchasedAt).toEqual(expect.any(String));
+});
