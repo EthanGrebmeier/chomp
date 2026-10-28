@@ -37,6 +37,7 @@ type GroceryListItemProps = {
   isChecked: boolean;
   className?: string;
   hideOrganizationTags?: boolean;
+  rowPressAction?: 'edit' | 'toggleChecked';
   onEdit?: (item: GroceryListItemWithRecipe) => void;
   isBulkSelectionModeActive?: boolean;
   isBulkSelected?: boolean;
@@ -102,6 +103,7 @@ const GroceryListItemComponent = ({
   isChecked,
   className,
   hideOrganizationTags = false,
+  rowPressAction = 'edit',
   onEdit,
   isBulkSelectionModeActive = false,
   isBulkSelected = false,
@@ -198,6 +200,11 @@ const GroceryListItemComponent = ({
       return;
     }
 
+    if (rowPressAction === 'toggleChecked') {
+      void onCheck(!animationTargetRef.current.isChecked);
+      return;
+    }
+
     onEdit?.(item);
   };
 
@@ -237,7 +244,19 @@ const GroceryListItemComponent = ({
       <HapticPressable
         className="flex-1 gap-0.5 py-1"
         onPress={handleRowPress}
-        onLongPress={handleRowLongPress}
+        onLongPress={
+          onEnterBulkSelectionModeWithItem || isBulkSelectionModeActive
+            ? handleRowLongPress
+            : undefined
+        }
+        accessibilityRole={
+          rowPressAction === 'toggleChecked' ? 'checkbox' : 'button'
+        }
+        accessibilityState={
+          rowPressAction === 'toggleChecked'
+            ? { checked: isChecked }
+            : undefined
+        }
         delayLongPress={200}
         hapticType="light"
       >
@@ -317,6 +336,7 @@ export const GroceryListItem = memo(
   (previousProps, nextProps) => {
     return (
       previousProps.item === nextProps.item &&
+      previousProps.rowPressAction === nextProps.rowPressAction &&
       previousProps.hideOrganizationTags === nextProps.hideOrganizationTags &&
       previousProps.categoryOptions === nextProps.categoryOptions &&
       previousProps.isChecked === nextProps.isChecked &&
