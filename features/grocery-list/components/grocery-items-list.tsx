@@ -3,6 +3,8 @@ import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
+import { useAppEntryVisible } from '@/lib/startup-screen-ready';
+
 import { FadeSwitch } from '../../../components/animated/fade-switch';
 import { useEditItemSheet } from '../../../components/item-sheet/edit-item/edit-item-sheet';
 import { EmptyHeading } from '../../../components/text/empty-heading';
@@ -31,6 +33,7 @@ import { GroceryListItem } from './grocery-list-item';
 type GroceryItemsListProps = {
   items: GroceryListItemWithRecipe[];
   totalItemCount: number;
+  onReady?: () => void;
   hideOrganizationTags?: boolean;
   rowPressAction?: 'edit' | 'toggleChecked';
   /** True while the list's items are still being fetched. */
@@ -81,6 +84,7 @@ type GroceryListRow =
 export const GroceryItemsList = ({
   items: savedItems,
   totalItemCount,
+  onReady,
   hideOrganizationTags = false,
   rowPressAction = 'edit',
   isLoading = false,
@@ -97,6 +101,7 @@ export const GroceryItemsList = ({
   onSelectBulkSelectionSectionItems,
   onDeselectBulkSelectionSectionItems,
 }: GroceryItemsListProps) => {
+  const entryVisible = useAppEntryVisible();
   // Group from tap intent immediately. Waiting for serialized durable writes
   // makes each publication restart the quiet window at an unpredictable time.
   const pendingCheckedState = usePendingCheckedState();
@@ -425,13 +430,18 @@ export const GroceryItemsList = ({
   // when items arrive after the skeleton or the last item is removed.
   return (
     <View className="flex-1">
-      <FadeSwitch stateKey={contentState}>
+      <FadeSwitch stateKey={contentState} animate={entryVisible}>
         {contentState === 'loading' ? null : contentState === 'empty' ? (
-          <EmptyListState />
+          <View className="flex-1" onLayout={onReady}>
+            <EmptyListState />
+          </View>
         ) : contentState === 'no-matches' ? (
-          <NoMatchesState />
+          <View className="flex-1" onLayout={onReady}>
+            <NoMatchesState />
+          </View>
         ) : (
           <FlashList
+            onLoad={onReady}
             data={listRows.rows}
             renderItem={renderRow}
             keyExtractor={item =>
