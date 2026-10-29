@@ -1,4 +1,4 @@
-import { materialize } from './model';
+import { createMaterializer, materialize } from './model';
 import type { Operation } from './types';
 
 export type StoredOperation = {
@@ -44,7 +44,8 @@ export async function commitOperations(
   store: CommitStore,
   plans: CommitPlan[],
   authorId: string,
-  requireApplicable = false
+  requireApplicable = false,
+  replay: typeof materialize = createMaterializer()
 ): Promise<CommitPlan[]> {
   if (
     !plans.length ||
@@ -78,7 +79,7 @@ export async function commitOperations(
     }
     const prepared = plans.map((plan, index) => {
       const history = decodeHistory(histories[index]);
-      const state = materialize(history);
+      const state = replay(history);
       if (!state.complete)
         throw new Error(state.error ?? 'Incomplete list history');
       if (
@@ -96,7 +97,7 @@ export async function commitOperations(
           parents: state.heads,
         },
       };
-      const next = materialize([...history, operation]);
+      const next = replay([...history, operation]);
       if (!next.complete) throw new Error(next.error ?? 'Incomplete commit');
       if (
         requireApplicable &&

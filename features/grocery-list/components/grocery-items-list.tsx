@@ -1,6 +1,6 @@
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { Image } from 'expo-image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { FadeSwitch } from '../../../components/animated/fade-switch';
@@ -10,10 +10,14 @@ import { EmptySubtext } from '../../../components/text/empty-subtext';
 import { useCategoryOptions } from '../../categories/use-category-options';
 import {
   createCheckedStateSnapshot,
+  createCheckedStateSettler,
   getPresentedCheckedState,
-  hasCheckedStateTransition,
   reconcilePresentedCheckedState,
 } from '../checked-state-presentation';
+import {
+  applyPendingCheckedState,
+  usePendingCheckedState,
+} from '../pending-checked-state';
 import {
   GroceryListGroupBy,
   GroceryListItemWithRecipe,
@@ -74,10 +78,8 @@ type GroceryListRow =
       item: GroceryListItemWithRecipe;
     };
 
-const CHECKED_SECTION_SETTLE_DELAY_MS = 1000;
-
 export const GroceryItemsList = ({
-  items,
+  items: savedItems,
   totalItemCount,
   hideOrganizationTags = false,
   rowPressAction = 'edit',
@@ -95,6 +97,13 @@ export const GroceryItemsList = ({
   onSelectBulkSelectionSectionItems,
   onDeselectBulkSelectionSectionItems,
 }: GroceryItemsListProps) => {
+  // Group from tap intent immediately. Waiting for serialized durable writes
+  // makes each publication restart the quiet window at an unpredictable time.
+  const pendingCheckedState = usePendingCheckedState();
+  const items = useMemo(
+    () => applyPendingCheckedState(savedItems, pendingCheckedState),
+    [savedItems, pendingCheckedState]
+  );
   const { present: presentEditSheet } = useEditItemSheet();
   const { data: categoryOptions } = useCategoryOptions();
 
@@ -111,14 +120,9 @@ export const GroceryItemsList = ({
   const [presentedCheckedState, setPresentedCheckedState] = useState(() =>
     createCheckedStateSnapshot(items)
   );
-  const lastObservedCheckedStateRef = useRef(presentedCheckedState);
-  const latestCheckedStateRef = useRef(presentedCheckedState);
-  const checkedStateSettleTimeoutRef = useRef<ReturnType<
-    typeof setTimeout
-  > | null>(null);
-  const checkedStateReconcileTimeoutRef = useRef<ReturnType<
-    typeof setTimeout
-  > | null>(null);
+  const [checkedStateSettler] = useState(() =>
+    createCheckedStateSettler(presentedCheckedState, setPresentedCheckedState)
+  );
 
   if (collapsedSectionsResetKey !== appliedCollapsedSectionsResetKey) {
     setAppliedCollapsedSectionsResetKey(collapsedSectionsResetKey);
@@ -130,50 +134,23 @@ export const GroceryItemsList = ({
 
   useEffect(() => {
     const nextCheckedState = createCheckedStateSnapshot(items);
-    const hasTransition = hasCheckedStateTransition(
-      lastObservedCheckedStateRef.current,
-      nextCheckedState
-    );
+    checkedStateSettler.observe(nextCheckedState);
 
-    lastObservedCheckedStateRef.current = nextCheckedState;
-    latestCheckedStateRef.current = nextCheckedState;
-
-    if (checkedStateReconcileTimeoutRef.current) {
-      clearTimeout(checkedStateReconcileTimeoutRef.current);
-    }
     // Reconcile membership on the next task so observing new props does not
     // synchronously cascade another render.
-    checkedStateReconcileTimeoutRef.current = setTimeout(() => {
+    const reconcileTimer = setTimeout(() => {
       setPresentedCheckedState(previous =>
         reconcilePresentedCheckedState(previous, nextCheckedState)
       );
-      checkedStateReconcileTimeoutRef.current = null;
     }, 0);
-
-    if (!hasTransition) {
-      return;
-    }
-
-    if (checkedStateSettleTimeoutRef.current) {
-      clearTimeout(checkedStateSettleTimeoutRef.current);
-    }
-
-    checkedStateSettleTimeoutRef.current = setTimeout(() => {
-      setPresentedCheckedState(new Map(latestCheckedStateRef.current));
-      checkedStateSettleTimeoutRef.current = null;
-    }, CHECKED_SECTION_SETTLE_DELAY_MS);
-  }, [items]);
+    return () => clearTimeout(reconcileTimer);
+  }, [items, checkedStateSettler]);
 
   useEffect(() => {
     return () => {
-      if (checkedStateSettleTimeoutRef.current) {
-        clearTimeout(checkedStateSettleTimeoutRef.current);
-      }
-      if (checkedStateReconcileTimeoutRef.current) {
-        clearTimeout(checkedStateReconcileTimeoutRef.current);
-      }
+      checkedStateSettler.dispose();
     };
-  }, []);
+  }, [checkedStateSettler]);
 
   const toggleSection = useCallback(
     (sectionKey: string) => {
