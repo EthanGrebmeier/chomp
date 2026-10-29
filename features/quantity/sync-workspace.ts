@@ -6,6 +6,26 @@ import type { Operation } from './types';
 export { operationChunk } from './operation-chunk';
 export type Pending = { operation: Operation; error?: string };
 
+/** Retain one copy of each exact operation. Conflicting payloads with the same
+ * identity remain present so replay can reject them rather than hide corruption. */
+export function mergeConfirmedOperations(
+  previous: Operation[],
+  incoming: Operation[]
+) {
+  const seen = new Set<string>();
+  const merged: Operation[] = [];
+  for (const operation of [...previous, ...incoming]) {
+    const key = JSON.stringify(operation);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(operation);
+  }
+  return merged.length === previous.length &&
+    merged.every((op, index) => op === previous[index])
+    ? previous
+    : merged;
+}
+
 export async function flushOutbox({
   workspaceId,
   userId,
@@ -13,6 +33,7 @@ export async function flushOutbox({
   changePending,
   confirm,
   afterConfirm,
+  replay,
 }: {
   workspaceId: string;
   userId: string;
@@ -20,6 +41,7 @@ export async function flushOutbox({
   changePending: (change: (values: Pending[]) => Pending[]) => Promise<void>;
   confirm: (operation: Operation) => void;
   afterConfirm?: (operation: Operation) => Promise<void>;
+  replay?: typeof materialize;
 }) {
   let item: Pending | undefined;
   while ((item = getPending().find(p => !p.error))) {
@@ -28,7 +50,9 @@ export async function flushOutbox({
       const [committed] = await commitOperations(
         quantityCommitStore(userId),
         [{ workspaceId, operation: pendingItem.operation }],
-        userId
+        userId,
+        false,
+        replay
       );
       confirm(committed.operation);
       await afterConfirm?.(committed.operation);
@@ -55,7 +79,8 @@ export function readWorkspaceState(
   confirmed: Operation[],
   pending: Pending[],
   rows: { id: string; body: string }[],
-  workspaceCount?: number
+  workspaceCount?: number,
+  replay: typeof materialize = materialize
 ) {
   try {
     if (workspaceCount !== undefined && workspaceCount !== 1)
@@ -72,7 +97,7 @@ export function readWorkspaceState(
     const optimisticIds = new Set<string>();
     // Optimistic intents follow the server-confirmed prefix, even when authored
     // offline against older heads. Their original version guards stay intact.
-    let optimistic = materialize(operations);
+    let optimistic = replay(operations);
     for (const item of pending.filter(
       p => !p.error && !savedIds.has(p.operation.id)
     )) {
@@ -82,7 +107,7 @@ export function readWorkspaceState(
       };
       operations.push(operation);
       optimisticIds.add(operation.id);
-      optimistic = materialize(operations, optimisticIds);
+      optimistic = replay(operations, optimisticIds);
     }
     return optimistic;
   } catch {
