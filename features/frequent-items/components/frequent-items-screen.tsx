@@ -1,6 +1,7 @@
 import { PlusIcon } from 'lucide-react-native';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
-import { FlatList, Platform, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
@@ -9,7 +10,6 @@ import { formatQuantityUnit } from '@/components/item-sheet/unit-utils';
 import { StoreTag } from '@/components/store-tag';
 import { EmptyHeading } from '@/components/text/empty-heading';
 import { EmptySubtext } from '@/components/text/empty-subtext';
-import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
 import { Text } from '@/components/ui/text';
@@ -25,6 +25,8 @@ import {
   normalizeGroceryItemName,
 } from '../utils/frequent-items';
 
+import { RecentItemPressable } from './recent-item-pressable';
+
 type FrequentItemsScreenProps = {
   listId: string;
 };
@@ -32,7 +34,7 @@ type FrequentItemsScreenProps = {
 type FrequentItemRowProps = {
   item: FrequentItem;
   categoryOptions: CategoryOption[];
-  onAdd: (item: FrequentItem) => void;
+  onAdd: (item: FrequentItem) => Promise<void>;
 };
 
 const FrequentItemRow = memo(function FrequentItemRow({
@@ -47,64 +49,55 @@ const FrequentItemRow = memo(function FrequentItemRow({
   });
 
   return (
-    <ListItem>
-      <HapticPressable
-        accessibilityRole="button"
-        accessibilityLabel={`Add ${item.name} to grocery list`}
-        className="mr-1 size-5 items-center justify-center rounded-md border border-border"
-        hapticType="selection"
-        hitSlop={10}
-        onPress={() => onAdd(item)}
-      >
-        <Icon
-          as={PlusIcon}
-          className="text-accent-foreground"
-          size={14}
-          strokeWidth={2.5}
-        />
-      </HapticPressable>
-
-      <HapticPressable
-        accessibilityRole="button"
-        accessibilityLabel={`Add ${item.name} to grocery list`}
-        className="flex-1 gap-1 py-1"
-        hapticType="selection"
-        onPress={() => onAdd(item)}
-      >
-        <View className="flex-row justify-between">
-          <Text
-            variant="itemTitle"
-            className="flex-1 pr-2"
-            style={compactTextStyle}
-          >
-            {item.name}
-            {'  '}
-            <Text variant="itemMeta" style={compactTextStyle}>
-              {formatQuantityUnit(item.quantity, item.unit)}
+    <RecentItemPressable
+      label={`Add ${item.name} to grocery list`}
+      onAdd={() => onAdd(item)}
+    >
+      <ListItem className="min-h-11">
+        <View className="mr-1 size-5 items-center justify-center rounded-md border border-border">
+          <Icon
+            as={PlusIcon}
+            className="text-accent-foreground"
+            size={14}
+            strokeWidth={2.5}
+          />
+        </View>
+        <View className="flex-1 gap-1 py-1">
+          <View className="flex-row justify-between">
+            <Text
+              variant="itemTitle"
+              className="flex-1 pr-2"
+              style={compactTextStyle}
+            >
+              {item.name}
+              {'  '}
+              <Text variant="itemMeta" style={compactTextStyle}>
+                {formatQuantityUnit(item.quantity, item.unit)}
+              </Text>
             </Text>
-          </Text>
-          {item.category ? (
-            <CategoryTag
-              category={item.category}
-              categoryOptions={categoryOptions}
-            />
+            {item.category ? (
+              <CategoryTag
+                category={item.category}
+                categoryOptions={categoryOptions}
+              />
+            ) : null}
+          </View>
+
+          {notes ? (
+            <Text variant="itemDescription" style={compactTextStyle}>
+              {notes}
+            </Text>
           ) : null}
-        </View>
 
-        {notes ? (
-          <Text variant="itemDescription" style={compactTextStyle}>
-            {notes}
-          </Text>
-        ) : null}
-
-        <View className="flex-row items-center gap-2">
-          {item.storeName ? <StoreTag name={item.storeName} /> : null}
-          <Text variant="caption" tabularNumbers>
-            Added {item.count} times
-          </Text>
+          <View className="flex-row items-center gap-2">
+            {item.storeName ? <StoreTag name={item.storeName} /> : null}
+            <Text variant="caption" tabularNumbers>
+              Added {item.count} times
+            </Text>
+          </View>
         </View>
-      </HapticPressable>
-    </ListItem>
+      </ListItem>
+    </RecentItemPressable>
   );
 });
 
@@ -132,7 +125,7 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
   );
 
   const handleAdd = useCallback(
-    (item: FrequentItem) => {
+    async (item: FrequentItem) => {
       if (pendingNamesRef.current.has(item.normalizedName)) {
         return;
       }
@@ -144,48 +137,45 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
         return next;
       });
 
-      setTimeout(() => {
-        const persistItem = async () => {
-          try {
-            const matchingStore =
-              stores.find(store => store.id === item.storeId) ??
-              stores.find(
-                store =>
-                  !!item.storeName &&
-                  normalizeGroceryItemName(store.name) ===
-                    normalizeGroceryItemName(item.storeName)
-              );
+      try {
+        const matchingStore =
+          stores.find(store => store.id === item.storeId) ??
+          stores.find(
+            store =>
+              !!item.storeName &&
+              normalizeGroceryItemName(store.name) ===
+                normalizeGroceryItemName(item.storeName)
+          );
 
-            await addGroceryListItem({
-              listId,
-              item: {
-                name: item.name,
-                quantity: item.quantity,
-                unit: item.unit,
-                category: item.category ?? undefined,
-                notes: item.notes ?? undefined,
-                storeId: matchingStore?.id,
-              },
-            });
-          } catch {
-            pendingNamesRef.current.delete(item.normalizedName);
-            setPendingNames(current => {
-              const next = new Set(current);
-              next.delete(item.normalizedName);
-              return next;
-            });
-            toast.error(`Couldn't add ${item.name}`);
-          }
-        };
-
-        void persistItem();
-      }, 0);
+        await addGroceryListItem({
+          listId,
+          item: {
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            category: item.category ?? undefined,
+            notes: item.notes ?? undefined,
+            storeId: matchingStore?.id,
+          },
+        });
+      } catch (error) {
+        pendingNamesRef.current.delete(item.normalizedName);
+        setPendingNames(current => {
+          const next = new Set(current);
+          next.delete(item.normalizedName);
+          return next;
+        });
+        toast.error(`Couldn't add ${item.name}`);
+        throw error;
+      }
     },
     [listId, stores]
   );
 
   return (
-    <View className="min-h-0 flex-1 pb-6">
+    <GestureHandlerRootView
+      style={{ flex: 1, minHeight: 0, paddingBottom: 24 }}
+    >
       {isLoading ? (
         <FrequentItemsSkeleton />
       ) : error ? (
@@ -209,23 +199,25 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
           </EmptySubtext>
         </View>
       ) : (
-        <FlatList
+        // The source is capped at 20 rows. Mount all of them so native layout
+        // can close a gap without waiting for virtualized cell measurements.
+        <ScrollView
           className="min-h-0 flex-1"
           contentInset={{ bottom: safeAreaBottom + 24 }}
-          data={visibleItems}
-          keyExtractor={item => item.normalizedName}
           keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => (
+          scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {visibleItems.map(item => (
             <FrequentItemRow
+              key={item.normalizedName}
               item={item}
               categoryOptions={categoryOptions}
               onAdd={handleAdd}
             />
-          )}
-          scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
-          showsVerticalScrollIndicator={false}
-        />
+          ))}
+        </ScrollView>
       )}
-    </View>
+    </GestureHandlerRootView>
   );
 };
