@@ -58,11 +58,16 @@ async function initialize(listId: string, userId: string) {
   const existing = await db.queryOnce(
     {
       gqc_workspaces_v1: { $: { where: { id: listId } } },
+      gqc_operations_v1: { $: { where: { workspaceId: listId } } },
+      grocery_items: {
+        $: { where: { 'grocery_list.id': listId } },
+        saved_item: {},
+      },
     },
     { ruleParams: { quantityInitialize: id() } }
   );
   if (existing.data.gqc_workspaces_v1[0]?.appListId === listId) {
-    await restoreSavedItemLinks(listId, userId);
+    await restoreSavedItemLinks(listId, userId, existing.data);
     return;
   }
   if (existing.data.gqc_workspaces_v1.length)
@@ -103,14 +108,14 @@ async function initialize(listId: string, userId: string) {
 }
 
 /** Repair earlier development imports by original row ID, never by name. */
-async function restoreSavedItemLinks(listId: string, userId: string) {
-  const { data } = await db.queryOnce({
-    gqc_operations_v1: { $: { where: { workspaceId: listId } } },
-    grocery_items: {
-      $: { where: { 'grocery_list.id': listId } },
-      saved_item: {},
-    },
-  });
+async function restoreSavedItemLinks(
+  listId: string,
+  userId: string,
+  data: {
+    gqc_operations_v1: { body: string }[];
+    grocery_items: { id: string; saved_item?: { id: string } | null }[];
+  }
+) {
   const state = materialize(
     data.gqc_operations_v1.map(row => JSON.parse(row.body) as Operation)
   );

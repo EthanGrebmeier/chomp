@@ -1,4 +1,5 @@
 import { Check, ChevronRight, Store } from 'lucide-react-native';
+import { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import AddItemSheet from '@/components/item-sheet/add-item/add-item-sheet';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { scheduleAfterPaint } from '@/lib/schedule-after-paint';
 
 import { GroceryItemsList } from '../components/grocery-items-list';
 import type { GroceryListItemWithRecipe } from '../types';
@@ -28,6 +30,7 @@ type Props = {
   session: ShoppingSession;
   onSessionChange: (session: ShoppingSession) => void;
   onExit: () => void;
+  onReady?: () => void;
 };
 
 export function ShoppingScreen({
@@ -38,6 +41,7 @@ export function ShoppingScreen({
   session,
   onSessionChange,
   onExit,
+  onReady,
 }: Props) {
   const destinations = getShoppingDestinations(items);
   const representedDestination = findShoppingDestination(
@@ -62,6 +66,14 @@ export function ShoppingScreen({
   const focusedItems = selected ? getShoppingItems(items, selected) : [];
   const isComplete =
     !isLoading && selected?.remaining === 0 && focusedItems.length > 0;
+
+  const usesVirtualList = Boolean(
+    selected && !isComplete && (focusedItems.length > 0 || isLoading)
+  );
+  useEffect(() => {
+    if (!isLoading && !usesVirtualList && onReady)
+      return scheduleAfterPaint(onReady);
+  }, [isLoading, usesVirtualList, onReady]);
 
   return (
     <View className="flex-1 bg-background">
@@ -111,6 +123,7 @@ export function ShoppingScreen({
               />
             ) : focusedItems.length > 0 || isLoading ? (
               <GroceryItemsList
+                onReady={onReady}
                 key={selected.storeId ?? 'no-store'}
                 items={focusedItems}
                 totalItemCount={focusedItems.length}
