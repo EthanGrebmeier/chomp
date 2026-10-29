@@ -9,6 +9,7 @@ type FadeSwitchProps = {
    * out while the new children fade in.
    */
   stateKey: string;
+  animate?: boolean;
   children: React.ReactNode;
 };
 
@@ -19,11 +20,15 @@ type FadeSwitchProps = {
  * not push the entering one around in the flex layout during the overlap.
  * The parent must have a defined size (e.g. `flex-1`).
  */
-export const FadeSwitch = ({ stateKey, children }: FadeSwitchProps) => (
+export const FadeSwitch = ({
+  stateKey,
+  children,
+  animate = true,
+}: FadeSwitchProps) => (
   <Animated.View
     key={stateKey}
-    entering={fadeIn()}
-    exiting={fadeOut}
+    entering={animate ? fadeIn() : undefined}
+    exiting={animate ? fadeOut : undefined}
     style={StyleSheet.absoluteFill}
   >
     {children}

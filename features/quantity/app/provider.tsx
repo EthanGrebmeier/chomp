@@ -1,28 +1,64 @@
 import { id } from '@instantdb/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState, useRef, type ReactNode } from 'react';
+import { useGlobalSearchParams, useSegments } from 'expo-router';
+import {
+  memo,
+  startTransition,
+  useEffect,
+  useState,
+  useRef,
+  type ReactNode,
+} from 'react';
 import { toast } from 'sonner-native';
 
+import { useCategoryOptions } from '@/features/categories/use-category-options';
+import { useSettings } from '@/features/grocery-list/hooks/useSettings';
+import { useGroceryLists } from '@/features/grocery-lists/instant/useGroceryLists';
+import { useListAccessTimes } from '@/features/grocery-lists/local/list-access-store';
 import { db } from '@/lib/instant';
+import { useAppEntryVisible } from '@/lib/startup-screen-ready';
 
 import { quantityWorkspaceAvailable } from '../config';
 import { saveRecipe } from '../meals';
 import { records } from '../model';
 import { useQuantityWorkspace } from '../use-quantity-workspace';
 
+import { entryListId, retainEntryLists } from './entry-lists';
 import { initializationCache } from './initialization-cache';
 import { recipeFromApp, ensureQuantityList } from './initialize';
 import { syncQuantitySavedItems } from './saved-items';
-import { publishListSession, emptyListSession } from './session';
+import {
+  publishListSession,
+  emptyListSession,
+  useQuantityList,
+} from './session';
 import { StoreReviewHost } from './store-review-sheet';
 
 const initializedLists = initializationCache(AsyncStorage);
 
-function Session({ listId, userId }: { listId: string; userId: string }) {
-  const session = useQuantityWorkspace(listId, userId, syncQuantitySavedItems);
-  const sources = db.useQuery({
-    recipes: { recipe_ingredients: { store: {} } },
-  });
+function Session({
+  listId,
+  userId,
+  initialized,
+}: {
+  listId: string;
+  userId: string;
+  initialized: boolean;
+}) {
+  const session = useQuantityWorkspace(
+    listId,
+    userId,
+    syncQuantitySavedItems,
+    initialized
+  );
+  const entryVisible = useAppEntryVisible();
+  const sources = db.useQuery(
+    entryVisible && session.canEdit
+      ? {
+          recipes: { recipe_ingredients: { store: {} } },
+        }
+      : null
+  );
   const sourceWrite = useRef(false);
   useEffect(() => {
     if (
@@ -57,12 +93,18 @@ function Session({ listId, userId }: { listId: string; userId: string }) {
     }
   }, [session, sources.data]);
   useEffect(() => {
-    publishListSession(listId, session);
-  }, [listId, session]);
+    if (initialized) publishListSession(listId, session);
+  }, [initialized, listId, session]);
   useEffect(() => () => publishListSession(listId, null), [listId]);
   return null;
 }
-function Initialize({ listId, userId }: { listId: string; userId: string }) {
+const Initialize = memo(function Initialize({
+  listId,
+  userId,
+}: {
+  listId: string;
+  userId: string;
+}) {
   const [ready, setReady] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const connection = db.useConnectionStatus();
@@ -104,23 +146,78 @@ function Initialize({ listId, userId }: { listId: string; userId: string }) {
     };
   }, [connection, listId, userId, attempt, ready]);
   useEffect(() => () => publishListSession(listId, null), [listId]);
-  return ready ? <Session listId={listId} userId={userId} /> : null;
+  return <Session listId={listId} userId={userId} initialized={ready} />;
+});
+/** Load the visible list first; keep cross-list sessions warm once entry has painted. */
+function QuantitySessions({ userId }: { userId: string }) {
+  const query = useGroceryLists();
+  const access = useListAccessTimes(userId);
+  useCategoryOptions();
+  db.useQuery({ stores: {} });
+  const { listId } = useGlobalSearchParams<{ listId?: string }>();
+  const segments = useSegments();
+  const lists = query.data?.grocery_lists ?? [];
+  const priorityListId = entryListId(
+    lists,
+    query.isLoading,
+    listId,
+    access.accessTimes
+  );
+  const priority = useQuantityList(priorityListId);
+  const entryVisible = useAppEntryVisible();
+  const [startedIds, setStartedIds] = useState<readonly string[]>([]);
+  const retainedIds = retainEntryLists(
+    startedIds,
+    priorityListId,
+    lists,
+    query.isLoading
+  );
+  if (retainedIds !== startedIds) setStartedIds(retainedIds);
+  const nextBackgroundId = lists.find(
+    list => !retainedIds.includes(list.id)
+  )?.id;
+  const warming = useQuantityList(retainedIds.at(-1));
+  const canWarmNext = warming.canEdit || Boolean(warming.error);
+  const onAppRoute = Boolean(segments[0] && segments[0] !== '(auth)');
+  useEffect(() => {
+    if (
+      !nextBackgroundId ||
+      !canWarmNext ||
+      !entryVisible ||
+      !onAppRoute ||
+      (!priority.canEdit && !priority.error)
+    )
+      return;
+    const idle = requestIdleCallback(() =>
+      startTransition(() =>
+        setStartedIds(ids =>
+          ids.includes(nextBackgroundId) ? ids : [...ids, nextBackgroundId]
+        )
+      )
+    );
+    return () => cancelIdleCallback(idle);
+  }, [
+    entryVisible,
+    nextBackgroundId,
+    canWarmNext,
+    onAppRoute,
+    priority.canEdit,
+    priority.error,
+  ]);
+  return retainedIds.map(id => (
+    <Initialize key={id} listId={id} userId={userId} />
+  ));
 }
+
 export function QuantityAppProvider({ children }: { children: ReactNode }) {
   const { user } = db.useAuth();
   const enabled = quantityWorkspaceAvailable();
-  const query = db.useQuery(enabled && user ? { grocery_lists: {} } : null);
+  useSettings();
   return (
     <>
-      {enabled && user
-        ? query.data?.grocery_lists.map(list => (
-            <Initialize
-              key={`${user.id}:${list.id}`}
-              listId={list.id}
-              userId={user.id}
-            />
-          ))
-        : null}
+      {enabled && user ? (
+        <QuantitySessions key={`sessions:${user.id}`} userId={user.id} />
+      ) : null}
       {children}
       {enabled && user ? <StoreReviewHost key={user.id} /> : null}
     </>
