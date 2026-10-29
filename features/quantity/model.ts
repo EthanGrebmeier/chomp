@@ -134,10 +134,32 @@ export function validateDocuments(documents: QuantityState['documents']) {
  * never silently overwritten. A move/source update is one indivisible operation.
  * Missing ancestors or malformed records fail closed, including cached reads.
  */
+type ReplayCheckpoint = { key: string; state: QuantityState };
+
+/** A workspace-local replay cache. Any changed/reordered operation invalidates
+ * its suffix; the complete history is still validated before checkpoints apply. */
+export function createMaterializer() {
+  const cache: { checkpoints: ReplayCheckpoint[] } = { checkpoints: [] };
+  return (
+    operations: readonly Operation[],
+    optimisticIds: ReadonlySet<string> = new Set()
+  ) => replay(operations, optimisticIds, cache);
+}
+
 export function materialize(
   operations: readonly Operation[],
   optimisticIds: ReadonlySet<string> = new Set()
 ): QuantityState {
+  return replay(operations, optimisticIds);
+}
+
+function replay(
+  operations: readonly Operation[],
+  optimisticIds: ReadonlySet<string>,
+  cache?: { checkpoints: ReplayCheckpoint[] }
+): QuantityState {
+  const checkpoints: ReplayCheckpoint[] = [];
+  let reusable = true;
   let state: QuantityState = {
     documents: {},
     heads: [],
@@ -183,15 +205,42 @@ export function materialize(
           );
       }
     }
+    // Process causal generations in linear graph traversal rather than scanning
+    // every remaining operation again for each historical write.
+    const remainingParents = new Map<string, number>();
+    const children = new Map<string, string[]>();
+    let ready: Operation[] = [];
+    for (const op of pending.values()) {
+      const parents = [...new Set(operationParents(op))];
+      remainingParents.set(op.id, parents.length);
+      if (!parents.length) ready.push(op);
+      for (const parent of parents) {
+        const dependents = children.get(parent) ?? [];
+        dependents.push(op.id);
+        children.set(parent, dependents);
+      }
+    }
     while (pending.size) {
-      const ready = [...pending.values()]
-        .filter(op => operationParents(op).every(id => applied.has(id)))
-        .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+      ready.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
       if (!ready.length)
         throw new Error('Waiting for missing operation history');
+      const nextReady: Operation[] = [];
       for (const op of ready) {
+        for (const childId of children.get(op.id) ?? []) {
+          const count = remainingParents.get(childId)! - 1;
+          remainingParents.set(childId, count);
+          if (count === 0) nextReady.push(pending.get(childId)!);
+        }
         pending.delete(op.id);
         applied.add(op.id);
+        const key = cache ? JSON.stringify(op) : '';
+        const previous = cache?.checkpoints[checkpoints.length];
+        if (cache && reusable && previous?.key === key) {
+          state = previous.state;
+          checkpoints.push(previous);
+          continue;
+        }
+        reusable = false;
         try {
           const ids = new Set<string>();
           for (const guard of op.guards) {
@@ -245,17 +294,29 @@ export function materialize(
             ),
           };
         } catch (error) {
-          state.conflicts.push({
-            operation: op,
-            reason:
-              error instanceof Error
-                ? error.message
-                : 'Unable to apply this change',
-          });
+          state = {
+            ...state,
+            conflicts: [
+              ...state.conflicts,
+              {
+                operation: op,
+                reason:
+                  error instanceof Error
+                    ? error.message
+                    : 'Unable to apply this change',
+              },
+            ],
+          };
         }
+        if (cache) checkpoints.push({ key, state });
       }
+      ready = nextReady;
     }
-    state.heads = [...applied].filter(id => !referenced.has(id)).sort();
+    state = {
+      ...state,
+      heads: [...applied].filter(id => !referenced.has(id)).sort(),
+    };
+    if (cache) cache.checkpoints = checkpoints;
   } catch (error) {
     state = {
       ...state,
