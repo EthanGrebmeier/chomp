@@ -6,9 +6,11 @@ import { db } from '@/lib/instant';
 
 import { quantityWorkspaceAvailable } from './config';
 import { initialOperations } from './fixtures';
+import { createMaterializer } from './model';
 import {
   flushOutbox,
   operationChunk,
+  mergeConfirmedOperations,
   readWorkspaceState,
   type Pending,
 } from './sync-workspace';
@@ -114,12 +116,14 @@ export function useQuantityWorkspace(
         )
           throw new Error('Workspace access is unavailable');
         setVerified(true);
-        setConfirmed(previous => [
-          ...previous,
-          ...result.data.gqc_operations_v1.map(
-            row => JSON.parse(row.body) as Operation
-          ),
-        ]);
+        setConfirmed(previous =>
+          mergeConfirmedOperations(
+            previous,
+            result.data.gqc_operations_v1.map(
+              row => JSON.parse(row.body) as Operation
+            )
+          )
+        );
         setError(null);
       })
       .catch(() => {
@@ -130,6 +134,7 @@ export function useQuantityWorkspace(
       });
   }, [workspaceId]);
 
+  const [replay] = useState(createMaterializer);
   const flush = useCallback(() => {
     if (sending.current || !outboxLoaded || connection !== 'authenticated')
       return;
@@ -137,9 +142,11 @@ export function useQuantityWorkspace(
     return flushOutbox({
       workspaceId,
       userId,
+      replay,
       getPending: () => pendingRef.current,
       changePending,
-      confirm: operation => setConfirmed(values => [...values, operation]),
+      confirm: operation =>
+        setConfirmed(values => mergeConfirmedOperations(values, [operation])),
       afterConfirm: operation =>
         afterConfirm?.(operation, workspaceId) ?? Promise.resolve(),
     }).finally(() => {
@@ -150,6 +157,7 @@ export function useQuantityWorkspace(
     changePending,
     connection,
     outboxLoaded,
+    replay,
     userId,
     workspaceId,
   ]);
@@ -169,9 +177,10 @@ export function useQuantityWorkspace(
         confirmed,
         pending,
         query.data?.gqc_operations_v1 ?? [],
-        query.data?.gqc_workspaces_v1.length
+        query.data?.gqc_workspaces_v1.length,
+        replay
       ),
-    [confirmed, pending, query.data]
+    [confirmed, pending, query.data, replay]
   );
 
   const canEdit =
