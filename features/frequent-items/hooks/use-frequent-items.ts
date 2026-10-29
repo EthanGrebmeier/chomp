@@ -5,7 +5,8 @@ import { db } from '@/lib/instant';
 
 import { buildAddEventTransactions } from '../instant/build-add-event-transactions';
 import {
-  buildFrequentItems,
+  rankFrequentItems,
+  selectFrequentItems,
   getFrequentItemsCutoff,
   getFrequentItemsQueryCutoff,
 } from '../utils/frequent-items';
@@ -126,14 +127,16 @@ export const useFrequentItems = (listId: string) => {
     };
   }, [itemsToBackfill, list, listId]);
 
-  const freshFrequentItems = useMemo(() => {
-    if (!list) return undefined;
-
-    return buildFrequentItems({
-      events: list.grocery_item_add_events,
-      currentItems: quantityItems,
-    });
-  }, [list, quantityItems]);
+  const events = list?.grocery_item_add_events;
+  const rankedItems = useMemo(
+    () => (events ? rankFrequentItems(events) : undefined),
+    [events]
+  );
+  const freshFrequentItems = useMemo(
+    () =>
+      rankedItems ? selectFrequentItems(rankedItems, quantityItems) : undefined,
+    [rankedItems, quantityItems]
+  );
   const isBackfilling = itemsToBackfill.length > 0 && !backfillError;
 
   useEffect(() => {
