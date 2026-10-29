@@ -82,19 +82,16 @@ it('creates a list-bound guest scope once, preserves scalar totals, and leaves o
     unit: 'each',
     savedItemId: 'saved-apples',
   });
-  mocks.query
-    .mockResolvedValueOnce({
-      data: {
-        gqc_workspaces_v1: [{ id: 'real-list', appListId: 'real-list' }],
-      },
-    })
-    .mockResolvedValueOnce({
-      data: {
-        gqc_operations_v1: [{ body: writes[1].value.body }],
-        grocery_items: [],
-      },
-    });
+  mocks.query.mockResolvedValueOnce({
+    data: {
+      gqc_workspaces_v1: [{ id: 'real-list', appListId: 'real-list' }],
+      gqc_operations_v1: [{ body: writes[1].value.body }],
+      grocery_items: [],
+    },
+  });
+  mocks.query.mockClear();
   await ensureQuantityList('real-list', 'guest');
+  expect(mocks.query).toHaveBeenCalledTimes(1);
   expect(mocks.transact).toHaveBeenCalledTimes(1);
 });
 it('rejects an unrelated demo scope instead of importing into it', async () => {
@@ -139,10 +136,8 @@ it('restores saved-item links in an earlier development import by row ID', async
   };
   mocks.query
     .mockResolvedValueOnce({
-      data: { gqc_workspaces_v1: [{ id: 'list', appListId: 'list' }] },
-    })
-    .mockResolvedValueOnce({
       data: {
+        gqc_workspaces_v1: [{ id: 'list', appListId: 'list' }],
         gqc_operations_v1: [{ body: JSON.stringify(operation) }],
         grocery_items: [{ id: 'row', saved_item: { id: 'saved-milk' } }],
       },

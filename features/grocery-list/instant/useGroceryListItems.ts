@@ -16,7 +16,7 @@ export const useGroceryListItems = (listId: string | undefined) => {
   );
   return {
     items: projected,
-    isLoading: listId ? quantity.loading : false,
-    error: quantity.error ? { message: quantity.error } : null,
+    isLoading: listId ? quantity.loading || stores.isLoading : false,
+    error: quantity.error ? { message: quantity.error } : stores.error,
   };
 };

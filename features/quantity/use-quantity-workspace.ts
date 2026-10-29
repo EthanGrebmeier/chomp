@@ -22,7 +22,8 @@ const workspaceQuery = (workspaceId: string) => ({
 export function useQuantityWorkspace(
   workspaceId: string,
   userId: string,
-  afterConfirm?: (operation: Operation, workspaceId: string) => Promise<void>
+  afterConfirm?: (operation: Operation, workspaceId: string) => Promise<void>,
+  initialized = true
 ) {
   const query = db.useQuery(workspaceQuery(workspaceId));
   const connection = db.useConnectionStatus();
@@ -106,7 +107,12 @@ export function useQuantityWorkspace(
 
   const [replay] = useState(createMaterializer);
   const flush = useCallback(() => {
-    if (sending.current || !outboxLoaded || connection !== 'authenticated')
+    if (
+      !initialized ||
+      sending.current ||
+      !outboxLoaded ||
+      connection !== 'authenticated'
+    )
       return;
     sending.current = true;
     return flushOutbox({
@@ -123,6 +129,7 @@ export function useQuantityWorkspace(
       sending.current = false;
     });
   }, [
+    initialized,
     afterConfirm,
     changePending,
     connection,
@@ -133,8 +140,8 @@ export function useQuantityWorkspace(
   ]);
 
   useEffect(() => {
-    if (connection === 'authenticated') void refresh();
-  }, [connection, refresh]);
+    if (initialized && connection === 'authenticated') void refresh();
+  }, [initialized, connection, refresh]);
   useEffect(() => {
     void flush()?.catch(() =>
       setError('Unable to save the outbox. Retry before closing the app.')
@@ -154,6 +161,7 @@ export function useQuantityWorkspace(
   );
 
   const canEdit =
+    initialized &&
     verified &&
     outboxLoaded &&
     !query.isLoading &&
