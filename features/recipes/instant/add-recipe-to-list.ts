@@ -1,3 +1,5 @@
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
+
 import {
   ConflictResolution,
   DefaultStoreForStacking,
@@ -14,6 +16,7 @@ export type RecipeIngredientInput = {
 };
 
 export type AddRecipeToListArgs = {
+  reviewConflicts?: StoreReviewer;
   recipeId: string;
   listId: string;
   // Pass ingredients directly to avoid queryOnce which doesn't work offline
@@ -27,6 +30,7 @@ export const addRecipeToList = async ({
   listId,
   ingredients,
   defaultStore,
+  reviewConflicts,
   conflictResolution = 'prompt',
 }: AddRecipeToListArgs) => {
   const { addQuantityRecipe } =
@@ -36,6 +40,7 @@ export const addRecipeToList = async ({
     listId,
     ingredients,
     defaultStore,
+    reviewConflicts,
     conflictResolution,
   });
 };

@@ -1,4 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import {
+  buildStoreConflictIndex,
+  countStoreConflicts,
+} from '../store-conflict-preview';
 import { materialize, records, totalFor } from '../model';
 import { manualAdd, addEntryToRow } from '../shopping';
 import { QuantityTransaction } from '../transaction';
@@ -130,5 +134,83 @@ describe('store-only duplicate review', () => {
         newId
       )
     ).toThrow('same store');
+  });
+});
+
+describe('pre-submit conflict preview', () => {
+  it.each([
+    {
+      label: 'exact store among multiple matches',
+      incoming: item('incoming'),
+      count: 0,
+    },
+    { label: 'different store', incoming: item('incoming', 'c'), count: 1 },
+    { label: 'no store', incoming: item('incoming', ''), count: 1 },
+    {
+      label: 'different unit',
+      incoming: item('incoming', 'c', 'kg'),
+      count: 0,
+    },
+    {
+      label: 'normalized name and unit',
+      incoming: { ...item('incoming', 'c'), name: ' APPLES ', unit: ' EACH ' },
+      count: 1,
+    },
+    {
+      label: 'different name',
+      incoming: { ...item('incoming', 'c'), name: 'Oranges' },
+      count: 0,
+    },
+    {
+      label: 'blank name',
+      incoming: { ...item('incoming', 'c'), name: '' },
+      count: 0,
+    },
+  ])('matches submit-time detection for $label', ({ incoming, count }) => {
+    const state = fixture();
+    const preview = countStoreConflicts(
+      buildStoreConflictIndex(state, 'list'),
+      [incoming]
+    );
+    expect(preview).toBe(count);
+    expect(preview).toBe(
+      inspectStoreConflicts(state, 'list', [incoming]).conflicts.length
+    );
+  });
+
+  it('updates when matching rows are purchased, removed or changed to the incoming store', () => {
+    const state = fixture();
+    const incoming = [item('incoming', 'c')];
+    const preview = () =>
+      countStoreConflicts(buildStoreConflictIndex(state, 'list'), incoming);
+    expect(preview()).toBe(1);
+    const rows = records(state, 'row').filter(row => row.unit === 'each');
+    state.documents[rows[0].id] = { ...rows[0], store: 'c' };
+    expect(preview()).toBe(0);
+    state.documents[rows[0].id] = { ...rows[0], status: 'checked' };
+    expect(preview()).toBe(1);
+    state.documents[rows[1].id] = { ...rows[1], status: 'deleted' };
+    expect(preview()).toBe(0);
+    expect(
+      countStoreConflicts(
+        buildStoreConflictIndex(fixture(), 'another-list'),
+        incoming
+      )
+    ).toBe(0);
+  });
+
+  it('counts selected incoming items independently, without requiring quantity entries', () => {
+    const state = fixture();
+    for (const entry of records(state, 'entry'))
+      delete state.documents[entry.id];
+    const index = buildStoreConflictIndex(state, 'list');
+    expect(
+      countStoreConflicts(index, [
+        item('first', 'c'),
+        item('second', 'c'),
+        item('exact', 'a'),
+      ])
+    ).toBe(2);
+    expect(countStoreConflicts(index, [])).toBe(0);
   });
 });
