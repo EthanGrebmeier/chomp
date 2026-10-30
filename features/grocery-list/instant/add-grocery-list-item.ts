@@ -1,3 +1,4 @@
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
 import { id } from '@instantdb/react-native';
 import { toast } from 'sonner-native';
 
@@ -16,7 +17,9 @@ export const addGroceryListItem = ({
   selectedCloudSavedItemStoreId,
   selectedLocalSavedItemId,
   persistLocalSavedItem = true,
+  reviewConflicts,
 }: {
+  reviewConflicts?: StoreReviewer;
   listId: string;
   item: BaseGroceryItem;
   savedItemId?: string;
@@ -35,7 +38,7 @@ export const addGroceryListItem = ({
   if (quantityWorkspaceAvailable()) {
     return import('@/features/quantity/app/grocery-actions').then(
       async ({ addManualQuantity }) => {
-        await addManualQuantity(listId, item, savedItemId);
+        await addManualQuantity(listId, item, savedItemId, reviewConflicts);
         try {
           await db.transact(
             buildAddEventTransactions({
