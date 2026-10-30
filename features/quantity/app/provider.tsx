@@ -9,7 +9,6 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import { toast } from 'sonner-native';
 
 import { useCategoryOptions } from '@/features/categories/use-category-options';
 import { useSettings } from '@/features/grocery-list/hooks/useSettings';
@@ -61,12 +60,7 @@ function Session({
   );
   const sourceWrite = useRef(false);
   useEffect(() => {
-    if (
-      !session.canEdit ||
-      session.pending.length ||
-      session.state.conflicts.length ||
-      sourceWrite.current
-    )
+    if (!session.canEdit || session.pending.length || sourceWrite.current)
       return;
     for (const source of sources.data?.recipes ?? []) {
       const existing = records(session.state, 'recipe').find(
@@ -79,13 +73,8 @@ function Session({
       sourceWrite.current = true;
       void session
         .send(saveRecipe(session.state, id, recipe))
-        .catch(error =>
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : 'Could not update planned recipe quantities'
-          )
-        )
+        // Background reconciliation must not interrupt the user.
+        .catch(() => {})
         .finally(() => {
           sourceWrite.current = false;
         });

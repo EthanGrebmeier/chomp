@@ -198,6 +198,34 @@ describe('serialized multi-list commits', () => {
     );
     expect(totalFor(state('target'), 'moved-row')).toBe(2);
   });
+  it('keeps the accepted quantity and allows later edits without resolving a stale edit', async () => {
+    const { store, state, newId } = setup();
+    const stale = editQuantity(state('source'), newId, 'entry', 9);
+    const accepted = editQuantity(state('source'), newId, 'entry', 4);
+    await commitOperations(
+      store,
+      [{ workspaceId: 'source', operation: accepted }],
+      'owner'
+    );
+    await commitOperations(
+      store,
+      [{ workspaceId: 'source', operation: stale }],
+      'owner'
+    );
+    expect(totalFor(state('source'), 'row')).toBe(4);
+    const next = editQuantity(state('source'), newId, 'entry', 6);
+    await commitOperations(
+      store,
+      [{ workspaceId: 'source', operation: next }],
+      'owner',
+      true
+    );
+    expect(state('source').complete).toBe(true);
+    expect(totalFor(state('source'), 'row')).toBe(6);
+    expect(state('source').conflicts.map(c => c.operation.id)).toEqual([
+      stale.id,
+    ]);
+  });
   it('retries after an unrelated destination edit without losing it', async () => {
     const { store, state, move, newId } = setup();
     const edit = new QuantityTransaction(state('target'));

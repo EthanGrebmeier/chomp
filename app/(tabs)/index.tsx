@@ -20,7 +20,6 @@ import { PreloadedMealPlanner } from '@/features/meal-planner/components/preload
 import { useMealPlanListReconciler } from '@/features/meal-planner/hooks';
 import { type MealPlanFocusRequest } from '@/features/meal-planner/types';
 import { useQuantityList } from '@/features/quantity/app/session';
-import { QuantityListStatus } from '@/features/quantity/app/status';
 import { db } from '@/lib/instant';
 import { buildGroceryListsIndexUrl } from '@/lib/navigation';
 import {
@@ -198,7 +197,6 @@ export default function List() {
             accessibilityRole="alert"
             className="flex-1 items-center justify-center gap-1 px-6"
           >
-            <QuantityListStatus listId={activeListId} />
             <EmptyHeading>Couldn&apos;t load your groceries</EmptyHeading>
             <EmptySubtext>Check your connection, then try again.</EmptySubtext>
             {settingsError ? (
@@ -223,7 +221,6 @@ export default function List() {
             exiting={FadeOut.duration(200)}
             className="flex-1"
           >
-            <QuantityListStatus listId={activeListId} />
             <GroceryList
               onReady={handleContentReady}
               listId={activeListId}
