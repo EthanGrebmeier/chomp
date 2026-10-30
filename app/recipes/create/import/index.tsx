@@ -4,7 +4,7 @@ import Animated from 'react-native-reanimated';
 
 import { fadeIn } from '@/components/animated/transitions';
 import { BackButton } from '@/components/ui/back-button';
-import { Button } from '@/components/ui/button';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Text } from '@/components/ui/text';
 import { useImportRecipeFlowContext } from '@/features/recipes/components/import/import-recipe-flow-context';
 import { ImportRecipePageFlow } from '@/features/recipes/components/import/import-recipe-page-flow';
@@ -50,12 +50,12 @@ const GuestImportPrompt = () => {
         </Text>
       </View>
       <View className="gap-2">
-        <Button size="xl" onPress={handleCreateAccount}>
+        <BottomActionButton onPress={handleCreateAccount}>
           <Text>Create Account</Text>
-        </Button>
-        <Button size="xl" variant="outline" onPress={() => router.back()}>
+        </BottomActionButton>
+        <BottomActionButton variant="outline" onPress={() => router.back()}>
           <Text>Maybe Later</Text>
-        </Button>
+        </BottomActionButton>
       </View>
     </View>
   );

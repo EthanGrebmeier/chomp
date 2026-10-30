@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/ui/button';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Text } from '@/components/ui/text';
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import {
@@ -348,20 +348,18 @@ export default function VerifyEmailLink() {
           </View>
 
           <View className="gap-4">
-            <Button
-              size="lg"
+            <BottomActionButton
               onPress={() => router.replace('/(auth)/sign-in-email')}
             >
               <Text>Back to Email Sign In</Text>
-            </Button>
+            </BottomActionButton>
 
-            <Button
+            <BottomActionButton
               variant="secondary"
-              size="lg"
               onPress={() => router.replace('/(auth)/sign-in')}
             >
               <Text>Back to Sign-In Options</Text>
-            </Button>
+            </BottomActionButton>
           </View>
         </View>
       </View>

@@ -4,7 +4,7 @@ import { ScrollView, View } from 'react-native';
 
 import AddItemSheet from '@/components/item-sheet/add-item/add-item-sheet';
 import EditItemProvider from '@/components/item-sheet/edit-item/edit-item-sheet';
-import { Button } from '@/components/ui/button';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -105,13 +105,12 @@ export function ShoppingScreen({
                   No items at this destination
                 </Text>
               </View>
-              <Button
+              <BottomActionButton
                 variant="outline"
-                className="min-h-11"
                 onPress={() => onSessionChange({ screen: 'picker' })}
               >
                 <Text>Choose another store</Text>
-              </Button>
+              </BottomActionButton>
             </View>
           ) : null}
           <EditItemProvider groceryListId={listId}>

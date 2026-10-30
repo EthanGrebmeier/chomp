@@ -2,9 +2,11 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { View } from 'react-native';
 
+import { SheetFooter } from '@/components/sheet-content';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+
 import { BottomSheet } from '../bottom-sheet';
 import { TextInput } from '../text-input';
-import { Button } from '../ui/button';
 import { CloseButton } from '../ui/close-button';
 import { Text } from '../ui/text';
 import { useUncontrolledTextInput } from '../use-uncontrolled-text-input';
@@ -67,17 +69,17 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
         }}
         onDismiss={handleDismiss}
         footer={
-          <View className="pb-safe px-10">
-            <Button onPress={handleSave} disabled={!canSave}>
+          <SheetFooter>
+            <BottomActionButton onPress={handleSave} disabled={!canSave}>
               <Text>Save</Text>
-            </Button>
-          </View>
+            </BottomActionButton>
+          </SheetFooter>
         }
       >
-        <BottomSheet.SheetView className="pb-safe">
+        <BottomSheet.SheetView>
           <BottomSheet.Header
             title="Enter a custom unit"
-            dismissButton={<CloseButton onPress={handleCancel} />}
+            backAction={<CloseButton onPress={handleCancel} />}
             className="mb-0"
           />
 

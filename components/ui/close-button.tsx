@@ -1,14 +1,27 @@
 import { X } from 'lucide-react-native';
+import { useContext } from 'react';
 
-import { Button, ButtonProps } from './button';
-import { Icon } from './icon';
+import { CloseButtonAlignmentContext } from './close-button-alignment';
+import {
+  HeaderActionButton,
+  type HeaderActionButtonProps,
+} from './header-action';
 
-type CloseButtonProps = Omit<ButtonProps, 'size' | 'variant' | 'children'>;
+type CloseButtonProps = Omit<
+  HeaderActionButtonProps,
+  'icon' | 'variant' | 'iconSize' | 'iconAlignment'
+>;
 
 export const CloseButton = (props: CloseButtonProps) => {
+  const alignment = useContext(CloseButtonAlignmentContext);
   return (
-    <Button size="icon" variant="ghost" {...props}>
-      <Icon as={X} size={20} strokeWidth={3} className="text-foreground" />
-    </Button>
+    <HeaderActionButton
+      accessibilityLabel="Close"
+      {...props}
+      icon={X}
+      iconSize={20}
+      iconAlignment={alignment}
+      variant="ghost"
+    />
   );
 };

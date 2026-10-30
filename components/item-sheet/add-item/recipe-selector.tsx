@@ -5,7 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDebounceCallback } from 'usehooks-ts';
 
 import { EmptyRecipePrompt } from '../../../features/recipes/components/empty-recipe-prompt';
-import { RecipeCardContent } from '../../../features/recipes/components/recipe-card';
+import { RecipeRowSeparator } from '../../../features/recipes/components/recipe-book-surface';
+import { RecipeCard } from '../../../features/recipes/components/recipe-card';
 import { RecipeFilters } from '../../../features/recipes/components/recipe-filters';
 import { useRecipes } from '../../../features/recipes/hooks/useRecipes';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
@@ -14,7 +15,6 @@ import {
   filterRecipes,
 } from '../../../features/recipes/utils/filter-recipes';
 import { cn } from '../../../lib/utils';
-import { HapticPressable } from '../../ui/haptic-pressable';
 import { Text } from '../../ui/text';
 import { useUncontrolledTextInput } from '../../use-uncontrolled-text-input';
 
@@ -66,13 +66,7 @@ export const RecipeSelector = ({
 
   const renderRecipeItem = useCallback(
     ({ item }: ListRenderItemInfo<RecipeWithIngredients>) => (
-      <HapticPressable
-        onPress={() => onSelectRecipe(item)}
-        className="w-full px-4 py-1"
-        hapticType="light"
-      >
-        <RecipeCardContent name={item.name} className="w-full" />
-      </HapticPressable>
+      <RecipeCard recipe={item} onPress={() => onSelectRecipe(item)} />
     ),
     [onSelectRecipe]
   );
@@ -105,7 +99,7 @@ export const RecipeSelector = ({
   }
 
   return (
-    <View className={cn(fillHeight ? 'min-h-0 flex-1 pb-6' : 'pb-6')}>
+    <View className={cn('px-4', fillHeight && 'min-h-0 flex-1')}>
       <RecipeFilters
         searchInputKey={searchInputKey}
         searchDefaultValue={searchDefaultValue}
@@ -133,10 +127,11 @@ export const RecipeSelector = ({
       ) : (
         <FlatList
           className={cn(fillHeight && 'min-h-0 flex-1')}
-          contentInset={{ bottom: safeAreaBottom + 24 }}
+          contentContainerStyle={{ paddingBottom: safeAreaBottom + 24 }}
           data={filteredRecipes}
           keyExtractor={item => item.id}
           renderItem={renderRecipeItem}
+          ItemSeparatorComponent={RecipeRowSeparator}
           scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
           showsVerticalScrollIndicator={false}
         />

@@ -1,10 +1,10 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { Button } from '@/components/ui/button';
+import { SheetFooter } from '@/components/sheet-content';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Text } from '@/components/ui/text';
 
 import { BackButton } from '../../../components/ui/back-button';
@@ -47,31 +47,29 @@ export const RecipeConflictSheet = forwardRef<
         name="recipe-conflict-sheet"
         ref={sheetRef}
         footer={
-          <View className="gap-2 px-10 pb-2">
-            <Button
+          <SheetFooter className="gap-2">
+            <BottomActionButton
               variant="default"
-              size="lg"
               onPress={onIncrement}
               disabled={isPending}
             >
               <Text>Increment Quantities</Text>
-            </Button>
-            <Button
+            </BottomActionButton>
+            <BottomActionButton
               variant="outline"
-              size="lg"
               onPress={onCreateSeparate}
               disabled={isPending}
             >
               <Text>Create Separate Items</Text>
-            </Button>
-          </View>
+            </BottomActionButton>
+          </SheetFooter>
         }
       >
-        <BottomSheet.SheetView className="pb-safe-offset-12">
+        <BottomSheet.SheetView>
           <BottomSheet.Header
             title="Choose how to add ingredients"
-            description={`Some ingredients from "${recipeName}" match items already on this list.`}
-            dismissButton={<BackButton onPress={handleClose} />}
+            subtitle={`Some ingredients from "${recipeName}" match items already on this list.`}
+            backAction={<BackButton onPress={handleClose} />}
           />
         </BottomSheet.SheetView>
       </BottomSheet>
