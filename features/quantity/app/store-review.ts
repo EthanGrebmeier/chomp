@@ -17,9 +17,11 @@ export type StoreReviewRequest = {
   stores: Record<string, string>;
   changed: boolean;
 };
-type Reviewer = (request: StoreReviewRequest) => Promise<StoreDecisions>;
-let reviewer: Reviewer | undefined;
-export function registerStoreReviewer(next: Reviewer) {
+export type StoreReviewer = (
+  request: StoreReviewRequest
+) => Promise<StoreDecisions>;
+let reviewer: StoreReviewer | undefined;
+export function registerStoreReviewer(next: StoreReviewer) {
   reviewer = next;
   return () => {
     if (reviewer === next) reviewer = undefined;
@@ -28,7 +30,8 @@ export function registerStoreReviewer(next: Reviewer) {
 
 export async function chooseItemDestinations(
   listId: string,
-  ingredients: Ingredient[]
+  ingredients: Ingredient[],
+  review: StoreReviewer | undefined = reviewer
 ) {
   let changed = false;
   for (;;) {
@@ -45,11 +48,11 @@ export async function chooseItemDestinations(
         id
       );
     const { data } = await db.queryOnce({ stores: {} });
-    if (!reviewer)
+    if (!review)
       throw new Error(
         'Store review is unavailable. Reopen the list and try again.'
       );
-    const decisions = await reviewer({
+    const decisions = await review({
       conflicts: inspected.conflicts,
       stores: Object.fromEntries(
         data.stores.map(store => [store.id, store.name])

@@ -14,6 +14,8 @@ import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
 import { Text } from '@/components/ui/text';
 import { useCategoryOptions } from '@/features/categories/use-category-options';
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
+import { isStoreReviewCancelled } from '@/features/quantity/store-review-cancelled';
 import type { CategoryOption } from '@/features/shared/category/categories';
 import { ListItemSkeleton } from '@/features/shared/components/list-item-skeleton';
 
@@ -28,6 +30,7 @@ import {
 import { RecentItemPressable } from './recent-item-pressable';
 
 type FrequentItemsScreenProps = {
+  reviewConflicts?: StoreReviewer;
   listId: string;
 };
 
@@ -53,7 +56,7 @@ const FrequentItemRow = memo(function FrequentItemRow({
       label={`Add ${item.name} to grocery list`}
       onAdd={() => onAdd(item)}
     >
-      <ListItem className="min-h-11">
+      <ListItem className="min-h-11 px-8">
         <View className="mr-1 size-5 items-center justify-center rounded-md border border-border">
           <Icon
             as={PlusIcon}
@@ -109,7 +112,10 @@ const FrequentItemsSkeleton = () => (
   </View>
 );
 
-export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
+export const FrequentItemsScreen = ({
+  listId,
+  reviewConflicts,
+}: FrequentItemsScreenProps) => {
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { frequentItems, isLoading, error } = useFrequentItems(listId);
   const { data: stores } = useStores();
@@ -149,6 +155,7 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
 
         await addGroceryListItem({
           listId,
+          reviewConflicts,
           item: {
             name: item.name,
             quantity: item.quantity,
@@ -165,11 +172,12 @@ export const FrequentItemsScreen = ({ listId }: FrequentItemsScreenProps) => {
           next.delete(item.normalizedName);
           return next;
         });
-        toast.error(`Couldn't add ${item.name}`);
+        if (!isStoreReviewCancelled(error))
+          toast.error(`Couldn't add ${item.name}`);
         throw error;
       }
     },
-    [listId, stores]
+    [listId, stores, reviewConflicts]
   );
 
   return (
