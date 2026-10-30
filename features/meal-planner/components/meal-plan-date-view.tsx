@@ -240,7 +240,6 @@ const MealPlanEntryRow = ({
       <MealPlanMealCard
         mealPlanRecipe={entry.value}
         recipe={recipe}
-        contextMenuEnabled={!dragConfig}
         onMealPress={onMealPress}
       />
     );

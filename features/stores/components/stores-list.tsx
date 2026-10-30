@@ -13,7 +13,7 @@ type StoreRowProps = {
 };
 
 const StoreRow = ({ store, onPress }: StoreRowProps) => (
-  <ListItem>
+  <ListItem className="px-8">
     <HapticPressable
       onPress={onPress}
       hapticType="light"

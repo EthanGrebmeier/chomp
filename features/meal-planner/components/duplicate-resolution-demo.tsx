@@ -1,12 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import {
-  ArrowLeft,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Scale,
-  Store,
-} from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, ChevronLeft } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -37,14 +30,11 @@ import {
   getDemoChoiceOptions,
   getDemoChoiceDescription,
   getDemoComparisonTarget,
-  getDemoConflictDifferences,
   getDemoCustomAmountUnits,
   getDemoCustomAmountStoreOptions,
-  getDemoDecisionSummary,
   isDemoDecisionComplete,
   sortDemoConflictsForReview,
   type DemoChoice,
-  type DemoCustomAmount,
   type DemoCustomAmounts,
   type DemoDecisions,
 } from '@/features/meal-planner/duplicate-resolution/demo-choices';
@@ -56,8 +46,11 @@ import type {
   DuplicateConflict,
   DuplicateItemFields,
 } from '@/features/meal-planner/duplicate-resolution/types';
-import { cn } from '@/lib/utils';
 
+import {
+  ConflictIndexRow,
+  type ConflictIndexTreatment,
+} from './conflict-index-row';
 import { DuplicateCustomAmountField } from './duplicate-custom-amount-field';
 import { DuplicateOutcomeCards } from './duplicate-outcome-cards';
 
@@ -186,106 +179,22 @@ function ConflictsHeading({ total }: { total: number }) {
         <Text className="text-sm text-muted-foreground">
           {total === 1
             ? 'This item is already on your list. How would you like to handle it?'
-            : 'These items are already on your list. Decide how to handle them.'}
+            : 'How would you like to handle them?'}
         </Text>
       ) : null}
     </View>
   );
 }
 
-function ConflictIndexRow({
-  conflict,
-  choice,
-  customAmount,
-  disabled,
-  onPress,
-}: {
-  conflict: DuplicateConflict;
-  choice: DemoChoice;
-  customAmount?: DemoCustomAmount;
-  disabled: boolean;
-  onPress: () => void;
-}) {
-  const existing = getDemoComparisonTarget(conflict);
-  const differences = getDemoConflictDifferences(conflict);
-  const summary = getDemoDecisionSummary(conflict, choice, customAmount);
-  return (
-    <HapticPressable
-      accessibilityRole="button"
-      accessibilityLabel={`${conflict.incoming.name}: ${[...differences, summary.complete ? `Selected: ${summary.label}` : summary.label, summary.detail].join('. ')}`}
-      accessibilityState={{ disabled }}
-      accessibilityHint="Opens this item to change how it is added."
-      onPress={onPress}
-      disabled={disabled}
-      className="min-h-12 gap-1 rounded-2xl bg-muted p-4"
-    >
-      <View className="flex-row items-start justify-between gap-3">
-        <Text className="flex-1 font-semibold">{conflict.incoming.name}</Text>
-        {differences.length > 0 ? (
-          <View
-            accessible={false}
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            className="shrink-0 flex-row items-center gap-1"
-          >
-            {differences.includes('Different stores') ? (
-              <View className="rounded-md bg-amber-500/10 p-1">
-                <Icon
-                  as={Store}
-                  size={16}
-                  className="text-amber-700 dark:text-amber-400"
-                />
-              </View>
-            ) : null}
-            {differences.includes('Different quantities') ||
-            differences.includes('Different units') ? (
-              <View className="rounded-md bg-amber-500/10 p-1">
-                <Icon
-                  as={Scale}
-                  size={16}
-                  className="text-amber-700 dark:text-amber-400"
-                />
-              </View>
-            ) : null}
-          </View>
-        ) : null}
-      </View>
-      <View className="flex-row items-center gap-3">
-        <View className="flex-1 gap-1">
-          <Text
-            className="text-sm text-muted-foreground"
-            style={styles.tabular}
-          >
-            {formatDemoQuantity(existing.quantity, existing.unit)} on list ·{' '}
-            {formatDemoQuantity(
-              conflict.incoming.quantity,
-              conflict.incoming.unit
-            )}{' '}
-            adding
-          </Text>
-          <Text
-            key={summary.complete ? 'selected' : 'needs-amount'}
-            className={cn(
-              'text-sm font-medium',
-              !summary.complete && 'text-destructive'
-            )}
-          >
-            {summary.label}
-          </Text>
-        </View>
-        <Icon as={ChevronRight} size={20} className="text-muted-foreground" />
-      </View>
-    </HapticPressable>
-  );
-}
-
 export function DuplicateResolutionDemo({
   scenario,
   variant,
+  indexTreatment = 'navigation',
   onDismiss,
 }: {
   scenario: DuplicateDemoScenario;
   variant: DuplicateDemoVariant;
+  indexTreatment?: ConflictIndexTreatment;
   onDismiss: () => void;
 }) {
   const sheetRef = useRef<TrueSheet>(null);
@@ -530,6 +439,7 @@ export function DuplicateResolutionDemo({
                 {conflicts.map((item, itemIndex) => (
                   <ConflictIndexRow
                     key={item.id}
+                    treatment={indexTreatment}
                     conflict={item}
                     choice={choiceFor(item)}
                     customAmount={customAmounts[item.id]}

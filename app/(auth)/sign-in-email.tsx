@@ -14,6 +14,7 @@ import { toast } from 'sonner-native';
 
 import { BareTextInput } from '@/components/text-input';
 import { BackButton } from '@/components/ui/back-button';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
@@ -640,18 +641,17 @@ export default function SignInEmail() {
               </View>
 
               <View className="w-full items-center">
-                <Button
+                <BottomActionButton
                   className="w-full"
                   onPress={onRetryFinishPress}
                   disabled={isFinishingSignIn}
-                  size="lg"
                 >
                   {isFinishingSignIn ? (
                     <ActivityIndicator color="white" />
                   ) : (
                     <Text>Retry</Text>
                   )}
-                </Button>
+                </BottomActionButton>
               </View>
             </>
           ) : isAutoSending && !pendingFlow ? (
@@ -688,18 +688,17 @@ export default function SignInEmail() {
               </View>
 
               <View className="w-full items-center">
-                <Button
+                <BottomActionButton
                   className="w-full"
                   onPress={onSendCodePress}
                   disabled={isBusy}
-                  size="xl"
                 >
                   {isSendingCode ? (
                     <ActivityIndicator color="white" />
                   ) : (
                     <Text>Send Code</Text>
                   )}
-                </Button>
+                </BottomActionButton>
               </View>
             </>
           ) : (
@@ -784,10 +783,9 @@ export default function SignInEmail() {
               </View>
 
               <View className="items-center gap-2">
-                <Button
+                <BottomActionButton
                   onPress={onVerifyCodePress}
                   disabled={isBusy}
-                  size="xl"
                   className="w-full"
                 >
                   {isVerifyingCode ? (
@@ -795,12 +793,11 @@ export default function SignInEmail() {
                   ) : (
                     <Text>Verify Code</Text>
                   )}
-                </Button>
+                </BottomActionButton>
 
-                <Button
+                <BottomActionButton
                   onPress={onResendCode}
                   disabled={isBusy}
-                  size="xl"
                   variant="outline"
                   className="w-full"
                 >
@@ -809,7 +806,7 @@ export default function SignInEmail() {
                   ) : (
                     <Text>Resend Code</Text>
                   )}
-                </Button>
+                </BottomActionButton>
               </View>
             </>
           )}

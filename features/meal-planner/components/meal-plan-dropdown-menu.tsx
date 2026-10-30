@@ -1,5 +1,5 @@
-import { MoreHorizontal } from 'lucide-react-native';
 import { Alert } from 'react-native';
+
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -7,7 +7,7 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
-import { Icon } from '@/components/ui/icon';
+import { HeaderMenuTrigger } from '@/components/ui/header-action';
 
 import { useClearMealPlan } from '../hooks/useClearMealPlan';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
@@ -55,14 +55,7 @@ export function MealPlanDropdownMenu({
 
   return (
     <DropdownMenuRoot
-      trigger={
-        <Icon
-          hitSlop={14}
-          as={MoreHorizontal}
-          size={24}
-          accessibilityLabel="Meal plan actions"
-        />
-      }
+      trigger={<HeaderMenuTrigger accessibilityLabel="Meal plan actions" />}
     >
       <DropdownMenuContent>
         <DropdownMenuItem

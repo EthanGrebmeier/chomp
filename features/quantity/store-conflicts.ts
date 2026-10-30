@@ -1,5 +1,6 @@
 import { normalize, totalFor } from './model';
 import { matchingRows, type Destination, type NewId } from './shopping';
+import { needsStoreReview } from './store-conflict-preview';
 import type {
   Ingredient,
   QuantityState,
@@ -29,7 +30,7 @@ export function inspectStoreConflicts(
     );
     const exact = rows.find(row => row.store === item.store);
     if (exact) destinations[item.id] = { rowId: exact.id, store: exact.store };
-    else if (rows.length)
+    else if (needsStoreReview(new Set(rows.map(row => row.store)), item.store))
       conflicts.push({
         item,
         rows: rows.map(row => ({

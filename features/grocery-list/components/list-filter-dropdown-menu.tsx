@@ -12,7 +12,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../../../components/native-dropdown';
-import { Icon } from '../../../components/ui/icon';
+import { HeaderMenuTrigger } from '../../../components/ui/header-action';
 import { GroceryListGroupBy, GroceryListSortBy } from '../types';
 
 type GroupByValue = GroceryListGroupBy;
@@ -40,7 +40,11 @@ export const ListFilterDropdownMenu = ({
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger>
-        <Icon as={ListFilter} size={24} hitSlop={14} />
+        <HeaderMenuTrigger
+          size="regular"
+          icon={ListFilter}
+          accessibilityLabel="Filter and sort list"
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuSub>

@@ -88,6 +88,7 @@ const buttonVariants = cva(
         'wide-small': cn('h-10 w-24'),
         icon: 'size-9',
         iconLg: 'size-14',
+        bottom: 'min-h-12 h-auto px-6 py-3',
       },
     },
     defaultVariants: {
@@ -128,6 +129,7 @@ const buttonTextVariants = cva(
         'wide-small': '',
         icon: '',
         iconLg: '',
+        bottom: 'text-center shrink',
       },
     },
     defaultVariants: {
@@ -170,6 +172,10 @@ const floatingIconOffsets: Record<
     right: 'right-2',
   },
   iconLg: {
+    left: 'left-4',
+    right: 'right-4',
+  },
+  bottom: {
     left: 'left-4',
     right: 'right-4',
   },

@@ -1,8 +1,7 @@
 import { TextSearchIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
-import { Button } from './button';
-import { Icon } from './icon';
+import { HeaderActionButton } from './header-action';
 
 type SearchButtonProps = {
   onPress: () => void;
@@ -18,21 +17,14 @@ export const SearchButton = ({
 }: SearchButtonProps) => {
   return (
     <View className="relative">
-      <Button
-        size="icon"
-        variant="secondary"
+      <HeaderActionButton
+        icon={TextSearchIcon}
+        variant="ghost"
         onPress={onPress}
         accessibilityLabel={accessibilityLabel}
-      >
-        <Icon
-          strokeWidth={3}
-          className="text-secondary-foreground"
-          as={TextSearchIcon}
-          size={16}
-        />
-      </Button>
+      />
       {hasActiveFilters ? (
-        <View className="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-background bg-primary" />
+        <View className="absolute right-0.5 top-0.5 size-3 rounded-full border-2 border-background bg-primary" />
       ) : null}
     </View>
   );

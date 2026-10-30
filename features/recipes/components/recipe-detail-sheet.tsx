@@ -51,7 +51,7 @@ export const RecipeDetailSheet = forwardRef<
       viewClassName="flex-1"
       onDismiss={handleDismiss}
     >
-      <BottomSheet.Header title="View recipe" className="px-4" />
+      <BottomSheet.Header title="View recipe" />
       <View className="flex-1">
         {isLoading ? (
           <Animated.View

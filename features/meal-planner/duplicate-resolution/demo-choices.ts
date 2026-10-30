@@ -1,5 +1,5 @@
-import { normalizeDuplicateToken } from './detection';
 import { DEMO_STORE_NAMES } from './demo-fixtures';
+import { normalizeDuplicateToken } from './detection';
 import type { DuplicateConflict } from './types';
 
 // UI exploration only. Store preferences are not executable planner decisions.

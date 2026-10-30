@@ -9,6 +9,7 @@ import { toast } from 'sonner-native';
 import { initializeDefaultGroceryList } from '@/features/grocery-lists/instant/useInitializeDefaultGroceryList';
 import {
   InstantBridgeError,
+  runWithEmailAuthCompletion,
   useInstantSignIn,
 } from '@/lib/instant/use-clerk-auth';
 
@@ -40,24 +41,28 @@ export function useOAuthFlow() {
       const shouldCreateDefaultList = signUp?.status === 'complete';
 
       if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId });
-        try {
-          await signInToInstant();
-          if (shouldCreateDefaultList) {
-            await initializeDefaultGroceryList();
-          }
-          router.replace('/(tabs)', { withAnchor: true });
-        } catch (error) {
-          if (error instanceof InstantBridgeError) {
-            toast.error(
-              'Network issue finishing sign-in. Your account is still signed in.'
-            );
-            return;
-          }
+        await runWithEmailAuthCompletion(async () => {
+          await setActive({ session: createdSessionId });
+          try {
+            await signInToInstant();
+            if (shouldCreateDefaultList) {
+              await initializeDefaultGroceryList();
+            }
+            router.replace('/(tabs)', { withAnchor: true });
+          } catch (error) {
+            if (error instanceof InstantBridgeError) {
+              toast.error(
+                'Network issue finishing sign-in. Your account is still signed in.'
+              );
+              return;
+            }
 
-          await resetToSignedOutState();
-          toast.error('We could not finish signing you in. Please try again.');
-        }
+            await resetToSignedOutState();
+            toast.error(
+              'We could not finish signing you in. Please try again.'
+            );
+          }
+        });
         return;
       }
 
@@ -104,24 +109,28 @@ export function useOAuthFlow() {
       const shouldCreateDefaultList = signUp?.status === 'complete';
 
       if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId });
-        try {
-          await signInToInstant();
-          if (shouldCreateDefaultList) {
-            await initializeDefaultGroceryList();
-          }
-          router.replace('/(tabs)', { withAnchor: true });
-        } catch (error) {
-          if (error instanceof InstantBridgeError) {
-            toast.error(
-              'Network issue finishing sign-in. Your account is still signed in.'
-            );
-            return;
-          }
+        await runWithEmailAuthCompletion(async () => {
+          await setActive({ session: createdSessionId });
+          try {
+            await signInToInstant();
+            if (shouldCreateDefaultList) {
+              await initializeDefaultGroceryList();
+            }
+            router.replace('/(tabs)', { withAnchor: true });
+          } catch (error) {
+            if (error instanceof InstantBridgeError) {
+              toast.error(
+                'Network issue finishing sign-in. Your account is still signed in.'
+              );
+              return;
+            }
 
-          await resetToSignedOutState();
-          toast.error('We could not finish signing you in. Please try again.');
-        }
+            await resetToSignedOutState();
+            toast.error(
+              'We could not finish signing you in. Please try again.'
+            );
+          }
+        });
         return;
       }
 

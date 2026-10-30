@@ -1,6 +1,8 @@
 import { useNetworkState } from 'expo-network';
-import { MoreHorizontal, WifiOff } from 'lucide-react-native';
+import { WifiOff } from 'lucide-react-native';
 import { View } from 'react-native';
+
+import { HeaderMenuTrigger } from '@/components/ui/header-action';
 
 import { Icon } from '../../../components/ui/icon';
 import {
@@ -59,7 +61,7 @@ export function GroceryListActions({
     networkState.isInternetReachable === false;
 
   return (
-    <View className="h-11 flex-row items-center gap-4">
+    <View className="h-11 flex-row items-center gap-2">
       {isDisconnected ? (
         <Icon as={WifiOff} size={20} className="text-destructive" />
       ) : null}
@@ -78,7 +80,12 @@ export function GroceryListActions({
         canStartShopping={canStartShopping}
         items={items}
         ownerId={ownerId}
-        trigger={<Icon hitSlop={14} as={MoreHorizontal} size={24} />}
+        trigger={
+          <HeaderMenuTrigger
+            size="regular"
+            accessibilityLabel="Grocery list actions"
+          />
+        }
         onClearListPress={onClearListPress}
         onSharePress={onSharePress}
         onDeleteOrLeave={onDeleteOrLeave}

@@ -4,7 +4,7 @@ import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/ui/back-button';
-import { Button } from '@/components/ui/button';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Text } from '@/components/ui/text';
 import {
   EditParsedIngredientSheet,
@@ -81,9 +81,9 @@ export default function ImportRecipeIngredientsPage() {
         className="border-t border-border bg-background px-4 pt-3"
         style={{ paddingBottom: Math.max(bottomInset, 12) }}
       >
-        <Button size="xl" onPress={() => router.back()}>
+        <BottomActionButton onPress={() => router.back()}>
           <Text>Done</Text>
-        </Button>
+        </BottomActionButton>
       </View>
 
       <EditParsedIngredientSheet

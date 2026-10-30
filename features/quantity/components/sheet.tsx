@@ -2,6 +2,7 @@ import { type ReactNode, useEffect } from 'react';
 import { ScrollView } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { SheetBody } from '@/components/sheet-content';
 import { BackButton } from '@/components/ui/back-button';
 
 import type { useSheetController } from './use-sheet-controller';
@@ -24,26 +25,18 @@ export function Sheet({
   return (
     <BottomSheet ref={ref} detents={[0.85]} scrollable onDismiss={onDismiss}>
       <BottomSheet.Header
-        className="px-4"
         title={title}
-        dismissButton={
+        backAction={
           <BackButton
             onPress={() => {
               void ref.current?.dismiss();
             }}
           />
         }
-        button={button}
+        primaryAction={button}
       />
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingHorizontal: 24,
-          paddingBottom: 40,
-          gap: 16,
-        }}
-      >
-        {children}
+      <ScrollView keyboardShouldPersistTaps="handled">
+        <SheetBody className="gap-4">{children}</SheetBody>
       </ScrollView>
     </BottomSheet>
   );

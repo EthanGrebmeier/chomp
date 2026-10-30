@@ -1,6 +1,9 @@
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
+
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
 
 export type AddItemToDateArgs = {
+  reviewConflicts?: StoreReviewer;
   listId: string;
   name: string;
   quantity: number;
@@ -10,13 +13,14 @@ export type AddItemToDateArgs = {
   storeId?: string;
   date: string;
   mealTag?: string;
+  showOnGroceryList?: boolean;
   /** List default store, applied to the linked item when it has no store. */
   defaultStore?: DefaultStoreForStacking | null;
 };
 
 /**
  * Adds a standalone item to the meal plan and, in the same transaction,
- * creates its linked grocery item.
+ * optionally creates its linked grocery item (shown by default).
  */
 export const addItemToDate = async ({
   listId,
@@ -28,7 +32,9 @@ export const addItemToDate = async ({
   storeId,
   date,
   mealTag,
+  showOnGroceryList,
   defaultStore,
+  reviewConflicts,
 }: AddItemToDateArgs) => {
   const { planQuantityItem } =
     await import('@/features/quantity/app/meal-actions');
@@ -42,6 +48,8 @@ export const addItemToDate = async ({
     storeId,
     date,
     mealTag,
+    showOnGroceryList,
     defaultStore,
+    reviewConflicts,
   });
 };
