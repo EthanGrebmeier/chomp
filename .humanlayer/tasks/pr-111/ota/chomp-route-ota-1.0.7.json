@@ -1,0 +1,14 @@
+[
+  {
+    "id": "01a17686-9f7c-74c5-a2a1-9301116e58ec",
+    "createdAt": "2026-10-26T04:44:56.572Z",
+    "group": "d654288e-7477-4176-a637-497d168f1a27",
+    "branch": "production",
+    "message": "Fix cold launch with a restored shopping session",
+    "runtimeVersion": "1.0.7",
+    "platform": "ios",
+    "manifestPermalink": "https://u.expo.dev/update/01a17686-9f7c-74c5-a2a1-9301116e58ec",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "3044cd0e358ab372e725ebe8d008675aa3f8560f"
+  }
+]

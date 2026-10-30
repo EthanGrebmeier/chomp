@@ -1,0 +1,14 @@
+[
+  {
+    "id": "01a17681-7ee0-7909-ab68-ae221ec24add",
+    "createdAt": "2026-10-26T04:39:20.544Z",
+    "group": "afc18817-3702-4763-82f3-b4f275a648aa",
+    "branch": "production",
+    "message": "Fix splash dismissal after startup state changes",
+    "runtimeVersion": "1.0.7",
+    "platform": "ios",
+    "manifestPermalink": "https://u.expo.dev/update/01a17681-7ee0-7909-ab68-ae221ec24add",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "58e5e40cca90d47d821305e44b4e7dfccb105ea4"
+  }
+]

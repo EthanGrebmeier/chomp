@@ -1,0 +1,27 @@
+{
+  "incident": "User reported splash-screen hang on TestFlight 1.0.7 after shopping/recipe OTA",
+  "failedUpdateGroup": "d824fb17-7d33-4969-bbb6-62cb0337e732",
+  "recovery": "Republished exact previous bundles for 1.0.5, 1.0.6, and 1.0.7; verified serving each runtime; annotated recovery tags pushed",
+  "findings": [
+    "Failed 1.0.7 bytecode contains expected Clerk publishable key and approved Instant app ID",
+    "quantityWorkspaceAvailable compiles to true in both known-good and failed bundles",
+    "Both bytecode versions are 98",
+    "No native dependency or runtime configuration source changes between bundles"
+  ],
+  "rootCause": "Splash readiness required the tabs group. Restoring a saved shopping session navigated to the root-level shopping route before dismissal, so readiness never became true.",
+  "nextStep": null,
+  "sourceState": "Main and all three active release branches include shopping grouping, recipe cards, and both startup fixes; matching OTAs are published and delivery verified.",
+  "evidence": [
+    "Device metadata proved both rollback and timer-fix bundles launched while splash remained visible",
+    "User confirmed opening chomp://grocery-lists immediately exposed the app",
+    "Device metadata confirms route-fix update 01a17686-9f7c-74c5-a2a1-9301116e58ec launched normally",
+    "User confirmed normal startup on route-fix update ending 58ec without the list-picker shortcut"
+  ],
+  "additionalFix": "Moved hidden flag into delayed callback to allow retry after effect cleanup; valid bug but insufficient alone for this incident.",
+  "recoveryStatus": "Complete. User confirmed normal startup on 1.0.7 and explicitly approved rollout to 1.0.5 and 1.0.6. Both are published with runtime delivery verified. CI passed on main and all three release heads.",
+  "finalUpdates": {
+    "1.0.5": "01a1768a-431f-7c6d-8b70-24f36364d679",
+    "1.0.6": "01a1768a-465c-780a-8a94-264103c77415",
+    "1.0.7": "01a17686-9f7c-74c5-a2a1-9301116e58ec"
+  }
+}

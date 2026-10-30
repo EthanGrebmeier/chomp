@@ -1,0 +1,14 @@
+[
+  {
+    "id": "01a18117-0648-725b-8876-37b802a47c10",
+    "createdAt": "2026-10-28T05:58:52.232Z",
+    "group": "5215e5af-dce5-49b9-a45b-50a78b8e8554",
+    "branch": "production",
+    "message": "Startup speed, purchased history, item taps, and multiline notes (1.0.5)",
+    "runtimeVersion": "1.0.5",
+    "platform": "ios",
+    "manifestPermalink": "https://u.expo.dev/update/01a18117-0648-725b-8876-37b802a47c10",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "6a8d76daec5a99989608bf5b515c4459d55e84d8"
+  }
+]
