@@ -28,6 +28,7 @@ import Animated, {
 import { toast } from 'sonner-native';
 
 import { moveQuantityRows } from '@/features/quantity/app/grocery-actions';
+import { useAppEntryVisible } from '@/lib/startup-screen-ready';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
 import {
@@ -105,6 +106,7 @@ type GroceryListProps = {
   ownerId?: string;
   items: GroceryListItemWithRecipe[];
   isItemsLoading?: boolean;
+  onReady?: () => void;
   groupBy: GroceryListGroupBy;
   sortBy: GroceryListSortBy;
   onBackPress: () => void;
@@ -136,6 +138,7 @@ export const GroceryList = ({
   ownerId,
   items,
   isItemsLoading = false,
+  onReady,
   groupBy: initialGroupBy,
   sortBy: initialSortBy,
   onBackPress,
@@ -147,12 +150,18 @@ export const GroceryList = ({
   alternateContent,
   onOpenMealPlanDate,
 }: GroceryListProps) => {
+  const entryVisible = useAppEntryVisible();
   const { width: viewportWidth } = useWindowDimensions();
   const shareListSheetRef = useRef<ShareListSheetRef>(null);
   const editListNameSheetRef = useRef<EditListNameSheetRef>(null);
   const { mutate: updateSettings } = useUpdateSettings();
   const { user } = db.useAuth();
   const shopping = useShoppingSession(user?.id, listId);
+  const [itemsRendered, setItemsRendered] = useState(false);
+  const handleItemsReady = useCallback(() => setItemsRendered(true), []);
+  useEffect(() => {
+    if (itemsRendered && (shopping.ready || !listId)) onReady?.();
+  }, [itemsRendered, shopping.ready, listId, onReady]);
   const shoppingPushPending = useRef(false);
   useFocusEffect(
     useCallback(() => {
@@ -785,7 +794,7 @@ export const GroceryList = ({
           ) : (
             <Animated.View
               key="view-switcher"
-              entering={FadeIn.duration(180)}
+              entering={entryVisible ? FadeIn.duration(180) : undefined}
               exiting={FadeOut.duration(120)}
               className="absolute inset-0"
             >
@@ -813,6 +822,7 @@ export const GroceryList = ({
             >
               <View className="flex-1">
                 <GroceryItemsList
+                  onReady={handleItemsReady}
                   items={filteredItems}
                   totalItemCount={items.length}
                   isLoading={isItemsLoading}

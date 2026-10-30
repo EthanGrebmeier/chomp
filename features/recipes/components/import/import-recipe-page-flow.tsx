@@ -18,7 +18,7 @@ import {
   STAGGER_MS,
 } from '@/components/animated/transitions';
 import { TextInput } from '@/components/text-input';
-import { Button } from '@/components/ui/button';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Text } from '@/components/ui/text';
 import { getImportErrorPresentation } from '@/features/recipes/constants/import-errors';
 import { useClipboardUrlHint } from '@/features/recipes/hooks/useClipboardUrlHint';
@@ -99,13 +99,12 @@ const UrlStep = ({ flow }: { flow: UseImportRecipeFlowReturn }) => {
           <ClipboardUrlChip onPress={handlePaste} />
         ) : null}
 
-        <Button
-          size="xl"
+        <BottomActionButton
           onPress={flow.handleSubmitUrl}
           disabled={!flow.urlHasValue}
         >
           <Text>Import Recipe</Text>
-        </Button>
+        </BottomActionButton>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -208,8 +207,7 @@ const PreviewStep = ({ flow }: { flow: UseImportRecipeFlowReturn }) => {
           className="bg-background px-4 pt-3"
           style={{ paddingBottom: Math.max(bottomInset, 12) }}
         >
-          <Button
-            size="xl"
+          <BottomActionButton
             onPress={flow.handleConfirmImport}
             disabled={isNameTooLong || !state.editedName.trim()}
           >
@@ -218,7 +216,7 @@ const PreviewStep = ({ flow }: { flow: UseImportRecipeFlowReturn }) => {
                 ? 'Import Recipe'
                 : `Import ${selectedCount} Ingredient${selectedCount !== 1 ? 's' : ''}`}
             </Text>
-          </Button>
+          </BottomActionButton>
         </View>
       </KeyboardStickyView>
     </View>
@@ -242,20 +240,19 @@ const ErrorStep = ({
       </Animated.View>
       <Animated.View entering={fadeInUp(STAGGER_MS)} className="gap-2">
         {retryable ? (
-          <Button size="xl" onPress={flow.handleSubmitUrl}>
+          <BottomActionButton onPress={flow.handleSubmitUrl}>
             <Text>Try Again</Text>
-          </Button>
+          </BottomActionButton>
         ) : null}
-        <Button
-          size="xl"
+        <BottomActionButton
           variant={retryable ? 'outline' : 'default'}
           onPress={flow.handleRetry}
         >
           <Text>Edit URL</Text>
-        </Button>
-        <Button size="xl" variant="ghost" onPress={onCancel}>
+        </BottomActionButton>
+        <BottomActionButton variant="ghost" onPress={onCancel}>
           <Text>Cancel</Text>
-        </Button>
+        </BottomActionButton>
       </Animated.View>
     </ScrollView>
   );

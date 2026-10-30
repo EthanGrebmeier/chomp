@@ -1,15 +1,7 @@
-import { useRecyclingState } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
-import { memo, useCallback, useLayoutEffect, useRef } from 'react';
-import { Platform, View, type TextLayoutEvent } from 'react-native';
-import Animated, {
-  Easing,
-  SharedValue,
-  useAnimatedReaction,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { Platform, View } from 'react-native';
+import { useSharedValue } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
 import { CategoryTag } from '../../../components/category-tag';
@@ -23,8 +15,8 @@ import {
   type SwipeToDeleteHandle,
 } from '../../../components/ui/swipe-to-delete';
 import { Text } from '../../../components/ui/text';
+import { TogglePressable } from '../../../components/ui/toggle-pressable';
 import { useTheme } from '../../../hooks/use-theme';
-import { cn } from '../../../lib/utils';
 import { CategoryOption } from '../../shared/category/categories';
 import { checkListItem } from '../instant/check-list-item';
 import { removeGroceryListItem } from '../instant/remove-grocery-list-item';
@@ -49,64 +41,6 @@ type GroceryListItemProps = {
 
 const LONG_PRESS_SUPPRESSION_MS = 750;
 
-type StrikethroughLineMetrics = {
-  height: number;
-  width: number;
-  x: number;
-  y: number;
-};
-
-type StrikethroughLineProps = {
-  color: string;
-  line: StrikethroughLineMetrics;
-  lineIndex: number;
-  progress: SharedValue<number>;
-  totalLines: number;
-};
-
-const StrikethroughLine = memo(function StrikethroughLine({
-  color,
-  line,
-  lineIndex,
-  progress,
-  totalLines,
-}: StrikethroughLineProps) {
-  const animatedStyle = useAnimatedStyle(() => {
-    const lineProgress = Math.min(
-      Math.max(progress.get() * totalLines - lineIndex, 0),
-      1
-    );
-
-    return {
-      // Keep the left edge fixed without changing layout on every frame.
-      // Transform-only updates bypass the shadow tree (see the Reanimated
-      // `*_SYNCHRONOUSLY_UPDATE_UI_PROPS` flags in package.json), so React
-      // commits from the check-off re-render cannot pause this animation.
-      transform: [
-        { translateX: ((lineProgress - 1) * line.width) / 2 },
-        { scaleX: lineProgress },
-      ],
-    };
-  });
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        animatedStyle,
-        {
-          position: 'absolute',
-          top: line.y + line.height / 2 - 1,
-          left: line.x,
-          width: line.width,
-          height: 2,
-          backgroundColor: color,
-        },
-      ]}
-    />
-  );
-});
-
 const GroceryListItemComponent = ({
   item,
   categoryOptions,
@@ -120,14 +54,14 @@ const GroceryListItemComponent = ({
   onToggleBulkSelection,
   onEnterBulkSelectionModeWithItem,
 }: GroceryListItemProps) => {
-  const [strikethroughLines, setStrikethroughLines] = useRecyclingState<
-    StrikethroughLineMetrics[]
-  >([], [item.id]);
+  const [pendingCheck, setPendingCheck] = useState<{
+    checked: boolean;
+    attempt: number;
+  } | null>(null);
+  const displayedChecked = pendingCheck?.checked ?? isChecked;
+  const checkAttemptRef = useRef(0);
   const notes = item.notes?.trim();
   const sourceLabel = groceryItemSourceLabel(item);
-  const animationTargetRef = useRef({ itemId: item.id, isChecked });
-  const lastObservedCheckedStateRef = useRef({ itemId: item.id, isChecked });
-  const checkAttemptRef = useRef(0);
   const swipeableRef = useRef<SwipeToDeleteHandle | null>(null);
   const lastLongPressAtRef = useRef(0);
 
@@ -137,112 +71,28 @@ const GroceryListItemComponent = ({
     default: undefined,
   });
 
-  // Both animations receive local intent before the list re-renders.
-  const animatedChecked = useSharedValue(isChecked);
-  const strikethroughWidth = useSharedValue(isChecked ? 1 : 0);
-
-  const strokeDuration = 200 * Math.max(strikethroughLines.length, 1);
-  // Create and advance the animation on the UI runtime. Re-renders and text
-  // measurements must not create a fresh timing animation for the same intent.
-  useAnimatedReaction(
-    () => animatedChecked.get(),
-    (checked, previousChecked) => {
-      if (previousChecked === null || checked === previousChecked) {
-        return;
-      }
-      strikethroughWidth.set(
-        withTiming(checked ? 1 : 0, {
-          duration: strokeDuration,
-          // Ease the whole stroke, not each line, so multi-line items do not
-          // stall at line breaks. Quad keeps the last line from crawling.
-          easing: Easing.out(Easing.quad),
-        })
-      );
-    }
-  );
-
-  const animateCheckedState = useCallback(
-    (checked: boolean) => {
-      animationTargetRef.current = { itemId: item.id, isChecked: checked };
-      animatedChecked.set(checked);
-    },
-    [animatedChecked, item.id]
-  );
-
+  const animatedChecked = useSharedValue(displayedChecked);
   useLayoutEffect(() => {
-    const previousObserved = lastObservedCheckedStateRef.current;
-    lastObservedCheckedStateRef.current = { itemId: item.id, isChecked };
-
-    if (previousObserved.itemId !== item.id) {
-      // FlashList can recycle this row for an entirely different item.
-      checkAttemptRef.current += 1;
-      animationTargetRef.current = { itemId: item.id, isChecked };
-      animatedChecked.set(isChecked);
-      strikethroughWidth.set(isChecked ? 1 : 0);
-    } else if (
-      previousObserved.isChecked !== isChecked &&
-      animationTargetRef.current.isChecked !== isChecked
-    ) {
-      // Only a changed prop can override local intent. Text-layout updates
-      // must not reverse a tap while the controlled prop is catching up.
-      animateCheckedState(isChecked);
-    }
-  }, [
-    animateCheckedState,
-    animatedChecked,
-    isChecked,
-    item.id,
-    strikethroughWidth,
-  ]);
-
-  const handleTextLayout = useCallback(
-    (event: TextLayoutEvent) => {
-      const nextLines = event.nativeEvent.lines.map(
-        ({ height, width, x, y }) => ({
-          height,
-          width,
-          x,
-          y,
-        })
-      );
-
-      setStrikethroughLines(previousLines => {
-        const linesAreUnchanged =
-          previousLines.length === nextLines.length &&
-          previousLines.every((line, index) => {
-            const nextLine = nextLines[index];
-            return (
-              line.height === nextLine.height &&
-              line.width === nextLine.width &&
-              line.x === nextLine.x &&
-              line.y === nextLine.y
-            );
-          });
-
-        return linesAreUnchanged ? previousLines : nextLines;
-      }, true);
-    },
-    [setStrikethroughLines]
-  );
+    animatedChecked.set(displayedChecked);
+  }, [animatedChecked, displayedChecked]);
 
   const onCheck = async (checked: boolean) => {
     swipeableRef.current?.close();
-
     if (isBulkSelectionModeActive) {
       onToggleBulkSelection?.(item.id);
       return;
     }
 
     const attempt = ++checkAttemptRef.current;
-    animateCheckedState(checked);
+    setPendingCheck({ checked, attempt });
     try {
       await checkListItem({ itemId: item.id, isChecked: checked });
     } catch {
-      if (checkAttemptRef.current === attempt) {
-        animateCheckedState(lastObservedCheckedStateRef.current.isChecked);
-      }
       toast.error('Could not save item. Check your connection and try again.');
     }
+    // Older saves cannot clear feedback for a newer tap. Model publication
+    // precedes completion, so releasing local intent also handles rollback.
+    setPendingCheck(current => (current?.attempt === attempt ? null : current));
   };
 
   const handleRowPress = () => {
@@ -258,7 +108,7 @@ const GroceryListItemComponent = ({
     }
 
     if (rowPressAction === 'toggleChecked') {
-      void onCheck(!animationTargetRef.current.isChecked);
+      void onCheck(!displayedChecked);
       return;
     }
 
@@ -280,7 +130,7 @@ const GroceryListItemComponent = ({
 
   const checkboxChecked = isBulkSelectionModeActive
     ? isBulkSelected
-    : isChecked;
+    : displayedChecked;
 
   const handleSwipeDeletePress = useCallback(() => {
     removeGroceryListItem({ item }).catch(() => {
@@ -289,6 +139,65 @@ const GroceryListItemComponent = ({
       );
     });
   }, [item]);
+
+  const rowContent = (
+    <>
+      <View className="flex-row  justify-between ">
+        <View className="relative flex-1 flex-row gap-2 pr-2">
+          <View className="flex-row items-center gap-2">
+            <Text
+              variant="itemTitle"
+              style={[
+                compactTextStyle,
+                {
+                  color: displayedChecked
+                    ? theme.mutedForeground
+                    : theme.foreground,
+                  textDecorationLine: displayedChecked
+                    ? 'line-through'
+                    : 'none',
+                  textDecorationColor: theme.destructive,
+                },
+              ]}
+            >
+              {item.name}
+              {'  '}
+              <Text
+                variant="itemMeta"
+                className="pl-2"
+                style={compactTextStyle}
+              >
+                {formatQuantityUnit(item.quantity, item.unit)}
+              </Text>
+            </Text>
+          </View>
+        </View>
+        <View className="flex-row gap-2">
+          {!hideOrganizationTags && item.category ? (
+            <CategoryTag
+              category={item.category}
+              categoryOptions={categoryOptions}
+            />
+          ) : null}
+        </View>
+      </View>
+      {notes ? (
+        <Text
+          variant="itemDescription"
+          className="-my-0.5"
+          style={[compactTextStyle, { opacity: displayedChecked ? 0.8 : 1 }]}
+        >
+          {notes}
+        </Text>
+      ) : null}
+      <View className="flex-row items-center gap-2">
+        {!hideOrganizationTags && item.store?.name && (
+          <StoreTag name={item.store.name} />
+        )}
+        {sourceLabel ? <RecipeTag name={sourceLabel} /> : null}
+      </View>
+    </>
+  );
 
   const itemContent = (
     <ListItem className={className}>
@@ -301,82 +210,41 @@ const GroceryListItemComponent = ({
         onChange={onCheck}
       />
 
-      <HapticPressable
-        className="flex-1 gap-0.5 py-1"
-        onPress={handleRowPress}
-        onLongPress={
-          onEnterBulkSelectionModeWithItem || isBulkSelectionModeActive
-            ? handleRowLongPress
-            : undefined
-        }
-        accessibilityRole={
-          rowPressAction === 'toggleChecked' ? 'checkbox' : 'button'
-        }
-        accessibilityState={
-          rowPressAction === 'toggleChecked'
-            ? { checked: isChecked }
-            : undefined
-        }
-        delayLongPress={200}
-        hapticType="light"
-      >
-        <View className="flex-row  justify-between ">
-          <View className="relative flex-1 flex-row gap-2 pr-2">
-            <View className="flex-row items-center gap-2">
-              <Text
-                variant="itemTitle"
-                className={cn(isChecked && 'text-muted-foreground')}
-                style={compactTextStyle}
-                onTextLayout={handleTextLayout}
-              >
-                {item.name}
-                {'  '}
-                <Text
-                  variant="itemMeta"
-                  className="pl-2"
-                  style={compactTextStyle}
-                >
-                  {formatQuantityUnit(item.quantity, item.unit)}
-                </Text>
-              </Text>
-
-              {strikethroughLines.map((line, index) => (
-                <StrikethroughLine
-                  key={`${line.x}:${line.y}`}
-                  color={theme.destructive}
-                  line={line}
-                  lineIndex={index}
-                  progress={strikethroughWidth}
-                  totalLines={strikethroughLines.length}
-                />
-              ))}
-            </View>
-          </View>
-          <View className="flex-row gap-2">
-            {!hideOrganizationTags && item.category ? (
-              <CategoryTag
-                category={item.category}
-                categoryOptions={categoryOptions}
-              />
-            ) : null}
-          </View>
-        </View>
-        {notes ? (
-          <Text
-            variant="itemDescription"
-            className={cn('-my-0.5', isChecked && 'opacity-80')}
-            style={compactTextStyle}
-          >
-            {notes}
-          </Text>
-        ) : null}
-        <View className="flex-row items-center gap-2">
-          {!hideOrganizationTags && item.store?.name && (
-            <StoreTag name={item.store.name} />
-          )}
-          {sourceLabel ? <RecipeTag name={sourceLabel} /> : null}
-        </View>
-      </HapticPressable>
+      {rowPressAction === 'toggleChecked' && !isBulkSelectionModeActive ? (
+        <TogglePressable
+          className="flex-1 gap-0.5 py-1"
+          checked={displayedChecked}
+          animatedChecked={animatedChecked}
+          onChange={checked => void onCheck(checked)}
+          onLongPress={
+            onEnterBulkSelectionModeWithItem ? handleRowLongPress : undefined
+          }
+        >
+          {rowContent}
+        </TogglePressable>
+      ) : (
+        <HapticPressable
+          className="flex-1 gap-0.5 py-1"
+          onPress={handleRowPress}
+          onLongPress={
+            onEnterBulkSelectionModeWithItem || isBulkSelectionModeActive
+              ? handleRowLongPress
+              : undefined
+          }
+          accessibilityRole={
+            rowPressAction === 'toggleChecked' ? 'checkbox' : 'button'
+          }
+          accessibilityState={
+            rowPressAction === 'toggleChecked'
+              ? { checked: displayedChecked }
+              : undefined
+          }
+          delayLongPress={200}
+          hapticType="light"
+        >
+          {rowContent}
+        </HapticPressable>
+      )}
     </ListItem>
   );
 
@@ -391,8 +259,14 @@ const GroceryListItemComponent = ({
   );
 };
 
+// FlashList may reuse a cell for another item when checked sections change.
+// Keep the cell memoized, but give its stateful contents an item lifetime: queued
+// gestures and save completions from the old item must never mutate the new one.
+// The key stays stable when the same item toggles or moves between sections.
 export const GroceryListItem = memo(
-  GroceryListItemComponent,
+  function GroceryListItem(props: GroceryListItemProps) {
+    return <GroceryListItemComponent key={props.item.id} {...props} />;
+  },
   (previousProps, nextProps) => {
     return (
       previousProps.item === nextProps.item &&

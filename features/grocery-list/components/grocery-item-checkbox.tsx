@@ -1,4 +1,3 @@
-import { startTransition, useOptimistic } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 
 import { Checkbox } from '../../../components/ui/checkbox';
@@ -15,21 +14,12 @@ export function GroceryItemCheckbox({
   animatedChecked,
   onChange,
 }: Props) {
-  const [displayedChecked, setDisplayedChecked] = useOptimistic(checked);
-
-  const handlePress = () => {
-    const next = !displayedChecked;
-    startTransition(async () => {
-      setDisplayedChecked(next);
-      await onChange(next);
-    });
-  };
-
   return (
     <Checkbox
-      checked={displayedChecked}
+      checked={checked}
       animatedChecked={animatedChecked}
-      onPress={handlePress}
+      onPress={() => void onChange(!checked)}
+      onCheckedChange={next => void onChange(next)}
       className="mr-1"
     />
   );

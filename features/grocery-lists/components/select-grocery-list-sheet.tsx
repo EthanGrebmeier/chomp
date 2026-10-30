@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { CheckIcon, LinkIcon, PlusIcon, UsersIcon } from 'lucide-react-native';
+import { PlusIcon, CheckIcon, LinkIcon, UsersIcon } from 'lucide-react-native';
 import {
   ReactNode,
   forwardRef,
@@ -9,8 +9,9 @@ import {
 } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 
+import { HeaderMenuTrigger } from '@/components/ui/header-action';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { AddButton } from '../../../components/ui/add-button';
 import {
   ContextMenuItem,
   ContextMenuItemIcon,
@@ -183,12 +184,18 @@ export const SelectGroceryListSheet = forwardRef<
           onStartClose={onStartClose}
         >
           <BottomSheet.Header
-            className="px-4"
             title={title}
-            description={description}
-            button={
+            subtitle={description}
+            primaryAction={
               <DropdownMenuRoot
-                trigger={<AddButton accessibilityLabel="Add grocery list" />}
+                trigger={
+                  <HeaderMenuTrigger
+                    size="compact"
+                    icon={PlusIcon}
+                    variant="default"
+                    accessibilityLabel="Add grocery list"
+                  />
+                }
               >
                 <DropdownMenuContent>
                   <DropdownMenuItem
@@ -223,7 +230,7 @@ export const SelectGroceryListSheet = forwardRef<
           <ScrollView
             nestedScrollEnabled
             showsVerticalScrollIndicator={false}
-            className="gap-1 px-4 pb-4"
+            className="gap-1 px-8 pb-4"
           >
             {lists?.grocery_lists.map(list => {
               const isSelected = list.id === selectedListId;

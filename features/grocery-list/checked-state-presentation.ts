@@ -49,3 +49,30 @@ export const getPresentedCheckedState = (
 ): boolean => {
   return presented.get(item.id) ?? Boolean(item.isChecked);
 };
+
+export const CHECKED_SECTION_SETTLE_DELAY_MS = 1000;
+
+/** One trailing quiet window; publications with unchanged values cannot extend it. */
+export function createCheckedStateSettler(
+  initial: CheckedStateSnapshot,
+  settle: (snapshot: CheckedStateSnapshot) => void
+) {
+  let latest = initial;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return {
+    observe(next: CheckedStateSnapshot) {
+      const changed = hasCheckedStateTransition(latest, next);
+      latest = next;
+      if (!changed) return;
+
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = undefined;
+        settle(new Map(latest));
+      }, CHECKED_SECTION_SETTLE_DELAY_MS);
+    },
+    dispose() {
+      clearTimeout(timer);
+    },
+  };
+}

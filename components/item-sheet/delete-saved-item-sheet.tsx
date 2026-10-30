@@ -1,10 +1,12 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
+import { SheetFooter } from '@/components/sheet-content';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+import { CloseButton } from '@/components/ui/close-button';
+
 import { BottomSheet } from '../bottom-sheet';
-import { Button } from '../ui/button';
 import { Text } from '../ui/text';
 
 export type DeleteSavedItemSheetRef = {
@@ -40,30 +42,31 @@ export const DeleteSavedItemSheet = forwardRef<
       name="delete-saved-item-sheet"
       ref={sheetRef}
       footer={
-        <View className="gap-2 px-10 pb-2">
-          <Button
+        <SheetFooter className="gap-2">
+          <BottomActionButton
             variant="destructive"
-            size="lg"
             onPress={onConfirm}
             disabled={isPending}
           >
             <Text className="text-white">Delete Saved Item</Text>
-          </Button>
-          <Button
+          </BottomActionButton>
+          <BottomActionButton
             variant="outline"
-            size="lg"
             onPress={handleClose}
             disabled={isPending}
           >
             <Text>Cancel</Text>
-          </Button>
-        </View>
+          </BottomActionButton>
+        </SheetFooter>
       }
     >
-      <BottomSheet.SheetView className="pb-safe-offset-12">
+      <BottomSheet.SheetView>
         <BottomSheet.Header
           title="Delete saved item?"
-          description={`"${itemName}" will be removed from your saved items. This won't affect items already on your lists.`}
+          backAction={
+            <CloseButton onPress={handleClose} disabled={isPending} />
+          }
+          subtitle={`"${itemName}" will be removed from your saved items. This won't affect items already on your lists.`}
         />
       </BottomSheet.SheetView>
     </BottomSheet>

@@ -18,7 +18,11 @@ export const GroceryListHeader = ({
   return (
     <View className="px-4">
       <View className="h-11 flex-row items-center">
-        <BackButton onPress={onBackPress} />
+        <BackButton
+          appearance="chevron"
+          className="-ml-4"
+          onPress={onBackPress}
+        />
         <View className="min-w-0 flex-1 px-2">
           <Heading numberOfLines={1}>{listName ?? 'Grocery List'}</Heading>
         </View>

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "01a17676-6e6b-799d-8f00-41f7866ccadc",
+    "createdAt": "2026-10-26T04:27:15.435Z",
+    "group": "210a6ab8-66e5-40c3-90f1-1e8dea9ac351",
+    "branch": "production",
+    "message": "Combine same-name shopping stores and update recipe book cards",
+    "runtimeVersion": "1.0.5",
+    "platform": "ios",
+    "manifestPermalink": "https://u.expo.dev/update/01a17676-6e6b-799d-8f00-41f7866ccadc",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "e55838b9842d03efa0b06af1503d99cf7427fbb0"
+  }
+]

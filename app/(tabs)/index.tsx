@@ -5,6 +5,9 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { EmptyHeading } from '@/components/text/empty-heading';
 import { EmptySubtext } from '@/components/text/empty-subtext';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import { useCategoryOptions } from '@/features/categories/use-category-options';
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
 import { GroceryListSkeleton } from '@/features/grocery-list/components/grocery-list-skeleton';
 import { type ListView } from '@/features/grocery-list/components/list-view-tabs';
@@ -16,10 +19,12 @@ import { useTrackListAccess } from '@/features/grocery-lists/local/use-track-lis
 import { PreloadedMealPlanner } from '@/features/meal-planner/components/preloaded-meal-planner';
 import { type MealPlanFocusRequest } from '@/features/meal-planner/types';
 import { useQuantityList } from '@/features/quantity/app/session';
-import { QuantityListStatus } from '@/features/quantity/app/status';
 import { db } from '@/lib/instant';
 import { buildGroceryListsIndexUrl } from '@/lib/navigation';
-import { useStartupScreenReady } from '@/lib/startup-screen-ready';
+import {
+  useAppEntryVisible,
+  useStartupScreenReady,
+} from '@/lib/startup-screen-ready';
 
 import { useSettings } from '../../features/grocery-list/hooks/useSettings';
 
@@ -28,7 +33,13 @@ export default function List() {
     listId?: string;
     view?: string;
   }>();
-  const { data: settings, isLoading: settingsLoading } = useSettings();
+  const {
+    data: settings,
+    isLoading: settingsLoading,
+    error: settingsError,
+    refetch: retrySettings,
+  } = useSettings();
+  const categories = useCategoryOptions();
   const [selectedListId, setSelectedListId] = useState<
     string | null | undefined
   >(listIdParam);
@@ -90,8 +101,11 @@ export default function List() {
   const activeList = lists?.grocery_lists.find(
     list => list.id === activeListId
   );
-  const { items: activeListItems, isLoading: itemsLoading } =
-    useGroceryListItems(activeListId);
+  const {
+    items: activeListItems,
+    isLoading: itemsLoading,
+    error: itemsError,
+  } = useGroceryListItems(activeListId);
   // Repairs meal plan ↔ grocery list drift once per list load; this screen
   // hosts both the grocery list and the meal plan.
 
@@ -119,12 +133,20 @@ export default function List() {
 
   // Items load per list; keep <GroceryList> mounted across list switches and
   // let it render a quiet list area instead of tearing down to the skeleton.
-  const isLoading = listsLoading || settingsLoading;
+  const isLoading = listsLoading || settingsLoading || categories.isLoading;
   const quantity = useQuantityList(activeListId);
+  const entryVisible = useAppEntryVisible();
+  const [contentRendered, setContentRendered] = useState(false);
+  const handleContentReady = useCallback(() => setContentRendered(true), []);
+  const loadError =
+    listsError ?? itemsError ?? settingsError ?? categories.error;
   useStartupScreenReady(
-    Boolean(listsError) ||
+    Boolean(loadError) ||
       (!isLoading &&
-        (!activeListId || quantity.canEdit || Boolean(quantity.error)))
+        (Boolean(quantity.error) ||
+          (!itemsLoading &&
+            contentRendered &&
+            (!activeListId || quantity.canEdit))))
   );
 
   const handleViewChange = useCallback(
@@ -165,13 +187,18 @@ export default function List() {
   return (
     <View className="flex-1 bg-background">
       <View className="pt-safe flex-1">
-        {listsError ? (
+        {loadError ? (
           <View
             accessibilityRole="alert"
             className="flex-1 items-center justify-center gap-1 px-6"
           >
-            <EmptyHeading>Couldn&apos;t load your grocery lists</EmptyHeading>
+            <EmptyHeading>Couldn&apos;t load your groceries</EmptyHeading>
             <EmptySubtext>Check your connection, then try again.</EmptySubtext>
+            {settingsError ? (
+              <Button onPress={() => void retrySettings()}>
+                <Text>Try again</Text>
+              </Button>
+            ) : null}
           </View>
         ) : isLoading ? (
           <Animated.View
@@ -185,12 +212,12 @@ export default function List() {
         ) : settings ? (
           <Animated.View
             key="content"
-            entering={FadeIn.duration(300)}
+            entering={entryVisible ? FadeIn.duration(300) : undefined}
             exiting={FadeOut.duration(200)}
             className="flex-1"
           >
-            <QuantityListStatus listId={activeListId} />
             <GroceryList
+              onReady={handleContentReady}
               listId={activeListId}
               listName={activeList?.name}
               joinCode={activeList?.joinCode}

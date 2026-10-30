@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { View } from 'react-native';
 
+import { SHEET_TOP_STYLE } from '@/components/sheet-content';
 import { SettingsMenu } from '@/features/settings/components/settings-menu';
 import { type SettingsSubmenu } from '@/features/settings/components/settings-types';
 
@@ -27,8 +28,9 @@ export default function Settings() {
   };
 
   return (
-    <View className="bg-background pt-6">
+    <View className="bg-background" style={SHEET_TOP_STYLE}>
       <SettingsMenu
+        onClose={() => router.back()}
         onSelect={handleSelect}
         onCreateAccount={handleCreateAccount}
       />

@@ -14,7 +14,7 @@ type AddToGroceryListSwitchProps = {
 };
 
 /**
- * "Show on grocery list" switch for the Edit Meal and Edit Item sheets. On
+ * "Show on grocery list" switch for adding and editing single meal-plan items. On
  * means at least one linked item is visible, including checked items.
  */
 export const AddToGroceryListSwitch = ({

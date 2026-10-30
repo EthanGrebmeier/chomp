@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { StoreReviewCancelledError } from '@/features/quantity/store-review-cancelled';
+
 import { addGroceryListItem } from '../add-grocery-list-item';
 
 type Transaction = {
@@ -113,7 +115,12 @@ describe('addGroceryListItem', () => {
       savedItemId: 'saved',
     });
     await vi.waitFor(() =>
-      expect(addManualQuantityMock).toHaveBeenCalledWith('list', item, 'saved')
+      expect(addManualQuantityMock).toHaveBeenCalledWith(
+        'list',
+        item,
+        'saved',
+        undefined
+      )
     );
     expect(transactMock).not.toHaveBeenCalled();
     quantity.resolve();
@@ -126,6 +133,18 @@ describe('addGroceryListItem', () => {
     ).toBe(true);
     expect(upsertLocalSavedItemMock).not.toHaveBeenCalled();
   });
+  it('forwards the originating sheet presenter to quantity addition', async () => {
+    const reviewConflicts = vi.fn();
+    addManualQuantityMock.mockResolvedValue(undefined);
+    transactMock.mockResolvedValue(undefined);
+    await addGroceryListItem({ listId: 'list', item, reviewConflicts });
+    expect(addManualQuantityMock).toHaveBeenCalledWith(
+      'list',
+      item,
+      undefined,
+      reviewConflicts
+    );
+  });
   it('does not record history when adding the quantity fails', async () => {
     addManualQuantityMock.mockRejectedValue(new Error('Outbox unavailable'));
     await expect(addGroceryListItem({ listId: 'list', item })).rejects.toThrow(
@@ -133,6 +152,16 @@ describe('addGroceryListItem', () => {
     );
     expect(transactMock).not.toHaveBeenCalled();
     expect(upsertLocalSavedItemMock).not.toHaveBeenCalled();
+  });
+  it('preserves review cancellation without recording an addition or reporting a failure', async () => {
+    const cancellation = new StoreReviewCancelledError();
+    addManualQuantityMock.mockRejectedValue(cancellation);
+    await expect(addGroceryListItem({ listId: 'list', item })).rejects.toBe(
+      cancellation
+    );
+    expect(transactMock).not.toHaveBeenCalled();
+    expect(upsertLocalSavedItemMock).not.toHaveBeenCalled();
+    expect(toastErrorMock).not.toHaveBeenCalled();
   });
   it('honors the saved-item toggle', async () => {
     addManualQuantityMock.mockResolvedValue(undefined);
