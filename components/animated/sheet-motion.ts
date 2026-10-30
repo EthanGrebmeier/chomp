@@ -3,7 +3,7 @@ import {
   FadeIn,
   FadeInRight,
   FadeOut,
-  FadeOutRight,
+  Keyframe,
   LinearTransition,
   ReduceMotion,
 } from 'react-native-reanimated';
@@ -24,12 +24,16 @@ export const sheetScreenEnter = FadeInRight.withInitialValues({
   .easing(SHEET_SCREEN_MOTION.easing)
   .reduceMotion(ReduceMotion.System);
 
-export const sheetScreenExit = FadeOutRight.withTargetValues({
-  opacity: 0,
-  transform: [{ translateX: SHEET_SCREEN_MOTION.distance }],
+// Reanimated 4.3 lacks FadeOutRight.withTargetValues; preserve the same motion.
+export const sheetScreenExit = new Keyframe({
+  0: { opacity: 1, transform: [{ translateX: 0 }] },
+  100: {
+    opacity: 0,
+    transform: [{ translateX: SHEET_SCREEN_MOTION.distance }],
+    easing: SHEET_SCREEN_MOTION.easing,
+  },
 })
   .duration(SHEET_SCREEN_MOTION.exitDuration)
-  .easing(SHEET_SCREEN_MOTION.easing)
   .reduceMotion(ReduceMotion.System);
 
 export const sheetScreenFadeIn = FadeIn.duration(
