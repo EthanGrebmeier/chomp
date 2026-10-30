@@ -3,6 +3,7 @@ import { InstaQLEntity } from '@instantdb/react-native';
 import schema from '../../instant.schema';
 import { RecipeWithIngredients } from '../recipes/types';
 import { Store } from '../stores/types';
+
 import { MealPlanIngredientSnapshotCreateInput } from './meal-plan-recipe-ingredient-editor';
 
 export type MealPlanRecipe = InstaQLEntity<typeof schema, 'meal_plan_recipes'>;

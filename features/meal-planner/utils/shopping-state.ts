@@ -45,7 +45,7 @@ type IngredientSnapshot = {
 };
 
 type RecipeEntry = {
-  recipe: { recipe_ingredients?: Array<{ id: string }> };
+  recipe: { recipe_ingredients?: { id: string }[] };
   ingredient_snapshots?: IngredientSnapshot[];
 };
 

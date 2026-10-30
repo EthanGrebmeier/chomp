@@ -1,6 +1,8 @@
 import { useRef } from 'react';
 import { toast } from 'sonner-native';
 
+import { isStoreReviewCancelled } from '@/features/quantity/store-review-cancelled';
+
 import type { MealPlanEntryRef } from '../instant/meal-plan-entry';
 
 import { useSetMealPlanEntryIgnored } from './useSetMealPlanEntryIgnored';
@@ -40,7 +42,8 @@ export const useMealPlanOnlyToggle = ({
         onSettled: () => {
           inFlightRef.current = false;
         },
-        onError: () => {
+        onError: error => {
+          if (isStoreReviewCancelled(error)) return;
           toast.error(
             ignored
               ? 'Failed to remove from grocery list'
