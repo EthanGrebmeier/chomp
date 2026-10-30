@@ -1,29 +1,19 @@
 import { CheckIcon } from 'lucide-react-native';
 
-import { Button } from './button';
-import { Icon } from './icon';
+import { HeaderActionButton } from './header-action';
 
 interface ConfirmButtonProps {
   onPress: () => void;
   disabled?: boolean;
 }
 
-export function ConfirmButton({ onPress, disabled }: ConfirmButtonProps) {
+export function ConfirmButton(props: ConfirmButtonProps) {
   return (
-    <Button
-      size="icon"
+    <HeaderActionButton
+      {...props}
+      icon={CheckIcon}
       accessibilityLabel="Confirm"
       variant="default"
-      onPress={onPress}
-      disabled={disabled}
-      hapticType="light"
-    >
-      <Icon
-        className="text-primary-foreground"
-        as={CheckIcon}
-        strokeWidth={3}
-        size={24}
-      />
-    </Button>
+    />
   );
 }

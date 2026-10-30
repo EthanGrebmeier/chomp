@@ -3,8 +3,10 @@ import { createContext, useContext, useRef, useState } from 'react';
 import { Alert, TextInput, View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { SheetFooter } from '@/components/sheet-content';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { Button } from '../../../components/ui/button';
 import { DeleteButton } from '../../../components/ui/delete-button';
 import { Text } from '../../../components/ui/text';
 import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
@@ -82,17 +84,21 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
         nameInputRef.current?.focus();
       }}
       footer={
-        <View className="px-10 pb-4">
-          <Button variant="default" onPress={onSubmit} disabled={!canSubmit}>
+        <SheetFooter>
+          <BottomActionButton
+            variant="default"
+            onPress={onSubmit}
+            disabled={!canSubmit}
+          >
             <Text>{submitLabel}</Text>
-          </Button>
-        </View>
+          </BottomActionButton>
+        </SheetFooter>
       }
     >
-      <BottomSheet.SheetView className="pb-safe">
+      <BottomSheet.SheetView>
         <BottomSheet.Header
           title={submitLabel === 'Update' ? 'Rename store' : 'Add a store'}
-          button={
+          primaryAction={
             onDelete ? (
               <DeleteButton
                 accessibilityLabel="Delete store"

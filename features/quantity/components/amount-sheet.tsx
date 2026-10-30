@@ -52,16 +52,15 @@ export function AmountSheet({
       insetAdjustment="never"
     >
       <BottomSheet.Header
-        className="mb-0 px-4"
         title={quantity === undefined ? 'Add quantity' : 'Adjust quantity'}
-        dismissButton={
+        backAction={
           <BackButton
             onPress={() => {
               void ref.current?.dismiss();
             }}
           />
         }
-        button={
+        primaryAction={
           <ConfirmButton
             disabled={busy || parsed === null}
             onPress={() => {
@@ -70,7 +69,7 @@ export function AmountSheet({
           />
         }
       />
-      <View className="gap-4 px-6 py-4">
+      <BottomSheet.SheetView className="gap-4">
         <View className="gap-2">
           <Text className="text-sm font-medium text-muted-foreground">
             Quantity
@@ -106,7 +105,7 @@ export function AmountSheet({
             <Text className="text-destructive">Remove</Text>
           </Button>
         ) : null}
-      </View>
+      </BottomSheet.SheetView>
     </BottomSheet>
   );
 }

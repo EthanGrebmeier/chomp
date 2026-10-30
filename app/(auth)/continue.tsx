@@ -13,6 +13,7 @@ import { toast } from 'sonner-native';
 
 import { LegalLink } from '@/components/auth/legal-consent';
 import { TextInput } from '@/components/text-input';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
@@ -279,17 +280,16 @@ export default function ContinueSignUp() {
                 We created your account but couldn&apos;t finish connecting.
                 Check your internet connection and try again.
               </Text>
-              <Button
+              <BottomActionButton
                 onPress={onRetryFinishPress}
                 disabled={isFinishingSignIn}
-                size="lg"
               >
                 {isFinishingSignIn ? (
                   <ActivityIndicator color="white" />
                 ) : (
                   <Text>Retry</Text>
                 )}
-              </Button>
+              </BottomActionButton>
             </View>
           ) : missingFields.length === 0 ? (
             <View className="gap-4">
@@ -327,10 +327,9 @@ export default function ContinueSignUp() {
                 </View>
               ) : null}
 
-              <Button
+              <BottomActionButton
                 onPress={handleSubmit}
                 disabled={!canSubmit}
-                size="lg"
                 className="mt-2"
               >
                 {isBusy ? (
@@ -338,7 +337,7 @@ export default function ContinueSignUp() {
                 ) : (
                   <Text>Continue</Text>
                 )}
-              </Button>
+              </BottomActionButton>
             </View>
           )}
         </View>
