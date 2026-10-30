@@ -200,6 +200,24 @@ describe('actual app quantity adapters', () => {
     expect(mealProjection(state()).recipes[0].id).toBe(planned.id);
   });
 
+  it('plans a standalone item without shopping demand and can include it later', async () => {
+    const item = await planQuantityItem({
+      listId: 'list',
+      name: 'Apples',
+      quantity: 2,
+      unit: 'each',
+      date: '2026-10-30',
+      showOnGroceryList: false,
+    });
+    expect(mealProjection(state()).items[0].id).toBe(item.id);
+    expect(groceryProjection(state())).toEqual([]);
+    const meal = records(state(), 'meal').find(m => m.id === item.id)!;
+    await selectQuantityIngredients(item.id, [
+      { snapshotRowId: meal.ingredients[0].id, isSelected: true },
+    ]);
+    expect(groceryProjection(state())[0].quantity).toBe(2);
+  });
+
   it('supports standalone decimals, mixed-row deletion, and incompatible units', async () => {
     const item = await planQuantityItem({
       listId: 'list',
