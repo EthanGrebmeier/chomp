@@ -19,6 +19,7 @@ export async function addQuantityRecipe({
   recipeId,
   ingredients,
   defaultStore,
+  reviewConflicts,
 }: AddRecipeToListArgs) {
   listSession(listId);
   const result = await db.queryOnce({
@@ -29,7 +30,11 @@ export async function addQuantityRecipe({
   const incoming = ingredients.map(i =>
     ingredientFromApp({ ...i, storeId: i.storeId ?? defaultStore?.id })
   );
-  const choices = await chooseItemDestinations(listId, incoming);
+  const choices = await chooseItemDestinations(
+    listId,
+    incoming,
+    reviewConflicts
+  );
   const session = listSession(listId);
   const tx = new QuantityTransaction(session.state);
   for (const item of incoming)

@@ -1,6 +1,8 @@
 import { id } from '@instantdb/react-native';
 import { toast } from 'sonner-native';
 
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
+
 import { db } from '../../../lib/instant';
 import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 import { upsertLocalSavedItem } from '../../saved-items/local/upsert-local-saved-item';
@@ -12,7 +14,9 @@ export const addGroceryListItem = ({
   savedItemId,
   selectedLocalSavedItemId,
   persistLocalSavedItem = true,
+  reviewConflicts,
 }: {
+  reviewConflicts?: StoreReviewer;
   listId: string;
   item: BaseGroceryItem;
   savedItemId?: string;
@@ -31,7 +35,7 @@ export const addGroceryListItem = ({
 
   return import('@/features/quantity/app/grocery-actions').then(
     async ({ addManualQuantity }) => {
-      await addManualQuantity(listId, item, savedItemId);
+      await addManualQuantity(listId, item, savedItemId, reviewConflicts);
       try {
         await db.transact(
           buildAddEventTransactions({
