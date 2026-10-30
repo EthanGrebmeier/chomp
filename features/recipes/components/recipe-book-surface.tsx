@@ -1,13 +1,9 @@
 import { PropsWithChildren } from 'react';
 import { View } from 'react-native';
 
-/** Fixed viewport: rows scroll inside while the rounded book surface stays put. */
+/** Shared full-width layout for the recipe book and its loading/empty states. */
 export function RecipeBookSurface({ children }: PropsWithChildren) {
-  return (
-    <View className="mx-4 mb-3 mt-2 flex-1 overflow-hidden rounded-xl bg-recipe-surface">
-      {children}
-    </View>
-  );
+  return <View className="mt-2 flex-1">{children}</View>;
 }
 
 export function RecipeRowSeparator() {
