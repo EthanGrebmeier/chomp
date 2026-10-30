@@ -1,6 +1,7 @@
-import { Check, Plus, Receipt } from 'lucide-react-native';
+import { Check, Plus, Receipt, SearchIcon, XIcon } from 'lucide-react-native';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, SectionList, View } from 'react-native';
+import { ActivityIndicator, Keyboard, SectionList, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
 import { CategoryTag } from '@/components/category-tag';
@@ -11,9 +12,11 @@ import { Button } from '@/components/ui/button';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
+import { SearchButton } from '@/components/ui/search-button';
 import { Text } from '@/components/ui/text';
 import { useCategoryOptions } from '@/features/categories/use-category-options';
 import { useQuantityList } from '@/features/quantity/app/session';
+import { isStoreReviewCancelled } from '@/features/quantity/store-review-cancelled';
 import type { CategoryOption } from '@/features/shared/category/categories';
 import { db } from '@/lib/instant';
 
@@ -24,17 +27,17 @@ import { groupPurchases, purchasedItems, type PurchasedItem } from './history';
 
 export function PurchasedItemsScreen({
   listId,
-  listName,
   onBack,
 }: {
   listId: string;
-  listName?: string;
   onBack: () => void;
 }) {
   const quantity = useQuantityList(listId);
+  const { bottom } = useSafeAreaInsets();
   const { data: categoryOptions } = useCategoryOptions();
   const stores = db.useQuery({ stores: {} });
   const [query, setQuery] = useState('');
+  const [searchMode, setSearchMode] = useState(false);
   const [adding, setAdding] = useState<Set<string>>(() => new Set());
   const [added, setAdded] = useState<Set<string>>(() => new Set());
   const pending = useRef(new Set<string>());
@@ -63,7 +66,8 @@ export function PurchasedItemsScreen({
         });
         setAdded(previous => new Set(previous).add(item.id));
         toast.success(`${item.name} added to list`);
-      } catch {
+      } catch (error) {
+        if (isStoreReviewCancelled(error)) return;
         toast.error(`Could not add ${item.name}. Try again.`);
       } finally {
         pending.current.delete(item.id);
@@ -79,32 +83,60 @@ export function PurchasedItemsScreen({
 
   return (
     <View className="flex-1 bg-background">
-      <GroceryListHeader listName="Purchased items" onBackPress={onBack} />
-      <View className="gap-4 px-4 pb-4 pt-2">
-        {listName ? (
-          <Text className="text-sm text-muted-foreground" numberOfLines={1}>
-            {listName}
-          </Text>
-        ) : null}
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search items or stores"
-          accessibilityLabel="Search purchased items"
-          returnKeyType="search"
-          autoCorrect={false}
-          clearable={false}
-        />
-        {query ? (
+      {searchMode ? (
+        <View className="h-11 flex-row items-center gap-2 px-4">
+          <View className="relative flex-1">
+            <TextInput
+              className="pl-10"
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search items or stores"
+              accessibilityLabel="Search purchased items"
+              returnKeyType="search"
+              autoCorrect={false}
+              autoFocus
+            />
+            <View
+              className="absolute bottom-0 left-1.5 top-0 w-8 items-center justify-center"
+              pointerEvents="none"
+            >
+              <Icon
+                as={SearchIcon}
+                size={18}
+                className="text-muted-foreground"
+              />
+            </View>
+          </View>
           <Button
-            variant="ghost"
-            className="min-h-11 self-start"
-            onPress={() => setQuery('')}
+            size="icon"
+            variant="secondary"
+            accessibilityLabel="Close search"
+            onPress={() => {
+              Keyboard.dismiss();
+              setSearchMode(false);
+            }}
           >
-            <Text>Clear search</Text>
+            <Icon
+              as={XIcon}
+              size={16}
+              strokeWidth={3}
+              className="text-secondary-foreground"
+            />
           </Button>
-        ) : null}
-      </View>
+        </View>
+      ) : (
+        <GroceryListHeader
+          listName="Purchased items"
+          onBackPress={onBack}
+          actions={
+            <SearchButton
+              accessibilityLabel="Search purchased items"
+              onPress={() => setSearchMode(true)}
+              hasActiveFilters={!!query.trim()}
+            />
+          }
+        />
+      )}
       {quantity.error ? (
         <View className="px-6 py-12">
           <Text
@@ -128,7 +160,9 @@ export function PurchasedItemsScreen({
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           stickySectionHeadersEnabled
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior="never"
+          contentContainerStyle={{ paddingBottom: bottom + 32 }}
+          scrollIndicatorInsets={{ bottom }}
           renderSectionHeader={({ section }) => (
             <View className="flex-row items-center justify-between bg-background px-4 pb-2 pt-4">
               <Text accessibilityRole="header" className="flex-1 font-semibold">
@@ -149,7 +183,6 @@ export function PurchasedItemsScreen({
               onAdd={addAgain}
             />
           )}
-          ListFooterComponent={<View className="h-8" />}
           ListEmptyComponent={
             <View className="items-center gap-3 px-8 py-16">
               <Icon as={Receipt} size={36} className="text-muted-foreground" />
