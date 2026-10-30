@@ -4,11 +4,12 @@ import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
+import { SheetFooter } from '@/components/sheet-content';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { cn } from '@/lib/utils';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { TextInput } from '../../../components/text-input';
-import { Button } from '../../../components/ui/button';
 import { CloseButton } from '../../../components/ui/close-button';
 import { Text } from '../../../components/ui/text';
 import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
@@ -92,23 +93,23 @@ export const CreateGroceryListSheet = forwardRef<
         setListNameMeta({ length: 0, hasText: false });
       }}
       footer={
-        <View className="pb-safe px-6">
-          <Button
+        <SheetFooter>
+          <BottomActionButton
             onPress={handleCreateList}
             disabled={overLimit || !listNameMeta.hasText}
           >
             <Text>Create List</Text>
-          </Button>
-        </View>
+          </BottomActionButton>
+        </SheetFooter>
       }
     >
-      <BottomSheet.SheetView className="pb-safe">
+      <BottomSheet.SheetView>
         <BottomSheet.Header
           title="Name your list"
-          dismissButton={<CloseButton onPress={handleCancel} />}
+          backAction={<CloseButton onPress={handleCancel} />}
         />
 
-        <View className="my-4 gap-2 pb-4">
+        <View className="gap-2">
           <View className="flex-row items-center justify-between gap-2">
             <Text variant="label" className="text-muted-foreground">
               List name

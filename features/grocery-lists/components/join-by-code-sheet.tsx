@@ -120,8 +120,8 @@ export const JoinByCodeSheet = forwardRef<
       <BottomSheet.SheetView>
         <BottomSheet.Header
           title="Join a shared list"
-          description="Enter the 8-character, case-sensitive code"
-          button={<CloseButton onPress={handleDismiss} />}
+          subtitle="Enter the 8-character, case-sensitive code"
+          backAction={<CloseButton onPress={handleDismiss} />}
         />
 
         <View className="items-center justify-center gap-6">

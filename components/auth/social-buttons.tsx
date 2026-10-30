@@ -3,9 +3,10 @@ import { ActivityIndicator, Platform } from 'react-native';
 
 import { AppleIcon } from '@/assets/icons/apple';
 import { GoogleIcon } from '@/assets/icons/google';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { useOAuthFlow } from '@/lib/clerk/use-oauth';
 
-import { Button, type ButtonProps } from '../ui/button';
+import { type ButtonProps } from '../ui/button';
 import { Text } from '../ui/text';
 
 interface SocialButtonsProps {
@@ -37,10 +38,9 @@ export function SocialButtons({
   return (
     <>
       {Platform.OS === 'ios' && (
-        <Button
+        <BottomActionButton
           className="w-full"
           variant={variant}
-          size="xl"
           icon={
             <AppleIcon
               className={`-translate-x-1 ${iconColorClass}`}
@@ -56,13 +56,12 @@ export function SocialButtons({
           ) : (
             <Text>Sign in with Apple</Text>
           )}
-        </Button>
+        </BottomActionButton>
       )}
 
-      <Button
+      <BottomActionButton
         className="w-full"
         variant={variant}
-        size="xl"
         icon={<GoogleIcon className={iconColorClass} width={14} height={14} />}
         onPress={signInWithGoogle}
         disabled={isDisabled}
@@ -72,7 +71,7 @@ export function SocialButtons({
         ) : (
           <Text>Sign in with Google</Text>
         )}
-      </Button>
+      </BottomActionButton>
     </>
   );
 }

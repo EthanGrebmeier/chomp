@@ -232,14 +232,13 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
             name={sheetName}
           >
             <BottomSheet.Header
-              className="px-4"
               title="Choose a category"
-              dismissButton={
+              backAction={
                 showBackButton ? (
                   <BackButton onPress={() => sheetRef.current?.dismiss()} />
                 ) : undefined
               }
-              button={
+              primaryAction={
                 <ConfirmButton
                   onPress={handleConfirm}
                   disabled={localCategory === null}
@@ -248,10 +247,10 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
             />
             <ScrollView
               ref={scrollViewRef}
-              className="max-h-96 px-2"
+              className="max-h-96 px-8"
               nestedScrollEnabled
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
+              contentContainerStyle={{ paddingBottom: 24 }}
             >
               <HapticPressable
                 onPress={handleOpenCreateCategory}

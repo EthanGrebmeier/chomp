@@ -4,7 +4,7 @@ import {
   TrueSheet,
 } from '@lodev09/react-native-true-sheet';
 import { useColorScheme } from 'nativewind';
-import { ComponentProps, ReactElement, forwardRef } from 'react';
+import { ComponentProps, ReactElement, forwardRef, useState } from 'react';
 import { View } from 'react-native';
 
 import {
@@ -15,7 +15,14 @@ import { cn } from '@/lib/utils';
 
 import { THEME } from '../lib/theme';
 
-import { Text } from './ui/text';
+import {
+  SheetBody,
+  SheetContentRoot,
+  SheetHasFooterContext,
+  SHEET_TOP_STYLE,
+} from './sheet-content';
+import { SheetExitContext } from './sheet-exit-context';
+import { SheetHeader } from './sheet-header';
 
 type BottomSheetProps = {
   children: React.ReactNode;
@@ -63,6 +70,7 @@ export const BottomSheet = ({
   scrollable,
 }: BottomSheetProps) => {
   const colorscheme = useColorScheme();
+  const [footerHeight, setFooterHeight] = useState(0);
 
   return (
     <TrueSheet
@@ -82,13 +90,37 @@ export const BottomSheet = ({
       }
       grabber
       dimmedDetentIndex={0}
-      footer={footer}
-      insetAdjustment={insetAdjustment}
+      footer={
+        footer ? (
+          <View
+            onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}
+          >
+            {footer}
+          </View>
+        ) : undefined
+      }
+      insetAdjustment={insetAdjustment ?? 'never'}
       scrollable={scrollable}
     >
-      <View className={cn(viewClassName)} style={{ paddingTop: 24 }}>
-        {children}
-      </View>
+      <SheetExitContext.Provider
+        value={() => {
+          void ref.current?.dismiss();
+        }}
+      >
+        <SheetContentRoot>
+          <SheetHasFooterContext.Provider value={Boolean(footer)}>
+            <View
+              className={cn(viewClassName)}
+              style={[
+                SHEET_TOP_STYLE,
+                { paddingBottom: footer ? footerHeight : 0 },
+              ]}
+            >
+              {children}
+            </View>
+          </SheetHasFooterContext.Provider>
+        </SheetContentRoot>
+      </SheetExitContext.Provider>
     </TrueSheet>
   );
 };
@@ -111,63 +143,7 @@ const TextInput = forwardRef<
   );
 });
 TextInput.displayName = 'TextInput';
-type HeaderProps = {
-  title?: string;
-  description?: React.ReactNode;
-  dismissButton?: React.ReactNode;
-  button?: React.ReactNode;
-  className?: string;
-};
-
-const Header = ({
-  title,
-  description,
-  dismissButton,
-  button,
-  className,
-}: HeaderProps) => {
-  return (
-    <View className={cn('mb-4 gap-2', className)}>
-      <View className="flex-row items-center">
-        {(dismissButton ?? button) && (
-          <View className="w-12 items-start">{dismissButton}</View>
-        )}
-        <View className="mx-2 flex-1">
-          {title && (
-            <Text
-              variant="h3"
-              className="text-center"
-              numberOfLines={2}
-              ellipsizeMode="tail"
-            >
-              {title}
-            </Text>
-          )}
-        </View>
-        {(dismissButton ?? button) && (
-          <View className="w-12 items-end">{button}</View>
-        )}
-      </View>
-      {description ? (
-        <Text variant="bodyMuted" className="text-center">
-          {description}
-        </Text>
-      ) : null}
-    </View>
-  );
-};
-
-const SheetView = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  return <View className={cn('px-6', className)}>{children}</View>;
-};
-
-BottomSheet.Header = Header;
+BottomSheet.Header = SheetHeader;
 BottomSheet.BareTextInput = BareTextInput;
 BottomSheet.TextInput = TextInput;
-BottomSheet.SheetView = SheetView;
+BottomSheet.SheetView = SheetBody;

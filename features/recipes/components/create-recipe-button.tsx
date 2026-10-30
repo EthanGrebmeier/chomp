@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
+import { PlusIcon } from 'lucide-react-native';
 
+import { HeaderMenuTrigger } from '@/components/ui/header-action';
 import { navigation } from '@/lib/navigation';
 
-import { AddButton } from '../../../components/ui/add-button';
 import { Button } from '../../../components/ui/button';
 import {
   DropdownMenuContent,
@@ -39,7 +40,12 @@ export const CreateRecipeButton = ({
             <Text>{label}</Text>
           </Button>
         ) : (
-          <AddButton accessibilityLabel="Add recipe" />
+          <HeaderMenuTrigger
+            size="compact"
+            icon={PlusIcon}
+            variant="default"
+            accessibilityLabel="Add recipe"
+          />
         )
       }
     >
