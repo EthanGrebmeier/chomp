@@ -2,10 +2,6 @@ import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe
 import { getCanonicalSnapshots, isHistory } from '../utils/shopping-state';
 
 import {
-  planMealPlanSnapshotReconciliation,
-  type SnapshotRowToCreate,
-} from './plan-meal-plan-snapshot-reconciliation';
-import {
   type LinkedGroceryItemForSync,
   type MealPlanEntryForSync,
   type MealPlanListSyncLinkedItemChange,
@@ -14,6 +10,10 @@ import {
   type MealPlanRecipeEntryForSync,
   planMealPlanListSync,
 } from './plan-meal-plan-list-sync';
+import {
+  planMealPlanSnapshotReconciliation,
+  type SnapshotRowToCreate,
+} from './plan-meal-plan-snapshot-reconciliation';
 
 export type SnapshotRowToCreateWithId = SnapshotRowToCreate & { id: string };
 
@@ -23,9 +23,9 @@ export type MealPlanEntryIgnoredPlan = {
   snapshotRowsToCreate: SnapshotRowToCreateWithId[];
   listSync: MealPlanListSyncPlan;
   /** Hide checked history without losing its purchase state or source link. */
-  softDeletes: Array<{ groceryItemId: string }>;
+  softDeletes: { groceryItemId: string }[];
   /** Show selected purchases again, keeping them checked. */
-  softRestores: Array<{ groceryItemId: string }>;
+  softRestores: { groceryItemId: string }[];
 };
 
 export type PlanMealPlanEntryIgnoredArgs = {

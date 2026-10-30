@@ -3,9 +3,11 @@ import { LinkIcon } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 
+import { SheetFooter } from '@/components/sheet-content';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { BackButton } from '../../../components/ui/back-button';
-import { Button } from '../../../components/ui/button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
@@ -73,19 +75,19 @@ export const RecipeUrlSheet = ({
 
       <BottomSheet
         footer={
-          <View className="px-10 pb-4">
-            <Button onPress={handleSave}>
+          <SheetFooter>
+            <BottomActionButton onPress={handleSave}>
               <Text>Done</Text>
-            </Button>
-          </View>
+            </BottomActionButton>
+          </SheetFooter>
         }
         ref={sheetRef}
         name="recipe-url-sheet"
       >
-        <BottomSheet.SheetView className="pb-safe">
+        <BottomSheet.SheetView>
           <BottomSheet.Header
             className="mb-0"
-            dismissButton={
+            backAction={
               canGoBack && (
                 <BackButton onPress={() => sheetRef.current?.dismiss()} />
               )

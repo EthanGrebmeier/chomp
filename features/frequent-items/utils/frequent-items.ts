@@ -50,21 +50,13 @@ export const getFrequentItemsQueryCutoff = (now = new Date()): string => {
   return cutoff.toISOString();
 };
 
-export const buildFrequentItems = ({
-  events,
-  currentItems,
-  now = new Date(),
-}: {
-  events: GroceryItemAddEvent[];
-  currentItems: CurrentGroceryItem[];
-  now?: Date;
-}): FrequentItem[] => {
+/** Aggregate history independently of the current shopping list. Do not limit
+ * here: excluding active names must happen before taking the top 20. */
+export const rankFrequentItems = (
+  events: GroceryItemAddEvent[],
+  now = new Date()
+): FrequentItem[] => {
   const cutoff = getFrequentItemsCutoff(now);
-  const uncheckedNames = new Set(
-    currentItems
-      .filter(item => !item.isDeleted && !item.isChecked)
-      .map(item => normalizeGroceryItemName(item.name))
-  );
   const grouped = new Map<string, FrequentItem>();
 
   for (const event of events) {
@@ -104,15 +96,36 @@ export const buildFrequentItems = ({
   }
 
   return [...grouped.values()]
-    .filter(
-      item =>
-        item.count >= FREQUENT_ITEMS_MIN_ADDITIONS &&
-        !uncheckedNames.has(item.normalizedName)
-    )
+    .filter(item => item.count >= FREQUENT_ITEMS_MIN_ADDITIONS)
     .sort(
       (left, right) =>
         right.count - left.count ||
         right.lastAddedAt.localeCompare(left.lastAddedAt)
-    )
+    );
+};
+
+/** Keeps candidate identities stable when only shopping quantities change. */
+export const selectFrequentItems = (
+  ranked: FrequentItem[],
+  currentItems: CurrentGroceryItem[]
+): FrequentItem[] => {
+  const uncheckedNames = new Set(
+    currentItems
+      .filter(item => !item.isDeleted && !item.isChecked)
+      .map(item => normalizeGroceryItemName(item.name))
+  );
+  return ranked
+    .filter(item => !uncheckedNames.has(item.normalizedName))
     .slice(0, FREQUENT_ITEMS_LIMIT);
 };
+
+export const buildFrequentItems = ({
+  events,
+  currentItems,
+  now = new Date(),
+}: {
+  events: GroceryItemAddEvent[];
+  currentItems: CurrentGroceryItem[];
+  now?: Date;
+}): FrequentItem[] =>
+  selectFrequentItems(rankFrequentItems(events, now), currentItems);

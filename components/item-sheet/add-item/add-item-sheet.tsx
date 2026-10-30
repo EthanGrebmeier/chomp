@@ -1,12 +1,16 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
-import { ArrowUpIcon, ChevronDownIcon, PlusIcon } from 'lucide-react-native';
+import {
+  ArrowUpIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  PlusIcon,
+} from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Keyboard, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
-  LinearTransition,
   ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
@@ -16,17 +20,25 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { toast } from 'sonner-native';
 
-import { FrequentItemsScreen } from '../../../features/frequent-items/components/frequent-items-screen';
+import { sheetCardResize } from '@/components/animated/sheet-motion';
 import {
-  RecipeConflictSheet,
-  RecipeConflictSheetRef,
-} from '../../../features/grocery-list/components/recipe-conflict-sheet';
+  SHEET_TOP_STYLE,
+  SHEET_CARD_STYLE,
+  SheetFooter,
+} from '@/components/sheet-content';
+import { SheetHeader } from '@/components/sheet-header';
+import { SheetScreenOverlay } from '@/components/sheet-screen-overlay';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+import { CloseButton } from '@/components/ui/close-button';
+import { InlineStoreReviewCard } from '@/features/quantity/app/inline-store-review-card';
+import { useInlineStoreReview } from '@/features/quantity/app/use-inline-store-review';
+import { useStoreConflictPreview } from '@/features/quantity/app/use-store-conflict-preview';
+import { isStoreReviewCancelled } from '@/features/quantity/store-review-cancelled';
+
+import { FrequentItemsScreen } from '../../../features/frequent-items/components/frequent-items-screen';
 import { addGroceryListItem } from '../../../features/grocery-list/instant/add-grocery-list-item';
 import { BaseGroceryItem } from '../../../features/grocery-list/types';
-import {
-  RecipeIngredientInput,
-  addRecipeToList,
-} from '../../../features/recipes/instant/add-recipe-to-list';
+import { addRecipeToList } from '../../../features/recipes/instant/add-recipe-to-list';
 import { RecipeWithIngredients } from '../../../features/recipes/types';
 import { addSavedItemIfNotExists } from '../../../features/saved-items/instant/add-saved-item-if-not-exists';
 import { upsertLocalSavedItem } from '../../../features/saved-items/local/upsert-local-saved-item';
@@ -34,7 +46,6 @@ import { useDefaultStore } from '../../../features/stores/instant/use-default-st
 import { navigation } from '../../../lib/navigation';
 import { THEME } from '../../../lib/theme';
 import { cn } from '../../../lib/utils';
-import { slideInRight, slideOutRight } from '../../animated/transitions';
 import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
@@ -53,12 +64,6 @@ import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 import { IngredientSelector } from './ingredient-selector';
 import { RecipeSelector } from './recipe-selector';
 import { SavedItemActions } from './saved-item-actions';
-
-// The native detent animates the sheet's position; this keeps its visible card
-// continuous while the transparent suggestion space and content bounds change.
-const CARD_RESIZE = LinearTransition.duration(300)
-  .easing(Easing.bezier(0.32, 0.72, 0, 1))
-  .reduceMotion(ReduceMotion.System);
 
 const ADD_MODES = [
   { value: 'item', label: 'Add Item' },
@@ -106,23 +111,10 @@ const ModeMenu = ({ mode, onModeChange }: ModeToggleProps) => (
   </DropdownMenuRoot>
 );
 
-const ModeHeader = (props: ModeToggleProps) => (
-  // Preserve a native header container so its menu moves in the card's local
-  // coordinates instead of being flattened into the sheet's layout.
-  <View
-    collapsable={false}
-    className={cn('items-center', props.mode === 'item' ? 'px-24' : 'px-14')}
-  >
-    <ModeMenu {...props} />
-    {props.mode === 'item' ? (
-      <View className="absolute right-2 top-0">
-        <SavedItemActions />
-      </View>
-    ) : null}
-  </View>
-);
-
 type AddItemSheetProps = {
+  review: ReturnType<typeof useInlineStoreReview>;
+  isSessionOpen: boolean;
+  setIsSessionOpen: (open: boolean) => void;
   itemOnly?: boolean;
   groceryListId: string;
   defaultStore?: { id: string; name: string } | null;
@@ -132,6 +124,9 @@ type AddItemSheetProps = {
 };
 
 const AddItemSheet = ({
+  review,
+  isSessionOpen,
+  setIsSessionOpen,
   itemOnly = false,
   groceryListId,
   defaultStore,
@@ -152,23 +147,37 @@ const AddItemSheet = ({
   );
   const contentOpacity = useSharedValue(1);
   const triggerOpacity = useSharedValue(isTriggerVisible ? 1 : 0);
-  const [isSessionOpen, setIsSessionOpen] = useState(false);
   const ref = useRef<TrueSheet>(null);
   const [hasBrowsed, setHasBrowsed] = useState(false);
-  const { reset, itemInputRef, onSubmit, isValid, isSubmitting } =
-    useItemSheet();
+  const {
+    reset,
+    itemInputRef,
+    onSubmit,
+    isValid,
+    isSubmitting,
+    itemInputValue,
+    unit,
+    storeId,
+  } = useItemSheet();
   const [mode, setMode] = useState<AddMode>('item');
+  const expanded = mode !== 'item' || !!review.pending;
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<
     Set<string>
   >(new Set());
   const [isAddingRecipe, setIsAddingRecipe] = useState(false);
-  const [isResolvingConflict, setIsResolvingConflict] = useState(false);
-  const [pendingConflictIngredients, setPendingConflictIngredients] = useState<
-    RecipeIngredientInput[] | null
-  >(null);
-  const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
+  const itemConflict = useStoreConflictPreview(
+    isSessionOpen ? groceryListId : undefined,
+    [{ name: itemInputValue, unit, storeId }]
+  );
+  const recipeConflict = useStoreConflictPreview(
+    isSessionOpen ? groceryListId : undefined,
+    selectedRecipe?.recipe_ingredients.filter(item =>
+      selectedIngredientIds.has(item.id)
+    ) ?? [],
+    defaultStore?.id
+  );
 
   useEffect(() => {
     triggerOpacity.set(
@@ -197,6 +206,7 @@ const AddItemSheet = ({
   };
 
   const handleClose = () => {
+    review.close();
     setIsSessionOpen(false);
     Keyboard.dismiss();
     itemInputRef.current?.blur();
@@ -205,16 +215,15 @@ const AddItemSheet = ({
     setMode('item');
     setHasBrowsed(false);
     setSelectedRecipe(null);
-    setPendingConflictIngredients(null);
   };
 
   useEffect(() => {
-    if (!isSessionOpen || mode !== 'item') return;
+    if (!isSessionOpen || mode !== 'item' || review.pending) return;
     // Focus during presentation, or after the detent updates when returning
     // from browsing, so the keyboard moves alongside the sheet.
     const focus = requestAnimationFrame(() => itemInputRef.current?.focus());
     return () => cancelAnimationFrame(focus);
-  }, [isSessionOpen, mode, itemInputRef]);
+  }, [isSessionOpen, mode, itemInputRef, review.pending]);
 
   const handleModeChange = (newMode: AddMode) => {
     if (newMode === mode) return;
@@ -315,49 +324,19 @@ const AddItemSheet = ({
         recipeId: selectedRecipe.id,
         listId: groceryListId,
         ingredients: selectedIngredients,
+        reviewConflicts: review.review,
         defaultStore,
       });
-
-      if (result.requiresConflictResolution) {
-        setPendingConflictIngredients(selectedIngredients);
-        conflictSheetRef.current?.present();
-        return;
-      }
 
       toast.success(
         `Added ${result.addedItems} item${result.addedItems === 1 ? '' : 's'} from ${selectedRecipe.name}`
       );
       handleAddComplete();
-    } catch {
+    } catch (error) {
+      if (isStoreReviewCancelled(error)) return;
       toast.error('Failed to add ingredients');
     } finally {
       setIsAddingRecipe(false);
-    }
-  };
-
-  const resolveConflict = async (resolution: 'increment' | 'separate') => {
-    if (!selectedRecipe || !pendingConflictIngredients?.length) return;
-
-    setIsResolvingConflict(true);
-    try {
-      const result = await addRecipeToList({
-        recipeId: selectedRecipe.id,
-        listId: groceryListId,
-        ingredients: pendingConflictIngredients,
-        defaultStore,
-        conflictResolution: resolution,
-      });
-
-      toast.success(
-        `Added ${result.addedItems} item${result.addedItems === 1 ? '' : 's'} from ${selectedRecipe.name}`
-      );
-      conflictSheetRef.current?.dismiss();
-      setPendingConflictIngredients(null);
-      handleAddComplete();
-    } catch {
-      toast.error('Failed to resolve ingredient conflicts');
-    } finally {
-      setIsResolvingConflict(false);
     }
   };
 
@@ -380,17 +359,21 @@ const AddItemSheet = ({
       <TrueSheet
         ref={ref}
         name="add-item-sheet"
-        detents={mode === 'item' ? ['auto'] : [expandedHeight / windowHeight]}
-        scrollable={mode !== 'item'}
-        draggable={mode !== 'item'}
-        backgroundColor={mode === 'item' ? 'transparent' : backgroundColor}
-        cornerRadius={mode === 'item' ? 0 : undefined}
-        grabber={mode !== 'item'}
-        elevation={mode === 'item' ? 0 : undefined}
+        detents={!expanded ? ['auto'] : [expandedHeight / windowHeight]}
+        scrollable={expanded}
+        draggable={expanded}
+        backgroundColor={!expanded ? 'transparent' : backgroundColor}
+        cornerRadius={!expanded ? 0 : undefined}
+        grabber={expanded}
+        elevation={!expanded ? 0 : undefined}
         insetAdjustment="never"
         onWillPresent={() => setIsSessionOpen(true)}
+        onWillDismiss={() => {
+          review.close();
+          setIsSessionOpen(false);
+        }}
         onWillFocus={() => {
-          if (mode === 'item') itemInputRef.current?.focus();
+          if (mode === 'item' && !review.pending) itemInputRef.current?.focus();
         }}
         onDidDismiss={handleClose}
       >
@@ -398,17 +381,17 @@ const AddItemSheet = ({
           compact
           renderContent={(fields, suggestions) => (
             <View
-              className={mode === 'item' ? 'px-2' : undefined}
+              className={!expanded ? 'px-2' : undefined}
               style={
-                mode === 'item'
+                !expanded
                   ? { paddingBottom: 24 }
                   : {
                       height: expandedHeight,
-                      paddingTop: 24,
+                      ...SHEET_TOP_STYLE,
                     }
               }
             >
-              {mode === 'item' ? (
+              {!expanded ? (
                 <ItemSuggestions
                   onClose={() => void ref.current?.dismiss()}
                   label="Close add item"
@@ -419,172 +402,187 @@ const AddItemSheet = ({
               <Animated.View
                 collapsable={false}
                 collapsableChildren={false}
-                layout={CARD_RESIZE}
+                layout={sheetCardResize}
+                style={!expanded ? SHEET_CARD_STYLE : undefined}
                 className={cn(
                   'overflow-hidden bg-background',
-                  mode === 'item'
-                    ? 'rounded-[32px] border border-border pb-2.5 pt-1.5'
+                  !expanded
+                    ? 'rounded-[32px] border border-border'
                     : 'min-h-0 flex-1'
                 )}
               >
-                {itemOnly ? (
-                  <Text className="py-3 text-center text-lg font-semibold">
-                    Add item
-                  </Text>
-                ) : (
-                  <ModeHeader mode={mode} onModeChange={handleModeChange} />
-                )}
-                <Animated.View
-                  style={[
-                    contentAnimatedStyle,
-                    { display: mode === 'item' ? 'flex' : 'none' },
-                  ]}
-                  className="px-3"
+                <View
+                  className={expanded ? 'flex-1' : undefined}
+                  pointerEvents={review.pending ? 'none' : 'auto'}
+                  accessibilityElementsHidden={!!review.pending}
+                  importantForAccessibility={
+                    review.pending ? 'no-hide-descendants' : 'auto'
+                  }
                 >
-                  <View className="pl-1">{fields}</View>
-                  <View className="mt-1 min-h-11 justify-center overflow-hidden">
-                    <MetaBar trailingInset={92} savedItemActionsInHeader />
-                    <View className="absolute bottom-0 right-0 top-0 justify-center bg-background pl-2">
-                      <Svg
-                        pointerEvents="none"
-                        width={24}
-                        height="100%"
-                        style={{ position: 'absolute', left: -24, top: 0 }}
-                      >
-                        <Defs>
-                          <LinearGradient
-                            id="add-item-metabar-fade"
-                            x1="0%"
-                            y1="0%"
-                            x2="100%"
-                            y2="0%"
-                          >
-                            <Stop
-                              offset="0%"
-                              stopColor={backgroundColor}
-                              stopOpacity={0}
-                            />
-                            <Stop offset="100%" stopColor={backgroundColor} />
-                          </LinearGradient>
-                        </Defs>
-                        <Rect
-                          width="100%"
-                          height="100%"
-                          fill="url(#add-item-metabar-fade)"
-                        />
-                      </Svg>
-                      <Button
-                        size="icon"
-                        className="size-10"
-                        hitSlop={2}
-                        accessibilityLabel={
-                          isItemAdded ? 'Item added' : 'Add item'
-                        }
-                        onPress={onSubmit}
-                        disabled={!groceryListId || !isValid || isSubmitting}
-                        status={isItemAdded ? 'success' : 'idle'}
-                        successLabel=""
-                        onSuccessComplete={onItemAddedFeedbackComplete}
-                      >
-                        <Icon
-                          as={ArrowUpIcon}
-                          size={22}
-                          strokeWidth={2.5}
-                          className="text-primary-foreground"
-                        />
-                      </Button>
-                    </View>
-                  </View>
-                </Animated.View>
-                {hasBrowsed ? (
+                  <SheetHeader
+                    title={itemOnly ? 'Add item' : undefined}
+                    centerContent={
+                      itemOnly ? undefined : (
+                        <ModeMenu mode={mode} onModeChange={handleModeChange} />
+                      )
+                    }
+                    backAction={
+                      <CloseButton
+                        accessibilityLabel="Close add item"
+                        onPress={() => void ref.current?.dismiss()}
+                      />
+                    }
+                    primaryAction={
+                      mode === 'item' ? <SavedItemActions /> : undefined
+                    }
+                  />
                   <Animated.View
-                    className="min-h-0 flex-1 pt-3"
                     style={[
                       contentAnimatedStyle,
-                      { display: mode === 'item' ? 'none' : 'flex' },
+                      { display: mode === 'item' ? 'flex' : 'none' },
                     ]}
+                    className="px-8"
                   >
-                    <View
-                      className="flex-1"
-                      style={{ display: mode === 'recipe' ? 'flex' : 'none' }}
-                    >
-                      <RecipeSelector
-                        fillHeight
-                        onSelectRecipe={handleRecipeSelect}
-                        onCreateRecipe={handleCreateRecipe}
+                    <View>{fields}</View>
+                    <View className="-mx-8 mt-1 min-h-11 justify-center overflow-hidden px-8">
+                      <MetaBar
+                        trailingInset={itemConflict.needsReview ? 144 : 92}
+                        savedItemActionsInHeader
                       />
-                    </View>
-                    <View
-                      className="flex-1"
-                      style={{ display: mode === 'recent' ? 'flex' : 'none' }}
-                    >
-                      <FrequentItemsScreen listId={groceryListId} />
+                      <View className="absolute bottom-0 right-8 top-0 justify-center bg-background pl-2">
+                        <Svg
+                          pointerEvents="none"
+                          width={24}
+                          height="100%"
+                          style={{ position: 'absolute', left: -24, top: 0 }}
+                        >
+                          <Defs>
+                            <LinearGradient
+                              id="add-item-metabar-fade"
+                              x1="0%"
+                              y1="0%"
+                              x2="100%"
+                              y2="0%"
+                            >
+                              <Stop
+                                offset="0%"
+                                stopColor={backgroundColor}
+                                stopOpacity={0}
+                              />
+                              <Stop offset="100%" stopColor={backgroundColor} />
+                            </LinearGradient>
+                          </Defs>
+                          <Rect
+                            width="100%"
+                            height="100%"
+                            fill="url(#add-item-metabar-fade)"
+                          />
+                        </Svg>
+                        <Button
+                          key={itemConflict.needsReview ? 'review' : 'add'}
+                          size={itemConflict.needsReview ? 'default' : 'icon'}
+                          className={
+                            itemConflict.needsReview
+                              ? 'h-10 gap-1 px-3'
+                              : 'size-10'
+                          }
+                          hitSlop={2}
+                          accessibilityLabel={
+                            isItemAdded
+                              ? 'Item added'
+                              : itemConflict.needsReview
+                                ? itemConflict.label
+                                : 'Add item'
+                          }
+                          onPress={onSubmit}
+                          disabled={!groceryListId || !isValid || isSubmitting}
+                          status={isItemAdded ? 'success' : 'idle'}
+                          successLabel=""
+                          onSuccessComplete={onItemAddedFeedbackComplete}
+                        >
+                          {itemConflict.needsReview ? (
+                            <Text>Review</Text>
+                          ) : null}
+                          <Icon
+                            as={
+                              itemConflict.needsReview
+                                ? ChevronRightIcon
+                                : ArrowUpIcon
+                            }
+                            size={22}
+                            strokeWidth={2.5}
+                            className="text-primary-foreground"
+                          />
+                        </Button>
+                      </View>
                     </View>
                   </Animated.View>
-                ) : null}
-                {selectedRecipe ? (
-                  <Animated.View
-                    key="ingredient-selector"
-                    className="overflow-hidden bg-background pt-4"
-                    style={StyleSheet.absoluteFill}
-                    entering={slideInRight()}
-                    exiting={slideOutRight()}
-                  >
-                    <IngredientSelector
-                      recipe={selectedRecipe}
-                      onBack={handleBackToRecipes}
-                      onOpenRecipe={() => void handleOpenRecipe()}
-                      onDismiss={() => void ref.current?.dismiss()}
-                      listId={groceryListId}
-                      selectedIds={selectedIngredientIds}
-                      onToggleIngredient={toggleIngredient}
-                      onToggleAll={toggleAllIngredients}
-                      showFooter={false}
-                      showHeader
-                    />
-                    <View
-                      className="shrink-0 px-4 pt-2"
-                      style={{
-                        paddingBottom: Math.max(12, insets.bottom),
-                      }}
+                  {hasBrowsed ? (
+                    <Animated.View
+                      className="min-h-0 flex-1"
+                      style={[
+                        contentAnimatedStyle,
+                        { display: mode === 'item' ? 'none' : 'flex' },
+                      ]}
                     >
-                      <Button
-                        size="lg"
-                        className="min-h-11"
-                        onPress={handleAddRecipeToList}
-                        disabled={
-                          selectedIngredientIds.size === 0 ||
-                          isAddingRecipe ||
-                          isResolvingConflict
-                        }
+                      <View
+                        className="flex-1"
+                        style={{ display: mode === 'recipe' ? 'flex' : 'none' }}
                       >
-                        <Text className="text-primary-foreground">
-                          Add to List
-                        </Text>
-                      </Button>
-                    </View>
-                  </Animated.View>
-                ) : null}
+                        <RecipeSelector
+                          fillHeight
+                          onSelectRecipe={handleRecipeSelect}
+                          onCreateRecipe={handleCreateRecipe}
+                        />
+                      </View>
+                      <View
+                        className="flex-1"
+                        style={{ display: mode === 'recent' ? 'flex' : 'none' }}
+                      >
+                        <FrequentItemsScreen
+                          listId={groceryListId}
+                          reviewConflicts={review.review}
+                        />
+                      </View>
+                    </Animated.View>
+                  ) : null}
+                  {selectedRecipe ? (
+                    <SheetScreenOverlay key="ingredient-selector">
+                      <IngredientSelector
+                        recipe={selectedRecipe}
+                        onBack={handleBackToRecipes}
+                        onOpenRecipe={() => void handleOpenRecipe()}
+                        onDismiss={() => void ref.current?.dismiss()}
+                        listId={groceryListId}
+                        selectedIds={selectedIngredientIds}
+                        onToggleIngredient={toggleIngredient}
+                        onToggleAll={toggleAllIngredients}
+                        showFooter={false}
+                        showHeader
+                      />
+                      <SheetFooter>
+                        <BottomActionButton
+                          onPress={handleAddRecipeToList}
+                          disabled={
+                            selectedIngredientIds.size === 0 || isAddingRecipe
+                          }
+                        >
+                          <Text className="text-primary-foreground">
+                            {recipeConflict.needsReview
+                              ? recipeConflict.label
+                              : 'Add to List'}
+                          </Text>
+                        </BottomActionButton>
+                      </SheetFooter>
+                    </SheetScreenOverlay>
+                  ) : null}
+                </View>
+                <InlineStoreReviewCard review={review} />
               </Animated.View>
             </View>
           )}
         />
       </TrueSheet>
-      <RecipeConflictSheet
-        ref={conflictSheetRef}
-        recipeName={selectedRecipe?.name ?? 'Recipe'}
-        onIncrement={() => {
-          void resolveConflict('increment');
-        }}
-        onCreateSeparate={() => {
-          void resolveConflict('separate');
-        }}
-        onCancel={() => {
-          conflictSheetRef.current?.dismiss();
-          setPendingConflictIngredients(null);
-        }}
-        isPending={isResolvingConflict}
-      />
     </>
   );
 };
@@ -605,8 +603,10 @@ const AddItem = ({
   const defaultStore =
     focusedStore !== undefined ? focusedStore : userDefaultStore;
   const [isItemAdded, setIsItemAdded] = useState(false);
+  const [isSessionOpen, setIsSessionOpen] = useState(false);
+  const review = useInlineStoreReview(isSessionOpen);
 
-  const onSubmit = ({
+  const onSubmit = async ({
     item,
     listId,
     selectedCloudSavedItemId,
@@ -631,15 +631,13 @@ const AddItem = ({
       // here, on Add. When on, a linked cloud item is synced (and linked)
       // inside addGroceryListItem; local/new items are handled below. When
       // off, nothing is written to saved items.
-      const transactionPromise = addGroceryListItem({
+      await addGroceryListItem({
         listId,
         item,
         savedItemId: saveItem ? selectedCloudSavedItemId : undefined,
         selectedCloudSavedItemStoreId,
         persistLocalSavedItem: false,
-      });
-      void transactionPromise.catch(() => {
-        toast.error('Failed to add item');
+        reviewConflicts: review.review,
       });
 
       if (saveItem && !selectedCloudSavedItemId) {
@@ -671,7 +669,8 @@ const AddItem = ({
       }
       setIsItemAdded(true);
       return true;
-    } catch {
+    } catch (error) {
+      if (isStoreReviewCancelled(error)) return false;
       toast.error('Failed to add item');
       return false;
     }
@@ -686,6 +685,9 @@ const AddItem = ({
       preferDefaultStore={focusedStore !== undefined}
     >
       <AddItemSheet
+        review={review}
+        isSessionOpen={isSessionOpen}
+        setIsSessionOpen={setIsSessionOpen}
         groceryListId={groceryListId}
         itemOnly={focusedStore !== undefined}
         defaultStore={defaultStore}

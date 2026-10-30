@@ -53,7 +53,7 @@ export const ShareListSheet = forwardRef<ShareListSheetRef, object>(
         <BottomSheet.SheetView>
           <BottomSheet.Header
             title="Invite people to this list"
-            description="Others can use this code to join your list"
+            subtitle="Others can use this code to join your list"
           />
           <View className="items-center gap-4">
             <HapticPressable

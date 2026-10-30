@@ -1,4 +1,4 @@
-import { MoreHorizontalIcon } from 'lucide-react-native';
+import { HeaderMenuTrigger } from '@/components/ui/header-action';
 
 import {
   DropdownMenuContent,
@@ -7,8 +7,6 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '../../../components/ui/dropdown-menu';
-import { Icon } from '../../../components/ui/icon';
-import { useTheme } from '../../../hooks/use-theme';
 
 type MealSheetRecipeDropdownProps = {
   recipeId: string;
@@ -25,13 +23,9 @@ export const MealSheetRecipeDropdown = ({
   onViewRecipe,
   onChangeRecipe,
 }: MealSheetRecipeDropdownProps) => {
-  const theme = useTheme();
-
   return (
     <DropdownMenuRoot
-      trigger={
-        <Icon as={MoreHorizontalIcon} size={24} color={theme.foreground} />
-      }
+      trigger={<HeaderMenuTrigger accessibilityLabel="Meal recipe actions" />}
     >
       <DropdownMenuContent>
         <DropdownMenuItem onSelect={onViewRecipe} key="view-recipe">

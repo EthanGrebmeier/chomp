@@ -3,9 +3,11 @@ import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
+import { SheetFooter } from '@/components/sheet-content';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { TextInput } from '../../../components/text-input';
-import { Button } from '../../../components/ui/button';
 import { CloseButton } from '../../../components/ui/close-button';
 import { Text } from '../../../components/ui/text';
 import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
@@ -70,20 +72,20 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
         ref={sheetRef}
         onStartClose={handleDismiss}
         footer={
-          <View className="pb-safe px-10">
-            <Button onPress={handleSave} disabled={!canSave}>
+          <SheetFooter>
+            <BottomActionButton onPress={handleSave} disabled={!canSave}>
               <Text>Save</Text>
-            </Button>
-          </View>
+            </BottomActionButton>
+          </SheetFooter>
         }
       >
-        <BottomSheet.SheetView className="pb-safe">
+        <BottomSheet.SheetView>
           <BottomSheet.Header
             title="Rename list"
-            dismissButton={<CloseButton onPress={handleCancel} />}
+            backAction={<CloseButton onPress={handleCancel} />}
           />
 
-          <View className="my-4">
+          <View className="">
             <TextInput
               key={listNameInput.inputKey}
               ref={inputRef}

@@ -1,6 +1,9 @@
 import { Activity, startTransition, useEffect, useState } from 'react';
 
-import { useSplashDismissed } from '@/lib/startup-screen-ready';
+import {
+  useAppEntryVisible,
+  useSplashDismissed,
+} from '@/lib/startup-screen-ready';
 
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
 import type { MealPlanFocusRequest } from '../types';
@@ -22,16 +25,24 @@ export function PreloadedMealPlanner({
   focusRequest,
 }: Props) {
   const splashDismissed = useSplashDismissed();
+  const entryVisible = useAppEntryVisible();
   const [preloaded, setPreloaded] = useState(false);
   // An explicit open retains the prepared screen even if it beats idle preload.
   if (isActive && !preloaded) setPreloaded(true);
   useEffect(() => {
-    if (!splashDismissed || !isListReady || preloaded || isActive) return;
+    if (
+      !entryVisible ||
+      !splashDismissed ||
+      !isListReady ||
+      preloaded ||
+      isActive
+    )
+      return;
     const idle = requestIdleCallback(() => {
       startTransition(() => setPreloaded(true));
     });
     return () => cancelIdleCallback(idle);
-  }, [splashDismissed, isListReady, preloaded, isActive]);
+  }, [entryVisible, splashDismissed, isListReady, preloaded, isActive]);
 
   if (!preloaded && !isActive) return null;
   return (

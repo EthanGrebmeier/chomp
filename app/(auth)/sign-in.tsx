@@ -9,7 +9,7 @@ import { SocialButtons } from '@/components/auth/social-buttons';
 import { WelcomeGraphic } from '@/components/branding/welcome-graphic';
 import { BareTextInput } from '@/components/text-input';
 import { BackButton } from '@/components/ui/back-button';
-import { Button } from '@/components/ui/button';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 
 import { Text } from '../../components/ui/text';
@@ -71,15 +71,14 @@ export default function SignIn() {
                 />
               </View>
 
-              <Button
-                size="xl"
+              <BottomActionButton
                 variant="default"
                 className="w-full"
                 disabled={isSocialLoading}
                 onPress={onContinueWithEmail}
               >
                 <Text>Continue</Text>
-              </Button>
+              </BottomActionButton>
             </View>
           </View>
 

@@ -1,3 +1,4 @@
+import { useIsFocused } from 'expo-router';
 import {
   createContext,
   useContext,
@@ -5,17 +6,31 @@ import {
   useSyncExternalStore,
 } from 'react';
 
+import type { EntryScreen } from './app-entry';
+import { scheduleAfterPaint } from './schedule-after-paint';
+
 export const StartupScreenReadyContext = createContext<
-  (ready: boolean) => void
+  (ready: boolean, screen: EntryScreen) => void
 >(() => {});
 
 /** Report data and edit readiness before exposing the initial grocery screen. */
-export function useStartupScreenReady(ready: boolean) {
+export function useStartupScreenReady(
+  ready: boolean,
+  screen: EntryScreen = 'grocery'
+) {
+  const focused = useIsFocused();
   const report = useContext(StartupScreenReadyContext);
   useEffect(() => {
-    report(ready);
-    return () => report(false);
-  }, [ready, report]);
+    if (!focused) return;
+    report(false, screen);
+    const cancel = ready
+      ? scheduleAfterPaint(() => report(true, screen))
+      : undefined;
+    return () => {
+      cancel?.();
+      report(false, screen);
+    };
+  }, [focused, ready, report, screen]);
 }
 
 // Native splash visibility is a process-wide, one-way transition. Publishing it
@@ -40,3 +55,6 @@ export function useSplashDismissed() {
     () => false
   );
 }
+
+export const AppEntryVisibleContext = createContext(false);
+export const useAppEntryVisible = () => useContext(AppEntryVisibleContext);

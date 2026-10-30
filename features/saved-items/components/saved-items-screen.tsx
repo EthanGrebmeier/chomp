@@ -3,11 +3,11 @@ import { Keyboard, Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useDebounceCallback } from 'usehooks-ts';
 
-import { Heading } from '@/components/text/heading';
+import { SHEET_TOP_STYLE } from '@/components/sheet-content';
+import { SheetHeader } from '@/components/sheet-header';
 import { AddButton } from '@/components/ui/add-button';
 import { BackButton } from '@/components/ui/back-button';
 import { SearchButton } from '@/components/ui/search-button';
-import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
 import { useSettings } from '@/features/grocery-list/hooks/useSettings';
 import { useUpdateSettings } from '@/features/grocery-list/hooks/useUpdateSettings';
@@ -96,57 +96,47 @@ function SavedItemsContent({ onBack }: SavedItemsScreenProps) {
 
   return (
     <Pressable
-      className="flex-1 bg-background pt-6"
+      className="flex-1 bg-background"
+      style={SHEET_TOP_STYLE}
       accessible={false}
       onPress={dismissSearch}
     >
-      <View className="h-11 justify-center px-4">
-        {searchMode ? (
-          <Animated.View
-            key="search-header"
-            entering={FadeIn.duration(200)}
-            exiting={FadeOut.duration(200)}
-          >
-            <SavedItemsFilters
-              searchInputKey={searchInputKey}
-              searchDefaultValue={searchDefaultValue}
-              onSearchChange={handleSearchChange}
-              onClose={() => setSearchMode(false)}
-              category={filterCategory}
-              onCategoryChange={handleFilterCategoryChange}
-              sortBy={sortBy}
-              onSortByChange={handleSortByChange}
-            />
-          </Animated.View>
-        ) : (
-          <Animated.View
-            key="default-header"
-            entering={FadeIn.duration(200)}
-            exiting={FadeOut.duration(200)}
-            className="flex-row items-center gap-2"
-          >
-            <BackButton onPress={onBack} href="/settings" />
-            <Heading className="flex-1">My Saved Items</Heading>
+      <SheetHeader
+        title="My Saved Items"
+        subtitle={`${filteredItems.length} item${filteredItems.length !== 1 ? 's' : ''}${searchQuery ? ` matching "${searchQuery}"` : filterCategory ? ' in this category' : ''}`}
+        backAction={<BackButton onPress={onBack} href="/settings" />}
+        primaryAction={
+          <View className="flex-row items-center gap-2">
             <SearchButton
               accessibilityLabel="Search saved items"
-              onPress={() => setSearchMode(true)}
+              onPress={() => setSearchMode(value => !value)}
               hasActiveFilters={hasActiveFilters}
             />
             <AddButton
               accessibilityLabel="Add saved item"
               onPress={() => present()}
             />
-          </Animated.View>
-        )}
-      </View>
-
-      <View className="mt-3 px-4">
-        <Text variant="caption" tabularNumbers>
-          {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
-          {searchQuery ? ` matching "${searchQuery}"` : ''}
-          {filterCategory && !searchQuery ? ' in this category' : ''}
-        </Text>
-      </View>
+          </View>
+        }
+      />
+      {searchMode ? (
+        <Animated.View
+          className="px-8"
+          entering={FadeIn.duration(200)}
+          exiting={FadeOut.duration(200)}
+        >
+          <SavedItemsFilters
+            searchInputKey={searchInputKey}
+            searchDefaultValue={searchDefaultValue}
+            onSearchChange={handleSearchChange}
+            onClose={() => setSearchMode(false)}
+            category={filterCategory}
+            onCategoryChange={handleFilterCategoryChange}
+            sortBy={sortBy}
+            onSortByChange={handleSortByChange}
+          />
+        </Animated.View>
+      ) : null}
 
       <View className="mt-2 flex-1">
         {isLoading ? (
