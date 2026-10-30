@@ -54,7 +54,8 @@ export async function planQuantityRecipe(args: AddRecipeToDateArgs) {
   }));
   const destinations = await chooseItemDestinations(
     args.listId,
-    ingredients.filter(i => i.selected)
+    ingredients.filter(i => i.selected),
+    args.reviewConflicts
   );
   const session = listSession(args.listId);
   const meal: Meal = {
@@ -83,11 +84,15 @@ export async function planQuantityItem(args: AddItemToDateArgs) {
   const ingredient: PlannedIngredient = {
     ...ingredientFromApp(args),
     store: args.storeId ?? args.defaultStore?.id ?? '',
-    selected: true,
+    selected: args.showOnGroceryList ?? true,
     overridden: false,
     recipeIngredientId: null,
   };
-  const destinations = await chooseItemDestinations(args.listId, [ingredient]);
+  const destinations = await chooseItemDestinations(
+    args.listId,
+    ingredient.selected ? [ingredient] : [],
+    args.reviewConflicts
+  );
   const session = listSession(args.listId);
   const meal: Meal = {
     kind: 'meal',
