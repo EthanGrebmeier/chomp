@@ -92,6 +92,7 @@ function InitialLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
+          animation: reducedMotion ? 'fade' : 'default',
         }}
       >
         <Stack.Screen name="index" />

@@ -14,7 +14,7 @@ const CategoryRow = ({ category, onPress }: CategoryRowProps) => (
     onPress={onPress}
     disabled={!onPress}
     hapticType="light"
-    className="mx-2 flex-row items-center justify-center rounded-xl px-2 py-3"
+    className="mx-8 flex-row items-center justify-center rounded-xl px-2 py-3"
   >
     <CategoryLabel
       color={category.color}
@@ -48,7 +48,7 @@ export const CategoriesList = ({
       />
     )}
     keyExtractor={item => item.value}
-    contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
+    contentContainerStyle={{ paddingBottom: 24 }}
     showsVerticalScrollIndicator={false}
   />
 );

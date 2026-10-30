@@ -128,16 +128,17 @@ export const UnitSheet = ({
         insetAdjustment="never"
       >
         <BottomSheet.Header
-          className="px-4"
           title="Set quantity"
-          dismissButton={
+          backAction={
             <BackButton onPress={() => sheetRef.current?.dismiss()} />
           }
-          button={<ConfirmButton onPress={handleConfirm} disabled={!isValid} />}
+          primaryAction={
+            <ConfirmButton onPress={handleConfirm} disabled={!isValid} />
+          }
         />
 
         <View className="pb-6">
-          <View className="px-4">
+          <View className="px-8">
             <View className="flex-row items-center justify-between gap-3 rounded-xl bg-muted px-4 py-3 ">
               <TextInput
                 key={quantityInput.inputKey}

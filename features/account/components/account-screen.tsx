@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, View } from 'react-native';
 import { toast } from 'sonner-native';
 
-import { Button } from '../../../components/ui/button';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+
 import { Text } from '../../../components/ui/text';
 import {
   consumeManualSignOutIntent,
@@ -65,7 +66,7 @@ export const AccountScreen = () => {
 
   if (!isReconciled) {
     return (
-      <View className="p-4">
+      <View className="px-8 pb-6">
         <ActivityIndicator />
       </View>
     );
@@ -73,7 +74,7 @@ export const AccountScreen = () => {
 
   if (!hasInstantEmailSession) {
     return (
-      <View className="p-4">
+      <View className="px-8 pb-6">
         <Text variant="muted">You are not signed in.</Text>
       </View>
     );
@@ -84,7 +85,7 @@ export const AccountScreen = () => {
   const isBusy = isSigningOut || isDeleting;
 
   return (
-    <View className="gap-12 p-4">
+    <View className="gap-12 px-8 pb-6">
       <View>
         <Text variant="muted" className="mb-1">
           Email
@@ -95,29 +96,27 @@ export const AccountScreen = () => {
       </View>
 
       <View className="gap-3 ">
-        <Button
+        <BottomActionButton
           variant="secondary"
           onPress={handleSignOut}
           disabled={isBusy}
           className="w-full"
-          size="lg"
         >
           {isSigningOut ? <ActivityIndicator /> : <Text>Sign Out</Text>}
-        </Button>
+        </BottomActionButton>
 
-        <Button
+        <BottomActionButton
           variant="destructive"
           onPress={handleDeleteAccount}
           disabled={isBusy}
           className="w-full"
-          size="lg"
         >
           {isDeleting ? (
             <ActivityIndicator color="white" />
           ) : (
             <Text>Delete Account</Text>
           )}
-        </Button>
+        </BottomActionButton>
       </View>
     </View>
   );

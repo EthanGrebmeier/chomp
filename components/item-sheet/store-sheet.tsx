@@ -10,6 +10,9 @@ import {
 import { ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { SheetFooter } from '@/components/sheet-content';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+
 import { DefaultStoreToggle } from '../../features/stores/components/default-store-toggle';
 import { createStore } from '../../features/stores/instant/create-store';
 import { useStores } from '../../features/stores/instant/use-stores';
@@ -17,7 +20,6 @@ import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
 import { BackButton } from '../ui/back-button';
-import { Button } from '../ui/button';
 import { ConfirmButton } from '../ui/confirm-button';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
@@ -271,14 +273,13 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
             name={sheetName}
           >
             <BottomSheet.Header
-              className="mb-0 px-4"
-              dismissButton={
+              backAction={
                 showBackButton ? (
                   <BackButton onPress={() => sheetRef.current?.dismiss()} />
                 ) : undefined
               }
               title="Choose a store"
-              button={
+              primaryAction={
                 <ConfirmButton
                   onPress={handleConfirm}
                   disabled={localStoreId === null}
@@ -287,9 +288,9 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
             />
 
             <ScrollView
-              className="max-h-96 px-2"
+              className="max-h-96 px-8"
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
+              contentContainerStyle={{ paddingBottom: 24 }}
             >
               <HapticPressable
                 onPress={handleOpenCreateStore}
@@ -351,22 +352,22 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
           name="create-store-sheet"
           detents={['auto']}
           footer={
-            <View className="px-10 pb-4">
-              <Button
+            <SheetFooter>
+              <BottomActionButton
                 variant="default"
                 onPress={handleCreateStore}
                 disabled={!canCreate}
               >
                 <Text>Create</Text>
-              </Button>
-            </View>
+              </BottomActionButton>
+            </SheetFooter>
           }
         >
-          <BottomSheet.SheetView className="pb-safe">
+          <BottomSheet.SheetView>
             <BottomSheet.Header
               className="mb-0"
               title="Add a store"
-              dismissButton={
+              backAction={
                 showBackButton ? (
                   <BackButton
                     onPress={() => createStoreSheetRef.current?.dismiss()}

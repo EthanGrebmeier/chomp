@@ -1,5 +1,4 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { MoreHorizontal } from 'lucide-react-native';
 import { useEffect, useRef, useState, type ComponentType } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
@@ -9,6 +8,7 @@ import {
   ItemNameField,
   ItemNotesField,
 } from '@/components/item-sheet/item-fields';
+import { SheetBody } from '@/components/sheet-content';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -16,7 +16,7 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
-import { Icon } from '@/components/ui/icon';
+import { HeaderMenuTrigger } from '@/components/ui/header-action';
 import { Text } from '@/components/ui/text';
 
 import { entriesFor, record, records, totalFor } from '../model';
@@ -151,20 +151,12 @@ export function ItemSheet({
     />
   );
   const content = (
-    <View className="px-6">
+    <SheetBody>
       <BottomSheet.Header
         title="Edit item"
-        button={
+        primaryAction={
           <DropdownMenuRoot
-            trigger={
-              <View
-                accessibilityRole="button"
-                accessibilityLabel="Item actions"
-                className="size-11 items-center justify-center"
-              >
-                <Icon as={MoreHorizontal} size={24} />
-              </View>
-            }
+            trigger={<HeaderMenuTrigger accessibilityLabel="Item actions" />}
           >
             <DropdownMenuContent>
               <DropdownMenuItem key="delete-item" destructive onSelect={remove}>
@@ -229,7 +221,7 @@ export function ItemSheet({
         </View>
       ) : null}
       {error ? <Text className="pt-3 text-destructive">{error}</Text> : null}
-    </View>
+    </SheetBody>
   );
   return (
     <BottomSheet

@@ -1,10 +1,10 @@
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { Heading } from '@/components/text/heading';
+import { SHEET_TOP_STYLE } from '@/components/sheet-content';
+import { SheetHeader } from '@/components/sheet-header';
 import { AddButton } from '@/components/ui/add-button';
 import { BackButton } from '@/components/ui/back-button';
-import { Text } from '@/components/ui/text';
 import { useCategoryOptions } from '@/features/categories/use-category-options';
 import { SavedItemsListSkeleton } from '@/features/saved-items/components/saved-items-list-skeleton';
 import { useInstantAuthState } from '@/lib/instant/use-clerk-auth';
@@ -26,26 +26,26 @@ function CategoriesContent({ onBack }: CategoriesScreenProps) {
   const canEditCategories = status === 'signed-in';
 
   return (
-    <View className="flex-1 bg-background pt-6">
-      <View className="flex-row items-center gap-3 px-4">
-        <BackButton onPress={onBack} href="/settings" />
-        <View className="flex-1 gap-1">
-          <Heading>My Categories</Heading>
-          <Text variant="caption">
-            {canEditCategories
-              ? 'Tap a category to edit or delete it.'
-              : 'Sign in to add or edit categories.'}
-          </Text>
-        </View>
-        {canEditCategories ? (
-          <AddButton
-            accessibilityLabel="Add category"
-            onPress={() => present()}
-          />
-        ) : null}
-      </View>
+    <View className="flex-1 bg-background" style={SHEET_TOP_STYLE}>
+      <SheetHeader
+        title="My Categories"
+        subtitle={
+          canEditCategories
+            ? 'Tap a category to edit or delete it.'
+            : 'Sign in to add or edit categories.'
+        }
+        backAction={<BackButton onPress={onBack} href="/settings" />}
+        primaryAction={
+          canEditCategories ? (
+            <AddButton
+              accessibilityLabel="Add category"
+              onPress={() => present()}
+            />
+          ) : undefined
+        }
+      />
 
-      <View className="mt-2 flex-1">
+      <View className="flex-1">
         {isLoading ? (
           <Animated.View
             key="skeleton"

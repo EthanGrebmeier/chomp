@@ -7,6 +7,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TextInput } from '@/components/text-input';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useUncontrolledTextInput } from '@/components/use-uncontrolled-text-input';
@@ -14,7 +15,7 @@ import { cn } from '@/lib/utils';
 
 const mealTimeOptions = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
 
-// xl button (h-12) + sticky bar padding (pt-3) + gap above the keyboard.
+// Bottom action (minimum 48 points) + sticky bar padding (pt-3) + gap above the keyboard.
 const STICKY_SUBMIT_OFFSET = 72;
 
 export type RecipePageFormData = {
@@ -179,14 +180,13 @@ export const RecipePageForm = ({
           className="bg-background pt-3"
           style={{ paddingBottom: bottomInset }}
         >
-          <Button
-            size="xl"
+          <BottomActionButton
             onPress={handleSubmit}
             disabled={!canSubmit || isPending}
             className={cn(isPending && 'opacity-70')}
           >
             <Text>{isPending ? pendingLabel : submitLabel}</Text>
-          </Button>
+          </BottomActionButton>
         </View>
       </KeyboardStickyView>
     </View>

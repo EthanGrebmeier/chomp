@@ -6,7 +6,7 @@ import { toast } from 'sonner-native';
 
 import { LegalConsent } from '@/components/auth/legal-consent';
 import { WelcomeGraphic } from '@/components/branding/welcome-graphic';
-import { Button } from '@/components/ui/button';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { useContinueAsGuest } from '@/lib/instant/use-continue-as-guest';
 import { navigation } from '@/lib/navigation';
 
@@ -58,18 +58,16 @@ export default function Welcome() {
           <WelcomeGraphic width={300} height={300} />
         </View>
         <View className=" justify-end gap-2">
-          <Button
-            size="xl"
+          <BottomActionButton
             variant="default"
             className="w-full"
             onPress={() => router.push('/(auth)/sign-in')}
           >
             <Text>Sign in</Text>
-          </Button>
+          </BottomActionButton>
 
-          <Button
+          <BottomActionButton
             variant="ghost"
-            size="xl"
             onPress={handleContinueAsGuest}
             disabled={isContinuingAsGuest}
           >
@@ -78,7 +76,7 @@ export default function Welcome() {
             ) : (
               <Text>Continue as a Guest</Text>
             )}
-          </Button>
+          </BottomActionButton>
 
           <LegalConsent className="mt-2 px-4 text-foreground/80" />
         </View>

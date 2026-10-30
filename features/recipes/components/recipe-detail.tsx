@@ -1,9 +1,7 @@
-import {
-  ExternalLinkIcon,
-  MoreHorizontal,
-  PlusIcon,
-} from 'lucide-react-native';
+import { ExternalLinkIcon, PlusIcon } from 'lucide-react-native';
 import { Linking, ScrollView, View } from 'react-native';
+
+import { HeaderMenuTrigger } from '@/components/ui/header-action';
 
 import { Heading } from '../../../components/text/heading';
 import { BackButton } from '../../../components/ui/back-button';
@@ -48,14 +46,10 @@ const RecipeDetailContent = ({
   return (
     <View className="flex-1">
       {/* Fixed navigation bar; the title lives in the scrolling content. */}
-      <View className="h-11 flex-row items-center justify-between px-4">
+      <View className="h-11 flex-row items-center justify-between px-8">
         <BackButton onPress={onClose} />
         <RecipeDropdownMenu
-          trigger={
-            <View className="size-8 items-center justify-center rounded-full bg-background">
-              <Icon as={MoreHorizontal} size={24} />
-            </View>
-          }
+          trigger={<HeaderMenuTrigger accessibilityLabel="Recipe actions" />}
           recipe={recipe}
           listId={listId}
           onClose={onClose}
@@ -68,7 +62,7 @@ const RecipeDetailContent = ({
         keyboardDismissMode="on-drag"
       >
         {/* Overview */}
-        <View className="gap-3 px-4">
+        <View className="gap-3 px-8">
           <View className="items-start gap-2">
             <Heading size="lg">{recipe.name}</Heading>
             <MealTagBadge mealTag={recipe.mealTag} />
@@ -101,7 +95,7 @@ const RecipeDetailContent = ({
 
         {/* Ingredients */}
         <View className="gap-1">
-          <View className="h-9 flex-row items-center justify-between px-4">
+          <View className="h-9 flex-row items-center justify-between px-8">
             <Text variant="overline">Ingredients</Text>
             {isOwner ? (
               <Button
@@ -121,7 +115,7 @@ const RecipeDetailContent = ({
             ) : null}
           </View>
           {ingredients.length === 0 ? (
-            <View className="items-center gap-1 px-4 py-8">
+            <View className="items-center gap-1 px-8 py-8">
               <Text variant="bodyMuted">No ingredients yet</Text>
               {isOwner ? (
                 <Text variant="caption">Tap Add to add ingredients</Text>
@@ -130,6 +124,7 @@ const RecipeDetailContent = ({
           ) : (
             ingredients.map(ingredient => (
               <RecipeIngredientItem
+                className="px-8"
                 key={ingredient.id}
                 ingredient={ingredient}
                 categoryOptions={categoryOptions}
