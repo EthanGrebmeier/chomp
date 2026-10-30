@@ -15,6 +15,9 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
+import { SHEET_TOP_STYLE, SheetContent } from '@/components/sheet-content';
+import { isStoreReviewCancelled } from '@/features/quantity/store-review-cancelled';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
@@ -23,7 +26,6 @@ import { navigation } from '../../../lib/navigation';
 import { THEME } from '../../../lib/theme';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
 import { useDefaultStore } from '../../stores/instant/use-default-store';
-import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveRecipeFromMealPlan } from '../hooks/useRemoveRecipeFromMealPlan';
 import { useUpdateMealPlanRecipe } from '../hooks/useUpdateMealPlanRecipe';
 import { useUserMealPlanData } from '../hooks/useUserMealPlanData';
@@ -39,7 +41,6 @@ import { SerializedAutosave } from '../utils/serialized-autosave';
 import {
   getCanonicalSnapshots,
   getIngredientShoppingStatus,
-  getMealPlanShoppingState,
 } from '../utils/shopping-state';
 import {
   countUncheckedLinkedGroceryItems,
@@ -50,7 +51,6 @@ import {
   MealPlanIngredientOverrideSheet,
   MealPlanIngredientOverrideSheetRef,
 } from './meal-plan-ingredient-override-sheet';
-import { AddToGroceryListSwitch } from './meal-plan-only';
 import { MealScheduleSentence } from './meal-schedule-sentence';
 import { MealSheetRecipeDropdown } from './meal-sheet-recipe-dropdown';
 
@@ -118,19 +118,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const liveMealPlanRecipe = mealPlanRecipeToEdit
       ? mealPlanRecipes.find(recipe => recipe.id === mealPlanRecipeToEdit.id)
       : undefined;
-    const shoppingState = getMealPlanShoppingState(
-      liveMealPlanRecipe ?? { recipe: { recipe_ingredients: [] } }
-    );
-    const {
-      isMealPlanOnly: mealPlanOnly,
-      setMealPlanOnly,
-      isPending: isSavingVisibility,
-    } = useMealPlanOnlyToggle({
-      entry: mealPlanRecipeToEdit
-        ? { type: 'recipe', id: mealPlanRecipeToEdit.id }
-        : null,
-      isMealPlanOnly: !shoppingState.isShownOnGroceryList,
-    });
     const [autosave] = useState(() => new SerializedAutosave());
     const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onDismissRef = useRef<(() => void) | undefined>(undefined);
@@ -161,7 +148,10 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           });
           setPersistedRecipeId(selectedRecipe.id);
         })
-        .catch(() => toast.error('Failed to update meal'));
+        .catch(error => {
+          if (!isStoreReviewCancelled(error))
+            toast.error('Failed to update meal');
+        });
     }, [
       autosave,
       getSnapshot,
@@ -367,9 +357,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       ])
     );
     const selectionDisabled =
-      mealPlanOnly ||
       isSnapshotLoading ||
-      isSavingVisibility ||
       isSavingSelection ||
       persistedRecipeId !== selectedRecipe?.id;
     const isRowSelectable = (row: MealPlanIngredientEditorRow) =>
@@ -436,11 +424,6 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
       };
     }, [mealPlanRecipeToEdit, persistedRecipeId]);
 
-    const handleMealPlanOnlyChange = (nextMealPlanOnly: boolean) => {
-      if (selectionInFlightRef.current || isSnapshotLoading) return;
-      setMealPlanOnly(nextMealPlanOnly);
-    };
-
     const handleToggleIngredientSelection = async (
       sourceRecipeIngredientId: string
     ) => {
@@ -464,8 +447,11 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           isSelected: nextIsSelected,
           defaultStore,
         });
-      } catch {
-        if (session === editorSessionRef.current)
+      } catch (error) {
+        if (
+          session === editorSessionRef.current &&
+          !isStoreReviewCancelled(error)
+        )
           toast.error('Failed to save ingredient selection');
       } finally {
         if (session === editorSessionRef.current) {
@@ -501,8 +487,11 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           })),
           defaultStore,
         });
-      } catch {
-        if (session === editorSessionRef.current)
+      } catch (error) {
+        if (
+          session === editorSessionRef.current &&
+          !isStoreReviewCancelled(error)
+        )
           toast.error('Failed to save ingredient selections');
       } finally {
         if (session === editorSessionRef.current) {
@@ -536,18 +525,17 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           onWillDismiss={flushAutoSave}
           onDidDismiss={handleSheetDismiss}
         >
-          <View
-            style={{ height: expandedHeight, paddingTop: 24 }}
-            className="px-4 pb-6"
+          <SheetContent
+            style={{ height: expandedHeight, ...SHEET_TOP_STYLE }}
+            className="pb-6"
           >
             <View className="min-h-0 flex-1">
               <BottomSheet.Header
                 title="Edit meal"
-                dismissButton={
+                backAction={
                   <BackButton onPress={() => sheetRef.current?.dismiss()} />
                 }
-                className="mb-2"
-                button={
+                primaryAction={
                   selectedRecipe ? (
                     <MealSheetRecipeDropdown
                       recipeId={selectedRecipe.id}
@@ -567,7 +555,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                 }
               />
               {selectedRecipeWithIngredients ? (
-                <View className="-mx-4 min-h-0 flex-1">
+                <View className="-mx-8 min-h-0 flex-1">
                   <IngredientSelector
                     recipe={selectedRecipeWithIngredients}
                     mode="meal-plan"
@@ -576,32 +564,12 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                     showHeader={false}
                     recipeNameHeading
                     scheduleControl={
-                      <View className="gap-3">
-                        <MealScheduleSentence
-                          date={selectedDate}
-                          onDateChange={setSelectedDate}
-                          mealTag={mealTag}
-                          onMealTagChange={setMealTag}
-                        />
-                        <AddToGroceryListSwitch
-                          isMealPlanOnly={mealPlanOnly}
-                          onMealPlanOnlyChange={handleMealPlanOnlyChange}
-                          disabled={
-                            isSnapshotLoading ||
-                            isSavingVisibility ||
-                            isSavingSelection ||
-                            persistedRecipeId !== selectedRecipe?.id ||
-                            ingredientRows.length === 0
-                          }
-                          description={
-                            ingredientRows.length === 0
-                              ? 'This meal has no ingredients to show.'
-                              : mealPlanOnly && shoppingState.purchasedCount > 0
-                                ? 'Turning this on adds selected ingredients again, including purchased items.'
-                                : undefined
-                          }
-                        />
-                      </View>
+                      <MealScheduleSentence
+                        date={selectedDate}
+                        onDateChange={setSelectedDate}
+                        mealTag={mealTag}
+                        onMealTagChange={setMealTag}
+                      />
                     }
                     showFooter={false}
                     onBack={() => {}}
@@ -619,7 +587,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                 </View>
               ) : null}
             </View>
-          </View>
+          </SheetContent>
         </TrueSheet>
 
         <MealPlanIngredientOverrideSheet
@@ -644,13 +612,14 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           name="edit-meal-change-recipe-sheet"
           ref={changeRecipeSheetRef}
           detents={[0.9]}
+          insetAdjustment="never"
           scrollable
           viewClassName="flex-1"
           onStartClose={() => {
             KeyboardController.dismiss();
           }}
         >
-          <View className="pb-safe flex-1">
+          <View className="flex-1">
             <View className="flex-1 gap-2">
               <BottomSheet.Header title="Choose another recipe" />
               <RecipeSelector

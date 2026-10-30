@@ -1,3 +1,5 @@
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
+
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
 import {
   initializeMealPlanIngredientEditor,
@@ -8,6 +10,7 @@ import {
 import { type MealPlanRecipeEntryForSync } from './plan-meal-plan-list-sync';
 
 export type AddRecipeToDateArgs = {
+  reviewConflicts?: StoreReviewer;
   listId: string;
   recipeId: string;
   date: string;
@@ -36,6 +39,7 @@ export const addRecipeToDate = async ({
     initializeMealPlanIngredientEditor(sourceIngredients)
   ),
   defaultStore,
+  reviewConflicts,
 }: AddRecipeToDateArgs) => {
   const { planQuantityRecipe } =
     await import('@/features/quantity/app/meal-actions');
@@ -48,5 +52,6 @@ export const addRecipeToDate = async ({
     sourceIngredients,
     ingredientSnapshots,
     defaultStore,
+    reviewConflicts,
   });
 };

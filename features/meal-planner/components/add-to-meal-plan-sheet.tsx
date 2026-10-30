@@ -1,32 +1,41 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router } from 'expo-router';
-import { ArrowUpIcon, ChevronDownIcon } from 'lucide-react-native';
+import {
+  ArrowUpIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
-import {
-  Keyboard,
-  StyleSheet,
-  TextInput,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Keyboard, TextInput, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing,
-  LinearTransition,
   ReduceMotion,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
+import { sheetCardResize } from '@/components/animated/sheet-motion';
+import { MetaBarTrailingInsetContext } from '@/components/meta-bar-insets';
 import {
-  slideInRight,
-  slideOutRight,
-} from '../../../components/animated/transitions';
-import { BottomSheet } from '../../../components/bottom-sheet';
+  SHEET_TOP_STYLE,
+  SHEET_CARD_STYLE,
+  SheetFooter,
+} from '@/components/sheet-content';
+import { SheetHeader } from '@/components/sheet-header';
+import { SheetPage } from '@/components/sheet-page';
+import { SheetScreenOverlay } from '@/components/sheet-screen-overlay';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+import { CloseButton } from '@/components/ui/close-button';
+import { InlineStoreReviewCard } from '@/features/quantity/app/inline-store-review-card';
+import { useInlineStoreReview } from '@/features/quantity/app/use-inline-store-review';
+import { useStoreConflictPreview } from '@/features/quantity/app/use-store-conflict-preview';
+import { isStoreReviewCancelled } from '@/features/quantity/store-review-cancelled';
+import { useDefaultStore } from '@/features/stores/instant/use-default-store';
+
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
 import { ItemSuggestions } from '../../../components/item-sheet/item-suggestions';
@@ -67,12 +76,8 @@ import {
 } from './meal-plan-item-context';
 import { MealPlanItemForm } from './meal-plan-item-form';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
+import { AddToGroceryListSwitch } from './meal-plan-only';
 import { MealScheduleSentence } from './meal-schedule-sentence';
-
-// Match the grocery add sheet: keep the card continuous as its detent changes.
-const CARD_RESIZE = LinearTransition.duration(300)
-  .easing(Easing.bezier(0.32, 0.72, 0, 1))
-  .reduceMotion(ReduceMotion.System);
 
 type AddMode = 'recipe' | 'item';
 
@@ -129,7 +134,6 @@ export type AddToMealPlanSheetRef = {
 
 const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
-  const reduceMotion = useReducedMotion();
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
@@ -161,17 +165,19 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
 
   const [mode, setMode] = useState<AddMode>('recipe');
   const [isSessionOpen, setIsSessionOpen] = useState(false);
+  const review = useInlineStoreReview(isSessionOpen);
+  const expanded = mode === 'recipe' || !!review.pending;
   const contentOpacity = useSharedValue(1);
   const contentAnimatedStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.get(),
   }));
 
   useEffect(() => {
-    if (!isSessionOpen || mode !== 'item') return;
+    if (!isSessionOpen || mode !== 'item' || review.pending) return;
     // Let the native detent and visible input layout commit before focusing.
     const frame = requestAnimationFrame(() => itemInputRef.current?.focus());
     return () => cancelAnimationFrame(frame);
-  }, [isSessionOpen, mode]);
+  }, [isSessionOpen, mode, review.pending]);
 
   useEffect(() => {
     contentOpacity.set(
@@ -182,6 +188,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       })
     );
   }, [mode, contentOpacity]);
+  const [isMealPlanOnly, setIsMealPlanOnly] = useState(false);
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
   const [ingredientRows, setIngredientRows] = useState<
@@ -195,7 +202,8 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     useRef<MealPlanIngredientOverrideSheetRef>(null);
 
   const { mutate: addItemToDate, isPending: isAddingItem } = useAddItemToDate();
-  const { mutate: addRecipeToDate } = useAddRecipeToDate();
+  const { mutate: addRecipeToDate, isPending: isAddingRecipe } =
+    useAddRecipeToDate();
 
   useImperativeHandle(
     ref,
@@ -214,6 +222,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
 
   const resetSheetState = () => {
     setMode('recipe');
+    setIsMealPlanOnly(false);
     setSelectedRecipe(null);
     setIngredientRows([]);
     setRecipeDate(undefined);
@@ -240,12 +249,12 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   };
 
   const handleAddRecipe = () => {
-    if (!selectedRecipe || !recipeDate || selectedIngredientIds.size === 0)
-      return;
+    if (!selectedRecipe || !recipeDate || isAddingRecipe) return;
 
     addRecipeToDate(
       {
         listId,
+        reviewConflicts: review.review,
         recipeId: selectedRecipe.id,
         date: recipeDate,
         mealTag: recipeMealTag,
@@ -258,7 +267,8 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           resetSheetState();
           sheetRef.current?.dismiss();
         },
-        onError: () => {
+        onError: error => {
+          if (isStoreReviewCancelled(error)) return;
           toast.error('Failed to add recipe');
         },
       }
@@ -274,11 +284,13 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   };
 
   const handleAddItem = () => {
-    if (!itemName || !selectedDate) return;
+    if (!itemName || !selectedDate || isAddingItem) return;
 
     addItemToDate(
       {
         listId,
+        reviewConflicts: review.review,
+        showOnGroceryList: !isMealPlanOnly,
         name: itemName,
         quantity,
         unit,
@@ -298,7 +310,8 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           });
           itemInputRef.current?.focus();
         },
-        onError: () => {
+        onError: error => {
+          if (isStoreReviewCancelled(error)) return;
           toast.error('Failed to add item');
         },
       }
@@ -354,8 +367,19 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     ingredientOverrideSheetRef.current?.present(row);
   };
 
-  const isRecipeAddDisabled =
-    !isRecipeModeValid || selectedIngredientIds.size === 0;
+  const { data: defaultStore } = useDefaultStore();
+  const itemConflict = useStoreConflictPreview(
+    isSessionOpen ? listId : undefined,
+    isMealPlanOnly ? [] : [{ name: itemName, unit, storeId }],
+    defaultStore?.id
+  );
+  const recipeConflict = useStoreConflictPreview(
+    isSessionOpen ? listId : undefined,
+    toSnapshotCreateInputs(ingredientRows).filter(item => item.isSelected),
+    defaultStore?.id
+  );
+
+  const isRecipeAddDisabled = !isRecipeModeValid || isAddingRecipe;
 
   const metadata = (
     <MealPlanMetaBar
@@ -378,18 +402,21 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     <TrueSheet
       name="add-to-meal-plan-sheet"
       ref={sheetRef}
-      detents={mode === 'item' ? ['auto'] : [expandedHeight / windowHeight]}
-      scrollable={mode === 'recipe'}
-      draggable={mode === 'recipe'}
-      backgroundColor={mode === 'item' ? 'transparent' : backgroundColor}
-      cornerRadius={mode === 'item' ? 0 : undefined}
-      grabber={mode === 'recipe'}
-      elevation={mode === 'item' ? 0 : undefined}
+      detents={!expanded ? ['auto'] : [expandedHeight / windowHeight]}
+      scrollable={expanded}
+      draggable={expanded}
+      backgroundColor={!expanded ? 'transparent' : backgroundColor}
+      cornerRadius={!expanded ? 0 : undefined}
+      grabber={expanded}
+      elevation={!expanded ? 0 : undefined}
       insetAdjustment="never"
       onWillPresent={() => setIsSessionOpen(true)}
-      onWillDismiss={() => setIsSessionOpen(false)}
+      onWillDismiss={() => {
+        review.close();
+        setIsSessionOpen(false);
+      }}
       onWillFocus={() => {
-        if (mode === 'item') itemInputRef.current?.focus();
+        if (mode === 'item' && !review.pending) itemInputRef.current?.focus();
       }}
       onDidDismiss={() => {
         Keyboard.dismiss();
@@ -406,12 +433,12 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
         renderContent={(fields, suggestions) => (
           <View
             style={
-              mode === 'recipe'
-                ? { height: expandedHeight, paddingTop: 24 }
+              expanded
+                ? { height: expandedHeight, ...SHEET_TOP_STYLE }
                 : { paddingHorizontal: 8, paddingBottom: 24 }
             }
           >
-            {mode === 'item' ? (
+            {!expanded ? (
               <ItemSuggestions
                 onClose={() => void sheetRef.current?.dismiss()}
                 label="Close meal planner"
@@ -422,121 +449,165 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
             <Animated.View
               collapsable={false}
               collapsableChildren={false}
-              layout={CARD_RESIZE}
+              layout={sheetCardResize}
+              style={!expanded ? SHEET_CARD_STYLE : undefined}
               className={cn(
                 'overflow-hidden bg-background',
-                mode === 'item'
-                  ? 'rounded-[32px] border border-border pb-2.5 pt-1.5'
+                !expanded
+                  ? 'rounded-[32px] border border-border'
                   : 'min-h-0 flex-1'
               )}
             >
               <View
-                collapsable={false}
-                className="min-h-11 items-center justify-center px-4"
-                pointerEvents={selectedRecipe ? 'none' : 'auto'}
-                accessibilityElementsHidden={!!selectedRecipe}
+                className={expanded ? 'flex-1' : undefined}
+                pointerEvents={review.pending ? 'none' : 'auto'}
+                accessibilityElementsHidden={!!review.pending}
                 importantForAccessibility={
-                  selectedRecipe ? 'no-hide-descendants' : 'auto'
+                  review.pending ? 'no-hide-descendants' : 'auto'
                 }
               >
-                <ModeMenu mode={mode} onModeChange={handleModeChange} />
-              </View>
-              <Animated.View
-                style={[
-                  contentAnimatedStyle,
-                  { display: mode === 'item' ? 'flex' : 'none' },
-                ]}
-                className="px-3"
-              >
-                <View className="pl-1">{fields}</View>
-                <View className="mt-1 min-h-11 flex-row items-center gap-2">
-                  <View className="min-w-0 flex-1">{metadata}</View>
-                  <Button
-                    size="icon"
-                    className="size-10"
-                    hitSlop={2}
-                    accessibilityLabel="Add item to meal plan"
-                    onPress={handleAddItem}
-                    disabled={!isValid() || isAddingItem}
-                  >
-                    <Icon
-                      as={ArrowUpIcon}
-                      size={22}
-                      strokeWidth={2.5}
-                      className="text-primary-foreground"
-                    />
-                  </Button>
-                </View>
-              </Animated.View>
-              <Animated.View
-                className="min-h-0 flex-1 overflow-hidden"
-                style={[
-                  contentAnimatedStyle,
-                  { display: mode === 'recipe' ? 'flex' : 'none' },
-                ]}
-              >
                 <View
-                  className="min-h-0 flex-1"
+                  collapsable={false}
                   pointerEvents={selectedRecipe ? 'none' : 'auto'}
                   accessibilityElementsHidden={!!selectedRecipe}
                   importantForAccessibility={
                     selectedRecipe ? 'no-hide-descendants' : 'auto'
                   }
                 >
-                  <RecipeSelector
-                    fillHeight
-                    onSelectRecipe={handleSelectRecipe}
-                    onCreateRecipe={handleCreateRecipe}
-                  />
-                </View>
-              </Animated.View>
-              {selectedRecipe ? (
-                <Animated.View
-                  key="ingredient-selector"
-                  className="overflow-hidden bg-background"
-                  style={StyleSheet.absoluteFill}
-                  entering={reduceMotion ? undefined : slideInRight()}
-                  exiting={reduceMotion ? undefined : slideOutRight()}
-                >
-                  <BottomSheet.Header
-                    className="px-4"
-                    title="Choose ingredients"
-                    dismissButton={<BackButton onPress={handleBackToRecipes} />}
-                  />
-                  <IngredientSelector
-                    recipe={selectedRecipe}
-                    mode="meal-plan"
-                    listId={listId}
-                    bottomContentInset={24}
-                    mealPlanIngredients={mealPlanIngredients}
-                    onBack={handleBackToRecipes}
-                    onDismiss={() => sheetRef.current?.dismiss()}
-                    onToggleIngredient={handleToggleIngredient}
-                    onToggleAll={handleToggleAllIngredients}
-                    selectedIds={selectedIngredientIds}
-                    onEditIngredient={handleEditIngredient}
-                    showHeader={false}
-                    showFooter={false}
-                    recipeNameHeading
-                    scheduleControl={
-                      <MealScheduleSentence
-                        date={recipeDate}
-                        onDateChange={setRecipeDate}
-                        mealTag={recipeMealTag}
-                        onMealTagChange={setRecipeMealTag}
+                  <SheetHeader
+                    centerContent={
+                      <ModeMenu mode={mode} onModeChange={handleModeChange} />
+                    }
+                    backAction={
+                      <CloseButton
+                        accessibilityLabel="Close meal planner"
+                        onPress={() => void sheetRef.current?.dismiss()}
                       />
                     }
                   />
-                  <View className="px-4 pb-6 pt-2">
+                </View>
+                <Animated.View
+                  style={[
+                    contentAnimatedStyle,
+                    { display: mode === 'item' ? 'flex' : 'none' },
+                  ]}
+                  className="px-8"
+                >
+                  <View>{fields}</View>
+                  <AddToGroceryListSwitch
+                    className="py-2"
+                    isMealPlanOnly={isMealPlanOnly}
+                    onMealPlanOnlyChange={setIsMealPlanOnly}
+                    disabled={isAddingItem}
+                  />
+                  <View className="mt-1 min-h-11 flex-row items-center gap-2">
+                    <View className="min-w-0 flex-1">
+                      <MetaBarTrailingInsetContext.Provider value={0}>
+                        {metadata}
+                      </MetaBarTrailingInsetContext.Provider>
+                    </View>
                     <Button
-                      onPress={handleAddRecipe}
-                      disabled={isRecipeAddDisabled}
+                      key={itemConflict.needsReview ? 'review' : 'add'}
+                      size={itemConflict.needsReview ? 'default' : 'icon'}
+                      className={
+                        itemConflict.needsReview ? 'h-10 gap-1 px-3' : 'size-10'
+                      }
+                      hitSlop={2}
+                      accessibilityLabel={
+                        itemConflict.needsReview
+                          ? itemConflict.label
+                          : 'Add item to meal plan'
+                      }
+                      onPress={handleAddItem}
+                      disabled={!isValid() || isAddingItem}
                     >
-                      <Text>Add to plan</Text>
+                      {itemConflict.needsReview ? <Text>Review</Text> : null}
+                      <Icon
+                        as={
+                          itemConflict.needsReview
+                            ? ChevronRightIcon
+                            : ArrowUpIcon
+                        }
+                        size={22}
+                        strokeWidth={2.5}
+                        className="text-primary-foreground"
+                      />
                     </Button>
                   </View>
                 </Animated.View>
-              ) : null}
+                <Animated.View
+                  className="min-h-0 flex-1 overflow-hidden"
+                  style={[
+                    contentAnimatedStyle,
+                    { display: mode === 'recipe' ? 'flex' : 'none' },
+                  ]}
+                >
+                  <View
+                    className="min-h-0 flex-1"
+                    pointerEvents={selectedRecipe ? 'none' : 'auto'}
+                    accessibilityElementsHidden={!!selectedRecipe}
+                    importantForAccessibility={
+                      selectedRecipe ? 'no-hide-descendants' : 'auto'
+                    }
+                  >
+                    <RecipeSelector
+                      fillHeight
+                      onSelectRecipe={handleSelectRecipe}
+                      onCreateRecipe={handleCreateRecipe}
+                    />
+                  </View>
+                </Animated.View>
+                {selectedRecipe ? (
+                  <SheetScreenOverlay key="ingredient-selector">
+                    <SheetPage
+                      header={{
+                        title: 'Choose ingredients',
+                        backAction: (
+                          <BackButton onPress={handleBackToRecipes} />
+                        ),
+                      }}
+                    >
+                      <IngredientSelector
+                        recipe={selectedRecipe}
+                        mode="meal-plan"
+                        listId={listId}
+                        bottomContentInset={24}
+                        mealPlanIngredients={mealPlanIngredients}
+                        onBack={handleBackToRecipes}
+                        onDismiss={() => sheetRef.current?.dismiss()}
+                        onToggleIngredient={handleToggleIngredient}
+                        onToggleAll={handleToggleAllIngredients}
+                        selectedIds={selectedIngredientIds}
+                        onEditIngredient={handleEditIngredient}
+                        showHeader={false}
+                        showFooter={false}
+                        recipeNameHeading
+                        scheduleControl={
+                          <MealScheduleSentence
+                            date={recipeDate}
+                            onDateChange={setRecipeDate}
+                            mealTag={recipeMealTag}
+                            onMealTagChange={setRecipeMealTag}
+                          />
+                        }
+                      />
+                      <SheetFooter>
+                        <BottomActionButton
+                          onPress={handleAddRecipe}
+                          disabled={isRecipeAddDisabled}
+                        >
+                          <Text>
+                            {recipeConflict.needsReview
+                              ? recipeConflict.label
+                              : 'Add to plan'}
+                          </Text>
+                        </BottomActionButton>
+                      </SheetFooter>
+                    </SheetPage>
+                  </SheetScreenOverlay>
+                ) : null}
+              </View>
+              <InlineStoreReviewCard review={review} />
             </Animated.View>
           </View>
         )}
