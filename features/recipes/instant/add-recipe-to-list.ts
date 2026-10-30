@@ -1,3 +1,4 @@
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
 import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 
 import { db } from '../../../lib/instant';
@@ -19,6 +20,7 @@ export type RecipeIngredientInput = {
 };
 
 export type AddRecipeToListArgs = {
+  reviewConflicts?: StoreReviewer;
   recipeId: string;
   listId: string;
   // Pass ingredients directly to avoid queryOnce which doesn't work offline
@@ -32,6 +34,7 @@ export const addRecipeToList = async ({
   listId,
   ingredients,
   defaultStore,
+  reviewConflicts,
   conflictResolution = 'prompt',
 }: AddRecipeToListArgs) => {
   if (quantityWorkspaceAvailable()) {
@@ -43,6 +46,7 @@ export const addRecipeToList = async ({
       ingredients,
       defaultStore,
       conflictResolution,
+      reviewConflicts,
     });
   }
   const result = await addIngredientsWithStacking({

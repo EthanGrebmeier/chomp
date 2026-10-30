@@ -1,3 +1,4 @@
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
 import { id, tx } from '@instantdb/react-native';
 
 import { quantityWorkspaceAvailable } from '@/features/quantity/config';
@@ -20,6 +21,7 @@ import {
 } from './plan-meal-plan-list-sync';
 
 export type AddRecipeToDateArgs = {
+  reviewConflicts?: StoreReviewer;
   listId: string;
   recipeId: string;
   date: string;
@@ -48,6 +50,7 @@ export const addRecipeToDate = async ({
     initializeMealPlanIngredientEditor(sourceIngredients)
   ),
   defaultStore,
+  reviewConflicts,
 }: AddRecipeToDateArgs) => {
   if (quantityWorkspaceAvailable()) {
     const { planQuantityRecipe } =
@@ -61,6 +64,7 @@ export const addRecipeToDate = async ({
       sourceIngredients,
       ingredientSnapshots,
       defaultStore,
+      reviewConflicts,
     });
   }
 

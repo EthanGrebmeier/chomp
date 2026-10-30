@@ -2,6 +2,7 @@ import { Check } from 'lucide-react-native';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -69,16 +70,15 @@ export function ShoppingComplete({
           {items.length} {items.length === 1 ? 'item' : 'items'} checked off
         </Text>
         <View className="mt-10 w-full gap-3">
-          <Button className="h-auto min-h-12 px-6 py-3" onPress={onChooseStore}>
+          <BottomActionButton onPress={onChooseStore}>
             <Text className="text-center">Choose another store</Text>
-          </Button>
-          <Button
+          </BottomActionButton>
+          <BottomActionButton
             variant="ghost"
-            className="h-auto min-h-12 px-6 py-3"
             onPress={() => setShowCheckedItems(true)}
           >
             <Text className="text-center">View checked items</Text>
-          </Button>
+          </BottomActionButton>
         </View>
       </View>
     </ScrollView>

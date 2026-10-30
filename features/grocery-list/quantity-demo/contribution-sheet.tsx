@@ -84,8 +84,8 @@ export function ContributionSheet({
       <BottomSheet.Header
         className="px-4"
         title={entry ? 'Adjust quantity' : 'Add quantity'}
-        dismissButton={<BackButton onPress={dismiss} />}
-        button={<ConfirmButton onPress={confirm} disabled={!valid} />}
+        backAction={<BackButton onPress={dismiss} />}
+        primaryAction={<ConfirmButton onPress={confirm} disabled={!valid} />}
       />
       <View className="gap-5 px-6 pb-5">
         <View className="gap-2">

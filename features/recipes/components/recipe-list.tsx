@@ -1,7 +1,7 @@
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import { memo, useCallback } from 'react';
 import { Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   ContextMenuItem,
@@ -45,10 +45,7 @@ const RecipeRow = memo(function RecipeRow({
   return (
     <ContextMenuRoot
       trigger={
-        <SwipeToDelete
-          onDelete={handleDelete}
-          contentClassName="bg-recipe-surface"
-        >
+        <SwipeToDelete onDelete={handleDelete}>
           <RecipeCard recipe={recipe} listId={listId} />
         </SwipeToDelete>
       }
@@ -71,6 +68,7 @@ type RecipeListProps = {
 
 export const RecipeList = ({ recipes, listId }: RecipeListProps) => {
   const { mutate: deleteRecipe } = useDeleteRecipe();
+  const { bottom } = useSafeAreaInsets();
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<RecipeWithIngredients>) => (
@@ -80,22 +78,21 @@ export const RecipeList = ({ recipes, listId }: RecipeListProps) => {
   );
 
   return (
-    <SafeAreaView edges={['bottom']} className="flex-1">
-      <RecipeBookSurface>
-        {recipes.length === 0 ? (
-          <EmptyRecipePrompt listId={listId} />
-        ) : (
-          <FlashList
-            keyboardDismissMode="on-drag"
-            contentContainerClassName="pb-4"
-            data={recipes}
-            renderItem={renderItem}
-            ItemSeparatorComponent={RecipeRowSeparator}
-            keyExtractor={item => item.id}
-            drawDistance={300}
-          />
-        )}
-      </RecipeBookSurface>
-    </SafeAreaView>
+    <RecipeBookSurface>
+      {recipes.length === 0 ? (
+        <EmptyRecipePrompt listId={listId} />
+      ) : (
+        <FlashList
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={{ paddingBottom: bottom + 16 }}
+          scrollIndicatorInsets={{ bottom }}
+          data={recipes}
+          renderItem={renderItem}
+          ItemSeparatorComponent={RecipeRowSeparator}
+          keyExtractor={item => item.id}
+          drawDistance={300}
+        />
+      )}
+    </RecipeBookSurface>
   );
 };

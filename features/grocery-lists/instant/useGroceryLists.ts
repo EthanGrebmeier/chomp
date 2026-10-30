@@ -25,11 +25,15 @@ export const useGroceryLists = () => {
   const { user } = db.useAuth();
   const userId = user?.id;
 
-  const groceryListsQuery = db.useQuery({
-    grocery_lists: {
-      shares: {},
-    },
-  });
+  const groceryListsQuery = db.useQuery(
+    user
+      ? {
+          grocery_lists: {
+            shares: {},
+          },
+        }
+      : null
+  );
   const listAccess = useListAccessTimes(userId);
   const groceryLists = groceryListsQuery.data?.grocery_lists;
 

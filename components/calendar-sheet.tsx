@@ -337,12 +337,12 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
         ref={bottomSheetRef}
         insetAdjustment="never"
       >
-        <BottomSheet.SheetView className="pb-safe gap-4">
+        <BottomSheet.SheetView className="gap-4">
           <BottomSheet.Header
             className="mb-0"
             title={headerTitle}
-            dismissButton={<BackButton onPress={handleClose} />}
-            button={
+            backAction={<BackButton onPress={handleClose} />}
+            primaryAction={
               <ConfirmButton
                 onPress={handleConfirm}
                 disabled={!internalSelectedDate}

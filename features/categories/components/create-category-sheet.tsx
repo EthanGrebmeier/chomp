@@ -11,9 +11,11 @@ import {
 import { Alert, TextInput, View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { SheetFooter } from '@/components/sheet-content';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { BackButton } from '../../../components/ui/back-button';
-import { Button } from '../../../components/ui/button';
 import { DeleteButton } from '../../../components/ui/delete-button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
@@ -177,26 +179,26 @@ export const CreateCategorySheet = forwardRef<
           nameInputRef.current?.focus();
         }}
         footer={
-          <View className="px-10 pb-4">
-            <Button
+          <SheetFooter>
+            <BottomActionButton
               variant="default"
               onPress={handleSubmit}
               disabled={!canSubmit || isSubmitting}
             >
               <Text>{submitLabel}</Text>
-            </Button>
-          </View>
+            </BottomActionButton>
+          </SheetFooter>
         }
       >
-        <BottomSheet.SheetView className="pb-safe">
+        <BottomSheet.SheetView>
           <BottomSheet.Header
             title={isEditing ? 'Edit category' : 'Add a category'}
-            dismissButton={
+            backAction={
               showBackButton ? (
                 <BackButton onPress={() => sheetRef.current?.dismiss()} />
               ) : undefined
             }
-            button={
+            primaryAction={
               isEditing ? (
                 <DeleteButton
                   accessibilityLabel="Delete category"

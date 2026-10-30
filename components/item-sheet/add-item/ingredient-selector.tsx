@@ -10,12 +10,13 @@ import {
 import { Platform, ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
+import { useStoreConflictPreview } from '@/features/quantity/app/use-store-conflict-preview';
+import { isStoreReviewCancelled } from '@/features/quantity/store-review-cancelled';
+
 import { CategoryTag } from '../../../components/category-tag';
 import { useCategoryOptions } from '../../../features/categories/use-category-options';
-import {
-  RecipeConflictSheet,
-  RecipeConflictSheetRef,
-} from '../../../features/grocery-list/components/recipe-conflict-sheet';
 import type { IngredientShoppingStatus } from '../../../features/meal-planner/utils/shopping-state';
 import {
   RecipeDetailSheet,
@@ -30,8 +31,8 @@ import { CategoryOption } from '../../../features/shared/category/categories';
 import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
 import { cn } from '../../../lib/utils';
 import { BottomSheet } from '../../bottom-sheet';
+import { SheetContent } from '../../sheet-content';
 import { BackButton } from '../../ui/back-button';
-import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
 import { ExternalLinkButton } from '../../ui/external-link-button';
 import { HapticPressable } from '../../ui/haptic-pressable';
@@ -66,7 +67,7 @@ const IngredientRow = ({
   });
 
   return (
-    <ListItem className={cn('py-1', className)}>
+    <ListItem className={cn('px-8 py-1', className)}>
       {shoppingStatus === 'purchased' ? (
         <View className="mr-1 size-5" />
       ) : (
@@ -137,6 +138,7 @@ type MealPlanSelectableIngredient = RecipeIngredient & {
 };
 
 type IngredientSelectorProps = {
+  reviewConflicts?: StoreReviewer;
   recipe: RecipeWithIngredients;
   onBack: () => void;
   onDismiss: () => void;
@@ -183,6 +185,7 @@ export const IngredientSelector = forwardRef<
 >(function IngredientSelector(
   {
     recipe,
+    reviewConflicts,
     onBack,
     onDismiss,
     onOpenRecipe,
@@ -232,11 +235,6 @@ export const IngredientSelector = forwardRef<
     new Set(ingredientIds)
   );
   const [isAddingInternal, setIsAddingInternal] = useState(false);
-  const [isResolvingConflict, setIsResolvingConflict] = useState(false);
-  const [pendingConflictIngredients, setPendingConflictIngredients] = useState<
-    SelectedIngredientInput[] | null
-  >(null);
-  const conflictSheetRef = useRef<RecipeConflictSheetRef>(null);
   const { data: categoryOptions } = useCategoryOptions();
   const { data: defaultStore } = useDefaultStore();
 
@@ -349,32 +347,6 @@ export const IngredientSelector = forwardRef<
     [effectiveSelectedIds, ingredients]
   );
 
-  const resolveConflict = async (resolution: 'increment' | 'separate') => {
-    if (!listId || !pendingConflictIngredients?.length) return;
-
-    setIsResolvingConflict(true);
-    try {
-      const result = await addRecipeToList({
-        recipeId: recipe.id,
-        listId,
-        ingredients: pendingConflictIngredients,
-        defaultStore,
-        conflictResolution: resolution,
-      });
-
-      toast.success(
-        `Added ${result.addedItems} item${result.addedItems === 1 ? '' : 's'} from ${recipe.name}`
-      );
-      conflictSheetRef.current?.dismiss();
-      setPendingConflictIngredients(null);
-      onComplete?.();
-    } catch {
-      toast.error('Failed to resolve ingredient conflicts');
-    } finally {
-      setIsResolvingConflict(false);
-    }
-  };
-
   const handleAdd = useCallback(async () => {
     if (onAddToList) {
       onAddToList();
@@ -391,19 +363,15 @@ export const IngredientSelector = forwardRef<
         listId,
         ingredients: selectedIngredients,
         defaultStore,
+        reviewConflicts,
       });
-
-      if (result.requiresConflictResolution) {
-        setPendingConflictIngredients(selectedIngredients);
-        conflictSheetRef.current?.present();
-        return;
-      }
 
       toast.success(
         `Added ${result.addedItems} item${result.addedItems === 1 ? '' : 's'} from ${recipe.name}`
       );
       onComplete?.();
-    } catch {
+    } catch (error) {
+      if (isStoreReviewCancelled(error)) return;
       toast.error('Failed to add ingredients');
     } finally {
       setIsAddingInternal(false);
@@ -417,11 +385,17 @@ export const IngredientSelector = forwardRef<
     onComplete,
     recipe.id,
     recipe.name,
+    reviewConflicts,
   ]);
 
   const shouldShowFooter = showFooter ?? Boolean(onAddToList ?? listId);
-  const isAddingResolved =
-    (isAdding ?? isAddingInternal) || isResolvingConflict;
+  const conflictPreview = useStoreConflictPreview(
+    mode === 'add-to-list' && shouldShowFooter ? listId : undefined,
+    buildSelectedIngredients(),
+    defaultStore?.id
+  );
+
+  const isAddingResolved = isAdding ?? isAddingInternal;
   const resolvedBottomInset =
     bottomContentInset ?? (shouldShowFooter ? 88 : 16);
 
@@ -445,11 +419,10 @@ export const IngredientSelector = forwardRef<
       <View className="relative flex-1">
         {showHeader ? (
           <BottomSheet.Header
-            className="px-4"
             title="Choose ingredients"
-            description={recipe.name}
-            dismissButton={<BackButton onPress={onBack} />}
-            button={
+            subtitle={recipe.name}
+            backAction={<BackButton onPress={onBack} />}
+            primaryAction={
               mode === 'add-to-list' ? (
                 <ExternalLinkButton onPress={handleGoToRecipe} />
               ) : undefined
@@ -458,17 +431,17 @@ export const IngredientSelector = forwardRef<
         ) : null}
 
         {recipeNameHeading ? (
-          <View className="gap-2 px-4 pt-4">
+          <SheetContent className="gap-2">
             <Text variant="h4" className="text-left">
               {recipe.name}
             </Text>
             {scheduleControl}
-          </View>
+          </SheetContent>
         ) : null}
 
         <View
           className={cn(
-            'mb-2 flex-row items-center justify-between px-4',
+            'mb-2 flex-row items-center justify-between px-8',
             !showHeader &&
               !recipeNameHeading &&
               selectionHeader !== 'compact' &&
@@ -533,33 +506,25 @@ export const IngredientSelector = forwardRef<
           })}
         </ScrollView>
         {shouldShowFooter && (
-          <View className="px-4 pb-4 pt-3">
-            <Button
+          <View className="px-8 pb-4 pt-3">
+            <BottomActionButton
               onPress={() => {
                 void handleAdd();
               }}
               disabled={effectiveSelectedIds.size === 0 || isAddingResolved}
             >
-              <Text>{isAddingResolved ? 'Adding...' : 'Add to List'}</Text>
-            </Button>
+              <Text>
+                {isAddingResolved
+                  ? 'Adding...'
+                  : conflictPreview.needsReview
+                    ? conflictPreview.label
+                    : 'Add to List'}
+              </Text>
+            </BottomActionButton>
           </View>
         )}
       </View>
-      <RecipeConflictSheet
-        ref={conflictSheetRef}
-        recipeName={recipe.name}
-        onIncrement={() => {
-          void resolveConflict('increment');
-        }}
-        onCreateSeparate={() => {
-          void resolveConflict('separate');
-        }}
-        onCancel={() => {
-          conflictSheetRef.current?.dismiss();
-          setPendingConflictIngredients(null);
-        }}
-        isPending={isResolvingConflict}
-      />
+
       <RecipeDetailSheet ref={recipeDetailSheetRef} listId={listId} />
     </>
   );

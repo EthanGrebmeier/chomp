@@ -55,7 +55,7 @@ const SavedItemRow = memo(function SavedItemRow({
   return (
     <ContextMenuRoot
       trigger={
-        <ListItem onDelete={handleDelete}>
+        <ListItem className="px-8" onDelete={handleDelete}>
           <HapticPressable
             onPress={handlePress}
             hapticType="light"

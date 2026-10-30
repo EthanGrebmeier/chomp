@@ -7,8 +7,9 @@ import {
 } from 'lucide-react-native';
 import { ActivityIndicator, View } from 'react-native';
 
-import { Heading } from '@/components/text/heading';
-import { Button } from '@/components/ui/button';
+import { SheetHeader } from '@/components/sheet-header';
+import { BottomActionButton } from '@/components/ui/bottom-action-button';
+import { CloseButton } from '@/components/ui/close-button';
 import { HapticPressable } from '@/components/ui/haptic-pressable';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -19,17 +20,26 @@ import { type SettingsSubmenu } from './settings-types';
 type SettingsMenuProps = {
   onSelect: (view: SettingsSubmenu) => void;
   onCreateAccount: () => void;
+  onClose: () => void;
 };
 
-export function SettingsMenu({ onSelect, onCreateAccount }: SettingsMenuProps) {
+export function SettingsMenu({
+  onSelect,
+  onCreateAccount,
+  onClose,
+}: SettingsMenuProps) {
   const { status, isReconciled, hasInstantEmailSession } =
     useInstantAuthState();
 
   return (
-    <View className="justify-between gap-4 px-4">
+    <View className="justify-between gap-4">
       <View className="gap-4">
-        <Heading className="ml-4">Settings</Heading>
-        <View className="gap-4 p-4">
+        <SheetHeader
+          className="mb-0"
+          title="Settings"
+          backAction={<CloseButton onPress={onClose} />}
+        />
+        <View className="gap-4 px-8 pb-6">
           <HapticPressable
             onPress={() => onSelect('saved-items')}
             className="flex-row items-center justify-between border-b border-border pb-4 active:opacity-70"
@@ -103,25 +113,24 @@ export function SettingsMenu({ onSelect, onCreateAccount }: SettingsMenuProps) {
         </View>
       </View>
       {!isReconciled ? (
-        <View className="gap-4 p-4">
+        <View className="gap-4 px-8 pb-6">
           <ActivityIndicator />
         </View>
       ) : status === 'guest' ? (
-        <View className="gap-4 p-4">
+        <View className="gap-4 px-8 pb-6">
           <View>
             <Text className="text-lg font-medium leading-5">Account</Text>
             <Text className="text-sm text-muted-foreground">
               Signed in as a guest
             </Text>
           </View>
-          <Button
+          <BottomActionButton
             variant="secondary"
             onPress={onCreateAccount}
             className="w-full"
-            size="lg"
           >
             <Text>Create Account</Text>
-          </Button>
+          </BottomActionButton>
         </View>
       ) : null}
     </View>

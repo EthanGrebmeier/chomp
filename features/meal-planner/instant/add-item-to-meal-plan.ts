@@ -1,3 +1,4 @@
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
 import { id, tx } from '@instantdb/react-native';
 
 import { quantityWorkspaceAvailable } from '@/features/quantity/config';
@@ -12,6 +13,8 @@ import { toNewMealPlanItemEntryForSync } from './new-meal-plan-entry-for-sync';
 import { planMealPlanListSync } from './plan-meal-plan-list-sync';
 
 export type AddItemToDateArgs = {
+  reviewConflicts?: StoreReviewer;
+  showOnGroceryList?: boolean;
   listId: string;
   name: string;
   quantity: number;
@@ -40,6 +43,8 @@ export const addItemToDate = async ({
   date,
   mealTag,
   defaultStore,
+  reviewConflicts,
+  showOnGroceryList,
 }: AddItemToDateArgs) => {
   if (quantityWorkspaceAvailable()) {
     const { planQuantityItem } =
@@ -55,6 +60,8 @@ export const addItemToDate = async ({
       date,
       mealTag,
       defaultStore,
+      reviewConflicts,
+      showOnGroceryList,
     });
   }
 

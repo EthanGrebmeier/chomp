@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 
-import { Heading } from '@/components/text/heading';
+import { SHEET_TOP_STYLE } from '@/components/sheet-content';
+import { SheetHeader } from '@/components/sheet-header';
 import { BackButton } from '@/components/ui/back-button';
 import { AccountScreen } from '@/features/account/components/account-screen';
 
@@ -10,11 +11,11 @@ type AccountSettingsScreenProps = {
 
 export function AccountSettingsScreen({ onBack }: AccountSettingsScreenProps) {
   return (
-    <View className="bg-background pt-6">
-      <View className="flex-row items-center gap-3 px-4">
-        <BackButton onPress={onBack} href="/settings" />
-        <Heading>Account</Heading>
-      </View>
+    <View className="bg-background" style={SHEET_TOP_STYLE}>
+      <SheetHeader
+        title="Account"
+        backAction={<BackButton onPress={onBack} href="/settings" />}
+      />
       <AccountScreen />
     </View>
   );

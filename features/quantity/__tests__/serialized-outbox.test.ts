@@ -5,7 +5,10 @@ vi.mock('@/lib/instant', () => ({ db: {} }));
 
 import { materialize, totalFor } from '../model';
 import { extraQuantity } from '../shopping';
-import { readWorkspaceState } from '../sync-workspace';
+import {
+  readWorkspaceState,
+  mergeConfirmedOperations,
+} from '../sync-workspace';
 import type { Operation } from '../types';
 
 it('overlays offline intents after the committed prefix and removes the overlay after acknowledgement', () => {
@@ -67,4 +70,33 @@ it('overlays offline intents after the committed prefix and removes the overlay 
   expect(confirmed.complete).toBe(true);
   expect(totalFor(confirmed, 'row')).toBe(7);
   expect(materialize([base, remote, offline]).complete).toBe(false);
+});
+
+it('does not accumulate duplicate history across repeated refreshes', () => {
+  const operation: Operation = {
+    id: 'one',
+    label: 'Empty',
+    parents: [],
+    guards: [],
+    resolves: [],
+    changes: [],
+  };
+  let confirmed = [operation];
+  for (let i = 0; i < 20; i++) {
+    const previous = confirmed;
+    confirmed = mergeConfirmedOperations(confirmed, [
+      JSON.parse(JSON.stringify(operation)),
+    ]);
+    expect(confirmed).toBe(previous);
+  }
+  expect(confirmed).toHaveLength(1);
+  const repaired = mergeConfirmedOperations(
+    [operation, operation],
+    [operation]
+  );
+  expect(repaired).toEqual([operation]);
+  const collision = { ...operation, label: 'Different payload' };
+  expect(
+    materialize(mergeConfirmedOperations(confirmed, [collision])).complete
+  ).toBe(false);
 });

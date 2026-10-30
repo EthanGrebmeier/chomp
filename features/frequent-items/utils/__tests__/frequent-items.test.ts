@@ -5,6 +5,8 @@ import {
   getFrequentItemsQueryCutoff,
   GroceryItemAddEvent,
   normalizeGroceryItemName,
+  rankFrequentItems,
+  selectFrequentItems,
 } from '../frequent-items';
 
 const NOW = new Date('2026-07-15T12:00:00.000Z');
@@ -49,6 +51,26 @@ describe('getFrequentItemsQueryCutoff', () => {
 });
 
 describe('buildFrequentItems', () => {
+  it('filters before limiting and reuses ranked candidates across quantity updates', () => {
+    const events = Array.from({ length: 25 }, (_, index) => [
+      event(`${index}-a`, `Item ${index}`, '2026-07-01T12:00:00.000Z'),
+      event(`${index}-b`, `Item ${index}`, '2026-07-02T12:00:00.000Z'),
+    ]).flat();
+    const ranked = rankFrequentItems(events, NOW);
+    const initial = selectFrequentItems(ranked, []);
+    const afterAdd = selectFrequentItems(ranked, [
+      { name: initial[0].name, isChecked: false },
+    ]);
+    expect(ranked).toHaveLength(25);
+    expect(afterAdd).toHaveLength(20);
+    expect(afterAdd[0]).toBe(initial[1]);
+    expect(afterAdd[19]).toBe(ranked[20]);
+    expect(
+      selectFrequentItems(ranked, [
+        { name: initial[0].name, isChecked: true },
+      ])[0]
+    ).toBe(initial[0]);
+  });
   it('requires two additions in the rolling 90-day window', () => {
     const result = buildFrequentItems({
       now: NOW,

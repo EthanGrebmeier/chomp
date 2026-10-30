@@ -6,9 +6,11 @@ import { db } from '@/lib/instant';
 
 import { quantityWorkspaceAvailable } from './config';
 import { initialOperations } from './fixtures';
+import { createMaterializer } from './model';
 import {
   flushOutbox,
   operationChunk,
+  mergeConfirmedOperations,
   readWorkspaceState,
   type Pending,
 } from './sync-workspace';
@@ -50,7 +52,8 @@ export function useQuantityWorkspaces() {
 export function useQuantityWorkspace(
   workspaceId: string,
   userId: string,
-  afterConfirm?: (operation: Operation, workspaceId: string) => Promise<void>
+  afterConfirm?: (operation: Operation, workspaceId: string) => Promise<void>,
+  initialized = true
 ) {
   const query = db.useQuery(workspaceQuery(workspaceId));
   const connection = db.useConnectionStatus();
@@ -114,12 +117,14 @@ export function useQuantityWorkspace(
         )
           throw new Error('Workspace access is unavailable');
         setVerified(true);
-        setConfirmed(previous => [
-          ...previous,
-          ...result.data.gqc_operations_v1.map(
-            row => JSON.parse(row.body) as Operation
-          ),
-        ]);
+        setConfirmed(previous =>
+          mergeConfirmedOperations(
+            previous,
+            result.data.gqc_operations_v1.map(
+              row => JSON.parse(row.body) as Operation
+            )
+          )
+        );
         setError(null);
       })
       .catch(() => {
@@ -130,33 +135,43 @@ export function useQuantityWorkspace(
       });
   }, [workspaceId]);
 
+  const [replay] = useState(createMaterializer);
   const flush = useCallback(() => {
-    if (sending.current || !outboxLoaded || connection !== 'authenticated')
+    if (
+      !initialized ||
+      sending.current ||
+      !outboxLoaded ||
+      connection !== 'authenticated'
+    )
       return;
     sending.current = true;
     return flushOutbox({
       workspaceId,
       userId,
+      replay,
       getPending: () => pendingRef.current,
       changePending,
-      confirm: operation => setConfirmed(values => [...values, operation]),
+      confirm: operation =>
+        setConfirmed(values => mergeConfirmedOperations(values, [operation])),
       afterConfirm: operation =>
         afterConfirm?.(operation, workspaceId) ?? Promise.resolve(),
     }).finally(() => {
       sending.current = false;
     });
   }, [
+    initialized,
     afterConfirm,
     changePending,
     connection,
     outboxLoaded,
+    replay,
     userId,
     workspaceId,
   ]);
 
   useEffect(() => {
-    if (connection === 'authenticated') void refresh();
-  }, [connection, refresh]);
+    if (initialized && connection === 'authenticated') void refresh();
+  }, [initialized, connection, refresh]);
   useEffect(() => {
     void flush()?.catch(() =>
       setError('Unable to save the outbox. Retry before closing the app.')
@@ -169,12 +184,14 @@ export function useQuantityWorkspace(
         confirmed,
         pending,
         query.data?.gqc_operations_v1 ?? [],
-        query.data?.gqc_workspaces_v1.length
+        query.data?.gqc_workspaces_v1.length,
+        replay
       ),
-    [confirmed, pending, query.data]
+    [confirmed, pending, query.data, replay]
   );
 
   const canEdit =
+    initialized &&
     verified &&
     outboxLoaded &&
     !query.isLoading &&
