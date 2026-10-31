@@ -132,7 +132,7 @@ const PreviewStep = ({ flow }: { flow: UseImportRecipeFlowReturn }) => {
     <View className="flex-1">
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="gap-6 px-4 pb-6"
+        contentContainerClassName="gap-6 px-8 pb-6"
         bottomOffset={72}
       >
         <View className="gap-2">
@@ -204,8 +204,8 @@ const PreviewStep = ({ flow }: { flow: UseImportRecipeFlowReturn }) => {
 
       <KeyboardStickyView offset={{ closed: 0, opened: bottomInset - 12 }}>
         <View
-          className="bg-background px-4 pt-3"
-          style={{ paddingBottom: Math.max(bottomInset, 12) }}
+          className="bg-background px-8 pt-4"
+          style={{ paddingBottom: bottomInset + 24 }}
         >
           <BottomActionButton
             onPress={flow.handleConfirmImport}
@@ -234,7 +234,7 @@ const ErrorStep = ({
   const { retryable } = getImportErrorPresentation(flow.state.error.code);
 
   return (
-    <ScrollView contentContainerClassName="gap-6 px-4 pb-10">
+    <ScrollView contentContainerClassName="gap-6 px-8 pb-10">
       <Animated.View entering={fadeInUp()}>
         <ImportError error={flow.state.error} />
       </Animated.View>

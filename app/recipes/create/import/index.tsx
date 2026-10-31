@@ -1,8 +1,7 @@
 import { router } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
-import Animated from 'react-native-reanimated';
 
-import { fadeIn } from '@/components/animated/transitions';
+import { SheetHeader } from '@/components/sheet-header';
 import { BackButton } from '@/components/ui/back-button';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Text } from '@/components/ui/text';
@@ -36,7 +35,7 @@ const GuestImportPrompt = () => {
   };
 
   return (
-    <View className="flex-1 justify-center gap-6 px-4">
+    <View className="flex-1 justify-center gap-6 px-8">
       <View className="gap-2">
         <Text className="text-center text-2xl font-bold text-foreground">
           Create an Account
@@ -84,18 +83,7 @@ export default function ImportRecipePage() {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="mb-4 flex-row items-center px-4">
-        <View className="w-12 items-start">
-          <BackButton />
-        </View>
-        <View className="mx-2 flex-1">
-          {/* Keyed so the new title fades in when the step changes. */}
-          <Animated.View key={title} entering={fadeIn()}>
-            <Text className="text-center text-2xl font-bold">{title}</Text>
-          </Animated.View>
-        </View>
-        <View className="w-12" />
-      </View>
+      <SheetHeader title={title} backAction={<BackButton />} />
 
       <ImportRecipePageFlow flow={flow} onCancel={() => router.back()} />
     </View>
