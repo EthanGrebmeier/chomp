@@ -1,6 +1,7 @@
 ---
 title: 'Frequent-item rows use pager gesture buttons inside a native sheet'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#118'
 ---
 
 ## Expected Behavior

@@ -1,6 +1,7 @@
 ---
 title: 'Reanimated custom CSS timing strings pass tsc but fail on native'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#71'
 ---
 
 ## Expected Behavior

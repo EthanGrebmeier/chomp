@@ -1,6 +1,7 @@
 ---
 title: 'BackButton ignores its className prop and hardcodes negative margin'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#136'
 ---
 
 ## Expected Behavior
