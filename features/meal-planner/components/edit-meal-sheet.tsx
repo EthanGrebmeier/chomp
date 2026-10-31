@@ -21,7 +21,7 @@ import { isStoreReviewCancelled } from '@/features/quantity/store-review-cancell
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { IngredientSelector } from '../../../components/item-sheet/add-item/ingredient-selector';
 import { RecipeSelector } from '../../../components/item-sheet/add-item/recipe-selector';
-import { BackButton } from '../../../components/ui/back-button';
+import { CloseButton } from '../../../components/ui/close-button';
 import { navigation } from '../../../lib/navigation';
 import { THEME } from '../../../lib/theme';
 import { Recipe, RecipeWithIngredients } from '../../recipes/types';
@@ -532,28 +532,11 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
             <View className="min-h-0 flex-1">
               <BottomSheet.Header
                 title="Edit meal"
-                backAction={
-                  <BackButton onPress={() => sheetRef.current?.dismiss()} />
-                }
-                primaryAction={
-                  selectedRecipe ? (
-                    <MealSheetRecipeDropdown
-                      recipeId={selectedRecipe.id}
-                      recipeName={selectedRecipe.name}
-                      onRemove={handleRemoveMeal}
-                      onViewRecipe={() => {
-                        onDismissRef.current = undefined;
-                        router.push(navigation.goToRecipe(selectedRecipe.id));
-                        sheetRef.current?.dismiss();
-                        changeRecipeSheetRef.current?.dismiss();
-                      }}
-                      onChangeRecipe={() => {
-                        changeRecipeSheetRef.current?.present();
-                      }}
-                    />
-                  ) : undefined
+                closeAction={
+                  <CloseButton onPress={() => sheetRef.current?.dismiss()} />
                 }
               />
+
               {selectedRecipeWithIngredients ? (
                 <View className="-mx-8 min-h-0 flex-1">
                   <IngredientSelector
@@ -564,12 +547,36 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
                     showHeader={false}
                     recipeNameHeading
                     scheduleControl={
-                      <MealScheduleSentence
-                        date={selectedDate}
-                        onDateChange={setSelectedDate}
-                        mealTag={mealTag}
-                        onMealTagChange={setMealTag}
-                      />
+                      <View className="flex-row items-center gap-2">
+                        <View className="shrink-0">
+                          {selectedRecipe ? (
+                            <MealSheetRecipeDropdown
+                              recipeId={selectedRecipe.id}
+                              recipeName={selectedRecipe.name}
+                              onRemove={handleRemoveMeal}
+                              onViewRecipe={() => {
+                                onDismissRef.current = undefined;
+                                router.push(
+                                  navigation.goToRecipe(selectedRecipe.id)
+                                );
+                                sheetRef.current?.dismiss();
+                                changeRecipeSheetRef.current?.dismiss();
+                              }}
+                              onChangeRecipe={() => {
+                                changeRecipeSheetRef.current?.present();
+                              }}
+                            />
+                          ) : undefined}
+                        </View>
+                        <View className="min-w-0 flex-1">
+                          <MealScheduleSentence
+                            date={selectedDate}
+                            onDateChange={setSelectedDate}
+                            mealTag={mealTag}
+                            onMealTagChange={setMealTag}
+                          />
+                        </View>
+                      </View>
                     }
                     showFooter={false}
                     onBack={() => {}}

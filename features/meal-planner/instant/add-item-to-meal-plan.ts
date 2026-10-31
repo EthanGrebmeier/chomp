@@ -14,7 +14,6 @@ import { planMealPlanListSync } from './plan-meal-plan-list-sync';
 
 export type AddItemToDateArgs = {
   reviewConflicts?: StoreReviewer;
-  showOnGroceryList?: boolean;
   listId: string;
   name: string;
   quantity: number;
@@ -44,7 +43,6 @@ export const addItemToDate = async ({
   mealTag,
   defaultStore,
   reviewConflicts,
-  showOnGroceryList,
 }: AddItemToDateArgs) => {
   if (quantityWorkspaceAvailable()) {
     const { planQuantityItem } =
@@ -61,7 +59,6 @@ export const addItemToDate = async ({
       mealTag,
       defaultStore,
       reviewConflicts,
-      showOnGroceryList,
     });
   }
 

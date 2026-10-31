@@ -1,21 +1,21 @@
 import { ReactNode } from 'react';
 import { View } from 'react-native';
 
-import { MetaBarTrailingInsetContext } from '../meta-bar-insets';
 import {
-  SHEET_CARD_STYLE,
-  SHEET_CONTENT_INSET,
-  SheetContent,
-  SheetContentRoot,
-} from '../sheet-content';
-import { SheetHeader } from '../sheet-header';
-import { CloseButton } from '../ui/close-button';
+  ComposerHeader,
+  ComposerCloseButton,
+  ComposerActionSlot,
+  COMPOSER_CARD_CLASS,
+} from '@/components/item-sheet/composer-layout';
+
+import { MetaBarTrailingInsetContext } from '../meta-bar-insets';
+import { SHEET_CONTENT_INSET, SheetContentRoot } from '../sheet-content';
+import { SurfaceContent } from '../surface-content';
 
 /** Compact form surface shared by grocery, ingredient, and meal-plan editors. */
 export function ItemComposerCard({
   title,
   header,
-  headerActions,
   onClose,
   children,
   metadata,
@@ -23,7 +23,6 @@ export function ItemComposerCard({
 }: {
   title: string;
   header?: ReactNode;
-  headerActions?: ReactNode;
   onClose: () => void;
   children: ReactNode;
   metadata: ReactNode;
@@ -33,23 +32,22 @@ export function ItemComposerCard({
     <SheetContentRoot>
       <View
         collapsable={false}
-        className="overflow-hidden rounded-[32px] border border-border bg-background"
-        style={SHEET_CARD_STYLE}
+        className={`overflow-hidden bg-background ${COMPOSER_CARD_CLASS}`}
       >
-        <SheetHeader
+        <ComposerHeader
+          className="mb-2"
           title={header ? undefined : title}
           centerContent={header}
-          backAction={
-            <CloseButton
+          closeAction={
+            <ComposerCloseButton
               onPress={onClose}
               accessibilityLabel={`Close ${title.toLowerCase()}`}
             />
           }
-          primaryAction={headerActions}
         />
-        <SheetContent>
-          <View>{children}</View>
-          <View className="mt-1 min-h-11 flex-row items-center gap-2">
+        <SurfaceContent>
+          <View className="gap-1">{children}</View>
+          <View className="mt-3 min-h-11 flex-row items-center gap-2">
             <View className="min-w-0 flex-1">
               <MetaBarTrailingInsetContext.Provider
                 value={action ? 0 : SHEET_CONTENT_INSET}
@@ -57,9 +55,9 @@ export function ItemComposerCard({
                 {metadata}
               </MetaBarTrailingInsetContext.Provider>
             </View>
-            {action}
+            {action ? <ComposerActionSlot>{action}</ComposerActionSlot> : null}
           </View>
-        </SheetContent>
+        </SurfaceContent>
       </View>
     </SheetContentRoot>
   );

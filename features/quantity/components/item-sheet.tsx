@@ -9,6 +9,7 @@ import {
   ItemNotesField,
 } from '@/components/item-sheet/item-fields';
 import { SheetBody } from '@/components/sheet-content';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -16,7 +17,7 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuRoot,
 } from '@/components/ui/dropdown-menu';
-import { HeaderMenuTrigger } from '@/components/ui/header-action';
+import { MetabarMenuTrigger } from '@/components/ui/metabar-menu-trigger';
 import { Text } from '@/components/ui/text';
 
 import { entriesFor, record, records, totalFor } from '../model';
@@ -48,6 +49,7 @@ export function ItemSheet({
   lists?: { id: string; name: string }[];
   MetadataComponent?: ComponentType<{
     children?: React.ReactNode;
+    leadingAction?: React.ReactNode;
     row: import('../types').ShoppingRow;
     onChange: (
       details: Parameters<typeof editShoppingDetails>[3]
@@ -150,37 +152,37 @@ export function ItemSheet({
       onSelect={listId => leave(() => onMove(rowId, listId))}
     />
   );
+  const itemActions = (
+    <DropdownMenuRoot
+      trigger={<MetabarMenuTrigger accessibilityLabel="Item actions" />}
+    >
+      <DropdownMenuContent>
+        <DropdownMenuItem key="delete-item" destructive onSelect={remove}>
+          <DropdownMenuItemTitle>Delete item</DropdownMenuItemTitle>
+          <DropdownMenuItemIcon ios={{ name: 'trash' }} />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
+  );
   const content = (
     <SheetBody>
-      <BottomSheet.Header
-        title="Edit item"
-        primaryAction={
-          <DropdownMenuRoot
-            trigger={<HeaderMenuTrigger accessibilityLabel="Item actions" />}
-          >
-            <DropdownMenuContent>
-              <DropdownMenuItem key="delete-item" destructive onSelect={remove}>
-                <DropdownMenuItemTitle>Delete item</DropdownMenuItemTitle>
-                <DropdownMenuItemIcon ios={{ name: 'trash' }} />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenuRoot>
-        }
-      />
-      <ItemNameField
-        accessibilityLabel="Item name"
-        value={name}
-        onChangeText={setName}
-        onEndEditing={saveMetadata}
-        editable={!history}
-      />
-      <ItemNotesField
-        accessibilityLabel="Shopping notes"
-        value={notes}
-        onChangeText={setNotes}
-        onEndEditing={saveMetadata}
-        editable={!history}
-      />
+      <BottomSheet.Header title="Edit item" className="mb-2" />
+      <View className="gap-1">
+        <ItemNameField
+          accessibilityLabel="Item name"
+          value={name}
+          onChangeText={setName}
+          onEndEditing={saveMetadata}
+          editable={!history}
+        />
+        <ItemNotesField
+          accessibilityLabel="Shopping notes"
+          value={notes}
+          onChangeText={setNotes}
+          onEndEditing={saveMetadata}
+          editable={!history}
+        />
+      </View>
       {history ? (
         <Text className="mt-2 text-sm text-muted-foreground">
           Purchased · Read-only history
@@ -201,25 +203,36 @@ export function ItemSheet({
             : setEditor({ id: entry.id, snapshot: state })
         }
       />
-      {!history ? (
-        <View className="gap-3 pt-2">
-          {MetadataComponent ? (
-            <MetadataComponent row={row} onChange={saveDetails}>
-              {listPill}
-            </MetadataComponent>
-          ) : (
-            <MetadataBar
-              category={row.category}
-              store={row.store}
-              stores={records(state, 'row').map(r => r.store)}
-              disabled={history}
-              onChange={(field, value) => saveDetails({ [field]: value })}
-            >
-              {listPill}
-            </MetadataBar>
-          )}
+      {history ? (
+        <Button variant="ghost" onPress={remove}>
+          <Text className="text-destructive">Delete item</Text>
+        </Button>
+      ) : (
+        <View className="flex-row items-center gap-2 pt-4">
+          <View className="min-w-0 flex-1">
+            {MetadataComponent ? (
+              <MetadataComponent
+                row={row}
+                onChange={saveDetails}
+                leadingAction={itemActions}
+              >
+                {listPill}
+              </MetadataComponent>
+            ) : (
+              <MetadataBar
+                leadingAction={itemActions}
+                category={row.category}
+                store={row.store}
+                stores={records(state, 'row').map(r => r.store)}
+                disabled={history}
+                onChange={(field, value) => saveDetails({ [field]: value })}
+              >
+                {listPill}
+              </MetadataBar>
+            )}
+          </View>
         </View>
-      ) : null}
+      )}
       {error ? <Text className="pt-3 text-destructive">{error}</Text> : null}
     </SheetBody>
   );

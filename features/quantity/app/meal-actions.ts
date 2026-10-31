@@ -84,13 +84,13 @@ export async function planQuantityItem(args: AddItemToDateArgs) {
   const ingredient: PlannedIngredient = {
     ...ingredientFromApp(args),
     store: args.storeId ?? args.defaultStore?.id ?? '',
-    selected: args.showOnGroceryList ?? true,
+    selected: true,
     overridden: false,
     recipeIngredientId: null,
   };
   const destinations = await chooseItemDestinations(
     args.listId,
-    ingredient.selected ? [ingredient] : [],
+    [ingredient],
     args.reviewConflicts
   );
   const session = listSession(args.listId);
