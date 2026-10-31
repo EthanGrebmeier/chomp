@@ -140,7 +140,7 @@ export function StoreReviewContent({
                   {conflict.item.name}
                 </Text>
               ) : null}
-              <View className="gap-3 rounded-2xl bg-muted p-4">
+              <View className="gap-2">
                 {[
                   ...conflict.rows.map(({ row, quantity }) => ({
                     id: row.id,
@@ -157,7 +157,10 @@ export function StoreReviewContent({
                     store: conflict.item.store,
                   },
                 ].map(item => (
-                  <View key={item.id} className="gap-1">
+                  <View
+                    key={item.id}
+                    className="gap-1 rounded-xl bg-muted px-3 py-3"
+                  >
                     <View className="flex-row flex-wrap justify-between gap-2">
                       <Text className="text-muted-foreground">
                         {item.label}
@@ -175,10 +178,6 @@ export function StoreReviewContent({
                   </View>
                 ))}
               </View>
-              <Text className="text-sm text-muted-foreground">
-                These quantities can be added together. Choose a store for the
-                combined item, or keep them separate.
-              </Text>
             </View>
             <View className="gap-3">
               <Text className="text-sm font-semibold">

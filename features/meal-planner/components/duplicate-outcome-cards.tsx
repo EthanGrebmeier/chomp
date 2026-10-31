@@ -18,14 +18,14 @@ export function DuplicateOutcomeCards<Choice extends string>({
   choice: Choice;
   disabled: boolean;
   onSelect: (choice: Choice) => void;
-  /** Extra controls shown inside the selected card, below its label. */
+  /** Extra controls shown inside the selected row, below its label. */
   renderSelectedDetail?: (choice: Choice) => ReactNode;
 }) {
   return (
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel="How should this item be added?"
-      className="gap-2"
+      className="gap-1"
     >
       {options.map(option => {
         const selected = choice === option.id;
@@ -34,10 +34,7 @@ export function DuplicateOutcomeCards<Choice extends string>({
           // The detail sits outside the pressable so its inputs stay tappable.
           <View
             key={`${option.id}-${selected}`}
-            className={cn(
-              'rounded-2xl border border-border',
-              selected && 'border-primary bg-muted'
-            )}
+            className={cn('rounded-xl', selected && 'bg-muted')}
           >
             <HapticPressable
               accessibilityRole="radio"
@@ -45,33 +42,16 @@ export function DuplicateOutcomeCards<Choice extends string>({
               accessibilityState={{ checked: selected, disabled }}
               disabled={disabled}
               onPress={() => onSelect(option.id)}
-              className="min-h-12 flex-row items-center gap-3 p-4"
+              className="min-h-11 flex-row items-center gap-3 px-3 py-2.5"
             >
-              <View
-                className={cn(
-                  'size-6 items-center justify-center rounded-full border border-muted-foreground',
-                  selected && 'border-primary bg-primary'
-                )}
-              >
+              <Text className="flex-1 font-semibold">{option.label}</Text>
+              <View className="size-5 items-center justify-center">
                 {selected ? (
-                  <Icon
-                    as={Check}
-                    size={16}
-                    className="text-primary-foreground"
-                  />
+                  <Icon as={Check} size={20} className="text-primary" />
                 ) : null}
               </View>
-              <View className="flex-1 gap-1">
-                <Text className="font-semibold">{option.label}</Text>
-                <Text
-                  className="text-sm text-muted-foreground"
-                  style={{ fontVariant: ['tabular-nums'] }}
-                >
-                  {option.description}
-                </Text>
-              </View>
             </HapticPressable>
-            {detail ? <View className="px-4 pb-4">{detail}</View> : null}
+            {detail ? <View className="px-3 pb-3">{detail}</View> : null}
           </View>
         );
       })}
