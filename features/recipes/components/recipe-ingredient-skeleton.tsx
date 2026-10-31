@@ -12,7 +12,7 @@ export const RecipeIngredientSkeleton = ({
   showTag = true,
 }: RecipeIngredientSkeletonProps) => {
   return (
-    <View className="px-4 py-2">
+    <View className="px-8 py-2">
       <View className="gap-1 py-1">
         <View className="flex-row items-start justify-between gap-2">
           <View className="flex-1 flex-row items-center gap-2 pr-2">

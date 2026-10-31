@@ -1,8 +1,9 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { ChevronDownIcon, ScaleIcon } from 'lucide-react-native';
+import { ChevronDownIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 
+import { SheetConfirmFooter } from '@/components/sheet-confirm-footer';
 import { parseQuantity } from '@/features/quantity/model';
 
 import { cn } from '../../lib/utils';
@@ -17,8 +18,7 @@ import {
   DropdownMenuItemTitle,
   DropdownMenuSeparator,
 } from '../native-dropdown';
-import { BackButton } from '../ui/back-button';
-import { ConfirmButton } from '../ui/confirm-button';
+import { CloseButton } from '../ui/close-button';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
@@ -104,15 +104,8 @@ export const UnitSheet = ({
               'font-semibold',
               disabled && 'text-muted-foreground'
             )}
-            icon={
-              <Icon
-                className="text-muted-foreground"
-                as={ScaleIcon}
-                size={16}
-              />
-            }
             hasValue={true}
-            className={cn('min-w-16 justify-between', disabled && 'opacity-50')}
+            className={cn(disabled && 'opacity-50')}
           >
             {displayQuantity}
           </Pill>
@@ -126,18 +119,18 @@ export const UnitSheet = ({
         onFocus={() => quantityInputRef.current?.focus()}
         draggable={false}
         insetAdjustment="never"
+        footer={
+          <SheetConfirmFooter onPress={handleConfirm} disabled={!isValid} />
+        }
       >
         <BottomSheet.Header
           title="Set quantity"
-          backAction={
-            <BackButton onPress={() => sheetRef.current?.dismiss()} />
-          }
-          primaryAction={
-            <ConfirmButton onPress={handleConfirm} disabled={!isValid} />
+          closeAction={
+            <CloseButton onPress={() => sheetRef.current?.dismiss()} />
           }
         />
 
-        <View className="pb-6">
+        <View>
           <View className="px-8">
             <View className="flex-row items-center justify-between gap-3 rounded-xl bg-muted px-4 py-3 ">
               <TextInput

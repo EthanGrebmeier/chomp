@@ -2,6 +2,8 @@ import { useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
+import { SurfaceContent } from '@/components/surface-content';
+import { BackButton } from '@/components/ui/back-button';
 import { RecipeDetail } from '@/features/recipes/components/recipe-detail';
 import { RecipeDetailSkeleton } from '@/features/recipes/components/recipe-detail-skeleton';
 import { useRecipe } from '@/features/recipes/hooks/useRecipe';
@@ -33,9 +35,15 @@ export default function RecipeDetailPage() {
           className="flex-1"
         >
           <View className="flex-1">
-            <View className="flex-1 items-center justify-center">
+            <SurfaceContent spacing="wide" className="h-11">
+              <BackButton />
+            </SurfaceContent>
+            <SurfaceContent
+              spacing="wide"
+              className="flex-1 items-center justify-center"
+            >
               <Text className="text-muted-foreground">Recipe not found</Text>
-            </View>
+            </SurfaceContent>
           </View>
         </Animated.View>
       ) : (

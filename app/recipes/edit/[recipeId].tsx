@@ -2,7 +2,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
 
-import { Heading } from '@/components/text/heading';
+import { SheetHeader } from '@/components/sheet-header';
+import { SurfaceContent } from '@/components/surface-content';
 import { BackButton } from '@/components/ui/back-button';
 import { Text } from '@/components/ui/text';
 import { RecipeDetailSkeleton } from '@/features/recipes/components/recipe-detail-skeleton';
@@ -64,14 +65,9 @@ export default function EditRecipePage() {
 
   if (!recipe || !isOwner) {
     return (
-      <View className="flex-1 bg-background pt-6">
-        <View className="mb-6 flex-row items-center gap-3 px-4">
-          <BackButton />
-          <View className="flex-1">
-            <Heading>Edit Recipe</Heading>
-          </View>
-        </View>
-        <View className="flex-1 items-center justify-center px-4">
+      <View className="flex-1 bg-background">
+        <SheetHeader title="Edit Recipe" backAction={<BackButton />} />
+        <View className="flex-1 items-center justify-center px-8">
           <Text className="text-center text-muted-foreground">
             {recipe
               ? 'You can only edit recipes you own.'
@@ -83,15 +79,10 @@ export default function EditRecipePage() {
   }
 
   return (
-    <View className="flex-1 bg-background pt-6">
-      <View className="mb-6 flex-row items-center gap-3 px-4">
-        <BackButton />
-        <View className="flex-1">
-          <Heading>Edit Recipe</Heading>
-        </View>
-      </View>
+    <View className="flex-1 bg-background">
+      <SheetHeader title="Edit Recipe" backAction={<BackButton />} />
 
-      <View className="flex-1 px-4">
+      <SurfaceContent spacing="wide" className="flex-1">
         <RecipePageForm
           mode="edit"
           initialValues={{
@@ -103,7 +94,7 @@ export default function EditRecipePage() {
           isPending={isPending}
           onSubmit={handleSubmit}
         />
-      </View>
+      </SurfaceContent>
     </View>
   );
 }

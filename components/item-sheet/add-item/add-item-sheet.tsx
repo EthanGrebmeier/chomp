@@ -22,14 +22,17 @@ import { toast } from 'sonner-native';
 
 import { sheetCardResize } from '@/components/animated/sheet-motion';
 import {
-  SHEET_TOP_STYLE,
-  SHEET_CARD_STYLE,
-  SheetFooter,
-} from '@/components/sheet-content';
-import { SheetHeader } from '@/components/sheet-header';
+  ComposerHeader,
+  ComposerCloseButton,
+  ComposerActionSlot,
+  composerSheetStyles,
+  COMPOSER_CONTENT_CLASS,
+  COMPOSER_METADATA_CLASS,
+  COMPOSER_ACTION_OVERLAY_CLASS,
+} from '@/components/item-sheet/composer-layout';
+import { SheetFooter } from '@/components/sheet-content';
 import { SheetScreenOverlay } from '@/components/sheet-screen-overlay';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
-import { CloseButton } from '@/components/ui/close-button';
 import { InlineStoreReviewCard } from '@/features/quantity/app/inline-store-review-card';
 import { useInlineStoreReview } from '@/features/quantity/app/use-inline-store-review';
 import { useStoreConflictPreview } from '@/features/quantity/app/use-store-conflict-preview';
@@ -45,7 +48,6 @@ import { upsertLocalSavedItem } from '../../../features/saved-items/local/upsert
 import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
 import { navigation } from '../../../lib/navigation';
 import { THEME } from '../../../lib/theme';
-import { cn } from '../../../lib/utils';
 import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
@@ -63,7 +65,6 @@ import { ItemSheetProvider, useItemSheet } from '../use-item-sheet';
 
 import { IngredientSelector } from './ingredient-selector';
 import { RecipeSelector } from './recipe-selector';
-import { SavedItemActions } from './saved-item-actions';
 
 const ADD_MODES = [
   { value: 'item', label: 'Add Item' },
@@ -85,9 +86,9 @@ const ModeMenu = ({ mode, onModeChange }: ModeToggleProps) => (
         accessible
         accessibilityRole="button"
         accessibilityLabel={`${ADD_MODES.find(option => option.value === mode)?.label}. Change item type`}
-        className="min-h-11 min-w-11 flex-row items-center justify-center gap-2"
+        className="min-h-11 min-w-11 flex-row items-center justify-start gap-2"
       >
-        <Text className="text-lg font-semibold">
+        <Text className="text-lg font-medium">
           {ADD_MODES.find(option => option.value === mode)?.label}
         </Text>
         <Icon
@@ -140,11 +141,8 @@ const AddItemSheet = ({
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   // TrueSheet's native flex container uses the entire screen height. Bound
-  // our card to the same height as its detent instead of inheriting that frame.
-  const expandedHeight = Math.min(
-    windowHeight * 0.94,
-    windowHeight - insets.top - 12
-  );
+  // our content below the top safe area for the full-height native detent.
+  const expandedHeight = windowHeight - insets.top;
   const contentOpacity = useSharedValue(1);
   const triggerOpacity = useSharedValue(isTriggerVisible ? 1 : 0);
   const ref = useRef<TrueSheet>(null);
@@ -359,14 +357,17 @@ const AddItemSheet = ({
       <TrueSheet
         ref={ref}
         name="add-item-sheet"
-        detents={!expanded ? ['auto'] : [expandedHeight / windowHeight]}
-        scrollable={expanded}
+        // Full height attaches the native sheet to the screen edges on iOS 26.
+        detents={!expanded ? ['auto'] : [1]}
+        // Recent Items owns its bounded viewport; native pinning expands it
+        // past the composer and clips its final rows.
+        scrollable={expanded && mode !== 'recent'}
         draggable={expanded}
         backgroundColor={!expanded ? 'transparent' : backgroundColor}
         cornerRadius={!expanded ? 0 : undefined}
         grabber={expanded}
         elevation={!expanded ? 0 : undefined}
-        insetAdjustment="never"
+        insetAdjustment={expanded ? 'automatic' : 'never'}
         onWillPresent={() => setIsSessionOpen(true)}
         onWillDismiss={() => {
           review.close();
@@ -381,13 +382,12 @@ const AddItemSheet = ({
           compact
           renderContent={(fields, suggestions) => (
             <View
-              className={!expanded ? 'px-2' : undefined}
               style={
                 !expanded
-                  ? { paddingBottom: 24 }
+                  ? composerSheetStyles.floatingFrame
                   : {
                       height: expandedHeight,
-                      ...SHEET_TOP_STYLE,
+                      ...composerSheetStyles.nativeFrame,
                     }
               }
             >
@@ -403,13 +403,12 @@ const AddItemSheet = ({
                 collapsable={false}
                 collapsableChildren={false}
                 layout={sheetCardResize}
-                style={!expanded ? SHEET_CARD_STYLE : undefined}
-                className={cn(
-                  'overflow-hidden bg-background',
-                  !expanded
-                    ? 'rounded-[32px] border border-border'
-                    : 'min-h-0 flex-1'
-                )}
+                className="overflow-hidden border-border bg-background"
+                style={
+                  expanded
+                    ? composerSheetStyles.nativeCard
+                    : composerSheetStyles.floatingCard
+                }
               >
                 <View
                   className={expanded ? 'flex-1' : undefined}
@@ -419,21 +418,18 @@ const AddItemSheet = ({
                     review.pending ? 'no-hide-descendants' : 'auto'
                   }
                 >
-                  <SheetHeader
+                  <ComposerHeader
                     title={itemOnly ? 'Add item' : undefined}
                     centerContent={
                       itemOnly ? undefined : (
                         <ModeMenu mode={mode} onModeChange={handleModeChange} />
                       )
                     }
-                    backAction={
-                      <CloseButton
+                    closeAction={
+                      <ComposerCloseButton
                         accessibilityLabel="Close add item"
                         onPress={() => void ref.current?.dismiss()}
                       />
-                    }
-                    primaryAction={
-                      mode === 'item' ? <SavedItemActions /> : undefined
                     }
                   />
                   <Animated.View
@@ -441,15 +437,15 @@ const AddItemSheet = ({
                       contentAnimatedStyle,
                       { display: mode === 'item' ? 'flex' : 'none' },
                     ]}
-                    className="px-8"
+                    className={COMPOSER_CONTENT_CLASS}
                   >
                     <View>{fields}</View>
-                    <View className="-mx-8 mt-1 min-h-11 justify-center overflow-hidden px-8">
+                    <View className={COMPOSER_METADATA_CLASS}>
                       <MetaBar
                         trailingInset={itemConflict.needsReview ? 144 : 92}
-                        savedItemActionsInHeader
+                        savedItemActionsInMenu
                       />
-                      <View className="absolute bottom-0 right-8 top-0 justify-center bg-background pl-2">
+                      <View className={COMPOSER_ACTION_OVERLAY_CLASS}>
                         <Svg
                           pointerEvents="none"
                           width={24}
@@ -478,42 +474,46 @@ const AddItemSheet = ({
                             fill="url(#add-item-metabar-fade)"
                           />
                         </Svg>
-                        <Button
-                          key={itemConflict.needsReview ? 'review' : 'add'}
-                          size={itemConflict.needsReview ? 'default' : 'icon'}
-                          className={
-                            itemConflict.needsReview
-                              ? 'h-10 gap-1 px-3'
-                              : 'size-10'
-                          }
-                          hitSlop={2}
-                          accessibilityLabel={
-                            isItemAdded
-                              ? 'Item added'
-                              : itemConflict.needsReview
-                                ? itemConflict.label
-                                : 'Add item'
-                          }
-                          onPress={onSubmit}
-                          disabled={!groceryListId || !isValid || isSubmitting}
-                          status={isItemAdded ? 'success' : 'idle'}
-                          successLabel=""
-                          onSuccessComplete={onItemAddedFeedbackComplete}
-                        >
-                          {itemConflict.needsReview ? (
-                            <Text>Review</Text>
-                          ) : null}
-                          <Icon
-                            as={
+                        <ComposerActionSlot>
+                          <Button
+                            key={itemConflict.needsReview ? 'review' : 'add'}
+                            size={itemConflict.needsReview ? 'default' : 'icon'}
+                            className={
                               itemConflict.needsReview
-                                ? ChevronRightIcon
-                                : ArrowUpIcon
+                                ? 'h-10 gap-1 px-3'
+                                : 'size-10'
                             }
-                            size={22}
-                            strokeWidth={2.5}
-                            className="text-primary-foreground"
-                          />
-                        </Button>
+                            hitSlop={2}
+                            accessibilityLabel={
+                              isItemAdded
+                                ? 'Item added'
+                                : itemConflict.needsReview
+                                  ? itemConflict.label
+                                  : 'Add item'
+                            }
+                            onPress={onSubmit}
+                            disabled={
+                              !groceryListId || !isValid || isSubmitting
+                            }
+                            status={isItemAdded ? 'success' : 'idle'}
+                            successLabel=""
+                            onSuccessComplete={onItemAddedFeedbackComplete}
+                          >
+                            {itemConflict.needsReview ? (
+                              <Text>Review</Text>
+                            ) : null}
+                            <Icon
+                              as={
+                                itemConflict.needsReview
+                                  ? ChevronRightIcon
+                                  : ArrowUpIcon
+                              }
+                              size={22}
+                              strokeWidth={2.5}
+                              className="text-primary-foreground"
+                            />
+                          </Button>
+                        </ComposerActionSlot>
                       </View>
                     </View>
                   </Animated.View>
@@ -530,6 +530,7 @@ const AddItemSheet = ({
                         style={{ display: mode === 'recipe' ? 'flex' : 'none' }}
                       >
                         <RecipeSelector
+                          spacing="standard"
                           fillHeight
                           onSelectRecipe={handleRecipeSelect}
                           onCreateRecipe={handleCreateRecipe}

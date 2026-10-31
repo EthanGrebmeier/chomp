@@ -13,6 +13,7 @@ export function InlineStoreReviewCard({
   return (
     <SheetScreenOverlay key={pending.id}>
       <StoreReviewContent
+        exitAction="back"
         request={pending.request}
         onBack={() => review.finish(null, pending.id)}
         onFinish={decisions => review.finish(decisions, pending.id)}

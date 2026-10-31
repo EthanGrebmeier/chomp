@@ -7,7 +7,7 @@ import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Text } from '@/components/ui/text';
 
-import { BackButton } from '../../../components/ui/back-button';
+import { CloseButton } from '../../../components/ui/close-button';
 
 export type RecipeConflictSheetRef = {
   present: () => void;
@@ -69,7 +69,7 @@ export const RecipeConflictSheet = forwardRef<
           <BottomSheet.Header
             title="Choose how to add ingredients"
             subtitle={`Some ingredients from "${recipeName}" match items already on this list.`}
-            backAction={<BackButton onPress={handleClose} />}
+            closeAction={<CloseButton onPress={handleClose} />}
           />
         </BottomSheet.SheetView>
       </BottomSheet>

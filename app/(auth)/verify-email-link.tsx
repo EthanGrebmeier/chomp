@@ -300,7 +300,7 @@ export default function VerifyEmailLink() {
   if (verificationState === 'verifying' || verificationState === 'finishing') {
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center gap-4 px-6">
+        <View className="flex-1 items-center justify-center gap-4 px-8">
           <ActivityIndicator size="large" />
           <Text variant="h1" className="text-3xl">
             {verificationState === 'verifying'
@@ -338,7 +338,7 @@ export default function VerifyEmailLink() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-1 justify-center px-6">
+      <View className="flex-1 justify-center px-8">
         <View className="gap-8">
           <View className="gap-3">
             <Text variant="h1">{content.title}</Text>

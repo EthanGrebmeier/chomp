@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { BackButton } from '@/components/ui/back-button';
+import { SheetConfirmFooter } from '@/components/sheet-confirm-footer';
 import { Button } from '@/components/ui/button';
-import { ConfirmButton } from '@/components/ui/confirm-button';
+import { CloseButton } from '@/components/ui/close-button';
 import { Text } from '@/components/ui/text';
 
 import { parseQuantity } from '../model';
@@ -50,21 +50,21 @@ export function AmountSheet({
       onStartOpen={() => input.current?.focus()}
       onDismiss={onDismiss}
       insetAdjustment="never"
+      footer={
+        <SheetConfirmFooter
+          disabled={busy || parsed === null}
+          onPress={() => {
+            if (parsed !== null) void commit(() => onSave(parsed));
+          }}
+        />
+      }
     >
       <BottomSheet.Header
         title={quantity === undefined ? 'Add quantity' : 'Adjust quantity'}
-        backAction={
-          <BackButton
+        closeAction={
+          <CloseButton
             onPress={() => {
               void ref.current?.dismiss();
-            }}
-          />
-        }
-        primaryAction={
-          <ConfirmButton
-            disabled={busy || parsed === null}
-            onPress={() => {
-              if (parsed !== null) void commit(() => onSave(parsed));
             }}
           />
         }
