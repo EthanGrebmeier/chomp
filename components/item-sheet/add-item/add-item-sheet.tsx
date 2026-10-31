@@ -25,12 +25,12 @@ import {
   ComposerHeader,
   ComposerCloseButton,
   ComposerActionSlot,
-  COMPOSER_CARD_CLASS,
+  composerSheetStyles,
   COMPOSER_CONTENT_CLASS,
   COMPOSER_METADATA_CLASS,
   COMPOSER_ACTION_OVERLAY_CLASS,
 } from '@/components/item-sheet/composer-layout';
-import { SHEET_TOP_STYLE, SheetFooter } from '@/components/sheet-content';
+import { SheetFooter } from '@/components/sheet-content';
 import { SheetScreenOverlay } from '@/components/sheet-screen-overlay';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { InlineStoreReviewCard } from '@/features/quantity/app/inline-store-review-card';
@@ -48,7 +48,6 @@ import { upsertLocalSavedItem } from '../../../features/saved-items/local/upsert
 import { useDefaultStore } from '../../../features/stores/instant/use-default-store';
 import { navigation } from '../../../lib/navigation';
 import { THEME } from '../../../lib/theme';
-import { cn } from '../../../lib/utils';
 import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
@@ -142,11 +141,8 @@ const AddItemSheet = ({
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   // TrueSheet's native flex container uses the entire screen height. Bound
-  // our card to the same height as its detent instead of inheriting that frame.
-  const expandedHeight = Math.min(
-    windowHeight * 0.94,
-    windowHeight - insets.top - 12
-  );
+  // our content below the top safe area for the full-height native detent.
+  const expandedHeight = windowHeight - insets.top;
   const contentOpacity = useSharedValue(1);
   const triggerOpacity = useSharedValue(isTriggerVisible ? 1 : 0);
   const ref = useRef<TrueSheet>(null);
@@ -361,7 +357,8 @@ const AddItemSheet = ({
       <TrueSheet
         ref={ref}
         name="add-item-sheet"
-        detents={!expanded ? ['auto'] : [expandedHeight / windowHeight]}
+        // Full height attaches the native sheet to the screen edges on iOS 26.
+        detents={!expanded ? ['auto'] : [1]}
         // Recent Items owns its bounded viewport; native pinning expands it
         // past the composer and clips its final rows.
         scrollable={expanded && mode !== 'recent'}
@@ -370,7 +367,7 @@ const AddItemSheet = ({
         cornerRadius={!expanded ? 0 : undefined}
         grabber={expanded}
         elevation={!expanded ? 0 : undefined}
-        insetAdjustment="never"
+        insetAdjustment={expanded ? 'automatic' : 'never'}
         onWillPresent={() => setIsSessionOpen(true)}
         onWillDismiss={() => {
           review.close();
@@ -385,13 +382,12 @@ const AddItemSheet = ({
           compact
           renderContent={(fields, suggestions) => (
             <View
-              className={!expanded ? 'px-2' : undefined}
               style={
                 !expanded
-                  ? { paddingBottom: 24 }
+                  ? composerSheetStyles.floatingFrame
                   : {
                       height: expandedHeight,
-                      ...SHEET_TOP_STYLE,
+                      ...composerSheetStyles.nativeFrame,
                     }
               }
             >
@@ -407,10 +403,12 @@ const AddItemSheet = ({
                 collapsable={false}
                 collapsableChildren={false}
                 layout={sheetCardResize}
-                className={cn(
-                  'overflow-hidden bg-background',
-                  !expanded ? COMPOSER_CARD_CLASS : 'min-h-0 flex-1'
-                )}
+                className="overflow-hidden border-border bg-background"
+                style={
+                  expanded
+                    ? composerSheetStyles.nativeCard
+                    : composerSheetStyles.floatingCard
+                }
               >
                 <View
                   className={expanded ? 'flex-1' : undefined}
