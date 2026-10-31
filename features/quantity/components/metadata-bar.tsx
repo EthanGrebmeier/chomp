@@ -1,3 +1,4 @@
+import { StoreIcon, TagIcon } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { toast } from 'sonner-native';
@@ -7,6 +8,7 @@ import { OptionDropdown } from '@/components/item-sheet/option-dropdown';
 import { MetaBarLayout } from '@/components/meta-bar-layout';
 import { ScrollingMetaBar } from '@/components/scrolling-meta-bar';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
 import { Pill } from '@/components/ui/pill';
 import { Text } from '@/components/ui/text';
 import { categoryOptions } from '@/features/shared/category/categories';
@@ -26,8 +28,10 @@ export function MetadataBar({
   disabled,
   onChange,
   children,
+  leadingAction,
 }: {
   children?: React.ReactNode;
+  leadingAction?: React.ReactNode;
   category: string;
   store: string;
   stores: string[];
@@ -44,6 +48,7 @@ export function MetadataBar({
     <>
       <MetaBarLayout>
         <ScrollingMetaBar>
+          {leadingAction}
           <OptionDropdown
             label="category"
             value={category}
@@ -62,6 +67,17 @@ export function MetadataBar({
             onCreate={() => setPicker('category')}
           >
             <Pill
+              icon={
+                <Icon
+                  as={TagIcon}
+                  size={16}
+                  className={
+                    categoryColor
+                      ? getCategoryTextClassName(categoryColor)
+                      : 'text-muted-foreground'
+                  }
+                />
+              }
               hasValue={!!category}
               className={
                 categoryColor
@@ -91,7 +107,18 @@ export function MetadataBar({
             }}
             onCreate={() => setPicker('store')}
           >
-            <Pill hasValue={!!store}>{store || 'Store'}</Pill>
+            <Pill
+              hasValue={!!store}
+              icon={
+                <Icon
+                  as={StoreIcon}
+                  size={16}
+                  className="text-muted-foreground"
+                />
+              }
+            >
+              {store || 'Store'}
+            </Pill>
           </OptionDropdown>
           {children}
         </ScrollingMetaBar>

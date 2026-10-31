@@ -15,6 +15,7 @@ import {
   filterRecipes,
 } from '../../../features/recipes/utils/filter-recipes';
 import { cn } from '../../../lib/utils';
+import type { SurfaceSpacing } from '../../surface-content';
 import { Text } from '../../ui/text';
 import { useUncontrolledTextInput } from '../../use-uncontrolled-text-input';
 
@@ -26,12 +27,14 @@ type RecipeSelectorProps = {
   onSelectRecipe: (recipe: RecipeWithIngredients) => void;
   onCreateRecipe: (initialName?: string) => void;
   fillHeight?: boolean;
+  spacing?: SurfaceSpacing;
 };
 
 export const RecipeSelector = ({
   onSelectRecipe,
   onCreateRecipe,
   fillHeight = false,
+  spacing = 'wide',
 }: RecipeSelectorProps) => {
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { data: recipes, isLoading } = useRecipes();
@@ -99,7 +102,12 @@ export const RecipeSelector = ({
   }
 
   return (
-    <View className={cn('px-4', fillHeight && 'min-h-0 flex-1')}>
+    <View
+      className={cn(
+        spacing === 'wide' && 'px-4',
+        fillHeight && 'min-h-0 flex-1'
+      )}
+    >
       <RecipeFilters
         searchInputKey={searchInputKey}
         searchDefaultValue={searchDefaultValue}
@@ -127,12 +135,14 @@ export const RecipeSelector = ({
       ) : (
         <FlatList
           className={cn(fillHeight && 'min-h-0 flex-1')}
-          contentContainerStyle={{ paddingBottom: safeAreaBottom + 24 }}
+          contentContainerStyle={{
+            paddingBottom: Math.max(safeAreaBottom, 24),
+          }}
           data={filteredRecipes}
           keyExtractor={item => item.id}
           renderItem={renderRecipeItem}
           ItemSeparatorComponent={RecipeRowSeparator}
-          scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
+          scrollIndicatorInsets={{ bottom: Math.max(safeAreaBottom, 24) }}
           showsVerticalScrollIndicator={false}
         />
       )}

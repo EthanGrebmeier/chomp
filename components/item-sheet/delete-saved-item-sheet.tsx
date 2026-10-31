@@ -63,7 +63,7 @@ export const DeleteSavedItemSheet = forwardRef<
       <BottomSheet.SheetView>
         <BottomSheet.Header
           title="Delete saved item?"
-          backAction={
+          closeAction={
             <CloseButton onPress={handleClose} disabled={isPending} />
           }
           subtitle={`"${itemName}" will be removed from your saved items. This won't affect items already on your lists.`}

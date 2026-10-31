@@ -9,6 +9,7 @@ import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
 
 type MealPlanMetaBarProps = {
+  leadingAction?: React.ReactNode;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
   unit: string;
@@ -25,6 +26,7 @@ type MealPlanMetaBarProps = {
 };
 
 export const MealPlanMetaBar = ({
+  leadingAction,
   quantity,
   onQuantityChange,
   unit,
@@ -62,6 +64,7 @@ export const MealPlanMetaBar = ({
       }
     >
       <ScrollingMetaBar>
+        {leadingAction}
         <UnitSheet
           quantity={quantity}
           unit={unit}

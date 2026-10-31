@@ -56,7 +56,7 @@ const FrequentItemRow = memo(function FrequentItemRow({
       label={`Add ${item.name} to grocery list`}
       onAdd={() => onAdd(item)}
     >
-      <ListItem className="min-h-11 px-8">
+      <ListItem className="min-h-11 px-4">
         <View className="mr-1 size-5 items-center justify-center rounded-md border border-border">
           <Icon
             as={PlusIcon}
@@ -181,15 +181,13 @@ export const FrequentItemsScreen = ({
   );
 
   return (
-    <GestureHandlerRootView
-      style={{ flex: 1, minHeight: 0, paddingBottom: 24 }}
-    >
+    <GestureHandlerRootView style={{ flex: 1, minHeight: 0 }}>
       {isLoading ? (
         <FrequentItemsSkeleton />
       ) : error ? (
         <View
           style={{ minHeight: 500 }}
-          className="items-center justify-center gap-1 px-6"
+          className="items-center justify-center gap-1 px-4"
         >
           <EmptyHeading>Couldn&apos;t load frequent items</EmptyHeading>
           <EmptySubtext>
@@ -199,7 +197,7 @@ export const FrequentItemsScreen = ({
       ) : visibleItems.length === 0 ? (
         <View
           style={{ minHeight: 500 }}
-          className="items-center justify-center gap-1 px-6"
+          className="items-center justify-center gap-1 px-4"
         >
           <EmptyHeading>No frequent items yet</EmptyHeading>
           <EmptySubtext>
@@ -211,9 +209,11 @@ export const FrequentItemsScreen = ({
         // can close a gap without waiting for virtualized cell measurements.
         <ScrollView
           className="min-h-0 flex-1"
-          contentInset={{ bottom: safeAreaBottom + 24 }}
+          contentContainerStyle={{
+            paddingBottom: Math.max(safeAreaBottom, 24),
+          }}
           keyboardShouldPersistTaps="handled"
-          scrollIndicatorInsets={{ bottom: safeAreaBottom + 24 }}
+          scrollIndicatorInsets={{ bottom: Math.max(safeAreaBottom, 24) }}
           showsVerticalScrollIndicator={false}
         >
           {visibleItems.map(item => (
