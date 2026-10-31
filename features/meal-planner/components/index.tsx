@@ -146,7 +146,7 @@ export const MealPlanner = memo(function MealPlanner({
       ) : null}
       <AddToMealPlanSheet listId={listId} ref={addToMealPlanSheet} />
       <EditMealSheet ref={editMealSheet} listId={listId} />
-      <EditItemSheet ref={editItemSheet} listId={listId} />
+      <EditItemSheet ref={editItemSheet} />
       <MealPlanDateView
         key={dayListSections[MEAL_PLAN_DAY_LIST_PAST_DAYS]?.dateKey}
         dayListSections={dayListSections}
