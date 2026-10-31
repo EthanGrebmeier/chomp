@@ -617,7 +617,7 @@ export default function SignInEmail() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="px-4 pt-2">
+      <View className="px-8 pt-2">
         <BackButton />
       </View>
       <KeyboardAvoidingView
@@ -625,7 +625,7 @@ export default function SignInEmail() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
         className="flex-1"
       >
-        <View className="flex-1 justify-between px-4 pt-8">
+        <View className="flex-1 justify-between px-8 pt-8">
           {bridgeRetry ? (
             <>
               <View className="w-full gap-6">

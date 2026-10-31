@@ -17,13 +17,13 @@ export default function PurchasedItemsRoute() {
       ? router.back()
       : router.replace(buildListUrl({ listId }));
   return (
-    <View className="pt-safe flex-1 bg-background">
+    <View className="pt-safe-offset-2 flex-1 bg-background">
       {listId && !unavailable && !error ? (
         <PurchasedItemsScreen key={listId} listId={listId} onBack={onBack} />
       ) : (
         <>
           <GroceryListHeader listName="Purchased items" onBackPress={onBack} />
-          <Text className="px-6 py-12 text-center text-muted-foreground">
+          <Text className="px-4 py-12 text-center text-muted-foreground">
             {error
               ? 'Could not load this list. Check your connection.'
               : listId

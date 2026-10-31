@@ -1,4 +1,4 @@
-import { HeaderMenuTrigger } from '@/components/ui/header-action';
+import { MetabarMenuTrigger } from '@/components/ui/metabar-menu-trigger';
 
 import {
   DropdownMenuContent,
@@ -25,7 +25,7 @@ export const MealSheetRecipeDropdown = ({
 }: MealSheetRecipeDropdownProps) => {
   return (
     <DropdownMenuRoot
-      trigger={<HeaderMenuTrigger accessibilityLabel="Meal recipe actions" />}
+      trigger={<MetabarMenuTrigger accessibilityLabel="Meal recipe actions" />}
     >
       <DropdownMenuContent>
         <DropdownMenuItem onSelect={onViewRecipe} key="view-recipe">

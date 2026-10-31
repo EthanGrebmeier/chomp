@@ -191,11 +191,11 @@ export default function List() {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="pt-safe flex-1">
+      <View className="pt-safe-offset-2 flex-1">
         {loadError ? (
           <View
             accessibilityRole="alert"
-            className="flex-1 items-center justify-center gap-1 px-6"
+            className="flex-1 items-center justify-center gap-1 px-4"
           >
             <EmptyHeading>Couldn&apos;t load your groceries</EmptyHeading>
             <EmptySubtext>Check your connection, then try again.</EmptySubtext>

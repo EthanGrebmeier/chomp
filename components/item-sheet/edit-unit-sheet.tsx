@@ -79,7 +79,7 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
         <BottomSheet.SheetView>
           <BottomSheet.Header
             title="Enter a custom unit"
-            backAction={<CloseButton onPress={handleCancel} />}
+            closeAction={<CloseButton onPress={handleCancel} />}
             className="mb-0"
           />
 

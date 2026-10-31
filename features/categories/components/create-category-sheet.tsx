@@ -15,8 +15,7 @@ import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { BackButton } from '../../../components/ui/back-button';
-import { DeleteButton } from '../../../components/ui/delete-button';
+import { CloseButton } from '../../../components/ui/close-button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
@@ -180,6 +179,17 @@ export const CreateCategorySheet = forwardRef<
         }}
         footer={
           <SheetFooter>
+            {isEditing ? (
+              <View className="mb-2">
+                <BottomActionButton
+                  variant="ghost"
+                  onPress={handleConfirmDelete}
+                  disabled={isSubmitting}
+                >
+                  <Text className="text-destructive">Delete category</Text>
+                </BottomActionButton>
+              </View>
+            ) : null}
             <BottomActionButton
               variant="default"
               onPress={handleSubmit}
@@ -193,18 +203,9 @@ export const CreateCategorySheet = forwardRef<
         <BottomSheet.SheetView>
           <BottomSheet.Header
             title={isEditing ? 'Edit category' : 'Add a category'}
-            backAction={
+            closeAction={
               showBackButton ? (
-                <BackButton onPress={() => sheetRef.current?.dismiss()} />
-              ) : undefined
-            }
-            primaryAction={
-              isEditing ? (
-                <DeleteButton
-                  accessibilityLabel="Delete category"
-                  onPress={handleConfirmDelete}
-                  disabled={isSubmitting}
-                />
+                <CloseButton onPress={() => sheetRef.current?.dismiss()} />
               ) : undefined
             }
           />

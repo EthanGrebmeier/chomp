@@ -7,7 +7,7 @@ import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { BackButton } from '../../../components/ui/back-button';
+import { CloseButton } from '../../../components/ui/close-button';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { Icon } from '../../../components/ui/icon';
 import { Pill } from '../../../components/ui/pill';
@@ -87,15 +87,15 @@ export const RecipeUrlSheet = ({
         <BottomSheet.SheetView>
           <BottomSheet.Header
             className="mb-0"
-            backAction={
+            closeAction={
               canGoBack && (
-                <BackButton onPress={() => sheetRef.current?.dismiss()} />
+                <CloseButton onPress={() => sheetRef.current?.dismiss()} />
               )
             }
             title="Link to original recipe"
           />
 
-          <View className="gap-4 pb-4">
+          <View className="gap-4">
             <BottomSheet.TextInput
               key={draftUrlInputKey}
               defaultValue={draftUrlDefaultValue}
