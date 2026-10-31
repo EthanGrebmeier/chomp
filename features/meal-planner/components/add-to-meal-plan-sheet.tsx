@@ -23,11 +23,11 @@ import {
   ComposerHeader,
   ComposerCloseButton,
   ComposerActionSlot,
-  COMPOSER_CARD_CLASS,
+  composerSheetStyles,
   COMPOSER_CONTENT_CLASS,
 } from '@/components/item-sheet/composer-layout';
 import { MetaBarTrailingInsetContext } from '@/components/meta-bar-insets';
-import { SHEET_TOP_STYLE, SheetFooter } from '@/components/sheet-content';
+import { SheetFooter } from '@/components/sheet-content';
 import { SheetPage } from '@/components/sheet-page';
 import { SheetScreenOverlay } from '@/components/sheet-screen-overlay';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
@@ -53,7 +53,6 @@ import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { navigation } from '../../../lib/navigation';
 import { THEME } from '../../../lib/theme';
-import { cn } from '../../../lib/utils';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
 import { useAddRecipeToDate } from '../hooks/useAddRecipeToMealPlan';
@@ -139,10 +138,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const { colorScheme } = useColorScheme();
   const backgroundColor =
     THEME[colorScheme === 'dark' ? 'dark' : 'light'].background;
-  const expandedHeight = Math.min(
-    windowHeight * 0.94,
-    windowHeight - insets.top - 12
-  );
+  const expandedHeight = windowHeight - insets.top;
   const itemInputRef = useRef<TextInput>(null);
   const {
     itemName,
@@ -399,14 +395,15 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     <TrueSheet
       name="add-to-meal-plan-sheet"
       ref={sheetRef}
-      detents={!expanded ? ['auto'] : [expandedHeight / windowHeight]}
+      // Full height attaches the native sheet to the screen edges on iOS 26.
+      detents={!expanded ? ['auto'] : [1]}
       scrollable={expanded}
       draggable={expanded}
       backgroundColor={!expanded ? 'transparent' : backgroundColor}
       cornerRadius={!expanded ? 0 : undefined}
       grabber={expanded}
       elevation={!expanded ? 0 : undefined}
-      insetAdjustment="never"
+      insetAdjustment={expanded ? 'automatic' : 'never'}
       onWillPresent={() => setIsSessionOpen(true)}
       onWillDismiss={() => {
         review.close();
@@ -431,8 +428,8 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           <View
             style={
               expanded
-                ? { height: expandedHeight, ...SHEET_TOP_STYLE }
-                : { paddingHorizontal: 8, paddingBottom: 24 }
+                ? { height: expandedHeight, ...composerSheetStyles.nativeFrame }
+                : composerSheetStyles.floatingFrame
             }
           >
             {!expanded ? (
@@ -447,10 +444,12 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               collapsable={false}
               collapsableChildren={false}
               layout={sheetCardResize}
-              className={cn(
-                'overflow-hidden bg-background',
-                !expanded ? COMPOSER_CARD_CLASS : 'min-h-0 flex-1'
-              )}
+              className="overflow-hidden border-border bg-background"
+              style={
+                expanded
+                  ? composerSheetStyles.nativeCard
+                  : composerSheetStyles.floatingCard
+              }
             >
               <View
                 className={expanded ? 'flex-1' : undefined}
