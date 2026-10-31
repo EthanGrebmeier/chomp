@@ -8,6 +8,7 @@ import {
 } from '@/components/conflict-review-row';
 import { SheetFooter } from '@/components/sheet-content';
 import { SheetPage } from '@/components/sheet-page';
+import { BackButton } from '@/components/ui/back-button';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
 import { Button } from '@/components/ui/button';
 import { CloseButton } from '@/components/ui/close-button';
@@ -27,11 +28,13 @@ export function StoreReviewContent({
   request,
   onFinish,
   onBack,
+  exitAction = 'close',
 }: {
   request: StoreReviewRequest;
   indexTreatment?: ConflictIndexTreatment;
   onFinish: (decisions: StoreDecisions) => void;
   onBack: () => void;
+  exitAction?: 'back' | 'close';
 }) {
   const scroll = useRef<ScrollView>(null);
   const [navigation, setNavigation] = useState<{
@@ -226,21 +229,25 @@ export function StoreReviewContent({
             : request.conflicts.length === 1
               ? 'This item is already on your list. How would you like to handle it?'
               : 'How would you like to handle them?',
-        backAction: (
-          <CloseButton
-            disabled={closing}
-            accessibilityLabel={
-              index !== null && request.conflicts.length > 1
-                ? 'Back to all items'
-                : 'Back to adding items'
-            }
-            onPress={() =>
-              index !== null && request.conflicts.length > 1
-                ? goTo(null)
-                : onBack()
-            }
-          />
-        ),
+        backAction:
+          index !== null && request.conflicts.length > 1 ? (
+            <BackButton
+              disabled={closing}
+              accessibilityLabel="Back to all items"
+              onPress={() => goTo(null)}
+            />
+          ) : exitAction === 'back' ? (
+            <BackButton
+              disabled={closing}
+              accessibilityLabel="Back to adding items"
+              onPress={onBack}
+            />
+          ) : undefined,
+        closeAction:
+          !(index !== null && request.conflicts.length > 1) &&
+          exitAction !== 'back' ? (
+            <CloseButton disabled={closing} onPress={onBack} />
+          ) : undefined,
       }}
     >
       <ScrollView
@@ -248,7 +255,6 @@ export function StoreReviewContent({
         className="min-h-0 flex-1"
         keyboardShouldPersistTaps="handled"
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingBottom: 24 }}
       >
         <View style={{ overflow: 'hidden' }}>
           {[

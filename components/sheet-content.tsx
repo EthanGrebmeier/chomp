@@ -1,50 +1,32 @@
-import {
-  createContext,
-  useContext,
-  type ComponentProps,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, type ComponentProps } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export const SHEET_CONTENT_INSET = 32;
-export const SHEET_ACTION_INSET = 16;
-export const SHEET_VERTICAL_INSET = 24;
-export const SHEET_HEADER_GAP = 16;
+import {
+  SurfaceContent,
+  SurfaceContentRoot,
+  SURFACE_INSETS,
+  SURFACE_SECTION_GAP,
+  SURFACE_HEADER_GAP,
+  useContentInset,
+} from './surface-content';
+
+export const SHEET_CONTENT_INSET = SURFACE_INSETS.wide;
+export const SHEET_VERTICAL_INSET = SURFACE_SECTION_GAP;
+export const SHEET_HEADER_GAP = SURFACE_HEADER_GAP;
 export const SHEET_TOP_STYLE = { paddingTop: SHEET_VERTICAL_INSET };
 export const SHEET_CARD_STYLE = { paddingVertical: SHEET_VERTICAL_INSET };
 export const SheetHasFooterContext = createContext(false);
-const SheetContentInsetContext = createContext(0);
-export const useSheetContentInset = () => useContext(SheetContentInsetContext);
+export const useSheetContentInset = useContentInset;
+export const SheetContentRoot = SurfaceContentRoot;
 
-/** Shared content edge; headers inside this container account for its inset. */
-export function SheetContent({
-  style,
-  children,
-  ...props
-}: ComponentProps<typeof View>) {
-  return (
-    <SheetContentInsetContext.Provider value={SHEET_CONTENT_INSET}>
-      <View
-        {...props}
-        style={[{ paddingHorizontal: SHEET_CONTENT_INSET }, style]}
-      >
-        {children}
-      </View>
-    </SheetContentInsetContext.Provider>
-  );
+/** Sheets use the wide content gutter. */
+export function SheetContent(props: ComponentProps<typeof View>) {
+  return <SurfaceContent {...props} spacing="wide" />;
 }
 
-/** A native sheet starts a new coordinate space, even when opened from another sheet. */
-export function SheetContentRoot({ children }: { children: ReactNode }) {
-  return (
-    <SheetContentInsetContext.Provider value={0}>
-      {children}
-    </SheetContentInsetContext.Provider>
-  );
-}
-
-/** Terminal body of an auto-sized sheet. Sections use SheetContent instead. */
+/** Terminal body owns one bottom gutter: safe-area clearance or visual spacing,
+ * whichever is larger. A footer takes over that responsibility when present. */
 export function SheetBody({ style, ...props }: ComponentProps<typeof View>) {
   const { bottom } = useSafeAreaInsets();
   const hasFooter = useContext(SheetHasFooterContext);
@@ -52,14 +34,16 @@ export function SheetBody({ style, ...props }: ComponentProps<typeof View>) {
     <SheetContent
       {...props}
       style={[
-        { paddingBottom: hasFooter ? 0 : bottom + SHEET_VERTICAL_INSET },
+        {
+          paddingBottom: hasFooter ? 0 : Math.max(bottom, SHEET_VERTICAL_INSET),
+        },
         style,
       ]}
     />
   );
 }
 
-/** Footer owns its edge padding, including when rendered in a native portal. */
+/** Footer owns edge clearance once, including when rendered in a native portal. */
 export function SheetFooter({ style, ...props }: ComponentProps<typeof View>) {
   const { bottom } = useSafeAreaInsets();
   return (
@@ -69,7 +53,7 @@ export function SheetFooter({ style, ...props }: ComponentProps<typeof View>) {
         style={[
           {
             paddingTop: SHEET_HEADER_GAP,
-            paddingBottom: bottom + SHEET_VERTICAL_INSET,
+            paddingBottom: Math.max(bottom, SHEET_VERTICAL_INSET),
           },
           style,
         ]}

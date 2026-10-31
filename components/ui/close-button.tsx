@@ -1,7 +1,5 @@
 import { X } from 'lucide-react-native';
-import { useContext } from 'react';
 
-import { CloseButtonAlignmentContext } from './close-button-alignment';
 import {
   HeaderActionButton,
   type HeaderActionButtonProps,
@@ -9,18 +7,16 @@ import {
 
 type CloseButtonProps = Omit<
   HeaderActionButtonProps,
-  'icon' | 'variant' | 'iconSize' | 'iconAlignment'
+  'icon' | 'variant' | 'iconSize' | 'iconAlignment' | 'iconLeadingInset'
 >;
 
 export const CloseButton = (props: CloseButtonProps) => {
-  const alignment = useContext(CloseButtonAlignmentContext);
   return (
     <HeaderActionButton
       accessibilityLabel="Close"
       {...props}
       icon={X}
       iconSize={20}
-      iconAlignment={alignment}
       variant="ghost"
     />
   );

@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
 import { View } from 'react-native';
 
+import { SurfaceContent } from '@/components/surface-content';
+
 import { Heading } from '../../../components/text/heading';
 import { BackButton } from '../../../components/ui/back-button';
 
@@ -16,18 +18,14 @@ export const GroceryListHeader = ({
   actions,
 }: GroceryListHeaderProps) => {
   return (
-    <View className="px-4">
+    <SurfaceContent>
       <View className="h-11 flex-row items-center">
-        <BackButton
-          appearance="chevron"
-          className="-ml-4"
-          onPress={onBackPress}
-        />
+        <BackButton onPress={onBackPress} />
         <View className="min-w-0 flex-1 px-2">
           <Heading numberOfLines={1}>{listName ?? 'Grocery List'}</Heading>
         </View>
         {actions ? <View>{actions}</View> : null}
       </View>
-    </View>
+    </SurfaceContent>
   );
 };
