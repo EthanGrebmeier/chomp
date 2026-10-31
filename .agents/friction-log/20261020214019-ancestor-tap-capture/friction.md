@@ -1,6 +1,7 @@
 ---
 title: 'Ancestor tap capture dismisses keyboards in nested native sheets'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#70'
 ---
 
 ## Expected Behavior

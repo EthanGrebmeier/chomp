@@ -1,6 +1,7 @@
 ---
 title: 'Restored shopping route is excluded from splash readiness'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#124'
 ---
 
 ## Expected Behavior

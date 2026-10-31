@@ -1,6 +1,7 @@
 ---
 title: 'Legacy unit fixtures inherit the quantity release environment'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#80'
 ---
 
 ## Expected Behavior
