@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { PlusIcon } from 'lucide-react-native';
+import { PlusIcon, TagIcon } from 'lucide-react-native';
 import {
   useCallback,
   forwardRef,
@@ -8,6 +8,8 @@ import {
   useState,
 } from 'react';
 import { ScrollView, View } from 'react-native';
+
+import { SheetConfirmFooter } from '@/components/sheet-confirm-footer';
 
 import { CategoryLabel } from '../../components/category-label';
 import {
@@ -29,8 +31,7 @@ import {
 import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
-import { BackButton } from '../ui/back-button';
-import { ConfirmButton } from '../ui/confirm-button';
+import { CloseButton } from '../ui/close-button';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
@@ -171,6 +172,17 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
 
     const trigger = (
       <Pill
+        icon={
+          <Icon
+            as={TagIcon}
+            size={16}
+            className={
+              selectedCategoryColor
+                ? getCategoryTextClassName(selectedCategoryColor)
+                : 'text-muted-foreground'
+            }
+          />
+        }
         className={cn(
           selectedCategoryColor &&
             getCategorySurfaceClassName(selectedCategoryColor),
@@ -230,19 +242,19 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
             ref={sheetRef}
             onOpen={handleScrollToSelectedCategory}
             name={sheetName}
+            footer={
+              <SheetConfirmFooter
+                onPress={handleConfirm}
+                disabled={localCategory === null}
+              />
+            }
           >
             <BottomSheet.Header
               title="Choose a category"
-              backAction={
+              closeAction={
                 showBackButton ? (
-                  <BackButton onPress={() => sheetRef.current?.dismiss()} />
+                  <CloseButton onPress={() => sheetRef.current?.dismiss()} />
                 ) : undefined
-              }
-              primaryAction={
-                <ConfirmButton
-                  onPress={handleConfirm}
-                  disabled={localCategory === null}
-                />
               }
             />
             <ScrollView
@@ -250,7 +262,6 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
               className="max-h-96 px-8"
               nestedScrollEnabled
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 24 }}
             >
               <HapticPressable
                 onPress={handleOpenCreateCategory}

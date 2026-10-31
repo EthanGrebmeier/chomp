@@ -44,7 +44,7 @@ export function QuantitySection({
   const formattedTotal = formatQuantity(total);
 
   return (
-    <View className="mt-2">
+    <View className="mt-4">
       <HapticPressable
         accessibilityRole="button"
         accessibilityLabel={`Quantity, ${formattedTotal} ${unit}`}
@@ -70,7 +70,7 @@ export function QuantitySection({
         </View>
       </HapticPressable>
       {expanded ? (
-        <Animated.View entering={reveal} className="mt-1 px-4">
+        <Animated.View entering={reveal} className="mt-1">
           {entries.length === 0 ? (
             <Text className="py-4 text-muted-foreground">
               {history

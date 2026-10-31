@@ -8,7 +8,6 @@ import {
 } from '../../../components/ui/context-menu';
 import { HapticPressable } from '../../../components/ui/haptic-pressable';
 import { ListItem } from '../../../components/ui/list-item';
-import { useMealPlanOnlyToggle } from '../hooks/useMealPlanOnlyToggle';
 import { useRemoveItemFromMealPlan } from '../hooks/useRemoveItemFromMealPlan';
 import { MealPlanItemWithStore } from '../types';
 import { getMealPlanShoppingState } from '../utils/shopping-state';
@@ -18,7 +17,6 @@ import {
 } from '../utils/unchecked-linked-grocery-items';
 
 import { MealPlanCardContent } from './meal-plan-card-content';
-import { MEAL_PLAN_ONLY_LABEL } from './meal-plan-only';
 
 type MealPlanItemCardProps = {
   mealPlanItem: MealPlanItemWithStore;
@@ -33,22 +31,7 @@ const MealPlanItemCard = ({
 }: MealPlanItemCardProps) => {
   const { mutate: removeItemFromMealPlan } = useRemoveItemFromMealPlan();
   const shoppingState = getMealPlanShoppingState(mealPlanItem);
-  const {
-    isMealPlanOnly: mealPlanOnly,
-    setMealPlanOnly,
-    isPending,
-  } = useMealPlanOnlyToggle({
-    entry: { type: 'item', id: mealPlanItem.id },
-    isMealPlanOnly: !shoppingState.isShownOnGroceryList,
-  });
-
-  const statusLabel = shoppingState.allPurchased
-    ? 'Purchased'
-    : mealPlanItem.ignoredByGroceryList
-      ? MEAL_PLAN_ONLY_LABEL
-      : !shoppingState.isShownOnGroceryList
-        ? 'Not on grocery list'
-        : null;
+  const statusLabel = shoppingState.allPurchased ? 'Purchased' : null;
 
   const handleDelete = () => {
     Alert.alert(
@@ -92,15 +75,6 @@ const MealPlanItemCard = ({
 
   return (
     <ContextMenuRoot trigger={card}>
-      <ContextMenuItem
-        key="toggle-meal-plan-only"
-        disabled={isPending}
-        onSelect={() => setMealPlanOnly(!mealPlanOnly)}
-      >
-        <ContextMenuItemTitle>
-          {mealPlanOnly ? 'Add to list' : 'Hide from list'}
-        </ContextMenuItemTitle>
-      </ContextMenuItem>
       <ContextMenuItem key="delete-item" destructive onSelect={handleDelete}>
         <ContextMenuItemTitle>Delete Item</ContextMenuItemTitle>
       </ContextMenuItem>
