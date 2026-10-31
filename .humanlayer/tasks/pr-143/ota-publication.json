@@ -1,0 +1,14 @@
+[
+  {
+    "id": "01a193fe-6bb1-70f8-ad79-d6789557f5cb",
+    "createdAt": "2026-10-31T22:04:46.897Z",
+    "group": "4edfebf0-b233-48e5-9afc-cee6f48193aa",
+    "branch": "production",
+    "message": "Polish sheets, expanded composers, and meal-plan controls (1.0.5)",
+    "runtimeVersion": "1.0.5",
+    "platform": "ios",
+    "manifestPermalink": "https://u.expo.dev/update/01a193fe-6bb1-70f8-ad79-d6789557f5cb",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "88b05f6fd56ab6821b2b72e566316a77d19e8af8"
+  }
+]
