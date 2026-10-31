@@ -1,0 +1,14 @@
+[
+  {
+    "id": "01a18ea0-7f76-7349-8faa-9a7506470dda",
+    "createdAt": "2026-10-30T21:04:05.494Z",
+    "group": "8969812b-95b3-49fb-9394-bc4edbab43e4",
+    "branch": "production",
+    "message": "October 30: responsive grocery controls, unified sheets, inline store review, meal selection and purchase search",
+    "runtimeVersion": "1.0.6",
+    "platform": "ios",
+    "manifestPermalink": "https://u.expo.dev/update/01a18ea0-7f76-7349-8faa-9a7506470dda",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "872a026599b61e6fd61c7aa44fc380efc015748c"
+  }
+]
