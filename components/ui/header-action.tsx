@@ -11,6 +11,8 @@ type HeaderActionAppearance = {
   iconClassName?: string;
   iconSize?: number;
   iconAlignment?: 'center' | 'leading';
+  /** Empty space before the visible SVG stroke, in points. */
+  iconLeadingInset?: number;
 };
 export type HeaderActionButtonProps = Omit<
   ButtonProps,
@@ -24,15 +26,18 @@ export function HeaderActionButton({
   iconClassName,
   iconSize = 16,
   iconAlignment = 'center',
+  iconLeadingInset = 0,
   variant = 'secondary',
   ...props
 }: HeaderActionButtonProps) {
   return (
     <View
-      className={cn(
-        'size-11 items-center justify-center',
-        iconAlignment === 'leading' && '-ml-4'
-      )}
+      className="size-11 items-center justify-center"
+      style={
+        iconAlignment === 'leading'
+          ? { marginLeft: -(44 - iconSize) / 2 - iconLeadingInset }
+          : undefined
+      }
     >
       <Button {...props} variant={variant} size="icon" hitSlop={4}>
         <Icon

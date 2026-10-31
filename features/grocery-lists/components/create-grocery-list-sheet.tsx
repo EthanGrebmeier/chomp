@@ -106,7 +106,7 @@ export const CreateGroceryListSheet = forwardRef<
       <BottomSheet.SheetView>
         <BottomSheet.Header
           title="Name your list"
-          backAction={<CloseButton onPress={handleCancel} />}
+          closeAction={<CloseButton onPress={handleCancel} />}
         />
 
         <View className="gap-2">

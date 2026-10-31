@@ -35,7 +35,7 @@ export const AddItemConflictSheet = ({
       <BottomSheet.SheetView>
         <BottomSheet.Header
           title="Choose how to add this item"
-          backAction={<CloseButton onPress={onCancel} />}
+          closeAction={<CloseButton onPress={onCancel} />}
           subtitle="This item is already in the list. Increment its quantities or create a separate item."
         />
         <View className="gap-2">

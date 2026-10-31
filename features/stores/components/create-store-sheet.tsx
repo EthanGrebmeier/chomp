@@ -7,7 +7,6 @@ import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
-import { DeleteButton } from '../../../components/ui/delete-button';
 import { Text } from '../../../components/ui/text';
 import { useUncontrolledTextInput } from '../../../components/use-uncontrolled-text-input';
 import { createStore } from '../instant/create-store';
@@ -85,6 +84,13 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
       }}
       footer={
         <SheetFooter>
+          {onDelete ? (
+            <View className="mb-2">
+              <BottomActionButton variant="ghost" onPress={onDelete}>
+                <Text className="text-destructive">Delete store</Text>
+              </BottomActionButton>
+            </View>
+          ) : null}
           <BottomActionButton
             variant="default"
             onPress={onSubmit}
@@ -98,14 +104,6 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
       <BottomSheet.SheetView>
         <BottomSheet.Header
           title={submitLabel === 'Update' ? 'Rename store' : 'Add a store'}
-          primaryAction={
-            onDelete ? (
-              <DeleteButton
-                accessibilityLabel="Delete store"
-                onPress={onDelete}
-              />
-            ) : undefined
-          }
         />
         <View>
           <Text className="mb-2 text-sm font-medium text-muted-foreground">

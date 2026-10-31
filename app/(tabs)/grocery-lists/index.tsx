@@ -185,7 +185,7 @@ export default function GroceryListsIndex() {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="flex-row items-center justify-between px-5 pb-4 pt-2">
+      <View className="flex-row items-center justify-between px-4 pb-4 pt-2">
         <Heading size="lg">Grocery Lists</Heading>
         <DropdownMenuRoot
           trigger={<AddButton accessibilityLabel="Add grocery list" />}
@@ -222,9 +222,9 @@ export default function GroceryListsIndex() {
           data={groceryLists}
           renderItem={renderList}
           keyExtractor={item => item.id}
-          contentContainerClassName="px-5 pb-24 pt-1"
+          contentContainerClassName="px-4 pb-24 pt-1"
           ListEmptyComponent={
-            <View className="flex-1 items-center justify-center px-4 py-16">
+            <View className="flex-1 items-center justify-center py-16">
               <Text className="text-center text-muted-foreground">
                 No grocery lists available
               </Text>

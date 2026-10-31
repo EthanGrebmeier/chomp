@@ -1,61 +1,40 @@
-import { Href, router } from 'expo-router';
+import { type Href, router } from 'expo-router';
 import { ChevronLeftIcon } from 'lucide-react-native';
 
-import { cn } from '@/lib/utils';
+import {
+  HeaderActionButton,
+  type HeaderActionButtonProps,
+} from './header-action';
 
-import { Button } from './button';
-import { CloseButton } from './close-button';
-import { Icon } from './icon';
-
-interface BackButtonProps {
+type BackButtonProps = Omit<
+  HeaderActionButtonProps,
+  | 'icon'
+  | 'iconSize'
+  | 'iconAlignment'
+  | 'iconLeadingInset'
+  | 'variant'
+  | 'onPress'
+> & {
   onPress?: () => void;
-  className?: string;
   href?: Href;
-  appearance?: 'close' | 'chevron';
-}
+};
 
-export function BackButton({
-  onPress,
-  className,
-  href,
-  appearance = 'close',
-}: BackButtonProps) {
-  const handlePress = () => {
-    if (onPress) {
-      onPress();
-    } else {
-      if (href) {
-        router.dismissTo(href);
-      } else {
-        router.back();
-      }
-    }
-  };
-
-  if (appearance === 'chevron') {
-    return (
-      <Button
-        size="icon"
-        variant="ghost"
-        accessibilityLabel="Back"
-        onPress={handlePress}
-        className={cn('size-11', className)}
-      >
-        <Icon
-          as={ChevronLeftIcon}
-          size={24}
-          strokeWidth={3.5}
-          className="text-foreground"
-        />
-      </Button>
-    );
-  }
-
+/** Returns to a parent screen or an earlier step; use CloseButton to dismiss. */
+export function BackButton({ onPress, href, ...props }: BackButtonProps) {
   return (
-    <CloseButton
+    <HeaderActionButton
       accessibilityLabel="Back"
-      onPress={handlePress}
-      className={className}
+      {...props}
+      icon={ChevronLeftIcon}
+      iconSize={24}
+      iconAlignment="leading"
+      iconLeadingInset={7.5}
+      variant="ghost"
+      onPress={() => {
+        if (onPress) onPress();
+        else if (href) router.dismissTo(href);
+        else router.back();
+      }}
     />
   );
 }

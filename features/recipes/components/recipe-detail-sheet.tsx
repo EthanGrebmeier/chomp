@@ -51,7 +51,6 @@ export const RecipeDetailSheet = forwardRef<
       viewClassName="flex-1"
       onDismiss={handleDismiss}
     >
-      <BottomSheet.Header title="View recipe" />
       <View className="flex-1">
         {isLoading ? (
           <Animated.View
@@ -60,16 +59,19 @@ export const RecipeDetailSheet = forwardRef<
             exiting={FadeOut.duration(200)}
             className="flex-1"
           >
-            <RecipeDetailSkeleton />
+            <RecipeDetailSkeleton onClose={() => sheetRef.current?.dismiss()} />
           </Animated.View>
         ) : !recipe ? (
           <Animated.View
             key="not-found"
             entering={FadeIn.duration(300)}
             exiting={FadeOut.duration(200)}
-            className="flex-1 items-center justify-center"
+            className="flex-1"
           >
-            <Text className="text-muted-foreground">Recipe not found</Text>
+            <BottomSheet.Header title="View recipe" />
+            <View className="flex-1 items-center justify-center px-8">
+              <Text className="text-muted-foreground">Recipe not found</Text>
+            </View>
           </Animated.View>
         ) : (
           <Animated.View
