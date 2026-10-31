@@ -1,6 +1,7 @@
 import { MetaBarLayout } from '../meta-bar-layout';
 import { ScrollingMetaBar } from '../scrolling-meta-bar';
 
+import { SavedItemActions } from './add-item/saved-item-actions';
 import { CategorySheet } from './category-sheet';
 import { DeleteSavedItemButton } from './delete-saved-item-button';
 import { SaveItemToggle } from './save-item-toggle';
@@ -10,10 +11,10 @@ import { useItemSheet } from './use-item-sheet';
 
 export const MetaBar = ({
   trailingInset = 0,
-  savedItemActionsInHeader = false,
+  savedItemActionsInMenu = false,
 }: {
   trailingInset?: number;
-  savedItemActionsInHeader?: boolean;
+  savedItemActionsInMenu?: boolean;
 }) => {
   const {
     category,
@@ -41,6 +42,7 @@ export const MetaBar = ({
   return (
     <MetaBarLayout>
       <ScrollingMetaBar trailingInset={trailingInset}>
+        {savedItemActionsInMenu ? <SavedItemActions /> : null}
         <UnitSheet
           quantity={quantity}
           unit={unit}
@@ -62,7 +64,7 @@ export const MetaBar = ({
             setStoreName(nextStoreName);
           }}
         />
-        {mode === 'add' && !savedItemActionsInHeader ? (
+        {mode === 'add' && !savedItemActionsInMenu ? (
           <>
             <SaveItemToggle
               value={saveItem}

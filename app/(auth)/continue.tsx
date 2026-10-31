@@ -264,7 +264,7 @@ export default function ContinueSignUp() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <View className="flex-1 justify-center px-6">
+        <View className="flex-1 justify-center px-8">
           <View className="mb-8">
             <Text variant="h1" className="mb-2">
               Continue Sign Up

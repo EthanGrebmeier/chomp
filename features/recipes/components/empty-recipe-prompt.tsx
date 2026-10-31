@@ -8,7 +8,7 @@ import { CreateRecipeButton } from './create-recipe-button';
 
 export const EmptyRecipePrompt = ({ listId }: { listId?: string }) => {
   return (
-    <View className="flex-1 items-center justify-center px-6 py-8">
+    <View className="flex-1 items-center justify-center px-4 py-8">
       <View className="items-center">
         <View className="w-48 ">
           <Image

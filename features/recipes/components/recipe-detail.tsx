@@ -1,9 +1,10 @@
 import { ExternalLinkIcon, PlusIcon } from 'lucide-react-native';
 import { Linking, ScrollView, View } from 'react-native';
 
+import { SheetHeader } from '@/components/sheet-header';
+import { CloseButton } from '@/components/ui/close-button';
 import { HeaderMenuTrigger } from '@/components/ui/header-action';
 
-import { Heading } from '../../../components/text/heading';
 import { BackButton } from '../../../components/ui/back-button';
 import { Button } from '../../../components/ui/button';
 import { Icon } from '../../../components/ui/icon';
@@ -45,16 +46,11 @@ const RecipeDetailContent = ({
 
   return (
     <View className="flex-1">
-      {/* Fixed navigation bar; the title lives in the scrolling content. */}
-      <View className="h-11 flex-row items-center justify-between px-8">
-        <BackButton onPress={onClose} />
-        <RecipeDropdownMenu
-          trigger={<HeaderMenuTrigger accessibilityLabel="Recipe actions" />}
-          recipe={recipe}
-          listId={listId}
-          onClose={onClose}
-        />
-      </View>
+      <SheetHeader
+        title={recipe.name}
+        backAction={!onClose ? <BackButton /> : undefined}
+        closeAction={onClose ? <CloseButton onPress={onClose} /> : undefined}
+      />
 
       <ScrollView
         className="flex-1"
@@ -63,9 +59,16 @@ const RecipeDetailContent = ({
       >
         {/* Overview */}
         <View className="gap-3 px-8">
-          <View className="items-start gap-2">
-            <Heading size="lg">{recipe.name}</Heading>
+          <View className="flex-row items-center justify-between gap-2">
             <MealTagBadge mealTag={recipe.mealTag} />
+            <RecipeDropdownMenu
+              trigger={
+                <HeaderMenuTrigger accessibilityLabel="Recipe actions" />
+              }
+              recipe={recipe}
+              listId={listId}
+              onClose={onClose}
+            />
           </View>
           {recipe.description ? (
             <Text variant="lead">{recipe.description}</Text>

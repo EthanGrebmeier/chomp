@@ -84,13 +84,13 @@ export async function planQuantityItem(args: AddItemToDateArgs) {
   const ingredient: PlannedIngredient = {
     ...ingredientFromApp(args),
     store: args.storeId ?? args.defaultStore?.id ?? '',
-    selected: args.showOnGroceryList ?? true,
+    selected: true,
     overridden: false,
     recipeIngredientId: null,
   };
   const destinations = await chooseItemDestinations(
     args.listId,
-    ingredient.selected ? [ingredient] : [],
+    [ingredient],
     args.reviewConflicts
   );
   const session = listSession(args.listId);
@@ -267,14 +267,6 @@ export function selectQuantityIngredient(
 ) {
   const { meal } = mealForIngredient(snapshotRowId);
   return selectQuantityIngredients(meal.id, [{ snapshotRowId, isSelected }]);
-}
-export function setQuantityMealIgnored(mealId: string, ignored: boolean) {
-  const session = documentSession(mealId);
-  const meal = record(session.state, mealId, 'meal');
-  return selectQuantityIngredients(
-    mealId,
-    meal.ingredients.map(i => ({ snapshotRowId: i.id, isSelected: !ignored }))
-  );
 }
 export async function overrideQuantityIngredient({
   snapshotRowId,

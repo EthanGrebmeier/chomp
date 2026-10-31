@@ -19,17 +19,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
 import { sheetCardResize } from '@/components/animated/sheet-motion';
-import { MetaBarTrailingInsetContext } from '@/components/meta-bar-insets';
 import {
-  SHEET_TOP_STYLE,
-  SHEET_CARD_STYLE,
-  SheetFooter,
-} from '@/components/sheet-content';
-import { SheetHeader } from '@/components/sheet-header';
+  ComposerHeader,
+  ComposerCloseButton,
+  ComposerActionSlot,
+  composerSheetStyles,
+  COMPOSER_CONTENT_CLASS,
+} from '@/components/item-sheet/composer-layout';
+import { MetaBarTrailingInsetContext } from '@/components/meta-bar-insets';
+import { SheetFooter } from '@/components/sheet-content';
 import { SheetPage } from '@/components/sheet-page';
 import { SheetScreenOverlay } from '@/components/sheet-screen-overlay';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
-import { CloseButton } from '@/components/ui/close-button';
 import { InlineStoreReviewCard } from '@/features/quantity/app/inline-store-review-card';
 import { useInlineStoreReview } from '@/features/quantity/app/use-inline-store-review';
 import { useStoreConflictPreview } from '@/features/quantity/app/use-store-conflict-preview';
@@ -52,7 +53,6 @@ import { Icon } from '../../../components/ui/icon';
 import { Text } from '../../../components/ui/text';
 import { navigation } from '../../../lib/navigation';
 import { THEME } from '../../../lib/theme';
-import { cn } from '../../../lib/utils';
 import { RecipeWithIngredients } from '../../recipes/types';
 import { useAddItemToDate } from '../hooks/useAddItemToMealPlan';
 import { useAddRecipeToDate } from '../hooks/useAddRecipeToMealPlan';
@@ -76,7 +76,6 @@ import {
 } from './meal-plan-item-context';
 import { MealPlanItemForm } from './meal-plan-item-form';
 import { MealPlanMetaBar } from './meal-plan-meta-bar';
-import { AddToGroceryListSwitch } from './meal-plan-only';
 import { MealScheduleSentence } from './meal-schedule-sentence';
 
 type AddMode = 'recipe' | 'item';
@@ -94,9 +93,9 @@ const ModeMenu = ({
         accessible
         accessibilityRole="button"
         accessibilityLabel="Change meal-plan entry type"
-        className="min-h-11 flex-row items-center justify-center gap-2"
+        className="min-h-11 flex-row items-center justify-start gap-2"
       >
-        <Text className="text-lg font-semibold">
+        <Text className="text-lg font-medium">
           {mode === 'item' ? 'Plan item' : 'Plan recipe'}
         </Text>
         <Icon
@@ -139,10 +138,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const { colorScheme } = useColorScheme();
   const backgroundColor =
     THEME[colorScheme === 'dark' ? 'dark' : 'light'].background;
-  const expandedHeight = Math.min(
-    windowHeight * 0.94,
-    windowHeight - insets.top - 12
-  );
+  const expandedHeight = windowHeight - insets.top;
   const itemInputRef = useRef<TextInput>(null);
   const {
     itemName,
@@ -188,7 +184,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       })
     );
   }, [mode, contentOpacity]);
-  const [isMealPlanOnly, setIsMealPlanOnly] = useState(false);
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeWithIngredients | null>(null);
   const [ingredientRows, setIngredientRows] = useState<
@@ -222,7 +217,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
 
   const resetSheetState = () => {
     setMode('recipe');
-    setIsMealPlanOnly(false);
     setSelectedRecipe(null);
     setIngredientRows([]);
     setRecipeDate(undefined);
@@ -290,7 +284,6 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       {
         listId,
         reviewConflicts: review.review,
-        showOnGroceryList: !isMealPlanOnly,
         name: itemName,
         quantity,
         unit,
@@ -370,7 +363,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
   const { data: defaultStore } = useDefaultStore();
   const itemConflict = useStoreConflictPreview(
     isSessionOpen ? listId : undefined,
-    isMealPlanOnly ? [] : [{ name: itemName, unit, storeId }],
+    [{ name: itemName, unit, storeId }],
     defaultStore?.id
   );
   const recipeConflict = useStoreConflictPreview(
@@ -402,14 +395,15 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
     <TrueSheet
       name="add-to-meal-plan-sheet"
       ref={sheetRef}
-      detents={!expanded ? ['auto'] : [expandedHeight / windowHeight]}
+      // Full height attaches the native sheet to the screen edges on iOS 26.
+      detents={!expanded ? ['auto'] : [1]}
       scrollable={expanded}
       draggable={expanded}
       backgroundColor={!expanded ? 'transparent' : backgroundColor}
       cornerRadius={!expanded ? 0 : undefined}
       grabber={expanded}
       elevation={!expanded ? 0 : undefined}
-      insetAdjustment="never"
+      insetAdjustment={expanded ? 'automatic' : 'never'}
       onWillPresent={() => setIsSessionOpen(true)}
       onWillDismiss={() => {
         review.close();
@@ -434,8 +428,8 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
           <View
             style={
               expanded
-                ? { height: expandedHeight, ...SHEET_TOP_STYLE }
-                : { paddingHorizontal: 8, paddingBottom: 24 }
+                ? { height: expandedHeight, ...composerSheetStyles.nativeFrame }
+                : composerSheetStyles.floatingFrame
             }
           >
             {!expanded ? (
@@ -450,13 +444,12 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
               collapsable={false}
               collapsableChildren={false}
               layout={sheetCardResize}
-              style={!expanded ? SHEET_CARD_STYLE : undefined}
-              className={cn(
-                'overflow-hidden bg-background',
-                !expanded
-                  ? 'rounded-[32px] border border-border'
-                  : 'min-h-0 flex-1'
-              )}
+              className="overflow-hidden border-border bg-background"
+              style={
+                expanded
+                  ? composerSheetStyles.nativeCard
+                  : composerSheetStyles.floatingCard
+              }
             >
               <View
                 className={expanded ? 'flex-1' : undefined}
@@ -474,12 +467,12 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
                     selectedRecipe ? 'no-hide-descendants' : 'auto'
                   }
                 >
-                  <SheetHeader
+                  <ComposerHeader
                     centerContent={
                       <ModeMenu mode={mode} onModeChange={handleModeChange} />
                     }
-                    backAction={
-                      <CloseButton
+                    closeAction={
+                      <ComposerCloseButton
                         accessibilityLabel="Close meal planner"
                         onPress={() => void sheetRef.current?.dismiss()}
                       />
@@ -491,48 +484,46 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
                     contentAnimatedStyle,
                     { display: mode === 'item' ? 'flex' : 'none' },
                   ]}
-                  className="px-8"
+                  className={COMPOSER_CONTENT_CLASS}
                 >
                   <View>{fields}</View>
-                  <AddToGroceryListSwitch
-                    className="py-2"
-                    isMealPlanOnly={isMealPlanOnly}
-                    onMealPlanOnlyChange={setIsMealPlanOnly}
-                    disabled={isAddingItem}
-                  />
                   <View className="mt-1 min-h-11 flex-row items-center gap-2">
                     <View className="min-w-0 flex-1">
                       <MetaBarTrailingInsetContext.Provider value={0}>
                         {metadata}
                       </MetaBarTrailingInsetContext.Provider>
                     </View>
-                    <Button
-                      key={itemConflict.needsReview ? 'review' : 'add'}
-                      size={itemConflict.needsReview ? 'default' : 'icon'}
-                      className={
-                        itemConflict.needsReview ? 'h-10 gap-1 px-3' : 'size-10'
-                      }
-                      hitSlop={2}
-                      accessibilityLabel={
-                        itemConflict.needsReview
-                          ? itemConflict.label
-                          : 'Add item to meal plan'
-                      }
-                      onPress={handleAddItem}
-                      disabled={!isValid() || isAddingItem}
-                    >
-                      {itemConflict.needsReview ? <Text>Review</Text> : null}
-                      <Icon
-                        as={
+                    <ComposerActionSlot>
+                      <Button
+                        key={itemConflict.needsReview ? 'review' : 'add'}
+                        size={itemConflict.needsReview ? 'default' : 'icon'}
+                        className={
                           itemConflict.needsReview
-                            ? ChevronRightIcon
-                            : ArrowUpIcon
+                            ? 'h-10 gap-1 px-3'
+                            : 'size-10'
                         }
-                        size={22}
-                        strokeWidth={2.5}
-                        className="text-primary-foreground"
-                      />
-                    </Button>
+                        hitSlop={2}
+                        accessibilityLabel={
+                          itemConflict.needsReview
+                            ? itemConflict.label
+                            : 'Add item to meal plan'
+                        }
+                        onPress={handleAddItem}
+                        disabled={!isValid() || isAddingItem}
+                      >
+                        {itemConflict.needsReview ? <Text>Review</Text> : null}
+                        <Icon
+                          as={
+                            itemConflict.needsReview
+                              ? ChevronRightIcon
+                              : ArrowUpIcon
+                          }
+                          size={22}
+                          strokeWidth={2.5}
+                          className="text-primary-foreground"
+                        />
+                      </Button>
+                    </ComposerActionSlot>
                   </View>
                 </Animated.View>
                 <Animated.View
@@ -551,6 +542,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
                     }
                   >
                     <RecipeSelector
+                      spacing="standard"
                       fillHeight
                       onSelectRecipe={handleSelectRecipe}
                       onCreateRecipe={handleCreateRecipe}

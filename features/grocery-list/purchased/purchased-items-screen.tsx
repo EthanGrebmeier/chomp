@@ -138,7 +138,7 @@ export function PurchasedItemsScreen({
         />
       )}
       {quantity.error ? (
-        <View className="px-6 py-12">
+        <View className="px-4 py-12">
           <Text
             accessibilityRole="alert"
             className="text-center text-destructive"
@@ -184,7 +184,7 @@ export function PurchasedItemsScreen({
             />
           )}
           ListEmptyComponent={
-            <View className="items-center gap-3 px-8 py-16">
+            <View className="items-center gap-3 px-4 py-16">
               <Icon as={Receipt} size={36} className="text-muted-foreground" />
               <Text className="text-center text-xl font-semibold">
                 {items.length ? 'No matching purchases' : 'No purchases yet'}

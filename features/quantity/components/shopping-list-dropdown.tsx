@@ -1,3 +1,4 @@
+import { ListIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import {
@@ -8,6 +9,7 @@ import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
 } from '@/components/native-dropdown';
+import { Icon } from '@/components/ui/icon';
 import { Pill } from '@/components/ui/pill';
 
 export function ShoppingListDropdown({
@@ -30,7 +32,14 @@ export function ShoppingListDropdown({
           accessibilityLabel={`Choose shopping list, current list: ${selectedList?.name ?? 'Shopping list'}`}
           className="min-h-11 justify-center"
         >
-          <Pill hasValue>{selectedList?.name ?? 'Shopping list'}</Pill>
+          <Pill
+            hasValue
+            icon={
+              <Icon as={ListIcon} size={16} className="text-muted-foreground" />
+            }
+          >
+            {selectedList?.name ?? 'Shopping list'}
+          </Pill>
         </View>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
