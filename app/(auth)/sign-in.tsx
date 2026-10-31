@@ -35,7 +35,7 @@ export default function SignIn() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="px-4">
+      <View className="px-8">
         <BackButton />
       </View>
 
@@ -44,7 +44,7 @@ export default function SignIn() {
         accessible={false}
         onPress={() => Keyboard.dismiss()}
       >
-        <View className="w-full flex-1 px-4 pt-8">
+        <View className="w-full flex-1 px-8 pt-8">
           <View className="w-full gap-4">
             <View className="w-full items-center gap-2 text-center">
               <View className="w-full translate-x-[-6px] translate-y-[-18px] items-center justify-center">

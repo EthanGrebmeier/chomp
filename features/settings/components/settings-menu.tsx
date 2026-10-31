@@ -37,7 +37,7 @@ export function SettingsMenu({
         <SheetHeader
           className="mb-0"
           title="Settings"
-          backAction={<CloseButton onPress={onClose} />}
+          closeAction={<CloseButton onPress={onClose} />}
         />
         <View className="gap-4 px-8 pb-6">
           <HapticPressable

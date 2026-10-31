@@ -43,7 +43,7 @@ export default function Welcome() {
         colorScheme === 'dark' ? 'bg-[#2020B1]' : 'bg-background'
       )}
     >
-      <View className="mt-12 flex-1 justify-between  px-6">
+      <View className="mt-12 flex-1 justify-between  px-8">
         <View className="items-center justify-start gap-2">
           <Text
             className={cn(

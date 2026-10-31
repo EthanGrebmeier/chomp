@@ -28,12 +28,12 @@ import { View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import PagerView from 'react-native-pager-view';
 
+import { SheetConfirmFooter } from '@/components/sheet-confirm-footer';
 import { cn } from '@/lib/utils';
 
 import { BottomSheet } from './bottom-sheet';
-import { BackButton } from './ui/back-button';
 import { Button } from './ui/button';
-import { ConfirmButton } from './ui/confirm-button';
+import { CloseButton } from './ui/close-button';
 import { HapticPressable } from './ui/haptic-pressable';
 import { Icon } from './ui/icon';
 import { Text } from './ui/text';
@@ -336,18 +336,18 @@ export const CalendarSheet = forwardRef<CalendarSheetRef, CalendarSheetProps>(
         onDismiss={onClose}
         ref={bottomSheetRef}
         insetAdjustment="never"
+        footer={
+          <SheetConfirmFooter
+            onPress={handleConfirm}
+            disabled={!internalSelectedDate}
+          />
+        }
       >
         <BottomSheet.SheetView className="gap-4">
           <BottomSheet.Header
             className="mb-0"
             title={headerTitle}
-            backAction={<BackButton onPress={handleClose} />}
-            primaryAction={
-              <ConfirmButton
-                onPress={handleConfirm}
-                disabled={!internalSelectedDate}
-              />
-            }
+            closeAction={<CloseButton onPress={handleClose} />}
           />
 
           <View className="-mx-4 gap-2 border-b border-border px-4 pb-4">

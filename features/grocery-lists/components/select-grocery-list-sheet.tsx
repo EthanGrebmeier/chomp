@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 
-import { HeaderMenuTrigger } from '@/components/ui/header-action';
+import { SheetFooter } from '@/components/sheet-content';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import {
@@ -181,20 +181,25 @@ export const SelectGroceryListSheet = forwardRef<
           name={name}
           ref={sheetRef}
           scrollable
-          onStartClose={onStartClose}
-        >
-          <BottomSheet.Header
-            title={title}
-            subtitle={description}
-            primaryAction={
+          footer={
+            <SheetFooter>
               <DropdownMenuRoot
                 trigger={
-                  <HeaderMenuTrigger
-                    size="compact"
-                    icon={PlusIcon}
-                    variant="default"
+                  <View
+                    accessible
+                    accessibilityRole="button"
                     accessibilityLabel="Add grocery list"
-                  />
+                    className="min-h-12 flex-row items-center justify-center gap-2 rounded-full bg-primary px-4"
+                  >
+                    <Icon
+                      as={PlusIcon}
+                      size={18}
+                      className="text-primary-foreground"
+                    />
+                    <Text className="font-semibold text-primary-foreground">
+                      Add grocery list
+                    </Text>
+                  </View>
                 }
               >
                 <DropdownMenuContent>
@@ -224,13 +229,16 @@ export const SelectGroceryListSheet = forwardRef<
                   )}
                 </DropdownMenuContent>
               </DropdownMenuRoot>
-            }
-          />
+            </SheetFooter>
+          }
+          onStartClose={onStartClose}
+        >
+          <BottomSheet.Header title={title} subtitle={description} />
 
           <ScrollView
             nestedScrollEnabled
             showsVerticalScrollIndicator={false}
-            className="gap-1 px-8 pb-4"
+            className="gap-1 px-8"
           >
             {lists?.grocery_lists.map(list => {
               const isSelected = list.id === selectedListId;

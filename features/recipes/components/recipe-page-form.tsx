@@ -15,8 +15,8 @@ import { cn } from '@/lib/utils';
 
 const mealTimeOptions = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
 
-// Bottom action (minimum 48 points) + sticky bar padding (pt-3) + gap above the keyboard.
-const STICKY_SUBMIT_OFFSET = 72;
+// Bottom action (minimum 48 points) + sticky bar padding (pt-4) + gap above the keyboard.
+const STICKY_SUBMIT_OFFSET = 48 + 16 + 24;
 
 export type RecipePageFormData = {
   name: string;
@@ -173,12 +173,12 @@ export const RecipePageForm = ({
       <KeyboardStickyView
         offset={{
           closed: 0,
-          opened: bottomInset - 12,
+          opened: bottomInset,
         }}
       >
         <View
-          className="bg-background pt-3"
-          style={{ paddingBottom: bottomInset }}
+          className="bg-background pt-4"
+          style={{ paddingBottom: bottomInset + 24 }}
         >
           <BottomActionButton
             onPress={handleSubmit}
