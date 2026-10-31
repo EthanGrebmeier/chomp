@@ -127,12 +127,12 @@ function ConflictComparison({
           />
         </>
       ) : (
-        <View className="gap-3 rounded-2xl bg-muted p-4">
+        <View className="gap-2">
           {[
             { label: 'On your list', item: existing },
             { label: 'Adding', item: conflict.incoming },
           ].map(({ label, item }) => (
-            <View key={label} className="gap-1">
+            <View key={label} className="gap-1 rounded-xl bg-muted px-3 py-3">
               <View className="flex-row flex-wrap justify-between gap-2">
                 <Text className="text-muted-foreground">{label}</Text>
                 <Text className="font-semibold" style={styles.tabular}>
@@ -148,13 +148,11 @@ function ConflictComparison({
           ))}
         </View>
       )}
-      {!conflict.canIncrement ? (
+      {!conflict.canIncrement && unitMismatch ? (
         <Text className="text-sm text-muted-foreground">
-          {!unitMismatch
-            ? 'These quantities can be added together. Choose a store for the combined item, or keep them separate.'
-            : storeMismatch
-              ? 'These items use different units and stores. Keep them separate, or set a combined total and choose its store.'
-              : 'These items use different units. Keep them separate, or set a combined total. Quantities won’t be converted automatically.'}
+          {storeMismatch
+            ? 'These items use different units and stores. Keep them separate, or set a combined total and choose its store.'
+            : 'These items use different units. Keep them separate, or set a combined total. Quantities won’t be converted automatically.'}
         </Text>
       ) : null}
     </View>
