@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
 });
 
 type PillProps = {
-  children: ReactNode;
+  children?: ReactNode;
   onClear?: () => void;
   className?: string;
   icon?: ReactNode;
@@ -44,16 +44,18 @@ export const Pill = ({
         style={styles.container}
       >
         {icon}
-        <Text
-          variant="label"
-          className={cn(
-            'text-base leading-5',
-            !hasValue && 'text-muted-foreground',
-            textClassName
-          )}
-        >
-          {children}
-        </Text>
+        {children != null ? (
+          <Text
+            variant="label"
+            className={cn(
+              'text-base leading-5',
+              !hasValue && 'text-muted-foreground',
+              textClassName
+            )}
+          >
+            {children}
+          </Text>
+        ) : null}
       </View>
       {hasValue && onClear && (
         <HapticPressable

@@ -1,4 +1,4 @@
-import { HeaderMenuTrigger } from '@/components/ui/header-action';
+import { MetabarMenuTrigger } from '@/components/ui/metabar-menu-trigger';
 
 import {
   DropdownMenuContent,
@@ -19,7 +19,7 @@ export const MealItemDropdownMenu = ({
 }: MealItemDropdownMenuProps) => {
   return (
     <DropdownMenuRoot
-      trigger={<HeaderMenuTrigger accessibilityLabel="Meal item actions" />}
+      trigger={<MetabarMenuTrigger accessibilityLabel="Meal item actions" />}
     >
       <DropdownMenuContent>
         <DropdownMenuItem onSelect={onRemove} destructive key="remove-item">

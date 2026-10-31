@@ -56,8 +56,10 @@ function AppMetadataBar({
   row,
   onChange,
   children,
+  leadingAction,
 }: {
   children?: React.ReactNode;
+  leadingAction?: React.ReactNode;
   row: import('../types').ShoppingRow;
   onChange: (
     details: Parameters<typeof import('../shopping').editShoppingDetails>[3]
@@ -65,7 +67,8 @@ function AppMetadataBar({
 }) {
   const { data } = db.useQuery({ stores: {} });
   return (
-    <ScrollingMetaBar contentClassName="gap-3">
+    <ScrollingMetaBar>
+      {leadingAction}
       <CategorySheet
         category={row.category}
         onSelect={value => {

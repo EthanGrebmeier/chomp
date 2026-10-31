@@ -45,7 +45,7 @@ type StoresListProps = {
 export const StoresList = ({ stores, onEditStore }: StoresListProps) => {
   if (stores.length === 0) {
     return (
-      <View className="-mt-32 flex-1 items-center justify-center px-4">
+      <View className="-mt-32 flex-1 items-center justify-center px-8">
         <EmptyHeading>No stores</EmptyHeading>
         <EmptySubtext>
           Stores help organize where you shop for items.

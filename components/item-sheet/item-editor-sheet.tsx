@@ -6,7 +6,6 @@ import { View } from 'react-native';
 import { Button } from '../ui/button';
 import { Icon } from '../ui/icon';
 
-import { SavedItemActions } from './add-item/saved-item-actions';
 import { ItemComposerCard } from './item-composer-card';
 import { ItemForm } from './item-form';
 import { ItemSuggestions } from './item-suggestions';
@@ -82,12 +81,9 @@ export function ItemEditorSheet({
             <ItemComposerCard
               title={title}
               onClose={close}
-              headerActions={
-                savedItemActions ? <SavedItemActions /> : undefined
-              }
               metadata={
                 metadata ?? (
-                  <MetaBar savedItemActionsInHeader={savedItemActions} />
+                  <MetaBar savedItemActionsInMenu={savedItemActions} />
                 )
               }
               action={

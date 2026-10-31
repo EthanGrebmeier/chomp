@@ -34,7 +34,6 @@ import { BottomSheet } from '../../bottom-sheet';
 import { SheetContent } from '../../sheet-content';
 import { BackButton } from '../../ui/back-button';
 import { Checkbox } from '../../ui/checkbox';
-import { ExternalLinkButton } from '../../ui/external-link-button';
 import { HapticPressable } from '../../ui/haptic-pressable';
 import { ListItem } from '../../ui/list-item';
 import { Text } from '../../ui/text';
@@ -396,8 +395,8 @@ export const IngredientSelector = forwardRef<
   );
 
   const isAddingResolved = isAdding ?? isAddingInternal;
-  const resolvedBottomInset =
-    bottomContentInset ?? (shouldShowFooter ? 88 : 16);
+  // The footer is in normal flow, so the list needs only its trailing gutter.
+  const resolvedBottomInset = bottomContentInset ?? 16;
 
   useEffect(() => {
     onBusyStateChange?.(isAddingResolved);
@@ -418,23 +417,31 @@ export const IngredientSelector = forwardRef<
     <>
       <View className="relative flex-1">
         {showHeader ? (
-          <BottomSheet.Header
-            title="Choose ingredients"
-            subtitle={recipe.name}
-            backAction={<BackButton onPress={onBack} />}
-            primaryAction={
-              mode === 'add-to-list' ? (
-                <ExternalLinkButton onPress={handleGoToRecipe} />
-              ) : undefined
-            }
-          />
+          <>
+            <BottomSheet.Header
+              title="Choose ingredients"
+              backAction={<BackButton onPress={onBack} />}
+            />
+          </>
         ) : null}
 
-        {recipeNameHeading ? (
+        {recipeNameHeading || showHeader ? (
           <SheetContent className="gap-2">
-            <Text variant="h4" className="text-left">
+            <Text
+              accessibilityRole="header"
+              className="text-left text-2xl font-semibold leading-8"
+            >
               {recipe.name}
             </Text>
+            {showHeader && mode === 'add-to-list' ? (
+              <HapticPressable
+                accessibilityRole="button"
+                onPress={handleGoToRecipe}
+                className="min-h-11 justify-center self-start active:opacity-60"
+              >
+                <Text className="font-medium text-primary">View recipe</Text>
+              </HapticPressable>
+            ) : null}
             {scheduleControl}
           </SheetContent>
         ) : null}
@@ -446,7 +453,7 @@ export const IngredientSelector = forwardRef<
               !recipeNameHeading &&
               selectionHeader !== 'compact' &&
               'pt-4',
-            recipeNameHeading && 'pt-4'
+            (recipeNameHeading || showHeader) && 'pt-4'
           )}
         >
           <View className="min-w-0 flex-1 pr-3">
@@ -476,7 +483,6 @@ export const IngredientSelector = forwardRef<
         <ScrollView
           className="min-h-24 flex-1"
           contentContainerStyle={{ paddingBottom: resolvedBottomInset }}
-          contentInset={{ bottom: resolvedBottomInset }}
           scrollIndicatorInsets={{ bottom: resolvedBottomInset }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"

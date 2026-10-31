@@ -173,7 +173,7 @@ export const SavedItemsList = ({
 
   if (items.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center px-4">
+      <View className="flex-1 items-center justify-center px-8">
         <EmptyHeading>No saved items</EmptyHeading>
         <EmptySubtext>
           Items you add will appear here for quick access.

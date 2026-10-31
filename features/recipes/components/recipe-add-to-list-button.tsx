@@ -177,15 +177,9 @@ export const RecipeAddToListButton = ({
             <BottomSheet.Header
               title="Choose ingredients"
               subtitle={
-                <>
-                  {recipe.name}
-                  {'\n'}
-                  <Text variant="caption">
-                    {targetList?.name
-                      ? `Adding to ${targetList.name}`
-                      : 'Adding to your grocery list'}
-                  </Text>
-                </>
+                targetList?.name
+                  ? `Adding to ${targetList.name}`
+                  : 'Adding to your grocery list'
               }
             />
             {selectedListIdForIngredients && (
@@ -203,6 +197,7 @@ export const RecipeAddToListButton = ({
                 onBusyStateChange={setIsSubmitting}
                 showFooter={false}
                 showHeader={false}
+                recipeNameHeading
                 selectionHeader="compact"
               />
             )}

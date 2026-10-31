@@ -1,5 +1,5 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { PlusIcon } from 'lucide-react-native';
+import { PlusIcon, StoreIcon } from 'lucide-react-native';
 import {
   forwardRef,
   useCallback,
@@ -10,6 +10,7 @@ import {
 import { ScrollView, View } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { SheetConfirmFooter } from '@/components/sheet-confirm-footer';
 import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
 
@@ -19,8 +20,7 @@ import { useStores } from '../../features/stores/instant/use-stores';
 import { cn } from '../../lib/utils';
 import { WithLayoutTransition } from '../animated/with-layout-transition';
 import { BottomSheet } from '../bottom-sheet';
-import { BackButton } from '../ui/back-button';
-import { ConfirmButton } from '../ui/confirm-button';
+import { CloseButton } from '../ui/close-button';
 import { HapticPressable } from '../ui/haptic-pressable';
 import { Icon } from '../ui/icon';
 import { Pill } from '../ui/pill';
@@ -207,6 +207,9 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
 
     const trigger = (
       <Pill
+        icon={
+          <Icon as={StoreIcon} size={16} className="text-muted-foreground" />
+        }
         className={cn(disabled && 'opacity-50')}
         textClassName={cn(
           'font-semibold',
@@ -271,26 +274,25 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
             scrollable
             ref={sheetRef}
             name={sheetName}
+            footer={
+              <SheetConfirmFooter
+                onPress={handleConfirm}
+                disabled={localStoreId === null}
+              />
+            }
           >
             <BottomSheet.Header
-              backAction={
+              closeAction={
                 showBackButton ? (
-                  <BackButton onPress={() => sheetRef.current?.dismiss()} />
+                  <CloseButton onPress={() => sheetRef.current?.dismiss()} />
                 ) : undefined
               }
               title="Choose a store"
-              primaryAction={
-                <ConfirmButton
-                  onPress={handleConfirm}
-                  disabled={localStoreId === null}
-                />
-              }
             />
 
             <ScrollView
               className="max-h-96 px-8"
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 24 }}
             >
               <HapticPressable
                 onPress={handleOpenCreateStore}
@@ -367,9 +369,9 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
             <BottomSheet.Header
               className="mb-0"
               title="Add a store"
-              backAction={
+              closeAction={
                 showBackButton ? (
-                  <BackButton
+                  <CloseButton
                     onPress={() => createStoreSheetRef.current?.dismiss()}
                   />
                 ) : undefined
