@@ -1,6 +1,7 @@
 ---
 title: 'Repeated quantity-history replay blocks checkbox debounce timers'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#129'
 ---
 
 ## Expected Behavior

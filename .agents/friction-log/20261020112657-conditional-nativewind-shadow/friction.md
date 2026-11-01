@@ -1,6 +1,7 @@
 ---
 title: 'Conditional NativeWind shadow triggers misleading navigation-context crash'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#66'
 ---
 
 ## Expected Behavior
