@@ -1,6 +1,7 @@
 ---
 title: 'Quantity entry verifies the complete history after subscribing to the same history'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#131'
 ---
 
 ## Expected Behavior

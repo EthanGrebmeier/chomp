@@ -1,6 +1,7 @@
 ---
 title: 'Checked-section debounce follows serialized save publication instead of tap intent'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#128'
 ---
 
 ## Expected Behavior
