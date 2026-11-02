@@ -4,7 +4,6 @@ import { View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { useCategoryOptions } from '@/features/categories/use-category-options';
 import { useGroceryListItems } from '@/features/grocery-list/instant/useGroceryListItems';
 import type { ShoppingSession } from '@/features/grocery-list/shopping/destinations';
 import { ShoppingScreen } from '@/features/grocery-list/shopping/shopping-screen';
@@ -76,17 +75,12 @@ function ShoppingRouteContent({
     isLoading: listsLoading,
     error: listsError,
   } = useGroceryLists();
-  const categories = useCategoryOptions();
   const quantity = useQuantityList(listId);
   const [contentRendered, setContentRendered] = useState(false);
   const handleContentReady = useCallback(() => setContentRendered(true), []);
-  const loadError = error ?? listsError ?? categories.error;
+  const loadError = error ?? listsError;
   const dataReady =
-    !loadError &&
-    !isLoading &&
-    !listsLoading &&
-    !categories.isLoading &&
-    quantity.canEdit;
+    !loadError && !isLoading && !listsLoading && quantity.canEdit;
   useStartupScreenReady(
     Boolean(loadError) || (dataReady && contentRendered),
     'shopping'

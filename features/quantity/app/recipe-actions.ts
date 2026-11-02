@@ -2,6 +2,7 @@ import { id } from '@instantdb/react-native';
 
 import type { AddRecipeToListArgs } from '@/features/recipes/instant/add-recipe-to-list';
 import { db } from '@/lib/instant';
+import { readCachedQuery } from '@/lib/instant/read-cached-query';
 
 import { commitOperations, decodeHistory } from '../commits';
 import { quantityCommitStore } from '../instant-commit-store';
@@ -22,10 +23,10 @@ export async function addQuantityRecipe({
   reviewConflicts,
 }: AddRecipeToListArgs) {
   listSession(listId);
-  const result = await db.queryOnce({
-    recipes: { $: { where: { id: recipeId } } },
+  const result = await readCachedQuery({
+    recipes: { recipe_ingredients: { store: {} } },
   });
-  const recipe = result.data.recipes[0];
+  const recipe = result.data.recipes.find(recipe => recipe.id === recipeId);
   if (!recipe) throw new Error('Recipe is no longer available');
   const incoming = ingredients.map(i =>
     ingredientFromApp({ ...i, storeId: i.storeId ?? defaultStore?.id })

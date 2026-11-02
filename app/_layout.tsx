@@ -209,11 +209,7 @@ function InitialLayout() {
   );
 }
 
-function RootLayoutContent({
-  isStartupUpdateReady,
-}: {
-  isStartupUpdateReady: boolean;
-}) {
+function RootLayoutContent() {
   const [fontsLoaded, fontLoadError] = useAppFonts();
   const { hasAppAccess, isReconciled, isSignedInWithClerk, shouldBlockAuthUi } =
     useInstantAuthState();
@@ -292,16 +288,14 @@ function RootLayoutContent({
       isReconciled &&
       hasReachedInitialLandingPoint;
     const canHideSplash =
-      isStartupUpdateReady &&
-      areFontsReady &&
-      (isMigrationErrorVisible || isAppReady);
+      areFontsReady && (isMigrationErrorVisible || isAppReady);
 
     if (!canHideSplash) {
       return;
     }
 
     // Other routes own their loading UI. For grocery and restored shopping, wait
-    // for the persisted outbox and fresh access verification as well as items.
+    // for the persisted outbox and cached items.
     const requiresScreenReadiness =
       topLevelSegment === 'shopping' ||
       (topLevelSegment === '(tabs)' && segments.length === 1);
@@ -326,7 +320,6 @@ function RootLayoutContent({
     hasAppAccess,
     isReconciled,
     isSignedInWithClerk,
-    isStartupUpdateReady,
     isScreenReady,
     migrationStatus,
     rootNavigationState?.key,
@@ -394,11 +387,11 @@ function RootLayoutContent({
 }
 
 export default function RootLayout() {
-  const { isReady: isStartupUpdateReady } = useStartupEasUpdate();
+  useStartupEasUpdate();
 
   return (
     <QuantitySessionGate>
-      <RootLayoutContent isStartupUpdateReady={isStartupUpdateReady} />
+      <RootLayoutContent />
     </QuantitySessionGate>
   );
 }
