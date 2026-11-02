@@ -4,6 +4,9 @@ const mocks = vi.hoisted(() => ({ query: vi.fn(), alert: vi.fn(), id: 0 }));
 vi.mock('@instantdb/react-native', () => ({ id: () => `id-${++mocks.id}` }));
 vi.mock('react-native', () => ({ Alert: { alert: mocks.alert } }));
 vi.mock('@/lib/instant', () => ({ db: { queryOnce: mocks.query } }));
+vi.mock('@/lib/instant/read-cached-query', () => ({
+  readCachedQuery: mocks.query,
+}));
 
 import { updateQuantityChecked } from '../app/checked-state';
 import { addQuantityRecipe } from '../app/recipe-actions';
