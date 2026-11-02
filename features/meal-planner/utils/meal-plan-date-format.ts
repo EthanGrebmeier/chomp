@@ -11,8 +11,13 @@ export const parseMealPlanDate = (dateStr: string): Date => {
   return new Date(year, month - 1, day);
 };
 
-/** Short display form of a meal plan date, e.g. "Sep 7". */
-export const formatMealPlanDate = (dateStr: string): string => {
+/** Display form of a meal plan date, optionally including the weekday. */
+export const formatMealPlanDate = (
+  dateStr: string,
+  { includeWeekday = false }: { includeWeekday?: boolean } = {}
+): string => {
   const date = parseMealPlanDate(dateStr);
-  return Number.isNaN(date.getTime()) ? 'Date' : format(date, 'MMM d');
+  return Number.isNaN(date.getTime())
+    ? 'Date'
+    : format(date, includeWeekday ? 'EEEE, MMM d' : 'MMM d');
 };

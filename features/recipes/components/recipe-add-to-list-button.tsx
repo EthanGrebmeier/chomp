@@ -48,7 +48,7 @@ export const RecipeAddToListButton = ({
   const review = useInlineStoreReview(!!selectedListIdForIngredients);
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const contentHeight = Math.min(height * 0.9, height - insets.top - 12);
+  const contentHeight = height - insets.top;
 
   const isOwner = recipe.user?.id === user?.id;
   const fallbackListId = groceryLists?.grocery_lists?.[0]?.id;
@@ -157,8 +157,8 @@ export const RecipeAddToListButton = ({
         <Text>Add to list</Text>
       </Button>
       <BottomSheet
-        detents={[contentHeight / height]}
-        insetAdjustment="never"
+        detents={[1]}
+        insetAdjustment="automatic"
         name="recipe-ingredient-selector-sheet"
         ref={ingredientSelectorSheetRef}
         onStartClose={handleIngredientSelectorDismiss}
