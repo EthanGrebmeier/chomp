@@ -49,6 +49,8 @@ function Session({
     syncQuantitySavedItems,
     initialized
   );
+  const { user } = db.useAuth();
+  const actorName = user?.id === userId ? (user.email ?? 'Guest') : 'Guest';
   const entryVisible = useAppEntryVisible();
   const sources = db.useQuery(
     entryVisible && session.canEdit
@@ -81,8 +83,12 @@ function Session({
     }
   }, [session, sources.data]);
   useEffect(() => {
-    if (initialized) publishListSession(listId, session);
-  }, [initialized, listId, session]);
+    if (initialized)
+      publishListSession(listId, {
+        ...session,
+        actor: { id: userId, name: actorName },
+      });
+  }, [initialized, listId, session, userId, actorName]);
   useEffect(() => () => publishListSession(listId, null), [listId]);
   return null;
 }

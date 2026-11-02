@@ -34,12 +34,16 @@ export async function updateQuantityChecked(
           if (row.status === 'deleted')
             throw new Error('Item has been deleted');
           tx.requireEntries(row.id);
-          const { purchasedAt, ...rest } = row;
+          const { purchasedAt, purchasedBy, ...rest } = row;
           tx.put({
             ...rest,
             status: isChecked ? 'checked' : 'active',
             ...(isChecked
               ? {
+                  purchasedBy:
+                    row.status === 'checked'
+                      ? (purchasedBy ?? null)
+                      : (session.actor ?? null),
                   purchasedAt:
                     row.status === 'checked'
                       ? (purchasedAt ?? null)
