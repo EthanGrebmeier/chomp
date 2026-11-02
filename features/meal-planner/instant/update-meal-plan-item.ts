@@ -1,15 +1,4 @@
-import { tx } from '@instantdb/react-native';
-
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
-
-import { db, type TransactionChunk } from '../../../lib/instant';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import type { DefaultStoreForStacking } from '../../recipes/instant/stack-recipe-ingredients-plan';
-
-import { applyMealPlanItemEdit } from './apply-meal-plan-entry-edits';
-import { buildMealPlanEntrySyncTransactions } from './build-meal-plan-list-sync-transactions';
-import { toMealPlanItemSyncContext } from './meal-plan-entry-sync-context';
-import { queryMealPlanItemSyncRow } from './query-meal-plan-entry-sync-rows';
 
 export type UpdateMealPlanItemArgs = {
   mealPlanItemId: string;
@@ -38,75 +27,7 @@ export const updateMealPlanItem = async ({
   updates,
   defaultStore,
 }: UpdateMealPlanItemArgs) => {
-  if (quantityWorkspaceAvailable()) {
-    const { updateQuantityItem } =
-      await import('@/features/quantity/app/meal-actions');
-    return updateQuantityItem({ mealPlanItemId, updates, defaultStore });
-  }
-
-  const { storeId, ...otherUpdates } = updates;
-  const nullableUpdates = {
-    ...(otherUpdates.notes !== undefined
-      ? { notes: otherUpdates.notes || null }
-      : {}),
-    ...(otherUpdates.category !== undefined
-      ? { category: otherUpdates.category || null }
-      : {}),
-    ...(otherUpdates.mealTag !== undefined
-      ? { mealTag: otherUpdates.mealTag || null }
-      : {}),
-  };
-  const now = new Date().toISOString();
-
-  const row = await queryMealPlanItemSyncRow(mealPlanItemId);
-  if (!row) {
-    throw new Error('Meal plan item not found');
-  }
-
-  const transactions: TransactionChunk[] = [
-    tx.meal_plan_items[mealPlanItemId].update(
-      trimStringFields({
-        ...otherUpdates,
-        ...nullableUpdates,
-        updatedAt: now,
-      })
-    ),
-  ];
-
-  const currentStoreId = row.store?.id;
-  if (storeId !== undefined && storeId !== (currentStoreId ?? '')) {
-    if (currentStoreId) {
-      transactions.push(
-        tx.meal_plan_items[mealPlanItemId].unlink({ store: currentStoreId })
-      );
-    }
-    if (storeId) {
-      transactions.push(
-        tx.meal_plan_items[mealPlanItemId].link({ store: storeId })
-      );
-    }
-  }
-
-  const context = toMealPlanItemSyncContext(row);
-  if (context) {
-    transactions.push(
-      ...buildMealPlanEntrySyncTransactions({
-        context: {
-          ...context,
-          entry: applyMealPlanItemEdit(context.entry, {
-            name: otherUpdates.name,
-            quantity: otherUpdates.quantity,
-            unit: otherUpdates.unit,
-            notes: nullableUpdates.notes,
-            category: nullableUpdates.category,
-            storeId,
-          }),
-        },
-        defaultStore,
-        now,
-      })
-    );
-  }
-
-  await db.transact(transactions);
+  const { updateQuantityItem } =
+    await import('@/features/quantity/app/meal-actions');
+  return updateQuantityItem({ mealPlanItemId, updates, defaultStore });
 };

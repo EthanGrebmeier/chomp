@@ -4,12 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { db } from '@/lib/instant';
 
-import { quantityWorkspaceAvailable } from './config';
-import { initialOperations } from './fixtures';
 import { createMaterializer } from './model';
 import {
   flushOutbox,
-  operationChunk,
   mergeConfirmedOperations,
   readWorkspaceState,
   type Pending,
@@ -20,33 +17,6 @@ const workspaceQuery = (workspaceId: string) => ({
   gqc_workspaces_v1: { $: { where: { id: workspaceId } } },
   gqc_operations_v1: { $: { where: { workspaceId } } },
 });
-
-export function useQuantityWorkspaces() {
-  const auth = db.useAuth();
-  const connection = db.useConnectionStatus();
-  const query = db.useQuery(
-    quantityWorkspaceAvailable() && auth.user ? { gqc_workspaces_v1: {} } : null
-  );
-  const create = async () => {
-    if (!quantityWorkspaceAvailable() || !auth.user)
-      throw new Error('Sign in to the development app first');
-    if (connection !== 'authenticated')
-      throw new Error('Connect before creating a workspace');
-    const workspaceId = id();
-    await db.transact([
-      db.tx.gqc_workspaces_v1[workspaceId].update({
-        name: 'Quantity workspace',
-        ownerId: auth.user.id,
-        memberIds: [auth.user.id],
-      }),
-      ...initialOperations(id).map(op =>
-        operationChunk(op, workspaceId, auth.user!.id)
-      ),
-    ]);
-    return workspaceId;
-  };
-  return { ...query, user: auth.user, create };
-}
 
 /** Durable app outbox plus the SDK queue; stable operation IDs make retries safe. */
 export function useQuantityWorkspace(

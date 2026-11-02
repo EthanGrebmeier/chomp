@@ -11,7 +11,6 @@ describe('real grocery-list quantity permissions', () => {
   it.skipIf(process.env.RUN_QUANTITY_SDK !== '1')(
     'uses live guest list membership and keeps list scopes immutable',
     async () => {
-      process.argv.push('--test-app');
       const { db: admin } = testApp();
       vi.stubGlobal('window', {});
       vi.stubGlobal('BroadcastChannel', undefined);

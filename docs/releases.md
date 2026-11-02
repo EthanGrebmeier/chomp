@@ -62,3 +62,12 @@ For a regression, identify the last known-good update group for the same runtime
 from the tag or EAS. Re-publish that group using EAS after verifying its database
 compatibility. Do not blindly roll back to an embedded pre-cutover bundle: it may
 point at the former database. Database rollback is separate from OTA rollback.
+
+## Next native release: 1.0.8
+
+Prepared from the latest `release/1.0.7` TestFlight maintenance head. This release
+adds the local press-haptics native module and retires the legacy scalar shopping
+path using the quantity-only implementation already on main. It uses runtime
+1.0.8, the production channel and the approved quantity database. A new binary
+is required; do not publish this native change to runtime 1.0.7. The older OTA
+baselines and maintenance branches remain intact.

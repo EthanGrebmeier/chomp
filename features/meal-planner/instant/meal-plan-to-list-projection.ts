@@ -1,4 +1,4 @@
-import { StackableIngredientInput } from '../../recipes/instant/stack-recipe-ingredients';
+import { StackableIngredientInput } from '../../recipes/instant/stack-recipe-ingredients-plan';
 
 type RecipeIngredientWithStore = {
   id: string;

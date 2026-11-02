@@ -1,15 +1,4 @@
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
-import { db, type TransactionChunk } from '@/lib/instant';
-
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { buildLinkedGroceryItemWriteBackTransactions } from '../../meal-planner/instant/build-list-to-meal-plan-write-back-transactions';
-import {
-  type GroceryItemWithMealPlanWriteBackLinks,
-  type LinkedGroceryItemPatch,
-  resolveMealPlanWriteBackSource,
-} from '../../meal-planner/instant/plan-list-to-meal-plan-write-back';
-import { syncRecipeIngredientsFromGroceryItem } from '../instant/sync-recipe-ingredients-from-grocery-item';
-import { syncSavedItemFromGroceryItem } from '../instant/sync-saved-item-from-grocery-item';
+import { type GroceryItemWithMealPlanWriteBackLinks } from '../../meal-planner/instant/plan-list-to-meal-plan-write-back';
 
 export type BulkStoreSelectionPayload = {
   selectedItemIds: string[];
@@ -64,279 +53,34 @@ export type BulkStoreCategoryWriteResult = {
 const getSelectedItemIds = (selectedItemIds: Set<string>) =>
   Array.from(selectedItemIds);
 
-const createSelectedItemsMap = (
-  selectedItems: BulkStoreCategorySelectedItem[]
-) => {
-  return new Map(selectedItems.map(item => [item.id, item]));
-};
-
-const resolveSelectedItemsForWrite = ({
-  selectedItemIds,
-  selectedItemsMap,
-}: {
-  selectedItemIds: string[];
-  selectedItemsMap: Map<string, BulkStoreCategorySelectedItem>;
-}) => {
-  let skippedItemCount = 0;
-  const matchedItems: BulkStoreCategorySelectedItem[] = [];
-
-  for (const itemId of selectedItemIds) {
-    const item = selectedItemsMap.get(itemId);
-    if (!item) {
-      skippedItemCount += 1;
-      continue;
-    }
-    matchedItems.push(item);
-  }
-
-  return {
-    matchedItems,
-    skippedItemCount,
-  };
-};
-
 // Linked items write the bulk change back to their meal plan source in the
 // same transaction as the grocery item writes.
-const buildMealPlanWriteBackTransactions = (
-  items: BulkStoreCategorySelectedItem[],
-  patch: LinkedGroceryItemPatch
-): TransactionChunk[] =>
-  items.flatMap(item =>
-    buildLinkedGroceryItemWriteBackTransactions({
-      source: resolveMealPlanWriteBackSource(item),
-      patch,
-    })
-  );
-
-const runBestEffortSavedItemSyncForItems = async ({
-  items,
-  patch,
-}: {
-  items: BulkStoreCategorySelectedItem[];
-  patch: {
-    storeId?: string;
-    category?: string;
-  };
-}) => {
-  const syncResults = await Promise.all(
-    items.map(item =>
-      runBestEffortSavedItemSync({
-        item,
-        patch,
-      })
-    )
-  );
-
-  return syncResults.reduce(
-    (failedCount, succeeded) => (succeeded ? failedCount : failedCount + 1),
-    0
-  );
-};
-
-const runBestEffortRecipeSyncForItems = async ({
-  items,
-  patch,
-}: {
-  items: BulkStoreCategorySelectedItem[];
-  patch: {
-    storeId?: string;
-    category?: string;
-  };
-}) => {
-  await Promise.all(
-    items.map(item =>
-      runBestEffortRecipeSync({
-        item,
-        patch,
-      })
-    )
-  );
-};
-
-const runBestEffortRecipeSync = async ({
-  item,
-  patch,
-}: {
-  item: BulkStoreCategorySelectedItem;
-  patch: {
-    storeId?: string;
-    category?: string;
-  };
-}) => {
-  if (!item.recipe?.id || !item.unit) {
-    return;
-  }
-
-  try {
-    await syncRecipeIngredientsFromGroceryItem({
-      recipeId: item.recipe.id,
-      matchName: item.name,
-      matchUnit: item.unit,
-      patch,
-    });
-  } catch {
-    // Recipe sync is intentionally best-effort and never blocks the bulk action.
-  }
-};
-
-const runBestEffortSavedItemSync = async ({
-  item,
-  patch,
-}: {
-  item: BulkStoreCategorySelectedItem;
-  patch: {
-    storeId?: string;
-    category?: string;
-  };
-}) => {
-  const nextSavedItemId = item.saved_item?.id;
-  if (!nextSavedItemId) {
-    return true;
-  }
-
-  try {
-    await syncSavedItemFromGroceryItem({
-      item: patch,
-      nextSavedItemId,
-      currentSavedItemOwnerId: item.saved_item?.user?.id,
-      savedItemStoreId: item.saved_item?.store?.id,
-      currentItemName: item.name,
-    });
-    return true;
-  } catch {
-    return false;
-  }
-};
 
 export const runBulkStoreUpdate = async ({
   selectedItemIds,
-  selectedItems,
   storeId,
 }: RunBulkStoreUpdateArgs): Promise<BulkStoreCategoryWriteResult> => {
-  if (quantityWorkspaceAvailable()) {
-    const { bulkQuantityMetadata } =
-      await import('@/features/quantity/app/grocery-actions');
-    await bulkQuantityMetadata(selectedItemIds, { store: storeId ?? '' });
-    return {
-      updatedItemCount: selectedItemIds.length,
-      skippedItemCount: 0,
-      failedSavedItemSyncCount: 0,
-    };
-  }
-  const selectedItemsMap = createSelectedItemsMap(selectedItems);
-  const patch = { storeId };
-  const { matchedItems, skippedItemCount } = resolveSelectedItemsForWrite({
-    selectedItemIds,
-    selectedItemsMap,
-  });
-  const transactions: TransactionChunk[] = [];
-
-  for (const item of matchedItems) {
-    const currentStoreId = item.store?.id;
-    if (!storeId && currentStoreId) {
-      transactions.push(
-        db.tx.grocery_items[item.id].unlink({
-          store: currentStoreId,
-        })
-      );
-      continue;
-    }
-
-    if (storeId !== currentStoreId) {
-      if (currentStoreId) {
-        transactions.push(
-          db.tx.grocery_items[item.id].unlink({
-            store: currentStoreId,
-          })
-        );
-      }
-      if (storeId) {
-        transactions.push(
-          db.tx.grocery_items[item.id].link({
-            store: storeId,
-          })
-        );
-      }
-    }
-  }
-
-  transactions.push(
-    ...buildMealPlanWriteBackTransactions(matchedItems, {
-      storeId: storeId ?? null,
-    })
-  );
-
-  if (transactions.length > 0) {
-    await db.transact(transactions);
-  }
-
-  const failedSavedItemSyncCount = await runBestEffortSavedItemSyncForItems({
-    items: matchedItems,
-    patch,
-  });
-  await runBestEffortRecipeSyncForItems({
-    items: matchedItems,
-    patch,
-  });
-
+  const { bulkQuantityMetadata } =
+    await import('@/features/quantity/app/grocery-actions');
+  await bulkQuantityMetadata(selectedItemIds, { store: storeId ?? '' });
   return {
-    updatedItemCount: matchedItems.length,
-    skippedItemCount,
-    failedSavedItemSyncCount,
+    updatedItemCount: selectedItemIds.length,
+    skippedItemCount: 0,
+    failedSavedItemSyncCount: 0,
   };
 };
 
 export const runBulkCategoryUpdate = async ({
   selectedItemIds,
-  selectedItems,
   category,
 }: RunBulkCategoryUpdateArgs): Promise<BulkStoreCategoryWriteResult> => {
-  if (quantityWorkspaceAvailable()) {
-    const { bulkQuantityMetadata } =
-      await import('@/features/quantity/app/grocery-actions');
-    await bulkQuantityMetadata(selectedItemIds, { category: category ?? '' });
-    return {
-      updatedItemCount: selectedItemIds.length,
-      skippedItemCount: 0,
-      failedSavedItemSyncCount: 0,
-    };
-  }
-  const selectedItemsMap = createSelectedItemsMap(selectedItems);
-  const patch = { category };
-  const { matchedItems, skippedItemCount } = resolveSelectedItemsForWrite({
-    selectedItemIds,
-    selectedItemsMap,
-  });
-  const transactions: TransactionChunk[] = [
-    ...matchedItems.map(item =>
-      db.tx.grocery_items[item.id].update(
-        trimStringFields({
-          category: category ?? null,
-        })
-      )
-    ),
-    ...buildMealPlanWriteBackTransactions(matchedItems, {
-      category: category ?? null,
-    }),
-  ];
-
-  if (transactions.length > 0) {
-    await db.transact(transactions);
-  }
-
-  const failedSavedItemSyncCount = await runBestEffortSavedItemSyncForItems({
-    items: matchedItems,
-    patch,
-  });
-  await runBestEffortRecipeSyncForItems({
-    items: matchedItems,
-    patch,
-  });
-
+  const { bulkQuantityMetadata } =
+    await import('@/features/quantity/app/grocery-actions');
+  await bulkQuantityMetadata(selectedItemIds, { category: category ?? '' });
   return {
-    updatedItemCount: matchedItems.length,
-    skippedItemCount,
-    failedSavedItemSyncCount,
+    updatedItemCount: selectedItemIds.length,
+    skippedItemCount: 0,
+    failedSavedItemSyncCount: 0,
   };
 };
 

@@ -1,10 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
-
-import { db } from '../../../lib/instant';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { GroceryListItem } from '../types';
 
 type clearCheckedItemsArgs = {
@@ -18,22 +14,9 @@ type clearCheckedItemsArgs = {
  * deletes that should write back to the meal plan.
  */
 const clearCheckedItems = async ({ itemIds }: clearCheckedItemsArgs) => {
-  if (quantityWorkspaceAvailable()) {
-    const { deleteQuantityRows } =
-      await import('@/features/quantity/app/grocery-actions');
-    return deleteQuantityRows(itemIds);
-  }
-
-  return db.transact(
-    itemIds.map(itemId =>
-      db.tx.grocery_items[itemId].update(
-        trimStringFields({
-          isDeleted: true,
-          deletedAt: new Date().toISOString(),
-        })
-      )
-    )
-  );
+  const { deleteQuantityRows } =
+    await import('@/features/quantity/app/grocery-actions');
+  return deleteQuantityRows(itemIds);
 };
 
 export const filterCheckedItems = (groceryItems: GroceryListItem[]) => {

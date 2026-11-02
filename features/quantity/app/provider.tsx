@@ -17,7 +17,6 @@ import { useListAccessTimes } from '@/features/grocery-lists/local/list-access-s
 import { db } from '@/lib/instant';
 import { useAppEntryVisible } from '@/lib/startup-screen-ready';
 
-import { quantityWorkspaceAvailable } from '../config';
 import { saveRecipe } from '../meals';
 import { records } from '../model';
 import { useQuantityWorkspace } from '../use-quantity-workspace';
@@ -206,15 +205,14 @@ function QuantitySessions({ userId }: { userId: string }) {
 
 export function QuantityAppProvider({ children }: { children: ReactNode }) {
   const { user } = db.useAuth();
-  const enabled = quantityWorkspaceAvailable();
   useSettings();
   return (
     <>
-      {enabled && user ? (
+      {user ? (
         <QuantitySessions key={`sessions:${user.id}`} userId={user.id} />
       ) : null}
       {children}
-      {enabled && user ? <StoreReviewHost key={user.id} /> : null}
+      {user ? <StoreReviewHost key={user.id} /> : null}
     </>
   );
 }

@@ -266,14 +266,6 @@ export function selectQuantityIngredient(
   const { meal } = mealForIngredient(snapshotRowId);
   return selectQuantityIngredients(meal.id, [{ snapshotRowId, isSelected }]);
 }
-export function setQuantityMealIgnored(mealId: string, ignored: boolean) {
-  const session = documentSession(mealId);
-  const meal = record(session.state, mealId, 'meal');
-  return selectQuantityIngredients(
-    mealId,
-    meal.ingredients.map(i => ({ snapshotRowId: i.id, isSelected: !ignored }))
-  );
-}
 export async function overrideQuantityIngredient({
   snapshotRowId,
   updates,

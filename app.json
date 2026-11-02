@@ -2,7 +2,7 @@
   "expo": {
     "name": "Chomp",
     "slug": "chomp",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "chomp",
@@ -121,7 +121,9 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/eaca5365-c88e-4712-b89c-b3f737a6cde5"
+      "url": "https://u.expo.dev/eaca5365-c88e-4712-b89c-b3f737a6cde5",
+      "checkAutomatically": "NEVER",
+      "fallbackToCacheTimeout": 0
     }
   }
 }

@@ -1,5 +1,5 @@
 import { InstantCoreDatabase, Reactor } from '@instantdb/core';
-import { TEST_APP } from './test-app.mjs';
+import { assertTestTarget } from './test-target.mjs';
 
 export const until = async (condition, label) => {
   const end = Date.now() + 15000;
@@ -11,6 +11,7 @@ export const until = async (condition, label) => {
 };
 
 export async function clientFor(admin, userId, workspaceId) {
+  const appId = assertTestTarget(process.env);
   const values = new Map();
   let listener;
   class Storage {
@@ -38,11 +39,7 @@ export async function clientFor(admin, userId, workspaceId) {
       };
     }
   }
-  const reactor = new Reactor(
-    { appId: TEST_APP, devtool: false },
-    Storage,
-    Network
-  );
+  const reactor = new Reactor({ appId, devtool: false }, Storage, Network);
   const client = new InstantCoreDatabase(reactor);
   let connection;
   client.subscribeConnectionStatus(value => {
