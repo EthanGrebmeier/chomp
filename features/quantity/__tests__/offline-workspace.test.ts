@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 // Exercise the hook's persisted cold-start path without a native renderer.
 const harness = vi.hoisted(() => ({
@@ -71,31 +71,36 @@ beforeEach(() => {
   harness.query.error = undefined;
   harness.queryOnce.mockReset();
 });
-it('opens cached lists offline and restores a durable edit after process restart', async () => {
-  const session = await coldStart();
-  expect(session.canEdit).toBe(true);
-  const operation: Operation = {
-    id: 'offline',
-    label: 'Create list',
-    parents: [],
-    guards: [],
-    resolves: [],
-    changes: [
-      {
-        id: 'list',
-        before: null,
-        value: { kind: 'list', id: 'list', name: 'Groceries' },
-      },
-    ],
-  };
-  await session.send(operation);
-  const restored = await coldStart();
-  expect(restored.canEdit).toBe(true);
-  expect(restored.pending).toEqual([{ operation }]);
-  expect(restored.state.documents.list.name).toBe('Groceries');
-  expect(harness.queryOnce).not.toHaveBeenCalled();
-  expect((await coldStart('other-user')).pending).toEqual([]);
-});
+afterEach(() => vi.unstubAllEnvs());
+it.each([undefined, '0', '1'])(
+  'opens cached lists and restores durable edits with rollout flag %s',
+  async flag => {
+    vi.stubEnv('EXPO_PUBLIC_QUANTITY_RELEASE', flag);
+    const session = await coldStart();
+    expect(session.canEdit).toBe(true);
+    const operation: Operation = {
+      id: 'offline',
+      label: 'Create list',
+      parents: [],
+      guards: [],
+      resolves: [],
+      changes: [
+        {
+          id: 'list',
+          before: null,
+          value: { kind: 'list', id: 'list', name: 'Groceries' },
+        },
+      ],
+    };
+    await session.send(operation);
+    const restored = await coldStart();
+    expect(restored.canEdit).toBe(true);
+    expect(restored.pending).toEqual([{ operation }]);
+    expect(restored.state.documents.list.name).toBe('Groceries');
+    expect(harness.queryOnce).not.toHaveBeenCalled();
+    expect((await coldStart('other-user')).pending).toEqual([]);
+  }
+);
 it('still blocks editing on permission errors or a corrupt durable outbox', async () => {
   harness.query.error = { message: 'Permission denied' };
   expect((await coldStart()).canEdit).toBe(false);

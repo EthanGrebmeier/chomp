@@ -1,11 +1,9 @@
-import type { StoreReviewer } from '@/features/quantity/app/store-review';
 import { id } from '@instantdb/react-native';
 import { toast } from 'sonner-native';
 
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
+import type { StoreReviewer } from '@/features/quantity/app/store-review';
 
 import { db } from '../../../lib/instant';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 import { upsertLocalSavedItem } from '../../saved-items/local/upsert-local-saved-item';
 import { BaseGroceryItem } from '../types';
@@ -14,7 +12,6 @@ export const addGroceryListItem = ({
   listId,
   item,
   savedItemId,
-  selectedCloudSavedItemStoreId,
   selectedLocalSavedItemId,
   persistLocalSavedItem = true,
   reviewConflicts,
@@ -35,118 +32,33 @@ export const addGroceryListItem = ({
 }) => {
   const itemId = id();
   const now = new Date().toISOString();
-  if (quantityWorkspaceAvailable()) {
-    return import('@/features/quantity/app/grocery-actions').then(
-      async ({ addManualQuantity }) => {
-        await addManualQuantity(listId, item, savedItemId, reviewConflicts);
-        // The durable quantity intent is the success boundary. Local history is
-        // useful offline; a server acknowledgement for recent-item ranking must
-        // never keep the add sheet waiting on poor cell service.
-        try {
-          if (!savedItemId && persistLocalSavedItem)
-            await upsertLocalSavedItem({ item, selectedLocalSavedItemId });
-        } catch {
-          toast.error('Item added, but local history could not be updated');
-        }
-        void db
-          .transact(
-            buildAddEventTransactions({
-              eventId: itemId,
-              listId,
-              item,
-              addedAt: now,
-            })
-          )
-          .catch(() => {
-            toast.error(
-              'Quantity saved, but recent-item history could not be updated'
-            );
-          });
+
+  return import('@/features/quantity/app/grocery-actions').then(
+    async ({ addManualQuantity }) => {
+      await addManualQuantity(listId, item, savedItemId, reviewConflicts);
+      // The durable quantity intent is the success boundary. Local history is
+      // useful offline; a server acknowledgement for recent-item ranking must
+      // never keep the add sheet waiting on poor cell service.
+      try {
+        if (!savedItemId && persistLocalSavedItem)
+          await upsertLocalSavedItem({ item, selectedLocalSavedItemId });
+      } catch {
+        toast.error('Item added, but local history could not be updated');
       }
-    );
-  }
-
-  const transactions: Parameters<typeof db.transact>[0] = [
-    db.tx.grocery_items[itemId].create(
-      trimStringFields({
-        name: item.name,
-        quantity: item.quantity,
-        unit: item.unit,
-        category: item.category,
-        notes: item.notes,
-        isChecked: false,
-        isDeleted: false,
-        createdAt: now,
-        updatedAt: now,
-      })
-    ),
-    db.tx.grocery_items[itemId].link({
-      grocery_list: listId,
-    }),
-    ...buildAddEventTransactions({
-      eventId: itemId,
-      listId,
-      item,
-      addedAt: now,
-    }),
-  ];
-
-  // Link store if provided
-  if (item.storeId) {
-    transactions.push(
-      db.tx.grocery_items[itemId].link({
-        store: item.storeId,
-      })
-    );
-  }
-
-  if (savedItemId) {
-    transactions.push(
-      db.tx.grocery_items[itemId].link({
-        saved_item: savedItemId,
-      }),
-      db.tx.saved_items[savedItemId].update(
-        trimStringFields({
-          name: item.name,
-          category: item.category ?? null,
-          notes: item.notes ?? null,
-          updatedAt: now,
-        })
-      )
-    );
-
-    if (selectedCloudSavedItemStoreId && !item.storeId) {
-      transactions.push(
-        db.tx.saved_items[savedItemId].unlink({
-          store: selectedCloudSavedItemStoreId,
-        })
-      );
-    } else if (item.storeId && item.storeId !== selectedCloudSavedItemStoreId) {
-      if (selectedCloudSavedItemStoreId) {
-        transactions.push(
-          db.tx.saved_items[savedItemId].unlink({
-            store: selectedCloudSavedItemStoreId,
+      void db
+        .transact(
+          buildAddEventTransactions({
+            eventId: itemId,
+            listId,
+            item,
+            addedAt: now,
           })
-        );
-      }
-      transactions.push(
-        db.tx.saved_items[savedItemId].link({
-          store: item.storeId,
-        })
-      );
+        )
+        .catch(() => {
+          toast.error(
+            'Quantity saved, but recent-item history could not be updated'
+          );
+        });
     }
-  }
-
-  const transactionPromise = db.transact(transactions);
-
-  if (!savedItemId && persistLocalSavedItem) {
-    void upsertLocalSavedItem({
-      item,
-      selectedLocalSavedItemId,
-    }).catch(() => {
-      toast.error('Item added, but saved item history could not be updated');
-    });
-  }
-
-  return transactionPromise;
+  );
 };

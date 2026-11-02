@@ -132,9 +132,11 @@ check a different app.
 
 ### Data migrations against a dev Instant app
 
-Do not assume `.env.local` points at production: quantity development uses the
-allowlisted test app there. Verify the app ID before any admin command and keep
-production credentials in a separate gitignored `.env.production.local` file.
+The former quantity development app (`5df33e29-252b-4e1c-a111-53787beccba3`)
+is now production. Verify the app ID before any admin command. Keep production
+credentials in `.env.production.local` and use a separate app for development.
+Quantity SDK tests use `.env.test.local` and explicitly reject both current and
+former production apps; see [Quantity model](features/quantity/README.md).
 Validate admin-SDK
 migrations (`scripts/*.mjs`) on a throwaway app before running them for real:
 

@@ -1,4 +1,3 @@
-import { id, tx } from '@instantdb/react-native';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { router, useFocusEffect } from 'expo-router';
 import {
@@ -6,6 +5,7 @@ import {
   useCallback,
   useDeferredValue,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -28,7 +28,6 @@ import Animated, {
 import { toast } from 'sonner-native';
 
 import { moveQuantityRows } from '@/features/quantity/app/grocery-actions';
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 import { useAppEntryVisible } from '@/lib/startup-screen-ready';
 
 import AddItemSheet from '../../../components/item-sheet/add-item/add-item-sheet';
@@ -46,8 +45,6 @@ import {
   buildPurchasedItemsUrl,
   buildShoppingUrl,
 } from '../../../lib/navigation';
-import { trimStringFields } from '../../../lib/utils/trim-string-fields';
-import { buildAddEventTransactions } from '../../frequent-items/instant/build-add-event-transactions';
 import {
   SelectGroceryListSheet,
   SelectGroceryListSheetRef,
@@ -68,11 +65,7 @@ import {
   getBulkDeleteConfirmationCopy,
   runBulkDelete,
 } from '../bulk-selection/delete-orchestrator';
-import {
-  BulkMoveItemForPlanning,
-  buildBulkMoveSelectionPayload,
-  runBulkMove,
-} from '../bulk-selection/move-orchestrator';
+import { buildBulkMoveSelectionPayload } from '../bulk-selection/move-orchestrator';
 import {
   buildBulkCategorySelectionPayload,
   buildBulkStoreSelectionPayload,
@@ -83,7 +76,6 @@ import { BulkToolbarActionId } from '../bulk-selection/toolbar';
 import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { addGroceryListItem } from '../instant/add-grocery-list-item';
 import { filterActiveItems, useClearGroceryList } from '../instant/clear-list';
-import { removeMovedGroceryItems } from '../instant/delete-grocery-items';
 import { incrementGroceryListItem } from '../instant/increment-grocery-list-item';
 import { useShoppingSession } from '../shopping/use-shopping-session';
 import {
@@ -250,6 +242,13 @@ export const GroceryList = ({
       );
     });
   }, [items, normalizedQuery]);
+
+  // Row/section handlers keep their identity across checkoffs while reading
+  // the latest committed items, not the items captured on their first render.
+  const filteredItemsRef = useRef(filteredItems);
+  useLayoutEffect(() => {
+    filteredItemsRef.current = filteredItems;
+  }, [filteredItems]);
 
   useEffect(() => {
     if (!bulkSelectionState.isActive) {
@@ -458,8 +457,10 @@ export const GroceryList = ({
     setBulkSelectionState(currentState => clearBulkSelection(currentState));
   };
 
-  const handleToggleBulkSelectionItem = (itemId: string) => {
-    const item = filteredItems.find(candidate => candidate.id === itemId);
+  const handleToggleBulkSelectionItem = useCallback((itemId: string) => {
+    const item = filteredItemsRef.current.find(
+      candidate => candidate.id === itemId
+    );
     if (!item) {
       return;
     }
@@ -470,10 +471,12 @@ export const GroceryList = ({
         isChecked: Boolean(item.isChecked),
       })
     );
-  };
+  }, []);
 
-  const handleEnterBulkSelectionModeWithItem = (itemId: string) => {
-    const item = filteredItems.find(candidate => candidate.id === itemId);
+  const handleEnterBulkSelectionModeWithItem = useCallback((itemId: string) => {
+    const item = filteredItemsRef.current.find(
+      candidate => candidate.id === itemId
+    );
     if (!item) {
       return;
     }
@@ -484,11 +487,11 @@ export const GroceryList = ({
         isChecked: Boolean(item.isChecked),
       })
     );
-  };
+  }, []);
 
-  const handleSelectBulkSectionItems = (itemIds: string[]) => {
+  const handleSelectBulkSectionItems = useCallback((itemIds: string[]) => {
     const selectableItemIds = new Set(
-      filteredItems
+      filteredItemsRef.current
         .filter(item => !item.isChecked)
         .map(item => item.id)
         .filter(id => itemIds.includes(id))
@@ -513,9 +516,9 @@ export const GroceryList = ({
         selectedItemIds: nextSelectedItemIds,
       };
     });
-  };
+  }, []);
 
-  const handleDeselectBulkSectionItems = (itemIds: string[]) => {
+  const handleDeselectBulkSectionItems = useCallback((itemIds: string[]) => {
     if (itemIds.length === 0) {
       return;
     }
@@ -540,7 +543,7 @@ export const GroceryList = ({
         selectedItemIds: nextSelectedItemIds,
       };
     });
-  };
+  }, []);
 
   const confirmBulkDelete = (selectedCount: number) => {
     const copy = getBulkDeleteConfirmationCopy(selectedCount);
@@ -713,135 +716,19 @@ export const GroceryList = ({
       moveSelectionPayload.selectedItemIds.includes(item.id)
     );
     handleExitBulkSelectionMode();
-    if (quantityWorkspaceAvailable()) {
-      try {
-        await moveQuantityRows(
-          selectedItems.map(item => item.id),
-          destinationListId
-        );
-        onActiveListChange?.(destinationListId);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : 'Could not move items'
-        );
-      }
-      return;
-    }
-    const fetchDestinationItems = async (
-      destinationListIdToUse: string
-    ): Promise<BulkMoveItemForPlanning[]> => {
-      const result = await db.queryOnce({
-        grocery_items: {
-          grocery_list: {},
-          store: {},
-          $: {
-            where: {
-              isDeleted: false,
-            },
-          },
-        },
-      });
-
-      return result.data.grocery_items.filter(
-        item => item.grocery_list?.id === destinationListIdToUse
-      );
-    };
 
     try {
-      await runBulkMove({
-        moveSelectionPayload,
-        selectedItems,
-        fetchDestinationItems,
-        applyDestinationPlan: async (
-          plan,
-          destinationListIdToUse,
-          destinationItems
-        ) => {
-          const transactions: Parameters<typeof db.transact>[0] = [];
-          const now = new Date().toISOString();
-          const destinationItemsMap = new Map(
-            destinationItems.map(item => [item.id, item])
-          );
-
-          for (const [
-            destinationItemId,
-            quantityToAdd,
-          ] of plan.quantityUpdates.entries()) {
-            const destinationItem = destinationItemsMap.get(destinationItemId);
-            if (!destinationItem) {
-              continue;
-            }
-
-            transactions.push(
-              tx.grocery_items[destinationItemId].update(
-                trimStringFields({
-                  quantity: destinationItem.quantity + quantityToAdd,
-                  updatedAt: now,
-                })
-              )
-            );
-          }
-
-          for (const createEntry of plan.createEntries) {
-            const nextItemId = id();
-            transactions.push(
-              tx.grocery_items[nextItemId].update(
-                trimStringFields({
-                  name: createEntry.name,
-                  quantity: createEntry.quantity,
-                  unit: createEntry.unit,
-                  notes: createEntry.notes,
-                  category: createEntry.category,
-                  isChecked: createEntry.isChecked,
-                  isDeleted: false,
-                  createdAt: now,
-                  updatedAt: now,
-                })
-              ),
-              tx.grocery_items[nextItemId].link({
-                grocery_list: destinationListIdToUse,
-              }),
-              ...buildAddEventTransactions({
-                eventId: nextItemId,
-                listId: destinationListIdToUse,
-                item: {
-                  name: createEntry.name,
-                  quantity: createEntry.quantity,
-                  unit: createEntry.unit,
-                  notes: createEntry.notes ?? undefined,
-                  category: createEntry.category ?? undefined,
-                  storeId: createEntry.storeId,
-                },
-                addedAt: now,
-              })
-            );
-
-            if (createEntry.storeId) {
-              transactions.push(
-                tx.grocery_items[nextItemId].link({
-                  store: createEntry.storeId,
-                })
-              );
-            }
-          }
-
-          if (transactions.length > 0) {
-            await db.transact(transactions);
-          }
-        },
-        removeSourceItems: async itemIds => {
-          const movedItemIds = new Set(itemIds);
-          await removeMovedGroceryItems({
-            items: selectedItems.filter(item => movedItemIds.has(item.id)),
-          });
-        },
-        onMoveSuccess: () => {
-          onActiveListChange?.(moveSelectionPayload.destinationListId);
-        },
-      });
-    } catch {
-      toast.error('Failed to move selected items');
+      await moveQuantityRows(
+        selectedItems.map(item => item.id),
+        destinationListId
+      );
+      onActiveListChange?.(destinationListId);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Could not move items'
+      );
     }
+    return;
   };
 
   return (

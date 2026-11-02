@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useGroceryListItems } from '@/features/grocery-list/instant/useGroceryListItems';
-import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 import { db } from '@/lib/instant';
 
 import { buildAddEventTransactions } from '../instant/build-add-event-transactions';
@@ -20,10 +19,7 @@ import {
 const BACKFILL_BATCH_SIZE = 100;
 
 export const useFrequentItems = (listId: string) => {
-  const quantityEnabled = quantityWorkspaceAvailable();
-  const { items: quantityItems } = useGroceryListItems(
-    quantityEnabled ? listId : undefined
-  );
+  const { items: quantityItems } = useGroceryListItems(listId);
   const { user } = db.useAuth();
   const cacheKey = user ? `${user.id}:${listId}` : null;
   const cachedFrequentItems = useCachedFrequentItems(cacheKey);
@@ -136,13 +132,10 @@ export const useFrequentItems = (listId: string) => {
     () => (events ? rankFrequentItems(events) : undefined),
     [events]
   );
-  const currentItems = quantityEnabled ? quantityItems : list?.grocery_items;
   const freshFrequentItems = useMemo(
     () =>
-      rankedItems && currentItems
-        ? selectFrequentItems(rankedItems, currentItems)
-        : undefined,
-    [rankedItems, currentItems]
+      rankedItems ? selectFrequentItems(rankedItems, quantityItems) : undefined,
+    [rankedItems, quantityItems]
   );
   const isBackfilling = itemsToBackfill.length > 0 && !backfillError;
 

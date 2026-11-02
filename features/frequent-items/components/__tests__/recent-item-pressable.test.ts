@@ -5,6 +5,7 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import { RecentItemPressable } from '../recent-item-pressable';
 
 const runtime = vi.hoisted(() => ({
+  nativeHaptics: false,
   taps: [] as {
     begin?: () => void;
     end?: (event: unknown, success: boolean) => void;
@@ -18,6 +19,12 @@ vi.mock('react', async importOriginal => ({
   useMemo: (factory: () => unknown) => factory(),
 }));
 vi.mock('react-native', () => ({ Platform: { OS: 'ios' } }));
+vi.mock('@/modules/press-haptics', () => ({
+  get hasNativePressHaptics() {
+    return runtime.nativeHaptics;
+  },
+  PressHapticsView: 'NativePressHapticsView',
+}));
 vi.mock('expo-haptics', () => ({ selectionAsync: vi.fn() }));
 vi.mock('@/components/ui/haptic-pressable', () => ({
   HapticPressable: 'Pressable',
@@ -68,6 +75,7 @@ vi.mock('react-native-gesture-handler', () => ({
 }));
 beforeEach(() => {
   vi.clearAllMocks();
+  runtime.nativeHaptics = false;
   runtime.taps.length = 0;
   runtime.queue.length = 0;
   runtime.styles.length = 0;
@@ -151,4 +159,31 @@ it('fires haptics on touch-down before release or adding, without a second pulse
   expect(Haptics.selectionAsync).toHaveBeenCalledOnce();
   tap.begin?.();
   expect(runtime.queue).toHaveLength(2);
+});
+
+it('keeps rapid native presses off the JS haptic queue while adds are pending', async () => {
+  runtime.nativeHaptics = true;
+  const onAdd = vi.fn(() => new Promise<void>(() => {}));
+  for (const name of ['Milk', 'Eggs', 'Bread']) {
+    const tree = RecentItemPressable({
+      label: `Add ${name}`,
+      onAdd,
+      children: name,
+    });
+    expect(tree.props.children.props.children.type).toBe(
+      'NativePressHapticsView'
+    );
+  }
+  for (const tap of runtime.taps) {
+    const queued = runtime.queue.length;
+    tap.begin?.();
+    expect(runtime.queue).toHaveLength(queued);
+    tap.end?.({}, true);
+  }
+  expect(runtime.queue).toHaveLength(3);
+  runtime.queue.forEach(commit => {
+    void commit();
+  });
+  expect(onAdd).toHaveBeenCalledTimes(3);
+  expect(Haptics.selectionAsync).not.toHaveBeenCalled();
 });

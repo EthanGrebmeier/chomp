@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["PressHapticsModule"] },
+  "android": { "modules": ["expo.modules.presshaptics.PressHapticsModule"] }
+}

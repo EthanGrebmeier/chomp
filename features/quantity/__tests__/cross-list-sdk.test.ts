@@ -1,5 +1,5 @@
 import { randomUUID as id } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { expect, it, vi } from 'vitest';
 
 import { clientFor } from '../../../scripts/quantity/client.mjs';
@@ -19,7 +19,6 @@ import { QuantityTransaction } from '../transaction';
 it.skipIf(process.env.RUN_QUANTITY_SDK !== '1')(
   'serializes real SDK list races and atomically rejects partial moves and recipe deletes',
   async () => {
-    process.argv.push('--test-app');
     const { db: admin } = testApp();
     vi.stubGlobal('window', {});
     vi.stubGlobal('BroadcastChannel', undefined);
@@ -344,8 +343,9 @@ it.skipIf(process.env.RUN_QUANTITY_SDK !== '1')(
       findings.push(
         'Retry commits catalog deletion and all list tombstones atomically.'
       );
+      mkdirSync('tmp/quantity-tests', { recursive: true });
       writeFileSync(
-        'plans/grocery-quantity-contributions/evidence/cross-list-sdk.json',
+        'tmp/quantity-tests/cross-list-sdk.json',
         JSON.stringify(
           {
             time: new Date().toISOString(),

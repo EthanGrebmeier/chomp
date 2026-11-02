@@ -114,3 +114,14 @@ including manual, recipe, and meal-plan additions. Combining into an existing ro
 keeps its original creator; moving a row preserves that creator too. Adding a
 historical item again creates a new row attributed to the current shopper. Older
 rows with no creator snapshot display “Unknown person.”
+
+## 1.0.8 quantity-only release
+
+Shopping and meal-plan reads and writes always use quantity contributions and the
+account/list-scoped durable outbox. The old rollout environment flag no longer
+selects a direct `grocery_items` writer. Legacy data remains readable for migration
+and frequent-item history; it is not an alternate editing mode. Existing cached
+workspaces and queued intents retain their storage keys and survive this upgrade.
+First-time legacy migration still requires connectivity; this cleanup does not
+make an undownloaded list available offline. Native OTA launch checks are disabled
+so downloaded shopping data does not wait for the network at cold launch.

@@ -9,6 +9,10 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { HapticPressable } from '@/components/ui/haptic-pressable';
+import {
+  hasNativePressHaptics,
+  PressHapticsView,
+} from '@/modules/press-haptics';
 
 type Props = {
   label: string;
@@ -47,8 +51,10 @@ export function RecentItemPressable({ label, onAdd, children }: Props) {
       Gesture.Tap()
         .maxDistance(10)
         .onBegin(() => {
-          // Press feedback precedes release, layout changes, and persistence.
-          if (!removed.get()) scheduleOnRN(triggerPressHaptic);
+          // Compatibility for installed binaries without the native observer.
+          if (!hasNativePressHaptics && !removed.get()) {
+            scheduleOnRN(triggerPressHaptic);
+          }
         })
         .onEnd((_event, success) => {
           if (!success || removed.get()) return;
@@ -85,7 +91,7 @@ export function RecentItemPressable({ label, onAdd, children }: Props) {
           if (event.nativeEvent.actionName === 'activate') activate();
         }}
       >
-        {children}
+        <PressHapticsView>{children}</PressHapticsView>
       </Animated.View>
     </GestureDetector>
   );
