@@ -270,7 +270,8 @@ export const StoreSheet = forwardRef<StoreSheetRef, StoreSheetProps>(
 
         {selectionMode === 'sheet' ? (
           <BottomSheet
-            detents={[0.7]}
+            detents={[1]}
+            insetAdjustment="automatic"
             scrollable
             ref={sheetRef}
             name={sheetName}

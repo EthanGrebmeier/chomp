@@ -4,6 +4,7 @@ import { removeRecipeFromMealPlan } from '../instant/remove-recipe-from-meal-pla
 
 export const useRemoveRecipeFromMealPlan = () => {
   return useMutation({
+    networkMode: 'always',
     mutationFn: removeRecipeFromMealPlan,
     // No need to invalidate queries - InstantDB updates in real-time
   });

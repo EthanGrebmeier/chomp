@@ -45,7 +45,9 @@ export function ItemSheet({
   onMove,
   MetadataComponent,
   lists,
+  canEdit = true,
 }: {
+  canEdit?: boolean;
   lists?: { id: string; name: string }[];
   MetadataComponent?: ComponentType<{
     children?: React.ReactNode;
@@ -166,73 +168,98 @@ export function ItemSheet({
   );
   const content = (
     <SheetBody>
-      <BottomSheet.Header title="Edit item" className="mb-2" />
-      <View className="gap-1">
-        <ItemNameField
-          accessibilityLabel="Item name"
-          value={name}
-          onChangeText={setName}
-          onEndEditing={saveMetadata}
-          editable={!history}
-        />
-        <ItemNotesField
-          accessibilityLabel="Shopping notes"
-          value={notes}
-          onChangeText={setNotes}
-          onEndEditing={saveMetadata}
-          editable={!history}
-        />
-      </View>
-      {history ? (
-        <Text className="mt-2 text-sm text-muted-foreground">
-          Purchased · Read-only history
-        </Text>
-      ) : null}
-      <QuantitySection
-        entries={entries}
-        total={totalFor(state, rowId) ?? 0}
-        itemName={row.name}
-        unit={row.unit}
-        history={history}
-        expanded={quantityExpanded}
-        onToggle={() => setQuantityExpanded(value => !value)}
-        onAdd={() => setEditor({ snapshot: state })}
-        onSelect={entry =>
-          entry.sourceId && entry.mealId
-            ? leave(() => onOpenMeal(entry.mealId!, entry.sourceId!))
-            : setEditor({ id: entry.id, snapshot: state })
-        }
+      <BottomSheet.Header
+        title={history ? 'Item details' : 'Edit item'}
+        className="mb-1"
       />
-      {history ? (
-        <Button variant="ghost" onPress={remove}>
-          <Text className="text-destructive">Delete item</Text>
-        </Button>
-      ) : (
-        <View className="flex-row items-center gap-2 pt-4">
-          <View className="min-w-0 flex-1">
-            {MetadataComponent ? (
-              <MetadataComponent
-                row={row}
-                onChange={saveDetails}
-                leadingAction={itemActions}
-              >
-                {listPill}
-              </MetadataComponent>
-            ) : (
-              <MetadataBar
-                leadingAction={itemActions}
-                category={row.category}
-                store={row.store}
-                stores={records(state, 'row').map(r => r.store)}
-                disabled={history}
-                onChange={(field, value) => saveDetails({ [field]: value })}
-              >
-                {listPill}
-              </MetadataBar>
-            )}
-          </View>
+      <View className="gap-3">
+        <View className="gap-1">
+          <ItemNameField
+            accessibilityLabel="Item name"
+            value={name}
+            onChangeText={setName}
+            onEndEditing={saveMetadata}
+            editable={!history}
+          />
+          <ItemNotesField
+            accessibilityLabel="Shopping notes"
+            value={notes}
+            onChangeText={setNotes}
+            onEndEditing={saveMetadata}
+            editable={!history}
+          />
         </View>
-      )}
+        <View className="gap-2">
+          <Text className="text-sm text-muted-foreground">
+            Added by {row.addedBy?.name ?? 'Unknown person'}
+          </Text>
+          {history ? (
+            <View className="gap-1">
+              <Text className="text-sm font-medium">
+                Checked off by {row.purchasedBy?.name ?? 'Unknown person'}
+              </Text>
+              <Text className="text-sm text-muted-foreground">
+                {row.purchasedAt && Number.isFinite(Date.parse(row.purchasedAt))
+                  ? new Date(row.purchasedAt).toLocaleString(undefined, {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })
+                  : 'Date unknown'}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <QuantitySection
+          entries={entries}
+          total={totalFor(state, rowId) ?? 0}
+          itemName={row.name}
+          unit={row.unit}
+          history={history}
+          expanded={quantityExpanded}
+          onToggle={() => setQuantityExpanded(value => !value)}
+          onAdd={() => setEditor({ snapshot: state })}
+          onSelect={entry =>
+            entry.sourceId && entry.mealId
+              ? leave(() => onOpenMeal(entry.mealId!, entry.sourceId!))
+              : setEditor({ id: entry.id, snapshot: state })
+          }
+        />
+        {history ? (
+          row.status === 'checked' && canEdit ? (
+            <Button variant="ghost" onPress={remove}>
+              <Text className="text-destructive">Delete item</Text>
+            </Button>
+          ) : null
+        ) : (
+          <View className="flex-row items-center gap-2">
+            <View className="min-w-0 flex-1">
+              {MetadataComponent ? (
+                <MetadataComponent
+                  row={row}
+                  onChange={saveDetails}
+                  leadingAction={itemActions}
+                >
+                  {listPill}
+                </MetadataComponent>
+              ) : (
+                <MetadataBar
+                  leadingAction={itemActions}
+                  category={row.category}
+                  store={row.store}
+                  stores={records(state, 'row').map(r => r.store)}
+                  disabled={history}
+                  onChange={(field, value) => saveDetails({ [field]: value })}
+                >
+                  {listPill}
+                </MetadataBar>
+              )}
+            </View>
+          </View>
+        )}
+      </View>
       {error ? <Text className="pt-3 text-destructive">{error}</Text> : null}
     </SheetBody>
   );
@@ -244,7 +271,8 @@ export function ItemSheet({
         navigation.current?.();
       }}
       onStartClose={saveMetadata}
-      detents={needsScroll ? [0.9] : undefined}
+      detents={needsScroll ? [1] : undefined}
+      insetAdjustment={needsScroll ? 'automatic' : 'never'}
       scrollable={needsScroll}
     >
       {entries.length > 3 ? (

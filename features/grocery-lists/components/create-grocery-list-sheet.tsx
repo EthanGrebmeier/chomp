@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
+import { useActionFeedback } from '@/hooks/use-action-feedback';
 import { cn } from '@/lib/utils';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
@@ -39,6 +40,7 @@ export const CreateGroceryListSheet = forwardRef<
   const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const createGroceryList = useCreateGroceryList();
+  const feedback = useActionFeedback();
 
   useImperativeHandle(ref, () => ({
     present: () => {
@@ -56,11 +58,16 @@ export const CreateGroceryListSheet = forwardRef<
       return;
     }
 
-    const result = await createGroceryList(trimmedListName);
-    listNameInput.reset();
-    setListNameMeta({ length: 0, hasText: false });
-    sheetRef.current?.dismiss();
-    onCreated(result.listId);
+    await feedback.run(
+      async () => {
+        const result = await createGroceryList(trimmedListName);
+        listNameInput.reset();
+        setListNameMeta({ length: 0, hasText: false });
+        sheetRef.current?.dismiss();
+        onCreated(result.listId);
+      },
+      { success: 'List created', error: 'Could not create list' }
+    );
   };
 
   const handleListNameChange = (text: string) => {
@@ -96,7 +103,8 @@ export const CreateGroceryListSheet = forwardRef<
         <SheetFooter>
           <BottomActionButton
             onPress={handleCreateList}
-            disabled={overLimit || !listNameMeta.hasText}
+            disabled={feedback.isPending || overLimit || !listNameMeta.hasText}
+            status={feedback.isPending ? 'pending' : 'idle'}
           >
             <Text>Create List</Text>
           </BottomActionButton>

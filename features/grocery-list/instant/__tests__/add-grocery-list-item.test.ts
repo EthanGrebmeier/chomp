@@ -133,6 +133,16 @@ describe('addGroceryListItem', () => {
     ).toBe(true);
     expect(upsertLocalSavedItemMock).not.toHaveBeenCalled();
   });
+  it('finishes the local add while recent-item sync is still waiting for service', async () => {
+    addManualQuantityMock.mockResolvedValue(undefined);
+    const network = createDeferred();
+    transactMock.mockReturnValue(network.promise);
+    await expect(
+      addGroceryListItem({ listId: 'list', item })
+    ).resolves.toBeUndefined();
+    expect(upsertLocalSavedItemMock).toHaveBeenCalled();
+    network.resolve();
+  });
   it('forwards the originating sheet presenter to quantity addition', async () => {
     const reviewConflicts = vi.fn();
     addManualQuantityMock.mockResolvedValue(undefined);

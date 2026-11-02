@@ -115,7 +115,7 @@ export const UnitSheet = ({
       <BottomSheet
         ref={sheetRef}
         name="unit-sheet"
-        onStartOpen={() => quantityInputRef.current?.focus()}
+        onOpen={() => quantityInputRef.current?.focus()}
         onFocus={() => quantityInputRef.current?.focus()}
         draggable={false}
         insetAdjustment="never"

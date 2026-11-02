@@ -1,5 +1,7 @@
 import { id } from '@instantdb/react-native';
 
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { BaseSavedItem } from '../types';
@@ -39,7 +41,7 @@ export const addSavedItem = async (item: AddSavedItemArgs) => {
     );
   }
 
-  await db.transact(transactions);
+  await transactLocally(transactions);
 
   return { id: itemId };
 };
