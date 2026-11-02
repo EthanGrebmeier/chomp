@@ -13,6 +13,7 @@ const { inspect, complete, query } = vi.hoisted(() => ({
 }));
 vi.mock('@instantdb/react-native', () => ({ id: () => 'new-row' }));
 vi.mock('@/lib/instant', () => ({ db: { queryOnce: query } }));
+vi.mock('@/lib/instant/read-cached-query', () => ({ readCachedQuery: query }));
 vi.mock('../app/session', () => ({ listSession: () => ({ state: {} }) }));
 vi.mock('../store-conflicts', () => ({
   inspectStoreConflicts: inspect,

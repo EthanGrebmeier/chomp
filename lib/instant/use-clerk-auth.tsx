@@ -29,7 +29,6 @@ import { createInstantAuthBridge, InstantBridgeError } from './auth-bridge';
 import {
   doesInstantAuthMatchClerk,
   getAuthReconciliationAction,
-  shouldStartClerkSignOutGracePeriod,
 } from './auth-reconciliation';
 import { redirectSignedOutAuth } from './auth-redirect';
 import {
@@ -53,7 +52,6 @@ const AUTH_LOADING_TIMEOUT_MS = 4000;
 const CLERK_RESTORE_TIMEOUT_MS = 3000;
 const AUTH_RESTORE_RETRY_COUNT = 10;
 const AUTH_RESTORE_RETRY_DELAY_MS = 250;
-const CLERK_SIGN_OUT_GRACE_PERIOD_MS = 3000;
 const AUTH_WELCOME_ROUTE: Href = '/(auth)';
 const AUTH_EXPIRED_ROUTE: Href = AUTH_WELCOME_ROUTE;
 const BRIDGE_BACKGROUND_RETRY_COUNT = 3;
@@ -270,7 +268,6 @@ export const InstantAuthHandler = ({
   const { user: clerkUser } = useUser();
   const signInToInstant = useInstantSignIn();
   const previousIsSignedInRef = useRef<boolean | undefined>(isSignedIn);
-  const hasClerkSignOutGraceElapsedRef = useRef(false);
   const transitionIdRef = useRef(0);
   const previousAppStateRef = useRef(AppState.currentState);
   const hasShownExpiredToastRef = useRef(false);
@@ -399,27 +396,6 @@ export const InstantAuthHandler = ({
   }, []);
 
   useEffect(() => {
-    hasClerkSignOutGraceElapsedRef.current = false;
-
-    if (
-      !shouldStartClerkSignOutGracePeriod({
-        isClerkLoaded,
-        isSignedIn,
-        isOffline,
-      })
-    ) {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      hasClerkSignOutGraceElapsedRef.current = true;
-      setReconcileNonce(current => current + 1);
-    }, CLERK_SIGN_OUT_GRACE_PERIOD_MS);
-
-    return () => clearTimeout(timeout);
-  }, [isClerkLoaded, isOffline, isSignedIn]);
-
-  useEffect(() => {
     const transitionId = ++transitionIdRef.current;
 
     if ((!isClerkSettled && !hasClerkRestoreTimedOut) || isBlockingAuthLoad) {
@@ -459,7 +435,6 @@ export const InstantAuthHandler = ({
           clerkUserId: clerkUserId ?? null,
           clerkEmail,
           instantAuth: stableAuth,
-          hasClerkSignOutGraceElapsed: hasClerkSignOutGraceElapsedRef.current,
           hasClerkRestoreTimedOut,
         });
 
@@ -527,19 +502,6 @@ export const InstantAuthHandler = ({
           return;
         }
 
-        if (action === 'clear-instant-session') {
-          const shouldSuppressSignOutToast = consumeManualSignOutIntent();
-          queryClient.clear();
-          await db.auth.signOut();
-          nextResolvedInstantAuth = null;
-
-          if (!shouldSuppressSignOutToast) {
-            shouldMarkSessionExpired = true;
-          }
-
-          return;
-        }
-
         nextResolvedInstantAuth = null;
 
         if (didTransitionFromSignedIn) {
@@ -573,6 +535,7 @@ export const InstantAuthHandler = ({
     isClerkSettled,
     isEmailAuthCompletionActive,
     isLoadingInstant,
+    liveInstantUser,
     isOffline,
     isSignedIn,
     queryClient,

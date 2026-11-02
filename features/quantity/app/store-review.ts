@@ -1,6 +1,6 @@
 import { id } from '@instantdb/react-native';
 
-import { db } from '@/lib/instant';
+import { readCachedQuery } from '@/lib/instant/read-cached-query';
 
 import {
   completeStoreDestinations,
@@ -47,7 +47,7 @@ export async function chooseItemDestinations(
         inspected.destinations,
         id
       );
-    const { data } = await db.queryOnce({ stores: {} });
+    const { data } = await readCachedQuery({ stores: {} });
     if (!review)
       throw new Error(
         'Store review is unavailable. Reopen the list and try again.'

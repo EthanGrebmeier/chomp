@@ -57,6 +57,13 @@ it('overlays offline intents after the committed prefix and removes the overlay 
   expect(optimistic.complete).toBe(true);
   expect(optimistic.conflicts).toEqual([]);
   expect(totalFor(optimistic, 'row')).toBe(7);
+  const failedSync = readWorkspaceState(
+    [],
+    [{ operation: offline, error: 'Connection lost' }],
+    rows,
+    1
+  );
+  expect(totalFor(failedSync, 'row')).toBe(7);
   const acknowledged = {
     ...offline,
     commit: { sequence: 3, parents: [remote.id] },
