@@ -74,7 +74,7 @@ export function StoreReviewSheet({
   const result = useRef<StoreDecisions | null>(null);
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const contentHeight = Math.min(height * 0.9, height - insets.top - 12);
+  const contentHeight = height - insets.top;
   useEffect(() => {
     void sheet.current?.present();
   }, []);
@@ -82,8 +82,8 @@ export function StoreReviewSheet({
     <BottomSheet
       ref={sheet}
       name="store-conflict-review"
-      detents={[contentHeight / height]}
-      insetAdjustment="never"
+      detents={[1]}
+      insetAdjustment="automatic"
       scrollable
       viewClassName="flex-1"
       onDismiss={() => onFinish(result.current)}

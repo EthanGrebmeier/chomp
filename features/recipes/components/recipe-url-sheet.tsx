@@ -1,7 +1,7 @@
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { LinkIcon } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
-import { View } from 'react-native';
+import { TextInput, View } from 'react-native';
 
 import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
@@ -29,6 +29,7 @@ export const RecipeUrlSheet = ({
   disabled = false,
 }: RecipeUrlSheetProps) => {
   const sheetRef = useRef<TrueSheet>(null);
+  const inputRef = useRef<TextInput>(null);
   const draftUrlInput = useUncontrolledTextInput(sourceUrl ?? '');
   const {
     inputKey: draftUrlInputKey,
@@ -83,6 +84,7 @@ export const RecipeUrlSheet = ({
         }
         ref={sheetRef}
         name="recipe-url-sheet"
+        onOpen={() => inputRef.current?.focus()}
       >
         <BottomSheet.SheetView>
           <BottomSheet.Header
@@ -97,6 +99,7 @@ export const RecipeUrlSheet = ({
 
           <View className="gap-4">
             <BottomSheet.TextInput
+              ref={inputRef}
               key={draftUrlInputKey}
               defaultValue={draftUrlDefaultValue}
               onChangeText={handleDraftUrlChange}
@@ -105,7 +108,6 @@ export const RecipeUrlSheet = ({
               keyboardType="url"
               autoCapitalize="none"
               autoCorrect={false}
-              autoFocus
               returnKeyType="done"
             />
           </View>

@@ -57,7 +57,6 @@ export function useQuantityWorkspace(
 ) {
   const query = db.useQuery(workspaceQuery(workspaceId));
   const connection = db.useConnectionStatus();
-  const [verified, setVerified] = useState(false);
   const [confirmed, setConfirmed] = useState<Operation[]>([]);
   const [pending, setPending] = useState<Pending[]>([]);
   const [outboxLoaded, setOutboxLoaded] = useState(false);
@@ -116,7 +115,6 @@ export function useQuantityWorkspace(
           !Array.isArray(result.data.gqc_operations_v1)
         )
           throw new Error('Workspace access is unavailable');
-        setVerified(true);
         setConfirmed(previous =>
           mergeConfirmedOperations(
             previous,
@@ -128,10 +126,8 @@ export function useQuantityWorkspace(
         setError(null);
       })
       .catch(() => {
-        setVerified(false);
-        setError(
-          'Could not verify the complete workspace. Reconnect and retry.'
-        );
+        // A failed network refresh says nothing about cached access. The live
+        // subscription still reports actual permission errors and removals.
       });
   }, [workspaceId]);
 
@@ -173,6 +169,16 @@ export function useQuantityWorkspace(
     if (initialized && connection === 'authenticated') void refresh();
   }, [initialized, connection, refresh]);
   useEffect(() => {
+    if (connection !== 'authenticated' || !outboxLoaded) return;
+    // Retry saved failures once per reconnect (including a cold launch), not in
+    // a tight loop after every failed send. Operation IDs make retries safe.
+    void changePending(values =>
+      values.map(p => ({ operation: p.operation }))
+    ).catch(() =>
+      setError('Unable to save the outbox. Retry before closing the app.')
+    );
+  }, [connection, outboxLoaded, changePending]);
+  useEffect(() => {
     void flush()?.catch(() =>
       setError('Unable to save the outbox. Retry before closing the app.')
     );
@@ -190,9 +196,10 @@ export function useQuantityWorkspace(
     [confirmed, pending, query.data, replay]
   );
 
+  // The persisted subscription is a complete local snapshot. Never require a
+  // fresh server acknowledgement to use it; commits still verify access online.
   const canEdit =
     initialized &&
-    verified &&
     outboxLoaded &&
     !query.isLoading &&
     !query.error &&

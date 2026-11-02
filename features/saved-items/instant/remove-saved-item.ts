@@ -1,3 +1,5 @@
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 
 export type RemoveSavedItemArgs = {
@@ -5,5 +7,5 @@ export type RemoveSavedItemArgs = {
 };
 
 export const removeSavedItem = async ({ itemId }: RemoveSavedItemArgs) => {
-  await db.transact([db.tx.saved_items[itemId].delete()]);
+  await transactLocally([db.tx.saved_items[itemId].delete()]);
 };

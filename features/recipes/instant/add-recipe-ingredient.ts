@@ -1,6 +1,9 @@
 import { id, tx } from '@instantdb/react-native';
+import { toast } from 'sonner-native';
 
-import { db, type TransactionChunk } from '../../../lib/instant';
+import { transactLocally } from '@/lib/instant/local-transaction';
+
+import { type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import {
   buildRecipeIngredientEditTransactions,
@@ -79,12 +82,14 @@ export const addRecipeIngredient = async ({
     })
   );
 
-  await db.transact(transactions);
+  await transactLocally(transactions);
 
   // Auto-save ingredient to user's saved items if it doesn't exist
-  addSavedItemIfNotExists({
+  void addSavedItemIfNotExists({
     name,
     category: category ?? undefined,
+  }).catch(() => {
+    toast.error('Ingredient saved, but could not add it to saved items');
   });
 
   return { id: ingredientId };

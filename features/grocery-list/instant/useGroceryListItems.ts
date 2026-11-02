@@ -80,14 +80,16 @@ export const useGroceryListItems = (listId: string | undefined) => {
   return {
     items: enabled ? projected : items,
     isLoading: enabled
-      ? quantity.loading || stores.isLoading
+      ? listId
+        ? quantity.loading
+        : false
       : listId
         ? query.isLoading
         : false,
     error: enabled
       ? quantity.error
         ? { message: quantity.error }
-        : stores.error
+        : undefined
       : query.error,
   };
 };

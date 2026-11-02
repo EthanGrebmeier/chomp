@@ -64,7 +64,7 @@ export const EditUnitSheet = forwardRef<EditUnitSheetRef, EditUnitSheetProps>(
       <BottomSheet
         name="edit-unit-sheet"
         ref={sheetRef}
-        onStartOpen={() => {
+        onOpen={() => {
           inputRef.current?.focus();
         }}
         onDismiss={handleDismiss}

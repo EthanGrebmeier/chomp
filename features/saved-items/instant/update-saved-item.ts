@@ -1,8 +1,10 @@
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { BaseSavedItem } from '../types';
 
-import { linkStoreToSavedItem } from './link-store-to-saved-item';
+import { buildSavedItemStoreTransactions } from './link-store-to-saved-item';
 
 export type UpdateSavedItemArgs = {
   itemId: string;
@@ -27,15 +29,14 @@ export const updateSavedItem = async ({
     ),
   ];
 
-  // Handle store linking/unlinking separately
   if (storeId !== undefined || currentStoreId) {
-    await db.transact(transactions);
-    await linkStoreToSavedItem({
-      itemId,
-      storeId,
-      currentStoreId,
-    });
-  } else {
-    await db.transact(transactions);
+    transactions.push(
+      ...buildSavedItemStoreTransactions({
+        itemId,
+        storeId,
+        currentStoreId,
+      })
+    );
   }
+  await transactLocally(transactions);
 };

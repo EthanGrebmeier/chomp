@@ -15,6 +15,7 @@ import { ListItem } from '@/components/ui/list-item';
 import { SearchButton } from '@/components/ui/search-button';
 import { Text } from '@/components/ui/text';
 import { useCategoryOptions } from '@/features/categories/use-category-options';
+import { AppQuantityItemSheet } from '@/features/quantity/app/item-sheet';
 import { useQuantityList } from '@/features/quantity/app/session';
 import { isStoreReviewCancelled } from '@/features/quantity/store-review-cancelled';
 import type { CategoryOption } from '@/features/shared/category/categories';
@@ -37,6 +38,7 @@ export function PurchasedItemsScreen({
   const { data: categoryOptions } = useCategoryOptions();
   const stores = db.useQuery({ stores: {} });
   const [query, setQuery] = useState('');
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [searchMode, setSearchMode] = useState(false);
   const [adding, setAdding] = useState<Set<string>>(() => new Set());
   const [added, setAdded] = useState<Set<string>>(() => new Set());
@@ -181,6 +183,7 @@ export function PurchasedItemsScreen({
               added={added.has(item.id)}
               disabled={!quantity.canEdit}
               onAdd={addAgain}
+              onDetails={setDetailId}
             />
           )}
           ListEmptyComponent={
@@ -203,6 +206,14 @@ export function PurchasedItemsScreen({
           }
         />
       )}
+      {detailId ? (
+        <AppQuantityItemSheet
+          key={detailId}
+          listId={listId}
+          rowId={detailId}
+          onDismiss={() => setDetailId(null)}
+        />
+      ) : null}
     </View>
   );
 }
@@ -214,6 +225,7 @@ const PurchaseRow = memo(function PurchaseRow({
   added,
   disabled,
   onAdd,
+  onDetails,
 }: {
   item: PurchasedItem;
   categoryOptions: CategoryOption[];
@@ -221,6 +233,7 @@ const PurchaseRow = memo(function PurchaseRow({
   added: boolean;
   disabled: boolean;
   onAdd: (item: PurchasedItem) => void;
+  onDetails: (id: string) => void;
 }) {
   return (
     <ListItem>
@@ -236,7 +249,7 @@ const PurchaseRow = memo(function PurchaseRow({
         disabled={disabled || adding || added}
         onPress={() => onAdd(item)}
         hapticType="selection"
-        className="min-h-11 flex-1 flex-row items-center gap-3 py-1"
+        className="min-h-11 min-w-11 items-center justify-center py-1"
       >
         <View className="size-5 items-center justify-center rounded-md border border-border">
           {adding ? (
@@ -250,6 +263,14 @@ const PurchaseRow = memo(function PurchaseRow({
             />
           )}
         </View>
+      </HapticPressable>
+      <HapticPressable
+        accessibilityRole="button"
+        accessibilityLabel={`View details for ${item.name}`}
+        onPress={() => onDetails(item.id)}
+        hapticType="selection"
+        className="min-h-11 flex-1 justify-center py-1"
+      >
         <View className="min-w-0 flex-1 gap-1">
           <View className="flex-row justify-between gap-2">
             <Text variant="itemTitle" className="flex-1">

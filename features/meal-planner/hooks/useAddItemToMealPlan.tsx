@@ -11,6 +11,7 @@ export const useAddItemToDate = () => {
   const { data: defaultStore } = useDefaultStore();
 
   return useMutation({
+    networkMode: 'always',
     mutationFn: (args: Omit<AddItemToDateArgs, 'defaultStore'>) =>
       addItemToDate({ ...args, defaultStore }),
     // No need to invalidate queries - InstantDB updates in real-time

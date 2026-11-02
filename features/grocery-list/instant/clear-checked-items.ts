@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner-native';
 
 import { quantityWorkspaceAvailable } from '@/features/quantity/config';
 
@@ -41,6 +42,9 @@ export const filterCheckedItems = (groceryItems: GroceryListItem[]) => {
 
 export const useClearCheckedItems = () => {
   return useMutation({
+    networkMode: 'always',
+    onSuccess: () => toast.success('Checked items cleared'),
+    onError: () => toast.error('Could not clear checked items'),
     mutationFn: clearCheckedItems,
   });
 };
