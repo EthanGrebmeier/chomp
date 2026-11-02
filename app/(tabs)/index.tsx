@@ -7,7 +7,6 @@ import { EmptyHeading } from '@/components/text/empty-heading';
 import { EmptySubtext } from '@/components/text/empty-subtext';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { useCategoryOptions } from '@/features/categories/use-category-options';
 import { GroceryList } from '@/features/grocery-list/components/grocery-list';
 import { GroceryListSkeleton } from '@/features/grocery-list/components/grocery-list-skeleton';
 import { type ListView } from '@/features/grocery-list/components/list-view-tabs';
@@ -39,7 +38,6 @@ export default function List() {
     error: settingsError,
     refetch: retrySettings,
   } = useSettings();
-  const categories = useCategoryOptions();
   const [selectedListId, setSelectedListId] = useState<
     string | null | undefined
   >(listIdParam);
@@ -114,11 +112,10 @@ export default function List() {
 
     const isOwner = user?.id === activeList.ownerId;
 
-    if (isOwner) {
-      await deleteGroceryList(activeListId);
-    } else {
-      await leaveGroceryList(activeListId);
-    }
+    const removed = isOwner
+      ? await deleteGroceryList(activeListId)
+      : await leaveGroceryList(activeListId);
+    if (!removed) return;
 
     // Switch to another list if available
     const remainingLists = lists?.grocery_lists.filter(
@@ -133,13 +130,12 @@ export default function List() {
 
   // Items load per list; keep <GroceryList> mounted across list switches and
   // let it render a quiet list area instead of tearing down to the skeleton.
-  const isLoading = listsLoading || settingsLoading || categories.isLoading;
+  const isLoading = listsLoading || settingsLoading;
   const quantity = useQuantityList(activeListId);
   const entryVisible = useAppEntryVisible();
   const [contentRendered, setContentRendered] = useState(false);
   const handleContentReady = useCallback(() => setContentRendered(true), []);
-  const loadError =
-    listsError ?? itemsError ?? settingsError ?? categories.error;
+  const loadError = listsError ?? itemsError ?? settingsError;
   useStartupScreenReady(
     Boolean(loadError) ||
       (!isLoading &&

@@ -36,22 +36,29 @@ export const addGroceryListItem = ({
   return import('@/features/quantity/app/grocery-actions').then(
     async ({ addManualQuantity }) => {
       await addManualQuantity(listId, item, savedItemId, reviewConflicts);
+      // The durable quantity intent is the success boundary. Local history is
+      // useful offline; a server acknowledgement for recent-item ranking must
+      // never keep the add sheet waiting on poor cell service.
       try {
-        await db.transact(
+        if (!savedItemId && persistLocalSavedItem)
+          await upsertLocalSavedItem({ item, selectedLocalSavedItemId });
+      } catch {
+        toast.error('Item added, but local history could not be updated');
+      }
+      void db
+        .transact(
           buildAddEventTransactions({
             eventId: itemId,
             listId,
             item,
             addedAt: now,
           })
-        );
-        if (!savedItemId && persistLocalSavedItem)
-          await upsertLocalSavedItem({ item, selectedLocalSavedItemId });
-      } catch {
-        toast.error(
-          'Quantity saved, but recent-item history could not be updated'
-        );
-      }
+        )
+        .catch(() => {
+          toast.error(
+            'Quantity saved, but recent-item history could not be updated'
+          );
+        });
     }
   );
 };

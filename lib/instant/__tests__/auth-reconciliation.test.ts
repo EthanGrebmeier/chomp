@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   doesInstantAuthMatchClerk,
   getAuthReconciliationAction,
-  shouldStartClerkSignOutGracePeriod,
 } from '../auth-reconciliation';
 
 const signedInInstantUser = {
@@ -20,7 +19,7 @@ describe('auth reconciliation', () => {
         clerkUserId: null,
         clerkEmail: null,
         instantAuth: undefined,
-        hasClerkSignOutGraceElapsed: false,
+
         hasClerkRestoreTimedOut: false,
       })
     ).toBe('wait');
@@ -32,7 +31,7 @@ describe('auth reconciliation', () => {
       isSignedIn: undefined,
       clerkUserId: null,
       clerkEmail: null,
-      hasClerkSignOutGraceElapsed: false,
+
       hasClerkRestoreTimedOut: true,
     };
 
@@ -68,7 +67,7 @@ describe('auth reconciliation', () => {
         clerkUserId: null,
         clerkEmail: null,
         instantAuth: undefined,
-        hasClerkSignOutGraceElapsed: false,
+
         hasClerkRestoreTimedOut: true,
       })
     ).toBe('wait');
@@ -82,7 +81,7 @@ describe('auth reconciliation', () => {
         clerkUserId: null,
         clerkEmail: null,
         instantAuth: signedInInstantUser,
-        hasClerkSignOutGraceElapsed: false,
+
         hasClerkRestoreTimedOut: false,
       })
     ).toBe('wait');
@@ -96,7 +95,7 @@ describe('auth reconciliation', () => {
         clerkUserId: 'clerk-user',
         clerkEmail: 'PERSON@example.com',
         instantAuth: signedInInstantUser,
-        hasClerkSignOutGraceElapsed: false,
+
         hasClerkRestoreTimedOut: false,
       })
     ).toBe('keep-email-session');
@@ -120,7 +119,7 @@ describe('auth reconciliation', () => {
         clerkUserId: 'clerk-user',
         clerkEmail: 'person@example.com',
         instantAuth: null,
-        hasClerkSignOutGraceElapsed: false,
+
         hasClerkRestoreTimedOut: false,
       })
     ).toBe('bridge-clerk-session');
@@ -135,7 +134,7 @@ describe('auth reconciliation', () => {
           id: 'other-user',
           email: 'other@example.com',
         },
-        hasClerkSignOutGraceElapsed: false,
+
         hasClerkRestoreTimedOut: false,
       })
     ).toBe('bridge-clerk-session');
@@ -149,13 +148,13 @@ describe('auth reconciliation', () => {
         clerkUserId: null,
         clerkEmail: null,
         instantAuth: signedInInstantUser,
-        hasClerkSignOutGraceElapsed: false,
+
         hasClerkRestoreTimedOut: false,
       })
     ).toBe('defer-instant-sign-out');
   });
 
-  it('clears the stale Instant email session after the sign-out grace period', () => {
+  it('preserves cached email auth when Clerk reports signed out after a failed refresh', () => {
     expect(
       getAuthReconciliationAction({
         isClerkLoaded: true,
@@ -163,28 +162,10 @@ describe('auth reconciliation', () => {
         clerkUserId: null,
         clerkEmail: null,
         instantAuth: signedInInstantUser,
-        hasClerkSignOutGraceElapsed: true,
+
         hasClerkRestoreTimedOut: false,
       })
-    ).toBe('clear-instant-session');
-  });
-
-  it('only starts the sign-out grace period while online', () => {
-    expect(
-      shouldStartClerkSignOutGracePeriod({
-        isClerkLoaded: true,
-        isSignedIn: false,
-        isOffline: true,
-      })
-    ).toBe(false);
-
-    expect(
-      shouldStartClerkSignOutGracePeriod({
-        isClerkLoaded: true,
-        isSignedIn: false,
-        isOffline: false,
-      })
-    ).toBe(true);
+    ).toBe('defer-instant-sign-out');
   });
 
   it('restores guests and recognizes a fully signed-out state', () => {
@@ -195,7 +176,7 @@ describe('auth reconciliation', () => {
         clerkUserId: null,
         clerkEmail: null,
         instantAuth: { id: 'guest-user' },
-        hasClerkSignOutGraceElapsed: false,
+
         hasClerkRestoreTimedOut: false,
       })
     ).toBe('keep-guest-session');
@@ -207,7 +188,7 @@ describe('auth reconciliation', () => {
         clerkUserId: null,
         clerkEmail: null,
         instantAuth: null,
-        hasClerkSignOutGraceElapsed: false,
+
         hasClerkRestoreTimedOut: false,
       })
     ).toBe('signed-out');

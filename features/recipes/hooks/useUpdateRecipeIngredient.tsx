@@ -11,6 +11,7 @@ export const useUpdateRecipeIngredient = () => {
   const { data: defaultStore } = useDefaultStore();
 
   return useMutation({
+    networkMode: 'always',
     mutationFn: (args: Omit<UpdateRecipeIngredientArgs, 'defaultStore'>) =>
       updateRecipeIngredient({ ...args, defaultStore }),
     // No need to invalidate queries - InstantDB updates in real-time

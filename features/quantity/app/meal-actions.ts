@@ -5,7 +5,7 @@ import type { AddRecipeToDateArgs } from '@/features/meal-planner/instant/add-re
 import type { UpdateSnapshotRowOverridesArgs } from '@/features/meal-planner/instant/meal-plan-ingredient-snapshot-store';
 import type { UpdateMealPlanItemArgs } from '@/features/meal-planner/instant/update-meal-plan-item';
 import type { UpdateMealPlanRecipeArgs } from '@/features/meal-planner/instant/update-meal-plan-recipe';
-import { db } from '@/lib/instant';
+import { readCachedQuery } from '@/lib/instant/read-cached-query';
 
 import { syncMeal, removeMeal, editMealSchedule } from '../meals';
 import { record, records } from '../model';
@@ -24,13 +24,12 @@ import { chooseItemDestinations } from './store-review';
 
 export async function planQuantityRecipe(args: AddRecipeToDateArgs) {
   listSession(args.listId);
-  const result = await db.queryOnce({
-    recipes: {
-      $: { where: { id: args.recipeId } },
-      recipe_ingredients: { store: {} },
-    },
+  const result = await readCachedQuery({
+    recipes: { recipe_ingredients: { store: {} } },
   });
-  const source = result.data.recipes[0];
+  const source = result.data.recipes.find(
+    recipe => recipe.id === args.recipeId
+  );
   if (!source) throw new Error('Recipe is no longer available');
   const recipe = recipeFromApp(source);
   const servings = args.servings ?? 1;
@@ -149,13 +148,12 @@ export async function updateQuantityMeal({
   let session = documentSession(mealPlanRecipeId);
   const meal = record(session.state, mealPlanRecipeId, 'meal');
   if (updates.recipeId && updates.recipeId !== meal.recipeId) {
-    const result = await db.queryOnce({
-      recipes: {
-        $: { where: { id: updates.recipeId } },
-        recipe_ingredients: { store: {} },
-      },
+    const result = await readCachedQuery({
+      recipes: { recipe_ingredients: { store: {} } },
     });
-    const source = result.data.recipes[0];
+    const source = result.data.recipes.find(
+      recipe => recipe.id === updates.recipeId
+    );
     if (!source) throw new Error('Replacement recipe is unavailable');
     const recipe = recipeFromApp(source);
     const servings = updates.servings ?? meal.servings;

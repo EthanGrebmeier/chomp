@@ -1,6 +1,7 @@
 import { tx } from '@instantdb/react-native';
 
-import { db } from '../../../lib/instant';
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 export type UpdateRecipeArgs = {
@@ -16,7 +17,7 @@ export type UpdateRecipeArgs = {
 };
 
 export const updateRecipe = async ({ recipeId, updates }: UpdateRecipeArgs) => {
-  await db.transact([
+  await transactLocally([
     tx.recipes[recipeId].update(
       trimStringFields({
         ...updates,

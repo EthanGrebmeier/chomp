@@ -10,7 +10,6 @@ export type AuthReconciliationAction =
   | 'defer-instant-sign-out'
   | 'use-cached-instant-session'
   | 'bridge-clerk-session'
-  | 'clear-instant-session'
   | 'signed-out';
 
 type GetAuthReconciliationActionArgs = {
@@ -19,20 +18,12 @@ type GetAuthReconciliationActionArgs = {
   clerkUserId: string | null;
   clerkEmail: string | null;
   instantAuth: AuthIdentity | null | undefined;
-  hasClerkSignOutGraceElapsed: boolean;
   /**
    * Clerk restores its session over the network. On a weak connection that
    * request can hang for a long time, so once this is true we stop waiting and
    * trust the locally persisted Instant session until Clerk catches up.
    */
   hasClerkRestoreTimedOut: boolean;
-};
-
-type ShouldStartClerkSignOutGracePeriodArgs = Pick<
-  GetAuthReconciliationActionArgs,
-  'isClerkLoaded' | 'isSignedIn'
-> & {
-  isOffline: boolean;
 };
 
 const normalizeEmail = (email: string | null | undefined) =>
@@ -64,20 +55,12 @@ export const doesInstantAuthMatchClerk = ({
   );
 };
 
-export const shouldStartClerkSignOutGracePeriod = ({
-  isClerkLoaded,
-  isSignedIn,
-  isOffline,
-}: ShouldStartClerkSignOutGracePeriodArgs) =>
-  isClerkLoaded && isSignedIn === false && !isOffline;
-
 export const getAuthReconciliationAction = ({
   isClerkLoaded,
   isSignedIn,
   clerkUserId,
   clerkEmail,
   instantAuth,
-  hasClerkSignOutGraceElapsed,
   hasClerkRestoreTimedOut,
 }: GetAuthReconciliationActionArgs): AuthReconciliationAction => {
   if (instantAuth === undefined) {
@@ -108,9 +91,9 @@ export const getAuthReconciliationAction = ({
   }
 
   if (instantAuth?.email) {
-    return hasClerkSignOutGraceElapsed
-      ? 'clear-instant-session'
-      : 'defer-instant-sign-out';
+    // Missing Clerk resources can mean a failed refresh, even when the device
+    // reports connectivity. Explicit sign-out clears Instant at its entrypoint.
+    return 'defer-instant-sign-out';
   }
 
   if (instantAuth) {

@@ -1,5 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import {
@@ -68,7 +70,7 @@ export const updateCategory = async ({
   );
 
   if (existingRecord) {
-    await db.transact([
+    await transactLocally([
       tx.categories[existingRecord.id].update(
         trimStringFields({ ...updates, name, updatedAt: now })
       ),
@@ -81,7 +83,7 @@ export const updateCategory = async ({
   }
 
   const overrideId = id();
-  await db.transact([
+  await transactLocally([
     tx.categories[overrideId].update(
       trimStringFields({
         name: name ?? category.label,

@@ -108,7 +108,7 @@ export const ItemInput = ({
       {...(compact
         ? {
             className:
-              'min-h-0 py-1 text-2xl font-semibold leading-8 text-foreground',
+              'min-h-0 pb-1 pt-0 text-2xl font-semibold leading-8 text-foreground',
           }
         : {})}
       key={inputKey}

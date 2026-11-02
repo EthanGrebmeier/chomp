@@ -1,11 +1,15 @@
+import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
 
 import { RecentItemPressable } from '../recent-item-pressable';
 
 const runtime = vi.hoisted(() => ({
-  taps: [] as { end?: (event: unknown, success: boolean) => void }[],
-  queue: [] as (() => Promise<void>)[],
+  taps: [] as {
+    begin?: () => void;
+    end?: (event: unknown, success: boolean) => void;
+  }[],
+  queue: [] as (() => Promise<void> | void)[],
   styles: [] as (() => { display: string })[],
 }));
 vi.mock('react', async importOriginal => ({
@@ -35,7 +39,8 @@ vi.mock('react-native-reanimated', () => ({
   },
 }));
 vi.mock('react-native-worklets', () => ({
-  scheduleOnRN: (callback: () => Promise<void>) => runtime.queue.push(callback),
+  scheduleOnRN: (callback: () => Promise<void> | void) =>
+    runtime.queue.push(callback),
 }));
 vi.mock('react-native-gesture-handler', () => ({
   GestureDetector: 'GestureDetector',
@@ -43,6 +48,11 @@ vi.mock('react-native-gesture-handler', () => ({
     Tap: () => {
       const handler = {
         maxDistance: () => handler,
+        begin: undefined as (() => void) | undefined,
+        onBegin: (callback: () => void) => {
+          handler.begin = callback;
+          return handler;
+        },
         end: undefined as
           | ((event: unknown, success: boolean) => void)
           | undefined,
@@ -57,6 +67,7 @@ vi.mock('react-native-gesture-handler', () => ({
   },
 }));
 beforeEach(() => {
+  vi.clearAllMocks();
   runtime.taps.length = 0;
   runtime.queue.length = 0;
   runtime.styles.length = 0;
@@ -123,4 +134,21 @@ it('restores failed adds and allows retry without restoring other pending rows',
     'none',
     'none',
   ]);
+});
+
+it('fires haptics on touch-down before release or adding, without a second pulse', async () => {
+  const onAdd = vi.fn().mockResolvedValue(undefined);
+  RecentItemPressable({ label: 'Add Milk', onAdd, children: null });
+  const tap = runtime.taps[0];
+  tap.begin?.();
+  await runtime.queue[0]();
+  expect(Haptics.selectionAsync).toHaveBeenCalledOnce();
+  expect(onAdd).not.toHaveBeenCalled();
+  expect(runtime.styles[0]()).toEqual({ display: 'flex' });
+  tap.end?.({}, true);
+  await runtime.queue[1]();
+  expect(onAdd).toHaveBeenCalledOnce();
+  expect(Haptics.selectionAsync).toHaveBeenCalledOnce();
+  tap.begin?.();
+  expect(runtime.queue).toHaveLength(2);
 });
