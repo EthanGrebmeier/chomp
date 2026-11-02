@@ -4,18 +4,23 @@ import { forwardRef, useCallback, useImperativeHandle } from 'react';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  Easing,
+  cancelAnimation,
   Extrapolation,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
+  withSpring,
+  ReduceMotion,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { cn } from '@/lib/utils';
 
 import { Icon } from './icon';
+import {
+  getDeleteThreshold,
+  shouldDeleteOnRelease,
+} from './swipe-to-delete-gesture';
 
 // Width the row rests at once opened, revealing the trash action.
 const SWIPE_REST_WIDTH = 88;
@@ -23,19 +28,13 @@ const SWIPE_REST_WIDTH = 88;
 const ACTIVATION_DISTANCE = 10;
 // Vertical travel that hands the touch back to the list for scrolling.
 const VERTICAL_FAIL_DISTANCE = 12;
-// Fraction of the screen the row must pass for a release to commit a delete.
-const FULL_SWIPE_FRACTION = 0.45;
 // How much of the drag beyond the commit threshold is tracked (rubber-banding).
 const OVERSHOOT_RESISTANCE = 0.5;
-// Quick, decelerating settle back to the open/closed resting positions.
-const SETTLE_TIMING = {
-  duration: 220,
-  easing: Easing.out(Easing.cubic),
-} as const;
-// Row accelerates off-screen once a delete is committed.
-const DELETE_SWEEP_TIMING = {
-  duration: 220,
-  easing: Easing.in(Easing.cubic),
+const SETTLE_SPRING = {
+  duration: 400,
+  dampingRatio: 1,
+  overshootClamping: true,
+  reduceMotion: ReduceMotion.System,
 } as const;
 
 const triggerThresholdHaptic = () => {
@@ -59,7 +58,7 @@ export type SwipeToDeleteProps = {
 
 /**
  * Native-style swipe-to-delete. A light swipe rests open to reveal a trash
- * icon; swiping past ~45% of the screen and releasing commits the delete by
+ * icon; a longer swipe or deliberate leftward flick commits the delete by
  * sweeping the row (and its red backdrop) off-screen. A medium haptic fires
  * when crossing the commit threshold.
  *
@@ -71,7 +70,7 @@ export const SwipeToDelete = forwardRef<
   SwipeToDeleteProps
 >(({ children, onDelete, contentClassName }, ref) => {
   const screenWidth = useWindowDimensions().width;
-  const fullSwipeThreshold = screenWidth * FULL_SWIPE_FRACTION;
+  const fullSwipeThreshold = getDeleteThreshold(screenWidth);
 
   // Negative when the row is swiped open to the left.
   const translateX = useSharedValue(0);
@@ -85,8 +84,8 @@ export const SwipeToDelete = forwardRef<
   const touchStartY = useSharedValue(0);
 
   const close = useCallback(() => {
-    translateX.value = withTiming(0, SETTLE_TIMING);
-    isPastThreshold.value = false;
+    translateX.set(withSpring(0, SETTLE_SPRING));
+    isPastThreshold.set(false);
   }, [translateX, isPastThreshold]);
 
   useImperativeHandle(ref, () => ({ close }), [close]);
@@ -102,16 +101,16 @@ export const SwipeToDelete = forwardRef<
       if (!touch) {
         return;
       }
-      touchStartX.value = touch.absoluteX;
-      touchStartY.value = touch.absoluteY;
+      touchStartX.set(touch.absoluteX);
+      touchStartY.set(touch.absoluteY);
     })
     .onTouchesMove((event, stateManager) => {
       const touch = event.changedTouches[0];
       if (!touch) {
         return;
       }
-      const dx = touch.absoluteX - touchStartX.value;
-      const dy = touch.absoluteY - touchStartY.value;
+      const dx = touch.absoluteX - touchStartX.get();
+      const dy = touch.absoluteY - touchStartY.get();
 
       if (Math.abs(dy) >= VERTICAL_FAIL_DISTANCE) {
         stateManager.fail();
@@ -122,7 +121,7 @@ export const SwipeToDelete = forwardRef<
         return;
       }
       if (dx >= ACTIVATION_DISTANCE) {
-        const isOpen = translateX.value < 0;
+        const isOpen = translateX.get() < 0;
         if (isOpen) {
           stateManager.activate();
         } else {
@@ -131,10 +130,11 @@ export const SwipeToDelete = forwardRef<
       }
     })
     .onStart(() => {
-      startX.value = translateX.value;
+      cancelAnimation(translateX);
+      startX.set(translateX.get());
     })
     .onUpdate(event => {
-      const raw = startX.value + event.translationX;
+      const raw = startX.get() + event.translationX;
       // Never allow the row to move past its closed resting position.
       let next = Math.min(raw, 0);
 
@@ -145,57 +145,67 @@ export const SwipeToDelete = forwardRef<
       }
 
       const crossed = -next >= fullSwipeThreshold;
-      if (crossed !== isPastThreshold.value) {
-        isPastThreshold.value = crossed;
+      if (crossed !== isPastThreshold.get()) {
+        isPastThreshold.set(crossed);
         if (crossed) {
           scheduleOnRN(triggerThresholdHaptic);
         }
       }
 
-      translateX.value = next;
+      translateX.set(next);
     })
     .onEnd(event => {
-      const position = -translateX.value;
-      isPastThreshold.value = false;
-
-      if (position >= fullSwipeThreshold) {
+      const position = -translateX.get();
+      if (
+        shouldDeleteOnRelease(position, event.velocityX, fullSwipeThreshold)
+      ) {
+        if (!isPastThreshold.get()) {
+          scheduleOnRN(triggerThresholdHaptic);
+        }
+        isPastThreshold.set(false);
         // Commit the delete: sweep the row and red backdrop off-screen left.
-        translateX.value = withTiming(
-          -screenWidth,
-          DELETE_SWEEP_TIMING,
-          finished => {
-            if (finished) {
-              scheduleOnRN(onDelete);
+        translateX.set(
+          withSpring(
+            -screenWidth,
+            { ...SETTLE_SPRING, duration: 300, velocity: event.velocityX },
+            finished => {
+              if (finished) {
+                scheduleOnRN(onDelete);
+              }
             }
-          }
+          )
         );
         return;
       }
+
+      isPastThreshold.set(false);
 
       const flingOpen = event.velocityX < -600;
       const flingClose = event.velocityX > 600;
       const shouldOpen =
         !flingClose && (flingOpen || position > SWIPE_REST_WIDTH * 0.5);
 
-      translateX.value = withTiming(
-        shouldOpen ? -SWIPE_REST_WIDTH : 0,
-        SETTLE_TIMING
+      translateX.set(
+        withSpring(shouldOpen ? -SWIPE_REST_WIDTH : 0, {
+          ...SETTLE_SPRING,
+          velocity: event.velocityX,
+        })
       );
     });
 
   const contentStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
+    transform: [{ translateX: translateX.get() }],
   }));
 
   const backdropStyle = useAnimatedStyle(() => ({
-    width: Math.max(-translateX.value, 0),
+    width: Math.max(-translateX.get(), 0),
   }));
 
   const iconStyle = useAnimatedStyle(() => ({
     transform: [
       {
         scale: interpolate(
-          -translateX.value,
+          -translateX.get(),
           [fullSwipeThreshold - 24, fullSwipeThreshold],
           [1, 1.2],
           Extrapolation.CLAMP

@@ -237,7 +237,8 @@ export const CategorySheet = forwardRef<CategorySheetRef, CategorySheetProps>(
 
         {selectionMode === 'sheet' ? (
           <BottomSheet
-            detents={[0.7]}
+            detents={[1]}
+            insetAdjustment="automatic"
             scrollable
             ref={sheetRef}
             onOpen={handleScrollToSelectedCategory}

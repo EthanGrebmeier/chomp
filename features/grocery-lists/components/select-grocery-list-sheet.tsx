@@ -179,6 +179,7 @@ export const SelectGroceryListSheet = forwardRef<
       <>
         <BottomSheet
           detents={[1]}
+          insetAdjustment="automatic"
           name={name}
           ref={sheetRef}
           scrollable

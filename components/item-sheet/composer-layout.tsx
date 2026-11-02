@@ -2,6 +2,8 @@ import { X } from 'lucide-react-native';
 import { type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { cn } from '@/lib/utils';
+
 import { SHEET_TOP_STYLE } from '../sheet-content';
 import { SheetHeader, type SheetHeaderProps } from '../sheet-header';
 import {
@@ -36,12 +38,21 @@ export const composerSheetStyles = StyleSheet.create({
 
 export const COMPOSER_CONTENT_CLASS = 'px-4';
 export const COMPOSER_METADATA_CLASS =
-  '-mx-4 mt-1 min-h-11 justify-center overflow-hidden px-4';
+  '-mx-4 mt-3 min-h-11 justify-center overflow-hidden px-4';
 export const COMPOSER_ACTION_OVERLAY_CLASS =
   'absolute bottom-0 right-0 top-0 justify-center bg-background pl-2 pr-4';
 
-export function ComposerHeader(props: Omit<SheetHeaderProps, 'spacing'>) {
-  return <SheetHeader {...props} spacing="standard" />;
+export function ComposerHeader({
+  className,
+  ...props
+}: Omit<SheetHeaderProps, 'spacing'>) {
+  return (
+    <SheetHeader
+      {...props}
+      className={cn('mb-0', className)}
+      spacing="standard"
+    />
+  );
 }
 
 export function ComposerCloseButton(
