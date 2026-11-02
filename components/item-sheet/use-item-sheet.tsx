@@ -154,6 +154,9 @@ export const ItemSheetProvider = ({
   );
   const [storeId, setStoreId] = useState<string | undefined>(undefined);
   const [storeName, setStoreName] = useState<string | undefined>(undefined);
+  // Suggestions supply defaults, but must not overwrite explicit draft choices
+  // (including clearing the category or choosing No store).
+  const metadataChoices = useRef({ category: false, store: false });
   const itemInputRef = useRef<TextInput>(null);
   const notesInputRef = useRef<TextInput>(null);
   const [showMatchingItems, setShowMatchingItems] = useState(false);
@@ -168,6 +171,7 @@ export const ItemSheetProvider = ({
   const reset = ({
     keepInputsMounted = false,
   }: { keepInputsMounted?: boolean } = {}) => {
+    metadataChoices.current = { category: false, store: false };
     setSelectedItem(null);
     setSyncSavedItem(false);
     // For continuous add entry we clear the text in place
@@ -195,6 +199,7 @@ export const ItemSheetProvider = ({
 
   const setFromItem = useCallback(
     (item: GroceryListItemWithRecipe | BaseGroceryItem) => {
+      metadataChoices.current = { category: false, store: false };
       setSelectedItem(null);
       setSyncSavedItem(false);
       resetItemInput(item.name);
@@ -306,23 +311,25 @@ export const ItemSheetProvider = ({
     handleItemInputTextChange(item.name);
     setItemInputValue(item.name);
     setHasItemTitle(item.name.trim().length > 0);
-    setCategory(item.category);
+    if (!metadataChoices.current.category) setCategory(item.category);
     // Keep the native multiline input mounted so picking a suggestion does
     // not restart its height measurement inside the auto-sized add sheet.
     setNotesInputNativeValue(item.notes ?? '', notesInputRef);
     setNotesInputValue(item.notes ?? '');
     const defaultStoreId = mode === 'add' ? defaultStore?.id : undefined;
     const defaultStoreName = mode === 'add' ? defaultStore?.name : undefined;
-    setStoreId(
-      preferDefaultStore ? defaultStoreId : (item.storeId ?? defaultStoreId)
-    );
-    setStoreName(
-      preferDefaultStore
-        ? defaultStoreName
-        : item.storeId
-          ? undefined
-          : defaultStoreName
-    );
+    if (!metadataChoices.current.store) {
+      setStoreId(
+        preferDefaultStore ? defaultStoreId : (item.storeId ?? defaultStoreId)
+      );
+      setStoreName(
+        preferDefaultStore
+          ? defaultStoreName
+          : item.storeId
+            ? undefined
+            : defaultStoreName
+      );
+    }
     setShowMatchingItems(false);
     // Notify observers (e.g. useLiveItemSync in the Edit flow) on the next
     // macrotask so React can commit the state updates above first. This keeps
@@ -370,7 +377,10 @@ export const ItemSheetProvider = ({
         setShowMatchingItems,
         onChangeItemText,
         category,
-        setCategory,
+        setCategory: value => {
+          metadataChoices.current.category = true;
+          setCategory(value);
+        },
         quantity,
         setQuantity,
         unit,
@@ -379,7 +389,10 @@ export const ItemSheetProvider = ({
         setRecipe,
         listId,
         storeId,
-        setStoreId,
+        setStoreId: value => {
+          metadataChoices.current.store = true;
+          setStoreId(value);
+        },
         storeName,
         setStoreName,
         reset,
