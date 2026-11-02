@@ -33,6 +33,7 @@ export function AppQuantityItemSheet({
   return (
     <ItemSheet
       state={session.state}
+      canEdit={session.canEdit}
       rowId={rowId}
       newId={id}
       send={operation => session.send({ ...operation, syncSavedItems: true })}

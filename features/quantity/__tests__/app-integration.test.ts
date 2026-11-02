@@ -23,7 +23,11 @@ import {
   selectQuantityIngredients,
   quantitySnapshots,
 } from '../app/meal-actions';
-import { emptyListSession, publishListSession } from '../app/session';
+import {
+  emptyListSession,
+  publishListSession,
+  listSession,
+} from '../app/session';
 import {
   groceryProjection,
   mealProjection,
@@ -53,6 +57,7 @@ async function send(operation: Operation) {
   history.push(operation);
   publishListSession('list', {
     ...emptyListSession,
+    actor: { id: 'shopper', name: 'shopper@example.com' },
     canEdit: true,
     loading: false,
     state: state(),
@@ -552,6 +557,7 @@ it('keeps rapid offline checkbox edits in the durable outbox with valid version 
       canEdit: true,
       loading: false,
       connection: 'closed',
+      actor: { id: 'shopper', name: 'shopper@example.com' },
       pending: [...pending],
       send: async operation => {
         // Model publication follows successful local persistence, without a server ack.
@@ -569,7 +575,8 @@ it('keeps rapid offline checkbox edits in the durable outbox with valid version 
   expect(offlineState().conflicts).toEqual([]);
   expect(offlineState().documents[row.id]).toMatchObject({ status: 'active' });
   expect(totalFor(offlineState(), row.id)).toBe(2);
-  // A fresh reconstruction from the saved outbox retains both operations.
+  await addManualQuantity('list', { name: 'Bread', quantity: 1, unit: 'each' });
+  // A fresh reconstruction from the saved outbox retains edits and attribution.
   const reloaded = readWorkspaceState(
     [],
     JSON.parse(JSON.stringify(pending)),
@@ -577,6 +584,21 @@ it('keeps rapid offline checkbox edits in the durable outbox with valid version 
     1
   );
   expect(reloaded).toEqual(offlineState());
+  expect(
+    records(reloaded, 'row').find(item => item.name === 'Bread')?.addedBy
+  ).toEqual({ id: 'shopper', name: 'shopper@example.com' });
+  await updateQuantityChecked([{ itemId: row.id, isChecked: true }]);
+  const purchaseAfterRestart = readWorkspaceState(
+    [],
+    JSON.parse(JSON.stringify(pending)),
+    committed,
+    1
+  );
+  expect(purchaseAfterRestart.documents[row.id]).toMatchObject({
+    status: 'checked',
+    purchasedAt: expect.any(String),
+    purchasedBy: { id: 'shopper', name: 'shopper@example.com' },
+  });
 });
 
 it('records purchase time, removes it on undo, and dates the next purchase anew', async () => {
@@ -585,10 +607,51 @@ it('records purchase time, removes it on undo, and dates the next purchase anew'
   await updateQuantityChecked([{ itemId: row.id, isChecked: true }]);
   const purchased = records(state(), 'row')[0];
   expect(purchased.purchasedAt).toEqual(expect.any(String));
+  expect(purchased.purchasedBy).toEqual({
+    id: 'shopper',
+    name: 'shopper@example.com',
+  });
   await updateQuantityChecked([{ itemId: row.id, isChecked: true }]);
   expect(records(state(), 'row')[0].purchasedAt).toBe(purchased.purchasedAt);
+  expect(records(state(), 'row')[0].purchasedBy).toEqual(purchased.purchasedBy);
   await updateQuantityChecked([{ itemId: row.id, isChecked: false }]);
   expect(records(state(), 'row')[0].purchasedAt).toBeUndefined();
+  expect(records(state(), 'row')[0].purchasedBy).toBeUndefined();
   await updateQuantityChecked([{ itemId: row.id, isChecked: true }]);
   expect(records(state(), 'row')[0].purchasedAt).toEqual(expect.any(String));
+  await send(deleteRows(state(), () => `id-${++mocks.id}`, [row.id]));
+  expect(records(state(), 'row')[0]).toMatchObject({
+    status: 'deleted',
+    purchasedBy: purchased.purchasedBy,
+    purchasedAt: expect.any(String),
+  });
+});
+
+it('preserves the original creator through combining, checking, and clearing', async () => {
+  await addManualQuantity('list', { name: 'Milk', quantity: 1, unit: 'each' });
+  const original = records(state(), 'row')[0];
+  expect(original.addedBy).toEqual({
+    id: 'shopper',
+    name: 'shopper@example.com',
+  });
+  publishListSession('list', {
+    ...listSession('list'),
+    actor: { id: 'other', name: 'other@example.com' },
+    send,
+  });
+  await addManualQuantity('list', { name: 'Milk', quantity: 2, unit: 'each' });
+  expect(records(state(), 'row')).toHaveLength(1);
+  expect(records(state(), 'row')[0].addedBy).toEqual(original.addedBy);
+  await updateQuantityChecked([{ itemId: original.id, isChecked: true }]);
+  await send(deleteRows(state(), () => `id-${++mocks.id}`, [original.id]));
+  expect(records(state(), 'row')[0].addedBy).toEqual(original.addedBy);
+  publishListSession('list', {
+    ...listSession('list'),
+    actor: { id: 'other', name: 'other@example.com' },
+    send,
+  });
+  await addManualQuantity('list', { name: 'Milk', quantity: 1, unit: 'each' });
+  expect(
+    records(state(), 'row').find(row => row.status === 'active')?.addedBy
+  ).toEqual({ id: 'other', name: 'other@example.com' });
 });
