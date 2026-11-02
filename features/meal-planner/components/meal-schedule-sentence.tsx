@@ -52,7 +52,7 @@ export const MealScheduleSentence = ({
           disabled={disabled}
         >
           <Text className={spanClassName(!!mealTag)}>
-            {mealTag ?? 'no meal time'}
+            {mealTag?.length ? mealTag : 'no meal'}
           </Text>
         </MealTimeDropdown>
         <Text variant="body" className="text-muted-foreground">
@@ -64,7 +64,7 @@ export const MealScheduleSentence = ({
             disabled ? undefined : () => calendarSheetRef.current?.present()
           }
         >
-          {date ? formatMealPlanDate(date) : 'a date'}
+          {date ? formatMealPlanDate(date, { includeWeekday: true }) : 'a date'}
         </Text>
       </View>
 

@@ -170,9 +170,9 @@ export function ItemSheet({
     <SheetBody>
       <BottomSheet.Header
         title={history ? 'Item details' : 'Edit item'}
-        className="mb-2"
+        className="mb-1"
       />
-      <View className="gap-6">
+      <View className="gap-3">
         <View className="gap-1">
           <ItemNameField
             accessibilityLabel="Item name"
@@ -271,7 +271,8 @@ export function ItemSheet({
         navigation.current?.();
       }}
       onStartClose={saveMetadata}
-      detents={needsScroll ? [0.9] : undefined}
+      detents={needsScroll ? [1] : undefined}
+      insetAdjustment={needsScroll ? 'automatic' : 'never'}
       scrollable={needsScroll}
     >
       {entries.length > 3 ? (
