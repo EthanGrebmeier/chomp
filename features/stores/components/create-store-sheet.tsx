@@ -5,6 +5,7 @@ import { toast } from 'sonner-native';
 
 import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
+import { useActionFeedback } from '@/hooks/use-action-feedback';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { Text } from '../../../components/ui/text';
@@ -38,6 +39,7 @@ type StoreSheetInternalContextType = {
   nameDefaultValue: string;
   isDefault: boolean;
   canSubmit: boolean;
+  isPending: boolean;
   onNameChange: (name: string) => void;
   onDefaultChange: () => void;
   reset: () => void;
@@ -67,6 +69,7 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
     nameDefaultValue,
     isDefault,
     canSubmit,
+    isPending,
     onNameChange,
     onDefaultChange,
     onSubmit,
@@ -86,7 +89,11 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
         <SheetFooter>
           {onDelete ? (
             <View className="mb-2">
-              <BottomActionButton variant="ghost" onPress={onDelete}>
+              <BottomActionButton
+                variant="ghost"
+                onPress={onDelete}
+                disabled={isPending}
+              >
                 <Text className="text-destructive">Delete store</Text>
               </BottomActionButton>
             </View>
@@ -94,7 +101,8 @@ const StoreSheetContents = ({ submitLabel }: { submitLabel: string }) => {
           <BottomActionButton
             variant="default"
             onPress={onSubmit}
-            disabled={!canSubmit}
+            disabled={!canSubmit || isPending}
+            status={isPending ? 'pending' : 'idle'}
           >
             <Text>{submitLabel}</Text>
           </BottomActionButton>
@@ -143,6 +151,7 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
   const sheetRef = useRef<TrueSheet>(null);
 
   const isEditing = !!editingStore;
+  const feedback = useActionFeedback();
 
   const reset = () => {
     nameInput.reset();
@@ -158,32 +167,35 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
       return;
     }
 
-    try {
-      if (isEditing && editingStore) {
-        await updateStore({
-          storeId: editingStore.id,
-          updates: { name: trimmedName, isDefault },
-        });
-      } else {
-        await createStore({ name: trimmedName, isDefault });
+    await feedback.run(
+      async () => {
+        if (isEditing && editingStore) {
+          await updateStore({
+            storeId: editingStore.id,
+            updates: { name: trimmedName, isDefault },
+          });
+        } else {
+          await createStore({ name: trimmedName, isDefault });
+        }
+        sheetRef.current?.dismiss();
+        reset();
+      },
+      {
+        success: isEditing ? 'Store updated' : 'Store created',
+        error: 'Could not save store',
       }
-      sheetRef.current?.dismiss();
-      reset();
-    } catch {
-      toast.error(
-        isEditing ? 'Failed to update store' : 'Failed to create store'
-      );
-    }
+    );
   };
 
   const deleteEditingStore = async (store: Store) => {
-    try {
-      await deleteStore({ storeId: store.id });
-      sheetRef.current?.dismiss();
-      reset();
-    } catch {
-      toast.error('Failed to delete store');
-    }
+    await feedback.run(
+      async () => {
+        await deleteStore({ storeId: store.id });
+        sheetRef.current?.dismiss();
+        reset();
+      },
+      { success: 'Store deleted', error: 'Could not delete store' }
+    );
   };
 
   const onDelete = editingStore
@@ -233,6 +245,7 @@ export const StoreSheetProvider = ({ children }: StoreSheetProviderProps) => {
           nameDefaultValue: nameInput.defaultValue,
           isDefault,
           canSubmit,
+          isPending: feedback.isPending,
           onNameChange,
           onDefaultChange: () => setIsDefault(current => !current),
           reset,

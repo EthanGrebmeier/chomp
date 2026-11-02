@@ -258,6 +258,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       },
       {
         onSuccess: () => {
+          toast.success('Recipe added to meal plan');
           resetSheetState();
           sheetRef.current?.dismiss();
         },
@@ -295,6 +296,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
       },
       {
         onSuccess: () => {
+          toast.success('Item added to meal plan');
           // Keep the sheet open for continuous entry. Clear the name field in
           // place (no remount) so it keeps focus and the keyboard stays up.
           resetMealPlanItemState({

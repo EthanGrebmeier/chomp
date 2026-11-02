@@ -183,6 +183,7 @@ export const RecipePageForm = ({
           <BottomActionButton
             onPress={handleSubmit}
             disabled={!canSubmit || isPending}
+            status={isPending ? 'pending' : 'idle'}
             className={cn(isPending && 'opacity-70')}
           >
             <Text>{isPending ? pendingLabel : submitLabel}</Text>

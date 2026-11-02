@@ -11,6 +11,7 @@ export const useAddRecipeToDate = () => {
   const { data: defaultStore } = useDefaultStore();
 
   return useMutation({
+    networkMode: 'always',
     mutationFn: (args: Omit<AddRecipeToDateArgs, 'defaultStore'>) =>
       addRecipeToDate({ ...args, defaultStore }),
     // No need to invalidate queries - InstantDB updates in real-time

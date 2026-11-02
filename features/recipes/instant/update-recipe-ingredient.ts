@@ -1,6 +1,8 @@
 import { tx } from '@instantdb/react-native';
 
-import { db, type TransactionChunk } from '../../../lib/instant';
+import { transactLocally } from '@/lib/instant/local-transaction';
+
+import { type TransactionChunk } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
 import { buildIngredientStoreLinkTransactions } from './link-store-to-ingredient';
@@ -48,7 +50,7 @@ const writeRecipeIngredientUpdate = async ({
     );
   }
 
-  await db.transact(transactions);
+  await transactLocally(transactions);
 
   return { ingredientId };
 };

@@ -112,11 +112,10 @@ export default function List() {
 
     const isOwner = user?.id === activeList.ownerId;
 
-    if (isOwner) {
-      await deleteGroceryList(activeListId);
-    } else {
-      await leaveGroceryList(activeListId);
-    }
+    const removed = isOwner
+      ? await deleteGroceryList(activeListId)
+      : await leaveGroceryList(activeListId);
+    if (!removed) return;
 
     // Switch to another list if available
     const remainingLists = lists?.grocery_lists.filter(

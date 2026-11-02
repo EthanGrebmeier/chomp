@@ -1,5 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import {
@@ -54,7 +56,7 @@ export const createCategory = async ({ name, color }: CreateCategoryArgs) => {
   );
 
   if (hiddenBuiltIn) {
-    await db.transact([
+    await transactLocally([
       tx.categories[hiddenBuiltIn.id].update(
         trimStringFields({
           name: normalizedName,
@@ -70,7 +72,7 @@ export const createCategory = async ({ name, color }: CreateCategoryArgs) => {
   const categoryId = id();
   const categoryValue = getUniqueCategoryValue(normalizedName, records);
 
-  await db.transact([
+  await transactLocally([
     tx.categories[categoryId].update(
       trimStringFields({
         name: normalizedName,
