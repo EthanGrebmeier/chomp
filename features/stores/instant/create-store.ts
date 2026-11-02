@@ -1,5 +1,8 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { transactLocally } from '@/lib/instant/local-transaction';
+import { readCachedQuery } from '@/lib/instant/read-cached-query';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
@@ -22,7 +25,7 @@ export const createStore = async ({
   const transactions: Parameters<typeof db.transact>[0] = [];
 
   if (isDefault) {
-    const result = await db.queryOnce({
+    const result = await readCachedQuery({
       stores: {
         user: {},
       },
@@ -55,7 +58,7 @@ export const createStore = async ({
     })
   );
 
-  await db.transact(transactions);
+  await transactLocally(transactions);
 
   return { id: storeId };
 };

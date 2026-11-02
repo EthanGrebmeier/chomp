@@ -28,9 +28,9 @@ type BottomSheetProps = {
   children: React.ReactNode;
   ref: React.RefObject<TrueSheet | null>;
   name?: string;
+  /** Focus inputs here: TrueSheet installs its keyboard observer before didPresent.
+   * Focusing during willPresent (or with autoFocus) can leave footers under the keyboard. */
   onOpen?: () => void;
-  /** Focus inputs during presentation so the keyboard transitions with the sheet. */
-  onStartOpen?: () => void;
   /** Restore input focus as a sheet above this one begins to dismiss. */
   onFocus?: () => void;
   draggable?: boolean;
@@ -60,7 +60,6 @@ export const BottomSheet = ({
   onStartClose,
   onDismiss,
   onOpen,
-  onStartOpen,
   onFocus,
   draggable,
   viewClassName,
@@ -78,7 +77,6 @@ export const BottomSheet = ({
       name={name}
       detents={detents ?? ['auto']}
       onDidPresent={onOpen}
-      onWillPresent={onStartOpen}
       onWillFocus={onFocus}
       draggable={draggable}
       onWillDismiss={onStartClose}

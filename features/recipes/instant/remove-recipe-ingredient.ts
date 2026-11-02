@@ -1,6 +1,6 @@
 import { tx } from '@instantdb/react-native';
 
-import { db } from '../../../lib/instant';
+import { transactLocally } from '@/lib/instant/local-transaction';
 
 export type RemoveRecipeIngredientArgs = {
   ingredientId: string;
@@ -10,7 +10,7 @@ export type RemoveRecipeIngredientArgs = {
 export const removeRecipeIngredient = async ({
   ingredientId,
 }: RemoveRecipeIngredientArgs) => {
-  await db.transact([tx.recipe_ingredients[ingredientId].delete()]);
+  await transactLocally([tx.recipe_ingredients[ingredientId].delete()]);
 
   return { removedIngredientId: ingredientId };
 };

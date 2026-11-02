@@ -1,3 +1,5 @@
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 import { upsertLocalSavedItem } from '../../saved-items/local/upsert-local-saved-item';
@@ -67,7 +69,7 @@ export const syncSavedItemFromGroceryItem = async ({
   }
 
   const now = new Date().toISOString();
-  await db.transact([
+  const transactions = [
     db.tx.saved_items[nextSavedItemId].update(
       trimStringFields({
         name,
@@ -76,7 +78,7 @@ export const syncSavedItemFromGroceryItem = async ({
         updatedAt: now,
       })
     ),
-  ]);
+  ];
 
   const savedItemStoreTransactions = [];
   if (storeId === undefined && savedItemStoreId) {
@@ -100,7 +102,5 @@ export const syncSavedItemFromGroceryItem = async ({
     );
   }
 
-  if (savedItemStoreTransactions.length > 0) {
-    await db.transact(savedItemStoreTransactions);
-  }
+  await transactLocally([...transactions, ...savedItemStoreTransactions]);
 };

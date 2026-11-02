@@ -25,7 +25,9 @@ export function Sheet({
   return (
     <BottomSheet
       ref={ref}
-      detents={[0.85]}
+      // Full height keeps this sheet attached to the screen edges on iOS 26.
+      detents={[1]}
+      insetAdjustment="automatic"
       scrollable
       onDismiss={onDismiss}
       footer={button ? <SheetFooter>{button}</SheetFooter> : undefined}

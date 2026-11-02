@@ -78,10 +78,7 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
     const { colorScheme } = useColorScheme();
     const backgroundColor =
       THEME[colorScheme === 'dark' ? 'dark' : 'light'].background;
-    const expandedHeight = Math.min(
-      windowHeight * 0.94,
-      windowHeight - insets.top - 12
-    );
+    const expandedHeight = windowHeight - insets.top;
     const [mealTag, setMealTag] = useState<string | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<string | undefined>(
       undefined
@@ -517,9 +514,9 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
           name="edit-meal-sheet"
           onDidPresent={() => setSheetOpen(true)}
           ref={sheetRef}
-          detents={[expandedHeight / windowHeight]}
+          detents={[1]}
           backgroundColor={backgroundColor}
-          insetAdjustment="never"
+          insetAdjustment="automatic"
           grabber
           scrollable
           onWillDismiss={flushAutoSave}
@@ -618,8 +615,8 @@ export const EditMealSheet = forwardRef<EditMealSheetRef, EditMealSheetProps>(
         <BottomSheet
           name="edit-meal-change-recipe-sheet"
           ref={changeRecipeSheetRef}
-          detents={[0.9]}
-          insetAdjustment="never"
+          detents={[1]}
+          insetAdjustment="automatic"
           scrollable
           viewClassName="flex-1"
           onStartClose={() => {

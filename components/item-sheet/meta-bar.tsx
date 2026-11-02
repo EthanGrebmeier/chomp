@@ -33,7 +33,7 @@ export const MetaBar = ({
     setSaveItem,
     selectedItem,
   } = useItemSheet();
-  const optionsDisabled = !hasItemTitle;
+  const optionsDisabled = mode !== 'add' && !hasItemTitle;
   // Both cloud matches and local matches can be synced or deleted in place.
   const hasEditableSavedItem =
     (selectedItem?.source === 'cloud' && !!selectedItem.cloudSavedItemId) ||

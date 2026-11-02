@@ -158,7 +158,8 @@ export const SelectGroceryListSheet = forwardRef<
             text: 'Leave',
             style: 'destructive',
             onPress: async () => {
-              await leaveGroceryList(listId);
+              const left = await leaveGroceryList(listId);
+              if (!left) return;
               // If the left list was selected, select another list
               if (selectedListId === listId) {
                 const remainingLists = lists?.grocery_lists.filter(
@@ -178,6 +179,7 @@ export const SelectGroceryListSheet = forwardRef<
       <>
         <BottomSheet
           detents={[1]}
+          insetAdjustment="automatic"
           name={name}
           ref={sheetRef}
           scrollable

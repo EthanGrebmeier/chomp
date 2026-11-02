@@ -1,3 +1,5 @@
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 
 export type DeleteStoreArgs = {
@@ -5,5 +7,5 @@ export type DeleteStoreArgs = {
 };
 
 export const deleteStore = async ({ storeId }: DeleteStoreArgs) => {
-  await db.transact([db.tx.stores[storeId].delete()]);
+  await transactLocally([db.tx.stores[storeId].delete()]);
 };

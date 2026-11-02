@@ -1,4 +1,5 @@
-import { db } from '../../../lib/instant';
+import { readCachedQuery } from '@/lib/instant/read-cached-query';
+
 import { isCategoryColor } from '../../shared/category/category-colors';
 import { CategoryRecord } from '../types';
 
@@ -25,7 +26,7 @@ export const toCategoryRecord = (category: RawCategory): CategoryRecord => ({
 export const queryMyCategories = async (
   userId: string
 ): Promise<CategoryRecord[]> => {
-  const result = await db.queryOnce({
+  const result = await readCachedQuery({
     categories: {
       user: {},
     },

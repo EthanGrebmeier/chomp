@@ -98,9 +98,7 @@ export function readWorkspaceState(
     // Optimistic intents follow the server-confirmed prefix, even when authored
     // offline against older heads. Their original version guards stay intact.
     let optimistic = replay(operations);
-    for (const item of pending.filter(
-      p => !p.error && !savedIds.has(p.operation.id)
-    )) {
+    for (const item of pending.filter(p => !savedIds.has(p.operation.id))) {
       const operation = {
         ...item.operation,
         parents: [...new Set([...item.operation.parents, ...optimistic.heads])],

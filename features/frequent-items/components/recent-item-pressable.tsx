@@ -16,6 +16,10 @@ type Props = {
   children: ReactNode;
 };
 
+function triggerPressHaptic() {
+  void Haptics.selectionAsync();
+}
+
 /** Collapse native layout from the UI runtime without waiting for JS. */
 export function RecentItemPressable({ label, onAdd, children }: Props) {
   const removed = useSharedValue(false);
@@ -25,7 +29,6 @@ export function RecentItemPressable({ label, onAdd, children }: Props) {
     display: removed.get() ? 'none' : 'flex',
   }));
   const commit = useCallback(async () => {
-    void Haptics.selectionAsync();
     try {
       await onAdd();
     } catch {
@@ -35,6 +38,7 @@ export function RecentItemPressable({ label, onAdd, children }: Props) {
   }, [onAdd, removed]);
   const activate = () => {
     if (removed.get()) return;
+    triggerPressHaptic();
     removed.set(true);
     void commit();
   };
@@ -42,6 +46,10 @@ export function RecentItemPressable({ label, onAdd, children }: Props) {
     () =>
       Gesture.Tap()
         .maxDistance(10)
+        .onBegin(() => {
+          // Press feedback precedes release, layout changes, and persistence.
+          if (!removed.get()) scheduleOnRN(triggerPressHaptic);
+        })
         .onEnd((_event, success) => {
           if (!success || removed.get()) return;
           removed.set(true);
