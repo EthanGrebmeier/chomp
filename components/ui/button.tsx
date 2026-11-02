@@ -14,6 +14,9 @@ import { Icon } from '@/components/ui/icon';
 import { Text, TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 
+// Shared shape works with both native-only and web-aware Pressable types.
+const IDLE_PRESS_STATE = { pressed: false, hovered: false };
+
 const SUCCESS_TEXT_TRAVEL = 8;
 const successTextEasing = Easing.bezier(0.2, 0, 0, 1);
 
@@ -331,7 +334,7 @@ function Button({
           <View className="flex-row items-center justify-center gap-2">
             <ActivityIndicator size="small" />
             {typeof children === 'function'
-              ? children({ pressed: false, hovered: false })
+              ? children(IDLE_PRESS_STATE)
               : children}
           </View>
         ) : isSuccess ? (
