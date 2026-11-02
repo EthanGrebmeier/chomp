@@ -47,7 +47,7 @@ export function AmountSheet({
   return (
     <BottomSheet
       ref={ref}
-      onStartOpen={() => input.current?.focus()}
+      onOpen={() => input.current?.focus()}
       onDismiss={onDismiss}
       insetAdjustment="never"
       footer={
