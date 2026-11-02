@@ -13,6 +13,7 @@ import { toast } from 'sonner-native';
 
 import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
+import { useActionFeedback } from '@/hooks/use-action-feedback';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { CloseButton } from '../../../components/ui/close-button';
@@ -60,7 +61,8 @@ export const CreateCategorySheet = forwardRef<
     const [editingCategory, setEditingCategory] =
       useState<CategoryOption | null>(null);
     const [canSubmit, setCanSubmit] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const feedback = useActionFeedback();
+    const isSubmitting = feedback.isPending;
     const [selectedColor, setSelectedColor] = useState<CategoryColor>('green');
     const nameInput = useUncontrolledTextInput();
     const nameInputRef = useRef<TextInput>(null);
@@ -71,7 +73,6 @@ export const CreateCategorySheet = forwardRef<
       nameInput.reset();
       setEditingCategory(null);
       setCanSubmit(false);
-      setIsSubmitting(false);
       setSelectedColor('green');
     };
 
@@ -108,46 +109,40 @@ export const CreateCategorySheet = forwardRef<
         return;
       }
 
-      setIsSubmitting(true);
-      try {
-        if (isEditing && editingCategory) {
-          await updateCategory({
-            category: editingCategory,
-            updates: { name, color: selectedColor },
-          });
-          onSaved?.({ value: editingCategory.value });
-        } else {
-          const category = await createCategory({
-            name,
-            color: selectedColor,
-          });
-          onSaved?.(category);
+      await feedback.run(
+        async () => {
+          if (isEditing && editingCategory) {
+            await updateCategory({
+              category: editingCategory,
+              updates: { name, color: selectedColor },
+            });
+            onSaved?.({ value: editingCategory.value });
+          } else {
+            const category = await createCategory({
+              name,
+              color: selectedColor,
+            });
+            onSaved?.(category);
+          }
+          sheetRef.current?.dismiss();
+          reset();
+        },
+        {
+          success: isEditing ? 'Category updated' : 'Category created',
+          error: 'Could not save category',
         }
-        sheetRef.current?.dismiss();
-        reset();
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : isEditing
-              ? 'Failed to update category'
-              : 'Failed to create category'
-        );
-      } finally {
-        setIsSubmitting(false);
-      }
+      );
     };
 
     const handleDelete = async (category: CategoryOption) => {
-      setIsSubmitting(true);
-      try {
-        await deleteCategory({ category });
-        sheetRef.current?.dismiss();
-        reset();
-      } catch {
-        toast.error('Failed to delete category');
-        setIsSubmitting(false);
-      }
+      await feedback.run(
+        async () => {
+          await deleteCategory({ category });
+          sheetRef.current?.dismiss();
+          reset();
+        },
+        { success: 'Category deleted', error: 'Could not delete category' }
+      );
     };
 
     const handleConfirmDelete = () => {
@@ -194,6 +189,7 @@ export const CreateCategorySheet = forwardRef<
               variant="default"
               onPress={handleSubmit}
               disabled={!canSubmit || isSubmitting}
+              status={isSubmitting ? 'pending' : 'idle'}
             >
               <Text>{submitLabel}</Text>
             </BottomActionButton>

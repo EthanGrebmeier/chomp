@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner-native';
 
 import type { GroceryItemForDeletion } from '../../meal-planner/instant/plan-linked-grocery-item-deletion';
 import { GroceryListItem } from '../types';
@@ -23,6 +24,9 @@ export const filterActiveItems = <Item extends GroceryListItem>(
 
 export const useClearGroceryList = () => {
   return useMutation({
+    networkMode: 'always',
+    onSuccess: () => toast.success('List cleared'),
+    onError: () => toast.error('Could not clear list'),
     mutationFn: clearGroceryList,
   });
 };

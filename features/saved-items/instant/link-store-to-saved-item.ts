@@ -1,3 +1,5 @@
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 
 export type LinkStoreToSavedItemArgs = {
@@ -6,7 +8,7 @@ export type LinkStoreToSavedItemArgs = {
   currentStoreId?: string;
 };
 
-export const linkStoreToSavedItem = async ({
+export const buildSavedItemStoreTransactions = ({
   itemId,
   storeId,
   currentStoreId,
@@ -41,7 +43,10 @@ export const linkStoreToSavedItem = async ({
     }
   }
 
-  if (transactions.length > 0) {
-    await db.transact(transactions);
-  }
+  return transactions;
+};
+
+export const linkStoreToSavedItem = async (args: LinkStoreToSavedItemArgs) => {
+  const transactions = buildSavedItemStoreTransactions(args);
+  if (transactions.length) await transactLocally(transactions);
 };

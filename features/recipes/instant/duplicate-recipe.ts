@@ -1,5 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
@@ -14,6 +16,8 @@ export type DuplicateRecipeArgs = {
 };
 
 export const duplicateRecipe = async (recipe: DuplicateRecipeArgs) => {
+  const user = await db.getAuth();
+  if (!user) throw new Error('User not authenticated');
   const newRecipeId = id();
   const now = new Date().toISOString();
 
@@ -29,6 +33,8 @@ export const duplicateRecipe = async (recipe: DuplicateRecipeArgs) => {
       })
     ),
   ];
+
+  transactions.push(tx.recipes[newRecipeId].link({ user: user.id }));
 
   // Duplicate ingredients
   for (const ingredient of recipe.ingredients) {
@@ -49,7 +55,7 @@ export const duplicateRecipe = async (recipe: DuplicateRecipeArgs) => {
     );
   }
 
-  await db.transact(transactions);
+  await transactLocally(transactions);
 
   return { id: newRecipeId };
 };

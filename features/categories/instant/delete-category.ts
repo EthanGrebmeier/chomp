@@ -1,6 +1,7 @@
 import { tx } from '@instantdb/react-native';
 
-import { db } from '../../../lib/instant';
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { CategoryOption } from '../../shared/category/categories';
 
 import { updateCategory } from './update-category';
@@ -27,5 +28,5 @@ export const deleteCategory = async ({ category }: DeleteCategoryArgs) => {
     throw new Error('Category not found');
   }
 
-  await db.transact([tx.categories[category.id].delete()]);
+  await transactLocally([tx.categories[category.id].delete()]);
 };

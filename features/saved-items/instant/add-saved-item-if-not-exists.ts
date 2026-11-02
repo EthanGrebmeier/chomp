@@ -1,6 +1,9 @@
 import { id } from '@instantdb/react-native';
 import { and, eq, or } from 'drizzle-orm';
 
+import { transactLocally } from '@/lib/instant/local-transaction';
+import { readCachedQuery } from '@/lib/instant/read-cached-query';
+
 import { db as sqliteDb } from '../../../db/local';
 import { localSavedItemTable } from '../../../db/schema';
 import { db } from '../../../lib/instant';
@@ -31,8 +34,8 @@ export const addSavedItemIfNotExists = async (item: BaseSavedItem) => {
     );
 
   // Check if instantdb item already exists (case-insensitive name match)
-  const { data } = await db.queryOnce({
-    saved_items: {},
+  const { data } = await readCachedQuery({
+    saved_items: { $: { where: { 'user.id': user.id } }, store: {} },
   });
 
   const existingItem = data?.saved_items?.find(
@@ -47,7 +50,7 @@ export const addSavedItemIfNotExists = async (item: BaseSavedItem) => {
   const itemId = id();
   const now = new Date().toISOString();
 
-  await db.transact([
+  await transactLocally([
     db.tx.saved_items[itemId].update(
       trimStringFields({
         name: item.name,
