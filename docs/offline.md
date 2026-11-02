@@ -97,3 +97,20 @@ Before release, test a production native build on a device:
 
 Device checks cannot be replaced by unit tests; they cover native storage timing,
 Clerk restoration, the transport, and the installed update configuration.
+
+## Purchase details
+
+Checking off an item snapshots the signed-in session's account ID and email
+(or “Guest”) with the local action timestamp in the same durable operation.
+Viewing checked and cleared purchases needs no profile lookup or network request.
+Unchecking removes both fields; checking again records a new purchase. Clearing
+checked items preserves both fields. Older purchases without attribution or a
+valid timestamp show unknown details rather than inferring them. Timestamps use
+the device clock and display in the viewer's local time zone; identity labels
+reflect the account at purchase time.
+
+New shopping rows also snapshot who added them in the original durable operation,
+including manual, recipe, and meal-plan additions. Combining into an existing row
+keeps its original creator; moving a row preserves that creator too. Adding a
+historical item again creates a new row attributed to the current shopper. Older
+rows with no creator snapshot display “Unknown person.”

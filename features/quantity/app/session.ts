@@ -4,7 +4,9 @@ import { materialize } from '../model';
 import type { Operation, QuantityState } from '../types';
 import type { useQuantityWorkspace } from '../use-quantity-workspace';
 
-export type ListSession = ReturnType<typeof useQuantityWorkspace>;
+export type ListSession = ReturnType<typeof useQuantityWorkspace> & {
+  actor?: { id: string; name: string };
+};
 const sessions = new Map<string, ListSession>();
 const listeners = new Set<() => void>();
 export const emptyListSession: ListSession = {
@@ -31,7 +33,26 @@ export function publishListSession(
   listId: string,
   session: ListSession | null
 ) {
-  if (session) sessions.set(listId, session);
+  if (session)
+    sessions.set(listId, {
+      ...session,
+      // Attribute new rows at the app write boundary so manual, recipe, and
+      // meal-plan additions all persist identity in their original operation.
+      send: operation =>
+        session.send({
+          ...operation,
+          changes: operation.changes.map(change =>
+            change.before === null &&
+            change.value?.kind === 'row' &&
+            change.value.addedBy === undefined
+              ? {
+                  ...change,
+                  value: { ...change.value, addedBy: session.actor ?? null },
+                }
+              : change
+          ),
+        }),
+    });
   else sessions.delete(listId);
   listeners.forEach(listener => listener());
 }

@@ -44,7 +44,7 @@ export function QuantitySection({
   const formattedTotal = formatQuantity(total);
 
   return (
-    <View className="mt-4">
+    <View>
       <HapticPressable
         accessibilityRole="button"
         accessibilityLabel={`Quantity, ${formattedTotal} ${unit}`}
