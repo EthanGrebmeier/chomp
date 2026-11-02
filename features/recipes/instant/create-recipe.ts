@@ -1,5 +1,7 @@
 import { id, tx } from '@instantdb/react-native';
 
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
@@ -74,7 +76,7 @@ export const createRecipe = async ({
     );
   }
 
-  await db.transact(transactions);
+  await transactLocally(transactions);
 
   return { id: recipeId };
 };

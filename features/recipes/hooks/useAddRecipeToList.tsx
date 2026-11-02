@@ -4,6 +4,7 @@ import { addRecipeToList } from '../instant/add-recipe-to-list';
 
 export const useAddRecipeToList = () => {
   return useMutation({
+    networkMode: 'always',
     mutationFn: addRecipeToList,
     // No need to invalidate queries - InstantDB updates in real-time
   });

@@ -1,6 +1,5 @@
 import { id } from '@instantdb/react-native';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
-import { toast } from 'sonner-native';
 
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
@@ -55,7 +54,7 @@ const joinGroceryListByCode = async (joinCode: string): Promise<JoinResult> => {
     // Create a share to add the user to the list
     // Chain ruleParams with the joinCode so permissions can verify access to the grocery_list
     const shareId = id();
-    await db.transact([
+    const result = await db.transact([
       db.tx.grocery_list_shares[shareId]
         .create(
           trimStringFields({
@@ -70,9 +69,14 @@ const joinGroceryListByCode = async (joinCode: string): Promise<JoinResult> => {
       db.tx.grocery_lists[list.id].ruleParams({ knownJoinCode: joinCode }),
     ]);
 
+    if (result.status !== 'synced') {
+      return {
+        success: false,
+        error: 'Waiting for a connection to confirm joining this list',
+      };
+    }
     return { success: true, listId: list.id, listName: list.name };
   } catch {
-    toast.error('Failed to join grocery list by code');
     return { success: false, error: 'Failed to join grocery list by code' };
   }
 };
@@ -81,6 +85,7 @@ export const useJoinGroceryListByCode = (
   options?: Omit<UseMutationOptions<JoinResult, Error, string>, 'mutationFn'>
 ) => {
   return useMutation({
+    networkMode: 'always',
     mutationFn: joinGroceryListByCode,
     ...options,
   });

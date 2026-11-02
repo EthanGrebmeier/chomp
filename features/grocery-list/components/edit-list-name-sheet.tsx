@@ -5,6 +5,7 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { SheetFooter } from '@/components/sheet-content';
 import { BottomActionButton } from '@/components/ui/bottom-action-button';
+import { useActionFeedback } from '@/hooks/use-action-feedback';
 
 import { BottomSheet } from '../../../components/bottom-sheet';
 import { TextInput } from '../../../components/text-input';
@@ -27,6 +28,7 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
     const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
     const updateGroceryListName = useUpdateGroceryListName();
+    const feedback = useActionFeedback();
 
     useImperativeHandle(ref, () => ({
       present: (id: string, currentName: string) => {
@@ -42,12 +44,13 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
       const trimmedListName = listNameInput.getValue().trim();
       if (!trimmedListName || !listId) return;
 
-      try {
-        await updateGroceryListName(listId, trimmedListName);
-        sheetRef.current?.dismiss();
-      } catch (error) {
-        console.error('Failed to update list name:', error);
-      }
+      await feedback.run(
+        async () => {
+          await updateGroceryListName(listId, trimmedListName);
+          sheetRef.current?.dismiss();
+        },
+        { success: 'List renamed', error: 'Could not rename list' }
+      );
     };
 
     const handleChangeText = (text: string) => {
@@ -73,7 +76,11 @@ export const EditListNameSheet = forwardRef<EditListNameSheetRef, object>(
         onStartClose={handleDismiss}
         footer={
           <SheetFooter>
-            <BottomActionButton onPress={handleSave} disabled={!canSave}>
+            <BottomActionButton
+              onPress={handleSave}
+              disabled={!canSave || feedback.isPending}
+              status={feedback.isPending ? 'pending' : 'idle'}
+            >
               <Text>Save</Text>
             </BottomActionButton>
           </SheetFooter>

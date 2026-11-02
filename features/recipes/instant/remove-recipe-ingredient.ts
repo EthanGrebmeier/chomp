@@ -1,6 +1,6 @@
 import { tx } from '@instantdb/react-native';
 
-import { db } from '../../../lib/instant';
+import { transactLocally } from '@/lib/instant/local-transaction';
 import {
   buildRecipeIngredientEditTransactions,
   queryRecipeIngredientEditTargets,
@@ -22,7 +22,7 @@ export const removeRecipeIngredient = async ({
     recipeIngredientId: ingredientId,
   });
 
-  await db.transact([
+  await transactLocally([
     // Removal creates and re-projects nothing, so no default store is needed.
     ...buildRecipeIngredientEditTransactions({
       recipeRows,

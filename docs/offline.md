@@ -16,6 +16,19 @@ network connection hangs rather than reporting itself offline. See AGENTS.md.
 - Store-conflict review and recipe additions/planning read the same cached query
   shapes used by the app. A missing cache produces a bounded error instead of
   waiting indefinitely. Optional store/category metadata cannot hide groceries.
+- Local-capable TanStack mutations use `networkMode: 'always'`: shopping,
+  meal-plan, catalog, and SQLite settings writes execute in airplane mode instead
+  of remaining paused before their local writer runs. Settings publish the saved
+  SQLite row directly to the query cache.
+- List renaming, recipe/ingredient edits, saved items, stores, and
+  categories use `transactLocally`. Instant updates subscriptions optimistically;
+  action completion waits for its mutation queue to reach disk, not a server
+  acknowledgement. Local saves are serialized, without serializing network
+  waits. Saved-item attributes and store links are written in one transaction.
+  Default-store and category validation read the downloaded query shapes.
+- Save/create forms show pending feedback and prevent repeated submission; a
+  successful local save closes the form with a confirmation. Inline edits show
+  their new value; shopping checkboxes retain their immediate checked feedback.
 - SQLite settings reads run regardless of network state.
 - An absent Clerk session after a failed refresh does not erase Instant's cached
   session. Explicit account sign-out still clears both sessions. Known identity
@@ -29,9 +42,23 @@ network connection hangs rather than reporting itself offline. See AGENTS.md.
   their downloaded data until the server reports revocation. Server permissions
   and fresh history checks remain mandatory when syncing. Rejected operations
   remain in the outbox; local completion does not mean server acceptance.
+- Catalog/list-metadata writes use Instant's existing queue, not the quantity
+  outbox. A server rejection or the SDK's connected-but-unresponsive timeout can
+  roll them back; a global mutation-error notification asks users to review their
+  latest edits, including for writes restored after restart. They are not retried
+  by a second app queue. “Saved” means persisted locally, not accepted by the
+  server. Shopping intents retain the stronger retry/reconciliation guarantees
+  above. Default-store/category validation uses cached data and may race edits
+  from another device.
+- `transactLocally` isolates the SDK's internal `kv`/`querySubs` flush APIs because
+  the public transaction promise is not a durability barrier. Its contract tests
+  exercise the installed SDK's actual serialization and cold restart. SDK upgrades
+  must keep those tests passing. Disk failure never reports local success; an
+  already applied optimistic edit may still appear and may later reach the server.
 - Concurrent changes can conflict during reconciliation. Stable operation IDs,
   original version guards, and conflict handling are preserved.
-- First sign-in, first migration from the old database, downloading an unseen
+- Creating a new list (which needs a new quantity workspace), first sign-in,
+  first migration from the old database, downloading an unseen
   list/recipe, invitations, remote recipe import, and account deletion need a
   connection. No local data can be recovered after uninstalling/clearing storage.
 - Cross-list moves and recipe deletion across lists still need fresh server
@@ -52,7 +79,8 @@ network connection hangs rather than reporting itself offline. See AGENTS.md.
 Automated regression coverage exercises cached offline startup, durable edit
 recovery after restart, account-scoped outboxes, permission errors, corrupt
 outboxes, cached imperative reads and their timeout/cleanup, auth reconciliation,
-and operation replay/deduplication.
+operation replay/deduplication, catalog queue persistence with a hanging server,
+SDK queue recovery on restart, and disk-write failures.
 
 Before release, test a production native build on a device:
 

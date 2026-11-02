@@ -37,7 +37,8 @@ export const RecipeDropdownMenu = ({
   // Check if current user owns the recipe
   const isOwner = recipe.user?.id === user?.id;
   const { mutate: duplicateRecipe } = useDuplicateRecipe();
-  const { mutate: deleteRecipe } = useDeleteRecipe();
+  const { mutateAsync: deleteRecipe, isPending: isDeleting } =
+    useDeleteRecipe();
 
   const handleDuplicate = () => {
     duplicateRecipe({
@@ -63,18 +64,18 @@ export const RecipeDropdownMenu = ({
     }
   };
 
-  const handleDelete = () => {
-    // Navigate away immediately so we do not briefly render the deleted recipe state.
-    if (onClose) {
-      onClose();
-    } else {
-      router.back();
+  const handleDelete = async () => {
+    if (isDeleting) return;
+    // The optimistic subscription can unmount this menu before confirmation;
+    // awaiting the promise keeps completion feedback alive across that unmount.
+    try {
+      await deleteRecipe(recipe.id);
+      toast.success('Recipe deleted');
+      if (onClose) onClose();
+      else router.back();
+    } catch {
+      toast.error('Failed to delete recipe');
     }
-    deleteRecipe(recipe.id, {
-      onError: () => {
-        toast.error('Failed to delete recipe');
-      },
-    });
   };
 
   const handleConfirmDelete = () => {
@@ -116,6 +117,7 @@ export const RecipeDropdownMenu = ({
           <DropdownMenuGroup>
             <DropdownMenuItem
               onSelect={handleConfirmDelete}
+              disabled={isDeleting}
               destructive
               key="delete-recipe"
             >

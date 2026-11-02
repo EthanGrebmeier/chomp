@@ -37,6 +37,7 @@ import {
   type AppEntryState,
 } from '@/lib/app-entry';
 import { db } from '@/lib/instant';
+import { LocalTransactionErrors } from '@/lib/instant/local-transaction-errors';
 import { QuantitySessionGate } from '@/lib/instant/quantity-session-gate';
 import {
   InstantAuthHandler,
@@ -374,6 +375,7 @@ function RootLayoutContent() {
                       </QuantityAppProvider>
                     </AppEntryVisibleContext.Provider>
                     <InstantAuthHandler />
+                    <LocalTransactionErrors />
                     <PortalHost />
                   </GestureHandlerRootView>
                 </SafeAreaProvider>
