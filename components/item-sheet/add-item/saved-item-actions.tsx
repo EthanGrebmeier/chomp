@@ -32,11 +32,7 @@ function SavedItemMenu({ onPress }: { onPress?: () => void }) {
       }
     >
       <DropdownMenuContent>
-        <DropdownMenuItem
-          key="save"
-          disabled={!hasItemTitle}
-          onSelect={toggleSave}
-        >
+        <DropdownMenuItem key="save" onSelect={toggleSave}>
           <DropdownMenuItemTitle>
             {isSync
               ? saveItem
