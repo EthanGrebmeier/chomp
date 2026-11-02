@@ -1,0 +1,38 @@
+[
+  {
+    "id": "01a19acc-baf2-7b42-a0ad-3fe974d2cd76",
+    "createdAt": "2026-11-02T05:47:50.898Z",
+    "group": "d868f9d5-5f75-4219-b78c-7140ec0bfecb",
+    "branch": "production",
+    "message": "Offline shopping, durable edits, sheet and gesture fixes \u2014 iOS 1.0.5",
+    "runtimeVersion": "1.0.5",
+    "platform": "ios",
+    "manifestPermalink": "https://u.expo.dev/update/01a19acc-baf2-7b42-a0ad-3fe974d2cd76",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "c21e4136a87c894f7e8a4a045286f22f77d2998d"
+  },
+  {
+    "id": "01a19acc-ee07-7dc1-b56a-b84deeaba690",
+    "createdAt": "2026-11-02T05:48:03.975Z",
+    "group": "032218cd-5040-4d09-9715-880eba22ef34",
+    "branch": "production",
+    "message": "Offline shopping, durable edits, sheet and gesture fixes \u2014 iOS 1.0.6",
+    "runtimeVersion": "1.0.6",
+    "platform": "ios",
+    "manifestPermalink": "https://u.expo.dev/update/01a19acc-ee07-7dc1-b56a-b84deeaba690",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "b2a7fa4c2e31b7608406029bbee2e60fb67617ce"
+  },
+  {
+    "id": "01a19acc-f848-7cb8-ac84-467809c753b5",
+    "createdAt": "2026-11-02T05:48:06.600Z",
+    "group": "b38bcf4c-8326-4c91-aae5-839e1ab724e2",
+    "branch": "production",
+    "message": "Offline shopping, durable edits, sheet and gesture fixes \u2014 TestFlight 1.0.7",
+    "runtimeVersion": "1.0.7",
+    "platform": "ios",
+    "manifestPermalink": "https://u.expo.dev/update/01a19acc-f848-7cb8-ac84-467809c753b5",
+    "isRollBackToEmbedded": false,
+    "gitCommitHash": "011a20d3d1dc902ecaaa672d98c3d556144502f2"
+  }
+]
