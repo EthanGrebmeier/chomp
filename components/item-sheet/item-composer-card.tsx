@@ -35,7 +35,6 @@ export function ItemComposerCard({
         className={`overflow-hidden bg-background ${COMPOSER_CARD_CLASS}`}
       >
         <ComposerHeader
-          className="mb-2"
           title={header ? undefined : title}
           centerContent={header}
           closeAction={

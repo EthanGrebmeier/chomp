@@ -11,7 +11,7 @@ import type { QuantityEntry } from '../types';
 
 function sourceDetail(entry: QuantityEntry) {
   if (entry.sourceId)
-    return `Planned for ${entry.mealTag.toLowerCase()} on ${new Date(`${entry.sourceDate}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
+    return `Planned for ${entry.mealTag.toLowerCase() || 'no meal'} on ${new Date(`${entry.sourceDate}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
   if (entry.origin === 'recipe') return 'Added from recipe';
   if (entry.origin === 'scheduled' || entry.origin === 'planned')
     return 'Purchased from meal plan';

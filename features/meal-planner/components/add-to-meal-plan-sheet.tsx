@@ -489,7 +489,7 @@ const AddToMealPlanSheetInner = ({ listId, ref }: AddToMealPlanSheetProps) => {
                   className={COMPOSER_CONTENT_CLASS}
                 >
                   <View>{fields}</View>
-                  <View className="mt-1 min-h-11 flex-row items-center gap-2">
+                  <View className="mt-3 min-h-11 flex-row items-center gap-2">
                     <View className="min-w-0 flex-1">
                       <MetaBarTrailingInsetContext.Provider value={0}>
                         {metadata}

@@ -47,6 +47,7 @@ export const RecipeDetailSheet = forwardRef<
       name="recipe-detail-sheet"
       ref={sheetRef}
       detents={[1]}
+      insetAdjustment="automatic"
       scrollable
       viewClassName="flex-1"
       onDismiss={handleDismiss}
