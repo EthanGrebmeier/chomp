@@ -1,7 +1,12 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { CheckIcon } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { Platform, View, type PressableStateCallbackType } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  View,
+  type PressableStateCallbackType,
+} from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 
 import { HapticPressable } from '@/components/ui/haptic-pressable';
@@ -141,7 +146,7 @@ const buttonTextVariants = cva(
 
 type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>['size']>;
 type ButtonIconPosition = 'left' | 'right';
-type ButtonStatus = 'idle' | 'success';
+type ButtonStatus = 'idle' | 'pending' | 'success';
 
 const floatingIconOffsets: Record<
   ButtonSize,
@@ -254,6 +259,7 @@ function Button({
   const resolvedSize = size ?? 'default';
   const hasFloatingIcon = Boolean(icon);
   const isSuccess = status === 'success';
+  const isPending = status === 'pending';
 
   useEffect(() => {
     if (!isSuccess || !onSuccessComplete) {
@@ -312,28 +318,42 @@ function Button({
         role="button"
         haptic={haptic}
         hapticType={hapticType}
-        disabled={disabled === true}
+        disabled={disabled === true || isPending}
         style={style}
         {...props}
+        accessibilityState={{
+          ...props.accessibilityState,
+          busy: isPending || props.accessibilityState?.busy,
+          disabled: disabled === true || isPending,
+        }}
       >
-        {isSuccess
-          ? renderAnimatedContents(
-              <View className="flex-row items-center justify-center gap-2">
-                <Icon
-                  as={CheckIcon}
-                  size={20}
-                  strokeWidth={3}
-                  className="text-white"
-                />
-                {successLabel ? (
-                  <Text className="text-white">{successLabel}</Text>
-                ) : null}
-              </View>
-            )
-          : typeof children === 'function'
-            ? (state: PressableStateCallbackType) =>
-                renderAnimatedContents(renderButtonContents(children(state)))
-            : renderAnimatedContents(renderButtonContents(children))}
+        {isPending ? (
+          <View className="flex-row items-center justify-center gap-2">
+            <ActivityIndicator size="small" />
+            {typeof children === 'function'
+              ? children({ pressed: false, hovered: false })
+              : children}
+          </View>
+        ) : isSuccess ? (
+          renderAnimatedContents(
+            <View className="flex-row items-center justify-center gap-2">
+              <Icon
+                as={CheckIcon}
+                size={20}
+                strokeWidth={3}
+                className="text-white"
+              />
+              {successLabel ? (
+                <Text className="text-white">{successLabel}</Text>
+              ) : null}
+            </View>
+          )
+        ) : typeof children === 'function' ? (
+          (state: PressableStateCallbackType) =>
+            renderAnimatedContents(renderButtonContents(children(state)))
+        ) : (
+          renderAnimatedContents(renderButtonContents(children))
+        )}
       </HapticPressable>
     </TextClassContext.Provider>
   );

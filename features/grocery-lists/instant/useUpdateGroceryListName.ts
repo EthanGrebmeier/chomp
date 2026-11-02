@@ -1,3 +1,5 @@
+import { transactLocally } from '@/lib/instant/local-transaction';
+
 import { db } from '../../../lib/instant';
 import { trimStringFields } from '../../../lib/utils/trim-string-fields';
 
@@ -7,7 +9,7 @@ export const useUpdateGroceryListName = () => {
       throw new Error('List name cannot be empty');
     }
 
-    await db.transact([
+    await transactLocally([
       db.tx.grocery_lists[listId].update(
         trimStringFields({
           name: name.trim(),

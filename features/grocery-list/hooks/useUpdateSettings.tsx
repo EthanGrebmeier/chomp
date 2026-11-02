@@ -6,11 +6,12 @@ import { queryKeys } from '../query-keys';
 export const useUpdateSettings = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    networkMode: 'always',
+    scope: { id: 'settings' },
     mutationFn: updateSettings,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.settings(),
-      });
+    onSuccess: settings => {
+      // Publish the durable SQLite result immediately; no extra read/render gap.
+      queryClient.setQueryData(queryKeys.settings(), settings);
     },
   });
 };

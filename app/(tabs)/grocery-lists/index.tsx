@@ -120,8 +120,8 @@ export default function GroceryListsIndex() {
           text: 'Leave',
           style: 'destructive',
           onPress: async () => {
-            await leaveGroceryList(list.id);
-            selectFallbackAfterRemoval(list.id);
+            const left = await leaveGroceryList(list.id);
+            if (left) selectFallbackAfterRemoval(list.id);
           },
         },
       ]
