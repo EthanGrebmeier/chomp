@@ -1,6 +1,7 @@
 ---
 title: 'Local React Native types differ from frozen release install'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#155'
 ---
 
 ## Expected Behavior

@@ -1,6 +1,7 @@
 ---
 title: 'Imported ingredient editor has no visible save action'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#69'
 ---
 
 ## Expected Behavior
