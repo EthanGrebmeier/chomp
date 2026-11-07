@@ -1,6 +1,7 @@
 ---
 title: 'Autocomplete overwrites explicit item draft metadata'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#151'
 ---
 
 ## Expected Behavior

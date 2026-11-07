@@ -1,6 +1,7 @@
 ---
 title: 'Splash dismissal cancellation can leave app permanently covered'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#123'
 ---
 
 ## Expected Behavior

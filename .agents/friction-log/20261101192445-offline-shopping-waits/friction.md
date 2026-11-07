@@ -1,6 +1,7 @@
 ---
 title: 'Offline shopping waits for network-only verification and action reads'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#148'
 ---
 
 ## Expected Behavior
