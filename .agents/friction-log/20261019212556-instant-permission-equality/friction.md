@@ -1,6 +1,7 @@
 ---
 title: 'Instant permission equality between JSON array and CEL list rejects matching members'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#61'
 ---
 
 ### Expected Behavior

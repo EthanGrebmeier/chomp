@@ -1,6 +1,7 @@
 ---
 title: 'Quantity test tooling still allowlists the production database'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#84'
 ---
 
 ## Expected Behavior

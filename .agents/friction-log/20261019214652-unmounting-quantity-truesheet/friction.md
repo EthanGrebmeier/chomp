@@ -1,6 +1,7 @@
 ---
 title: 'Unmounting quantity TrueSheet before dismissal leaves a native sheet onscreen'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#64'
 ---
 
 ### Expected Behavior

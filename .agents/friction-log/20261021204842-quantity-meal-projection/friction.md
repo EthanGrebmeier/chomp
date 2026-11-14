@@ -1,6 +1,7 @@
 ---
 title: 'Quantity meal projection rescans the full shopping history for every meal'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#81'
 ---
 
 ## Expected Behavior

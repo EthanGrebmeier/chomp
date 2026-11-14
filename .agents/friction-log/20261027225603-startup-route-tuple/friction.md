@@ -1,6 +1,7 @@
 ---
 title: '# Startup route tuple check depends on generated Expo route types'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#125'
 ---
 
 ## Expected Behavior

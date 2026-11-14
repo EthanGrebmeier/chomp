@@ -1,6 +1,7 @@
 ---
 title: 'README assumes .env.local points at production'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#76'
 ---
 
 ### Expected Behavior

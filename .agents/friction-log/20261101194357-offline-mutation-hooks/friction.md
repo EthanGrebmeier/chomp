@@ -1,6 +1,7 @@
 ---
 title: 'Offline mutation hooks pause durable local actions'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#150'
 ---
 
 ## Expected Behavior
