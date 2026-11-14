@@ -1,6 +1,7 @@
 ---
 title: 'Recent-item ranking rebuilds history on quantity updates'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#135'
 ---
 
 ## Expected Behavior

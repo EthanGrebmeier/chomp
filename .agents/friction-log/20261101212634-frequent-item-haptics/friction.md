@@ -1,6 +1,7 @@
 ---
 title: 'Frequent-item haptics trail touch feedback until release'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#153'
 ---
 
 ## Expected Behavior

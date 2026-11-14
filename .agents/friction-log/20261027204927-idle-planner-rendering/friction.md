@@ -1,6 +1,7 @@
 ---
 title: 'Idle planner rendering competes with splash dismissal'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#117'
 ---
 
 ## Expected Behavior

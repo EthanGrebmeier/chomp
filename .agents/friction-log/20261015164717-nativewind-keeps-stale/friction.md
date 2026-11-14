@@ -1,6 +1,7 @@
 ---
 title: 'NativeWind keeps stale styles when a reused component''s className changes'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#59'
 ---
 
 ### Expected Behavior

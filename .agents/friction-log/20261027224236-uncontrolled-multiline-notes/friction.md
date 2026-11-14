@@ -1,6 +1,7 @@
 ---
 title: 'Uncontrolled multiline notes do not resize item sheets'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#120'
 ---
 
 ## Expected Behavior
