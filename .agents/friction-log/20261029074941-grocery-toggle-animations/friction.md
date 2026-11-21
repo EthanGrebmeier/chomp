@@ -1,6 +1,7 @@
 ---
 title: 'Grocery toggle animations depend on the JS tap queue'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#126'
 ---
 
 ## Expected Behavior

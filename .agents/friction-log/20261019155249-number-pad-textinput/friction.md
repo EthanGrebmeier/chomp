@@ -1,6 +1,7 @@
 ---
 title: 'Number-pad TextInput with returnKeyType adds a Done accessory'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#55'
 ---
 
 ### Expected Behavior

@@ -1,6 +1,7 @@
 ---
 title: 'Recipes settings toolbar remains visible when hidden'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#72'
 ---
 
 ## Expected Behavior

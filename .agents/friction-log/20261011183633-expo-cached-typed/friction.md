@@ -1,6 +1,7 @@
 ---
 title: 'Expo cached typed routes reject new demo route during tsc'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#58'
 ---
 
 ## Expected Behavior

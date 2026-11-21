@@ -1,6 +1,7 @@
 ---
 title: 'EAS runtime versions reused across native SDK changes'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#75'
 ---
 
 ### Expected Behavior

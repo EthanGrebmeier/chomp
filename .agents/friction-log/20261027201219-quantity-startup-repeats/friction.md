@@ -1,6 +1,7 @@
 ---
 title: 'Quantity startup repeats legacy repair before loading list history'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#116'
 ---
 
 ## Expected Behavior
