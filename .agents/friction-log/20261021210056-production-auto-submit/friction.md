@@ -1,6 +1,7 @@
 ---
 title: 'Production auto-submit requires saved App Store Connect app ID'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#82'
 ---
 
 ## Expected Behavior

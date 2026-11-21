@@ -1,6 +1,7 @@
 ---
 title: 'Sign-in bypasses launch-only grocery readiness gate'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#130'
 ---
 
 ## Expected Behavior

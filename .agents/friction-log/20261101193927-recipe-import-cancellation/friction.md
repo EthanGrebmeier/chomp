@@ -1,6 +1,7 @@
 ---
 title: 'Recipe import cancellation and save failure dispatch unsupported GO_BACK transitions'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#149'
 ---
 
 ### Expected Behavior

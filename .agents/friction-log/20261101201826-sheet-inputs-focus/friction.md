@@ -1,6 +1,7 @@
 ---
 title: 'Sheet inputs focus before TrueSheet installs its keyboard observer'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#152'
 ---
 
 ## Expected Behavior
