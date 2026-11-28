@@ -1,6 +1,7 @@
 ---
 title: 'Recent Items uses a native scroll viewport larger than its composer'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#141'
 ---
 
 ### Expected Behavior

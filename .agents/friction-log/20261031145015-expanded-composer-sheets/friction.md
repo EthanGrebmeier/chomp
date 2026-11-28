@@ -1,6 +1,7 @@
 ---
 title: 'Expanded composer sheets remain detached with fractional native detents'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#142'
 ---
 
 ## Expected Behavior

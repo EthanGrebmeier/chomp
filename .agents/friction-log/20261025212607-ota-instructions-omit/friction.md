@@ -1,6 +1,7 @@
 ---
 title: 'OTA instructions omit the TestFlight 1.0.7 quantity flag'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#122'
 ---
 
 ## Expected Behavior

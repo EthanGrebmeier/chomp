@@ -1,6 +1,7 @@
 ---
 title: 'Swipe-to-delete ignores flick momentum'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#154'
 ---
 
 ## Expected Behavior

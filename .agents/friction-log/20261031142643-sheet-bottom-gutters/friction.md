@@ -1,6 +1,7 @@
 ---
 title: 'Sheet bottom gutters stack visual spacing on safe-area clearance'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#140'
 ---
 
 ### Expected Behavior

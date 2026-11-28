@@ -1,6 +1,7 @@
 ---
 title: 'Finished UI-thread checkbox styles revert when FlashList moves rows'
 severity: 'major'
+issue: 'EthanGrebmeier/chomp#127'
 ---
 
 ### Expected Behavior

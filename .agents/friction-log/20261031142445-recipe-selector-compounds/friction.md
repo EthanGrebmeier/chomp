@@ -1,6 +1,7 @@
 ---
 title: 'Recipe selector compounds its child gutters in composer sheets'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#139'
 ---
 
 ### Expected Behavior
