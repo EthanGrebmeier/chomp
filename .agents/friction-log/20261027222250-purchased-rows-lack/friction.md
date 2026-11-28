@@ -1,6 +1,7 @@
 ---
 title: 'Purchased rows lack a purchase date and cleared purchase marker'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#119'
 ---
 
 ## Expected Behavior

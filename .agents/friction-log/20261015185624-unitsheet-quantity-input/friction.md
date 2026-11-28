@@ -1,6 +1,7 @@
 ---
 title: 'UnitSheet quantity input only accepts whole numbers'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#60'
 ---
 
 ### Expected Behavior

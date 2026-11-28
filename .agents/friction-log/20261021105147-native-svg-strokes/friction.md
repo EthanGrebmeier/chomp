@@ -1,6 +1,7 @@
 ---
 title: 'Native SVG strokes reject space-separated theme HSL colors'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#73'
 ---
 
 ## Expected Behavior

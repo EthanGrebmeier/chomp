@@ -1,6 +1,7 @@
 ---
 title: 'Quantity checkbox feedback waits for durable outbox and bypasses pending checked state'
 severity: 'minor'
+issue: 'EthanGrebmeier/chomp#74'
 ---
 
 ## Expected Behavior
